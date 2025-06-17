@@ -139,6 +139,24 @@ type Storage interface {
 	DeleteChatAttachment(ctx context.Context, attachmentID int) error
 	UpdateMessageAttachmentsCount(ctx context.Context, messageID int, count int) error
 	GetMessageByID(ctx context.Context, messageID int) (*models.MarketplaceMessage, error)
+	
+	// Chat verification methods
+	GetChatActivityStats(ctx context.Context, buyerID int, sellerID int, listingID int) (*models.ChatActivityStats, error)
+	
+	// Rating aggregation methods
+	GetUserAggregatedRating(ctx context.Context, userID int) (*models.UserAggregatedRating, error)
+	GetStorefrontAggregatedRating(ctx context.Context, storefrontID int) (*models.StorefrontAggregatedRating, error)
+	RefreshRatingViews(ctx context.Context) error
+	
+	// Review confirmation and dispute methods
+	CreateReviewConfirmation(ctx context.Context, confirmation *models.ReviewConfirmation) error
+	GetReviewConfirmation(ctx context.Context, reviewID int) (*models.ReviewConfirmation, error)
+	CreateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error
+	GetReviewDispute(ctx context.Context, reviewID int) (*models.ReviewDispute, error)
+	UpdateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error
+	
+	// Review permission check
+	CanUserReviewEntity(ctx context.Context, userID int, entityType string, entityID int) (*models.CanReviewResponse, error)
 
 	Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 

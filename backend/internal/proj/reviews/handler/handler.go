@@ -27,6 +27,13 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	entityStats := app.Group("/api/v1/entity")
 	entityStats.Get("/:type/:id/rating", h.Review.GetEntityRating)
 	entityStats.Get("/:type/:id/stats", h.Review.GetEntityStats)
+	
+	// Новые endpoints для агрегированных рейтингов
+	app.Get("/api/v1/users/:id/aggregated-rating", h.Review.GetUserAggregatedRating)
+	app.Get("/api/v1/storefronts/:id/aggregated-rating", h.Review.GetStorefrontAggregatedRating)
+	
+	// Endpoint для проверки возможности оставить отзыв
+	app.Get("/api/v1/reviews/can-review/:type/:id", mw.AuthRequiredJWT, h.Review.CanReview)
 
 	review := app.Group("/api/v1/reviews")
 	review.Get("/", h.Review.GetReviews)
@@ -45,6 +52,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	protectedReviews.Post("/:id/vote", h.Review.VoteForReview)
 	protectedReviews.Post("/:id/response", h.Review.AddResponse)
 	protectedReviews.Post("/:id/photos", h.Review.UploadPhotos)
+	
+	// Новые endpoints для подтверждений и споров
+	protectedReviews.Post("/:id/confirm", h.Review.ConfirmReview)
+	protectedReviews.Post("/:id/dispute", h.Review.DisputeReview)
 
 	return nil
 }

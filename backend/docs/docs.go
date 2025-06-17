@@ -9430,6 +9430,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/reviews/can-review/{type}/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Checks if the current user can leave a review for the specified entity",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Check if user can review entity",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Entity type (listing, user, storefront)",
+                        "name": "type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Entity ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permission check result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.CanReviewResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid parameters",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/reviews/rating/{type}/{id}": {
             "get": {
                 "description": "Returns average rating for a specific entity",
@@ -10018,6 +10086,152 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/reviews/{id}/confirm": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Allows seller to confirm or dispute a review",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Confirm review",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Confirmation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.CreateReviewConfirmationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review confirmed successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reviews/{id}/dispute": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a dispute for a review",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Dispute review",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dispute request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.CreateReviewDisputeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dispute created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_reviews_handler.ReviewMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/reviews/{id}/photos": {
             "post": {
                 "security": [
@@ -10046,7 +10260,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "file",
-                        "description": "Photos to upload (max 10)",
+                        "description": "Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)",
                         "name": "photos",
                         "in": "formData",
                         "required": true
@@ -10572,6 +10786,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/storefronts/{id}/aggregated-rating": {
+            "get": {
+                "description": "Returns aggregated rating for a storefront including breakdown by sources",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Get storefront aggregated rating",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aggregated rating",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.AggregatedRating"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid storefront ID",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts/{id}/import-sources": {
             "get": {
                 "security": [
@@ -11033,6 +11303,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/{id}/aggregated-rating": {
+            "get": {
+                "description": "Returns aggregated rating for a user including breakdown by sources",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Get user aggregated rating",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aggregated rating",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.AggregatedRating"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user ID",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/{id}/profile": {
             "get": {
                 "security": [
@@ -11274,6 +11600,48 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_models.AggregatedRating": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "number"
+                },
+                "breakdown": {
+                    "$ref": "#/definitions/backend_internal_domain_models.RatingBreakdown"
+                },
+                "distribution": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "entity_id": {
+                    "type": "integer"
+                },
+                "entity_type": {
+                    "type": "string"
+                },
+                "last_review_at": {
+                    "type": "string"
+                },
+                "recent_rating": {
+                    "type": "number"
+                },
+                "recent_reviews": {
+                    "type": "integer"
+                },
+                "recent_trend": {
+                    "description": "up, down, stable",
+                    "type": "string"
+                },
+                "total_reviews": {
+                    "type": "integer"
+                },
+                "verified_percentage": {
+                    "type": "integer"
+                }
+            }
+        },
         "backend_internal_domain_models.AttachGroupToCategoryRequest": {
             "type": "object",
             "required": [
@@ -11414,6 +11782,34 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.BreakdownItem": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.CanReviewResponse": {
+            "type": "object",
+            "properties": {
+                "can_review": {
+                    "type": "boolean"
+                },
+                "existing_review_id": {
+                    "type": "integer"
+                },
+                "has_existing_review": {
+                    "type": "boolean"
+                },
+                "reason": {
+                    "type": "string"
                 }
             }
         },
@@ -11796,6 +12192,48 @@ const docTemplate = `{
                 },
                 "receiver_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.CreateReviewConfirmationRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "notes": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "confirmed",
+                        "disputed"
+                    ]
+                }
+            }
+        },
+        "backend_internal_domain_models.CreateReviewDisputeRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "reason"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "minLength": 10
+                },
+                "reason": {
+                    "type": "string",
+                    "enum": [
+                        "not_a_customer",
+                        "false_information",
+                        "deal_cancelled",
+                        "spam",
+                        "other"
+                    ]
                 }
             }
         },
@@ -12795,6 +13233,35 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_models.RatingBreakdown": {
+            "type": "object",
+            "properties": {
+                "direct": {
+                    "description": "Прямые отзывы",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.BreakdownItem"
+                        }
+                    ]
+                },
+                "listings": {
+                    "description": "Через товары",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.BreakdownItem"
+                        }
+                    ]
+                },
+                "storefronts": {
+                    "description": "Через магазины",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.BreakdownItem"
+                        }
+                    ]
+                }
+            }
+        },
         "backend_internal_domain_models.Review": {
             "type": "object",
             "properties": {
@@ -12823,6 +13290,9 @@ const docTemplate = `{
                 },
                 "entity_type": {
                     "type": "string"
+                },
+                "has_active_dispute": {
+                    "type": "boolean"
                 },
                 "helpful_votes": {
                     "type": "integer"
@@ -12860,6 +13330,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/backend_internal_domain_models.ReviewResponse"
                     }
+                },
+                "seller_confirmed": {
+                    "type": "boolean"
                 },
                 "status": {
                     "type": "string"

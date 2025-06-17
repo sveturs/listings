@@ -42,13 +42,14 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
         INSERT INTO reviews (
             user_id, entity_type, entity_id, rating, comment, 
             pros, cons, photos, is_verified_purchase, status,
-            original_language
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            original_language, entity_origin_type, entity_origin_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING id, created_at, updated_at
     `,
 		review.UserID, review.EntityType, review.EntityID, review.Rating,
 		moderatedComment, review.Pros, review.Cons, review.Photos,
 		review.IsVerifiedPurchase, review.Status, review.OriginalLanguage,
+		review.EntityOriginType, review.EntityOriginID,
 	).Scan(&review.ID, &review.CreatedAt, &review.UpdatedAt)
 
 	if err != nil {

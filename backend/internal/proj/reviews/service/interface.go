@@ -21,4 +21,15 @@ type ReviewServiceInterface interface {
 	GetStorefrontReviews(ctx context.Context, storefrontID int) ([]models.Review, error)
 	GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error)
 	GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error)
+	
+	// Aggregated ratings
+	GetUserAggregatedRating(ctx context.Context, userID int) (*models.AggregatedRating, error)
+	GetStorefrontAggregatedRating(ctx context.Context, storefrontID int) (*models.AggregatedRating, error)
+	
+	// Review confirmation and disputes
+	ConfirmReview(ctx context.Context, userID int, reviewID int, req *models.CreateReviewConfirmationRequest) error
+	DisputeReview(ctx context.Context, userID int, reviewID int, req *models.CreateReviewDisputeRequest) error
+	
+	// Permission check
+	CanUserReviewEntity(ctx context.Context, userID int, entityType string, entityID int) (*models.CanReviewResponse, error)
 }

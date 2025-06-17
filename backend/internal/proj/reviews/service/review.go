@@ -6,6 +6,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/storage"
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 )
@@ -82,6 +83,13 @@ func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *model
 		Photos:           req.Photos,
 		Status:           "published",
 		OriginalLanguage: req.OriginalLanguage,
+	}
+
+	// Заполняем entity_origin_type и entity_origin_id для агрегации рейтингов
+	err := s.setEntityOrigin(ctx, review)
+	if err != nil {
+		log.Printf("Ошибка определения origin для отзыва: %v", err)
+		// Не блокируем создание отзыва, но логируем ошибку
 	}
 
 	// Проверяем, является ли покупка верифицированной
@@ -166,18 +174,46 @@ func (s *ReviewService) GetEntityRating(ctx context.Context, entityType string, 
 }
 
 // checkVerifiedPurchase проверяет, совершал ли пользователь покупку
+// Использует трехэтапную систему верификации через анализ чата
 func (s *ReviewService) checkVerifiedPurchase(ctx context.Context, userId int, entityType string, entityId int) bool {
 	// В зависимости от типа сущности проверяем наличие покупки/бронирования
 	switch entityType {
 	case "listing":
-		// Проверяем покупки в маркетплейсе
-		return true // TODO: реализовать проверку
+		// Для маркетплейса проверяем активность в чате
+		// Сначала получаем информацию о листинге, чтобы узнать продавца
+		listing, err := s.storage.GetListingByID(ctx, entityId)
+		if err != nil || listing == nil {
+			return false
+		}
+
+		// Получаем статистику чата между покупателем и продавцом
+		stats, err := s.storage.GetChatActivityStats(ctx, userId, listing.UserID, entityId)
+		if err != nil {
+			return false
+		}
+
+		// Критерии автоматической верификации:
+		// 1. Чат существует
+		// 2. Минимум 5 сообщений от каждой стороны
+		// 3. Чат не старше 30 дней
+		// 4. Обе стороны были активны в чате
+		if stats.ChatExists &&
+			stats.BuyerMessages >= 5 &&
+			stats.SellerMessages >= 5 &&
+			stats.DaysSinceLastMsg <= 30 &&
+			stats.TotalMessages >= 10 {
+			return true
+		}
+
+		return false
 	case "room":
 		// Проверяем бронирования комнат
-		return true // TODO: реализовать проверку
+		// TODO: интегрировать с системой бронирований когда она будет реализована
+		return false
 	case "car":
 		// Проверяем аренду автомобилей
-		return true // TODO: реализовать проверку
+		// TODO: интегрировать с системой аренды когда она будет реализована
+		return false
 	default:
 		return false
 	}
@@ -187,7 +223,97 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		RatingDistribution: make(map[int]int),
 	}
 
-	// Получаем общую статистику
+	// Для пользователей и витрин используем материализованные представления
+	if entityType == "user" {
+		// Используем материализованное представление user_ratings
+		err := s.storage.QueryRow(ctx, `
+			SELECT 
+				total_reviews,
+				average_rating,
+				verified_reviews,
+				photo_reviews
+			FROM user_ratings
+			WHERE user_id = $1
+		`, entityId).Scan(
+			&stats.TotalReviews,
+			&stats.AverageRating,
+			&stats.VerifiedReviews,
+			&stats.PhotoReviews,
+		)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				// Если нет записи в материализованном представлении, возвращаем пустую статистику
+				return stats, nil
+			}
+			return nil, err
+		}
+
+		// Получаем распределение оценок из материализованного представления
+		rows, err := s.storage.Query(ctx, `
+			SELECT rating, count
+			FROM user_rating_distribution
+			WHERE user_id = $1
+		`, entityId)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var rating, count int
+			if err := rows.Scan(&rating, &count); err != nil {
+				return nil, err
+			}
+			stats.RatingDistribution[rating] = count
+		}
+
+		return stats, nil
+	} else if entityType == "storefront" {
+		// Используем материализованное представление storefront_ratings
+		err := s.storage.QueryRow(ctx, `
+			SELECT 
+				total_reviews,
+				average_rating,
+				verified_reviews,
+				photo_reviews
+			FROM storefront_ratings
+			WHERE storefront_id = $1
+		`, entityId).Scan(
+			&stats.TotalReviews,
+			&stats.AverageRating,
+			&stats.VerifiedReviews,
+			&stats.PhotoReviews,
+		)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return stats, nil
+			}
+			return nil, err
+		}
+
+		// Получаем распределение оценок
+		rows, err := s.storage.Query(ctx, `
+			SELECT rating, count
+			FROM storefront_rating_distribution
+			WHERE storefront_id = $1
+		`, entityId)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var rating, count int
+			if err := rows.Scan(&rating, &count); err != nil {
+				return nil, err
+			}
+			stats.RatingDistribution[rating] = count
+		}
+
+		return stats, nil
+	}
+
+	// Для других типов сущностей (listing, room, car) используем прямой запрос
 	err := s.storage.QueryRow(ctx, `
         SELECT 
             COUNT(*) as total,
@@ -240,8 +366,13 @@ func (s *ReviewService) UpdateReviewPhotos(ctx context.Context, reviewId int, ph
 		return err
 	}
 
-	// Обновляем массив фотографий
-	review.Photos = photoUrls
+	// Добавляем новые фото к существующим
+	review.Photos = append(review.Photos, photoUrls...)
+
+	// Проверяем общее количество фото
+	if len(review.Photos) > 5 {
+		return fmt.Errorf("превышено максимальное количество фотографий (5)")
+	}
 
 	// Сохраняем изменения
 	return s.storage.UpdateReview(ctx, review)
@@ -299,4 +430,235 @@ func (s *ReviewService) GetStorefrontRatingSummary(ctx context.Context, storefro
 	}
 
 	return summary, nil
+}
+
+// setEntityOrigin заполняет поля entity_origin_type и entity_origin_id
+// для правильной агрегации рейтингов после удаления объектов
+func (s *ReviewService) setEntityOrigin(ctx context.Context, review *models.Review) error {
+	switch review.EntityType {
+	case "listing":
+		// Для отзывов на товары определяем владельца
+		listing, err := s.storage.GetListingByID(ctx, review.EntityID)
+		if err != nil {
+			return fmt.Errorf("не удалось получить информацию о товаре: %w", err)
+		}
+
+		// Если товар принадлежит магазину, origin указывает на магазин
+		if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+			review.EntityOriginType = "storefront"
+			review.EntityOriginID = *listing.StorefrontID
+		} else {
+			// Иначе origin указывает на продавца
+			review.EntityOriginType = "user"
+			review.EntityOriginID = listing.UserID
+		}
+
+	case "storefront":
+		// Для отзывов на магазин origin - сам магазин
+		review.EntityOriginType = "storefront"
+		review.EntityOriginID = review.EntityID
+
+	case "user":
+		// Для отзывов на пользователя origin - сам пользователь
+		review.EntityOriginType = "user"
+		review.EntityOriginID = review.EntityID
+
+	default:
+		return fmt.Errorf("неизвестный тип сущности: %s", review.EntityType)
+	}
+
+	return nil
+}
+
+// GetUserAggregatedRating получает агрегированный рейтинг пользователя
+func (s *ReviewService) GetUserAggregatedRating(ctx context.Context, userID int) (*models.AggregatedRating, error) {
+	data, err := s.storage.GetUserAggregatedRating(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Преобразуем в общий формат AggregatedRating
+	rating := &models.AggregatedRating{
+		EntityType:   "user",
+		EntityID:     userID,
+		Average:      data.AverageRating,
+		TotalReviews: data.TotalReviews,
+		Distribution: map[int]int{
+			1: data.Rating1,
+			2: data.Rating2,
+			3: data.Rating3,
+			4: data.Rating4,
+			5: data.Rating5,
+		},
+		Breakdown: models.RatingBreakdown{
+			Direct: models.BreakdownItem{
+				Count:   data.DirectReviews,
+				Average: 0, // TODO: рассчитать отдельно если нужно
+			},
+			Listings: models.BreakdownItem{
+				Count:   data.ListingReviews,
+				Average: 0,
+			},
+			Storefronts: models.BreakdownItem{
+				Count:   data.StorefrontReviews,
+				Average: 0,
+			},
+		},
+		VerifiedPercentage: 0,
+		RecentRating:       data.RecentRating,
+		RecentReviews:      data.RecentReviews,
+		LastReviewAt:       data.LastReviewAt,
+	}
+
+	// Рассчитываем процент верифицированных
+	if data.TotalReviews > 0 {
+		rating.VerifiedPercentage = (data.VerifiedReviews * 100) / data.TotalReviews
+	}
+
+	// Определяем тренд
+	if data.RecentRating != nil && data.RecentReviews >= 5 {
+		diff := *data.RecentRating - data.AverageRating
+		if diff > 0.2 {
+			rating.RecentTrend = "up"
+		} else if diff < -0.2 {
+			rating.RecentTrend = "down"
+		} else {
+			rating.RecentTrend = "stable"
+		}
+	} else {
+		rating.RecentTrend = "stable"
+	}
+
+	return rating, nil
+}
+
+// GetStorefrontAggregatedRating получает агрегированный рейтинг магазина
+func (s *ReviewService) GetStorefrontAggregatedRating(ctx context.Context, storefrontID int) (*models.AggregatedRating, error) {
+	data, err := s.storage.GetStorefrontAggregatedRating(ctx, storefrontID)
+	if err != nil {
+		return nil, err
+	}
+
+	rating := &models.AggregatedRating{
+		EntityType:   "storefront",
+		EntityID:     storefrontID,
+		Average:      data.AverageRating,
+		TotalReviews: data.TotalReviews,
+		Distribution: map[int]int{
+			1: data.Rating1,
+			2: data.Rating2,
+			3: data.Rating3,
+			4: data.Rating4,
+			5: data.Rating5,
+		},
+		Breakdown: models.RatingBreakdown{
+			Direct: models.BreakdownItem{
+				Count:   data.DirectReviews,
+				Average: 0,
+			},
+			Listings: models.BreakdownItem{
+				Count:   data.ListingReviews,
+				Average: 0,
+			},
+		},
+		VerifiedPercentage: 0,
+		RecentRating:       data.RecentRating,
+		RecentReviews:      data.RecentReviews,
+		LastReviewAt:       data.LastReviewAt,
+	}
+
+	if data.TotalReviews > 0 {
+		rating.VerifiedPercentage = (data.VerifiedReviews * 100) / data.TotalReviews
+	}
+
+	if data.RecentRating != nil && data.RecentReviews >= 5 {
+		diff := *data.RecentRating - data.AverageRating
+		if diff > 0.2 {
+			rating.RecentTrend = "up"
+		} else if diff < -0.2 {
+			rating.RecentTrend = "down"
+		} else {
+			rating.RecentTrend = "stable"
+		}
+	} else {
+		rating.RecentTrend = "stable"
+	}
+
+	return rating, nil
+}
+
+// ConfirmReview подтверждает отзыв продавцом
+func (s *ReviewService) ConfirmReview(ctx context.Context, userID int, reviewID int, req *models.CreateReviewConfirmationRequest) error {
+	// Получаем отзыв
+	review, err := s.storage.GetReviewByID(ctx, reviewID)
+	if err != nil {
+		return err
+	}
+
+	// Проверяем права - только продавец/владелец может подтвердить
+	// TODO: добавить более детальную проверку прав в зависимости от entity_type
+	
+	// Проверяем, не было ли уже подтверждения
+	existing, err := s.storage.GetReviewConfirmation(ctx, reviewID)
+	if err != nil {
+		return err
+	}
+	if existing != nil {
+		return fmt.Errorf("отзыв уже имеет подтверждение")
+	}
+
+	// Создаем подтверждение
+	confirmation := &models.ReviewConfirmation{
+		ReviewID:           reviewID,
+		ConfirmedBy:        userID,
+		ConfirmationStatus: req.Status,
+		Notes:              req.Notes,
+	}
+
+	err = s.storage.CreateReviewConfirmation(ctx, confirmation)
+	if err != nil {
+		return err
+	}
+
+	// Обновляем флаг в reviews если подтверждено
+	if req.Status == "confirmed" {
+		review.SellerConfirmed = true
+		err = s.storage.UpdateReview(ctx, review)
+	}
+
+	return err
+}
+
+// DisputeReview создает спор по отзыву
+func (s *ReviewService) DisputeReview(ctx context.Context, userID int, reviewID int, req *models.CreateReviewDisputeRequest) error {
+	// Получаем отзыв
+	_, err := s.storage.GetReviewByID(ctx, reviewID)
+	if err != nil {
+		return err
+	}
+
+	// Проверяем, нет ли активного спора
+	existing, err := s.storage.GetReviewDispute(ctx, reviewID)
+	if err != nil {
+		return err
+	}
+	if existing != nil {
+		return fmt.Errorf("по этому отзыву уже есть активный спор")
+	}
+
+	// Создаем спор
+	dispute := &models.ReviewDispute{
+		ReviewID:           reviewID,
+		DisputedBy:         userID,
+		DisputeReason:      req.Reason,
+		DisputeDescription: req.Description,
+		Status:             "pending",
+	}
+
+	return s.storage.CreateReviewDispute(ctx, dispute)
+}
+
+// CanUserReviewEntity проверяет может ли пользователь оставить отзыв
+func (s *ReviewService) CanUserReviewEntity(ctx context.Context, userID int, entityType string, entityID int) (*models.CanReviewResponse, error) {
+	return s.storage.CanUserReviewEntity(ctx, userID, entityType, entityID)
 }

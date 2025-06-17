@@ -65,3 +65,15 @@ type GetMessagesRequest struct {
 type MarkAsReadRequest struct {
 	MessageIDs []int `json:"message_ids" validate:"required"`
 }
+
+// ChatActivityStats структура для статистики активности в чате
+type ChatActivityStats struct {
+	ChatExists         bool      `json:"chat_exists"`
+	TotalMessages      int       `json:"total_messages"`
+	BuyerMessages      int       `json:"buyer_messages"`
+	SellerMessages     int       `json:"seller_messages"`
+	DaysSinceFirstMsg  int       `json:"days_since_first_msg"`
+	DaysSinceLastMsg   int       `json:"days_since_last_msg"`
+	FirstMessageDate   time.Time `json:"first_message_date"`
+	LastMessageDate    time.Time `json:"last_message_date"`
+}

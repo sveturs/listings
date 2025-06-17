@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useReviewStats } from '@/hooks/useReviews';
 
 interface SellerInfoProps {
   listing: {
@@ -32,8 +33,11 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [showPhone, setShowPhone] = useState(false);
-  const [rating] = useState(4.5); // TODO: Get from API
-  const [reviewsCount] = useState(23); // TODO: Get from API
+
+  // Получаем статистику отзывов продавца
+  const { data: statsData } = useReviewStats('user', listing.user_id);
+  const rating = statsData?.average_rating || 0;
+  const reviewsCount = statsData?.total_reviews || 0;
 
   const dateLocale = locale === 'ru' ? ru : enUS;
   const formatDate = (date: string) => {
@@ -58,41 +62,51 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
             <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
           </svg>
         ))}
-        <span className="text-sm ml-1">({reviewsCount})</span>
+        <span className="text-xs text-base-content/60 ml-1">
+          {rating.toFixed(1)} ({reviewsCount})
+        </span>
       </div>
     );
   };
 
   return (
-    <div className="card bg-base-200">
-      <div className="card-body">
-        <h3 className="font-semibold mb-4">
+    <div className="bg-base-100 rounded-lg shadow-sm border border-base-200 overflow-hidden">
+      <div className="p-4 lg:p-6">
+        <h3 className="text-lg font-semibold mb-4 text-base-content">
           {locale === 'ru' ? 'Продавец' : 'Seller'}
         </h3>
 
         {/* Seller Avatar and Basic Info */}
-        <div className="flex items-start gap-4 mb-4">
+        <div className="flex items-start gap-4 mb-6">
           <div className="avatar">
-            <div className="w-20 h-20 rounded-full bg-base-300">
+            <div className="w-16 h-16 rounded-full bg-base-200">
               {listing.user?.picture_url ? (
                 <Image
                   src={listing.user.picture_url}
                   alt={listing.user.name}
-                  width={80}
-                  height={80}
-                  className="rounded-full"
+                  width={64}
+                  height={64}
+                  className="rounded-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-3xl font-bold">
+                <div className="w-full h-full flex items-center justify-center text-2xl font-semibold text-base-content">
                   {listing.user?.name.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
           </div>
           <div className="flex-1">
-            <p className="font-medium text-lg">{listing.user?.name}</p>
-            {renderStars(rating)}
-            <p className="text-sm text-base-content/60 mt-1">
+            <p className="font-semibold text-base-content">
+              {listing.user?.name}
+            </p>
+            {reviewsCount > 0 ? (
+              <div className="mt-1">{renderStars(rating)}</div>
+            ) : (
+              <p className="text-sm text-base-content/60 mt-1">
+                {locale === 'ru' ? 'Нет отзывов' : 'No reviews yet'}
+              </p>
+            )}
+            <p className="text-xs text-base-content/60 mt-2">
               {locale === 'ru' ? 'На сайте с' : 'Member since'}{' '}
               {listing.user && formatDate(listing.user.created_at)}
             </p>
@@ -100,17 +114,17 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
         </div>
 
         {/* Seller Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="text-center p-3 bg-base-100 rounded-lg">
-            <div className="text-2xl font-bold text-primary">
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="text-center p-3 bg-base-200/50 rounded-lg">
+            <div className="text-2xl font-bold text-base-content">
               {listing.seller_response_rate || 95}%
             </div>
             <div className="text-xs text-base-content/60">
               {locale === 'ru' ? 'Процент ответов' : 'Response rate'}
             </div>
           </div>
-          <div className="text-center p-3 bg-base-100 rounded-lg">
-            <div className="text-2xl font-bold text-primary">
+          <div className="text-center p-3 bg-base-200/50 rounded-lg">
+            <div className="text-2xl font-bold text-base-content">
               {listing.seller_response_time || '< 1ч'}
             </div>
             <div className="text-xs text-base-content/60">
@@ -120,8 +134,8 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
         </div>
 
         {/* Seller Badges */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          <div className="badge badge-success gap-1">
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-success/10 text-success rounded-md">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
@@ -130,9 +144,9 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
               />
             </svg>
             {locale === 'ru' ? 'Проверен' : 'Verified'}
-          </div>
+          </span>
           {(listing.seller_total_listings || 0) > 10 && (
-            <div className="badge badge-info gap-1">
+            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-info/10 text-info rounded-md">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                 <path
@@ -142,17 +156,20 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
                 />
               </svg>
               {locale === 'ru' ? 'Опытный продавец' : 'Experienced'}
-            </div>
+            </span>
           )}
         </div>
 
         {/* Action Buttons */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {user && user.id !== listing.user_id ? (
             <>
-              <button onClick={onChatClick} className="btn btn-primary w-full">
+              <button
+                onClick={onChatClick}
+                className="btn btn-primary w-full h-10 rounded-lg font-medium"
+              >
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -169,10 +186,10 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
 
               <button
                 onClick={() => setShowPhone(!showPhone)}
-                className="btn btn-outline w-full"
+                className="btn btn-outline btn-primary w-full h-10 rounded-lg font-medium"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -193,10 +210,10 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
 
               <Link
                 href={`/${locale}/marketplace?user_id=${listing.user_id}`}
-                className="btn btn-ghost w-full"
+                className="btn btn-ghost w-full h-10 rounded-lg font-medium"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -208,7 +225,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                   />
                 </svg>
-                {locale === 'ru' ? 'Все товары продавца' : 'All seller items'}(
+                {locale === 'ru' ? 'Все товары продавца' : 'All seller items'} (
                 {listing.seller_total_listings || 0})
               </Link>
             </>
@@ -257,27 +274,28 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
         </div>
 
         {/* Trust & Safety */}
-        <div className="divider"></div>
-        <div className="text-xs text-base-content/60 space-y-1">
-          <div className="flex items-start gap-2">
-            <svg
-              className="w-4 h-4 mt-0.5 text-success"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-              />
-            </svg>
-            <span>
-              {locale === 'ru'
-                ? 'Все сделки защищены правилами платформы'
-                : 'All transactions are protected by platform rules'}
-            </span>
+        <div className="mt-4 pt-4 border-t border-base-200">
+          <div className="bg-success/5 rounded-lg p-3 border border-success/20">
+            <div className="flex items-center gap-2">
+              <svg
+                className="w-4 h-4 text-success flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+              <span className="text-xs text-base-content/70">
+                {locale === 'ru'
+                  ? 'Все сделки защищены правилами платформы'
+                  : 'All transactions are protected by platform rules'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
