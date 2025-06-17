@@ -67,16 +67,9 @@ func (s *MinioStorage) UploadFile(ctx context.Context, objectName string, reader
 
 	logger.Info().Str("filePath", filePath).Msg("File successfully uploaded to MinIO")
 
-	// Формируем URL в зависимости от bucket
-	var fileURL string
-	if s.minioBucketName == "chat-files" {
-		fileURL = fmt.Sprintf("/chat-files/%s", objectName)
-	} else {
-		fileURL = fmt.Sprintf("/listings/%s", objectName)
-	}
-
-	logger.Info().Str("fileURL", fileURL).Msg("URL for file")
-	return fileURL, nil
+	// Возвращаем полный URL, который уже сформирован в MinioClient
+	logger.Info().Str("fileURL", filePath).Msg("URL for file")
+	return filePath, nil
 }
 
 func (s *MinioStorage) DeleteFile(ctx context.Context, objectName string) error {

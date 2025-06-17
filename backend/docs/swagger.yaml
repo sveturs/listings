@@ -9583,6 +9583,42 @@ paths:
       summary: Get storefront rating summary
       tags:
       - reviews
+  /api/v1/reviews/upload-photos:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads photos that will be attached to a new review during creation
+      parameters:
+      - description: 'Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)'
+        in: formData
+        name: photos
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Photos uploaded successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_reviews_handler.PhotosResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Upload photos for new review
+      tags:
+      - reviews
   /api/v1/reviews/user/{id}:
     get:
       consumes:

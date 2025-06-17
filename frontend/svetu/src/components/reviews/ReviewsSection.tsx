@@ -3,12 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from 'next-intl';
-import {
-  useReviews,
-  useReviewStats,
-  useCanReview,
-  useCreateReview,
-} from '@/hooks/useReviews';
+import { useReviews, useReviewStats, useCanReview } from '@/hooks/useReviews';
 import { RatingStats } from './RatingStats';
 import { ReviewList } from './ReviewList';
 import { ReviewForm } from './ReviewForm';
@@ -40,13 +35,17 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   });
 
   // Fetch data
-  const { data: reviewsData, isLoading: reviewsLoading } = useReviews(filters);
-  const { data: statsData, isLoading: statsLoading } = useReviewStats(
-    entityType,
-    entityId
-  );
+  const {
+    data: reviewsData,
+    isLoading: reviewsLoading,
+    refetch: refetchReviews,
+  } = useReviews(filters);
+  const {
+    data: statsData,
+    isLoading: statsLoading,
+    refetch: refetchStats,
+  } = useReviewStats(entityType, entityId);
   const { data: canReviewData } = useCanReview(entityType, entityId, user?.id);
-  const createReviewMutation = useCreateReview();
 
   // Check if user can write a review
   const canWriteReview =
@@ -64,19 +63,11 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
     statsLoading,
   });
 
-  const handleCreateReview = async (reviewData: any) => {
-    try {
-      await createReviewMutation.mutateAsync({
-        ...reviewData,
-        entity_type: entityType,
-        entity_id: entityId,
-        storefront_id: storefrontId,
-        original_language: locale,
-      });
-      setShowReviewForm(false);
-    } catch (error) {
-      console.error('Failed to create review:', error);
-    }
+  const handleReviewSuccess = () => {
+    setShowReviewForm(false);
+    // Принудительно обновляем данные отзывов после успешного создания
+    refetchReviews();
+    refetchStats();
   };
 
   const handlePageChange = (page: number) => {
@@ -225,9 +216,11 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
               </button>
             </div>
             <ReviewForm
-              onSubmit={handleCreateReview}
+              entityType={entityType}
+              entityId={entityId}
+              storefrontId={storefrontId}
+              onSuccess={handleReviewSuccess}
               onCancel={() => setShowReviewForm(false)}
-              isSubmitting={createReviewMutation.isPending}
             />
           </div>
         </div>

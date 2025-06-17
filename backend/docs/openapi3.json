@@ -11303,6 +11303,67 @@
                 }
             }
         },
+        "/api/v1/reviews/upload-photos": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uploads photos that will be attached to a new review during creation",
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Upload photos for new review",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/postApiV1ReviewsUploadPhotos"
+                },
+                "responses": {
+                    "200": {
+                        "description": "Photos uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/internal_proj_reviews_handler.PhotosResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/reviews/user/{id}": {
             "get": {
                 "description": "Returns all reviews received by a specific user",
@@ -11834,24 +11895,7 @@
                     }
                 ],
                 "requestBody": {
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "photos": {
-                                        "description": "Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)",
-                                        "type": "string",
-                                        "format": "binary"
-                                    }
-                                },
-                                "required": [
-                                    "photos"
-                                ]
-                            }
-                        }
-                    },
-                    "required": true
+                    "$ref": "#/components/requestBodies/postApiV1ReviewsUploadPhotos"
                 },
                 "responses": {
                     "200": {
@@ -13319,6 +13363,26 @@
                     }
                 },
                 "description": "Attribute data",
+                "required": true
+            },
+            "postApiV1ReviewsUploadPhotos": {
+                "content": {
+                    "multipart/form-data": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "photos": {
+                                    "description": "Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)",
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "required": [
+                                "photos"
+                            ]
+                        }
+                    }
+                },
                 "required": true
             }
         },

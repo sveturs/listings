@@ -52,6 +52,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	protectedReviews.Post("/:id/vote", h.Review.VoteForReview)
 	protectedReviews.Post("/:id/response", h.Review.AddResponse)
 	protectedReviews.Post("/:id/photos", h.Review.UploadPhotos)
+	protectedReviews.Post("/upload-photos", h.Review.UploadPhotosForNewReview)
 	
 	// Новые endpoints для подтверждений и споров
 	protectedReviews.Post("/:id/confirm", h.Review.ConfirmReview)

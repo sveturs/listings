@@ -6,6 +6,7 @@ import { useLocale } from 'next-intl';
 import { formatDistanceToNow } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { RatingDisplay } from './RatingDisplay';
+import { ImageGallery } from './ImageGallery';
 import {
   useVoteReview,
   useConfirmReview,
@@ -40,6 +41,11 @@ export const ReviewList: React.FC<ReviewListProps> = ({
   const [showOnlyVerified, setShowOnlyVerified] = useState(false);
   const [disputeReviewId, setDisputeReviewId] = useState<number | null>(null);
   const [disputeReason, setDisputeReason] = useState('');
+
+  // Image gallery state
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const voteReviewMutation = useVoteReview();
   const confirmReviewMutation = useConfirmReview();
@@ -95,6 +101,16 @@ export const ReviewList: React.FC<ReviewListProps> = ({
     } else {
       onFilterChange({ min_rating: rating, max_rating: rating });
     }
+  };
+
+  const openImageGallery = (images: string[], initialIndex: number = 0) => {
+    setGalleryImages(images);
+    setGalleryInitialIndex(initialIndex);
+    setIsGalleryOpen(true);
+  };
+
+  const closeImageGallery = () => {
+    setIsGalleryOpen(false);
   };
 
   // Debug: log reviews data
@@ -362,9 +378,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                       <div
                         key={index}
                         className="relative group cursor-pointer"
-                        onClick={() => {
-                          // TODO: Open image modal
-                        }}
+                        onClick={() => openImageGallery(review.photos!, index)}
                       >
                         <Image
                           src={photo}
@@ -372,11 +386,11 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                           width={80}
                           height={80}
                           className="w-20 h-20 object-cover rounded-md transition-all duration-200
-                                   group-hover:brightness-75"
+                                   group-hover:brightness-75 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md bg-black/20">
                           <svg
-                            className="w-6 h-6 text-white"
+                            className="w-6 h-6 text-white drop-shadow-lg"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -389,6 +403,11 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                             />
                           </svg>
                         </div>
+                        {review.photos!.length > 1 && (
+                          <div className="absolute top-1 right-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded-md font-medium">
+                            {index + 1}/{review.photos!.length}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -699,6 +718,14 @@ export const ReviewList: React.FC<ReviewListProps> = ({
           ></div>
         </div>
       )}
+
+      {/* Image Gallery */}
+      <ImageGallery
+        images={galleryImages}
+        initialIndex={galleryInitialIndex}
+        isOpen={isGalleryOpen}
+        onClose={closeImageGallery}
+      />
     </div>
   );
 };

@@ -145,7 +145,55 @@ export const reviewApi = {
     return data.data;
   },
 
-  // Create a new review
+  // Create a draft review (step 1)
+  async createDraftReview(reviewData: CreateReviewRequest): Promise<Review> {
+    const authHeaders = await getAuthHeaders();
+    const csrfToken = await AuthService.getCsrfToken();
+
+    const response = await fetch(`${API_BASE}/reviews/draft`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+      },
+      credentials: 'include',
+      body: JSON.stringify(reviewData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create draft review');
+    }
+
+    const data = await response.json();
+    return data.data;
+  },
+
+  // Publish a draft review (step 2b)
+  async publishReview(reviewId: number): Promise<Review> {
+    const authHeaders = await getAuthHeaders();
+    const csrfToken = await AuthService.getCsrfToken();
+
+    const response = await fetch(`${API_BASE}/reviews/${reviewId}/publish`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders,
+        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to publish review');
+    }
+
+    const data = await response.json();
+    return data.data;
+  },
+
+  // Legacy: Create a new review (single step)
   async createReview(reviewData: CreateReviewRequest): Promise<Review> {
     const authHeaders = await getAuthHeaders();
 
@@ -170,6 +218,34 @@ export const reviewApi = {
 
     const data = await response.json();
     return data.data;
+  },
+
+  // Upload photos to existing review (step 2a)
+  async uploadReviewPhotos(reviewId: number, files: File[]): Promise<string[]> {
+    const authHeaders = await getAuthHeaders();
+    const csrfToken = await AuthService.getCsrfToken();
+
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append(`photos`, file);
+    });
+
+    const response = await fetch(`${API_BASE}/reviews/${reviewId}/photos`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders,
+        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+      },
+      credentials: 'include',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload photos');
+    }
+
+    const data = await response.json();
+    return data.data.photos;
   },
 
   // Update a review
@@ -345,6 +421,6 @@ export const reviewApi = {
     }
 
     const data = await response.json();
-    return data.data.urls;
+    return data.data.photos;
   },
 };

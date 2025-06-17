@@ -100,7 +100,67 @@ export const useCanReview = (
   });
 };
 
-// Create review mutation
+// Create draft review mutation (step 1)
+export const useCreateDraftReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (reviewData: CreateReviewRequest) =>
+      reviewApi.createDraftReview(reviewData),
+    onSuccess: (_data, _variables) => {
+      // Invalidate reviews list to show draft
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+  });
+};
+
+// Publish review mutation (step 2b)
+export const usePublishReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (reviewId: number) => reviewApi.publishReview(reviewId),
+    onSuccess: (data) => {
+      // Invalidate all related queries after publishing
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.stats(data.entity_type, data.entity_id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.canReview(data.entity_type, data.entity_id),
+      });
+
+      // Invalidate aggregated ratings if applicable
+      if (data.entity_origin_type && data.entity_origin_id) {
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.aggregatedRating(
+            data.entity_origin_type,
+            data.entity_origin_id
+          ),
+        });
+      }
+    },
+  });
+};
+
+// Upload photos to review mutation (step 2a)
+export const useUploadReviewPhotosToReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ reviewId, files }: { reviewId: number; files: File[] }) =>
+      reviewApi.uploadReviewPhotos(reviewId, files),
+    onSuccess: (data, variables) => {
+      // Invalidate specific review to show updated photos
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.review(variables.reviewId),
+      });
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+  });
+};
+
+// Legacy: Create review mutation (single step)
 export const useCreateReview = () => {
   const queryClient = useQueryClient();
 

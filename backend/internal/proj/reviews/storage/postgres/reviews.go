@@ -433,6 +433,18 @@ func (s *Storage) UpdateReview(ctx context.Context, review *models.Review) error
 	return err
 }
 
+func (s *Storage) UpdateReviewStatus(ctx context.Context, reviewId int, status string) error {
+	_, err := s.pool.Exec(ctx, `
+        UPDATE reviews 
+        SET status = $1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+    `,
+		status, reviewId,
+	)
+	return err
+}
+
 func (s *Storage) DeleteReview(ctx context.Context, id int) error {
 	_, err := s.pool.Exec(ctx, `DELETE FROM reviews WHERE id = $1`, id)
 	return err
