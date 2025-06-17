@@ -25,6 +25,8 @@ type Review struct {
 	UpdatedAt          time.Time `json:"updated_at"`
 	HelpfulVotes       int       `json:"helpful_votes"`
 	NotHelpfulVotes    int       `json:"not_helpful_votes"`
+	SellerConfirmed    bool      `json:"seller_confirmed"`
+	HasActiveDispute   bool      `json:"has_active_dispute"`
 	// поля для мультиязычности
 	OriginalLanguage string                       `json:"original_language"`
 	RawTranslations  interface{}                  `json:"-"`

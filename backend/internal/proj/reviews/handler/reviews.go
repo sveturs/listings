@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -416,16 +415,28 @@ func (h *ReviewHandler) GetStats(c *fiber.Ctx) error {
 // @Accept multipart/form-data
 // @Produce json
 // @Param id path int true "Review ID"
-// @Param photos formData file true "Photos to upload (max 10)"
+// @Param photos formData file true "Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)"
 // @Success 200 {object} utils.SuccessResponseSwag{data=PhotosResponse} "Photos uploaded successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/photos [post]
 func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
+	userId := c.Locals("user_id").(int)
 	reviewId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
+	}
+
+	// Получаем существующий отзыв для проверки авторства и количества фото
+	review, err := h.services.Review().GetReviewByID(c.Context(), reviewId)
+	if err != nil || review == nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.not_found")
+	}
+
+	// Проверяем, что пользователь является автором отзыва
+	if review.UserID != userId {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "reviews.error.not_author")
 	}
 
 	// Получаем загруженные файлы
@@ -439,14 +450,31 @@ func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.no_files")
 	}
 
-	if len(files) > 10 {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.max_files")
+	// Проверяем общее количество фото (существующие + новые)
+	existingPhotosCount := len(review.Photos)
+	totalPhotos := existingPhotosCount + len(files)
+	if totalPhotos > 5 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.total_max_files")
+	}
+
+	// Разрешенные форматы
+	allowedFormats := map[string]bool{
+		"image/jpeg": true,
+		"image/jpg":  true,
+		"image/png":  true,
+		"image/webp": true,
 	}
 
 	photoUrls := make([]string, 0)
 	for _, file := range files {
+		// Проверка размера файла (максимум 5MB)
+		if file.Size > 5*1024*1024 {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.file_too_large")
+		}
+
 		// Проверка типа файла
-		if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
+		contentType := file.Header.Get("Content-Type")
+		if !allowedFormats[contentType] {
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.invalid_type")
 		}
 
@@ -681,4 +709,167 @@ func (h *ReviewHandler) GetStorefrontRatingSummary(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, summary)
+}
+
+// GetUserAggregatedRating возвращает агрегированный рейтинг пользователя
+// @Summary Get user aggregated rating
+// @Description Returns aggregated rating for a user including breakdown by sources
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.AggregatedRating} "Aggregated rating"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid user ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/users/{id}/aggregated-rating [get]
+func (h *ReviewHandler) GetUserAggregatedRating(c *fiber.Ctx) error {
+	userID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_user_id")
+	}
+
+	rating, err := h.services.Review().GetUserAggregatedRating(c.Context(), userID)
+	if err != nil {
+		log.Printf("Error getting user aggregated rating: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.aggregated_rating.error.fetch_failed")
+	}
+
+	return utils.SuccessResponse(c, rating)
+}
+
+// GetStorefrontAggregatedRating возвращает агрегированный рейтинг магазина
+// @Summary Get storefront aggregated rating
+// @Description Returns aggregated rating for a storefront including breakdown by sources
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Storefront ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.AggregatedRating} "Aggregated rating"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid storefront ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/storefronts/{id}/aggregated-rating [get]
+func (h *ReviewHandler) GetStorefrontAggregatedRating(c *fiber.Ctx) error {
+	storefrontID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_storefront_id")
+	}
+
+	rating, err := h.services.Review().GetStorefrontAggregatedRating(c.Context(), storefrontID)
+	if err != nil {
+		log.Printf("Error getting storefront aggregated rating: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.aggregated_rating.error.fetch_failed")
+	}
+
+	return utils.SuccessResponse(c, rating)
+}
+
+// CanReview проверяет может ли пользователь оставить отзыв
+// @Summary Check if user can review entity
+// @Description Checks if the current user can leave a review for the specified entity
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param type path string true "Entity type (listing, user, storefront)"
+// @Param id path int true "Entity ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.CanReviewResponse} "Permission check result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/can-review/{type}/{id} [get]
+func (h *ReviewHandler) CanReview(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+	entityType := c.Params("type")
+	entityID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_entity_id")
+	}
+
+	// Валидация типа сущности
+	validTypes := map[string]bool{"listing": true, "user": true, "storefront": true}
+	if !validTypes[entityType] {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_entity_type")
+	}
+
+	response, err := h.services.Review().CanUserReviewEntity(c.Context(), userID, entityType, entityID)
+	if err != nil {
+		log.Printf("Error checking review permission: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.permission.error.check_failed")
+	}
+
+	return utils.SuccessResponse(c, response)
+}
+
+// ConfirmReview подтверждает отзыв продавцом
+// @Summary Confirm review
+// @Description Allows seller to confirm or dispute a review
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Review ID"
+// @Param request body models.CreateReviewConfirmationRequest true "Confirmation request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ReviewMessageResponse} "Review confirmed successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 403 {object} utils.ErrorResponseSwag "Not authorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/{id}/confirm [post]
+func (h *ReviewHandler) ConfirmReview(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+	reviewID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
+	}
+
+	var req models.CreateReviewConfirmationRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_request")
+	}
+
+	err = h.services.Review().ConfirmReview(c.Context(), userID, reviewID, &req)
+	if err != nil {
+		log.Printf("Error confirming review: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.confirm.error.failed")
+	}
+
+	return utils.SuccessResponse(c, ReviewMessageResponse{
+		Success: true,
+		Message: "reviews.confirm.success",
+	})
+}
+
+// DisputeReview создает спор по отзыву
+// @Summary Dispute review
+// @Description Creates a dispute for a review
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Review ID"
+// @Param request body models.CreateReviewDisputeRequest true "Dispute request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ReviewMessageResponse} "Dispute created successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/{id}/dispute [post]
+func (h *ReviewHandler) DisputeReview(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+	reviewID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
+	}
+
+	var req models.CreateReviewDisputeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_request")
+	}
+
+	err = h.services.Review().DisputeReview(c.Context(), userID, reviewID, &req)
+	if err != nil {
+		log.Printf("Error creating dispute: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.dispute.error.failed")
+	}
+
+	return utils.SuccessResponse(c, ReviewMessageResponse{
+		Success: true,
+		Message: "reviews.dispute.success.created",
+	})
 }

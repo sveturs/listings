@@ -895,3 +895,309 @@ func (db *Database) CanAddContact(ctx context.Context, userID, targetUserID int)
 func (db *Database) AreContacts(ctx context.Context, userID1, userID2 int) (bool, error) {
 	return db.marketplaceDB.AreContacts(ctx, userID1, userID2)
 }
+
+// GetChatActivityStats получает статистику активности в чате между покупателем и продавцом
+func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, sellerID int, listingID int) (*models.ChatActivityStats, error) {
+	stats := &models.ChatActivityStats{}
+
+	// Проверяем наличие чата и получаем статистику
+	query := `
+		WITH chat_info AS (
+			SELECT 
+				c.id as chat_id,
+				c.created_at as chat_created
+			FROM marketplace_chats c
+			WHERE c.buyer_id = $1 
+				AND c.seller_id = $2 
+				AND c.listing_id = $3
+			LIMIT 1
+		),
+		message_stats AS (
+			SELECT 
+				COUNT(*) as total_messages,
+				COUNT(*) FILTER (WHERE m.sender_id = $1) as buyer_messages,
+				COUNT(*) FILTER (WHERE m.sender_id = $2) as seller_messages,
+				MIN(m.created_at) as first_message_date,
+				MAX(m.created_at) as last_message_date
+			FROM marketplace_messages m
+			INNER JOIN chat_info ci ON m.chat_id = ci.chat_id
+		)
+		SELECT 
+			CASE WHEN ci.chat_id IS NOT NULL THEN true ELSE false END as chat_exists,
+			COALESCE(ms.total_messages, 0) as total_messages,
+			COALESCE(ms.buyer_messages, 0) as buyer_messages,
+			COALESCE(ms.seller_messages, 0) as seller_messages,
+			ms.first_message_date,
+			ms.last_message_date,
+			CASE 
+				WHEN ms.first_message_date IS NOT NULL 
+				THEN EXTRACT(DAY FROM NOW() - ms.first_message_date)::int 
+				ELSE 0 
+			END as days_since_first_msg,
+			CASE 
+				WHEN ms.last_message_date IS NOT NULL 
+				THEN EXTRACT(DAY FROM NOW() - ms.last_message_date)::int 
+				ELSE 0 
+			END as days_since_last_msg
+		FROM chat_info ci
+		LEFT JOIN message_stats ms ON true
+	`
+
+	row := db.pool.QueryRow(ctx, query, buyerID, sellerID, listingID)
+	
+	err := row.Scan(
+		&stats.ChatExists,
+		&stats.TotalMessages,
+		&stats.BuyerMessages,
+		&stats.SellerMessages,
+		&stats.FirstMessageDate,
+		&stats.LastMessageDate,
+		&stats.DaysSinceFirstMsg,
+		&stats.DaysSinceLastMsg,
+	)
+
+	if err == pgx.ErrNoRows {
+		// Чат не существует, возвращаем пустую статистику
+		return stats, nil
+	}
+
+	return stats, err
+}
+
+// GetUserAggregatedRating получает агрегированный рейтинг пользователя
+func (db *Database) GetUserAggregatedRating(ctx context.Context, userID int) (*models.UserAggregatedRating, error) {
+	rating := &models.UserAggregatedRating{UserID: userID}
+
+	query := `
+		SELECT 
+			total_reviews, average_rating, direct_reviews, listing_reviews, 
+			storefront_reviews, verified_reviews, rating_1, rating_2, rating_3, 
+			rating_4, rating_5, recent_rating, recent_reviews, last_review_at
+		FROM user_ratings
+		WHERE user_id = $1
+	`
+
+	row := db.pool.QueryRow(ctx, query, userID)
+	err := row.Scan(
+		&rating.TotalReviews, &rating.AverageRating, &rating.DirectReviews,
+		&rating.ListingReviews, &rating.StorefrontReviews, &rating.VerifiedReviews,
+		&rating.Rating1, &rating.Rating2, &rating.Rating3,
+		&rating.Rating4, &rating.Rating5, &rating.RecentRating,
+		&rating.RecentReviews, &rating.LastReviewAt,
+	)
+
+	if err == pgx.ErrNoRows {
+		// Если нет данных в материализованном представлении, возвращаем пустой рейтинг
+		return rating, nil
+	}
+
+	return rating, err
+}
+
+// GetStorefrontAggregatedRating получает агрегированный рейтинг магазина
+func (db *Database) GetStorefrontAggregatedRating(ctx context.Context, storefrontID int) (*models.StorefrontAggregatedRating, error) {
+	rating := &models.StorefrontAggregatedRating{StorefrontID: storefrontID}
+
+	query := `
+		SELECT 
+			total_reviews, average_rating, direct_reviews, listing_reviews, 
+			verified_reviews, rating_1, rating_2, rating_3, rating_4, rating_5, 
+			recent_rating, recent_reviews, last_review_at, owner_id
+		FROM storefront_ratings
+		WHERE storefront_id = $1
+	`
+
+	row := db.pool.QueryRow(ctx, query, storefrontID)
+	err := row.Scan(
+		&rating.TotalReviews, &rating.AverageRating, &rating.DirectReviews,
+		&rating.ListingReviews, &rating.VerifiedReviews,
+		&rating.Rating1, &rating.Rating2, &rating.Rating3,
+		&rating.Rating4, &rating.Rating5, &rating.RecentRating,
+		&rating.RecentReviews, &rating.LastReviewAt, &rating.OwnerID,
+	)
+
+	if err == pgx.ErrNoRows {
+		return rating, nil
+	}
+
+	return rating, err
+}
+
+// RefreshRatingViews обновляет материализованные представления
+func (db *Database) RefreshRatingViews(ctx context.Context) error {
+	_, err := db.pool.Exec(ctx, "SELECT rebuild_all_ratings()")
+	return err
+}
+
+// CreateReviewConfirmation создает подтверждение отзыва
+func (db *Database) CreateReviewConfirmation(ctx context.Context, confirmation *models.ReviewConfirmation) error {
+	query := `
+		INSERT INTO review_confirmations 
+		(review_id, confirmed_by, confirmation_status, notes)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, confirmed_at
+	`
+
+	row := db.pool.QueryRow(ctx, query,
+		confirmation.ReviewID, confirmation.ConfirmedBy,
+		confirmation.ConfirmationStatus, confirmation.Notes,
+	)
+
+	return row.Scan(&confirmation.ID, &confirmation.ConfirmedAt)
+}
+
+// GetReviewConfirmation получает подтверждение отзыва
+func (db *Database) GetReviewConfirmation(ctx context.Context, reviewID int) (*models.ReviewConfirmation, error) {
+	confirmation := &models.ReviewConfirmation{}
+
+	query := `
+		SELECT id, review_id, confirmed_by, confirmation_status, confirmed_at, notes
+		FROM review_confirmations
+		WHERE review_id = $1
+	`
+
+	row := db.pool.QueryRow(ctx, query, reviewID)
+	err := row.Scan(
+		&confirmation.ID, &confirmation.ReviewID, &confirmation.ConfirmedBy,
+		&confirmation.ConfirmationStatus, &confirmation.ConfirmedAt, &confirmation.Notes,
+	)
+
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+
+	return confirmation, err
+}
+
+// CreateReviewDispute создает спор по отзыву
+func (db *Database) CreateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error {
+	query := `
+		INSERT INTO review_disputes 
+		(review_id, disputed_by, dispute_reason, dispute_description, status)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, created_at, updated_at
+	`
+
+	row := db.pool.QueryRow(ctx, query,
+		dispute.ReviewID, dispute.DisputedBy, dispute.DisputeReason,
+		dispute.DisputeDescription, dispute.Status,
+	)
+
+	err := row.Scan(&dispute.ID, &dispute.CreatedAt, &dispute.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
+	// Обновляем флаг в таблице reviews
+	_, err = db.pool.Exec(ctx,
+		"UPDATE reviews SET has_active_dispute = true WHERE id = $1",
+		dispute.ReviewID,
+	)
+
+	return err
+}
+
+// GetReviewDispute получает спор по отзыву
+func (db *Database) GetReviewDispute(ctx context.Context, reviewID int) (*models.ReviewDispute, error) {
+	dispute := &models.ReviewDispute{}
+
+	query := `
+		SELECT id, review_id, disputed_by, dispute_reason, dispute_description,
+			   status, admin_id, admin_notes, created_at, updated_at, resolved_at
+		FROM review_disputes
+		WHERE review_id = $1 AND status NOT IN ('resolved_keep_review', 'resolved_remove_review', 'cancelled')
+		ORDER BY created_at DESC
+		LIMIT 1
+	`
+
+	row := db.pool.QueryRow(ctx, query, reviewID)
+	err := row.Scan(
+		&dispute.ID, &dispute.ReviewID, &dispute.DisputedBy,
+		&dispute.DisputeReason, &dispute.DisputeDescription, &dispute.Status,
+		&dispute.AdminID, &dispute.AdminNotes, &dispute.CreatedAt,
+		&dispute.UpdatedAt, &dispute.ResolvedAt,
+	)
+
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+
+	return dispute, err
+}
+
+// UpdateReviewDispute обновляет спор
+func (db *Database) UpdateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error {
+	query := `
+		UPDATE review_disputes
+		SET status = $2, admin_id = $3, admin_notes = $4, 
+			updated_at = NOW(), resolved_at = $5
+		WHERE id = $1
+	`
+
+	_, err := db.pool.Exec(ctx, query,
+		dispute.ID, dispute.Status, dispute.AdminID,
+		dispute.AdminNotes, dispute.ResolvedAt,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// Если спор разрешен, обновляем флаг в reviews
+	if dispute.Status == "resolved_keep_review" || 
+	   dispute.Status == "resolved_remove_review" || 
+	   dispute.Status == "cancelled" {
+		_, err = db.pool.Exec(ctx,
+			"UPDATE reviews SET has_active_dispute = false WHERE id = $1",
+			dispute.ReviewID,
+		)
+	}
+
+	return err
+}
+
+// CanUserReviewEntity проверяет может ли пользователь оставить отзыв
+func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityType string, entityID int) (*models.CanReviewResponse, error) {
+	response := &models.CanReviewResponse{
+		CanReview: true,
+	}
+
+	// Проверяем существующий отзыв
+	var existingReviewID *int
+	query := `
+		SELECT id FROM reviews 
+		WHERE user_id = $1 AND entity_type = $2 AND entity_id = $3 
+		AND status != 'deleted'
+		LIMIT 1
+	`
+
+	err := db.pool.QueryRow(ctx, query, userID, entityType, entityID).Scan(&existingReviewID)
+	if err != nil && err != pgx.ErrNoRows {
+		return nil, err
+	}
+
+	if existingReviewID != nil {
+		response.CanReview = false
+		response.HasExistingReview = true
+		response.ExistingReviewID = existingReviewID
+		response.Reason = "Вы уже оставили отзыв на этот объект"
+		return response, nil
+	}
+
+	// Для отзывов на товары проверяем владельца
+	if entityType == "listing" {
+		var ownerID int
+		err := db.pool.QueryRow(ctx,
+			"SELECT user_id FROM marketplace_listings WHERE id = $1",
+			entityID,
+		).Scan(&ownerID)
+
+		if err == nil && ownerID == userID {
+			response.CanReview = false
+			response.Reason = "Вы не можете оставить отзыв на свой товар"
+			return response, nil
+		}
+	}
+
+	return response, nil
+}
