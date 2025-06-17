@@ -13,6 +13,7 @@ import SellerInfo from '@/components/marketplace/listing/SellerInfo';
 import ListingActions from '@/components/marketplace/listing/ListingActions';
 import SimilarListings from '@/components/marketplace/listing/SimilarListings';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
+import { ReviewsSection } from '@/components/reviews';
 
 interface User {
   id: number;
@@ -525,6 +526,17 @@ export default function ListingPage({ params }: Props) {
                       </>
                     );
                   })()}
+              </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="card bg-base-200">
+              <div className="card-body">
+                <ReviewsSection
+                  entityType="listing"
+                  entityId={listing.id}
+                  sellerId={listing.user_id}
+                />
               </div>
             </div>
 

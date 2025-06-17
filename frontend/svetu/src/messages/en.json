@@ -849,8 +849,10 @@
         "parse_form": "Failed to process form data",
         "no_files": "No files selected",
         "max_files": "Maximum 10 photos allowed",
-        "invalid_type": "Only image files are allowed",
-        "update_failed": "Failed to upload photos"
+        "invalid_type": "Invalid file format. Only JPG, PNG and WebP are allowed",
+        "update_failed": "Failed to upload photos",
+        "file_too_large": "File size exceeds 5MB limit",
+        "total_max_files": "Maximum 5 photos per review allowed"
       },
       "success": {
         "uploaded": "Photos uploaded successfully"
@@ -875,7 +877,8 @@
       "listing_not_found": "Listing not found",
       "invalid_entity_id": "Invalid entity ID",
       "invalid_user_id": "Invalid user ID",
-      "invalid_storefront_id": "Invalid storefront ID"
+      "invalid_storefront_id": "Invalid storefront ID",
+      "not_author": "You can only edit your own reviews"
     }
   },
   "create_listing": {
