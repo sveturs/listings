@@ -9013,64 +9013,7 @@ export interface paths {
       };
     };
     put?: never;
-    /**
-     * Create a new review
-     * @description Creates a new review for a listing
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Review data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CreateReviewRequest'];
-        };
-      };
-      responses: {
-        /** @description Created review */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Review'];
-            };
-          };
-        };
-        /** @description Invalid input */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Listing not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -9441,6 +9384,77 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/reviews/{id}/publish': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Publish a draft review
+     * @description Publishes a draft review and sends notifications (step 2 of 2)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Review ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Published review */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.Review'];
+            };
+          };
+        };
+        /** @description Invalid review ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Review not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/reviews/{id}/response': {
     parameters: {
       query?: never;
@@ -9651,6 +9665,79 @@ export interface paths {
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/reviews/draft': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create a draft review
+     * @description Creates a new draft review with text content (step 1 of 2)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Review data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CreateReviewRequest'];
+        };
+      };
+      responses: {
+        /** @description Created draft review */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.Review'];
+            };
+          };
+        };
+        /** @description Invalid input */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Listing not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;

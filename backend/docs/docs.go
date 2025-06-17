@@ -9361,73 +9361,6 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Creates a new review for a listing",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "reviews"
-                ],
-                "summary": "Create a new review",
-                "parameters": [
-                    {
-                        "description": "Review data",
-                        "name": "review",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/backend_internal_domain_models.CreateReviewRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Created review",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/backend_internal_domain_models.Review"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid input",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    },
-                    "404": {
-                        "description": "Listing not found",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    }
-                }
             }
         },
         "/api/v1/reviews/can-review/{type}/{id}": {
@@ -9485,6 +9418,75 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid parameters",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reviews/draft": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new draft review with text content (step 1 of 2)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Create a draft review",
+                "parameters": [
+                    {
+                        "description": "Review data",
+                        "name": "review",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.CreateReviewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Created draft review",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.Review"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Listing not found",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -10348,6 +10350,73 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reviews/{id}/publish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Publishes a draft review and sends notifications (step 2 of 2)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Publish a draft review",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Published review",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.Review"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid review ID",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Review not found",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }

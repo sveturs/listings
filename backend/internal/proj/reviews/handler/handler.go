@@ -46,12 +46,18 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Get("/api/v1/storefronts/:id/rating", mw.AuthRequiredJWT, mw.CSRFProtection(), h.Review.GetStorefrontRatingSummary)
 
 	protectedReviews := app.Group("/api/v1/reviews", mw.AuthRequiredJWT, mw.CSRFProtection())
-	protectedReviews.Post("/", h.Review.CreateReview)
+	// Двухэтапный процесс создания отзывов
+	protectedReviews.Post("/draft", h.Review.CreateDraftReview)      // Этап 1: создание черновика
+	protectedReviews.Post("/:id/photos", h.Review.UploadPhotos)      // Этап 2a: загрузка фотографий
+	protectedReviews.Post("/:id/publish", h.Review.PublishReview)    // Этап 2b: публикация отзыва
+	
+	// Управление отзывами
 	protectedReviews.Put("/:id", h.Review.UpdateReview)
 	protectedReviews.Delete("/:id", h.Review.DeleteReview)
 	protectedReviews.Post("/:id/vote", h.Review.VoteForReview)
 	protectedReviews.Post("/:id/response", h.Review.AddResponse)
-	protectedReviews.Post("/:id/photos", h.Review.UploadPhotos)
+	
+	// Временная загрузка фотографий (для старого API)
 	protectedReviews.Post("/upload-photos", h.Review.UploadPhotosForNewReview)
 	
 	// Новые endpoints для подтверждений и споров

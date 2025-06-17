@@ -6318,50 +6318,6 @@ paths:
       summary: Get reviews list
       tags:
         - reviews
-    post:
-      description: Creates a new review for a listing
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/backend_internal_domain_models.CreateReviewRequest"
-        description: Review data
-        required: true
-      responses:
-        "200":
-          description: Created review
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/backend_internal_domain_models.Review"
-                    type: object
-        "400":
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-        "404":
-          description: Listing not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-      security:
-        - BearerAuth: []
-      summary: Create a new review
-      tags:
-        - reviews
   "/api/v1/reviews/{id}":
     delete:
       description: Deletes a review by its author
@@ -6623,6 +6579,51 @@ paths:
       summary: Upload review photos
       tags:
         - reviews
+  "/api/v1/reviews/{id}/publish":
+    post:
+      description: Publishes a draft review and sends notifications (step 2 of 2)
+      parameters:
+        - description: Review ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Published review
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.Review"
+                    type: object
+        "400":
+          description: Invalid review ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Review not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Publish a draft review
+      tags:
+        - reviews
   "/api/v1/reviews/{id}/response":
     post:
       description: Adds a response from the listing owner to a review
@@ -6770,6 +6771,51 @@ paths:
       security:
         - BearerAuth: []
       summary: Check if user can review entity
+      tags:
+        - reviews
+  /api/v1/reviews/draft:
+    post:
+      description: Creates a new draft review with text content (step 1 of 2)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_domain_models.CreateReviewRequest"
+        description: Review data
+        required: true
+      responses:
+        "200":
+          description: Created draft review
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.Review"
+                    type: object
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Create a draft review
       tags:
         - reviews
   "/api/v1/reviews/rating/{type}/{id}":
