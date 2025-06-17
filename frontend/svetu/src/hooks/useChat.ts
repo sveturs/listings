@@ -12,6 +12,7 @@ import {
   deleteAttachment,
   removeUploadingFile,
   setUserTyping,
+  clearAllData,
   selectChats,
   selectCurrentChat,
   selectUnreadCount,
@@ -19,6 +20,7 @@ import {
   selectError,
   selectOnlineUsers,
   selectUploadingFiles,
+  selectPendingChatId,
 } from '@/store/slices/chatSlice';
 import type {
   MarketplaceChat,
@@ -37,6 +39,7 @@ export function useChat() {
   const error = useAppSelector(selectError);
   const onlineUsers = useAppSelector(selectOnlineUsers);
   const uploadingFiles = useAppSelector(selectUploadingFiles);
+  const pendingChatId = useAppSelector(selectPendingChatId);
 
   // Actions
   const loadChatsAction = useCallback(
@@ -124,6 +127,10 @@ export function useChat() {
     dispatch({ type: 'chat/closeWebSocket' });
   }, [dispatch]);
 
+  const clearChatData = useCallback(() => {
+    dispatch(clearAllData());
+  }, [dispatch]);
+
   // Additional selectors for specific chat data
   const messages = useAppSelector((state) => state.chat.messages);
   const typingUsers = useAppSelector((state) => state.chat.typingUsers);
@@ -147,6 +154,7 @@ export function useChat() {
     userLastSeen,
     hasMoreChats,
     messagesLoaded,
+    pendingChatId,
 
     // Actions
     loadChats: loadChatsAction,
@@ -162,6 +170,7 @@ export function useChat() {
     setUserTyping: setUserTypingAction,
     initWebSocket,
     closeWebSocket,
+    clearChatData,
 
     // Helpers
     getMessages: (chatId?: number) => {

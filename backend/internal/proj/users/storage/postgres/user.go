@@ -64,6 +64,18 @@ func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) 
 
 	user.ID = userID
 	user.Provider = "google"
+
+	// Создаем настройки приватности для нового пользователя OAuth
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO user_privacy_settings (user_id)
+		VALUES ($1)
+		ON CONFLICT (user_id) DO NOTHING
+	`, userID)
+	if err != nil {
+		s.logger.Info("Failed to create privacy settings for OAuth user %d: %v", userID, err)
+		// Не прерываем процесс, так как пользователь уже создан
+	}
+
 	return user, nil
 }
 func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -120,6 +132,18 @@ func (s *Storage) CreateUser(ctx context.Context, user *models.User) (*models.Us
 		}
 		return nil, err
 	}
+
+	// Создаем настройки приватности для нового пользователя
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO user_privacy_settings (user_id)
+		VALUES ($1)
+		ON CONFLICT (user_id) DO NOTHING
+	`, user.ID)
+	if err != nil {
+		s.logger.Info("Failed to create privacy settings for user %d: %v", user.ID, err)
+		// Не прерываем процесс, так как пользователь уже создан
+	}
+
 	return user, nil
 }
 

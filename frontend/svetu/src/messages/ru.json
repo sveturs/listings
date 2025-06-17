@@ -559,6 +559,8 @@
     "contactActive": "Активен",
     "tryDifferentSearch": "Попробуйте изменить поисковый запрос",
     "addContactsMessage": "Добавьте контакты для быстрого общения",
+    "loginRequired": "Требуется вход",
+    "loginToViewChats": "Пожалуйста, войдите в систему для просмотра и отправки сообщений",
     "online": "в сети",
     "lastSeen": "был(а) {time}",
     "lastSeenJustNow": "только что",

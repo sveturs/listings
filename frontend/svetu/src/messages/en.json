@@ -549,6 +549,8 @@
     "contactActive": "Active",
     "tryDifferentSearch": "Try a different search query",
     "addContactsMessage": "Add contacts for quick communication",
+    "loginRequired": "Sign in required",
+    "loginToViewChats": "Please sign in to view and send messages",
     "online": "online",
     "lastSeen": "last seen {time}",
     "lastSeenJustNow": "just now",

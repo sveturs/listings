@@ -37,6 +37,9 @@ interface ChatState {
   // Загрузка файлов
   uploadingFiles: Record<string, UploadingFile>; // fileId -> uploadingFile
   attachments: Record<number, ChatAttachment[]>; // messageId -> attachments
+
+  // Флаг для автовыбора нового чата
+  pendingChatId: number | null; // ID чата который нужно выбрать после загрузки
 }
 
 const initialState: ChatState = {
@@ -58,6 +61,7 @@ const initialState: ChatState = {
   messagesLoaded: {},
   uploadingFiles: {},
   attachments: {},
+  pendingChatId: null,
 };
 
 // Async thunks
@@ -91,8 +95,25 @@ export const loadMessages = createAsyncThunk(
 
 export const sendMessage = createAsyncThunk(
   'chat/sendMessage',
-  async (payload: SendMessagePayload) => {
+  async (payload: SendMessagePayload, { dispatch, getState }) => {
     const response = await chatService.sendMessage(payload);
+
+    // Если это новый чат (нет chat_id в payload), загружаем список чатов
+    if (!payload.chat_id && response.chat_id) {
+      const state = getState() as RootState;
+      const existingChat = state.chat.chats.find(
+        (c) => c.id === response.chat_id
+      );
+
+      // Если чата еще нет в списке, загружаем обновленный список
+      if (!existingChat) {
+        // Устанавливаем pendingChatId перед загрузкой чатов
+        dispatch(chatSlice.actions.setPendingChatId(response.chat_id));
+        // Загружаем список чатов
+        await dispatch(loadChats(1));
+      }
+    }
+
     return response;
   }
 );
@@ -291,6 +312,21 @@ const chatSlice = createSlice({
       state.currentUserId = action.payload;
     },
 
+    setPendingChatId: (state, action: PayloadAction<number | null>) => {
+      state.pendingChatId = action.payload;
+    },
+
+    // Очистка всех данных при логауте
+    clearAllData: (state) => {
+      // Закрываем WebSocket если он открыт
+      if (state.ws) {
+        state.ws.close();
+      }
+
+      // Возвращаем состояние к начальному
+      Object.assign(state, initialState);
+    },
+
     updateMessageAttachments: (
       state,
       action: PayloadAction<{
@@ -462,6 +498,15 @@ const chatSlice = createSlice({
           total: newUnreadCount,
         });
         state.unreadCount = newUnreadCount;
+
+        // Если есть pendingChatId, выбираем этот чат
+        if (state.pendingChatId) {
+          const newChat = state.chats.find((c) => c.id === state.pendingChatId);
+          if (newChat) {
+            state.currentChat = newChat;
+            state.pendingChatId = null;
+          }
+        }
       })
       .addCase(loadChats.rejected, (state, action) => {
         state.isLoading = false;
@@ -529,6 +574,7 @@ const chatSlice = createSlice({
         state.chats[chatIndex].last_message = message;
         state.chats[chatIndex].last_message_at = message.created_at;
       }
+      // pendingChatId уже установлен в thunk через setPendingChatId
     });
 
     // markMessagesAsRead
@@ -623,11 +669,13 @@ export const {
   selectLatestChat,
   setWebSocket,
   setUserTyping,
+  clearAllData,
   addUploadingFile,
   updateUploadProgress,
   setUploadError,
   removeUploadingFile,
   setCurrentUserId,
+  setPendingChatId,
   updateMessageAttachments,
   handleNewMessage,
   handleMessageRead,
@@ -651,5 +699,7 @@ export const selectUploadingFiles = (state: RootState) =>
   state.chat.uploadingFiles;
 export const selectCurrentUserId = (state: RootState) =>
   state.chat.currentUserId;
+export const selectPendingChatId = (state: RootState) =>
+  state.chat.pendingChatId;
 
 export default chatSlice.reducer;

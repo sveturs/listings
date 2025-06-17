@@ -8,6 +8,7 @@ import Header from '@/components/Header';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ReduxProvider } from '@/components/ReduxProvider';
 import WebSocketManager from '@/components/WebSocketManager';
+import AuthStateManager from '@/components/AuthStateManager';
 import '../globals.css';
 
 const geistSans = Geist({
@@ -67,6 +68,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ReduxProvider>
             <AuthProvider>
+              <AuthStateManager />
               <WebSocketManager />
               <Header />
               <main className="min-h-screen pt-16">{children}</main>
