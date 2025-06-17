@@ -64,7 +64,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[101] flex items-center justify-center bg-base-300/20 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[101] flex items-center justify-center bg-base-300/5 backdrop-blur-sm">
       {/* Background overlay */}
       <div
         className="absolute inset-0 cursor-pointer"
@@ -73,9 +73,9 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
       />
 
       {/* Gallery container */}
-      <div className="relative max-w-5xl max-h-[90vh] w-full mx-4 bg-base-100 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative max-w-5xl max-h-[90vh] w-full mx-4 bg-base-100/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden">
         {/* Header with controls */}
-        <div className="flex items-center justify-between p-4 bg-base-100 border-b border-base-200">
+        <div className="flex items-center justify-between p-4 bg-base-100/20 backdrop-blur-sm border-b border-base-200/20">
           <div className="flex items-center gap-4">
             <div className="text-base-content text-sm font-medium">
               {locale === 'ru' ? 'Фотография' : 'Photo'} {currentIndex + 1}{' '}
@@ -154,22 +154,18 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
 
         {/* Main image container */}
         <div
-          className="relative bg-base-200/10 backdrop-blur-md p-6"
+          className="relative bg-transparent p-6"
           style={{ height: 'calc(90vh - 160px)' }}
         >
-          <div className="relative w-full h-full bg-base-100 rounded-xl shadow-inner">
-            <div className="absolute inset-2 flex items-center justify-center">
-              <div className="relative w-full h-full">
-                <Image
-                  src={images[currentIndex]}
-                  alt={`Review photo ${currentIndex + 1}`}
-                  fill
-                  className="object-contain rounded-lg"
-                  sizes="(max-width: 1200px) 100vw, 1200px"
-                  priority
-                />
-              </div>
-            </div>
+          <div className="relative w-full h-full flex items-center justify-center">
+            <Image
+              src={images[currentIndex]}
+              alt={`Review photo ${currentIndex + 1}`}
+              fill
+              className="object-contain rounded-lg drop-shadow-2xl"
+              sizes="(max-width: 1200px) 100vw, 1200px"
+              priority
+            />
           </div>
 
           {/* Large navigation arrows for easier clicking */}
@@ -223,7 +219,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         </div>
 
         {/* Footer with thumbnails and close button */}
-        <div className="px-4 pt-4 pb-12 bg-base-100 border-t border-base-200">
+        <div className="px-4 pt-4 pb-12 bg-transparent">
           {images.length > 1 && (
             <div className="flex justify-center gap-2 mb-16 max-w-full overflow-x-auto pb-2">
               {images.map((image, index) => (
