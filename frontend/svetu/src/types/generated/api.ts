@@ -9236,6 +9236,149 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/reviews/{id}/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirm review
+     * @description Allows seller to confirm or dispute a review
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Review ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Confirmation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CreateReviewConfirmationRequest'];
+        };
+      };
+      responses: {
+        /** @description Review confirmed successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_reviews_handler.ReviewMessageResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not authorized */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/reviews/{id}/dispute': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Dispute review
+     * @description Creates a dispute for a review
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Review ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Dispute request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CreateReviewDisputeRequest'];
+        };
+      };
+      responses: {
+        /** @description Dispute created successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_reviews_handler.ReviewMessageResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/reviews/{id}/photos': {
     parameters: {
       query?: never;
@@ -9264,7 +9407,7 @@ export interface paths {
           'multipart/form-data': {
             /**
              * Format: binary
-             * @description Photos to upload (max 10)
+             * @description Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)
              */
             photos: string;
           };
@@ -9454,6 +9597,70 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/reviews/can-review/{type}/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check if user can review entity
+     * @description Checks if the current user can leave a review for the specified entity
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Entity type (listing, user, storefront) */
+          type: string;
+          /** @description Entity ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Permission check result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CanReviewResponse'];
+            };
+          };
+        };
+        /** @description Invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -10202,6 +10409,68 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/{id}/aggregated-rating': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront aggregated rating
+     * @description Returns aggregated rating for a storefront including breakdown by sources
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Aggregated rating */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.AggregatedRating'];
+            };
+          };
+        };
+        /** @description Invalid storefront ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts/{id}/import-sources': {
     parameters: {
       query?: never;
@@ -10363,6 +10632,68 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/users/{id}/aggregated-rating': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user aggregated rating
+     * @description Returns aggregated rating for a user including breakdown by sources
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description User ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Aggregated rating */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.AggregatedRating'];
+            };
+          };
+        };
+        /** @description Invalid user ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -10914,6 +11245,22 @@ export interface components {
       id?: number;
       notes?: string;
     };
+    'backend_internal_domain_models.AggregatedRating': {
+      average?: number;
+      breakdown?: components['schemas']['backend_internal_domain_models.RatingBreakdown'];
+      distribution?: {
+        [key: string]: number;
+      };
+      entity_id?: number;
+      entity_type?: string;
+      last_review_at?: string;
+      recent_rating?: number;
+      recent_reviews?: number;
+      /** @description up, down, stable */
+      recent_trend?: string;
+      total_reviews?: number;
+      verified_percentage?: number;
+    };
     'backend_internal_domain_models.AttachGroupToCategoryRequest': {
       collapsed_by_default?: boolean;
       component_id?: number;
@@ -10958,6 +11305,16 @@ export interface components {
       status?: string;
       type?: string;
       user_id?: number;
+    };
+    'backend_internal_domain_models.BreakdownItem': {
+      average?: number;
+      count?: number;
+    };
+    'backend_internal_domain_models.CanReviewResponse': {
+      can_review?: boolean;
+      existing_review_id?: number;
+      has_existing_review?: boolean;
+      reason?: string;
     };
     'backend_internal_domain_models.CategoryAttribute': {
       attribute_type?: string;
@@ -11088,6 +11445,21 @@ export interface components {
       content: string;
       listing_id?: number;
       receiver_id: number;
+    };
+    'backend_internal_domain_models.CreateReviewConfirmationRequest': {
+      notes?: string;
+      /** @enum {string} */
+      status: 'confirmed' | 'disputed';
+    };
+    'backend_internal_domain_models.CreateReviewDisputeRequest': {
+      description: string;
+      /** @enum {string} */
+      reason:
+        | 'not_a_customer'
+        | 'false_information'
+        | 'deal_cancelled'
+        | 'spam'
+        | 'other';
     };
     'backend_internal_domain_models.CreateReviewRequest': {
       comment?: string;
@@ -11424,6 +11796,14 @@ export interface components {
       listing_id?: number;
       price?: number;
     };
+    'backend_internal_domain_models.RatingBreakdown': {
+      /** @description Прямые отзывы */
+      direct?: components['schemas']['backend_internal_domain_models.BreakdownItem'];
+      /** @description Через товары */
+      listings?: components['schemas']['backend_internal_domain_models.BreakdownItem'];
+      /** @description Через магазины */
+      storefronts?: components['schemas']['backend_internal_domain_models.BreakdownItem'];
+    };
     'backend_internal_domain_models.Review': {
       comment?: string;
       cons?: string;
@@ -11435,6 +11815,7 @@ export interface components {
       /** @description тип оригинального объекта (user, storefront) */
       entity_origin_type?: string;
       entity_type?: string;
+      has_active_dispute?: boolean;
       helpful_votes?: number;
       id?: number;
       is_verified_purchase?: boolean;
@@ -11446,6 +11827,7 @@ export interface components {
       pros?: string;
       rating?: number;
       responses?: components['schemas']['backend_internal_domain_models.ReviewResponse'][];
+      seller_confirmed?: boolean;
       status?: string;
       translations?: {
         [key: string]: {

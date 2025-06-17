@@ -6482,6 +6482,106 @@ paths:
       summary: Update review
       tags:
         - reviews
+  "/api/v1/reviews/{id}/confirm":
+    post:
+      description: Allows seller to confirm or dispute a review
+      parameters:
+        - description: Review ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_domain_models.CreateReviewConfirma\
+                tionRequest"
+        description: Confirmation request
+        required: true
+      responses:
+        "200":
+          description: Review confirmed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_reviews_handler.ReviewMessageResponse"
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "403":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Confirm review
+      tags:
+        - reviews
+  "/api/v1/reviews/{id}/dispute":
+    post:
+      description: Creates a dispute for a review
+      parameters:
+        - description: Review ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_domain_models.CreateReviewDisputeR\
+                equest"
+        description: Dispute request
+        required: true
+      responses:
+        "200":
+          description: Dispute created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_reviews_handler.ReviewMessageResponse"
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Dispute review
+      tags:
+        - reviews
   "/api/v1/reviews/{id}/photos":
     post:
       description: Uploads photos for an existing review
@@ -6499,7 +6599,7 @@ paths:
               type: object
               properties:
                 photos:
-                  description: Photos to upload (max 10)
+                  description: "Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)"
                   type: string
                   format: binary
               required:
@@ -6636,6 +6736,51 @@ paths:
       security:
         - BearerAuth: []
       summary: Vote for a review
+      tags:
+        - reviews
+  "/api/v1/reviews/can-review/{type}/{id}":
+    get:
+      description: Checks if the current user can leave a review for the specified entity
+      parameters:
+        - description: Entity type (listing, user, storefront)
+          in: path
+          name: type
+          required: true
+          schema:
+            type: string
+        - description: Entity ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Permission check result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.CanReviewResponse"
+                    type: object
+        "400":
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Check if user can review entity
       tags:
         - reviews
   "/api/v1/reviews/rating/{type}/{id}":
@@ -7132,6 +7277,43 @@ paths:
       summary: Update storefront
       tags:
         - storefronts
+  "/api/v1/storefronts/{id}/aggregated-rating":
+    get:
+      description: Returns aggregated rating for a storefront including breakdown by sources
+      parameters:
+        - description: Storefront ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Aggregated rating
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.AggregatedRating"
+                    type: object
+        "400":
+          description: Invalid storefront ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get storefront aggregated rating
+      tags:
+        - reviews
   "/api/v1/storefronts/{id}/import-sources":
     get:
       description: Returns all import sources for a specific storefront
@@ -7231,6 +7413,43 @@ paths:
       summary: Set translation provider
       tags:
         - marketplace-translations
+  "/api/v1/users/{id}/aggregated-rating":
+    get:
+      description: Returns aggregated rating for a user including breakdown by sources
+      parameters:
+        - description: User ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Aggregated rating
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.AggregatedRating"
+                    type: object
+        "400":
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get user aggregated rating
+      tags:
+        - reviews
   "/api/v1/users/{id}/profile":
     get:
       description: Returns public information about user by ID
@@ -7601,6 +7820,34 @@ components:
         notes:
           type: string
       type: object
+    backend_internal_domain_models.AggregatedRating:
+      properties:
+        average:
+          type: number
+        breakdown:
+          $ref: "#/components/schemas/backend_internal_domain_models.RatingBreakdown"
+        distribution:
+          additionalProperties:
+            type: integer
+          type: object
+        entity_id:
+          type: integer
+        entity_type:
+          type: string
+        last_review_at:
+          type: string
+        recent_rating:
+          type: number
+        recent_reviews:
+          type: integer
+        recent_trend:
+          description: up, down, stable
+          type: string
+        total_reviews:
+          type: integer
+        verified_percentage:
+          type: integer
+      type: object
     backend_internal_domain_models.AttachGroupToCategoryRequest:
       properties:
         collapsed_by_default:
@@ -7694,6 +7941,24 @@ components:
           type: string
         user_id:
           type: integer
+      type: object
+    backend_internal_domain_models.BreakdownItem:
+      properties:
+        average:
+          type: number
+        count:
+          type: integer
+      type: object
+    backend_internal_domain_models.CanReviewResponse:
+      properties:
+        can_review:
+          type: boolean
+        existing_review_id:
+          type: integer
+        has_existing_review:
+          type: boolean
+        reason:
+          type: string
       type: object
     backend_internal_domain_models.CategoryAttribute:
       properties:
@@ -7952,6 +8217,36 @@ components:
       required:
         - content
         - receiver_id
+      type: object
+    backend_internal_domain_models.CreateReviewConfirmationRequest:
+      properties:
+        notes:
+          type: string
+        status:
+          enum:
+            - confirmed
+            - disputed
+          type: string
+      required:
+        - status
+      type: object
+    backend_internal_domain_models.CreateReviewDisputeRequest:
+      properties:
+        description:
+          maxLength: 1000
+          minLength: 10
+          type: string
+        reason:
+          enum:
+            - not_a_customer
+            - false_information
+            - deal_cancelled
+            - spam
+            - other
+          type: string
+      required:
+        - description
+        - reason
       type: object
     backend_internal_domain_models.CreateReviewRequest:
       properties:
@@ -8621,6 +8916,21 @@ components:
         price:
           type: number
       type: object
+    backend_internal_domain_models.RatingBreakdown:
+      properties:
+        direct:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_models.BreakdownItem"
+          description: Прямые отзывы
+        listings:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_models.BreakdownItem"
+          description: Через товары
+        storefronts:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_models.BreakdownItem"
+          description: Через магазины
+      type: object
     backend_internal_domain_models.Review:
       properties:
         comment:
@@ -8641,6 +8951,8 @@ components:
           type: string
         entity_type:
           type: string
+        has_active_dispute:
+          type: boolean
         helpful_votes:
           type: integer
         id:
@@ -8666,6 +8978,8 @@ components:
           items:
             $ref: "#/components/schemas/backend_internal_domain_models.ReviewResponse"
           type: array
+        seller_confirmed:
+          type: boolean
         status:
           type: string
         translations:
