@@ -26,7 +26,7 @@ import (
 	notificationHandler "backend/internal/proj/notifications/handler"
 	paymentHandler "backend/internal/proj/payments/handler"
 	reviewHandler "backend/internal/proj/reviews/handler"
-	storefrontHandler "backend/internal/proj/storefront/handler"
+	storefrontHandler "backend/internal/proj/storefronts/handler"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"

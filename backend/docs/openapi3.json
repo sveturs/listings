@@ -5067,791 +5067,6 @@
                 }
             }
         },
-        "/api/v1/import-sources": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Creates a new import source for storefront",
-                "tags": [
-                    "import-sources"
-                ],
-                "summary": "Create import source",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/backend_internal_domain_models.ImportSourceCreate"
-                            }
-                        }
-                    },
-                    "description": "Import source data",
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Import source created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/backend_internal_domain_models.ImportSource"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "storefront.invalidRequest",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "importSource.createError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/import-sources/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Updates import source information",
-                "tags": [
-                    "import-sources"
-                ],
-                "summary": "Update import source",
-                "parameters": [
-                    {
-                        "description": "Import source ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/backend_internal_domain_models.ImportSource"
-                            }
-                        }
-                    },
-                    "description": "Updated import source data",
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Update successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_storefront_handler.MessageResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "importSource.invalidId,storefront.invalidRequest",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "importSource.updateError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Deletes an import source",
-                "tags": [
-                    "import-sources"
-                ],
-                "summary": "Delete import source",
-                "parameters": [
-                    {
-                        "description": "Import source ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Delete successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_storefront_handler.MessageResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "importSource.invalidId",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "importSource.deleteError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/import-sources/{id}/apply-mappings": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Applies category mappings to imported listings",
-                "tags": [
-                    "import-sources"
-                ],
-                "summary": "Apply category mappings",
-                "parameters": [
-                    {
-                        "description": "Import source ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Mappings applied successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_storefront_handler.ApplyCategoryMappingsResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "importSource.invalidId",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "importSource.applyCategoryMappingsError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/import-sources/{id}/category-mappings": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns category mappings for a specific import source",
-                "tags": [
-                    "import-sources"
-                ],
-                "summary": "Get category mappings for import source",
-                "parameters": [
-                    {
-                        "description": "Import source ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Category mappings",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
-                                                        "type": "integer"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "importSource.invalidId",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "importSource.getCategoryMappingsError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Updates category mappings for a specific import source",
-                "tags": [
-                    "import-sources"
-                ],
-                "summary": "Update category mappings for import source",
-                "parameters": [
-                    {
-                        "description": "Import source ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "additionalProperties": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    },
-                    "description": "Category mappings",
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Update successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_storefront_handler.CategoryMappingsUpdateResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "importSource.invalidId,importSource.invalidMappingsFormat",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "importSource.updateCategoryMappingsError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/import-sources/{id}/history": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns import history for an import source",
-                "tags": [
-                    "import-sources"
-                ],
-                "summary": "Get import history",
-                "parameters": [
-                    {
-                        "description": "Import source ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "description": "Limit number of results",
-                        "name": "limit",
-                        "in": "query",
-                        "schema": {
-                            "type": "integer",
-                            "default": 10
-                        }
-                    },
-                    {
-                        "description": "Offset for pagination",
-                        "name": "offset",
-                        "in": "query",
-                        "schema": {
-                            "type": "integer",
-                            "default": 0
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Import history",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/backend_internal_domain_models.ImportHistory"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "importSource.invalidId",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "importSource.getHistoryError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/import-sources/{id}/import": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Starts import process for an import source",
-                "tags": [
-                    "import-sources"
-                ],
-                "summary": "Run import",
-                "parameters": [
-                    {
-                        "description": "Import source ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "file": {
-                                        "description": "CSV file for import",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "images_zip": {
-                                        "description": "ZIP file with images",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "xml_zip": {
-                                        "description": "ZIP file with XML data",
-                                        "type": "string",
-                                        "format": "binary"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Import completed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/backend_internal_domain_models.ImportHistory"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "importSource.invalidId,importSource.notFound,importSource.noDataSource",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "importSource.runImportError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/import-sources/{id}/imported-categories": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns list of categories that were imported by this source",
-                "tags": [
-                    "import-sources"
-                ],
-                "summary": "Get imported categories",
-                "parameters": [
-                    {
-                        "description": "Import source ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "List of imported categories",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "importSource.invalidId",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "importSource.getImportedCategoriesError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/marketplace/admin/attribute-groups": {
             "get": {
                 "security": [
@@ -10599,90 +9814,6 @@
                 }
             }
         },
-        "/api/v1/public/storefronts/{id}": {
-            "get": {
-                "description": "Returns public data of a storefront (no authentication required)",
-                "tags": [
-                    "storefronts"
-                ],
-                "summary": "Get public storefront",
-                "parameters": [
-                    {
-                        "description": "Storefront ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Public storefront data",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "storefront.invalidId",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "storefront.notActive",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "storefront.notFound",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "storefront.getError",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/reviews": {
             "get": {
                 "description": "Returns paginated list of reviews with filters",
@@ -12206,58 +11337,134 @@
         },
         "/api/v1/storefronts": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns all storefronts owned by the authenticated user",
+                "description": "Returns paginated list of storefronts with filters",
                 "tags": [
                     "storefronts"
                 ],
-                "summary": "Get user storefronts",
-                "responses": {
-                    "200": {
-                        "description": "List of user storefronts",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
+                "summary": "List storefronts",
+                "parameters": [
+                    {
+                        "description": "Filter by user ID",
+                        "name": "user_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
                         }
                     },
-                    "401": {
-                        "description": "auth.required",
+                    {
+                        "description": "Filter by active status",
+                        "name": "is_active",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "description": "Filter by verification status",
+                        "name": "is_verified",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "description": "Filter by city",
+                        "name": "city",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Minimum rating filter",
+                        "name": "min_rating",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Search in name and description",
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Latitude for geo search",
+                        "name": "lat",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Longitude for geo search",
+                        "name": "lng",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Radius in km for geo search",
+                        "name": "radius_km",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Sort field (rating, products_count, distance)",
+                        "name": "sort_by",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Sort order (asc, desc)",
+                        "name": "sort_order",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Results per page (max 100)",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Results offset",
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of storefronts",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.StorefrontsListResponse"
                                 }
                             }
                         }
                     },
                     "500": {
-                        "description": "storefront.getError",
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
@@ -12279,7 +11486,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontCreate"
+                                "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontCreateDTO"
                             }
                         }
                     },
@@ -12287,64 +11494,390 @@
                     "required": true
                 },
                 "responses": {
-                    "200": {
-                        "description": "Storefront created successfully",
+                    "201": {
+                        "description": "Created storefront",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "storefront.invalidRequest",
+                        "description": "Bad request",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "auth.required",
+                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
                     },
-                    "402": {
-                        "description": "storefront.insufficientFunds",
+                    "403": {
+                        "description": "Storefront limit reached",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
                     },
                     "500": {
-                        "description": "storefront.createError",
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/building": {
+            "get": {
+                "description": "Returns all storefronts located in the same building",
+                "tags": [
+                    "storefronts",
+                    "map"
+                ],
+                "summary": "Get businesses in building",
+                "parameters": [
+                    {
+                        "description": "Building latitude",
+                        "name": "lat",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Building longitude",
+                        "name": "lng",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Businesses in building",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontMapData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid coordinates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/map": {
+            "get": {
+                "description": "Returns storefronts within map bounds with minimal data for performance",
+                "tags": [
+                    "storefronts",
+                    "map"
+                ],
+                "summary": "Get storefronts for map",
+                "parameters": [
+                    {
+                        "description": "Minimum latitude",
+                        "name": "min_lat",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Maximum latitude",
+                        "name": "max_lat",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Minimum longitude",
+                        "name": "min_lng",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Maximum longitude",
+                        "name": "max_lng",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Minimum rating filter",
+                        "name": "min_rating",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Map markers data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontMapData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid bounds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/my": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns list of storefronts owned by current user",
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Get my storefronts",
+                "responses": {
+                    "200": {
+                        "description": "List of user's storefronts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/nearby": {
+            "get": {
+                "description": "Returns storefronts within specified radius from coordinates",
+                "tags": [
+                    "storefronts",
+                    "map"
+                ],
+                "summary": "Get nearby storefronts",
+                "parameters": [
+                    {
+                        "description": "Latitude",
+                        "name": "lat",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Longitude",
+                        "name": "lng",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Radius in kilometers (default 5)",
+                        "name": "radius_km",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Maximum results (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Nearby storefronts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid coordinates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/slug/{slug}": {
+            "get": {
+                "description": "Returns storefront details by slug",
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Get storefront by slug",
+                "parameters": [
+                    {
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Storefront details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
@@ -12354,12 +11887,7 @@
         },
         "/api/v1/storefronts/{id}": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns a specific storefront by ID",
+                "description": "Returns storefront details by ID",
                 "tags": [
                     "storefronts"
                 ],
@@ -12381,49 +11909,27 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
                                 }
                             }
                         }
                     },
-                    "400": {
-                        "description": "storefront.invalidId",
+                    "404": {
+                        "description": "Storefront not found",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
                     },
                     "500": {
-                        "description": "storefront.getError",
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
@@ -12436,7 +11942,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Updates storefront information",
+                "description": "Updates storefront details",
                 "tags": [
                     "storefronts"
                 ],
@@ -12456,62 +11962,70 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
+                                "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontUpdateDTO"
                             }
                         }
                     },
-                    "description": "Updated storefront data",
+                    "description": "Update data",
                     "required": true
                 },
                 "responses": {
                     "200": {
-                        "description": "Update successful",
+                        "description": "Storefront updated",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_storefront_handler.MessageResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "storefront.invalidId,storefront.invalidRequest",
+                        "description": "Bad request",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "auth.required",
+                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
                     },
                     "500": {
-                        "description": "storefront.updateError",
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
@@ -12524,7 +12038,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Deletes a storefront",
+                "description": "Soft deletes a storefront (marks as inactive)",
                 "tags": [
                     "storefronts"
                 ],
@@ -12542,53 +12056,51 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Delete successful",
+                        "description": "Storefront deleted",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_storefront_handler.MessageResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "storefront.invalidId",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "auth.required",
+                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Only owner can delete storefront",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
                     },
                     "500": {
-                        "description": "storefront.deleteError",
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
@@ -12660,18 +12172,585 @@
                 }
             }
         },
-        "/api/v1/storefronts/{id}/import-sources": {
+        "/api/v1/storefronts/{id}/analytics": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns all import sources for a specific storefront",
+                "description": "Returns analytics data for specified period",
                 "tags": [
-                    "import-sources"
+                    "storefronts"
                 ],
-                "summary": "Get import sources for storefront",
+                "summary": "Get storefront analytics",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Analytics data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontAnalytics"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/banner": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uploads a banner image for the storefront",
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Upload storefront banner",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "banner": {
+                                        "description": "Banner file",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "required": [
+                                    "banner"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Banner URL",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/delivery-options": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates storefront delivery options",
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Update delivery options",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontDeliveryOption"
+                                }
+                            }
+                        }
+                    },
+                    "description": "Delivery options",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Delivery options updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/hours": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates storefront working hours",
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Update working hours",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontHours"
+                                }
+                            }
+                        }
+                    },
+                    "description": "Working hours",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Hours updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/logo": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uploads a logo image for the storefront",
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Upload storefront logo",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "logo": {
+                                        "description": "Logo file",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "required": [
+                                    "logo"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Logo URL",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/payment-methods": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates storefront payment methods",
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Update payment methods",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontPaymentMethod"
+                                }
+                            }
+                        }
+                    },
+                    "description": "Payment methods",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment methods updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/staff": {
+            "get": {
+                "description": "Returns list of staff members with their roles and permissions",
+                "tags": [
+                    "storefronts",
+                    "staff"
+                ],
+                "summary": "Get storefront staff",
                 "parameters": [
                     {
                         "description": "Storefront ID",
@@ -12685,56 +12764,375 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of import sources",
+                        "description": "Staff list",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/backend_internal_domain_models.ImportSource"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.StaffListResponse"
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "storefront.invalidId",
+                        "description": "Bad request",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "auth.required",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
                     },
                     "500": {
-                        "description": "importSource.getError",
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds a new staff member to the storefront",
+                "tags": [
+                    "storefronts",
+                    "staff"
+                ],
+                "summary": "Add staff member",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/internal_proj_storefronts_handler.AddStaffRequest"
+                            }
+                        }
+                    },
+                    "description": "Staff data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Staff added",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions or staff limit reached",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/staff/{staffId}/permissions": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates permissions for a staff member",
+                "tags": [
+                    "storefronts",
+                    "staff"
+                ],
+                "summary": "Update staff permissions",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Staff ID",
+                        "name": "staffId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        }
+                    },
+                    "description": "Permissions map",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permissions updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Staff not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/staff/{userId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes a staff member from the storefront",
+                "tags": [
+                    "storefronts",
+                    "staff"
+                ],
+                "summary": "Remove staff member",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "User ID of staff member",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Staff removed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Staff not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/view": {
+            "post": {
+                "description": "Records a view for analytics",
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Record storefront view",
+                "parameters": [
+                    {
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "View recorded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
                                 }
                             }
                         }
@@ -14356,6 +14754,44 @@
                     }
                 }
             },
+            "backend_internal_domain_models.DeliveryProvider": {
+                "type": "string",
+                "enum": [
+                    "posta_srbije",
+                    "aks",
+                    "bex",
+                    "d_express",
+                    "city_express",
+                    "self_pickup",
+                    "own_delivery"
+                ],
+                "x-enum-varnames": [
+                    "DeliveryProviderPostaSrbije",
+                    "DeliveryProviderAKS",
+                    "DeliveryProviderBEX",
+                    "DeliveryProviderDExpress",
+                    "DeliveryProviderCityExpress",
+                    "DeliveryProviderSelfPickup",
+                    "DeliveryProviderOwnDelivery"
+                ]
+            },
+            "backend_internal_domain_models.DeliveryZone": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "postal_codes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "price_modifier": {
+                        "type": "number"
+                    }
+                }
+            },
             "backend_internal_domain_models.GeoLocation": {
                 "type": "object",
                 "properties": {
@@ -14373,129 +14809,9 @@
                     }
                 }
             },
-            "backend_internal_domain_models.ImportHistory": {
+            "backend_internal_domain_models.JSONB": {
                 "type": "object",
-                "properties": {
-                    "finished_at": {
-                        "type": "string"
-                    },
-                    "id": {
-                        "type": "integer"
-                    },
-                    "items_failed": {
-                        "type": "integer"
-                    },
-                    "items_imported": {
-                        "type": "integer"
-                    },
-                    "items_total": {
-                        "type": "integer"
-                    },
-                    "items_updated": {
-                        "type": "integer"
-                    },
-                    "log": {
-                        "type": "string"
-                    },
-                    "source_id": {
-                        "type": "integer"
-                    },
-                    "started_at": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "description": "success, failed, partial",
-                        "type": "string"
-                    }
-                }
-            },
-            "backend_internal_domain_models.ImportSource": {
-                "type": "object",
-                "properties": {
-                    "auth_data": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    },
-                    "created_at": {
-                        "type": "string"
-                    },
-                    "id": {
-                        "type": "integer"
-                    },
-                    "last_import_at": {
-                        "type": "string"
-                    },
-                    "last_import_log": {
-                        "description": "Изменяем на обычную строку, но обрабатываем NULL при сканировании",
-                        "type": "string"
-                    },
-                    "last_import_status": {
-                        "description": "Изменяем на обычную строку, но обрабатываем NULL при сканировании",
-                        "type": "string"
-                    },
-                    "mapping": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    },
-                    "schedule": {
-                        "type": "string"
-                    },
-                    "storefront_id": {
-                        "type": "integer"
-                    },
-                    "type": {
-                        "description": "csv, xml, json",
-                        "type": "string"
-                    },
-                    "updated_at": {
-                        "type": "string"
-                    },
-                    "url": {
-                        "type": "string"
-                    }
-                }
-            },
-            "backend_internal_domain_models.ImportSourceCreate": {
-                "type": "object",
-                "required": [
-                    "storefront_id",
-                    "type"
-                ],
-                "properties": {
-                    "auth_data": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    },
-                    "mapping": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    },
-                    "schedule": {
-                        "type": "string"
-                    },
-                    "storefront_id": {
-                        "type": "integer"
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "csv",
-                            "xml",
-                            "json"
-                        ]
-                    },
-                    "url": {
-                        "type": "string"
-                    }
-                }
+                "additionalProperties": true
             },
             "backend_internal_domain_models.ListingAttributeValue": {
                 "type": "object",
@@ -14562,6 +14878,52 @@
                     "unit": {
                         "description": "Добавляем поле для единиц измерения",
                         "type": "string"
+                    }
+                }
+            },
+            "backend_internal_domain_models.Location": {
+                "type": "object",
+                "properties": {
+                    "building_info": {
+                        "description": "Дополнительная информация",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
+                    },
+                    "building_lat": {
+                        "description": "Координаты здания (после геокодинга)",
+                        "type": "number"
+                    },
+                    "building_lng": {
+                        "type": "number"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "country": {
+                        "type": "string"
+                    },
+                    "full_address": {
+                        "description": "Адресные данные",
+                        "type": "string"
+                    },
+                    "house_number": {
+                        "type": "string"
+                    },
+                    "postal_code": {
+                        "type": "string"
+                    },
+                    "street": {
+                        "type": "string"
+                    },
+                    "user_lat": {
+                        "description": "Координаты клика пользователя",
+                        "type": "number"
+                    },
+                    "user_lng": {
+                        "type": "number"
                     }
                 }
             },
@@ -15104,6 +15466,40 @@
                     }
                 }
             },
+            "backend_internal_domain_models.PaymentMethodType": {
+                "type": "string",
+                "enum": [
+                    "cash",
+                    "cod",
+                    "card",
+                    "bank_transfer",
+                    "paypal",
+                    "crypto",
+                    "postanska",
+                    "keks_pay",
+                    "ips"
+                ],
+                "x-enum-comments": {
+                    "PaymentMethodBankTransfer": "Банковский перевод",
+                    "PaymentMethodCOD": "Cash on Delivery - оплата курьеру",
+                    "PaymentMethodCard": "Банковская карта",
+                    "PaymentMethodCash": "Наличные в магазине",
+                    "PaymentMethodIPS": "Instant Payment System",
+                    "PaymentMethodKeks": "Keks Pay (популярно в Сербии)",
+                    "PaymentMethodPostanska": "Poštanska štedionica"
+                },
+                "x-enum-varnames": [
+                    "PaymentMethodCash",
+                    "PaymentMethodCOD",
+                    "PaymentMethodCard",
+                    "PaymentMethodBankTransfer",
+                    "PaymentMethodPayPal",
+                    "PaymentMethodCrypto",
+                    "PaymentMethodPostanska",
+                    "PaymentMethodKeks",
+                    "PaymentMethodIPS"
+                ]
+            },
             "backend_internal_domain_models.PaymentSession": {
                 "type": "object",
                 "properties": {
@@ -15363,23 +15759,50 @@
                     }
                 }
             },
+            "backend_internal_domain_models.StaffRole": {
+                "type": "string",
+                "enum": [
+                    "owner",
+                    "manager",
+                    "support",
+                    "moderator"
+                ],
+                "x-enum-varnames": [
+                    "StaffRoleOwner",
+                    "StaffRoleManager",
+                    "StaffRoleSupport",
+                    "StaffRoleModerator"
+                ]
+            },
             "backend_internal_domain_models.Storefront": {
                 "type": "object",
                 "properties": {
                     "address": {
+                        "description": "Локация",
+                        "type": "string"
+                    },
+                    "ai_agent_config": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                    },
+                    "ai_agent_enabled": {
+                        "description": "AI и killer features",
+                        "type": "boolean"
+                    },
+                    "banner_url": {
                         "type": "string"
                     },
                     "city": {
                         "type": "string"
                     },
+                    "commission_rate": {
+                        "type": "number"
+                    },
                     "country": {
                         "type": "string"
                     },
                     "created_at": {
+                        "description": "Временные метки",
                         "type": "string"
-                    },
-                    "creation_transaction_id": {
-                        "type": "integer"
                     },
                     "description": {
                         "type": "string"
@@ -15387,13 +15810,27 @@
                     "email": {
                         "type": "string"
                     },
+                    "group_buying_enabled": {
+                        "type": "boolean"
+                    },
                     "id": {
                         "type": "integer"
+                    },
+                    "is_active": {
+                        "description": "Статус и статистика",
+                        "type": "boolean"
+                    },
+                    "is_verified": {
+                        "type": "boolean"
                     },
                     "latitude": {
                         "type": "number"
                     },
-                    "logo_path": {
+                    "live_shopping_enabled": {
+                        "type": "boolean"
+                    },
+                    "logo_url": {
+                        "description": "Брендинг",
                         "type": "string"
                     },
                     "longitude": {
@@ -15403,14 +15840,51 @@
                         "type": "string"
                     },
                     "phone": {
+                        "description": "Контактная информация",
                         "type": "string"
+                    },
+                    "postal_code": {
+                        "type": "string"
+                    },
+                    "products_count": {
+                        "type": "integer"
+                    },
+                    "rating": {
+                        "type": "number"
+                    },
+                    "reviews_count": {
+                        "type": "integer"
+                    },
+                    "sales_count": {
+                        "type": "integer"
+                    },
+                    "seo_meta": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                    },
+                    "settings": {
+                        "description": "Настройки бизнеса",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
                     },
                     "slug": {
                         "type": "string"
                     },
-                    "status": {
-                        "description": "active, inactive, suspended",
+                    "subscription_expires_at": {
                         "type": "string"
+                    },
+                    "subscription_plan": {
+                        "description": "Подписка (монетизация)",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.SubscriptionPlan"
+                            }
+                        ]
+                    },
+                    "theme": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
                     },
                     "updated_at": {
                         "type": "string"
@@ -15418,34 +15892,311 @@
                     "user_id": {
                         "type": "integer"
                     },
+                    "verification_date": {
+                        "type": "string"
+                    },
+                    "views_count": {
+                        "type": "integer"
+                    },
                     "website": {
                         "type": "string"
                     }
                 }
             },
-            "backend_internal_domain_models.StorefrontCreate": {
+            "backend_internal_domain_models.StorefrontAnalytics": {
+                "type": "object",
+                "properties": {
+                    "add_to_cart_count": {
+                        "type": "integer"
+                    },
+                    "avg_order_value": {
+                        "type": "number"
+                    },
+                    "avg_session_time": {
+                        "description": "в секундах",
+                        "type": "integer"
+                    },
+                    "bounce_rate": {
+                        "type": "number"
+                    },
+                    "checkout_count": {
+                        "type": "integer"
+                    },
+                    "conversion_rate": {
+                        "type": "number"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "date": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "orders_by_city": {
+                        "description": "География заказов",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
+                    },
+                    "orders_count": {
+                        "description": "Продажи",
+                        "type": "integer"
+                    },
+                    "page_views": {
+                        "description": "Трафик",
+                        "type": "integer"
+                    },
+                    "payment_methods_usage": {
+                        "description": "Методы оплаты",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
+                    },
+                    "product_views": {
+                        "description": "Товары",
+                        "type": "integer"
+                    },
+                    "revenue": {
+                        "type": "number"
+                    },
+                    "storefront_id": {
+                        "type": "integer"
+                    },
+                    "top_categories": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                    },
+                    "top_products": {
+                        "description": "Топ товары/категории",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
+                    },
+                    "traffic_sources": {
+                        "description": "Источники трафика",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
+                    },
+                    "unique_visitors": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "backend_internal_domain_models.StorefrontCreateDTO": {
                 "type": "object",
                 "required": [
+                    "location",
                     "name"
                 ],
                 "properties": {
-                    "address": {
-                        "type": "string"
-                    },
-                    "city": {
-                        "type": "string"
-                    },
-                    "country": {
-                        "type": "string"
-                    },
                     "description": {
                         "type": "string"
                     },
                     "email": {
                         "type": "string"
                     },
+                    "location": {
+                        "description": "Локация",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.Location"
+                            }
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "minLength": 3
+                    },
+                    "phone": {
+                        "description": "Контактная информация",
+                        "type": "string"
+                    },
+                    "seo_meta": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                    },
+                    "settings": {
+                        "description": "Настройки",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
+                    },
+                    "theme": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                }
+            },
+            "backend_internal_domain_models.StorefrontDeliveryOption": {
+                "type": "object",
+                "properties": {
+                    "available_days": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "base_price": {
+                        "description": "Ценообразование",
+                        "type": "number"
+                    },
+                    "cod_fee": {
+                        "description": "Специальные платы",
+                        "type": "number"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "cutoff_time": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "estimated_days_max": {
+                        "type": "integer"
+                    },
+                    "estimated_days_min": {
+                        "type": "integer"
+                    },
+                    "fragile_handling": {
+                        "description": "Обработка хрупких товаров",
+                        "type": "number"
+                    },
+                    "free_above_amount": {
+                        "type": "number"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "insurance_fee": {
+                        "description": "Страховка",
+                        "type": "number"
+                    },
+                    "is_enabled": {
+                        "type": "boolean"
+                    },
+                    "max_distance_km": {
+                        "type": "number"
+                    },
+                    "max_weight_kg": {
+                        "type": "number"
+                    },
+                    "min_order_amount": {
+                        "description": "Ограничения доставки",
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "price_per_kg": {
+                        "type": "number"
+                    },
+                    "price_per_km": {
+                        "type": "number"
+                    },
+                    "provider": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.DeliveryProvider"
+                    },
+                    "provider_config": {
+                        "description": "Интеграция с провайдером",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
+                    },
+                    "storefront_id": {
+                        "type": "integer"
+                    },
+                    "supported_payment_methods": {
+                        "description": "Поддерживаемые методы оплаты для этой доставки",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/backend_internal_domain_models.PaymentMethodType"
+                        }
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "zones": {
+                        "description": "Зоны и доступность",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/backend_internal_domain_models.DeliveryZone"
+                        }
+                    }
+                }
+            },
+            "backend_internal_domain_models.StorefrontHours": {
+                "type": "object",
+                "properties": {
+                    "close_time": {
+                        "type": "string"
+                    },
+                    "day_of_week": {
+                        "description": "0=Sunday, 6=Saturday",
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_closed": {
+                        "type": "boolean"
+                    },
+                    "open_time": {
+                        "type": "string"
+                    },
+                    "special_date": {
+                        "description": "Специальные часы",
+                        "type": "string"
+                    },
+                    "special_note": {
+                        "type": "string"
+                    },
+                    "storefront_id": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "backend_internal_domain_models.StorefrontMapData": {
+                "type": "object",
+                "properties": {
+                    "accepts_cards": {
+                        "type": "boolean"
+                    },
+                    "address": {
+                        "description": "Краткая информация для попапа",
+                        "type": "string"
+                    },
+                    "has_delivery": {
+                        "type": "boolean"
+                    },
+                    "has_self_pickup": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
                     "latitude": {
                         "type": "number"
+                    },
+                    "logo_url": {
+                        "type": "string"
                     },
                     "longitude": {
                         "type": "number"
@@ -15456,8 +16207,62 @@
                     "phone": {
                         "type": "string"
                     },
-                    "website": {
+                    "products_count": {
+                        "type": "integer"
+                    },
+                    "rating": {
+                        "type": "number"
+                    },
+                    "slug": {
                         "type": "string"
+                    },
+                    "supports_cod": {
+                        "description": "Ключевые фичи",
+                        "type": "boolean"
+                    },
+                    "working_now": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "backend_internal_domain_models.StorefrontPaymentMethod": {
+                "type": "object",
+                "properties": {
+                    "cod_fee": {
+                        "description": "Специфично для COD (наложенный платеж)",
+                        "type": "number"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_enabled": {
+                        "type": "boolean"
+                    },
+                    "max_amount": {
+                        "type": "number"
+                    },
+                    "method_type": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.PaymentMethodType"
+                    },
+                    "min_amount": {
+                        "type": "number"
+                    },
+                    "provider": {
+                        "description": "Настройки провайдера",
+                        "type": "string"
+                    },
+                    "settings": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                    },
+                    "storefront_id": {
+                        "type": "integer"
+                    },
+                    "transaction_fee": {
+                        "description": "Комиссии и лимиты",
+                        "type": "number"
                     }
                 }
             },
@@ -15492,6 +16297,114 @@
                         "type": "integer"
                     }
                 }
+            },
+            "backend_internal_domain_models.StorefrontStaff": {
+                "type": "object",
+                "properties": {
+                    "actions_count": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "last_active_at": {
+                        "description": "Отслеживание активности",
+                        "type": "string"
+                    },
+                    "permissions": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.StaffRole"
+                    },
+                    "storefront_id": {
+                        "type": "integer"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "backend_internal_domain_models.StorefrontUpdateDTO": {
+                "type": "object",
+                "properties": {
+                    "ai_agent_enabled": {
+                        "description": "Функции",
+                        "type": "boolean"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "group_buying_enabled": {
+                        "type": "boolean"
+                    },
+                    "live_shopping_enabled": {
+                        "type": "boolean"
+                    },
+                    "location": {
+                        "description": "Локация",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.Location"
+                            }
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "minLength": 3
+                    },
+                    "phone": {
+                        "description": "Контактная информация",
+                        "type": "string"
+                    },
+                    "seo_meta": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                    },
+                    "settings": {
+                        "description": "Настройки",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
+                    },
+                    "theme": {
+                        "description": "Брендинг",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                }
+            },
+            "backend_internal_domain_models.SubscriptionPlan": {
+                "type": "string",
+                "enum": [
+                    "starter",
+                    "professional",
+                    "business",
+                    "enterprise"
+                ],
+                "x-enum-varnames": [
+                    "SubscriptionPlanStarter",
+                    "SubscriptionPlanProfessional",
+                    "SubscriptionPlanBusiness",
+                    "SubscriptionPlanEnterprise"
+                ]
             },
             "backend_internal_domain_models.Translation": {
                 "type": "object",
@@ -17065,26 +17978,64 @@
                     }
                 }
             },
-            "internal_proj_storefront_handler.ApplyCategoryMappingsResponse": {
+            "internal_proj_storefronts_handler.AddStaffRequest": {
                 "type": "object",
+                "required": [
+                    "role",
+                    "user_id"
+                ],
                 "properties": {
-                    "message": {
-                        "type": "string"
+                    "role": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.StaffRole"
                     },
-                    "updated_count": {
+                    "user_id": {
                         "type": "integer"
                     }
                 }
             },
-            "internal_proj_storefront_handler.CategoryMappingsUpdateResponse": {
+            "internal_proj_storefronts_handler.ErrorResponse": {
                 "type": "object",
                 "properties": {
-                    "message": {
+                    "error": {
                         "type": "string"
                     }
                 }
             },
-            "internal_proj_storefront_handler.MessageResponse": {
+            "internal_proj_storefronts_handler.StaffListResponse": {
+                "type": "object",
+                "properties": {
+                    "staff": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontStaff"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "internal_proj_storefronts_handler.StorefrontsListResponse": {
+                "type": "object",
+                "properties": {
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "offset": {
+                        "type": "integer"
+                    },
+                    "storefronts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "internal_proj_storefronts_handler.SuccessResponse": {
                 "type": "object",
                 "properties": {
                     "message": {

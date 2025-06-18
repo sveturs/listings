@@ -4203,654 +4203,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/import-sources': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create import source
-     * @description Creates a new import source for storefront
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Import source data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_domain_models.ImportSourceCreate'];
-        };
-      };
-      responses: {
-        /** @description Import source created */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ImportSource'];
-            };
-          };
-        };
-        /** @description storefront.invalidRequest */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.createError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/import-sources/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update import source
-     * @description Updates import source information
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Import source ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Updated import source data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_domain_models.ImportSource'];
-        };
-      };
-      responses: {
-        /** @description Update successful */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_storefront_handler.MessageResponse'];
-            };
-          };
-        };
-        /** @description importSource.invalidId,storefront.invalidRequest */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.updateError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    /**
-     * Delete import source
-     * @description Deletes an import source
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Import source ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Delete successful */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_storefront_handler.MessageResponse'];
-            };
-          };
-        };
-        /** @description importSource.invalidId */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.deleteError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/import-sources/{id}/apply-mappings': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Apply category mappings
-     * @description Applies category mappings to imported listings
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Import source ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Mappings applied successfully */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_storefront_handler.ApplyCategoryMappingsResponse'];
-            };
-          };
-        };
-        /** @description importSource.invalidId */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.applyCategoryMappingsError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/import-sources/{id}/category-mappings': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get category mappings for import source
-     * @description Returns category mappings for a specific import source
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Import source ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Category mappings */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: number;
-              };
-            };
-          };
-        };
-        /** @description importSource.invalidId */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.getCategoryMappingsError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    /**
-     * Update category mappings for import source
-     * @description Updates category mappings for a specific import source
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Import source ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Category mappings */
-      requestBody: {
-        content: {
-          'application/json': {
-            [key: string]: number;
-          };
-        };
-      };
-      responses: {
-        /** @description Update successful */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_storefront_handler.CategoryMappingsUpdateResponse'];
-            };
-          };
-        };
-        /** @description importSource.invalidId,importSource.invalidMappingsFormat */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.updateCategoryMappingsError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/import-sources/{id}/history': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get import history
-     * @description Returns import history for an import source
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Limit number of results */
-          limit?: number;
-          /** @description Offset for pagination */
-          offset?: number;
-        };
-        header?: never;
-        path: {
-          /** @description Import source ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Import history */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ImportHistory'][];
-            };
-          };
-        };
-        /** @description importSource.invalidId */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.getHistoryError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/import-sources/{id}/import': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Run import
-     * @description Starts import process for an import source
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Import source ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          'multipart/form-data': {
-            /**
-             * Format: binary
-             * @description CSV file for import
-             */
-            file?: string;
-            /**
-             * Format: binary
-             * @description ZIP file with images
-             */
-            images_zip?: string;
-            /**
-             * Format: binary
-             * @description ZIP file with XML data
-             */
-            xml_zip?: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Import completed */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ImportHistory'];
-            };
-          };
-        };
-        /** @description importSource.invalidId,importSource.notFound,importSource.noDataSource */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.runImportError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/import-sources/{id}/imported-categories': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get imported categories
-     * @description Returns list of categories that were imported by this source
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Import source ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description List of imported categories */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: string[];
-            };
-          };
-        };
-        /** @description importSource.invalidId */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.getImportedCategoriesError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/marketplace/admin/attribute-groups': {
     parameters: {
       query?: never;
@@ -8869,86 +8221,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/public/storefronts/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get public storefront
-     * @description Returns public data of a storefront (no authentication required)
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Public storefront data */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Storefront'];
-            };
-          };
-        };
-        /** @description storefront.invalidId */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description storefront.notActive */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description storefront.notFound */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description storefront.getError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/reviews': {
     parameters: {
       query?: never;
@@ -10242,45 +9514,61 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get user storefronts
-     * @description Returns all storefronts owned by the authenticated user
+     * List storefronts
+     * @description Returns paginated list of storefronts with filters
      */
     get: {
       parameters: {
-        query?: never;
+        query?: {
+          /** @description Filter by user ID */
+          user_id?: number;
+          /** @description Filter by active status */
+          is_active?: boolean;
+          /** @description Filter by verification status */
+          is_verified?: boolean;
+          /** @description Filter by city */
+          city?: string;
+          /** @description Minimum rating filter */
+          min_rating?: number;
+          /** @description Search in name and description */
+          search?: string;
+          /** @description Latitude for geo search */
+          lat?: number;
+          /** @description Longitude for geo search */
+          lng?: number;
+          /** @description Radius in km for geo search */
+          radius_km?: number;
+          /** @description Sort field (rating, products_count, distance) */
+          sort_by?: string;
+          /** @description Sort order (asc, desc) */
+          sort_order?: string;
+          /** @description Results per page (max 100) */
+          limit?: number;
+          /** @description Results offset */
+          offset?: number;
+        };
         header?: never;
         path?: never;
         cookie?: never;
       };
       requestBody?: never;
       responses: {
-        /** @description List of user storefronts */
+        /** @description List of storefronts */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Storefront'][];
-            };
+            'application/json': components['schemas']['internal_proj_storefronts_handler.StorefrontsListResponse'];
           };
         };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description storefront.getError */
+        /** @description Internal server error */
         500: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
       };
@@ -10300,55 +9588,53 @@ export interface paths {
       /** @description Storefront data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.StorefrontCreate'];
+          'application/json': components['schemas']['backend_internal_domain_models.StorefrontCreateDTO'];
         };
       };
       responses: {
-        /** @description Storefront created successfully */
-        200: {
+        /** @description Created storefront */
+        201: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Storefront'];
-            };
+            'application/json': components['schemas']['backend_internal_domain_models.Storefront'];
           };
         };
-        /** @description storefront.invalidRequest */
+        /** @description Bad request */
         400: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
-        /** @description auth.required */
+        /** @description Unauthorized */
         401: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
-        /** @description storefront.insufficientFunds */
-        402: {
+        /** @description Storefront limit reached */
+        403: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
-        /** @description storefront.createError */
+        /** @description Internal server error */
         500: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
       };
@@ -10368,7 +9654,7 @@ export interface paths {
     };
     /**
      * Get storefront by ID
-     * @description Returns a specific storefront by ID
+     * @description Returns storefront details by ID
      */
     get: {
       parameters: {
@@ -10388,43 +9674,32 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Storefront'];
-            };
+            'application/json': components['schemas']['backend_internal_domain_models.Storefront'];
           };
         };
-        /** @description storefront.invalidId */
-        400: {
+        /** @description Storefront not found */
+        404: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description storefront.getError */
+        /** @description Internal server error */
         500: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
       };
     };
     /**
      * Update storefront
-     * @description Updates storefront information
+     * @description Updates storefront details
      */
     put: {
       parameters: {
@@ -10436,49 +9711,65 @@ export interface paths {
         };
         cookie?: never;
       };
-      /** @description Updated storefront data */
+      /** @description Update data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.Storefront'];
+          'application/json': components['schemas']['backend_internal_domain_models.StorefrontUpdateDTO'];
         };
       };
       responses: {
-        /** @description Update successful */
+        /** @description Storefront updated */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_storefront_handler.MessageResponse'];
-            };
+            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
           };
         };
-        /** @description storefront.invalidId,storefront.invalidRequest */
+        /** @description Bad request */
         400: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
-        /** @description auth.required */
+        /** @description Unauthorized */
         401: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
-        /** @description storefront.updateError */
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
         500: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
       };
@@ -10486,7 +9777,7 @@ export interface paths {
     post?: never;
     /**
      * Delete storefront
-     * @description Deletes a storefront
+     * @description Soft deletes a storefront (marks as inactive)
      */
     delete: {
       parameters: {
@@ -10500,42 +9791,49 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Delete successful */
+        /** @description Storefront deleted */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_storefront_handler.MessageResponse'];
-            };
+            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
           };
         };
-        /** @description storefront.invalidId */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.required */
+        /** @description Unauthorized */
         401: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
-        /** @description storefront.deleteError */
+        /** @description Only owner can delete storefront */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
         500: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
       };
@@ -10607,7 +9905,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/import-sources': {
+  '/api/v1/storefronts/{id}/analytics': {
     parameters: {
       query?: never;
       header?: never;
@@ -10615,8 +9913,520 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get import sources for storefront
-     * @description Returns all import sources for a specific storefront
+     * Get storefront analytics
+     * @description Returns analytics data for specified period
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Start date (YYYY-MM-DD) */
+          from: string;
+          /** @description End date (YYYY-MM-DD) */
+          to: string;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Analytics data */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.StorefrontAnalytics'][];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{id}/banner': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload storefront banner
+     * @description Uploads a banner image for the storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Banner file
+             */
+            banner: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Banner URL */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{id}/delivery-options': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update delivery options
+     * @description Updates storefront delivery options
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Delivery options */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.StorefrontDeliveryOption'][];
+        };
+      };
+      responses: {
+        /** @description Delivery options updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{id}/hours': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update working hours
+     * @description Updates storefront working hours
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Working hours */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.StorefrontHours'][];
+        };
+      };
+      responses: {
+        /** @description Hours updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{id}/logo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload storefront logo
+     * @description Uploads a logo image for the storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Logo file
+             */
+            logo: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Logo URL */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{id}/payment-methods': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update payment methods
+     * @description Updates storefront payment methods
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Payment methods */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.StorefrontPaymentMethod'][];
+        };
+      };
+      responses: {
+        /** @description Payment methods updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{id}/staff': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront staff
+     * @description Returns list of staff members with their roles and permissions
      */
     get: {
       parameters: {
@@ -10630,42 +10440,654 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description List of import sources */
+        /** @description Staff list */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ImportSource'][];
-            };
+            'application/json': components['schemas']['internal_proj_storefronts_handler.StaffListResponse'];
           };
         };
-        /** @description storefront.invalidId */
+        /** @description Bad request */
         400: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
-        /** @description auth.required */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description importSource.getError */
+        /** @description Internal server error */
         500: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Add staff member
+     * @description Adds a new staff member to the storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Staff data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_storefronts_handler.AddStaffRequest'];
+        };
+      };
+      responses: {
+        /** @description Staff added */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Insufficient permissions or staff limit reached */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{id}/staff/{staffId}/permissions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update staff permissions
+     * @description Updates permissions for a staff member
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+          /** @description Staff ID */
+          staffId: number;
+        };
+        cookie?: never;
+      };
+      /** @description Permissions map */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.JSONB'];
+        };
+      };
+      responses: {
+        /** @description Permissions updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Staff not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{id}/staff/{userId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove staff member
+     * @description Removes a staff member from the storefront
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+          /** @description User ID of staff member */
+          userId: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Staff removed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Staff not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{id}/view': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Record storefront view
+     * @description Records a view for analytics
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description View recorded */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/building': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get businesses in building
+     * @description Returns all storefronts located in the same building
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Building latitude */
+          lat: number;
+          /** @description Building longitude */
+          lng: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Businesses in building */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.StorefrontMapData'][];
+          };
+        };
+        /** @description Invalid coordinates */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/map': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefronts for map
+     * @description Returns storefronts within map bounds with minimal data for performance
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Minimum latitude */
+          min_lat: number;
+          /** @description Maximum latitude */
+          max_lat: number;
+          /** @description Minimum longitude */
+          min_lng: number;
+          /** @description Maximum longitude */
+          max_lng: number;
+          /** @description Minimum rating filter */
+          min_rating?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Map markers data */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.StorefrontMapData'][];
+          };
+        };
+        /** @description Invalid bounds */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/my': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get my storefronts
+     * @description Returns list of storefronts owned by current user
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of user's storefronts */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.Storefront'][];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/nearby': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get nearby storefronts
+     * @description Returns storefronts within specified radius from coordinates
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Latitude */
+          lat: number;
+          /** @description Longitude */
+          lng: number;
+          /** @description Radius in kilometers (default 5) */
+          radius_km?: number;
+          /** @description Maximum results (default 20, max 100) */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Nearby storefronts */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.Storefront'][];
+          };
+        };
+        /** @description Invalid coordinates */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/slug/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront by slug
+     * @description Returns storefront details by slug
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Storefront details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.Storefront'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
           };
         };
       };
@@ -11652,50 +12074,28 @@ export interface components {
       updated_by?: number;
       usage_context?: string;
     };
+    /** @enum {string} */
+    'backend_internal_domain_models.DeliveryProvider':
+      | 'posta_srbije'
+      | 'aks'
+      | 'bex'
+      | 'd_express'
+      | 'city_express'
+      | 'self_pickup'
+      | 'own_delivery';
+    'backend_internal_domain_models.DeliveryZone': {
+      name?: string;
+      postal_codes?: string[];
+      price_modifier?: number;
+    };
     'backend_internal_domain_models.GeoLocation': {
       city?: string;
       country?: string;
       lat?: number;
       lon?: number;
     };
-    'backend_internal_domain_models.ImportHistory': {
-      finished_at?: string;
-      id?: number;
-      items_failed?: number;
-      items_imported?: number;
-      items_total?: number;
-      items_updated?: number;
-      log?: string;
-      source_id?: number;
-      started_at?: string;
-      /** @description success, failed, partial */
-      status?: string;
-    };
-    'backend_internal_domain_models.ImportSource': {
-      auth_data?: number[];
-      created_at?: string;
-      id?: number;
-      last_import_at?: string;
-      /** @description Изменяем на обычную строку, но обрабатываем NULL при сканировании */
-      last_import_log?: string;
-      /** @description Изменяем на обычную строку, но обрабатываем NULL при сканировании */
-      last_import_status?: string;
-      mapping?: number[];
-      schedule?: string;
-      storefront_id?: number;
-      /** @description csv, xml, json */
-      type?: string;
-      updated_at?: string;
-      url?: string;
-    };
-    'backend_internal_domain_models.ImportSourceCreate': {
-      auth_data?: number[];
-      mapping?: number[];
-      schedule?: string;
-      storefront_id: number;
-      /** @enum {string} */
-      type: 'csv' | 'xml' | 'json';
-      url?: string;
+    'backend_internal_domain_models.JSONB': {
+      [key: string]: unknown;
     };
     'backend_internal_domain_models.ListingAttributeValue': {
       attribute_id?: number;
@@ -11723,6 +12123,23 @@ export interface components {
       };
       /** @description Добавляем поле для единиц измерения */
       unit?: string;
+    };
+    'backend_internal_domain_models.Location': {
+      /** @description Дополнительная информация */
+      building_info?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Координаты здания (после геокодинга) */
+      building_lat?: number;
+      building_lng?: number;
+      city?: string;
+      country?: string;
+      /** @description Адресные данные */
+      full_address?: string;
+      house_number?: string;
+      postal_code?: string;
+      street?: string;
+      /** @description Координаты клика пользователя */
+      user_lat?: number;
+      user_lng?: number;
     };
     'backend_internal_domain_models.MapMarker': {
       category_id?: number;
@@ -11908,6 +12325,17 @@ export interface components {
       name?: string;
       type?: string;
     };
+    /** @enum {string} */
+    'backend_internal_domain_models.PaymentMethodType':
+      | 'cash'
+      | 'cod'
+      | 'card'
+      | 'bank_transfer'
+      | 'paypal'
+      | 'crypto'
+      | 'postanska'
+      | 'keks_pay'
+      | 'ips';
     'backend_internal_domain_models.PaymentSession': {
       amount?: number;
       completed_at?: string;
@@ -11999,38 +12427,183 @@ export interface components {
       total_reviews?: number;
       verified_reviews?: number;
     };
+    /** @enum {string} */
+    'backend_internal_domain_models.StaffRole':
+      | 'owner'
+      | 'manager'
+      | 'support'
+      | 'moderator';
     'backend_internal_domain_models.Storefront': {
+      /** @description Локация */
       address?: string;
+      ai_agent_config?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description AI и killer features */
+      ai_agent_enabled?: boolean;
+      banner_url?: string;
       city?: string;
+      commission_rate?: number;
       country?: string;
+      /** @description Временные метки */
       created_at?: string;
-      creation_transaction_id?: number;
       description?: string;
       email?: string;
+      group_buying_enabled?: boolean;
+      id?: number;
+      /** @description Статус и статистика */
+      is_active?: boolean;
+      is_verified?: boolean;
+      latitude?: number;
+      live_shopping_enabled?: boolean;
+      /** @description Брендинг */
+      logo_url?: string;
+      longitude?: number;
+      name?: string;
+      /** @description Контактная информация */
+      phone?: string;
+      postal_code?: string;
+      products_count?: number;
+      rating?: number;
+      reviews_count?: number;
+      sales_count?: number;
+      seo_meta?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Настройки бизнеса */
+      settings?: components['schemas']['backend_internal_domain_models.JSONB'];
+      slug?: string;
+      subscription_expires_at?: string;
+      /** @description Подписка (монетизация) */
+      subscription_plan?: components['schemas']['backend_internal_domain_models.SubscriptionPlan'];
+      theme?: components['schemas']['backend_internal_domain_models.JSONB'];
+      updated_at?: string;
+      user_id?: number;
+      verification_date?: string;
+      views_count?: number;
+      website?: string;
+    };
+    'backend_internal_domain_models.StorefrontAnalytics': {
+      add_to_cart_count?: number;
+      avg_order_value?: number;
+      /** @description в секундах */
+      avg_session_time?: number;
+      bounce_rate?: number;
+      checkout_count?: number;
+      conversion_rate?: number;
+      created_at?: string;
+      date?: string;
+      id?: number;
+      /** @description География заказов */
+      orders_by_city?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Продажи */
+      orders_count?: number;
+      /** @description Трафик */
+      page_views?: number;
+      /** @description Методы оплаты */
+      payment_methods_usage?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Товары */
+      product_views?: number;
+      revenue?: number;
+      storefront_id?: number;
+      top_categories?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Топ товары/категории */
+      top_products?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Источники трафика */
+      traffic_sources?: components['schemas']['backend_internal_domain_models.JSONB'];
+      unique_visitors?: number;
+    };
+    'backend_internal_domain_models.StorefrontCreateDTO': {
+      description?: string;
+      email?: string;
+      /** @description Локация */
+      location: components['schemas']['backend_internal_domain_models.Location'];
+      name: string;
+      /** @description Контактная информация */
+      phone?: string;
+      seo_meta?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Настройки */
+      settings?: components['schemas']['backend_internal_domain_models.JSONB'];
+      theme?: components['schemas']['backend_internal_domain_models.JSONB'];
+      website?: string;
+    };
+    'backend_internal_domain_models.StorefrontDeliveryOption': {
+      available_days?: number[];
+      /** @description Ценообразование */
+      base_price?: number;
+      /** @description Специальные платы */
+      cod_fee?: number;
+      created_at?: string;
+      cutoff_time?: string;
+      description?: string;
+      estimated_days_max?: number;
+      estimated_days_min?: number;
+      /** @description Обработка хрупких товаров */
+      fragile_handling?: number;
+      free_above_amount?: number;
+      id?: number;
+      /** @description Страховка */
+      insurance_fee?: number;
+      is_enabled?: boolean;
+      max_distance_km?: number;
+      max_weight_kg?: number;
+      /** @description Ограничения доставки */
+      min_order_amount?: number;
+      name?: string;
+      price_per_kg?: number;
+      price_per_km?: number;
+      provider?: components['schemas']['backend_internal_domain_models.DeliveryProvider'];
+      /** @description Интеграция с провайдером */
+      provider_config?: components['schemas']['backend_internal_domain_models.JSONB'];
+      storefront_id?: number;
+      /** @description Поддерживаемые методы оплаты для этой доставки */
+      supported_payment_methods?: components['schemas']['backend_internal_domain_models.PaymentMethodType'][];
+      updated_at?: string;
+      /** @description Зоны и доступность */
+      zones?: components['schemas']['backend_internal_domain_models.DeliveryZone'][];
+    };
+    'backend_internal_domain_models.StorefrontHours': {
+      close_time?: string;
+      /** @description 0=Sunday, 6=Saturday */
+      day_of_week?: number;
+      id?: number;
+      is_closed?: boolean;
+      open_time?: string;
+      /** @description Специальные часы */
+      special_date?: string;
+      special_note?: string;
+      storefront_id?: number;
+    };
+    'backend_internal_domain_models.StorefrontMapData': {
+      accepts_cards?: boolean;
+      /** @description Краткая информация для попапа */
+      address?: string;
+      has_delivery?: boolean;
+      has_self_pickup?: boolean;
       id?: number;
       latitude?: number;
-      logo_path?: string;
+      logo_url?: string;
       longitude?: number;
       name?: string;
       phone?: string;
+      products_count?: number;
+      rating?: number;
       slug?: string;
-      /** @description active, inactive, suspended */
-      status?: string;
-      updated_at?: string;
-      user_id?: number;
-      website?: string;
+      /** @description Ключевые фичи */
+      supports_cod?: boolean;
+      working_now?: boolean;
     };
-    'backend_internal_domain_models.StorefrontCreate': {
-      address?: string;
-      city?: string;
-      country?: string;
-      description?: string;
-      email?: string;
-      latitude?: number;
-      longitude?: number;
-      name: string;
-      phone?: string;
-      website?: string;
+    'backend_internal_domain_models.StorefrontPaymentMethod': {
+      /** @description Специфично для COD (наложенный платеж) */
+      cod_fee?: number;
+      created_at?: string;
+      id?: number;
+      is_enabled?: boolean;
+      max_amount?: number;
+      method_type?: components['schemas']['backend_internal_domain_models.PaymentMethodType'];
+      min_amount?: number;
+      /** @description Настройки провайдера */
+      provider?: string;
+      settings?: components['schemas']['backend_internal_domain_models.JSONB'];
+      storefront_id?: number;
+      /** @description Комиссии и лимиты */
+      transaction_fee?: number;
     };
     'backend_internal_domain_models.StorefrontRatingSummary': {
       average_rating?: number;
@@ -12043,6 +12616,43 @@ export interface components {
       storefront_id?: number;
       total_reviews?: number;
     };
+    'backend_internal_domain_models.StorefrontStaff': {
+      actions_count?: number;
+      created_at?: string;
+      id?: number;
+      /** @description Отслеживание активности */
+      last_active_at?: string;
+      permissions?: components['schemas']['backend_internal_domain_models.JSONB'];
+      role?: components['schemas']['backend_internal_domain_models.StaffRole'];
+      storefront_id?: number;
+      updated_at?: string;
+      user_id?: number;
+    };
+    'backend_internal_domain_models.StorefrontUpdateDTO': {
+      /** @description Функции */
+      ai_agent_enabled?: boolean;
+      description?: string;
+      email?: string;
+      group_buying_enabled?: boolean;
+      live_shopping_enabled?: boolean;
+      /** @description Локация */
+      location?: components['schemas']['backend_internal_domain_models.Location'];
+      name?: string;
+      /** @description Контактная информация */
+      phone?: string;
+      seo_meta?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Настройки */
+      settings?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Брендинг */
+      theme?: components['schemas']['backend_internal_domain_models.JSONB'];
+      website?: string;
+    };
+    /** @enum {string} */
+    'backend_internal_domain_models.SubscriptionPlan':
+      | 'starter'
+      | 'professional'
+      | 'business'
+      | 'enterprise';
     'backend_internal_domain_models.Translation': {
       created_at?: string;
       entity_id?: number;
@@ -12746,14 +13356,24 @@ export interface components {
       /** @example helpful */
       vote_type?: string;
     };
-    'internal_proj_storefront_handler.ApplyCategoryMappingsResponse': {
-      message?: string;
-      updated_count?: number;
+    'internal_proj_storefronts_handler.AddStaffRequest': {
+      role: components['schemas']['backend_internal_domain_models.StaffRole'];
+      user_id: number;
     };
-    'internal_proj_storefront_handler.CategoryMappingsUpdateResponse': {
-      message?: string;
+    'internal_proj_storefronts_handler.ErrorResponse': {
+      error?: string;
     };
-    'internal_proj_storefront_handler.MessageResponse': {
+    'internal_proj_storefronts_handler.StaffListResponse': {
+      staff?: components['schemas']['backend_internal_domain_models.StorefrontStaff'][];
+      total?: number;
+    };
+    'internal_proj_storefronts_handler.StorefrontsListResponse': {
+      limit?: number;
+      offset?: number;
+      storefronts?: components['schemas']['backend_internal_domain_models.Storefront'][];
+      total?: number;
+    };
+    'internal_proj_storefronts_handler.SuccessResponse': {
       message?: string;
     };
     'internal_proj_users_handler.AdminAdminsResponse': {

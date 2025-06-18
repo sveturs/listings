@@ -10,7 +10,7 @@ import (
 	notificationService "backend/internal/proj/notifications/service"
 	payment "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
-	storefrontService "backend/internal/proj/storefront/service"
+	storefrontService "backend/internal/proj/storefronts/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
@@ -28,10 +28,9 @@ type Service struct {
 	translation    translationService.TranslationServiceInterface
 	balance        *balance.BalanceService
 	payment        payment.PaymentServiceInterface
-	storefront     storefrontService.StorefrontServiceInterface
+	storefront     storefrontService.StorefrontService
 	storage        storage.Storage
 	geocode        geocodeService.GeocodeServiceInterface
-	scheduleImport *storefrontService.ScheduleService
 	fileStorage    filestorage.FileStorageInterface
 	chatAttachment *marketplaceService.ChatAttachmentService
 }
@@ -40,8 +39,9 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	notificationSvc := notificationService.NewService(storage)
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
-	storefrontSvc := storefrontService.NewStorefrontService(storage)
-	scheduleService := storefrontService.NewScheduleService(storage, storefrontSvc)
+	// TODO: создать storefront repository и передать его
+	// storefrontSvc := storefrontService.NewStorefrontService(storefrontRepo, fileStorage)
+	var storefrontSvc storefrontService.StorefrontService = nil
 
 	// Создаем сервис платежей с передачей сервиса баланса
 	stripeService := payment.NewStripeService(
@@ -50,7 +50,6 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 		cfg.FrontendURL,
 		balanceSvc,
 	)
-	scheduleService.Start()
 	// Create services
 	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification)
 	contactsSvc := marketplaceService.NewContactsService(storage)
@@ -93,21 +92,15 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 		translation:    translationSvc,
 		balance:        balanceSvc,
 		payment:        stripeService,
-		storefront:     storefrontService.NewStorefrontService(storage),
+		storefront:     storefrontSvc,
 		storage:        storage,
 		geocode:        geocodeSvc,
-		scheduleImport: scheduleService,
 		fileStorage:    fileStorageSvc,
 		chatAttachment: chatAttachmentSvc,
 	}
 }
 
 func (s *Service) Shutdown() {
-	// Останавливаем сервис расписания
-	if s.scheduleImport != nil {
-		s.scheduleImport.Stop()
-	}
-
 	log.Println("All services stopped")
 }
 
@@ -119,7 +112,7 @@ func (s *Service) Storage() storage.Storage {
 	return s.storage
 }
 
-func (s *Service) Storefront() storefrontService.StorefrontServiceInterface {
+func (s *Service) Storefront() storefrontService.StorefrontService {
 	return s.storefront
 }
 
