@@ -1271,12 +1271,14 @@ definitions:
     enum:
     - owner
     - manager
+    - cashier
     - support
     - moderator
     type: string
     x-enum-varnames:
     - StaffRoleOwner
     - StaffRoleManager
+    - StaffRoleCashier
     - StaffRoleSupport
     - StaffRoleModerator
   backend_internal_domain_models.Storefront:
@@ -1442,6 +1444,9 @@ definitions:
         allOf:
         - $ref: '#/definitions/backend_internal_domain_models.JSONB'
         description: Настройки
+      slug:
+        description: Генерируется автоматически если пустой
+        type: string
       theme:
         $ref: '#/definitions/backend_internal_domain_models.JSONB'
       website:
@@ -1650,6 +1655,8 @@ definitions:
       ai_agent_enabled:
         description: Функции
         type: boolean
+      banner_url:
+        type: string
       description:
         type: string
       email:
@@ -1662,6 +1669,9 @@ definitions:
         allOf:
         - $ref: '#/definitions/backend_internal_domain_models.Location'
         description: Локация
+      logo_url:
+        description: Брендинг
+        type: string
       name:
         maxLength: 255
         minLength: 3
@@ -1676,9 +1686,7 @@ definitions:
         - $ref: '#/definitions/backend_internal_domain_models.JSONB'
         description: Настройки
       theme:
-        allOf:
-        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
-        description: Брендинг
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
       website:
         type: string
     type: object
@@ -2010,6 +2018,73 @@ definitions:
       storefrontID:
         description: ID витрины
         type: string
+    type: object
+  backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      description:
+        type: string
+      distance:
+        description: Расстояние в км (если есть)
+        type: number
+      email:
+        type: string
+      hasDelivery:
+        type: boolean
+      hasSelfPickup:
+        type: boolean
+      highlights:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        description: Подсвеченные фрагменты
+        type: object
+      id:
+        type: integer
+      isOpenNow:
+        type: boolean
+      isVerified:
+        type: boolean
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      paymentMethods:
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      productsCount:
+        type: integer
+      rating:
+        type: number
+      reviewsCount:
+        type: integer
+      score:
+        description: Релевантность
+        type: number
+      slug:
+        type: string
+      userID:
+        type: integer
+    type: object
+  backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult:
+    properties:
+      storefronts:
+        items:
+          $ref: '#/definitions/backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem'
+        type: array
+      total:
+        type: integer
     type: object
   backend_pkg_utils.ErrorResponseSwag:
     properties:
@@ -10572,6 +10647,93 @@ paths:
       tags:
       - storefronts
       - map
+  /api/v1/storefronts/search:
+    get:
+      consumes:
+      - application/json
+      description: Performs advanced search of storefronts using OpenSearch engine
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: City filter
+        in: query
+        name: city
+        type: string
+      - description: Latitude for geo search
+        in: query
+        name: lat
+        type: number
+      - description: Longitude for geo search
+        in: query
+        name: lng
+        type: number
+      - description: Search radius in kilometers
+        in: query
+        name: radius_km
+        type: integer
+      - description: Minimum rating
+        in: query
+        name: min_rating
+        type: number
+      - description: Only verified storefronts
+        in: query
+        name: is_verified
+        type: boolean
+      - description: Only currently open storefronts
+        in: query
+        name: is_open_now
+        type: boolean
+      - description: Payment methods (comma separated)
+        in: query
+        name: payment_methods
+        type: string
+      - description: Has delivery option
+        in: query
+        name: has_delivery
+        type: boolean
+      - description: Has self pickup option
+        in: query
+        name: has_self_pickup
+        type: boolean
+      - description: Sort field (rating, distance, products_count, created_at)
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort order (asc, desc)
+        in: query
+        name: sort_order
+        type: string
+      - default: 20
+        description: Number of results (max 100)
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Results offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results
+          schema:
+            $ref: '#/definitions/backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult'
+        "400":
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      summary: Search storefronts using OpenSearch
+      tags:
+      - storefronts
+      - search
   /api/v1/storefronts/slug/{slug}:
     get:
       consumes:

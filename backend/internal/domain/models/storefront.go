@@ -23,6 +23,7 @@ type StaffRole string
 const (
 	StaffRoleOwner     StaffRole = "owner"
 	StaffRoleManager   StaffRole = "manager"
+	StaffRoleCashier   StaffRole = "cashier"
 	StaffRoleSupport   StaffRole = "support"
 	StaffRoleModerator StaffRole = "moderator"
 )
@@ -302,6 +303,7 @@ type Location struct {
 // StorefrontCreateDTO данные для создания витрины
 type StorefrontCreateDTO struct {
 	Name        string `json:"name" validate:"required,min=3,max=255"`
+	Slug        string `json:"slug,omitempty"` // Генерируется автоматически если пустой
 	Description string `json:"description,omitempty"`
 
 	// Брендинг
@@ -328,7 +330,9 @@ type StorefrontUpdateDTO struct {
 	Description *string `json:"description,omitempty"`
 
 	// Брендинг
-	Theme JSONB `json:"theme,omitempty"`
+	LogoURL   *string `json:"logo_url,omitempty"`
+	BannerURL *string `json:"banner_url,omitempty"`
+	Theme     JSONB   `json:"theme,omitempty"`
 
 	// Контактная информация
 	Phone   *string `json:"phone,omitempty"`

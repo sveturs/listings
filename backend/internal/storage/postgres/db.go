@@ -24,6 +24,7 @@ import (
 	userStorage "backend/internal/proj/users/storage/postgres"
 
 	"backend/internal/proj/marketplace/storage/opensearch"
+	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
 	osClient "backend/internal/storage/opensearch"
 )
 
@@ -35,11 +36,14 @@ type Database struct {
 	usersDB           *userStorage.Storage
 	notificationsDB   *notificationStorage.Storage
 	osMarketplaceRepo opensearch.MarketplaceSearchRepository
+	osStorefrontRepo  storefrontOpenSearch.StorefrontSearchRepository
 	osClient          *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
 	db                *sql.DB
 	marketplaceIndex  string
+	storefrontIndex   string
 	attributeGroups   AttributeGroupStorage
 	fsStorage         filestorage.FileStorageInterface
+	storefrontRepo    StorefrontRepository // Репозиторий для витрин
 }
 
 func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface) (*Database, error) {
@@ -62,9 +66,13 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 		notificationsDB:  notificationStorage.NewNotificationStorage(pool),
 		osClient:         osClient,    // Сохраняем клиент OpenSearch
 		marketplaceIndex: indexName,   // Сохраняем имя индекса
+		storefrontIndex:  "storefronts", // Индекс для витрин
 		fsStorage:        fileStorage, // Используем переданный параметр
 		attributeGroups:  NewAttributeGroupStorage(pool),
 	}
+	
+	// Инициализируем репозиторий витрин
+	db.storefrontRepo = NewStorefrontRepository(db)
 
 	// Инициализируем репозиторий OpenSearch, если клиент передан
 	if osClient != nil {
@@ -72,6 +80,13 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 		// Подготавливаем индекс
 		if err := db.osMarketplaceRepo.PrepareIndex(context.Background()); err != nil {
 			log.Printf("Ошибка подготовки индекса OpenSearch: %v", err)
+		}
+		
+		// Инициализируем репозиторий витрин в OpenSearch
+		db.osStorefrontRepo = storefrontOpenSearch.NewStorefrontRepository(osClient, db.storefrontIndex)
+		// Подготавливаем индекс витрин
+		if err := db.osStorefrontRepo.PrepareIndex(context.Background()); err != nil {
+			log.Printf("Ошибка подготовки индекса витрин в OpenSearch: %v", err)
 		}
 	}
 
@@ -103,6 +118,38 @@ func (db *Database) GetOpenSearchClient() (interface {
 		return nil, fmt.Errorf("OpenSearch клиент не настроен")
 	}
 	return db.osClient, nil
+}
+
+// SearchStorefrontsOpenSearch выполняет поиск витрин через OpenSearch
+func (db *Database) SearchStorefrontsOpenSearch(ctx context.Context, params *storefrontOpenSearch.StorefrontSearchParams) (*storefrontOpenSearch.StorefrontSearchResult, error) {
+	if db.osStorefrontRepo == nil {
+		return nil, fmt.Errorf("OpenSearch для витрин не настроен")
+	}
+	return db.osStorefrontRepo.Search(ctx, params)
+}
+
+// IndexStorefront индексирует витрину в OpenSearch
+func (db *Database) IndexStorefront(ctx context.Context, storefront *models.Storefront) error {
+	if db.osStorefrontRepo == nil {
+		return fmt.Errorf("OpenSearch для витрин не настроен")
+	}
+	return db.osStorefrontRepo.Index(ctx, storefront)
+}
+
+// DeleteStorefrontIndex удаляет витрину из индекса OpenSearch
+func (db *Database) DeleteStorefrontIndex(ctx context.Context, storefrontID int) error {
+	if db.osStorefrontRepo == nil {
+		return fmt.Errorf("OpenSearch для витрин не настроен")
+	}
+	return db.osStorefrontRepo.Delete(ctx, storefrontID)
+}
+
+// ReindexAllStorefronts переиндексирует все витрины
+func (db *Database) ReindexAllStorefronts(ctx context.Context) error {
+	if db.osStorefrontRepo == nil {
+		return fmt.Errorf("OpenSearch для витрин не настроен")
+	}
+	return db.osStorefrontRepo.ReindexAll(ctx)
 }
 func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
 	var image models.MarketplaceImage
@@ -1314,3 +1361,13 @@ func (db *Database) DeleteStorefront(ctx context.Context, id int) error {
 	_, err := db.pool.Exec(ctx, "DELETE FROM storefronts WHERE id = $1", id)
 	return err
 }
+
+// Storefront возвращает репозиторий витрин
+func (db *Database) Storefront() interface{} {
+	if db.storefrontRepo != nil {
+		return db.storefrontRepo
+	}
+	// Возвращаем новый репозиторий используя текущий экземпляр db
+	return NewStorefrontRepository(db)
+}
+

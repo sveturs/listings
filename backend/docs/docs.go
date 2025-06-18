@@ -10261,6 +10261,136 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/storefronts/search": {
+            "get": {
+                "description": "Performs advanced search of storefronts using OpenSearch engine",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts",
+                    "search"
+                ],
+                "summary": "Search storefronts using OpenSearch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "City filter",
+                        "name": "city",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Latitude for geo search",
+                        "name": "lat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Longitude for geo search",
+                        "name": "lng",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Search radius in kilometers",
+                        "name": "radius_km",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Minimum rating",
+                        "name": "min_rating",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Only verified storefronts",
+                        "name": "is_verified",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Only currently open storefronts",
+                        "name": "is_open_now",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Payment methods (comma separated)",
+                        "name": "payment_methods",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Has delivery option",
+                        "name": "has_delivery",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Has self pickup option",
+                        "name": "has_self_pickup",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort field (rating, distance, products_count, created_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc, desc)",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Number of results (max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Results offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results",
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid parameters",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts/slug/{slug}": {
             "get": {
                 "description": "Returns storefront details by slug",
@@ -13809,12 +13939,14 @@ const docTemplate = `{
             "enum": [
                 "owner",
                 "manager",
+                "cashier",
                 "support",
                 "moderator"
             ],
             "x-enum-varnames": [
                 "StaffRoleOwner",
                 "StaffRoleManager",
+                "StaffRoleCashier",
                 "StaffRoleSupport",
                 "StaffRoleModerator"
             ]
@@ -14077,6 +14209,10 @@ const docTemplate = `{
                             "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                         }
                     ]
+                },
+                "slug": {
+                    "description": "Генерируется автоматически если пустой",
+                    "type": "string"
                 },
                 "theme": {
                     "$ref": "#/definitions/backend_internal_domain_models.JSONB"
@@ -14383,6 +14519,9 @@ const docTemplate = `{
                     "description": "Функции",
                     "type": "boolean"
                 },
+                "banner_url": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -14402,6 +14541,10 @@ const docTemplate = `{
                             "$ref": "#/definitions/backend_internal_domain_models.Location"
                         }
                     ]
+                },
+                "logo_url": {
+                    "description": "Брендинг",
+                    "type": "string"
                 },
                 "name": {
                     "type": "string",
@@ -14424,12 +14567,7 @@ const docTemplate = `{
                     ]
                 },
                 "theme": {
-                    "description": "Брендинг",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/backend_internal_domain_models.JSONB"
-                        }
-                    ]
+                    "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                 },
                 "website": {
                     "type": "string"
@@ -14918,6 +15056,106 @@ const docTemplate = `{
                 "storefrontID": {
                     "description": "ID витрины",
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "distance": {
+                    "description": "Расстояние в км (если есть)",
+                    "type": "number"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "hasDelivery": {
+                    "type": "boolean"
+                },
+                "hasSelfPickup": {
+                    "type": "boolean"
+                },
+                "highlights": {
+                    "description": "Подсвеченные фрагменты",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isOpenNow": {
+                    "type": "boolean"
+                },
+                "isVerified": {
+                    "type": "boolean"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "paymentMethods": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "productsCount": {
+                    "type": "integer"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "reviewsCount": {
+                    "type": "integer"
+                },
+                "score": {
+                    "description": "Релевантность",
+                    "type": "number"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult": {
+            "type": "object",
+            "properties": {
+                "storefronts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
