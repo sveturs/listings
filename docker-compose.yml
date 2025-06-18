@@ -132,14 +132,19 @@ services:
 #
 #  frontend:
 #    build:
-#      context: ./frontend/hostel-frontend
+#      context: ./frontend/svetu
 #      dockerfile: Dockerfile
+#    container_name: frontend
 #    ports:
-#      - "3001:3001"
-#    env_file:
-#      - ./frontend/hostel-frontend/.env.local
-#    depends_on:
-#      - backend
+#      - "3000:3000"
+#    environment:
+#      - NODE_ENV=production
+#      - NEXT_PUBLIC_API_URL=http://localhost:8089
+#      - NEXT_PUBLIC_MINIO_URL=http://localhost:9000
+#      - NEXT_PUBLIC_IMAGE_HOSTS=http:localhost:9000,https:svetu.rs:443,http:localhost:3000
+#      - NEXT_PUBLIC_IMAGE_PATH_PATTERN=/listings/**
+#      - NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:8089
+#      - NEXT_PUBLIC_ENABLE_PAYMENTS=false
 #    networks:
 #      - hostel_network
   migrate:

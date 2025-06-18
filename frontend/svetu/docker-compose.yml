@@ -1,0 +1,49 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: svetu-frontend:latest
+    network_mode: 'host'
+    environment:
+      # Основные переменные окружения
+      - NODE_ENV=production
+
+      # API URLs
+      # Для клиента (браузер) - используем порт 3000 хоста
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+
+      # Для сервера (SSR) - используем host.docker.internal для доступа к хосту
+      # На Linux может потребоваться использовать IP хоста напрямую
+      - INTERNAL_API_URL=http://host.docker.internal:8089
+
+      # MinIO URLs
+      - NEXT_PUBLIC_MINIO_URL=http://localhost:9000
+
+      # Разрешенные хосты для изображений
+      - NEXT_PUBLIC_IMAGE_HOSTS=http:localhost:9000,https:svetu.rs:443,http:localhost:3000,http:localhost:8089
+
+      # WebSocket URL (если backend поддерживает)
+      - NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:8089
+
+      # Дополнительные настройки
+      - NEXT_PUBLIC_ENABLE_PAYMENTS=false
+      - NEXT_PUBLIC_IMAGE_PATH_PATTERN=/listings/**
+
+      # Port settings
+      - PORT=3002
+      - HOSTNAME=0.0.0.0
+
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
