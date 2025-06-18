@@ -1344,5 +1344,52 @@
     "products": "Manage Products",
     "orders": "Manage Orders",
     "settings": "Manage Settings"
+  },
+  "storefronts": {
+    "title": "Storefronts",
+    "browseStorefronts": "Browse Storefronts",
+    "notFound": "Storefront not found",
+    "notFoundDescription": "The storefront you're looking for doesn't exist or has been removed",
+    "about": "About",
+    "businessDetails": "Business Details",
+    "registrationNumber": "Registration Number",
+    "taxNumber": "Tax Number",
+    "vatNumber": "VAT Number",
+    "location": "Location",
+    "products": "Products",
+    "noProducts": "No products available yet",
+    "storeInfo": "Store Information",
+    "businessHours": "Business Hours",
+    "open": "Open",
+    "closed": "Closed",
+    "website": "Website",
+    "socialMedia": "Social Media",
+    "memberSince": "Member since",
+    "verified": "Verified",
+    "contactStore": "Contact Store",
+    "follow": "Follow",
+    "following": "Following",
+    "manageDashboard": "Manage Dashboard",
+    "viewAnalytics": "View Analytics",
+    "acceptedPayments": "Accepted Payments",
+    "deliveryOptions": "Delivery Options",
+    "shareStore": "Share Store",
+    "storeLink": "Store Link",
+    "trustSafety": "Trust & Safety",
+    "verifiedBusiness": "Verified Business",
+    "securePayments": "Secure Payments",
+    "buyerProtection": "Buyer Protection",
+    "payment_methods": {
+      "cash": "Cash",
+      "card": "Card",
+      "bank_transfer": "Bank Transfer",
+      "cod": "Cash on Delivery"
+    },
+    "business_types": {
+      "retail": "Retail Store",
+      "service": "Service Provider",
+      "restaurant": "Restaurant",
+      "other": "Other Business"
+    }
   }
 }

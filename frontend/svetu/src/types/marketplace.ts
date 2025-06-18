@@ -103,3 +103,18 @@ export interface MarketplaceSearchParams {
   maxPrice?: number;
   search?: string;
 }
+
+export interface ListingCardData {
+  id: number;
+  title: string;
+  price: number;
+  old_price?: number;
+  location?: string;
+  main_image?: string;
+  has_discount?: boolean;
+  discount_percentage?: number;
+  created_at: string;
+  views_count?: number;
+  favorites_count?: number;
+  is_favorite?: boolean;
+}
