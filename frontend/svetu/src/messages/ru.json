@@ -1194,6 +1194,165 @@
     "continue": "Продолжить",
     "select": "Выбрать",
     "yes": "Да",
-    "popular": "Популярное"
+    "popular": "Популярное",
+    "next": "Далее",
+    "add": "Добавить",
+    "optional": "Необязательно",
+    "closed": "Закрыто",
+    "open": "Открыто",
+    "searching": "Поиск...",
+    "publishing": "Публикация...",
+    "publish": "Опубликовать",
+    "free_above": "Бесплатно от",
+    "days": {
+      "monday": "Понедельник",
+      "tuesday": "Вторник",
+      "wednesday": "Среда",
+      "thursday": "Четверг",
+      "friday": "Пятница",
+      "saturday": "Суббота",
+      "sunday": "Воскресенье"
+    }
+  },
+  "create_storefront": {
+    "title": "Создайте свою витрину",
+    "subtitle": "Настройте присутствие вашего бизнеса на Sve Tu",
+    "auth_required": "Пожалуйста, войдите для создания витрины",
+    "success": "Витрина успешно создана!",
+    "error": "Не удалось создать витрину",
+    "steps": {
+      "basic_info": "Основная информация",
+      "business_details": "Данные о бизнесе",
+      "location": "Местоположение",
+      "business_hours": "Часы работы",
+      "payment_delivery": "Оплата и доставка",
+      "staff_setup": "Настройка персонала",
+      "preview": "Просмотр и публикация"
+    },
+    "basic_info": {
+      "title": "Основная информация",
+      "subtitle": "Расскажите клиентам о вашем бизнесе",
+      "name": "Название бизнеса",
+      "name_placeholder": "Введите название вашего бизнеса",
+      "slug": "URL магазина",
+      "slug_placeholder": "vash-magazin",
+      "description": "Описание",
+      "description_placeholder": "Опишите ваш бизнес, товары и услуги",
+      "business_type": "Тип бизнеса"
+    },
+    "business_details": {
+      "title": "Данные о бизнесе",
+      "subtitle": "Необязательная информация о регистрации бизнеса",
+      "registration_number": "Регистрационный номер",
+      "registration_number_placeholder": "например, 12345678",
+      "tax_number": "Налоговый номер (ПИБ)",
+      "tax_number_placeholder": "например, 123456789",
+      "vat_number": "Номер НДС",
+      "vat_number_placeholder": "например, RS123456789",
+      "phone": "Номер телефона",
+      "phone_placeholder": "+381 11 123 4567",
+      "email": "Email бизнеса",
+      "email_placeholder": "contact@vashbiznes.com",
+      "website": "Веб-сайт",
+      "website_placeholder": "https://www.vashbiznes.com"
+    },
+    "location": {
+      "title": "Местоположение бизнеса",
+      "subtitle": "Где находится ваш бизнес?",
+      "address": "Адрес",
+      "address_placeholder": "например, Кнез Михаилова 10",
+      "city": "Город",
+      "city_placeholder": "например, Белград",
+      "postal_code": "Почтовый индекс",
+      "postal_code_placeholder": "например, 11000",
+      "country": "Страна",
+      "find_on_map": "Найти на карте",
+      "coordinates": "Координаты"
+    },
+    "business_hours": {
+      "title": "Часы работы",
+      "subtitle": "Когда ваш бизнес открыт?",
+      "tip": "Установите ваши обычные часы работы. Вы можете изменить их в любое время."
+    },
+    "payment_delivery": {
+      "title": "Способы оплаты и доставки",
+      "subtitle": "Как клиенты могут оплатить и получить свои заказы?",
+      "payment_methods": "Способы оплаты",
+      "delivery_options": "Варианты доставки",
+      "provider": "Поставщик",
+      "delivery_time": "Время доставки (минуты)",
+      "delivery_cost": "Стоимость доставки (RSD)",
+      "free_threshold": "Бесплатная доставка от (RSD)"
+    },
+    "staff_setup": {
+      "title": "Сотрудники",
+      "subtitle": "Добавьте членов команды для управления витриной",
+      "current_staff": "Текущие сотрудники",
+      "add_member": "Добавить сотрудника",
+      "email": "Email адрес",
+      "email_placeholder": "staff@vashbiznes.com",
+      "role": "Роль",
+      "permissions": "Разрешения",
+      "tip": "Сотрудники получат приглашение по email для присоединения к вашей витрине."
+    },
+    "preview": {
+      "title": "Проверьте вашу витрину",
+      "subtitle": "Пожалуйста, проверьте всю информацию перед публикацией"
+    },
+    "business_types": {
+      "retail": "Розничный магазин",
+      "service": "Поставщик услуг",
+      "restaurant": "Ресторан/Кафе",
+      "grocery": "Продуктовый магазин",
+      "other": "Другое"
+    },
+    "errors": {
+      "name_required": "Название бизнеса должно быть не менее 3 символов",
+      "slug_required": "URL магазина должен быть не менее 3 символов",
+      "slug_invalid": "URL магазина может содержать только строчные буквы, цифры и дефисы",
+      "description_required": "Описание должно быть не менее 20 символов",
+      "email_invalid": "Пожалуйста, введите корректный email адрес",
+      "email_required": "Email адрес обязателен",
+      "email_duplicate": "Этот email уже добавлен",
+      "phone_invalid": "Пожалуйста, введите корректный номер телефона",
+      "website_invalid": "Пожалуйста, введите корректный URL веб-сайта",
+      "address_required": "Адрес должен быть не менее 5 символов",
+      "city_required": "Город должен быть не менее 2 символов",
+      "postal_code_required": "Почтовый индекс должен быть не менее 4 символов"
+    }
+  },
+  "countries": {
+    "RS": "Сербия",
+    "BA": "Босния и Герцеговина",
+    "HR": "Хорватия",
+    "ME": "Черногория",
+    "MK": "Северная Македония"
+  },
+  "payment_methods": {
+    "cash": "Наличные",
+    "card": "Банковская карта",
+    "bank_transfer": "Банковский перевод",
+    "cod": "Наложенный платеж",
+    "postanska_stedionica": "Poštanska štedionica"
+  },
+  "delivery_providers": {
+    "posta_srbije": "Pošta Srbije",
+    "aks": "AKS",
+    "bex": "BEX",
+    "city_express": "City Express",
+    "d_express": "D Express",
+    "post_express": "Post Express",
+    "daily_express": "Daily Express",
+    "own_delivery": "Собственная доставка"
+  },
+  "roles": {
+    "staff": "Сотрудник",
+    "manager": "Менеджер",
+    "admin": "Администратор"
+  },
+  "permissions": {
+    "products": "Управление товарами",
+    "orders": "Управление заказами",
+    "settings": "Управление настройками"
   }
 }

@@ -1184,6 +1184,165 @@
     "continue": "Continue",
     "select": "Select",
     "yes": "Yes",
-    "popular": "Popular"
+    "popular": "Popular",
+    "next": "Next",
+    "add": "Add",
+    "optional": "Optional",
+    "closed": "Closed",
+    "open": "Open",
+    "searching": "Searching...",
+    "publishing": "Publishing...",
+    "publish": "Publish",
+    "free_above": "Free above",
+    "days": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    }
+  },
+  "create_storefront": {
+    "title": "Create Your Storefront",
+    "subtitle": "Set up your business presence on Sve Tu",
+    "auth_required": "Please sign in to create a storefront",
+    "success": "Storefront created successfully!",
+    "error": "Failed to create storefront",
+    "steps": {
+      "basic_info": "Basic Information",
+      "business_details": "Business Details",
+      "location": "Location",
+      "business_hours": "Business Hours",
+      "payment_delivery": "Payment & Delivery",
+      "staff_setup": "Staff Setup",
+      "preview": "Review & Publish"
+    },
+    "basic_info": {
+      "title": "Basic Information",
+      "subtitle": "Tell customers about your business",
+      "name": "Business Name",
+      "name_placeholder": "Enter your business name",
+      "slug": "Store URL",
+      "slug_placeholder": "your-store-name",
+      "description": "Description",
+      "description_placeholder": "Describe your business, products, and services",
+      "business_type": "Business Type"
+    },
+    "business_details": {
+      "title": "Business Details",
+      "subtitle": "Optional business registration information",
+      "registration_number": "Registration Number",
+      "registration_number_placeholder": "e.g., 12345678",
+      "tax_number": "Tax Number (PIB)",
+      "tax_number_placeholder": "e.g., 123456789",
+      "vat_number": "VAT Number",
+      "vat_number_placeholder": "e.g., RS123456789",
+      "phone": "Phone Number",
+      "phone_placeholder": "+381 11 123 4567",
+      "email": "Business Email",
+      "email_placeholder": "contact@yourbusiness.com",
+      "website": "Website",
+      "website_placeholder": "https://www.yourbusiness.com"
+    },
+    "location": {
+      "title": "Business Location",
+      "subtitle": "Where is your business located?",
+      "address": "Street Address",
+      "address_placeholder": "e.g., Knez Mihailova 10",
+      "city": "City",
+      "city_placeholder": "e.g., Belgrade",
+      "postal_code": "Postal Code",
+      "postal_code_placeholder": "e.g., 11000",
+      "country": "Country",
+      "find_on_map": "Find on Map",
+      "coordinates": "Coordinates"
+    },
+    "business_hours": {
+      "title": "Business Hours",
+      "subtitle": "When are you open for business?",
+      "tip": "Set your regular business hours. You can update these anytime."
+    },
+    "payment_delivery": {
+      "title": "Payment & Delivery Options",
+      "subtitle": "How can customers pay and receive their orders?",
+      "payment_methods": "Payment Methods",
+      "delivery_options": "Delivery Options",
+      "provider": "Provider",
+      "delivery_time": "Delivery Time (minutes)",
+      "delivery_cost": "Delivery Cost (RSD)",
+      "free_threshold": "Free Delivery Above (RSD)"
+    },
+    "staff_setup": {
+      "title": "Staff Members",
+      "subtitle": "Add team members who will help manage your storefront",
+      "current_staff": "Current Staff Members",
+      "add_member": "Add Staff Member",
+      "email": "Email Address",
+      "email_placeholder": "staff@yourbusiness.com",
+      "role": "Role",
+      "permissions": "Permissions",
+      "tip": "Staff members will receive an invitation email to join your storefront."
+    },
+    "preview": {
+      "title": "Review Your Storefront",
+      "subtitle": "Please review all information before publishing"
+    },
+    "business_types": {
+      "retail": "Retail Store",
+      "service": "Service Provider",
+      "restaurant": "Restaurant/Cafe",
+      "grocery": "Grocery Store",
+      "other": "Other"
+    },
+    "errors": {
+      "name_required": "Business name must be at least 3 characters",
+      "slug_required": "Store URL must be at least 3 characters",
+      "slug_invalid": "Store URL can only contain lowercase letters, numbers, and hyphens",
+      "description_required": "Description must be at least 20 characters",
+      "email_invalid": "Please enter a valid email address",
+      "email_required": "Email address is required",
+      "email_duplicate": "This email is already added",
+      "phone_invalid": "Please enter a valid phone number",
+      "website_invalid": "Please enter a valid website URL",
+      "address_required": "Street address must be at least 5 characters",
+      "city_required": "City must be at least 2 characters",
+      "postal_code_required": "Postal code must be at least 4 characters"
+    }
+  },
+  "countries": {
+    "RS": "Serbia",
+    "BA": "Bosnia and Herzegovina",
+    "HR": "Croatia",
+    "ME": "Montenegro",
+    "MK": "North Macedonia"
+  },
+  "payment_methods": {
+    "cash": "Cash",
+    "card": "Credit/Debit Card",
+    "bank_transfer": "Bank Transfer",
+    "cod": "Cash on Delivery",
+    "postanska_stedionica": "Poštanska štedionica"
+  },
+  "delivery_providers": {
+    "posta_srbije": "Pošta Srbije",
+    "aks": "AKS",
+    "bex": "BEX",
+    "city_express": "City Express",
+    "d_express": "D Express",
+    "post_express": "Post Express",
+    "daily_express": "Daily Express",
+    "own_delivery": "Own Delivery"
+  },
+  "roles": {
+    "staff": "Staff",
+    "manager": "Manager",
+    "admin": "Administrator"
+  },
+  "permissions": {
+    "products": "Manage Products",
+    "orders": "Manage Orders",
+    "settings": "Manage Settings"
   }
 }
