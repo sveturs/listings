@@ -1,0 +1,267 @@
+'use client';
+
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useCreateStorefrontContext } from '@/contexts/CreateStorefrontContext';
+
+interface PaymentDeliveryStepProps {
+  onNext: () => void;
+  onBack: () => void;
+}
+
+const paymentMethods = [
+  { id: 'cash', icon: '💵' },
+  { id: 'card', icon: '💳' },
+  { id: 'bank_transfer', icon: '🏦' },
+  { id: 'cod', icon: '📦' },
+  { id: 'postanska_stedionica', icon: '📮' },
+];
+
+const deliveryProviders = [
+  'posta_srbije',
+  'aks',
+  'bex',
+  'city_express',
+  'd_express',
+  'post_express',
+  'daily_express',
+  'own_delivery',
+];
+
+interface DeliveryOption {
+  providerName: string;
+  deliveryTimeMinutes: number;
+  deliveryCostRSD: number;
+  freeDeliveryThresholdRSD?: number;
+  maxDistanceKm?: number;
+}
+
+export default function PaymentDeliveryStep({
+  onNext,
+  onBack,
+}: PaymentDeliveryStepProps) {
+  const t = useTranslations();
+  const { formData, updateFormData } = useCreateStorefrontContext();
+  const [newDeliveryOption, setNewDeliveryOption] = useState<DeliveryOption>({
+    providerName: '',
+    deliveryTimeMinutes: 60,
+    deliveryCostRSD: 300,
+  });
+
+  const togglePaymentMethod = (method: string) => {
+    const currentMethods = formData.paymentMethods || [];
+    const updated = currentMethods.includes(method)
+      ? currentMethods.filter((m) => m !== method)
+      : [...currentMethods, method];
+    updateFormData({ paymentMethods: updated });
+  };
+
+  const addDeliveryOption = () => {
+    if (newDeliveryOption.providerName) {
+      const currentOptions = formData.deliveryOptions || [];
+      updateFormData({
+        deliveryOptions: [...currentOptions, { ...newDeliveryOption }],
+      });
+      setNewDeliveryOption({
+        providerName: '',
+        deliveryTimeMinutes: 60,
+        deliveryCostRSD: 300,
+      });
+    }
+  };
+
+  const removeDeliveryOption = (index: number) => {
+    const currentOptions = formData.deliveryOptions || [];
+    updateFormData({
+      deliveryOptions: currentOptions.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleNext = () => {
+    onNext();
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="card bg-base-100 shadow-xl">
+        <div className="card-body">
+          <h2 className="card-title text-2xl mb-4">
+            {t('create_storefront.payment_delivery.title')}
+          </h2>
+          <p className="text-base-content/70 mb-6">
+            {t('create_storefront.payment_delivery.subtitle')}
+          </p>
+
+          {/* Payment Methods */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">
+              {t('create_storefront.payment_delivery.payment_methods')}
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {paymentMethods.map((method) => (
+                <label key={method.id} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-primary"
+                    checked={
+                      formData.paymentMethods?.includes(method.id) || false
+                    }
+                    onChange={() => togglePaymentMethod(method.id)}
+                  />
+                  <span className="ml-2">
+                    {method.icon} {t(`payment_methods.${method.id}`)}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Delivery Options */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">
+              {t('create_storefront.payment_delivery.delivery_options')}
+            </h3>
+
+            {/* Existing delivery options */}
+            {formData.deliveryOptions &&
+              formData.deliveryOptions.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {formData.deliveryOptions.map((option, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-base-200 rounded-lg"
+                    >
+                      <div>
+                        <span className="font-medium">
+                          {t(`delivery_providers.${option.providerName}`)}
+                        </span>
+                        <span className="text-sm text-base-content/70 ml-2">
+                          {option.deliveryTimeMinutes} min •{' '}
+                          {option.deliveryCostRSD} RSD
+                        </span>
+                      </div>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => removeDeliveryOption(index)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            {/* Add new delivery option */}
+            <div className="card bg-base-200">
+              <div className="card-body p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">
+                        {t('create_storefront.payment_delivery.provider')}
+                      </span>
+                    </label>
+                    <select
+                      className="select select-bordered select-sm"
+                      value={newDeliveryOption.providerName}
+                      onChange={(e) =>
+                        setNewDeliveryOption({
+                          ...newDeliveryOption,
+                          providerName: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">{t('common.select')}</option>
+                      {deliveryProviders.map((provider) => (
+                        <option key={provider} value={provider}>
+                          {t(`delivery_providers.${provider}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">
+                        {t('create_storefront.payment_delivery.delivery_time')}
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      className="input input-bordered input-sm"
+                      value={newDeliveryOption.deliveryTimeMinutes}
+                      onChange={(e) =>
+                        setNewDeliveryOption({
+                          ...newDeliveryOption,
+                          deliveryTimeMinutes: parseInt(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">
+                        {t('create_storefront.payment_delivery.delivery_cost')}
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      className="input input-bordered input-sm"
+                      value={newDeliveryOption.deliveryCostRSD}
+                      onChange={(e) =>
+                        setNewDeliveryOption({
+                          ...newDeliveryOption,
+                          deliveryCostRSD: parseInt(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">
+                        {t('create_storefront.payment_delivery.free_threshold')}
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      className="input input-bordered input-sm"
+                      placeholder={t('common.optional')}
+                      value={newDeliveryOption.freeDeliveryThresholdRSD || ''}
+                      onChange={(e) =>
+                        setNewDeliveryOption({
+                          ...newDeliveryOption,
+                          freeDeliveryThresholdRSD: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <button
+                  className="btn btn-primary btn-sm mt-3"
+                  onClick={addDeliveryOption}
+                  disabled={!newDeliveryOption.providerName}
+                >
+                  {t('common.add')}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="card-actions justify-between mt-6">
+            <button className="btn btn-ghost" onClick={onBack}>
+              {t('common.back')}
+            </button>
+            <button className="btn btn-primary" onClick={handleNext}>
+              {t('common.next')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
