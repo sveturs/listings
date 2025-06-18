@@ -75,7 +75,7 @@ export class MarketplaceService {
       searchParams.append('maxPrice', params.maxPrice.toString());
     if (params.search) searchParams.append('search', params.search);
 
-    const url = `${configManager.getApiUrl()}/api/v1/marketplace/search?${searchParams.toString()}`;
+    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/search?${searchParams.toString()}`;
 
     try {
       const response = await fetch(url);
@@ -95,7 +95,7 @@ export class MarketplaceService {
   }
 
   static async getCategories(): Promise<CategoryResponse> {
-    const url = `${configManager.getApiUrl()}/api/v1/marketplace/categories`;
+    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/categories`;
 
     try {
       const response = await fetch(url);
@@ -115,7 +115,7 @@ export class MarketplaceService {
   static async getCategoryAttributes(
     categoryId: number
   ): Promise<CategoryAttributesResponse> {
-    const url = `${configManager.getApiUrl()}/api/v1/marketplace/categories/${categoryId}/attributes`;
+    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/categories/${categoryId}/attributes`;
 
     try {
       const response = await fetch(url);

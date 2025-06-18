@@ -35,7 +35,7 @@ jobs:
             -   name: Build and push Frontend Docker image
                 uses: docker/build-push-action@v4
                 with:
-                    context: ./frontend/hostel-frontend
+                    context: ./frontend/svetu
                     push: true
                     tags: |
                         ${{ secrets.DOCKER_REGISTRY }}/svetu/frontend/app:${{ env.TIMESTAMP }}

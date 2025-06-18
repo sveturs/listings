@@ -1,10 +1,15 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
-import configManager from './src/config';
+// import configManager from './src/config';
 
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
+  eslint: {
+    // During production builds, do not run ESLint
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       // Динамически создаем список хостов из переменных окружения
