@@ -1,12 +1,40 @@
 import type { components } from '@/types/generated/api';
 
 // Базовые типы из API
-export type Storefront =
+export type StorefrontBase =
   components['schemas']['backend_internal_domain_models.Storefront'];
 export type StorefrontCreateDTO =
   components['schemas']['backend_internal_domain_models.StorefrontCreateDTO'];
 export type StorefrontUpdateDTO =
   components['schemas']['backend_internal_domain_models.StorefrontUpdateDTO'];
+
+// Расширенный тип Storefront с дополнительными полями
+export interface Storefront extends StorefrontBase {
+  // Дополнительные поля для UI
+  stats?: {
+    average_rating?: number;
+    total_products?: number;
+    total_reviews?: number;
+    total_sales?: number;
+    view_count?: number;
+  };
+  hours?: StorefrontHours[];
+  payment_methods?: StorefrontPaymentMethod[];
+  delivery_options?: StorefrontDeliveryOption[];
+  location?: Location;
+  business_type?: string;
+  registration_number?: string;
+  tax_number?: string;
+  vat_number?: string;
+  banner_image_url?: string;
+  logo_url?: string;
+  website_url?: string;
+  social_links?: {
+    facebook?: string;
+    instagram?: string;
+    telegram?: string;
+  };
+}
 export type StorefrontAnalytics =
   components['schemas']['backend_internal_domain_models.StorefrontAnalytics'];
 export type StorefrontRatingSummary =

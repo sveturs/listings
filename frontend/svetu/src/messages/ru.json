@@ -1354,5 +1354,52 @@
     "products": "Управление товарами",
     "orders": "Управление заказами",
     "settings": "Управление настройками"
+  },
+  "storefronts": {
+    "title": "Витрины",
+    "browseStorefronts": "Просмотреть витрины",
+    "notFound": "Витрина не найдена",
+    "notFoundDescription": "Витрина, которую вы ищете, не существует или была удалена",
+    "about": "О магазине",
+    "businessDetails": "Данные компании",
+    "registrationNumber": "Регистрационный номер",
+    "taxNumber": "ИНН",
+    "vatNumber": "НДС номер",
+    "location": "Местоположение",
+    "products": "Товары",
+    "noProducts": "Товары пока не добавлены",
+    "storeInfo": "Информация о магазине",
+    "businessHours": "Часы работы",
+    "open": "Открыто",
+    "closed": "Закрыто",
+    "website": "Веб-сайт",
+    "socialMedia": "Социальные сети",
+    "memberSince": "Участник с",
+    "verified": "Проверено",
+    "contactStore": "Связаться с магазином",
+    "follow": "Подписаться",
+    "following": "Вы подписаны",
+    "manageDashboard": "Управление витриной",
+    "viewAnalytics": "Просмотр аналитики",
+    "acceptedPayments": "Принимаемые платежи",
+    "deliveryOptions": "Способы доставки",
+    "shareStore": "Поделиться магазином",
+    "storeLink": "Ссылка на магазин",
+    "trustSafety": "Доверие и безопасность",
+    "verifiedBusiness": "Проверенный бизнес",
+    "securePayments": "Безопасные платежи",
+    "buyerProtection": "Защита покупателя",
+    "payment_methods": {
+      "cash": "Наличные",
+      "card": "Карта",
+      "bank_transfer": "Банковский перевод",
+      "cod": "Наложенный платеж"
+    },
+    "business_types": {
+      "retail": "Розничный магазин",
+      "service": "Поставщик услуг",
+      "restaurant": "Ресторан",
+      "other": "Другой бизнес"
+    }
   }
 }
