@@ -409,6 +409,10 @@ func (db *Database) UpdateReview(ctx context.Context, review *models.Review) err
 	return db.reviewDB.UpdateReview(ctx, review)
 }
 
+func (db *Database) UpdateReviewStatus(ctx context.Context, reviewId int, status string) error {
+	return db.reviewDB.UpdateReviewStatus(ctx, reviewId, status)
+}
+
 func (db *Database) DeleteReview(ctx context.Context, id int) error {
 	return db.reviewDB.DeleteReview(ctx, id)
 }

@@ -51,6 +51,7 @@ type Storage interface {
 	GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
 	GetReviewByID(ctx context.Context, id int) (*models.Review, error)
 	UpdateReview(ctx context.Context, review *models.Review) error
+	UpdateReviewStatus(ctx context.Context, reviewId int, status string) error
 	DeleteReview(ctx context.Context, id int) error
 	AddReviewResponse(ctx context.Context, response *models.ReviewResponse) error
 	AddReviewVote(ctx context.Context, vote *models.ReviewVote) error

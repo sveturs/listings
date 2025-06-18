@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { formatDistanceToNow } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { RatingDisplay } from './RatingDisplay';
+import { ImageGallery } from './ImageGallery';
 import {
   useVoteReview,
   useConfirmReview,
@@ -35,11 +36,17 @@ export const ReviewList: React.FC<ReviewListProps> = ({
   sellerId,
 }) => {
   const locale = useLocale();
+  const t = useTranslations('reviews.list');
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [showOnlyWithPhotos, setShowOnlyWithPhotos] = useState(false);
   const [showOnlyVerified, setShowOnlyVerified] = useState(false);
   const [disputeReviewId, setDisputeReviewId] = useState<number | null>(null);
   const [disputeReason, setDisputeReason] = useState('');
+
+  // Image gallery state
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const voteReviewMutation = useVoteReview();
   const confirmReviewMutation = useConfirmReview();
@@ -97,6 +104,16 @@ export const ReviewList: React.FC<ReviewListProps> = ({
     }
   };
 
+  const openImageGallery = (images: string[], initialIndex: number = 0) => {
+    setGalleryImages(images);
+    setGalleryInitialIndex(initialIndex);
+    setIsGalleryOpen(true);
+  };
+
+  const closeImageGallery = () => {
+    setIsGalleryOpen(false);
+  };
+
   // Debug: log reviews data
   console.log('ReviewList: reviews data', reviews);
 
@@ -110,22 +127,16 @@ export const ReviewList: React.FC<ReviewListProps> = ({
             <div className="form-control">
               <label className="label">
                 <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/70">
-                  {locale === 'ru' ? 'Сортировка' : 'Sort by'}
+                  {t('sortBy')}
                 </span>
               </label>
               <select
                 className="select select-bordered select-sm min-w-[140px]"
                 onChange={(e) => onSortChange(e.target.value)}
               >
-                <option value="date">
-                  {locale === 'ru' ? 'По дате' : 'By date'}
-                </option>
-                <option value="rating">
-                  {locale === 'ru' ? 'По рейтингу' : 'By rating'}
-                </option>
-                <option value="likes">
-                  {locale === 'ru' ? 'По полезности' : 'By helpfulness'}
-                </option>
+                <option value="date">{t('byDate')}</option>
+                <option value="rating">{t('byRating')}</option>
+                <option value="likes">{t('byHelpfulness')}</option>
               </select>
             </div>
 
@@ -133,7 +144,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
             <div className="form-control">
               <label className="label">
                 <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/70">
-                  {locale === 'ru' ? 'Рейтинг' : 'Rating'}
+                  {t('rating')}
                 </span>
               </label>
               <div className="flex gap-1">
@@ -145,7 +156,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                       : 'bg-base-200 text-base-content hover:bg-base-300'
                   }`}
                 >
-                  {locale === 'ru' ? 'Все' : 'All'}
+                  {t('all')}
                 </button>
                 {[5, 4, 3, 2, 1].map((rating) => (
                   <button
@@ -182,9 +193,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                     // Note: This would require backend support for photo filter
                   }}
                 />
-                <span className="label-text text-sm">
-                  {locale === 'ru' ? 'С фото' : 'With photos'}
-                </span>
+                <span className="label-text text-sm">{t('withPhotos')}</span>
               </label>
 
               <label className="label cursor-pointer">
@@ -197,9 +206,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                     // Note: This would require backend support for verified filter
                   }}
                 />
-                <span className="label-text text-sm">
-                  {locale === 'ru' ? 'Подтвержденные' : 'Verified'}
-                </span>
+                <span className="label-text text-sm">{t('verified')}</span>
               </label>
             </div>
           </div>
@@ -237,7 +244,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                   )}
                   <div>
                     <div className="font-medium text-base-content">
-                      {review.user?.name || 'Anonymous'}
+                      {review.user?.name || t('anonymous')}
                     </div>
                     <div className="text-xs text-base-content/60">
                       {formatDate(review.created_at)}
@@ -263,7 +270,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                           clipRule="evenodd"
                         />
                       </svg>
-                      {locale === 'ru' ? 'Подтвержден' : 'Verified'}
+                      {t('verifiedPurchase')}
                     </span>
                   )}
                   {review.seller_confirmed && (
@@ -279,9 +286,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                           clipRule="evenodd"
                         />
                       </svg>
-                      {locale === 'ru'
-                        ? 'Подтвержден продавцом'
-                        : 'Seller confirmed'}
+                      {t('sellerConfirmed')}
                     </span>
                   )}
                 </div>
@@ -316,7 +321,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                     </div>
                     <div className="flex-1">
                       <span className="text-xs font-medium text-success uppercase tracking-wider">
-                        {locale === 'ru' ? 'Достоинства' : 'Pros'}
+                        {t('pros')}
                       </span>
                       <p className="text-sm text-base-content/80 mt-1 leading-relaxed">
                         {review.translations?.[locale]?.pros || review.pros}
@@ -346,7 +351,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                     </div>
                     <div className="flex-1">
                       <span className="text-xs font-medium text-warning uppercase tracking-wider">
-                        {locale === 'ru' ? 'Недостатки' : 'Cons'}
+                        {t('cons')}
                       </span>
                       <p className="text-sm text-base-content/80 mt-1 leading-relaxed">
                         {review.translations?.[locale]?.cons || review.cons}
@@ -362,9 +367,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                       <div
                         key={index}
                         className="relative group cursor-pointer"
-                        onClick={() => {
-                          // TODO: Open image modal
-                        }}
+                        onClick={() => openImageGallery(review.photos!, index)}
                       >
                         <Image
                           src={photo}
@@ -372,11 +375,11 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                           width={80}
                           height={80}
                           className="w-20 h-20 object-cover rounded-md transition-all duration-200
-                                   group-hover:brightness-75"
+                                   group-hover:brightness-75 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md bg-black/20">
                           <svg
-                            className="w-6 h-6 text-white"
+                            className="w-6 h-6 text-white drop-shadow-lg"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -389,6 +392,11 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                             />
                           </svg>
                         </div>
+                        {review.photos!.length > 1 && (
+                          <div className="absolute top-1 right-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded-md font-medium">
+                            {index + 1}/{review.photos!.length}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -401,7 +409,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                   {/* Helpful votes */}
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-base-content/60">
-                      {locale === 'ru' ? 'Полезно?' : 'Helpful?'}
+                      {t('helpful')}
                     </span>
                     <button
                       onClick={() => handleVote(review.id, 'helpful')}
@@ -480,7 +488,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      {locale === 'ru' ? 'Подтвердить' : 'Confirm'}
+                      {t('confirm')}
                     </button>
                   )}
 
@@ -508,7 +516,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        {locale === 'ru' ? 'Оспорить' : 'Dispute'}
+                        {t('dispute')}
                       </button>
                     )}
                 </div>
@@ -534,7 +542,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                           </svg>
                         </div>
                         <span className="text-xs font-medium text-base-content">
-                          {response.user?.name || 'Seller'}
+                          {response.user?.name || t('seller')}
                         </span>
                         <span className="text-xs text-base-content/50">
                           {formatDate(response.created_at)}
@@ -644,13 +652,11 @@ export const ReviewList: React.FC<ReviewListProps> = ({
             >
               ✕
             </button>
-            <h3 className="font-bold text-lg mb-4">
-              {locale === 'ru' ? 'Оспорить отзыв' : 'Dispute Review'}
-            </h3>
+            <h3 className="font-bold text-lg mb-4">{t('disputeReview')}</h3>
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-base-content/70 mb-2 block">
-                  {locale === 'ru' ? 'Причина спора' : 'Dispute reason'}
+                  {t('disputeReason')}
                 </label>
                 <textarea
                   value={disputeReason}
@@ -658,11 +664,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                   className="w-full min-h-[120px] p-3 rounded-lg border border-base-200
                            bg-base-100 resize-none transition-all duration-200
                            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                  placeholder={
-                    locale === 'ru'
-                      ? 'Укажите причину спора...'
-                      : 'Please provide a reason for the dispute...'
-                  }
+                  placeholder={t('disputePlaceholder')}
                 />
               </div>
               <div className="flex gap-3 justify-end">
@@ -673,7 +675,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                   }}
                   className="btn btn-ghost"
                 >
-                  {locale === 'ru' ? 'Отмена' : 'Cancel'}
+                  {t('cancel')}
                 </button>
                 <button
                   onClick={handleDispute}
@@ -685,7 +687,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                   {disputeReviewMutation.isPending && (
                     <span className="loading loading-spinner loading-sm mr-2"></span>
                   )}
-                  {locale === 'ru' ? 'Отправить' : 'Submit'}
+                  {t('submit')}
                 </button>
               </div>
             </div>
@@ -699,6 +701,14 @@ export const ReviewList: React.FC<ReviewListProps> = ({
           ></div>
         </div>
       )}
+
+      {/* Image Gallery */}
+      <ImageGallery
+        images={galleryImages}
+        initialIndex={galleryInitialIndex}
+        isOpen={isGalleryOpen}
+        onClose={closeImageGallery}
+      />
     </div>
   );
 };

@@ -6318,50 +6318,6 @@ paths:
       summary: Get reviews list
       tags:
         - reviews
-    post:
-      description: Creates a new review for a listing
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/backend_internal_domain_models.CreateReviewRequest"
-        description: Review data
-        required: true
-      responses:
-        "200":
-          description: Created review
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/backend_internal_domain_models.Review"
-                    type: object
-        "400":
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-        "404":
-          description: Listing not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-      security:
-        - BearerAuth: []
-      summary: Create a new review
-      tags:
-        - reviews
   "/api/v1/reviews/{id}":
     delete:
       description: Deletes a review by its author
@@ -6593,18 +6549,7 @@ paths:
           schema:
             type: integer
       requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                photos:
-                  description: "Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)"
-                  type: string
-                  format: binary
-              required:
-                - photos
-        required: true
+        $ref: "#/components/requestBodies/postApiV1Reviews_id_photos"
       responses:
         "200":
           description: Photos uploaded successfully
@@ -6632,6 +6577,51 @@ paths:
       security:
         - BearerAuth: []
       summary: Upload review photos
+      tags:
+        - reviews
+  "/api/v1/reviews/{id}/publish":
+    post:
+      description: Publishes a draft review and sends notifications (step 2 of 2)
+      parameters:
+        - description: Review ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Published review
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.Review"
+                    type: object
+        "400":
+          description: Invalid review ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Review not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Publish a draft review
       tags:
         - reviews
   "/api/v1/reviews/{id}/response":
@@ -6781,6 +6771,51 @@ paths:
       security:
         - BearerAuth: []
       summary: Check if user can review entity
+      tags:
+        - reviews
+  /api/v1/reviews/draft:
+    post:
+      description: Creates a new draft review with text content (step 1 of 2)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_domain_models.CreateReviewRequest"
+        description: Review data
+        required: true
+      responses:
+        "200":
+          description: Created draft review
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.Review"
+                    type: object
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Create a draft review
       tags:
         - reviews
   "/api/v1/reviews/rating/{type}/{id}":
@@ -6977,6 +7012,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Get storefront rating summary
+      tags:
+        - reviews
+  /api/v1/reviews/upload-photos:
+    post:
+      description: Uploads photos that will be attached to a new review during creation
+      requestBody:
+        $ref: "#/components/requestBodies/postApiV1Reviews_id_photos"
+      responses:
+        "200":
+          description: Photos uploaded successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_reviews_handler.PhotosResponse"
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Upload photos for new review
       tags:
         - reviews
   "/api/v1/reviews/user/{id}":
@@ -7771,6 +7840,19 @@ components:
           schema:
             $ref: "#/components/schemas/backend_internal_domain_models.CategoryAttribute"
       description: Attribute data
+      required: true
+    postApiV1Reviews_id_photos:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              photos:
+                description: "Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)"
+                type: string
+                format: binary
+            required:
+              - photos
       required: true
   securitySchemes:
     Bearer:

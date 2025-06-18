@@ -6,7 +6,13 @@ import (
 )
 
 type ReviewServiceInterface interface {
+	// Two-step review creation
+	CreateDraftReview(ctx context.Context, userId int, review *models.CreateReviewRequest) (*models.Review, error)
+	PublishReview(ctx context.Context, reviewId int) (*models.Review, error)
+	
+	// Legacy single-step creation
 	CreateReview(ctx context.Context, userId int, review *models.CreateReviewRequest) (*models.Review, error)
+	
 	GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)
 	GetReviewByID(ctx context.Context, id int) (*models.Review, error)
 	UpdateReview(ctx context.Context, userId int, reviewId int, review *models.Review) error

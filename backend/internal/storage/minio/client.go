@@ -26,6 +26,7 @@ type MinioClient struct {
 	client     *minio.Client
 	bucketName string
 	location   string
+	baseURL    string
 }
 
 // NewMinioClient создает новый клиент MinIO
@@ -88,10 +89,43 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 		}
 	}
 
+	// Создаем bucket для фотографий отзывов если он не существует
+	reviewPhotosBucket := "review-photos"
+	reviewExists, err := client.BucketExists(context.Background(), reviewPhotosBucket)
+	if err != nil {
+		log.Printf("Ошибка проверки существования бакета review-photos: %v", err)
+	} else if !reviewExists {
+		err = client.MakeBucket(context.Background(), reviewPhotosBucket, minio.MakeBucketOptions{
+			Region: config.Location,
+		})
+		if err != nil {
+			log.Printf("Ошибка создания бакета review-photos: %v", err)
+		} else {
+			log.Printf("Успешно создан бакет: %s", reviewPhotosBucket)
+
+			// Устанавливаем политику доступа для публичного чтения
+			reviewPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + reviewPhotosBucket + `/*"]}]}`
+			err = client.SetBucketPolicy(context.Background(), reviewPhotosBucket, reviewPolicy)
+			if err != nil {
+				log.Printf("Ошибка установки политики бакета review-photos: %v", err)
+			} else {
+				log.Printf("Успешно установлена политика для бакета: %s", reviewPhotosBucket)
+			}
+		}
+	}
+
+	// Формируем базовый URL для файлов
+	protocol := "http"
+	if config.UseSSL {
+		protocol = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s", protocol, config.Endpoint)
+
 	return &MinioClient{
 		client:     client,
 		bucketName: config.BucketName,
 		location:   config.Location,
+		baseURL:    baseURL,
 	}, nil
 }
 
@@ -112,8 +146,8 @@ func (m *MinioClient) UploadFile(ctx context.Context, objectName string, reader 
 	}
 
 	// Return public URL for the file
-	// Format: /<bucket-name>/<object-path>
-	publicURL := fmt.Sprintf("/%s/%s", m.bucketName, objectName)
+	// Format: http://minio-host/<bucket-name>/<object-path>
+	publicURL := fmt.Sprintf("%s/%s/%s", m.baseURL, m.bucketName, objectName)
 	return publicURL, nil
 }
 
@@ -154,6 +188,64 @@ func (m *MinioClient) GetObject(ctx context.Context, objectName string) (io.Read
 	obj, err := m.client.GetObject(ctx, m.bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения объекта из MinIO: %w", err)
+	}
+
+	return obj, nil
+}
+
+// UploadToCustomBucket загружает файл в указанный бакет
+func (m *MinioClient) UploadToCustomBucket(ctx context.Context, bucketName, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
+	// Remove leading slash if present
+	if strings.HasPrefix(objectName, "/") {
+		objectName = objectName[1:]
+	}
+
+	// Upload file to MinIO
+	_, err := m.client.PutObject(ctx, bucketName, objectName, reader, size, minio.PutObjectOptions{
+		ContentType: contentType,
+	})
+	if err != nil {
+		return "", fmt.Errorf("error uploading file to MinIO bucket %s: %w", bucketName, err)
+	}
+
+	// Return public URL for the file
+	publicURL := fmt.Sprintf("/%s/%s", bucketName, objectName)
+	return publicURL, nil
+}
+
+// DeleteFileFromCustomBucket удаляет файл из указанного бакета
+func (m *MinioClient) DeleteFileFromCustomBucket(ctx context.Context, bucketName, objectName string) error {
+	err := m.client.RemoveObject(ctx, bucketName, objectName, minio.RemoveObjectOptions{})
+	if err != nil {
+		return fmt.Errorf("ошибка удаления файла из MinIO bucket %s: %w", bucketName, err)
+	}
+	return nil
+}
+
+// GetPresignedURLFromCustomBucket создает предварительно подписанный URL для файла из указанного бакета
+func (m *MinioClient) GetPresignedURLFromCustomBucket(ctx context.Context, bucketName, objectName string, expiry time.Duration) (string, error) {
+	if strings.HasPrefix(objectName, "/") {
+		objectName = objectName[1:]
+	}
+
+	presignedURL, err := m.client.PresignedGetObject(ctx, bucketName, objectName, expiry, nil)
+	if err != nil {
+		return "", fmt.Errorf("ошибка создания предварительно подписанного URL для bucket %s: %w", bucketName, err)
+	}
+	return presignedURL.String(), nil
+}
+
+// GetObjectFromCustomBucket возвращает файл из указанного бакета в виде потока
+func (m *MinioClient) GetObjectFromCustomBucket(ctx context.Context, bucketName, objectName string) (io.ReadCloser, error) {
+	if strings.HasPrefix(objectName, "/") {
+		objectName = objectName[1:]
+	}
+
+	log.Printf("Получение объекта из MinIO: bucket=%s, object=%s", bucketName, objectName)
+
+	obj, err := m.client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения объекта из MinIO bucket %s: %w", bucketName, err)
 	}
 
 	return obj, nil

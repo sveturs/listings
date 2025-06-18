@@ -70,7 +70,78 @@ func (s *ReviewService) UpdateEntityRatingInSearch(ctx context.Context, entityTy
 	return nil
 }
 
-// Исправленная версия метода CreateReview
+// CreateDraftReview создает черновик отзыва (этап 1)
+func (s *ReviewService) CreateDraftReview(ctx context.Context, userId int, req *models.CreateReviewRequest) (*models.Review, error) {
+	review := &models.Review{
+		UserID:           userId,
+		EntityType:       req.EntityType,
+		EntityID:         req.EntityID,
+		Rating:           req.Rating,
+		Comment:          req.Comment,
+		Pros:             req.Pros,
+		Cons:             req.Cons,
+		Photos:           nil, // Фотографии добавятся позже
+		Status:           "draft", // Статус черновика
+		OriginalLanguage: req.OriginalLanguage,
+	}
+
+	// Заполняем entity_origin_type и entity_origin_id для агрегации рейтингов
+	err := s.setEntityOrigin(ctx, review)
+	if err != nil {
+		log.Printf("Ошибка определения origin для отзыва: %v", err)
+		// Не блокируем создание отзыва, но логируем ошибку
+	}
+
+	// Проверяем, является ли покупка верифицированной
+	review.IsVerifiedPurchase = s.checkVerifiedPurchase(ctx, userId, req.EntityType, req.EntityID)
+
+	// Создаем черновик отзыва в базе
+	createdReview, err := s.storage.CreateReview(ctx, review)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка создания черновика отзыва: %w", err)
+	}
+
+	log.Printf("Created draft review with ID %d", createdReview.ID)
+	return createdReview, nil
+}
+
+// PublishReview публикует черновик отзыва (этап 2)
+func (s *ReviewService) PublishReview(ctx context.Context, reviewId int) (*models.Review, error) {
+	// Получаем отзыв
+	review, err := s.storage.GetReviewByID(ctx, reviewId)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения отзыва: %w", err)
+	}
+
+	// Проверяем, что отзыв в статусе draft
+	if review.Status != "draft" {
+		return nil, fmt.Errorf("отзыв не является черновиком")
+	}
+
+	// Обновляем статус на published
+	err = s.storage.UpdateReviewStatus(ctx, reviewId, "published")
+	if err != nil {
+		return nil, fmt.Errorf("ошибка публикации отзыва: %w", err)
+	}
+
+	// Обновляем рейтинг в поисковом индексе
+	err = s.UpdateEntityRatingInSearch(ctx, review.EntityType, review.EntityID, float64(review.Rating))
+	if err != nil {
+		log.Printf("Ошибка обновления рейтинга в поиске: %v", err)
+		// Не блокируем публикацию отзыва
+	}
+
+	// Получаем обновленный отзыв
+	publishedReview, err := s.storage.GetReviewByID(ctx, reviewId)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения опубликованного отзыва: %w", err)
+	}
+
+	log.Printf("Published review with ID %d", reviewId)
+	return publishedReview, nil
+}
+
+// Исправленная версия метода CreateReview (legacy, одношаговое создание)
 func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *models.CreateReviewRequest) (*models.Review, error) {
 	review := &models.Review{
 		UserID:           userId,

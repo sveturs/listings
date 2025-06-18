@@ -35,21 +35,21 @@ func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
 	}
 }
 
-// CreateReview creates a new review
-// @Summary Create a new review
-// @Description Creates a new review for a listing
+// CreateDraftReview creates a new draft review (step 1)
+// @Summary Create a draft review
+// @Description Creates a new draft review with text content (step 1 of 2)
 // @Tags reviews
 // @Accept json
 // @Produce json
 // @Param review body models.CreateReviewRequest true "Review data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.Review} "Created review"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.Review} "Created draft review"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid input"
 // @Failure 404 {object} utils.ErrorResponseSwag "Listing not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/reviews [post]
-func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
-	log.Printf("Starting CreateReview handler")
+// @Router /api/v1/reviews/draft [post]
+func (h *ReviewHandler) CreateDraftReview(c *fiber.Ctx) error {
+	log.Printf("Starting CreateDraftReview handler")
 	userID := c.Locals("user_id").(int)
 
 	var request models.CreateReviewRequest
@@ -87,14 +87,14 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 		storefrontID := *listing.StorefrontID
 		request.StorefrontID = &storefrontID
 	}
-	// Создаем отзыв через сервис
-	createdReview, err := h.services.Review().CreateReview(c.Context(), userID, &request)
+	
+	// Создаем черновик отзыва без фотографий
+	request.Photos = nil
+	createdReview, err := h.services.Review().CreateDraftReview(c.Context(), userID, &request)
 	if err != nil {
-		log.Printf("Failed to create review: %v", err)
+		log.Printf("Failed to create draft review: %v", err)
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.create.error.create_failed")
 	}
-
-	log.Printf("Parsed request: %+v", request)
 
 	// Проверяем созданный отзыв
 	if createdReview == nil {
@@ -102,18 +102,65 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.create.error.create_failed")
 	}
 
-	log.Printf("Review created: %+v", createdReview)
+	log.Printf("Draft review created: %+v", createdReview)
 
-	// Отправляем уведомление только если отзыв написан не владельцем объявления
-	if listing.UserID != userID {
+	return utils.SuccessResponse(c, createdReview)
+}
+
+// PublishReview publishes a draft review (step 2)
+// @Summary Publish a draft review
+// @Description Publishes a draft review and sends notifications (step 2 of 2)
+// @Tags reviews
+// @Accept json
+// @Produce json
+// @Param id path int true "Review ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.Review} "Published review"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid review ID"
+// @Failure 404 {object} utils.ErrorResponseSwag "Review not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/{id}/publish [post]
+func (h *ReviewHandler) PublishReview(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+	reviewId, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
+	}
+
+	// Получаем черновик отзыва
+	review, err := h.services.Review().GetReviewByID(c.Context(), reviewId)
+	if err != nil || review == nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.not_found")
+	}
+
+	// Проверяем, что пользователь является автором отзыва
+	if review.UserID != userID {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "reviews.error.not_author")
+	}
+
+	// Проверяем, что отзыв в статусе draft
+	if review.Status != "draft" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.publish.error.not_draft")
+	}
+
+	// Публикуем отзыв
+	publishedReview, err := h.services.Review().PublishReview(c.Context(), reviewId)
+	if err != nil {
+		log.Printf("Error publishing review: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.publish.error.failed")
+	}
+
+	// Получаем информацию об объявлении для отправки уведомления
+	listing, err := h.services.Marketplace().GetListingByID(c.Context(), review.EntityID)
+	if err == nil && listing.UserID != userID {
+		// Отправляем уведомление только если отзыв написан не владельцем объявления
 		notificationText := fmt.Sprintf(
 			"reviews.notification.new_review\nreviews.notification.rating: %d/5\nreviews.notification.listing: %s\n\n%s",
-			request.Rating,
+			review.Rating,
 			listing.Title,
-			request.Comment,
+			review.Comment,
 		)
 
-		// Отправляем уведомление
 		if err := h.services.Notification().SendNotification(
 			c.Context(),
 			listing.UserID,
@@ -122,11 +169,11 @@ func (h *ReviewHandler) CreateReview(c *fiber.Ctx) error {
 			listing.ID,
 		); err != nil {
 			log.Printf("Error sending notification: %v", err)
-			// Не возвращаем ошибку, так как отзыв уже создан
+			// Не возвращаем ошибку, так как отзыв уже опубликован
 		}
 	}
 
-	return utils.SuccessResponse(c, createdReview)
+	return utils.SuccessResponse(c, publishedReview)
 }
 
 // GetReviews returns filtered list of reviews
@@ -480,14 +527,24 @@ func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
 
 		// Генерируем уникальное имя файла
 		filename := fmt.Sprintf("review_%d_%d_%s", reviewId, time.Now().UnixNano(), file.Filename)
+		objectKey := "reviews/" + filename
 
-		// Сохраняем файл
-		if err := c.SaveFile(file, "./uploads/"+filename); err != nil {
-			log.Printf("Error saving file: %v", err)
+		// Открываем файл для чтения
+		src, err := file.Open()
+		if err != nil {
+			log.Printf("Error opening file: %v", err)
+			continue
+		}
+		defer src.Close()
+
+		// Загружаем файл в MinIO и получаем полный URL
+		imageURL, err := h.services.Storage().FileStorage().UploadFile(c.Context(), objectKey, src, file.Size, contentType)
+		if err != nil {
+			log.Printf("Error uploading file to MinIO: %v", err)
 			continue
 		}
 
-		photoUrls = append(photoUrls, filename)
+		photoUrls = append(photoUrls, imageURL)
 	}
 
 	// Обновляем отзыв с новыми фотографиями
@@ -499,6 +556,92 @@ func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, PhotosResponse{
 		Success: true,
 		Message: "reviews.photos.success.uploaded",
+		Photos:  photoUrls,
+	})
+}
+
+// UploadPhotosForNewReview uploads photos for a new review being created
+// @Summary Upload photos for new review
+// @Description Uploads photos that will be attached to a new review during creation
+// @Tags reviews
+// @Accept multipart/form-data
+// @Produce json
+// @Param photos formData file true "Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)"
+// @Success 200 {object} utils.SuccessResponseSwag{data=PhotosResponse} "Photos uploaded successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/reviews/upload-photos [post]
+func (h *ReviewHandler) UploadPhotosForNewReview(c *fiber.Ctx) error {
+	userId := c.Locals("user_id").(int)
+
+	// Получаем загруженные файлы
+	form, err := c.MultipartForm()
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.parse_form")
+	}
+
+	files := form.File["photos"]
+	if len(files) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.no_files")
+	}
+
+	// Максимум 5 фото
+	if len(files) > 5 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.max_files")
+	}
+
+	// Разрешенные форматы
+	allowedFormats := map[string]bool{
+		"image/jpeg": true,
+		"image/jpg":  true,
+		"image/png":  true,
+		"image/webp": true,
+	}
+
+	photoUrls := make([]string, 0)
+	for _, file := range files {
+		// Проверка размера файла (максимум 5MB)
+		if file.Size > 5*1024*1024 {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.file_too_large")
+		}
+
+		// Проверка типа файла
+		contentType := file.Header.Get("Content-Type")
+		if !allowedFormats[contentType] {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.photos.error.invalid_type")
+		}
+
+		// Генерируем уникальное имя файла для временного хранения в review-photos
+		filename := fmt.Sprintf("temp_%d_%d_%s", userId, time.Now().UnixNano(), file.Filename)
+		tempObjectKey := "temp/" + filename
+
+		// Открываем файл для чтения
+		src, err := file.Open()
+		if err != nil {
+			log.Printf("Error opening file: %v", err)
+			continue
+		}
+		defer src.Close()
+
+		// Пока используем основной FileStorage, позже добавим review-photos wrapper
+		// TODO: Создать отдельный бакет review-photos
+		imageURL, err := h.services.Storage().FileStorage().UploadFile(c.Context(), tempObjectKey, src, file.Size, contentType)
+		if err != nil {
+			log.Printf("Error uploading temp file to MinIO: %v", err)
+			continue
+		}
+
+		photoUrls = append(photoUrls, imageURL)
+	}
+
+	if len(photoUrls) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.photos.error.save_failed")
+	}
+
+	return utils.SuccessResponse(c, PhotosResponse{
+		Success: true,
+		Message: "reviews.photos.success.uploaded_temp",
 		Photos:  photoUrls,
 	})
 }

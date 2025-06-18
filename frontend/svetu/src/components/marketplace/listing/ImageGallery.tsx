@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import config from '@/config';
 
 interface ImageGalleryProps {
@@ -15,7 +15,7 @@ interface ImageGalleryProps {
 }
 
 export default function ImageGallery({ images, title }: ImageGalleryProps) {
-  const locale = useLocale();
+  const t = useTranslations('marketplace.imageGallery');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -276,7 +276,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
               />
             </svg>
-            {locale === 'ru' ? 'Нажмите для увеличения' : 'Click to zoom'}
+            {t('clickToZoom')}
           </div>
 
           {/* Zoom preview (desktop only) */}
