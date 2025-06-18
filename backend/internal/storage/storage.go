@@ -4,6 +4,7 @@ package storage
 import (
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
+	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage/filestorage"
 	"backend/internal/types"
 	"context"
@@ -167,6 +168,9 @@ type Storage interface {
 	GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error)
 	UpdateStorefront(ctx context.Context, storefront *models.Storefront) error
 	DeleteStorefront(ctx context.Context, id int) error
+	
+	// Storefront repository access
+	Storefront() interface{}
 
 	// OpenSearch методы
 	SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
@@ -177,6 +181,12 @@ type Storage interface {
 	IndexListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListingIndex(ctx context.Context, id string) error
 	PrepareIndex(ctx context.Context) error
+	
+	// Storefront OpenSearch методы
+	SearchStorefrontsOpenSearch(ctx context.Context, params *opensearch.StorefrontSearchParams) (*opensearch.StorefrontSearchResult, error)
+	IndexStorefront(ctx context.Context, storefront *models.Storefront) error
+	DeleteStorefrontIndex(ctx context.Context, storefrontID int) error
+	ReindexAllStorefronts(ctx context.Context) error
 
 	// Translation methods
 	GetTranslationsForEntity(ctx context.Context, entityType string, entityID int) ([]models.Translation, error)

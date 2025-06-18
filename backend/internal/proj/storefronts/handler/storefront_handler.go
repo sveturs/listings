@@ -3,8 +3,10 @@ package handler
 import (
 	"backend/internal/domain/models"
 	"backend/internal/proj/storefronts/service"
+	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -46,7 +48,7 @@ func (h *StorefrontHandler) CreateStorefront(c *fiber.Ctx) error {
 		})
 	}
 
-	storefront, err := h.service.Create(c.Context(), userID, &dto)
+	storefront, err := h.service.CreateStorefront(c.Context(), userID, &dto)
 	if err != nil {
 		switch err {
 		case service.ErrStorefrontLimitReached:
@@ -401,6 +403,99 @@ func (h *StorefrontHandler) GetMapData(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(mapData)
+}
+
+// SearchOpenSearch выполняет поиск витрин через OpenSearch
+// @Summary Search storefronts using OpenSearch
+// @Description Performs advanced search of storefronts using OpenSearch engine
+// @Tags storefronts,search
+// @Accept json
+// @Produce json
+// @Param q query string false "Search query"
+// @Param city query string false "City filter"
+// @Param lat query float64 false "Latitude for geo search"
+// @Param lng query float64 false "Longitude for geo search"
+// @Param radius_km query int false "Search radius in kilometers"
+// @Param min_rating query float64 false "Minimum rating"
+// @Param is_verified query bool false "Only verified storefronts"
+// @Param is_open_now query bool false "Only currently open storefronts"
+// @Param payment_methods query string false "Payment methods (comma separated)"
+// @Param has_delivery query bool false "Has delivery option"
+// @Param has_self_pickup query bool false "Has self pickup option"
+// @Param sort_by query string false "Sort field (rating, distance, products_count, created_at)"
+// @Param sort_order query string false "Sort order (asc, desc)"
+// @Param limit query int false "Number of results (max 100)" default(20)
+// @Param offset query int false "Results offset" default(0)
+// @Success 200 {object} opensearch.StorefrontSearchResult "Search results"
+// @Failure 400 {object} ErrorResponse "Invalid parameters"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/v1/storefronts/search [get]
+func (h *StorefrontHandler) SearchOpenSearch(c *fiber.Ctx) error {
+	params := &opensearch.StorefrontSearchParams{
+		Query: c.Query("q"),
+		City:  c.Query("city"),
+	}
+
+	// Геолокация
+	if lat, err := strconv.ParseFloat(c.Query("lat"), 64); err == nil {
+		params.Latitude = lat
+	}
+	if lng, err := strconv.ParseFloat(c.Query("lng"), 64); err == nil {
+		params.Longitude = lng
+	}
+	if radius, err := strconv.Atoi(c.Query("radius_km")); err == nil {
+		params.RadiusKm = radius
+	}
+
+	// Фильтры
+	if minRating, err := strconv.ParseFloat(c.Query("min_rating"), 64); err == nil {
+		params.MinRating = minRating
+	}
+	if isVerified := c.Query("is_verified"); isVerified != "" {
+		verified := isVerified == "true"
+		params.IsVerified = &verified
+	}
+	if isActive := c.Query("is_active"); isActive != "" {
+		active := isActive == "true"
+		params.IsActive = &active
+	}
+	if isOpenNow := c.Query("is_open_now"); isOpenNow != "" {
+		openNow := isOpenNow == "true"
+		params.IsOpenNow = &openNow
+	}
+	if hasDelivery := c.Query("has_delivery"); hasDelivery != "" {
+		delivery := hasDelivery == "true"
+		params.HasDelivery = &delivery
+	}
+	if hasSelfPickup := c.Query("has_self_pickup"); hasSelfPickup != "" {
+		selfPickup := hasSelfPickup == "true"
+		params.HasSelfPickup = &selfPickup
+	}
+
+	// Методы оплаты
+	if paymentMethods := c.Query("payment_methods"); paymentMethods != "" {
+		params.PaymentMethods = strings.Split(paymentMethods, ",")
+	}
+
+	// Сортировка
+	params.SortBy = c.Query("sort_by", "rating")
+	params.SortOrder = c.Query("sort_order", "desc")
+
+	// Пагинация
+	params.Limit = c.QueryInt("limit", 20)
+	if params.Limit > 100 {
+		params.Limit = 100
+	}
+	params.Offset = c.QueryInt("offset", 0)
+
+	result, err := h.service.SearchOpenSearch(c.Context(), params)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
+			Error: "Failed to search storefronts",
+		})
+	}
+
+	return c.JSON(result)
 }
 
 // GetNearbyStorefronts получает ближайшие витрины

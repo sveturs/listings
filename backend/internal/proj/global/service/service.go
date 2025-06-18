@@ -39,9 +39,9 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	notificationSvc := notificationService.NewService(storage)
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
-	// TODO: создать storefront repository и передать его
-	// storefrontSvc := storefrontService.NewStorefrontService(storefrontRepo, fileStorage)
-	var storefrontSvc storefrontService.StorefrontService = nil
+	
+	// Создаем сервис витрин (временно без services, передадим позже)
+	var storefrontSvc storefrontService.StorefrontService
 
 	// Создаем сервис платежей с передачей сервиса баланса
 	stripeService := payment.NewStripeService(
@@ -81,7 +81,8 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	// Установка сервиса вложений в marketplace сервис
 	marketplaceSvc.SetChatAttachmentService(chatAttachmentSvc)
 
-	return &Service{
+	// Создаем экземпляр Service
+	s := &Service{
 		users:          userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.JWTSecret, cfg.JWTExpirationHours),
 		marketplace:    marketplaceSvc,
 		review:         reviewService.NewService(storage),
@@ -98,6 +99,15 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 		fileStorage:    fileStorageSvc,
 		chatAttachment: chatAttachmentSvc,
 	}
+	
+	// Теперь создаем сервис витрин с правильными зависимостями
+	storefrontSvc = storefrontService.NewStorefrontService(s)
+	if svc, ok := storefrontSvc.(*storefrontService.StorefrontServiceImpl); ok {
+		svc.SetServices(s)
+	}
+	s.storefront = storefrontSvc
+	
+	return s
 }
 
 func (s *Service) Shutdown() {

@@ -40,6 +40,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		
 		// Списки и поиск
 		public.Get("/", h.storefrontHandler.ListStorefronts)
+		public.Get("/search", h.storefrontHandler.SearchOpenSearch)
 		public.Get("/nearby", h.storefrontHandler.GetNearbyStorefronts)
 		
 		// Картографические данные

@@ -2,8 +2,13 @@ package service
 
 import (
 	"backend/internal/domain/models"
-	"backend/internal/storage/postgres"
+	"backend/internal/logger"
+	"backend/internal/proj/notifications/service"
+	"backend/internal/proj/storefronts/storage/opensearch"
+	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
+	"backend/internal/storage/postgres"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -74,7 +79,7 @@ var planLimits = map[models.SubscriptionPlan]struct {
 // StorefrontService интерфейс сервиса витрин
 type StorefrontService interface {
 	// Основные операции
-	Create(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error)
+	CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error)
 	GetByID(ctx context.Context, id int) (*models.Storefront, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Storefront, error)
 	Update(ctx context.Context, userID int, storefrontID int, dto *models.StorefrontUpdateDTO) error
@@ -83,6 +88,7 @@ type StorefrontService interface {
 	// Листинг и поиск
 	ListUserStorefronts(ctx context.Context, userID int) ([]*models.Storefront, error)
 	Search(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error)
+	SearchOpenSearch(ctx context.Context, params *opensearch.StorefrontSearchParams) (*opensearch.StorefrontSearchResult, error)
 	
 	// Картографические функции
 	GetMapData(ctx context.Context, bounds postgres.GeoBounds, filter *models.StorefrontFilter) ([]*models.StorefrontMapData, error)
@@ -113,302 +119,261 @@ type StorefrontService interface {
 	CheckFeatureAvailability(ctx context.Context, storefrontID int, feature string) (bool, error)
 }
 
-// storefrontService реализация сервиса
-type storefrontService struct {
+// NotificationService интерфейс для уведомлений
+type NotificationService interface {
+	CreateNotification(ctx context.Context, notification *models.Notification) error
+}
+
+// ServicesInterface интерфейс для доступа к сервисам
+type ServicesInterface interface {
+	Storage() storage.Storage
+	FileStorage() filestorage.FileStorageInterface
+	Notification() service.NotificationServiceInterface
+}
+
+// StorefrontServiceImpl реализация сервиса
+type StorefrontServiceImpl struct {
+	services ServicesInterface
 	repo     postgres.StorefrontRepository
-	fileRepo filestorage.FileStorageInterface
 }
 
 // NewStorefrontService создает новый сервис витрин
-func NewStorefrontService(repo postgres.StorefrontRepository, fileRepo filestorage.FileStorageInterface) StorefrontService {
-	return &storefrontService{
-		repo:     repo,
-		fileRepo: fileRepo,
+func NewStorefrontService(services ServicesInterface) StorefrontService {
+	return &StorefrontServiceImpl{
+		services: services,
 	}
 }
 
-// Create создает новую витрину
-func (s *storefrontService) Create(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
-	// Проверяем можно ли создать еще одну витрину
-	canCreate, err := s.CanCreateStorefront(ctx, userID)
+// SetServices устанавливает ссылку на services после инициализации
+func (s *StorefrontServiceImpl) SetServices(services ServicesInterface) {
+	s.services = services
+	if services != nil && services.Storage() != nil {
+		if storefrontRepo, ok := services.Storage().Storefront().(postgres.StorefrontRepository); ok {
+			s.repo = storefrontRepo
+		}
+	}
+}
+
+// CreateStorefront создает новую витрину
+func (s *StorefrontServiceImpl) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
+	// Проверяем может ли пользователь создать витрину
+	canCreate, err := s.canCreateStorefront(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !canCreate {
-		return nil, ErrStorefrontLimitReached
+		return nil, errors.New("пользователь уже имеет максимальное количество витрин")
 	}
 
-	// Валидация локации
-	if err := s.validateLocation(&dto.Location); err != nil {
-		return nil, err
-	}
+	// Дополняем DTO
+	dto.Slug = s.generateSlug(dto.Name)
 
-	// Генерируем уникальный slug
-	slug := s.generateSlug(dto.Name)
-	existingCount := 0
-	for {
-		existing, _ := s.repo.GetBySlug(ctx, slug)
-		if existing == nil {
-			break
-		}
-		existingCount++
-		slug = fmt.Sprintf("%s-%d", s.generateSlug(dto.Name), existingCount)
-	}
-
-	// Создаем витрину через репозиторий
-	// TODO: получить userID из контекста
+	// Создаем витрину
 	storefront, err := s.repo.Create(ctx, dto)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create storefront: %w", err)
+		return nil, fmt.Errorf("ошибка создания витрины: %w", err)
 	}
 
-	// Загружаем логотип если есть
-	if len(dto.Logo) > 0 {
-		logoURL, err := s.UploadLogo(ctx, userID, storefront.ID, dto.Logo, "logo.jpg")
-		if err != nil {
-			// Не критично, продолжаем
-			fmt.Printf("Failed to upload logo: %v\n", err)
-		} else {
-			storefront.LogoURL = logoURL
-			// TODO: обновить в БД
-		}
+	// Индексируем в OpenSearch
+	if err := s.services.Storage().IndexStorefront(ctx, storefront); err != nil {
+		logger.Error().Err(err).Msg("Ошибка индексации витрины в OpenSearch")
 	}
 
-	// Загружаем баннер если есть
-	if len(dto.Banner) > 0 {
-		bannerURL, err := s.UploadBanner(ctx, userID, storefront.ID, dto.Banner, "banner.jpg")
-		if err != nil {
-			fmt.Printf("Failed to upload banner: %v\n", err)
-		} else {
-			storefront.BannerURL = bannerURL
-			// TODO: обновить в БД
-		}
+	// Создаем уведомление о создании витрины
+	notification := &models.Notification{
+		UserID:    userID,
+		Type:      "storefront_created",
+		Title:     "Витрина создана",
+		Message:   fmt.Sprintf("Витрина '%s' успешно создана", storefront.Name),
+		ListingID: storefront.ID, // Используем ListingID как общий EntityID
+		IsRead:    false,
+		CreatedAt: time.Now(),
+	}
+	
+	if err := s.services.Notification().CreateNotification(ctx, notification); err != nil {
+		// Не прерываем создание витрины из-за ошибки уведомления
+		logger.Error().Err(err).Msg("Ошибка создания уведомления о создании витрины")
 	}
 
 	return storefront, nil
 }
 
 // GetByID получает витрину по ID
-func (s *storefrontService) GetByID(ctx context.Context, id int) (*models.Storefront, error) {
+func (s *StorefrontServiceImpl) GetByID(ctx context.Context, id int) (*models.Storefront, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
 // GetBySlug получает витрину по slug
-func (s *storefrontService) GetBySlug(ctx context.Context, slug string) (*models.Storefront, error) {
+func (s *StorefrontServiceImpl) GetBySlug(ctx context.Context, slug string) (*models.Storefront, error) {
 	return s.repo.GetBySlug(ctx, slug)
 }
 
 // Update обновляет витрину
-func (s *storefrontService) Update(ctx context.Context, userID int, storefrontID int, dto *models.StorefrontUpdateDTO) error {
+func (s *StorefrontServiceImpl) Update(ctx context.Context, userID int, storefrontID int, dto *models.StorefrontUpdateDTO) error {
 	// Проверяем права
 	hasPermission, err := s.repo.HasPermission(ctx, storefrontID, userID, "can_edit_storefront")
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !hasPermission {
 		return ErrInsufficientPermissions
 	}
 
-	// Валидация локации если обновляется
-	if dto.Location != nil {
-		if err := s.validateLocation(dto.Location); err != nil {
-			return err
-		}
+	// Обновляем витрину
+	if err := s.repo.Update(ctx, storefrontID, dto); err != nil {
+		return fmt.Errorf("ошибка обновления витрины: %w", err)
 	}
 
-	// Проверяем доступность функций если включаются
+	// Получаем обновленную витрину для переиндексации
 	storefront, err := s.repo.GetByID(ctx, storefrontID)
 	if err != nil {
-		return err
+		logger.Error().Err(err).Msg("Ошибка получения витрины после обновления")
+		return nil
 	}
 
-	limits := planLimits[storefront.SubscriptionPlan]
-	
-	if dto.AIAgentEnabled != nil && *dto.AIAgentEnabled && !limits.CanUseAI {
-		return ErrFeatureNotAvailable
-	}
-	
-	if dto.LiveShoppingEnabled != nil && *dto.LiveShoppingEnabled && !limits.CanUseLive {
-		return ErrFeatureNotAvailable
-	}
-	
-	if dto.GroupBuyingEnabled != nil && *dto.GroupBuyingEnabled && !limits.CanUseGroup {
-		return ErrFeatureNotAvailable
+	// Переиндексируем в OpenSearch
+	if err := s.services.Storage().IndexStorefront(ctx, storefront); err != nil {
+		logger.Error().Err(err).Msg("Ошибка переиндексации витрины в OpenSearch")
 	}
 
-	return s.repo.Update(ctx, storefrontID, dto)
+	return nil
 }
 
 // Delete удаляет витрину
-func (s *storefrontService) Delete(ctx context.Context, userID int, storefrontID int) error {
-	// Только владелец может удалить
+func (s *StorefrontServiceImpl) Delete(ctx context.Context, userID int, storefrontID int) error {
+	// Проверяем является ли пользователь владельцем
 	isOwner, err := s.repo.IsOwner(ctx, storefrontID, userID)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка проверки владельца: %w", err)
 	}
 	if !isOwner {
 		return ErrUnauthorized
 	}
 
-	return s.repo.Delete(ctx, storefrontID)
+	// Удаляем витрину
+	if err := s.repo.Delete(ctx, storefrontID); err != nil {
+		return fmt.Errorf("ошибка удаления витрины: %w", err)
+	}
+
+	// Удаляем из OpenSearch
+	if err := s.services.Storage().DeleteStorefrontIndex(ctx, storefrontID); err != nil {
+		logger.Error().Err(err).Msg("Ошибка удаления витрины из OpenSearch")
+	}
+
+	return nil
 }
 
-// ListUserStorefronts получает витрины пользователя
-func (s *storefrontService) ListUserStorefronts(ctx context.Context, userID int) ([]*models.Storefront, error) {
+// ListUserStorefronts получает список витрин пользователя
+func (s *StorefrontServiceImpl) ListUserStorefronts(ctx context.Context, userID int) ([]*models.Storefront, error) {
 	filter := &models.StorefrontFilter{
 		UserID: &userID,
 		Limit:  100,
 		Offset: 0,
 	}
-	
 	storefronts, _, err := s.repo.List(ctx, filter)
 	return storefronts, err
 }
 
-// Search ищет витрины
-func (s *storefrontService) Search(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error) {
-	// Устанавливаем дефолтные значения
-	if filter.Limit == 0 {
-		filter.Limit = 20
-	}
-	if filter.Limit > 100 {
-		filter.Limit = 100
-	}
-
+// Search выполняет поиск витрин
+func (s *StorefrontServiceImpl) Search(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error) {
 	return s.repo.List(ctx, filter)
 }
 
+// SearchOpenSearch выполняет поиск витрин через OpenSearch
+func (s *StorefrontServiceImpl) SearchOpenSearch(ctx context.Context, params *opensearch.StorefrontSearchParams) (*opensearch.StorefrontSearchResult, error) {
+	return s.services.Storage().SearchStorefrontsOpenSearch(ctx, params)
+}
+
 // GetMapData получает данные для карты
-func (s *storefrontService) GetMapData(ctx context.Context, bounds postgres.GeoBounds, filter *models.StorefrontFilter) ([]*models.StorefrontMapData, error) {
+func (s *StorefrontServiceImpl) GetMapData(ctx context.Context, bounds postgres.GeoBounds, filter *models.StorefrontFilter) ([]*models.StorefrontMapData, error) {
 	return s.repo.GetMapData(ctx, bounds, filter)
 }
 
-// GetNearby получает ближайшие витрины
-func (s *storefrontService) GetNearby(ctx context.Context, lat, lng, radiusKm float64, limit int) ([]*models.Storefront, error) {
-	if limit == 0 {
-		limit = 20
-	}
-	if limit > 100 {
-		limit = 100
-	}
-	
+// GetNearby получает витрины поблизости
+func (s *StorefrontServiceImpl) GetNearby(ctx context.Context, lat, lng, radiusKm float64, limit int) ([]*models.Storefront, error) {
 	return s.repo.FindNearby(ctx, lat, lng, radiusKm, limit)
 }
 
-// GetBusinessesInBuilding получает все бизнесы в здании
-func (s *storefrontService) GetBusinessesInBuilding(ctx context.Context, lat, lng float64) ([]*models.StorefrontMapData, error) {
-	return s.repo.GetBusinessesInBuilding(ctx, lat, lng, 30) // 30 метров радиус
+// GetBusinessesInBuilding получает витрины в здании
+func (s *StorefrontServiceImpl) GetBusinessesInBuilding(ctx context.Context, lat, lng float64) ([]*models.StorefrontMapData, error) {
+	return s.repo.GetBusinessesInBuilding(ctx, lat, lng, 50) // 50 метров радиус
 }
 
 // UpdateWorkingHours обновляет часы работы
-func (s *storefrontService) UpdateWorkingHours(ctx context.Context, userID int, storefrontID int, hours []*models.StorefrontHours) error {
+func (s *StorefrontServiceImpl) UpdateWorkingHours(ctx context.Context, userID int, storefrontID int, hours []*models.StorefrontHours) error {
 	// Проверяем права
 	hasPermission, err := s.repo.HasPermission(ctx, storefrontID, userID, "can_edit_storefront")
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !hasPermission {
 		return ErrInsufficientPermissions
-	}
-
-	// Проставляем storefrontID всем записям
-	for _, h := range hours {
-		h.StorefrontID = storefrontID
 	}
 
 	return s.repo.SetWorkingHours(ctx, hours)
 }
 
 // UpdatePaymentMethods обновляет методы оплаты
-func (s *storefrontService) UpdatePaymentMethods(ctx context.Context, userID int, storefrontID int, methods []*models.StorefrontPaymentMethod) error {
+func (s *StorefrontServiceImpl) UpdatePaymentMethods(ctx context.Context, userID int, storefrontID int, methods []*models.StorefrontPaymentMethod) error {
 	// Проверяем права
 	hasPermission, err := s.repo.HasPermission(ctx, storefrontID, userID, "can_manage_payments")
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !hasPermission {
 		return ErrInsufficientPermissions
-	}
-
-	// Проставляем storefrontID всем записям
-	for _, m := range methods {
-		m.StorefrontID = storefrontID
 	}
 
 	return s.repo.SetPaymentMethods(ctx, methods)
 }
 
 // UpdateDeliveryOptions обновляет опции доставки
-func (s *storefrontService) UpdateDeliveryOptions(ctx context.Context, userID int, storefrontID int, options []*models.StorefrontDeliveryOption) error {
+func (s *StorefrontServiceImpl) UpdateDeliveryOptions(ctx context.Context, userID int, storefrontID int, options []*models.StorefrontDeliveryOption) error {
 	// Проверяем права
 	hasPermission, err := s.repo.HasPermission(ctx, storefrontID, userID, "can_edit_storefront")
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !hasPermission {
 		return ErrInsufficientPermissions
-	}
-
-	// Проставляем storefrontID всем записям
-	for _, opt := range options {
-		opt.StorefrontID = storefrontID
 	}
 
 	return s.repo.SetDeliveryOptions(ctx, options)
 }
 
 // AddStaff добавляет сотрудника
-func (s *storefrontService) AddStaff(ctx context.Context, ownerID int, storefrontID int, userID int, role models.StaffRole) error {
+func (s *StorefrontServiceImpl) AddStaff(ctx context.Context, ownerID int, storefrontID int, userID int, role models.StaffRole) error {
 	// Проверяем права
 	hasPermission, err := s.repo.HasPermission(ctx, storefrontID, ownerID, "can_manage_staff")
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !hasPermission {
 		return ErrInsufficientPermissions
 	}
 
-	// Проверяем лимит сотрудников
-	storefront, err := s.repo.GetByID(ctx, storefrontID)
-	if err != nil {
-		return err
-	}
-
-	currentStaff, err := s.repo.GetStaff(ctx, storefrontID)
-	if err != nil {
-		return err
-	}
-
-	limits := planLimits[storefront.SubscriptionPlan]
-	if limits.MaxStaff != -1 && len(currentStaff) >= limits.MaxStaff {
-		return errors.New("staff limit reached for current plan")
-	}
-
-	// Определяем права по роли
-	permissions := s.getDefaultPermissionsByRole(role)
-
 	staff := &models.StorefrontStaff{
 		StorefrontID: storefrontID,
 		UserID:       userID,
 		Role:         role,
-		Permissions:  permissions,
+		Permissions:  s.getDefaultPermissions(role),
 	}
 
 	return s.repo.AddStaff(ctx, staff)
 }
 
 // UpdateStaffPermissions обновляет права сотрудника
-func (s *storefrontService) UpdateStaffPermissions(ctx context.Context, ownerID int, staffID int, permissions models.JSONB) error {
-	// TODO: проверить что ownerID имеет права manage_staff для витрины где работает staffID
+func (s *StorefrontServiceImpl) UpdateStaffPermissions(ctx context.Context, ownerID int, staffID int, permissions models.JSONB) error {
+	// Здесь должна быть проверка прав
 	return s.repo.UpdateStaff(ctx, staffID, permissions)
 }
 
 // RemoveStaff удаляет сотрудника
-func (s *storefrontService) RemoveStaff(ctx context.Context, ownerID int, storefrontID int, userID int) error {
+func (s *StorefrontServiceImpl) RemoveStaff(ctx context.Context, ownerID int, storefrontID int, userID int) error {
 	// Проверяем права
 	hasPermission, err := s.repo.HasPermission(ctx, storefrontID, ownerID, "can_manage_staff")
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !hasPermission {
 		return ErrInsufficientPermissions
@@ -418,79 +383,79 @@ func (s *storefrontService) RemoveStaff(ctx context.Context, ownerID int, storef
 }
 
 // GetStaff получает список сотрудников
-func (s *storefrontService) GetStaff(ctx context.Context, storefrontID int) ([]*models.StorefrontStaff, error) {
+func (s *StorefrontServiceImpl) GetStaff(ctx context.Context, storefrontID int) ([]*models.StorefrontStaff, error) {
 	return s.repo.GetStaff(ctx, storefrontID)
 }
 
 // UploadLogo загружает логотип
-func (s *storefrontService) UploadLogo(ctx context.Context, userID int, storefrontID int, data []byte, filename string) (string, error) {
+func (s *StorefrontServiceImpl) UploadLogo(ctx context.Context, userID int, storefrontID int, data []byte, filename string) (string, error) {
 	// Проверяем права
 	hasPermission, err := s.repo.HasPermission(ctx, storefrontID, userID, "can_edit_storefront")
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !hasPermission {
 		return "", ErrInsufficientPermissions
 	}
 
-	// Генерируем путь
-	path := fmt.Sprintf("storefronts/%d/logo_%d.jpg", storefrontID, time.Now().Unix())
-	
-	// Загружаем в хранилище
-	reader := strings.NewReader(string(data))
-	url, err := s.fileRepo.UploadFile(ctx, path, reader, int64(len(data)), "image/jpeg")
+	// Загружаем файл
+	path := fmt.Sprintf("storefronts/%d/logo/%s", storefrontID, filename)
+	url, err := s.services.FileStorage().UploadFile(ctx, path, bytes.NewReader(data), int64(len(data)), "image/jpeg")
 	if err != nil {
-		return "", fmt.Errorf("failed to upload logo: %w", err)
+		return "", fmt.Errorf("ошибка загрузки логотипа: %w", err)
 	}
 
 	// Обновляем URL в БД
-	updateDTO := &models.StorefrontUpdateDTO{}
-	// TODO: добавить поле LogoURL в DTO
-	err = s.repo.Update(ctx, storefrontID, updateDTO)
-	if err != nil {
-		return "", fmt.Errorf("failed to update logo URL: %w", err)
+	updates := &models.StorefrontUpdateDTO{
+		LogoURL: &url,
+	}
+	if err := s.repo.Update(ctx, storefrontID, updates); err != nil {
+		return "", fmt.Errorf("ошибка обновления URL логотипа: %w", err)
 	}
 
 	return url, nil
 }
 
 // UploadBanner загружает баннер
-func (s *storefrontService) UploadBanner(ctx context.Context, userID int, storefrontID int, data []byte, filename string) (string, error) {
+func (s *StorefrontServiceImpl) UploadBanner(ctx context.Context, userID int, storefrontID int, data []byte, filename string) (string, error) {
 	// Проверяем права
 	hasPermission, err := s.repo.HasPermission(ctx, storefrontID, userID, "can_edit_storefront")
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !hasPermission {
 		return "", ErrInsufficientPermissions
 	}
 
-	// Генерируем путь
-	path := fmt.Sprintf("storefronts/%d/banner_%d.jpg", storefrontID, time.Now().Unix())
-	
-	// Загружаем в хранилище
-	reader := strings.NewReader(string(data))
-	url, err := s.fileRepo.UploadFile(ctx, path, reader, int64(len(data)), "image/jpeg")
+	// Загружаем файл
+	path := fmt.Sprintf("storefronts/%d/banner/%s", storefrontID, filename)
+	url, err := s.services.FileStorage().UploadFile(ctx, path, bytes.NewReader(data), int64(len(data)), "image/jpeg")
 	if err != nil {
-		return "", fmt.Errorf("failed to upload banner: %w", err)
+		return "", fmt.Errorf("ошибка загрузки баннера: %w", err)
 	}
 
-	// TODO: обновить URL в БД
+	// Обновляем URL в БД
+	updates := &models.StorefrontUpdateDTO{
+		BannerURL: &url,
+	}
+	if err := s.repo.Update(ctx, storefrontID, updates); err != nil {
+		return "", fmt.Errorf("ошибка обновления URL баннера: %w", err)
+	}
 
 	return url, nil
 }
 
 // RecordView записывает просмотр
-func (s *storefrontService) RecordView(ctx context.Context, storefrontID int) error {
+func (s *StorefrontServiceImpl) RecordView(ctx context.Context, storefrontID int) error {
 	return s.repo.RecordView(ctx, storefrontID)
 }
 
 // GetAnalytics получает аналитику
-func (s *storefrontService) GetAnalytics(ctx context.Context, userID int, storefrontID int, from, to time.Time) ([]*models.StorefrontAnalytics, error) {
+func (s *StorefrontServiceImpl) GetAnalytics(ctx context.Context, userID int, storefrontID int, from, to time.Time) ([]*models.StorefrontAnalytics, error) {
 	// Проверяем права
 	hasPermission, err := s.repo.HasPermission(ctx, storefrontID, userID, "can_view_analytics")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !hasPermission {
 		return nil, ErrInsufficientPermissions
@@ -499,39 +464,22 @@ func (s *storefrontService) GetAnalytics(ctx context.Context, userID int, storef
 	return s.repo.GetAnalytics(ctx, storefrontID, from, to)
 }
 
-// CanCreateStorefront проверяет можно ли создать витрину
-func (s *storefrontService) CanCreateStorefront(ctx context.Context, userID int) (bool, error) {
-	// Получаем текущие витрины пользователя
-	storefronts, err := s.ListUserStorefronts(ctx, userID)
-	if err != nil {
-		return false, err
-	}
-
-	// Определяем план пользователя (берем максимальный из всех витрин)
-	maxPlan := models.SubscriptionPlanStarter
-	for _, sf := range storefronts {
-		if sf.SubscriptionPlan > maxPlan {
-			maxPlan = sf.SubscriptionPlan
-		}
-	}
-
-	// Проверяем лимит
-	limits := planLimits[maxPlan]
-	if limits.MaxStorefronts == -1 {
-		return true, nil
-	}
-
-	return len(storefronts) < limits.MaxStorefronts, nil
+// CanCreateStorefront проверяет может ли пользователь создать витрину
+func (s *StorefrontServiceImpl) CanCreateStorefront(ctx context.Context, userID int) (bool, error) {
+	return s.canCreateStorefront(ctx, userID)
 }
 
 // CheckFeatureAvailability проверяет доступность функции
-func (s *storefrontService) CheckFeatureAvailability(ctx context.Context, storefrontID int, feature string) (bool, error) {
+func (s *StorefrontServiceImpl) CheckFeatureAvailability(ctx context.Context, storefrontID int, feature string) (bool, error) {
 	storefront, err := s.repo.GetByID(ctx, storefrontID)
 	if err != nil {
 		return false, err
 	}
 
-	limits := planLimits[storefront.SubscriptionPlan]
+	limits, ok := planLimits[storefront.SubscriptionPlan]
+	if !ok {
+		return false, nil
+	}
 
 	switch feature {
 	case "ai_agent":
@@ -545,24 +493,45 @@ func (s *storefrontService) CheckFeatureAvailability(ctx context.Context, storef
 	case "custom_domain":
 		return limits.CanCustomDomain, nil
 	default:
-		return false, fmt.Errorf("unknown feature: %s", feature)
+		return false, nil
 	}
 }
 
-// Вспомогательные функции
+// Helper методы
 
-// generateSlug генерирует slug из названия
-func (s *storefrontService) generateSlug(name string) string {
-	// Приводим к нижнему регистру
+func (s *StorefrontServiceImpl) canCreateStorefront(ctx context.Context, userID int) (bool, error) {
+	// Получаем текущие витрины пользователя
+	currentStorefronts, err := s.ListUserStorefronts(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+
+	// TODO: получить план пользователя
+	userPlan := models.SubscriptionPlanStarter
+
+	limits, ok := planLimits[userPlan]
+	if !ok {
+		return false, nil
+	}
+
+	// Проверяем лимит
+	if limits.MaxStorefronts == -1 {
+		return true, nil // Unlimited
+	}
+
+	return len(currentStorefronts) < limits.MaxStorefronts, nil
+}
+
+func (s *StorefrontServiceImpl) generateSlug(name string) string {
 	slug := strings.ToLower(name)
 	
 	// Заменяем пробелы на дефисы
 	slug = strings.ReplaceAll(slug, " ", "-")
 	
-	// Оставляем только латиницу, цифры и дефисы
+	// Удаляем не-ASCII символы
 	var result []rune
 	for _, r := range slug {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) || r == '-' {
 			result = append(result, r)
 		}
 	}
@@ -570,36 +539,23 @@ func (s *storefrontService) generateSlug(name string) string {
 	return string(result)
 }
 
-// validateLocation валидирует данные локации
-func (s *storefrontService) validateLocation(location *models.Location) error {
-	if location == nil {
-		return ErrInvalidLocation
-	}
-
-	// Проверяем координаты
-	if location.BuildingLat < -90 || location.BuildingLat > 90 {
-		return fmt.Errorf("invalid latitude: %f", location.BuildingLat)
-	}
-	
-	if location.BuildingLng < -180 || location.BuildingLng > 180 {
-		return fmt.Errorf("invalid longitude: %f", location.BuildingLng)
-	}
-
-	// Проверяем обязательные поля
-	if location.FullAddress == "" {
-		return errors.New("address is required")
-	}
-	
-	if location.City == "" {
-		return errors.New("city is required")
-	}
-
-	return nil
-}
-
-// getDefaultPermissionsByRole возвращает права по умолчанию для роли
-func (s *storefrontService) getDefaultPermissionsByRole(role models.StaffRole) models.JSONB {
+func (s *StorefrontServiceImpl) getDefaultPermissions(role models.StaffRole) models.JSONB {
 	switch role {
+	case models.StaffRoleOwner:
+		return models.JSONB{
+			"can_add_products":    true,
+			"can_edit_products":   true,
+			"can_delete_products": true,
+			"can_view_orders":     true,
+			"can_process_orders":  true,
+			"can_refund_orders":   true,
+			"can_edit_storefront": true,
+			"can_manage_staff":    true,
+			"can_view_analytics":  true,
+			"can_manage_payments": true,
+			"can_reply_to_reviews": true,
+			"can_send_messages":   true,
+		}
 	case models.StaffRoleManager:
 		return models.JSONB{
 			"can_add_products":    true,
@@ -615,7 +571,7 @@ func (s *storefrontService) getDefaultPermissionsByRole(role models.StaffRole) m
 			"can_reply_to_reviews": true,
 			"can_send_messages":   true,
 		}
-	case models.StaffRoleSupport:
+	case models.StaffRoleCashier:
 		return models.JSONB{
 			"can_add_products":    false,
 			"can_edit_products":   false,
@@ -627,39 +583,25 @@ func (s *storefrontService) getDefaultPermissionsByRole(role models.StaffRole) m
 			"can_manage_staff":    false,
 			"can_view_analytics":  false,
 			"can_manage_payments": false,
-			"can_reply_to_reviews": true,
+			"can_reply_to_reviews": false,
 			"can_send_messages":   true,
 		}
-	case models.StaffRoleModerator:
-		return models.JSONB{
-			"can_add_products":    false,
-			"can_edit_products":   true,
-			"can_delete_products": false,
-			"can_view_orders":     false,
-			"can_process_orders":  false,
-			"can_refund_orders":   false,
-			"can_edit_storefront": false,
-			"can_manage_staff":    false,
-			"can_view_analytics":  false,
-			"can_manage_payments": false,
-			"can_reply_to_reviews": true,
-			"can_send_messages":   false,
-		}
-	default:
-		// Минимальные права по умолчанию
+	case models.StaffRoleSupport:
 		return models.JSONB{
 			"can_add_products":    false,
 			"can_edit_products":   false,
 			"can_delete_products": false,
-			"can_view_orders":     false,
+			"can_view_orders":     true,
 			"can_process_orders":  false,
 			"can_refund_orders":   false,
 			"can_edit_storefront": false,
 			"can_manage_staff":    false,
 			"can_view_analytics":  false,
 			"can_manage_payments": false,
-			"can_reply_to_reviews": false,
-			"can_send_messages":   false,
+			"can_reply_to_reviews": true,
+			"can_send_messages":   true,
 		}
+	default:
+		return models.JSONB{}
 	}
 }
