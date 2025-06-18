@@ -1205,3 +1205,112 @@ func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityT
 
 	return response, nil
 }
+
+// Storefront methods
+func (db *Database) CreateStorefront(ctx context.Context, storefront *models.Storefront) (int, error) {
+	var id int
+	err := db.pool.QueryRow(ctx, `
+		INSERT INTO storefronts (user_id, slug, name, description, logo_url, banner_url, theme,
+			phone, email, website, address, city, postal_code, country, latitude, longitude,
+			settings, seo_meta, is_active, subscription_plan, commission_rate)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+		RETURNING id
+	`, storefront.UserID, storefront.Slug, storefront.Name, storefront.Description,
+		storefront.LogoURL, storefront.BannerURL, storefront.Theme, storefront.Phone,
+		storefront.Email, storefront.Website, storefront.Address, storefront.City,
+		storefront.PostalCode, storefront.Country, storefront.Latitude, storefront.Longitude,
+		storefront.Settings, storefront.SEOMeta, storefront.IsActive, storefront.SubscriptionPlan,
+		storefront.CommissionRate).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]models.Storefront, error) {
+	rows, err := db.pool.Query(ctx, `
+		SELECT id, user_id, slug, name, description, logo_url, banner_url, theme,
+			phone, email, website, address, city, postal_code, country, latitude, longitude,
+			settings, seo_meta, is_active, is_verified, verification_date, rating, reviews_count,
+			products_count, sales_count, views_count, subscription_plan, subscription_expires_at,
+			commission_rate, ai_agent_enabled, ai_agent_config, live_shopping_enabled,
+			group_buying_enabled, created_at, updated_at
+		FROM storefronts
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var storefronts []models.Storefront
+	for rows.Next() {
+		var s models.Storefront
+		err := rows.Scan(
+			&s.ID, &s.UserID, &s.Slug, &s.Name, &s.Description, &s.LogoURL, &s.BannerURL, &s.Theme,
+			&s.Phone, &s.Email, &s.Website, &s.Address, &s.City, &s.PostalCode, &s.Country,
+			&s.Latitude, &s.Longitude, &s.Settings, &s.SEOMeta, &s.IsActive, &s.IsVerified,
+			&s.VerificationDate, &s.Rating, &s.ReviewsCount, &s.ProductsCount, &s.SalesCount,
+			&s.ViewsCount, &s.SubscriptionPlan, &s.SubscriptionExpiresAt, &s.CommissionRate,
+			&s.AIAgentEnabled, &s.AIAgentConfig, &s.LiveShoppingEnabled, &s.GroupBuyingEnabled,
+			&s.CreatedAt, &s.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		storefronts = append(storefronts, s)
+	}
+
+	return storefronts, nil
+}
+
+func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
+	var s models.Storefront
+	err := db.pool.QueryRow(ctx, `
+		SELECT id, user_id, slug, name, description, logo_url, banner_url, theme,
+			phone, email, website, address, city, postal_code, country, latitude, longitude,
+			settings, seo_meta, is_active, is_verified, verification_date, rating, reviews_count,
+			products_count, sales_count, views_count, subscription_plan, subscription_expires_at,
+			commission_rate, ai_agent_enabled, ai_agent_config, live_shopping_enabled,
+			group_buying_enabled, created_at, updated_at
+		FROM storefronts
+		WHERE id = $1
+	`, id).Scan(
+		&s.ID, &s.UserID, &s.Slug, &s.Name, &s.Description, &s.LogoURL, &s.BannerURL, &s.Theme,
+		&s.Phone, &s.Email, &s.Website, &s.Address, &s.City, &s.PostalCode, &s.Country,
+		&s.Latitude, &s.Longitude, &s.Settings, &s.SEOMeta, &s.IsActive, &s.IsVerified,
+		&s.VerificationDate, &s.Rating, &s.ReviewsCount, &s.ProductsCount, &s.SalesCount,
+		&s.ViewsCount, &s.SubscriptionPlan, &s.SubscriptionExpiresAt, &s.CommissionRate,
+		&s.AIAgentEnabled, &s.AIAgentConfig, &s.LiveShoppingEnabled, &s.GroupBuyingEnabled,
+		&s.CreatedAt, &s.UpdatedAt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (db *Database) UpdateStorefront(ctx context.Context, storefront *models.Storefront) error {
+	_, err := db.pool.Exec(ctx, `
+		UPDATE storefronts
+		SET name = $2, description = $3, logo_url = $4, banner_url = $5, theme = $6,
+			phone = $7, email = $8, website = $9, address = $10, city = $11,
+			postal_code = $12, country = $13, latitude = $14, longitude = $15,
+			settings = $16, seo_meta = $17, is_active = $18, updated_at = NOW()
+		WHERE id = $1
+	`, storefront.ID, storefront.Name, storefront.Description, storefront.LogoURL,
+		storefront.BannerURL, storefront.Theme, storefront.Phone, storefront.Email,
+		storefront.Website, storefront.Address, storefront.City, storefront.PostalCode,
+		storefront.Country, storefront.Latitude, storefront.Longitude, storefront.Settings,
+		storefront.SEOMeta, storefront.IsActive)
+	return err
+}
+
+func (db *Database) DeleteStorefront(ctx context.Context, id int) error {
+	_, err := db.pool.Exec(ctx, "DELETE FROM storefronts WHERE id = $1", id)
+	return err
+}

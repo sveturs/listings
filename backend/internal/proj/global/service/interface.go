@@ -12,7 +12,7 @@ import (
 	notificationService "backend/internal/proj/notifications/service"
 	paymentService "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
-	storefrontService "backend/internal/proj/storefront/service"
+	storefrontService "backend/internal/proj/storefronts/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
@@ -30,7 +30,7 @@ type ServicesInterface interface {
 	Translation() translationService.TranslationServiceInterface
 	Balance() balanceService.BalanceServiceInterface
 	Payment() paymentService.PaymentServiceInterface
-	Storefront() storefrontService.StorefrontServiceInterface
+	Storefront() storefrontService.StorefrontService
 	Storage() storage.Storage
 	Geocode() geocodeService.GeocodeServiceInterface
 

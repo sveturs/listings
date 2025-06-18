@@ -1,323 +1,723 @@
-// backend/internal/storage/postgres/storefront.go
 package postgres
 
 import (
 	"backend/internal/domain/models"
 	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"math"
+	"strings"
 	"time"
-		"database/sql"
-		"fmt"
 )
 
-// CreateStorefront создает новую витрину
-func (db *Database) CreateStorefront(ctx context.Context, storefront *models.Storefront) (int, error) {
-    var id int
-    err := db.pool.QueryRow(ctx, `
-        INSERT INTO user_storefronts (
-            user_id, name, description, logo_path, slug,
-            status, creation_transaction_id, created_at, updated_at,
-            phone, email, website, address, city, country, latitude, longitude
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-        RETURNING id
-    `,
-        storefront.UserID, storefront.Name, storefront.Description, storefront.LogoPath,
-        storefront.Slug, storefront.Status, storefront.CreationTransactionID,
-        storefront.CreatedAt, storefront.UpdatedAt,
-        storefront.Phone, storefront.Email, storefront.Website, 
-        storefront.Address, storefront.City, storefront.Country,
-        storefront.Latitude, storefront.Longitude,
-    ).Scan(&id)
+// ErrNotFound ошибка когда запись не найдена
+var ErrNotFound = errors.New("record not found")
 
-    return id, err
+// StorefrontRepository интерфейс репозитория витрин
+type StorefrontRepository interface {
+	// Основные CRUD операции
+	Create(ctx context.Context, storefront *models.StorefrontCreateDTO) (*models.Storefront, error)
+	GetByID(ctx context.Context, id int) (*models.Storefront, error)
+	GetBySlug(ctx context.Context, slug string) (*models.Storefront, error)
+	Update(ctx context.Context, id int, updates *models.StorefrontUpdateDTO) error
+	Delete(ctx context.Context, id int) error
+	
+	// Поиск и фильтрация
+	List(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error)
+	GetMapData(ctx context.Context, bounds GeoBounds, filter *models.StorefrontFilter) ([]*models.StorefrontMapData, error)
+	GetClusters(ctx context.Context, bounds GeoBounds, zoomLevel int) ([]*models.MapCluster, error)
+	
+	// Геолокация
+	FindNearby(ctx context.Context, lat, lng, radiusKm float64, limit int) ([]*models.Storefront, error)
+	GetBusinessesInBuilding(ctx context.Context, lat, lng float64, radiusM float64) ([]*models.StorefrontMapData, error)
+	
+	// Управление персоналом
+	AddStaff(ctx context.Context, staff *models.StorefrontStaff) error
+	UpdateStaff(ctx context.Context, id int, permissions models.JSONB) error
+	RemoveStaff(ctx context.Context, storefrontID, userID int) error
+	GetStaff(ctx context.Context, storefrontID int) ([]*models.StorefrontStaff, error)
+	
+	// Часы работы
+	SetWorkingHours(ctx context.Context, hours []*models.StorefrontHours) error
+	GetWorkingHours(ctx context.Context, storefrontID int) ([]*models.StorefrontHours, error)
+	IsOpenNow(ctx context.Context, storefrontID int) (bool, error)
+	
+	// Методы оплаты
+	SetPaymentMethods(ctx context.Context, methods []*models.StorefrontPaymentMethod) error
+	GetPaymentMethods(ctx context.Context, storefrontID int) ([]*models.StorefrontPaymentMethod, error)
+	
+	// Методы доставки
+	SetDeliveryOptions(ctx context.Context, options []*models.StorefrontDeliveryOption) error
+	GetDeliveryOptions(ctx context.Context, storefrontID int) ([]*models.StorefrontDeliveryOption, error)
+	
+	// Аналитика
+	RecordView(ctx context.Context, storefrontID int) error
+	RecordAnalytics(ctx context.Context, analytics *models.StorefrontAnalytics) error
+	GetAnalytics(ctx context.Context, storefrontID int, from, to time.Time) ([]*models.StorefrontAnalytics, error)
+	
+	// Проверки прав
+	IsOwner(ctx context.Context, storefrontID, userID int) (bool, error)
+	HasPermission(ctx context.Context, storefrontID, userID int, permission string) (bool, error)
 }
 
-// GetUserStorefronts возвращает все витрины пользователя
-func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]models.Storefront, error) {
-    rows, err := db.pool.Query(ctx, `
-        SELECT id, user_id, name, description, logo_path, slug,
-               status, creation_transaction_id, created_at, updated_at,
-               phone, email, website, address, city, country, latitude, longitude
-        FROM user_storefronts
-        WHERE user_id = $1
-        ORDER BY created_at DESC
-    `, userID)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
-
-    var storefronts []models.Storefront
-    for rows.Next() {
-        var s models.Storefront
-        err := rows.Scan(
-            &s.ID, &s.UserID, &s.Name, &s.Description, &s.LogoPath,
-            &s.Slug, &s.Status, &s.CreationTransactionID, &s.CreatedAt, &s.UpdatedAt,
-            &s.Phone, &s.Email, &s.Website, &s.Address, &s.City, &s.Country,
-            &s.Latitude, &s.Longitude,
-        )
-        if err != nil {
-            return nil, err
-        }
-        storefronts = append(storefronts, s)
-    }
-
-    return storefronts, rows.Err()
+// GeoBounds границы географической области
+type GeoBounds struct {
+	MinLat float64
+	MaxLat float64
+	MinLng float64
+	MaxLng float64
 }
 
-// GetStorefrontByID возвращает витрину по ID
-func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
-    var s models.Storefront
-    err := db.pool.QueryRow(ctx, `
-        SELECT id, user_id, name, description, logo_path, slug,
-               status, creation_transaction_id, created_at, updated_at,
-               phone, email, website, address, city, country, latitude, longitude
-        FROM user_storefronts
-        WHERE id = $1
-    `, id).Scan(
-        &s.ID, &s.UserID, &s.Name, &s.Description, &s.LogoPath,
-        &s.Slug, &s.Status, &s.CreationTransactionID, &s.CreatedAt, &s.UpdatedAt,
-        &s.Phone, &s.Email, &s.Website, &s.Address, &s.City, &s.Country,
-        &s.Latitude, &s.Longitude,
-    )
-    if err != nil {
-        return nil, err
-    }
-
-    return &s, nil
+// storefrontRepo реализация репозитория витрин
+type storefrontRepo struct {
+	db *Database
 }
 
-// UpdateStorefront обновляет информацию о витрине
-func (db *Database) UpdateStorefront(ctx context.Context, storefront *models.Storefront) error {
-    _, err := db.pool.Exec(ctx, `
-        UPDATE user_storefronts
-        SET name = $1, description = $2, logo_path = $3, slug = $4,
-            status = $5, updated_at = $6,
-            phone = $7, email = $8, website = $9, address = $10,
-            city = $11, country = $12, latitude = $13, longitude = $14
-        WHERE id = $15
-    `,
-        storefront.Name, storefront.Description, storefront.LogoPath,
-        storefront.Slug, storefront.Status, time.Now(),
-        storefront.Phone, storefront.Email, storefront.Website, storefront.Address,
-        storefront.City, storefront.Country, storefront.Latitude, storefront.Longitude,
-        storefront.ID,
-    )
-    return err
+// NewStorefrontRepository создает новый репозиторий витрин
+func NewStorefrontRepository(db *Database) StorefrontRepository {
+	return &storefrontRepo{db: db}
 }
 
-// DeleteStorefront удаляет витрину
-func (db *Database) DeleteStorefront(ctx context.Context, id int) error {
-	_, err := db.pool.Exec(ctx, `
-		DELETE FROM user_storefronts WHERE id = $1
-	`, id)
-	return err
-}
+// Create создает новую витрину
+func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
+	tx, err := r.db.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
 
-// CreateImportSource создает новый источник импорта
-func (db *Database) CreateImportSource(ctx context.Context, source *models.ImportSource) (int, error) {
-    var id int
-    err := db.pool.QueryRow(ctx, `
-        INSERT INTO import_sources (
-            storefront_id, type, url, auth_data, schedule, mapping,
-            created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id
-    `,
-        source.StorefrontID, source.Type, source.URL, source.AuthData,
-        source.Schedule, source.Mapping, source.CreatedAt, source.UpdatedAt,
-    ).Scan(&id)
-
-    if err != nil {
-        return 0, fmt.Errorf("error creating import source: %w", err)
-    }
-
-    return id, nil
-}
-
-// GetImportSourceByID возвращает источник импорта по ID
-func (db *Database) GetImportSourceByID(ctx context.Context, id int) (*models.ImportSource, error) {
-    var s models.ImportSource
-    var lastImportStatus, lastImportLog sql.NullString
-    
-    err := db.pool.QueryRow(ctx, `
-        SELECT id, storefront_id, type, url, 
-               COALESCE(auth_data, '{}'::jsonb), 
-               schedule, 
-               COALESCE(mapping, '{}'::jsonb),
-               last_import_at, 
-               last_import_status, 
-               last_import_log,
-               created_at, updated_at
-        FROM import_sources
-        WHERE id = $1
-    `, id).Scan(
-        &s.ID, &s.StorefrontID, &s.Type, &s.URL, &s.AuthData,
-        &s.Schedule, &s.Mapping, &s.LastImportAt, &lastImportStatus,
-        &lastImportLog, &s.CreatedAt, &s.UpdatedAt,
-    )
-    if err != nil {
-        return nil, fmt.Errorf("error scanning import source: %w", err)
-    }
-
-    // Преобразуем sql.NullString в строку
-    if lastImportStatus.Valid {
-        s.LastImportStatus = lastImportStatus.String
-    } else {
-        s.LastImportStatus = ""
-    }
-
-    // Преобразуем sql.NullString в строку
-    if lastImportLog.Valid {
-        s.LastImportLog = lastImportLog.String
-    } else {
-        s.LastImportLog = ""
-    }
-
-    return &s, nil
-}
-
-// GetImportSources возвращает источники импорта для витрины
-func (db *Database) GetImportSources(ctx context.Context, storefrontID int) ([]models.ImportSource, error) {
-    rows, err := db.pool.Query(ctx, `
-        SELECT id, storefront_id, type, url, 
-               COALESCE(auth_data, '{}'::jsonb), 
-               schedule, 
-               COALESCE(mapping, '{}'::jsonb),
-               last_import_at, 
-               last_import_status, 
-               last_import_log,
-               created_at, updated_at
-        FROM import_sources
-        WHERE storefront_id = $1
-        ORDER BY created_at DESC
-    `, storefrontID)
-    if err != nil {
-        return nil, fmt.Errorf("error getting import sources: %w", err)
-    }
-    defer rows.Close()
-
-    var sources []models.ImportSource
-    for rows.Next() {
-        var s models.ImportSource
-        var lastImportStatus, lastImportLog sql.NullString
-        
-        err := rows.Scan(
-            &s.ID, &s.StorefrontID, &s.Type, &s.URL, &s.AuthData,
-            &s.Schedule, &s.Mapping, &s.LastImportAt, &lastImportStatus,
-            &lastImportLog, &s.CreatedAt, &s.UpdatedAt,
-        )
-        if err != nil {
-            return nil, fmt.Errorf("error scanning import source row: %w", err)
-        }
-        
-        // Преобразуем sql.NullString в строку
-        if lastImportStatus.Valid {
-            s.LastImportStatus = lastImportStatus.String
-        } else {
-            s.LastImportStatus = ""
-        }
-
-        // Преобразуем sql.NullString в строку
-        if lastImportLog.Valid {
-            s.LastImportLog = lastImportLog.String
-        } else {
-            s.LastImportLog = ""
-        }
-        
-        sources = append(sources, s)
-    }
-
-    return sources, rows.Err()
-}
-
-// UpdateImportSource обновляет источник импорта
-func (db *Database) UpdateImportSource(ctx context.Context, source *models.ImportSource) error {
-    // Используем COALESCE для NULL значений
-    _, err := db.pool.Exec(ctx, `
-        UPDATE import_sources
-        SET type = $1, url = $2, auth_data = $3, schedule = $4, mapping = $5,
-            last_import_at = $6, last_import_status = $7, last_import_log = $8,
-            updated_at = $9
-        WHERE id = $10
-    `,
-        source.Type, source.URL, source.AuthData, source.Schedule, source.Mapping,
-        source.LastImportAt, source.LastImportStatus, source.LastImportLog,
-        time.Now(), source.ID,
-    )
-    
-    if err != nil {
-        return fmt.Errorf("error updating import source: %w", err)
-    }
-    
-    return nil
-}
-
-// DeleteImportSource удаляет источник импорта
-func (db *Database) DeleteImportSource(ctx context.Context, id int) error {
-	_, err := db.pool.Exec(ctx, `
-		DELETE FROM import_sources WHERE id = $1
-	`, id)
-	return err
-}
-
-// CreateImportHistory создает новую запись в истории импорта
-func (db *Database) CreateImportHistory(ctx context.Context, history *models.ImportHistory) (int, error) {
-	var id int
-	err := db.pool.QueryRow(ctx, `
-		INSERT INTO import_history (
-			source_id, status, items_total, items_imported, items_failed,
-			log, started_at, finished_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id
+	// Создаем витрину
+	var storefront models.Storefront
+	err = tx.QueryRow(ctx, `
+		INSERT INTO storefronts (
+			user_id, slug, name, description,
+			logo_url, banner_url, theme,
+			phone, email, website,
+			address, city, postal_code, country, latitude, longitude,
+			settings, seo_meta,
+			is_active, subscription_plan, commission_rate
+		) VALUES (
+			$1, $2, $3, $4,
+			$5, $6, $7,
+			$8, $9, $10,
+			$11, $12, $13, $14, $15, $16,
+			$17, $18,
+			$19, $20, $21
+		)
+		RETURNING id, created_at, updated_at
 	`,
-		history.SourceID, history.Status, history.ItemsTotal, history.ItemsImported,
-		history.ItemsFailed, history.Log, history.StartedAt, history.FinishedAt,
-	).Scan(&id)
+		// Временно используем userID = 1, потом получим из контекста
+		1, generateSlug(dto.Name), dto.Name, dto.Description,
+		"", "", dto.Theme,
+		dto.Phone, dto.Email, dto.Website,
+		dto.Location.FullAddress, dto.Location.City, dto.Location.PostalCode, dto.Location.Country,
+		dto.Location.BuildingLat, dto.Location.BuildingLng,
+		dto.Settings, dto.SEOMeta,
+		false, models.SubscriptionPlanStarter, 3.00,
+	).Scan(&storefront.ID, &storefront.CreatedAt, &storefront.UpdatedAt)
+	
+	if err != nil {
+		return nil, fmt.Errorf("failed to create storefront: %w", err)
+	}
 
-	return id, err
+	// Создаем владельца в staff
+	_, err = tx.Exec(ctx, `
+		INSERT INTO storefront_staff (storefront_id, user_id, role, permissions)
+		VALUES ($1, $2, $3, $4)
+	`, storefront.ID, 1, models.StaffRoleOwner, getOwnerPermissions())
+	
+	if err != nil {
+		return nil, fmt.Errorf("failed to add owner to staff: %w", err)
+	}
+
+	// Устанавливаем дефолтные часы работы (9:00-18:00 пн-пт)
+	for day := 1; day <= 5; day++ {
+		_, err = tx.Exec(ctx, `
+			INSERT INTO storefront_hours (storefront_id, day_of_week, open_time, close_time)
+			VALUES ($1, $2, $3, $4)
+		`, storefront.ID, day, "09:00", "18:00")
+		if err != nil {
+			return nil, fmt.Errorf("failed to set working hours: %w", err)
+		}
+	}
+
+	// Добавляем базовые методы оплаты
+	paymentMethods := []struct {
+		method models.PaymentMethodType
+		fee    float64
+	}{
+		{models.PaymentMethodCash, 0},
+		{models.PaymentMethodCOD, 2.5},
+		{models.PaymentMethodCard, 2.0},
+	}
+
+	for _, pm := range paymentMethods {
+		_, err = tx.Exec(ctx, `
+			INSERT INTO storefront_payment_methods (
+				storefront_id, method_type, is_enabled, transaction_fee
+			) VALUES ($1, $2, $3, $4)
+		`, storefront.ID, pm.method, true, pm.fee)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add payment method %s: %w", pm.method, err)
+		}
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Загружаем полную информацию о созданной витрине
+	return r.GetByID(ctx, storefront.ID)
 }
 
-// GetImportHistory возвращает историю импорта
-func (db *Database) GetImportHistory(ctx context.Context, sourceID int, limit, offset int) ([]models.ImportHistory, error) {
-	rows, err := db.pool.Query(ctx, `
-		SELECT id, source_id, status, items_total, items_imported, items_failed,
-		       log, started_at, finished_at
-		FROM import_history
-		WHERE source_id = $1
-		ORDER BY started_at DESC
-		LIMIT $2 OFFSET $3
-	`, sourceID, limit, offset)
+// GetByID получает витрину по ID
+func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefront, error) {
+	var s models.Storefront
+	var theme, settings, seoMeta, aiConfig []byte
+
+	err := r.db.pool.QueryRow(ctx, `
+		SELECT 
+			id, user_id, slug, name, description,
+			logo_url, banner_url, theme,
+			phone, email, website,
+			address, city, postal_code, country, latitude, longitude,
+			settings, seo_meta,
+			is_active, is_verified, verification_date,
+			rating, reviews_count, products_count, sales_count, views_count,
+			subscription_plan, subscription_expires_at, commission_rate,
+			ai_agent_enabled, ai_agent_config, live_shopping_enabled, group_buying_enabled,
+			created_at, updated_at
+		FROM storefronts
+		WHERE id = $1
+	`, id).Scan(
+		&s.ID, &s.UserID, &s.Slug, &s.Name, &s.Description,
+		&s.LogoURL, &s.BannerURL, &theme,
+		&s.Phone, &s.Email, &s.Website,
+		&s.Address, &s.City, &s.PostalCode, &s.Country, &s.Latitude, &s.Longitude,
+		&settings, &seoMeta,
+		&s.IsActive, &s.IsVerified, &s.VerificationDate,
+		&s.Rating, &s.ReviewsCount, &s.ProductsCount, &s.SalesCount, &s.ViewsCount,
+		&s.SubscriptionPlan, &s.SubscriptionExpiresAt, &s.CommissionRate,
+		&s.AIAgentEnabled, &aiConfig, &s.LiveShoppingEnabled, &s.GroupBuyingEnabled,
+		&s.CreatedAt, &s.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get storefront: %w", err)
+	}
+
+	// Парсим JSONB поля
+	if theme != nil {
+		json.Unmarshal(theme, &s.Theme)
+	}
+	if settings != nil {
+		json.Unmarshal(settings, &s.Settings)
+	}
+	if seoMeta != nil {
+		json.Unmarshal(seoMeta, &s.SEOMeta)
+	}
+	if aiConfig != nil {
+		json.Unmarshal(aiConfig, &s.AIAgentConfig)
+	}
+
+	return &s, nil
+}
+
+// GetBySlug получает витрину по slug
+func (r *storefrontRepo) GetBySlug(ctx context.Context, slug string) (*models.Storefront, error) {
+	var id int
+	err := r.db.pool.QueryRow(ctx, "SELECT id FROM storefronts WHERE slug = $1", slug).Scan(&id)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	return r.GetByID(ctx, id)
+}
 
-	var history []models.ImportHistory
-	for rows.Next() {
-		var h models.ImportHistory
-		err := rows.Scan(
-			&h.ID, &h.SourceID, &h.Status, &h.ItemsTotal, &h.ItemsImported,
-			&h.ItemsFailed, &h.Log, &h.StartedAt, &h.FinishedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-		history = append(history, h)
+// Update обновляет витрину
+func (r *storefrontRepo) Update(ctx context.Context, id int, dto *models.StorefrontUpdateDTO) error {
+	var setClauses []string
+	var args []interface{}
+	argCount := 1
+
+	// Динамически строим UPDATE запрос
+	if dto.Name != nil {
+		setClauses = append(setClauses, fmt.Sprintf("name = $%d", argCount))
+		args = append(args, *dto.Name)
+		argCount++
+	}
+	if dto.Description != nil {
+		setClauses = append(setClauses, fmt.Sprintf("description = $%d", argCount))
+		args = append(args, *dto.Description)
+		argCount++
+	}
+	if dto.Theme != nil {
+		setClauses = append(setClauses, fmt.Sprintf("theme = $%d", argCount))
+		args = append(args, dto.Theme)
+		argCount++
+	}
+	if dto.Phone != nil {
+		setClauses = append(setClauses, fmt.Sprintf("phone = $%d", argCount))
+		args = append(args, *dto.Phone)
+		argCount++
+	}
+	if dto.Email != nil {
+		setClauses = append(setClauses, fmt.Sprintf("email = $%d", argCount))
+		args = append(args, *dto.Email)
+		argCount++
+	}
+	if dto.Website != nil {
+		setClauses = append(setClauses, fmt.Sprintf("website = $%d", argCount))
+		args = append(args, *dto.Website)
+		argCount++
+	}
+	if dto.Location != nil {
+		setClauses = append(setClauses, fmt.Sprintf("address = $%d", argCount))
+		args = append(args, dto.Location.FullAddress)
+		argCount++
+		
+		setClauses = append(setClauses, fmt.Sprintf("city = $%d", argCount))
+		args = append(args, dto.Location.City)
+		argCount++
+		
+		setClauses = append(setClauses, fmt.Sprintf("postal_code = $%d", argCount))
+		args = append(args, dto.Location.PostalCode)
+		argCount++
+		
+		setClauses = append(setClauses, fmt.Sprintf("latitude = $%d", argCount))
+		args = append(args, dto.Location.BuildingLat)
+		argCount++
+		
+		setClauses = append(setClauses, fmt.Sprintf("longitude = $%d", argCount))
+		args = append(args, dto.Location.BuildingLng)
+		argCount++
+	}
+	if dto.Settings != nil {
+		setClauses = append(setClauses, fmt.Sprintf("settings = $%d", argCount))
+		args = append(args, dto.Settings)
+		argCount++
+	}
+	if dto.SEOMeta != nil {
+		setClauses = append(setClauses, fmt.Sprintf("seo_meta = $%d", argCount))
+		args = append(args, dto.SEOMeta)
+		argCount++
+	}
+	if dto.AIAgentEnabled != nil {
+		setClauses = append(setClauses, fmt.Sprintf("ai_agent_enabled = $%d", argCount))
+		args = append(args, *dto.AIAgentEnabled)
+		argCount++
+	}
+	if dto.LiveShoppingEnabled != nil {
+		setClauses = append(setClauses, fmt.Sprintf("live_shopping_enabled = $%d", argCount))
+		args = append(args, *dto.LiveShoppingEnabled)
+		argCount++
+	}
+	if dto.GroupBuyingEnabled != nil {
+		setClauses = append(setClauses, fmt.Sprintf("group_buying_enabled = $%d", argCount))
+		args = append(args, *dto.GroupBuyingEnabled)
+		argCount++
 	}
 
-	return history, rows.Err()
+	if len(setClauses) == 0 {
+		return errors.New("no fields to update")
+	}
+
+	setClauses = append(setClauses, "updated_at = CURRENT_TIMESTAMP")
+	args = append(args, id)
+
+	query := fmt.Sprintf(
+		"UPDATE storefronts SET %s WHERE id = $%d",
+		strings.Join(setClauses, ", "),
+		argCount,
+	)
+
+	result, err := r.db.pool.Exec(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to update storefront: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
-// UpdateImportHistory обновляет запись в истории импорта
-func (db *Database) UpdateImportHistory(ctx context.Context, history *models.ImportHistory) error {
-	_, err := db.pool.Exec(ctx, `
-		UPDATE import_history
-		SET status = $1, items_total = $2, items_imported = $3, items_failed = $4,
-		    log = $5, finished_at = $6
-		WHERE id = $7
-	`,
-		history.Status, history.ItemsTotal, history.ItemsImported, history.ItemsFailed,
-		history.Log, history.FinishedAt, history.ID,
+// Delete удаляет витрину (soft delete)
+func (r *storefrontRepo) Delete(ctx context.Context, id int) error {
+	result, err := r.db.pool.Exec(ctx, 
+		"UPDATE storefronts SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1", 
+		id,
 	)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to delete storefront: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
+
+// List возвращает список витрин с фильтрацией
+func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error) {
+	// Строим динамический запрос
+	whereConditions := []string{"1=1"}
+	countWhereConditions := []string{"1=1"}
+	args := []interface{}{}
+	argCount := 1
+
+	if filter.UserID != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("user_id = $%d", argCount))
+		countWhereConditions = append(countWhereConditions, fmt.Sprintf("user_id = $%d", argCount))
+		args = append(args, *filter.UserID)
+		argCount++
+	}
+
+	if filter.IsActive != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("is_active = $%d", argCount))
+		countWhereConditions = append(countWhereConditions, fmt.Sprintf("is_active = $%d", argCount))
+		args = append(args, *filter.IsActive)
+		argCount++
+	}
+
+	if filter.IsVerified != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("is_verified = $%d", argCount))
+		countWhereConditions = append(countWhereConditions, fmt.Sprintf("is_verified = $%d", argCount))
+		args = append(args, *filter.IsVerified)
+		argCount++
+	}
+
+	if filter.City != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("LOWER(city) = LOWER($%d)", argCount))
+		countWhereConditions = append(countWhereConditions, fmt.Sprintf("LOWER(city) = LOWER($%d)", argCount))
+		args = append(args, *filter.City)
+		argCount++
+	}
+
+	if filter.MinRating != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("rating >= $%d", argCount))
+		countWhereConditions = append(countWhereConditions, fmt.Sprintf("rating >= $%d", argCount))
+		args = append(args, *filter.MinRating)
+		argCount++
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("(name ILIKE $%d OR description ILIKE $%d)", argCount, argCount))
+		countWhereConditions = append(countWhereConditions, fmt.Sprintf("(name ILIKE $%d OR description ILIKE $%d)", argCount, argCount))
+		searchTerm := "%" + *filter.Search + "%"
+		args = append(args, searchTerm)
+		argCount++
+	}
+
+	// Геофильтр
+	if filter.Latitude != nil && filter.Longitude != nil && filter.RadiusKm != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf(`
+			earth_distance(
+				ll_to_earth(latitude, longitude),
+				ll_to_earth($%d, $%d)
+			) <= $%d * 1000
+		`, argCount, argCount+1, argCount+2))
+		
+		countWhereConditions = append(countWhereConditions, fmt.Sprintf(`
+			earth_distance(
+				ll_to_earth(latitude, longitude),
+				ll_to_earth($%d, $%d)
+			) <= $%d * 1000
+		`, argCount, argCount+1, argCount+2))
+		
+		args = append(args, *filter.Latitude, *filter.Longitude, *filter.RadiusKm)
+		argCount += 3
+	}
+
+	// Подсчет общего количества
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM storefronts WHERE %s", strings.Join(countWhereConditions, " AND "))
+	var totalCount int
+	err := r.db.pool.QueryRow(ctx, countQuery, args...).Scan(&totalCount)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count storefronts: %w", err)
+	}
+
+	// Сортировка
+	orderBy := "created_at DESC"
+	if filter.SortBy != "" {
+		switch filter.SortBy {
+		case "rating":
+			orderBy = "rating"
+		case "products_count":
+			orderBy = "products_count"
+		case "distance":
+			if filter.Latitude != nil && filter.Longitude != nil {
+				orderBy = fmt.Sprintf("earth_distance(ll_to_earth(latitude, longitude), ll_to_earth(%f, %f))", 
+					*filter.Latitude, *filter.Longitude)
+			}
+		}
+		
+		if filter.SortOrder == "desc" {
+			orderBy += " DESC"
+		} else {
+			orderBy += " ASC"
+		}
+	}
+
+	// Основной запрос
+	query := fmt.Sprintf(`
+		SELECT 
+			id, user_id, slug, name, description,
+			logo_url, banner_url, theme,
+			phone, email, website,
+			address, city, postal_code, country, latitude, longitude,
+			settings, seo_meta,
+			is_active, is_verified, verification_date,
+			rating, reviews_count, products_count, sales_count, views_count,
+			subscription_plan, subscription_expires_at, commission_rate,
+			ai_agent_enabled, ai_agent_config, live_shopping_enabled, group_buying_enabled,
+			created_at, updated_at
+		FROM storefronts
+		WHERE %s
+		ORDER BY %s
+		LIMIT $%d OFFSET $%d
+	`, strings.Join(whereConditions, " AND "), orderBy, argCount, argCount+1)
+
+	args = append(args, filter.Limit, filter.Offset)
+
+	rows, err := r.db.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list storefronts: %w", err)
+	}
+	defer rows.Close()
+
+	var storefronts []*models.Storefront
+	for rows.Next() {
+		s := &models.Storefront{}
+		var theme, settings, seoMeta, aiConfig []byte
+
+		err := rows.Scan(
+			&s.ID, &s.UserID, &s.Slug, &s.Name, &s.Description,
+			&s.LogoURL, &s.BannerURL, &theme,
+			&s.Phone, &s.Email, &s.Website,
+			&s.Address, &s.City, &s.PostalCode, &s.Country, &s.Latitude, &s.Longitude,
+			&settings, &seoMeta,
+			&s.IsActive, &s.IsVerified, &s.VerificationDate,
+			&s.Rating, &s.ReviewsCount, &s.ProductsCount, &s.SalesCount, &s.ViewsCount,
+			&s.SubscriptionPlan, &s.SubscriptionExpiresAt, &s.CommissionRate,
+			&s.AIAgentEnabled, &aiConfig, &s.LiveShoppingEnabled, &s.GroupBuyingEnabled,
+			&s.CreatedAt, &s.UpdatedAt,
+		)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to scan storefront: %w", err)
+		}
+
+		// Парсим JSONB поля
+		if theme != nil {
+			json.Unmarshal(theme, &s.Theme)
+		}
+		if settings != nil {
+			json.Unmarshal(settings, &s.Settings)
+		}
+		if seoMeta != nil {
+			json.Unmarshal(seoMeta, &s.SEOMeta)
+		}
+		if aiConfig != nil {
+			json.Unmarshal(aiConfig, &s.AIAgentConfig)
+		}
+
+		storefronts = append(storefronts, s)
+	}
+
+	return storefronts, totalCount, nil
+}
+
+// FindNearby находит витрины в радиусе
+func (r *storefrontRepo) FindNearby(ctx context.Context, lat, lng, radiusKm float64, limit int) ([]*models.Storefront, error) {
+	filter := &models.StorefrontFilter{
+		Latitude:  &lat,
+		Longitude: &lng,
+		RadiusKm:  &radiusKm,
+		IsActive:  boolPtr(true),
+		Limit:     limit,
+		Offset:    0,
+		SortBy:    "distance",
+		SortOrder: "asc",
+	}
+	
+	storefronts, _, err := r.List(ctx, filter)
+	return storefronts, err
+}
+
+// GetMapData получает данные для отображения на карте
+func (r *storefrontRepo) GetMapData(ctx context.Context, bounds GeoBounds, filter *models.StorefrontFilter) ([]*models.StorefrontMapData, error) {
+	query := `
+		SELECT 
+			s.id, s.slug, s.name, s.latitude, s.longitude, s.rating, s.logo_url,
+			s.address, s.phone, s.products_count,
+			CASE 
+				WHEN EXISTS (
+					SELECT 1 FROM storefront_hours 
+					WHERE storefront_id = s.id 
+					AND day_of_week = EXTRACT(DOW FROM CURRENT_TIMESTAMP)
+					AND NOT is_closed
+					AND CURRENT_TIME BETWEEN open_time AND close_time
+				) THEN true 
+				ELSE false 
+			END as working_now,
+			CASE WHEN EXISTS (
+				SELECT 1 FROM storefront_payment_methods 
+				WHERE storefront_id = s.id AND method_type = 'cod' AND is_enabled
+			) THEN true ELSE false END as supports_cod,
+			CASE WHEN EXISTS (
+				SELECT 1 FROM storefront_delivery_options 
+				WHERE storefront_id = s.id AND is_enabled AND provider != 'self_pickup'
+			) THEN true ELSE false END as has_delivery,
+			CASE WHEN EXISTS (
+				SELECT 1 FROM storefront_delivery_options 
+				WHERE storefront_id = s.id AND is_enabled AND provider = 'self_pickup'
+			) THEN true ELSE false END as has_self_pickup,
+			CASE WHEN EXISTS (
+				SELECT 1 FROM storefront_payment_methods 
+				WHERE storefront_id = s.id AND method_type = 'card' AND is_enabled
+			) THEN true ELSE false END as accepts_cards
+		FROM storefronts s
+		WHERE s.is_active = true
+		AND s.latitude BETWEEN $1 AND $2
+		AND s.longitude BETWEEN $3 AND $4
+	`
+
+	args := []interface{}{bounds.MinLat, bounds.MaxLat, bounds.MinLng, bounds.MaxLng}
+
+	// Добавляем дополнительные фильтры
+	if filter != nil {
+		if filter.MinRating != nil {
+			query += " AND s.rating >= $5"
+			args = append(args, *filter.MinRating)
+		}
+		// ... другие фильтры
+	}
+
+	rows, err := r.db.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get map data: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*models.StorefrontMapData
+	for rows.Next() {
+		var data models.StorefrontMapData
+		err := rows.Scan(
+			&data.ID, &data.Slug, &data.Name, &data.Latitude, &data.Longitude,
+			&data.Rating, &data.LogoURL, &data.Address, &data.Phone, &data.ProductsCount,
+			&data.WorkingNow, &data.SupportsCOD, &data.HasDelivery, &data.HasSelfPickup, &data.AcceptsCards,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan map data: %w", err)
+		}
+		results = append(results, &data)
+	}
+
+	return results, nil
+}
+
+// GetBusinessesInBuilding получает все бизнесы в здании
+func (r *storefrontRepo) GetBusinessesInBuilding(ctx context.Context, lat, lng float64, radiusM float64) ([]*models.StorefrontMapData, error) {
+	bounds := GeoBounds{
+		MinLat: lat - (radiusM/111000.0), // приблизительно
+		MaxLat: lat + (radiusM/111000.0),
+		MinLng: lng - (radiusM/(111000.0*math.Cos(lat*math.Pi/180))),
+		MaxLng: lng + (radiusM/(111000.0*math.Cos(lat*math.Pi/180))),
+	}
+	
+	return r.GetMapData(ctx, bounds, nil)
+}
+
+// IsOwner проверяет является ли пользователь владельцем
+func (r *storefrontRepo) IsOwner(ctx context.Context, storefrontID, userID int) (bool, error) {
+	var exists bool
+	err := r.db.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM storefronts 
+			WHERE id = $1 AND user_id = $2
+		)
+	`, storefrontID, userID).Scan(&exists)
+	
+	return exists, err
+}
+
+// HasPermission проверяет права пользователя
+func (r *storefrontRepo) HasPermission(ctx context.Context, storefrontID, userID int, permission string) (bool, error) {
+	// Владелец имеет все права
+	isOwner, err := r.IsOwner(ctx, storefrontID, userID)
+	if err != nil {
+		return false, err
+	}
+	if isOwner {
+		return true, nil
+	}
+
+	// Проверяем права сотрудника
+	var permissions models.JSONB
+	err = r.db.pool.QueryRow(ctx, `
+		SELECT permissions FROM storefront_staff 
+		WHERE storefront_id = $1 AND user_id = $2
+	`, storefrontID, userID).Scan(&permissions)
+	
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	// Проверяем наличие конкретного разрешения
+	if val, ok := permissions[permission]; ok {
+		if boolVal, ok := val.(bool); ok {
+			return boolVal, nil
+		}
+	}
+
+	return false, nil
+}
+
+// Helper функции
+
+func generateSlug(name string) string {
+	// Простая генерация slug - в продакшене нужно использовать библиотеку
+	slug := strings.ToLower(name)
+	slug = strings.ReplaceAll(slug, " ", "-")
+	// Добавляем timestamp для уникальности
+	return fmt.Sprintf("%s-%d", slug, time.Now().Unix())
+}
+
+func getOwnerPermissions() models.JSONB {
+	return models.JSONB{
+		"can_add_products":    true,
+		"can_edit_products":   true,
+		"can_delete_products": true,
+		"can_view_orders":     true,
+		"can_process_orders":  true,
+		"can_refund_orders":   true,
+		"can_edit_storefront": true,
+		"can_manage_staff":    true,
+		"can_view_analytics":  true,
+		"can_manage_payments": true,
+		"can_reply_to_reviews": true,
+		"can_send_messages":   true,
+	}
+}
+
+func boolPtr(b bool) *bool {
+	return &b
+}
+
+// Дополнительные методы будут реализованы по мере необходимости:
+// - SetWorkingHours, GetWorkingHours, IsOpenNow
+// - SetPaymentMethods, GetPaymentMethods
+// - SetDeliveryOptions, GetDeliveryOptions
+// - AddStaff, UpdateStaff, RemoveStaff, GetStaff
+// - RecordView, RecordAnalytics, GetAnalytics
+// - GetClusters

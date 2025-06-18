@@ -168,13 +168,6 @@ type Storage interface {
 	UpdateStorefront(ctx context.Context, storefront *models.Storefront) error
 	DeleteStorefront(ctx context.Context, id int) error
 
-	// Import Source methods
-	CreateImportSource(ctx context.Context, source *models.ImportSource) (int, error)
-	GetImportSourceByID(ctx context.Context, id int) (*models.ImportSource, error)
-	GetImportSources(ctx context.Context, storefrontID int) ([]models.ImportSource, error)
-	UpdateImportSource(ctx context.Context, source *models.ImportSource) error
-	DeleteImportSource(ctx context.Context, id int) error
-
 	// OpenSearch методы
 	SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
 
@@ -184,11 +177,6 @@ type Storage interface {
 	IndexListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListingIndex(ctx context.Context, id string) error
 	PrepareIndex(ctx context.Context) error
-
-	// Import History methods
-	CreateImportHistory(ctx context.Context, history *models.ImportHistory) (int, error)
-	GetImportHistory(ctx context.Context, sourceID int, limit, offset int) ([]models.ImportHistory, error)
-	UpdateImportHistory(ctx context.Context, history *models.ImportHistory) error
 
 	// Translation methods
 	GetTranslationsForEntity(ctx context.Context, entityType string, entityID int) ([]models.Translation, error)
