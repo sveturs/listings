@@ -592,6 +592,35 @@ definitions:
       usage_context:
         type: string
     type: object
+  backend_internal_domain_models.DeliveryProvider:
+    enum:
+    - posta_srbije
+    - aks
+    - bex
+    - d_express
+    - city_express
+    - self_pickup
+    - own_delivery
+    type: string
+    x-enum-varnames:
+    - DeliveryProviderPostaSrbije
+    - DeliveryProviderAKS
+    - DeliveryProviderBEX
+    - DeliveryProviderDExpress
+    - DeliveryProviderCityExpress
+    - DeliveryProviderSelfPickup
+    - DeliveryProviderOwnDelivery
+  backend_internal_domain_models.DeliveryZone:
+    properties:
+      name:
+        type: string
+      postal_codes:
+        items:
+          type: string
+        type: array
+      price_modifier:
+        type: number
+    type: object
   backend_internal_domain_models.GeoLocation:
     properties:
       city:
@@ -603,89 +632,8 @@ definitions:
       lon:
         type: number
     type: object
-  backend_internal_domain_models.ImportHistory:
-    properties:
-      finished_at:
-        type: string
-      id:
-        type: integer
-      items_failed:
-        type: integer
-      items_imported:
-        type: integer
-      items_total:
-        type: integer
-      items_updated:
-        type: integer
-      log:
-        type: string
-      source_id:
-        type: integer
-      started_at:
-        type: string
-      status:
-        description: success, failed, partial
-        type: string
-    type: object
-  backend_internal_domain_models.ImportSource:
-    properties:
-      auth_data:
-        items:
-          type: integer
-        type: array
-      created_at:
-        type: string
-      id:
-        type: integer
-      last_import_at:
-        type: string
-      last_import_log:
-        description: Изменяем на обычную строку, но обрабатываем NULL при сканировании
-        type: string
-      last_import_status:
-        description: Изменяем на обычную строку, но обрабатываем NULL при сканировании
-        type: string
-      mapping:
-        items:
-          type: integer
-        type: array
-      schedule:
-        type: string
-      storefront_id:
-        type: integer
-      type:
-        description: csv, xml, json
-        type: string
-      updated_at:
-        type: string
-      url:
-        type: string
-    type: object
-  backend_internal_domain_models.ImportSourceCreate:
-    properties:
-      auth_data:
-        items:
-          type: integer
-        type: array
-      mapping:
-        items:
-          type: integer
-        type: array
-      schedule:
-        type: string
-      storefront_id:
-        type: integer
-      type:
-        enum:
-        - csv
-        - xml
-        - json
-        type: string
-      url:
-        type: string
-    required:
-    - storefront_id
-    - type
+  backend_internal_domain_models.JSONB:
+    additionalProperties: true
     type: object
   backend_internal_domain_models.ListingAttributeValue:
     properties:
@@ -733,6 +681,36 @@ definitions:
       unit:
         description: Добавляем поле для единиц измерения
         type: string
+    type: object
+  backend_internal_domain_models.Location:
+    properties:
+      building_info:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Дополнительная информация
+      building_lat:
+        description: Координаты здания (после геокодинга)
+        type: number
+      building_lng:
+        type: number
+      city:
+        type: string
+      country:
+        type: string
+      full_address:
+        description: Адресные данные
+        type: string
+      house_number:
+        type: string
+      postal_code:
+        type: string
+      street:
+        type: string
+      user_lat:
+        description: Координаты клика пользователя
+        type: number
+      user_lng:
+        type: number
     type: object
   backend_internal_domain_models.MapMarker:
     properties:
@@ -1092,6 +1070,36 @@ definitions:
       type:
         type: string
     type: object
+  backend_internal_domain_models.PaymentMethodType:
+    enum:
+    - cash
+    - cod
+    - card
+    - bank_transfer
+    - paypal
+    - crypto
+    - postanska
+    - keks_pay
+    - ips
+    type: string
+    x-enum-comments:
+      PaymentMethodBankTransfer: Банковский перевод
+      PaymentMethodCOD: Cash on Delivery - оплата курьеру
+      PaymentMethodCard: Банковская карта
+      PaymentMethodCash: Наличные в магазине
+      PaymentMethodIPS: Instant Payment System
+      PaymentMethodKeks: Keks Pay (популярно в Сербии)
+      PaymentMethodPostanska: Poštanska štedionica
+    x-enum-varnames:
+    - PaymentMethodCash
+    - PaymentMethodCOD
+    - PaymentMethodCard
+    - PaymentMethodBankTransfer
+    - PaymentMethodPayPal
+    - PaymentMethodCrypto
+    - PaymentMethodPostanska
+    - PaymentMethodKeks
+    - PaymentMethodIPS
   backend_internal_domain_models.PaymentSession:
     properties:
       amount:
@@ -1259,70 +1267,340 @@ definitions:
       verified_reviews:
         type: integer
     type: object
+  backend_internal_domain_models.StaffRole:
+    enum:
+    - owner
+    - manager
+    - support
+    - moderator
+    type: string
+    x-enum-varnames:
+    - StaffRoleOwner
+    - StaffRoleManager
+    - StaffRoleSupport
+    - StaffRoleModerator
   backend_internal_domain_models.Storefront:
     properties:
       address:
+        description: Локация
+        type: string
+      ai_agent_config:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      ai_agent_enabled:
+        description: AI и killer features
+        type: boolean
+      banner_url:
         type: string
       city:
         type: string
+      commission_rate:
+        type: number
       country:
         type: string
       created_at:
+        description: Временные метки
         type: string
-      creation_transaction_id:
-        type: integer
       description:
         type: string
       email:
         type: string
+      group_buying_enabled:
+        type: boolean
       id:
         type: integer
+      is_active:
+        description: Статус и статистика
+        type: boolean
+      is_verified:
+        type: boolean
       latitude:
         type: number
-      logo_path:
+      live_shopping_enabled:
+        type: boolean
+      logo_url:
+        description: Брендинг
         type: string
       longitude:
         type: number
       name:
         type: string
       phone:
+        description: Контактная информация
         type: string
+      postal_code:
+        type: string
+      products_count:
+        type: integer
+      rating:
+        type: number
+      reviews_count:
+        type: integer
+      sales_count:
+        type: integer
+      seo_meta:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      settings:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Настройки бизнеса
       slug:
         type: string
-      status:
-        description: active, inactive, suspended
+      subscription_expires_at:
         type: string
+      subscription_plan:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.SubscriptionPlan'
+        description: Подписка (монетизация)
+      theme:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
       updated_at:
         type: string
       user_id:
         type: integer
+      verification_date:
+        type: string
+      views_count:
+        type: integer
       website:
         type: string
     type: object
-  backend_internal_domain_models.StorefrontCreate:
+  backend_internal_domain_models.StorefrontAnalytics:
     properties:
-      address:
+      add_to_cart_count:
+        type: integer
+      avg_order_value:
+        type: number
+      avg_session_time:
+        description: в секундах
+        type: integer
+      bounce_rate:
+        type: number
+      checkout_count:
+        type: integer
+      conversion_rate:
+        type: number
+      created_at:
         type: string
-      city:
+      date:
         type: string
-      country:
-        type: string
+      id:
+        type: integer
+      orders_by_city:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: География заказов
+      orders_count:
+        description: Продажи
+        type: integer
+      page_views:
+        description: Трафик
+        type: integer
+      payment_methods_usage:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Методы оплаты
+      product_views:
+        description: Товары
+        type: integer
+      revenue:
+        type: number
+      storefront_id:
+        type: integer
+      top_categories:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      top_products:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Топ товары/категории
+      traffic_sources:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Источники трафика
+      unique_visitors:
+        type: integer
+    type: object
+  backend_internal_domain_models.StorefrontCreateDTO:
+    properties:
       description:
         type: string
       email:
         type: string
+      location:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.Location'
+        description: Локация
+      name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      phone:
+        description: Контактная информация
+        type: string
+      seo_meta:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      settings:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Настройки
+      theme:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      website:
+        type: string
+    required:
+    - location
+    - name
+    type: object
+  backend_internal_domain_models.StorefrontDeliveryOption:
+    properties:
+      available_days:
+        items:
+          type: integer
+        type: array
+      base_price:
+        description: Ценообразование
+        type: number
+      cod_fee:
+        description: Специальные платы
+        type: number
+      created_at:
+        type: string
+      cutoff_time:
+        type: string
+      description:
+        type: string
+      estimated_days_max:
+        type: integer
+      estimated_days_min:
+        type: integer
+      fragile_handling:
+        description: Обработка хрупких товаров
+        type: number
+      free_above_amount:
+        type: number
+      id:
+        type: integer
+      insurance_fee:
+        description: Страховка
+        type: number
+      is_enabled:
+        type: boolean
+      max_distance_km:
+        type: number
+      max_weight_kg:
+        type: number
+      min_order_amount:
+        description: Ограничения доставки
+        type: number
+      name:
+        type: string
+      price_per_kg:
+        type: number
+      price_per_km:
+        type: number
+      provider:
+        $ref: '#/definitions/backend_internal_domain_models.DeliveryProvider'
+      provider_config:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Интеграция с провайдером
+      storefront_id:
+        type: integer
+      supported_payment_methods:
+        description: Поддерживаемые методы оплаты для этой доставки
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.PaymentMethodType'
+        type: array
+      updated_at:
+        type: string
+      zones:
+        description: Зоны и доступность
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.DeliveryZone'
+        type: array
+    type: object
+  backend_internal_domain_models.StorefrontHours:
+    properties:
+      close_time:
+        type: string
+      day_of_week:
+        description: 0=Sunday, 6=Saturday
+        type: integer
+      id:
+        type: integer
+      is_closed:
+        type: boolean
+      open_time:
+        type: string
+      special_date:
+        description: Специальные часы
+        type: string
+      special_note:
+        type: string
+      storefront_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.StorefrontMapData:
+    properties:
+      accepts_cards:
+        type: boolean
+      address:
+        description: Краткая информация для попапа
+        type: string
+      has_delivery:
+        type: boolean
+      has_self_pickup:
+        type: boolean
+      id:
+        type: integer
       latitude:
         type: number
+      logo_url:
+        type: string
       longitude:
         type: number
       name:
         type: string
       phone:
         type: string
-      website:
+      products_count:
+        type: integer
+      rating:
+        type: number
+      slug:
         type: string
-    required:
-    - name
+      supports_cod:
+        description: Ключевые фичи
+        type: boolean
+      working_now:
+        type: boolean
+    type: object
+  backend_internal_domain_models.StorefrontPaymentMethod:
+    properties:
+      cod_fee:
+        description: Специфично для COD (наложенный платеж)
+        type: number
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_enabled:
+        type: boolean
+      max_amount:
+        type: number
+      method_type:
+        $ref: '#/definitions/backend_internal_domain_models.PaymentMethodType'
+      min_amount:
+        type: number
+      provider:
+        description: Настройки провайдера
+        type: string
+      settings:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      storefront_id:
+        type: integer
+      transaction_fee:
+        description: Комиссии и лимиты
+        type: number
     type: object
   backend_internal_domain_models.StorefrontRatingSummary:
     properties:
@@ -1345,6 +1623,77 @@ definitions:
       total_reviews:
         type: integer
     type: object
+  backend_internal_domain_models.StorefrontStaff:
+    properties:
+      actions_count:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      last_active_at:
+        description: Отслеживание активности
+        type: string
+      permissions:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      role:
+        $ref: '#/definitions/backend_internal_domain_models.StaffRole'
+      storefront_id:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.StorefrontUpdateDTO:
+    properties:
+      ai_agent_enabled:
+        description: Функции
+        type: boolean
+      description:
+        type: string
+      email:
+        type: string
+      group_buying_enabled:
+        type: boolean
+      live_shopping_enabled:
+        type: boolean
+      location:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.Location'
+        description: Локация
+      name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      phone:
+        description: Контактная информация
+        type: string
+      seo_meta:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      settings:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Настройки
+      theme:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Брендинг
+      website:
+        type: string
+    type: object
+  backend_internal_domain_models.SubscriptionPlan:
+    enum:
+    - starter
+    - professional
+    - business
+    - enterprise
+    type: string
+    x-enum-varnames:
+    - SubscriptionPlanStarter
+    - SubscriptionPlanProfessional
+    - SubscriptionPlanBusiness
+    - SubscriptionPlanEnterprise
   backend_internal_domain_models.Translation:
     properties:
       created_at:
@@ -2429,19 +2778,44 @@ definitions:
         example: helpful
         type: string
     type: object
-  internal_proj_storefront_handler.ApplyCategoryMappingsResponse:
+  internal_proj_storefronts_handler.AddStaffRequest:
     properties:
-      message:
+      role:
+        $ref: '#/definitions/backend_internal_domain_models.StaffRole'
+      user_id:
+        type: integer
+    required:
+    - role
+    - user_id
+    type: object
+  internal_proj_storefronts_handler.ErrorResponse:
+    properties:
+      error:
         type: string
-      updated_count:
+    type: object
+  internal_proj_storefronts_handler.StaffListResponse:
+    properties:
+      staff:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.StorefrontStaff'
+        type: array
+      total:
         type: integer
     type: object
-  internal_proj_storefront_handler.CategoryMappingsUpdateResponse:
+  internal_proj_storefronts_handler.StorefrontsListResponse:
     properties:
-      message:
-        type: string
+      limit:
+        type: integer
+      offset:
+        type: integer
+      storefronts:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.Storefront'
+        type: array
+      total:
+        type: integer
     type: object
-  internal_proj_storefront_handler.MessageResponse:
+  internal_proj_storefronts_handler.SuccessResponse:
     properties:
       message:
         type: string
@@ -6010,407 +6384,6 @@ paths:
       summary: Обратное геокодирование
       tags:
       - geocode
-  /api/v1/import-sources:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new import source for storefront
-      parameters:
-      - description: Import source data
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/backend_internal_domain_models.ImportSourceCreate'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Import source created
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/backend_internal_domain_models.ImportSource'
-              type: object
-        "400":
-          description: storefront.invalidRequest
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: importSource.createError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Create import source
-      tags:
-      - import-sources
-  /api/v1/import-sources/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Deletes an import source
-      parameters:
-      - description: Import source ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Delete successful
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_storefront_handler.MessageResponse'
-              type: object
-        "400":
-          description: importSource.invalidId
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: importSource.deleteError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Delete import source
-      tags:
-      - import-sources
-    put:
-      consumes:
-      - application/json
-      description: Updates import source information
-      parameters:
-      - description: Import source ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Updated import source data
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/backend_internal_domain_models.ImportSource'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Update successful
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_storefront_handler.MessageResponse'
-              type: object
-        "400":
-          description: importSource.invalidId,storefront.invalidRequest
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: importSource.updateError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Update import source
-      tags:
-      - import-sources
-  /api/v1/import-sources/{id}/apply-mappings:
-    post:
-      consumes:
-      - application/json
-      description: Applies category mappings to imported listings
-      parameters:
-      - description: Import source ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Mappings applied successfully
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_storefront_handler.ApplyCategoryMappingsResponse'
-              type: object
-        "400":
-          description: importSource.invalidId
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: importSource.applyCategoryMappingsError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Apply category mappings
-      tags:
-      - import-sources
-  /api/v1/import-sources/{id}/category-mappings:
-    get:
-      consumes:
-      - application/json
-      description: Returns category mappings for a specific import source
-      parameters:
-      - description: Import source ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Category mappings
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  additionalProperties:
-                    type: integer
-                  type: object
-              type: object
-        "400":
-          description: importSource.invalidId
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: importSource.getCategoryMappingsError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Get category mappings for import source
-      tags:
-      - import-sources
-    put:
-      consumes:
-      - application/json
-      description: Updates category mappings for a specific import source
-      parameters:
-      - description: Import source ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Category mappings
-        in: body
-        name: body
-        required: true
-        schema:
-          additionalProperties:
-            type: integer
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Update successful
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_storefront_handler.CategoryMappingsUpdateResponse'
-              type: object
-        "400":
-          description: importSource.invalidId,importSource.invalidMappingsFormat
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: importSource.updateCategoryMappingsError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Update category mappings for import source
-      tags:
-      - import-sources
-  /api/v1/import-sources/{id}/history:
-    get:
-      consumes:
-      - application/json
-      description: Returns import history for an import source
-      parameters:
-      - description: Import source ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - default: 10
-        description: Limit number of results
-        in: query
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset for pagination
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Import history
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/backend_internal_domain_models.ImportHistory'
-                  type: array
-              type: object
-        "400":
-          description: importSource.invalidId
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: importSource.getHistoryError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Get import history
-      tags:
-      - import-sources
-  /api/v1/import-sources/{id}/import:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Starts import process for an import source
-      parameters:
-      - description: Import source ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: CSV file for import
-        in: formData
-        name: file
-        type: file
-      - description: ZIP file with images
-        in: formData
-        name: images_zip
-        type: file
-      - description: ZIP file with XML data
-        in: formData
-        name: xml_zip
-        type: file
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Import completed
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/backend_internal_domain_models.ImportHistory'
-              type: object
-        "400":
-          description: importSource.invalidId,importSource.notFound,importSource.noDataSource
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: importSource.runImportError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Run import
-      tags:
-      - import-sources
-  /api/v1/import-sources/{id}/imported-categories:
-    get:
-      consumes:
-      - application/json
-      description: Returns list of categories that were imported by this source
-      parameters:
-      - description: Import source ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of imported categories
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    type: string
-                  type: array
-              type: object
-        "400":
-          description: importSource.invalidId
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: importSource.getImportedCategoriesError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Get imported categories
-      tags:
-      - import-sources
   /api/v1/marketplace/admin/attribute-groups:
     get:
       consumes:
@@ -8879,48 +8852,6 @@ paths:
       summary: Process payment webhook
       tags:
       - payments
-  /api/v1/public/storefronts/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Returns public data of a storefront (no authentication required)
-      parameters:
-      - description: Storefront ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Public storefront data
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/backend_internal_domain_models.Storefront'
-              type: object
-        "400":
-          description: storefront.invalidId
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "403":
-          description: storefront.notActive
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "404":
-          description: storefront.notFound
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: storefront.getError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Get public storefront
-      tags:
-      - storefronts
   /api/v1/reviews:
     get:
       consumes:
@@ -9732,32 +9663,72 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns all storefronts owned by the authenticated user
+      description: Returns paginated list of storefronts with filters
+      parameters:
+      - description: Filter by user ID
+        in: query
+        name: user_id
+        type: integer
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      - description: Filter by verification status
+        in: query
+        name: is_verified
+        type: boolean
+      - description: Filter by city
+        in: query
+        name: city
+        type: string
+      - description: Minimum rating filter
+        in: query
+        name: min_rating
+        type: number
+      - description: Search in name and description
+        in: query
+        name: search
+        type: string
+      - description: Latitude for geo search
+        in: query
+        name: lat
+        type: number
+      - description: Longitude for geo search
+        in: query
+        name: lng
+        type: number
+      - description: Radius in km for geo search
+        in: query
+        name: radius_km
+        type: number
+      - description: Sort field (rating, products_count, distance)
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort order (asc, desc)
+        in: query
+        name: sort_order
+        type: string
+      - description: Results per page (max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Results offset
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: List of user storefronts
+          description: List of storefronts
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/backend_internal_domain_models.Storefront'
-                  type: array
-              type: object
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.StorefrontsListResponse'
         "500":
-          description: storefront.getError
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
-      summary: Get user storefronts
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      summary: List storefronts
       tags:
       - storefronts
     post:
@@ -9767,38 +9738,33 @@ paths:
       parameters:
       - description: Storefront data
         in: body
-        name: body
+        name: storefront
         required: true
         schema:
-          $ref: '#/definitions/backend_internal_domain_models.StorefrontCreate'
+          $ref: '#/definitions/backend_internal_domain_models.StorefrontCreateDTO'
       produces:
       - application/json
       responses:
-        "200":
-          description: Storefront created successfully
+        "201":
+          description: Created storefront
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/backend_internal_domain_models.Storefront'
-              type: object
+            $ref: '#/definitions/backend_internal_domain_models.Storefront'
         "400":
-          description: storefront.invalidRequest
+          description: Bad request
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
         "401":
-          description: auth.required
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "402":
-          description: storefront.insufficientFunds
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Storefront limit reached
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
         "500":
-          description: storefront.createError
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create new storefront
@@ -9808,7 +9774,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Deletes a storefront
+      description: Soft deletes a storefront (marks as inactive)
       parameters:
       - description: Storefront ID
         in: path
@@ -9819,26 +9785,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Delete successful
+          description: Storefront deleted
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_storefront_handler.MessageResponse'
-              type: object
-        "400":
-          description: storefront.invalidId
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.SuccessResponse'
         "401":
-          description: auth.required
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Only owner can delete storefront
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "404":
+          description: Storefront not found
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
         "500":
-          description: storefront.deleteError
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete storefront
@@ -9847,7 +9812,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a specific storefront by ID
+      description: Returns storefront details by ID
       parameters:
       - description: Storefront ID
         in: path
@@ -9860,69 +9825,61 @@ paths:
         "200":
           description: Storefront details
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/backend_internal_domain_models.Storefront'
-              type: object
-        "400":
-          description: storefront.invalidId
+            $ref: '#/definitions/backend_internal_domain_models.Storefront'
+        "404":
+          description: Storefront not found
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
         "500":
-          description: storefront.getError
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      security:
-      - BearerAuth: []
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
       summary: Get storefront by ID
       tags:
       - storefronts
     put:
       consumes:
       - application/json
-      description: Updates storefront information
+      description: Updates storefront details
       parameters:
       - description: Storefront ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Updated storefront data
+      - description: Update data
         in: body
-        name: body
+        name: storefront
         required: true
         schema:
-          $ref: '#/definitions/backend_internal_domain_models.Storefront'
+          $ref: '#/definitions/backend_internal_domain_models.StorefrontUpdateDTO'
       produces:
       - application/json
       responses:
         "200":
-          description: Update successful
+          description: Storefront updated
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_storefront_handler.MessageResponse'
-              type: object
+            $ref: '#/definitions/internal_proj_storefronts_handler.SuccessResponse'
         "400":
-          description: storefront.invalidId,storefront.invalidRequest
+          description: Bad request
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
         "401":
-          description: auth.required
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "404":
+          description: Storefront not found
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
         "500":
-          description: storefront.updateError
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update storefront
@@ -9963,11 +9920,295 @@ paths:
       summary: Get storefront aggregated rating
       tags:
       - reviews
-  /api/v1/storefronts/{id}/import-sources:
+  /api/v1/storefronts/{id}/analytics:
     get:
       consumes:
       - application/json
-      description: Returns all import sources for a specific storefront
+      description: Returns analytics data for specified period
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Analytics data
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.StorefrontAnalytics'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get storefront analytics
+      tags:
+      - storefronts
+  /api/v1/storefronts/{id}/banner:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a banner image for the storefront
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Banner file
+        in: formData
+        name: banner
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Banner URL
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload storefront banner
+      tags:
+      - storefronts
+  /api/v1/storefronts/{id}/delivery-options:
+    put:
+      consumes:
+      - application/json
+      description: Updates storefront delivery options
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Delivery options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/backend_internal_domain_models.StorefrontDeliveryOption'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Delivery options updated
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update delivery options
+      tags:
+      - storefronts
+  /api/v1/storefronts/{id}/hours:
+    put:
+      consumes:
+      - application/json
+      description: Updates storefront working hours
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Working hours
+        in: body
+        name: hours
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/backend_internal_domain_models.StorefrontHours'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Hours updated
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update working hours
+      tags:
+      - storefronts
+  /api/v1/storefronts/{id}/logo:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a logo image for the storefront
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Logo file
+        in: formData
+        name: logo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logo URL
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload storefront logo
+      tags:
+      - storefronts
+  /api/v1/storefronts/{id}/payment-methods:
+    put:
+      consumes:
+      - application/json
+      description: Updates storefront payment methods
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Payment methods
+        in: body
+        name: methods
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/backend_internal_domain_models.StorefrontPaymentMethod'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment methods updated
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update payment methods
+      tags:
+      - storefronts
+  /api/v1/storefronts/{id}/staff:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of staff members with their roles and permissions
       parameters:
       - description: Storefront ID
         in: path
@@ -9978,33 +10219,388 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of import sources
+          description: Staff list
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/backend_internal_domain_models.ImportSource'
-                  type: array
-              type: object
+            $ref: '#/definitions/internal_proj_storefronts_handler.StaffListResponse'
         "400":
-          description: storefront.invalidId
+          description: Bad request
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: auth.required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
         "500":
-          description: importSource.getError
+          description: Internal server error
           schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      summary: Get storefront staff
+      tags:
+      - storefronts
+      - staff
+    post:
+      consumes:
+      - application/json
+      description: Adds a new staff member to the storefront
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Staff data
+        in: body
+        name: staff
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_storefronts_handler.AddStaffRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Staff added
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions or staff limit reached
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Get import sources for storefront
+      summary: Add staff member
       tags:
-      - import-sources
+      - storefronts
+      - staff
+  /api/v1/storefronts/{id}/staff/{staffId}/permissions:
+    put:
+      consumes:
+      - application/json
+      description: Updates permissions for a staff member
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Staff ID
+        in: path
+        name: staffId
+        required: true
+        type: integer
+      - description: Permissions map
+        in: body
+        name: permissions
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permissions updated
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "404":
+          description: Staff not found
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update staff permissions
+      tags:
+      - storefronts
+      - staff
+  /api/v1/storefronts/{id}/staff/{userId}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a staff member from the storefront
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User ID of staff member
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Staff removed
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "403":
+          description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "404":
+          description: Staff not found
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove staff member
+      tags:
+      - storefronts
+      - staff
+  /api/v1/storefronts/{id}/view:
+    post:
+      consumes:
+      - application/json
+      description: Records a view for analytics
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: View recorded
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      summary: Record storefront view
+      tags:
+      - storefronts
+  /api/v1/storefronts/building:
+    get:
+      consumes:
+      - application/json
+      description: Returns all storefronts located in the same building
+      parameters:
+      - description: Building latitude
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: Building longitude
+        in: query
+        name: lng
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Businesses in building
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.StorefrontMapData'
+            type: array
+        "400":
+          description: Invalid coordinates
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      summary: Get businesses in building
+      tags:
+      - storefronts
+      - map
+  /api/v1/storefronts/map:
+    get:
+      consumes:
+      - application/json
+      description: Returns storefronts within map bounds with minimal data for performance
+      parameters:
+      - description: Minimum latitude
+        in: query
+        name: min_lat
+        required: true
+        type: number
+      - description: Maximum latitude
+        in: query
+        name: max_lat
+        required: true
+        type: number
+      - description: Minimum longitude
+        in: query
+        name: min_lng
+        required: true
+        type: number
+      - description: Maximum longitude
+        in: query
+        name: max_lng
+        required: true
+        type: number
+      - description: Minimum rating filter
+        in: query
+        name: min_rating
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Map markers data
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.StorefrontMapData'
+            type: array
+        "400":
+          description: Invalid bounds
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      summary: Get storefronts for map
+      tags:
+      - storefronts
+      - map
+  /api/v1/storefronts/my:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of storefronts owned by current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user's storefronts
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.Storefront'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my storefronts
+      tags:
+      - storefronts
+  /api/v1/storefronts/nearby:
+    get:
+      consumes:
+      - application/json
+      description: Returns storefronts within specified radius from coordinates
+      parameters:
+      - description: Latitude
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: Longitude
+        in: query
+        name: lng
+        required: true
+        type: number
+      - description: Radius in kilometers (default 5)
+        in: query
+        name: radius_km
+        type: number
+      - description: Maximum results (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Nearby storefronts
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.Storefront'
+            type: array
+        "400":
+          description: Invalid coordinates
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      summary: Get nearby storefronts
+      tags:
+      - storefronts
+      - map
+  /api/v1/storefronts/slug/{slug}:
+    get:
+      consumes:
+      - application/json
+      description: Returns storefront details by slug
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Storefront details
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.Storefront'
+        "404":
+          description: Storefront not found
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ErrorResponse'
+      summary: Get storefront by slug
+      tags:
+      - storefronts
   /api/v1/translation/limits:
     get:
       consumes:
