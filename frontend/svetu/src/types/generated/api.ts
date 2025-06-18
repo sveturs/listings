@@ -11040,6 +11040,94 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search storefronts using OpenSearch
+     * @description Performs advanced search of storefronts using OpenSearch engine
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Search query */
+          q?: string;
+          /** @description City filter */
+          city?: string;
+          /** @description Latitude for geo search */
+          lat?: number;
+          /** @description Longitude for geo search */
+          lng?: number;
+          /** @description Search radius in kilometers */
+          radius_km?: number;
+          /** @description Minimum rating */
+          min_rating?: number;
+          /** @description Only verified storefronts */
+          is_verified?: boolean;
+          /** @description Only currently open storefronts */
+          is_open_now?: boolean;
+          /** @description Payment methods (comma separated) */
+          payment_methods?: string;
+          /** @description Has delivery option */
+          has_delivery?: boolean;
+          /** @description Has self pickup option */
+          has_self_pickup?: boolean;
+          /** @description Sort field (rating, distance, products_count, created_at) */
+          sort_by?: string;
+          /** @description Sort order (asc, desc) */
+          sort_order?: string;
+          /** @description Number of results (max 100) */
+          limit?: number;
+          /** @description Results offset */
+          offset?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult'];
+          };
+        };
+        /** @description Invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts/slug/{slug}': {
     parameters: {
       query?: never;
@@ -12431,6 +12519,7 @@ export interface components {
     'backend_internal_domain_models.StaffRole':
       | 'owner'
       | 'manager'
+      | 'cashier'
       | 'support'
       | 'moderator';
     'backend_internal_domain_models.Storefront': {
@@ -12520,6 +12609,8 @@ export interface components {
       seo_meta?: components['schemas']['backend_internal_domain_models.JSONB'];
       /** @description Настройки */
       settings?: components['schemas']['backend_internal_domain_models.JSONB'];
+      /** @description Генерируется автоматически если пустой */
+      slug?: string;
       theme?: components['schemas']['backend_internal_domain_models.JSONB'];
       website?: string;
     };
@@ -12631,19 +12722,21 @@ export interface components {
     'backend_internal_domain_models.StorefrontUpdateDTO': {
       /** @description Функции */
       ai_agent_enabled?: boolean;
+      banner_url?: string;
       description?: string;
       email?: string;
       group_buying_enabled?: boolean;
       live_shopping_enabled?: boolean;
       /** @description Локация */
       location?: components['schemas']['backend_internal_domain_models.Location'];
+      /** @description Брендинг */
+      logo_url?: string;
       name?: string;
       /** @description Контактная информация */
       phone?: string;
       seo_meta?: components['schemas']['backend_internal_domain_models.JSONB'];
       /** @description Настройки */
       settings?: components['schemas']['backend_internal_domain_models.JSONB'];
-      /** @description Брендинг */
       theme?: components['schemas']['backend_internal_domain_models.JSONB'];
       website?: string;
     };
@@ -12830,6 +12923,40 @@ export interface components {
       status?: string;
       /** @description ID витрины */
       storefrontID?: string;
+    };
+    'backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem': {
+      address?: string;
+      city?: string;
+      country?: string;
+      description?: string;
+      /** @description Расстояние в км (если есть) */
+      distance?: number;
+      email?: string;
+      hasDelivery?: boolean;
+      hasSelfPickup?: boolean;
+      /** @description Подсвеченные фрагменты */
+      highlights?: {
+        [key: string]: string[];
+      };
+      id?: number;
+      isOpenNow?: boolean;
+      isVerified?: boolean;
+      latitude?: number;
+      longitude?: number;
+      name?: string;
+      paymentMethods?: string[];
+      phone?: string;
+      productsCount?: number;
+      rating?: number;
+      reviewsCount?: number;
+      /** @description Релевантность */
+      score?: number;
+      slug?: string;
+      userID?: number;
+    };
+    'backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult': {
+      storefronts?: components['schemas']['backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem'][];
+      total?: number;
     };
     'backend_pkg_utils.ErrorResponseSwag': {
       /** @example Описание ошибки */

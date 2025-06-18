@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import chatReducer from './slices/chatSlice';
 import reviewsReducer from './slices/reviewsSlice';
+import storefrontsReducer from './slices/storefrontSlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
 
 export const store = configureStore({
   reducer: {
     chat: chatReducer,
     reviews: reviewsReducer,
+    storefronts: storefrontsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
