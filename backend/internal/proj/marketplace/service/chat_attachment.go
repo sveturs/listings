@@ -3,6 +3,7 @@ package service
 import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
 	"backend/pkg/utils"
@@ -104,7 +105,10 @@ func (w *chatFileStorageWrapper) GetFile(ctx context.Context, objectName string)
 
 // UploadAttachments загружает вложения для сообщения
 func (s *ChatAttachmentService) UploadAttachments(ctx context.Context, messageID int, files []*multipart.FileHeader) ([]*models.ChatAttachment, error) {
-	fmt.Printf("ChatAttachmentService.UploadAttachments: messageID=%d, files count=%d\n", messageID, len(files))
+	logger.Debug().
+		Int("messageID", messageID).
+		Int("filesCount", len(files)).
+		Msg("ChatAttachmentService.UploadAttachments")
 	var attachments []*models.ChatAttachment
 
 	for _, fileHeader := range files {
@@ -161,7 +165,11 @@ func (s *ChatAttachmentService) UploadAttachments(ctx context.Context, messageID
 	// Обновляем счетчик вложений в сообщении
 	if err := s.storage.UpdateMessageAttachmentsCount(ctx, messageID, len(attachments)); err != nil {
 		// Логируем ошибку, но не возвращаем её, так как файлы уже загружены
-		fmt.Printf("Error updating message attachments count: %v\n", err)
+		logger.Error().
+			Err(err).
+			Int("messageID", messageID).
+			Int("attachmentsCount", len(attachments)).
+			Msg("Error updating message attachments count")
 	}
 
 	return attachments, nil
@@ -198,7 +206,11 @@ func (s *ChatAttachmentService) DeleteAttachment(ctx context.Context, attachment
 	// Удаляем файл из хранилища
 	if err := s.fileStorage.DeleteFile(ctx, attachment.FilePath); err != nil {
 		// Логируем ошибку, но продолжаем удаление из БД
-		fmt.Printf("Error deleting file from storage: %v\n", err)
+		logger.Error().
+			Err(err).
+			Str("filePath", attachment.FilePath).
+			Int("attachmentID", attachmentID).
+			Msg("Error deleting file from storage")
 	}
 
 	// Удаляем запись из БД

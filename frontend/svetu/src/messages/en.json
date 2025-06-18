@@ -618,6 +618,9 @@
     "connectionError": "Error connecting Telegram"
   },
   "marketplace": {
+    "imageGallery": {
+      "clickToZoom": "Click to zoom"
+    },
     "invalidData": "Invalid data provided",
     "duplicateTitle": "Listing with this title already exists",
     "createError": "Failed to create listing",
@@ -879,6 +882,92 @@
       "invalid_user_id": "Invalid user ID",
       "invalid_storefront_id": "Invalid storefront ID",
       "not_author": "You can only edit your own reviews"
+    },
+    "form": {
+      "rating": {
+        "label": "Your rating",
+        "placeholder": "Please select a rating",
+        "error": "Please select a rating"
+      },
+      "comment": {
+        "label": "Your review",
+        "placeholder": "Share your experience...",
+        "error": "Please write a comment",
+        "tooShort": "Comment is too short"
+      },
+      "pros": {
+        "label": "Pros",
+        "placeholder": "What did you like?"
+      },
+      "cons": {
+        "label": "Cons",
+        "placeholder": "What could be improved?"
+      },
+      "photos": {
+        "label": "Photos",
+        "dragText": "Click or drag photos here",
+        "limitReached": "Photo limit reached",
+        "maxFiles": "Maximum 5 photos allowed",
+        "fileTypes": "JPG, PNG or WebP up to 5MB"
+      },
+      "submit": "Submit review",
+      "cancel": "Cancel",
+      "progress": {
+        "creating": "Creating review",
+        "uploading": "Uploading photos",
+        "publishing": "Publishing",
+        "submitting": "Submitting..."
+      }
+    },
+    "stats": {
+      "reviews": "reviews",
+      "verified": "verified",
+      "ratingDistribution": "Rating distribution",
+      "withPhotos": "reviews with photos"
+    },
+    "list": {
+      "sortBy": "Sort by",
+      "byDate": "By date",
+      "byRating": "By rating",
+      "byHelpfulness": "By helpfulness",
+      "rating": "Rating",
+      "all": "All",
+      "withPhotos": "With photos",
+      "verified": "Verified",
+      "pros": "Pros",
+      "cons": "Cons",
+      "helpful": "Helpful?",
+      "confirm": "Confirm",
+      "dispute": "Dispute",
+      "verifiedPurchase": "Verified",
+      "sellerConfirmed": "Seller confirmed",
+      "disputeReview": "Dispute Review",
+      "disputeReason": "Dispute reason",
+      "disputePlaceholder": "Please provide a reason for the dispute...",
+      "cancel": "Cancel",
+      "submit": "Submit",
+      "anonymous": "Anonymous",
+      "seller": "Seller"
+    },
+    "section": {
+      "title": "Reviews",
+      "writeReview": "Write a review",
+      "loginToWrite": "Log in to write a review",
+      "ownerCantReview": "You cannot review your own listing",
+      "alreadyReviewed": "You have already reviewed this",
+      "yourReview": "Your review",
+      "noReviews": "No reviews yet. Be the first to write a review!",
+      "cantReview": "You cannot leave a review"
+    },
+    "gallery": {
+      "closeGallery": "Close gallery",
+      "photo": "Photo",
+      "of": "of",
+      "previousImage": "Previous image",
+      "nextImage": "Next image",
+      "fullscreenMode": "Fullscreen mode",
+      "close": "Close",
+      "swipeToNavigate": "Swipe to navigate"
     }
   },
   "create_listing": {

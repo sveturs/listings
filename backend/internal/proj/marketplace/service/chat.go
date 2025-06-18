@@ -3,6 +3,7 @@ package service
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/storage"
 	"backend/pkg/utils"
 	"context"
@@ -136,7 +137,11 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 
 			if err != nil {
 				// Просто логируем ошибку, не возвращаем ее в основной поток
-				fmt.Printf("Error sending notification: %v\n", err)
+				logger.Error().
+					Err(err).
+					Int("receiverID", receiverID).
+					Int("listingID", listingID).
+					Msg("Error sending notification")
 			}
 		}()
 	}

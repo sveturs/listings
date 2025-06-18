@@ -628,6 +628,9 @@
     "connectionError": "Ошибка при подключении Telegram"
   },
   "marketplace": {
+    "imageGallery": {
+      "clickToZoom": "Нажмите для увеличения"
+    },
     "invalidData": "Некорректные данные",
     "duplicateTitle": "Объявление с таким заголовком уже существует",
     "createError": "Не удалось создать объявление",
@@ -889,6 +892,92 @@
       "invalid_user_id": "Неверный ID пользователя",
       "invalid_storefront_id": "Неверный ID витрины",
       "not_author": "Вы можете редактировать только свои отзывы"
+    },
+    "form": {
+      "rating": {
+        "label": "Ваша оценка",
+        "placeholder": "Выберите оценку",
+        "error": "Выберите оценку"
+      },
+      "comment": {
+        "label": "Ваш отзыв",
+        "placeholder": "Расскажите о вашем опыте...",
+        "error": "Напишите комментарий",
+        "tooShort": "Комментарий слишком короткий"
+      },
+      "pros": {
+        "label": "Достоинства",
+        "placeholder": "Что вам понравилось?"
+      },
+      "cons": {
+        "label": "Недостатки",
+        "placeholder": "Что можно улучшить?"
+      },
+      "photos": {
+        "label": "Фотографии",
+        "dragText": "Нажмите или перетащите фото",
+        "limitReached": "Достигнут лимит фотографий",
+        "maxFiles": "Максимум 5 фотографий",
+        "fileTypes": "JPG, PNG или WebP до 5MB"
+      },
+      "submit": "Отправить отзыв",
+      "cancel": "Отмена",
+      "progress": {
+        "creating": "Создание отзыва",
+        "uploading": "Загрузка фото",
+        "publishing": "Публикация",
+        "submitting": "Отправка..."
+      }
+    },
+    "stats": {
+      "reviews": "отзывов",
+      "verified": "подтверждены",
+      "ratingDistribution": "Распределение оценок",
+      "withPhotos": "отзывов с фото"
+    },
+    "list": {
+      "sortBy": "Сортировка",
+      "byDate": "По дате",
+      "byRating": "По рейтингу",
+      "byHelpfulness": "По полезности",
+      "rating": "Рейтинг",
+      "all": "Все",
+      "withPhotos": "С фото",
+      "verified": "Подтвержденные",
+      "pros": "Достоинства",
+      "cons": "Недостатки",
+      "helpful": "Полезно?",
+      "confirm": "Подтвердить",
+      "dispute": "Оспорить",
+      "verifiedPurchase": "Подтвержден",
+      "sellerConfirmed": "Подтвержден продавцом",
+      "disputeReview": "Оспорить отзыв",
+      "disputeReason": "Причина спора",
+      "disputePlaceholder": "Укажите причину спора...",
+      "cancel": "Отмена",
+      "submit": "Отправить",
+      "anonymous": "Аноним",
+      "seller": "Продавец"
+    },
+    "section": {
+      "title": "Отзывы",
+      "writeReview": "Написать отзыв",
+      "loginToWrite": "Войдите, чтобы оставить отзыв",
+      "ownerCantReview": "Вы не можете оставить отзыв на своё объявление",
+      "alreadyReviewed": "Вы уже оставили отзыв",
+      "yourReview": "Ваш отзыв",
+      "noReviews": "Пока нет отзывов. Будьте первым!",
+      "cantReview": "Вы не можете оставить отзыв"
+    },
+    "gallery": {
+      "closeGallery": "Закрыть галерею",
+      "photo": "Фотография",
+      "of": "из",
+      "previousImage": "Предыдущее изображение",
+      "nextImage": "Следующее изображение",
+      "fullscreenMode": "Полноэкранный режим",
+      "close": "Закрыть",
+      "swipeToNavigate": "Свайпните для навигации"
     }
   },
   "create_listing": {

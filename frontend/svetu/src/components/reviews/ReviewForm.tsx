@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { RatingInput } from './RatingInput';
 import {
@@ -41,6 +41,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   legacyOnSubmit,
 }) => {
   const locale = useLocale();
+  const t = useTranslations('reviews.form');
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [pros, setPros] = useState('');
@@ -80,10 +81,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     if (validFiles.length + photos.length > 5) {
       setErrors((prev) => ({
         ...prev,
-        photos:
-          locale === 'ru'
-            ? 'Максимум 5 фотографий'
-            : 'Maximum 5 photos allowed',
+        photos: t('photos.maxFiles'),
       }));
       return;
     }
@@ -120,10 +118,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     if (files.length + photos.length > 5) {
       setErrors((prev) => ({
         ...prev,
-        photos:
-          locale === 'ru'
-            ? 'Максимум 5 фотографий'
-            : 'Maximum 5 photos allowed',
+        photos: t('photos.maxFiles'),
       }));
       return;
     }
@@ -136,18 +131,13 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (rating === 0) {
-      newErrors.rating =
-        locale === 'ru' ? 'Выберите оценку' : 'Please select a rating';
+      newErrors.rating = t('rating.error');
     }
 
     if (!comment.trim()) {
-      newErrors.comment =
-        locale === 'ru' ? 'Напишите комментарий' : 'Please write a comment';
+      newErrors.comment = t('comment.error');
     } else if (comment.length < 10) {
-      newErrors.comment =
-        locale === 'ru'
-          ? 'Комментарий слишком короткий'
-          : 'Comment is too short';
+      newErrors.comment = t('comment.tooShort');
     }
 
     setErrors(newErrors);
@@ -247,18 +237,18 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     const steps = [
       {
         key: 'form',
-        label: locale === 'ru' ? 'Создание отзыва' : 'Creating review',
+        label: t('progress.creating'),
         active: currentStep === 'form' || createDraftMutation.isPending,
       },
       {
         key: 'uploading',
-        label: locale === 'ru' ? 'Загрузка фото' : 'Uploading photos',
+        label: t('progress.uploading'),
         active: currentStep === 'uploading' && photos.length > 0,
         skip: photos.length === 0,
       },
       {
         key: 'publishing',
-        label: locale === 'ru' ? 'Публикация' : 'Publishing',
+        label: t('progress.publishing'),
         active: currentStep === 'publishing' || publishReviewMutation.isPending,
       },
     ].filter((step) => !step.skip);
@@ -308,7 +298,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
         <div className="space-y-3 animate-in fade-in duration-500">
           <label className="block">
             <span className="text-sm font-medium text-base-content uppercase tracking-wider">
-              {locale === 'ru' ? 'Ваша оценка' : 'Your rating'}
+              {t('rating.label')}
               <span className="text-error ml-1">*</span>
             </span>
           </label>
@@ -327,7 +317,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
         <div className="space-y-3 animate-in fade-in duration-500 delay-100">
           <label className="block">
             <span className="text-sm font-medium text-base-content uppercase tracking-wider">
-              {locale === 'ru' ? 'Ваш отзыв' : 'Your review'}
+              {t('comment.label')}
               <span className="text-error ml-1">*</span>
             </span>
           </label>
@@ -340,11 +330,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                   ? 'border-error focus:ring-error'
                   : 'border-base-200 focus:border-primary focus:ring-primary'
               } bg-base-100 resize-none transition-all duration-200 focus:outline-none focus:ring-2`}
-              placeholder={
-                locale === 'ru'
-                  ? 'Расскажите о вашем опыте...'
-                  : 'Share your experience...'
-              }
+              placeholder={t('comment.placeholder')}
               maxLength={500}
             />
             <div className="absolute bottom-3 right-3 text-xs text-base-content/50">
@@ -377,7 +363,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                 </svg>
               </div>
               <span className="text-sm font-medium text-base-content">
-                {locale === 'ru' ? 'Достоинства' : 'Pros'}
+                {t('pros.label')}
               </span>
             </label>
             <textarea
@@ -387,9 +373,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                      resize-none transition-all duration-200 
                      focus:outline-none focus:ring-2 focus:ring-success/20 focus:border-success
                      hover:border-success/30"
-              placeholder={
-                locale === 'ru' ? 'Что вам понравилось?' : 'What did you like?'
-              }
+              placeholder={t('pros.placeholder')}
               maxLength={300}
             />
           </div>
@@ -413,7 +397,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                 </svg>
               </div>
               <span className="text-sm font-medium text-base-content">
-                {locale === 'ru' ? 'Недостатки' : 'Cons'}
+                {t('cons.label')}
               </span>
             </label>
             <textarea
@@ -423,11 +407,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                      resize-none transition-all duration-200 
                      focus:outline-none focus:ring-2 focus:ring-warning/20 focus:border-warning
                      hover:border-warning/30"
-              placeholder={
-                locale === 'ru'
-                  ? 'Что можно улучшить?'
-                  : 'What could be improved?'
-              }
+              placeholder={t('cons.placeholder')}
               maxLength={300}
             />
           </div>
@@ -453,7 +433,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                 </svg>
               </div>
               <span className="text-sm font-medium text-base-content">
-                {locale === 'ru' ? 'Фотографии' : 'Photos'}
+                {t('photos.label')}
               </span>
             </label>
             <span className="text-xs text-base-content/60 font-medium">
@@ -534,17 +514,11 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
 
             <p className="text-sm font-medium text-base-content/70 mb-1">
               {photos.length >= 5
-                ? locale === 'ru'
-                  ? 'Достигнут лимит фотографий'
-                  : 'Photo limit reached'
-                : locale === 'ru'
-                  ? 'Нажмите или перетащите фото'
-                  : 'Click or drag photos here'}
+                ? t('photos.limitReached')
+                : t('photos.dragText')}
             </p>
             <p className="text-xs text-base-content/50">
-              {locale === 'ru'
-                ? 'JPG, PNG или WebP до 5MB'
-                : 'JPG, PNG or WebP up to 5MB'}
+              {t('photos.fileTypes')}
             </p>
           </div>
 
@@ -574,16 +548,10 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
               <>
                 <span className="loading loading-spinner loading-sm"></span>
                 {currentStep === 'uploading'
-                  ? locale === 'ru'
-                    ? 'Загрузка фото...'
-                    : 'Uploading photos...'
+                  ? t('progress.uploading')
                   : currentStep === 'publishing'
-                    ? locale === 'ru'
-                      ? 'Публикация...'
-                      : 'Publishing...'
-                    : locale === 'ru'
-                      ? 'Создание отзыва...'
-                      : 'Creating review...'}
+                    ? t('progress.publishing')
+                    : t('progress.creating')}
               </>
             ) : (
               <>
@@ -600,7 +568,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                {locale === 'ru' ? 'Отправить отзыв' : 'Submit review'}
+                {t('submit')}
               </>
             )}
           </button>
@@ -616,7 +584,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
             className="btn btn-ghost h-11 px-6 rounded-lg font-medium
                    hover:bg-base-200 transition-all duration-200"
           >
-            {locale === 'ru' ? 'Отмена' : 'Cancel'}
+            {t('cancel')}
           </button>
         </div>
       </form>
