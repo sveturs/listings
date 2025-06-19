@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useParams, useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   fetchStorefrontBySlug,
   fetchStorefrontAnalytics,
 } from '@/store/slices/storefrontSlice';
 import { usePageViewTracking } from '@/hooks/useAnalytics';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import {
   ChartBarIcon,
@@ -52,9 +53,12 @@ ChartJS.register(
 
 export default function StorefrontDashboardPage() {
   const t = useTranslations();
+  const locale = useLocale();
+  const router = useRouter();
   const params = useParams();
   const dispatch = useAppDispatch();
   const slug = params.slug as string;
+  const { user } = useAuth();
 
   const { currentStorefront, isLoading, analytics, isLoadingAnalytics } =
     useAppSelector((state) => state.storefronts);
@@ -62,6 +66,7 @@ export default function StorefrontDashboardPage() {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>(
     'month'
   );
+  const [accessDenied, setAccessDenied] = useState(false);
 
   // Отслеживание просмотра страницы дашборда
   usePageViewTracking(currentStorefront?.id, 'dashboard');
@@ -71,6 +76,24 @@ export default function StorefrontDashboardPage() {
       dispatch(fetchStorefrontBySlug(slug));
     }
   }, [dispatch, slug]);
+
+  // Проверка доступа
+  useEffect(() => {
+    if (!isLoading && currentStorefront) {
+      // Если пользователь не авторизован
+      if (!user) {
+        setAccessDenied(true);
+        router.push(`/${locale}/storefronts/${slug}`);
+        return;
+      }
+
+      // Если пользователь не владелец
+      if (currentStorefront.user_id !== user.id) {
+        setAccessDenied(true);
+        router.push(`/${locale}/storefronts/${slug}`);
+      }
+    }
+  }, [currentStorefront, user, isLoading, router, slug, locale]);
 
   useEffect(() => {
     if (currentStorefront?.id) {
@@ -98,6 +121,22 @@ export default function StorefrontDashboardPage() {
       );
     }
   }, [dispatch, currentStorefront?.id, timeRange]);
+
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-base-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold mb-2">
+            {t('common.accessDenied')}
+          </h1>
+          <p className="text-base-content/60">
+            {t('storefronts.dashboardAccessDenied')}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading || !currentStorefront || isLoadingAnalytics) {
     return (
@@ -161,7 +200,8 @@ export default function StorefrontDashboardPage() {
 
     // Process analytics data
     const sortedAnalytics = [...analytics].sort(
-      (a, b) => new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime()
+      (a, b) =>
+        new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime()
     );
 
     const labels = sortedAnalytics.map((a) =>

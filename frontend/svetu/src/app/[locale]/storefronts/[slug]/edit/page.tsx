@@ -114,7 +114,9 @@ export default function EditStorefrontPage() {
 
       // Загружаем способы доставки
       if ((currentStorefront as any).settings?.delivery_options) {
-        setDeliveryOptions((currentStorefront as any).settings.delivery_options);
+        setDeliveryOptions(
+          (currentStorefront as any).settings.delivery_options
+        );
       }
     }
   }, [currentStorefront]);
