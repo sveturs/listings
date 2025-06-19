@@ -1,0 +1,38 @@
+# Dockerfile для мигратора базы данных
+FROM golang:1.21-alpine AS builder
+
+# Установка зависимостей
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /app
+
+# Копирование go mod файлов
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Копирование исходного кода
+COPY . .
+
+# Сборка мигратора
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o migrator ./cmd/migrator
+
+# Финальный образ
+FROM alpine:latest
+
+# Установка ca-certificates для HTTPS соединений
+RUN apk --no-cache add ca-certificates postgresql-client
+
+WORKDIR /
+
+# Копирование бинарника мигратора
+COPY --from=builder /app/migrator /migrator
+
+# Копирование файлов миграций
+COPY --from=builder /app/migrations /migrations
+
+# Создание пользователя для безопасности
+RUN adduser -D -s /bin/sh migrator
+USER migrator
+
+# Установка точки входа
+ENTRYPOINT ["/migrator"]

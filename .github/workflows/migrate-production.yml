@@ -1,0 +1,97 @@
+name: Production Database Migration
+
+on:
+    workflow_dispatch:
+        inputs:
+            migration_direction:
+                description: 'Migration direction'
+                required: true
+                default: 'up'
+                type: choice
+                options:
+                    - up
+                    - down
+            target_version:
+                description: 'Target migration version (optional, e.g. 000050)'
+                required: false
+                type: string
+
+env:
+    MIGRATOR_IMAGE: svetu/migrator
+
+jobs:
+    migrate:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v3
+
+            # Настройка SSH ключа для подключения к серверу
+            -   name: Setup SSH key
+                uses: webfactory/ssh-agent@v0.7.0
+                with:
+                    ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+            # Добавление host key в known hosts
+            -   name: Add host key to known hosts
+                run: |
+                    mkdir -p ~/.ssh
+                    ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+            # Выполнение миграции на сервере
+            -   name: Run migration on production
+                run: |
+                    echo "🚀 Running database migration..."
+                    
+                    ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+                      set -e
+                      
+                      cd /opt/svetu
+                      
+                      # Загружаем переменные окружения
+                      source .env
+                      
+                      # Скачиваем последний образ мигратора
+                      echo "📥 Pulling migrator image..."
+                      docker pull ${{ secrets.DOCKER_REGISTRY }}/${{ env.MIGRATOR_IMAGE }}:latest
+                      
+                      # Определяем контейнер с базой данных
+                      DB_CONTAINER=$(docker ps --format "{{.Names}}" | grep -E "db|postgres" | head -n 1)
+                      if [ -z "$DB_CONTAINER" ]; then
+                        echo "❌ Database container not found"
+                        exit 1
+                      fi
+                      echo "📊 Using database container: $DB_CONTAINER"
+                      
+                      # Подготовка направления миграции
+                      if [ "${{ github.event.inputs.migration_direction }}" = "up" ]; then
+                        if [ -n "${{ github.event.inputs.target_version }}" ]; then
+                          echo "🔼 Running migration UP to version ${{ github.event.inputs.target_version }}..."
+                        else
+                          echo "🔼 Running migration UP to latest..."
+                        fi
+                      else
+                        if [ -n "${{ github.event.inputs.target_version }}" ]; then
+                          echo "🔽 Running migration DOWN to version ${{ github.event.inputs.target_version }}..."
+                        else
+                          echo "🔽 Running migration DOWN (reverts ALL migrations)..."
+                          echo "⚠️  WARNING: This will revert ALL migrations!"
+                        fi
+                      fi
+                      
+                      # Запуск миграции
+                      docker run --rm --network svetu_default \
+                        -e DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_CONTAINER}:5432/${POSTGRES_DB}?sslmode=disable" \
+                        -e MIGRATIONS_PATH="/migrations" \
+                        -e MIGRATION_DIRECTION="${{ github.event.inputs.migration_direction }}" \
+                        -e MIGRATION_TARGET="${{ github.event.inputs.target_version }}" \
+                        ${{ secrets.DOCKER_REGISTRY }}/${{ env.MIGRATOR_IMAGE }}:latest
+                      
+                      echo "✅ Migration completed successfully"
+                    EOF
+
+            # Оповещение о завершении
+            -   name: Migration notification
+                if: always()
+                run: |
+                    echo "Migration ${{ job.status }}"

@@ -47,9 +47,8 @@ func (m *Migrator) Up() error {
 }
 
 // Down reverts all migrations
-// TODO: I want only 1 down migration
 func (m *Migrator) Down() error {
-	logger.Info().Str("migrationPath", m.migrationPath).Str("dsn", m.dsn).Msg("migrating...")
+	logger.Info().Str("migrationPath", m.migrationPath).Msg("Reverting all migrations...")
 
 	migrator, err := migrate.New(m.migrationPath, m.dsn)
 	if err != nil {
@@ -61,6 +60,76 @@ func (m *Migrator) Down() error {
 		return fmt.Errorf("error running migrations down: %w", err)
 	}
 
-	logger.Info().Msg("Migrations down completed successfully")
+	logger.Info().Msg("All migrations reverted successfully")
 	return nil
+}
+
+// UpTo migrates up to a specific version
+func (m *Migrator) UpTo(version string) error {
+	logger.Info().
+		Str("migrationPath", m.migrationPath).
+		Str("targetVersion", version).
+		Msg("Migrating up to specific version...")
+
+	migrator, err := migrate.New(m.migrationPath, m.dsn)
+	if err != nil {
+		return fmt.Errorf("error creating migrate instance: %w", err)
+	}
+	defer migrator.Close()
+
+	// Convert version string to uint
+	targetVersion, err := parseVersion(version)
+	if err != nil {
+		return fmt.Errorf("error parsing target version: %w", err)
+	}
+
+	if err := migrator.Migrate(targetVersion); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("error migrating to version %d: %w", targetVersion, err)
+	}
+
+	logger.Info().Uint("version", targetVersion).Msg("Migrated to specific version successfully")
+	return nil
+}
+
+// DownTo migrates down to a specific version
+func (m *Migrator) DownTo(version string) error {
+	logger.Info().
+		Str("migrationPath", m.migrationPath).
+		Str("targetVersion", version).
+		Msg("Reverting to specific version...")
+
+	migrator, err := migrate.New(m.migrationPath, m.dsn)
+	if err != nil {
+		return fmt.Errorf("error creating migrate instance: %w", err)
+	}
+	defer migrator.Close()
+
+	// Convert version string to uint
+	targetVersion, err := parseVersion(version)
+	if err != nil {
+		return fmt.Errorf("error parsing target version: %w", err)
+	}
+
+	if err := migrator.Migrate(targetVersion); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("error migrating to version %d: %w", targetVersion, err)
+	}
+
+	logger.Info().Uint("version", targetVersion).Msg("Reverted to specific version successfully")
+	return nil
+}
+
+// parseVersion converts version string to uint
+func parseVersion(version string) (uint, error) {
+	// Remove leading zeros if any
+	version = strings.TrimLeft(version, "0")
+	if version == "" {
+		version = "0"
+	}
+
+	var v uint
+	_, err := fmt.Sscanf(version, "%d", &v)
+	if err != nil {
+		return 0, fmt.Errorf("invalid version format: %s", version)
+	}
+	return v, nil
 }

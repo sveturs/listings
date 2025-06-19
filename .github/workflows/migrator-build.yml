@@ -1,15 +1,18 @@
-name: Backend Build
+name: Build Migration Tool
 
 on:
     workflow_dispatch:
         inputs:
             version:
-                description: 'Backend: Build'
+                description: 'Migration Build'
                 required: false
                 default: 'latest'
 
+env:
+    IMAGE_NAME: svetu/migrator
+
 jobs:
-    deploy:
+    build:
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout code
@@ -31,18 +34,20 @@ jobs:
             -   name: Set up Docker Buildx
                 uses: docker/setup-buildx-action@v3
 
-            # Сборка и отправка Backend образа
-            -   name: Build and push Backend Docker image
+            # Сборка и отправка Migrator образа
+            -   name: Build and push Migrator Docker image
                 uses: docker/build-push-action@v6
                 with:
                     context: ./backend
+                    file: ./backend/Dockerfile.migrator
                     push: true
                     tags: |
-                        ${{ secrets.DOCKER_REGISTRY }}/svetu/backend/api:${{ env.TIMESTAMP }}
-                        ${{ secrets.DOCKER_REGISTRY }}/svetu/backend/api:latest
+                        ${{ secrets.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TIMESTAMP }}
+                        ${{ secrets.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
-            # Оповещение о завершении деплоя
-            -   name: Deployment notification
+            # Оповещение о завершении
+            -   name: Build notification
                 if: always()
                 run: |
-                    echo "Deployment ${{ job.status }}"
+                    echo "Build ${{ job.status }}"
+                    echo "Image: ${{ secrets.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TIMESTAMP }}"

@@ -21,12 +21,29 @@ func main() {
 		logger.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
 
-	arg := "up"
-	if len(os.Args) > 1 {
-		arg = os.Args[1]
+	// Get migration settings from environment variables
+	migrationsPath := os.Getenv("MIGRATIONS_PATH")
+	if migrationsPath == "" {
+		migrationsPath = "migrations" // default path
 	}
 
-	logger.Info().Msg("Starting migration")
+	direction := os.Getenv("MIGRATION_DIRECTION")
+	if direction == "" {
+		// Fallback to command line argument for backward compatibility
+		if len(os.Args) > 1 {
+			direction = os.Args[1]
+		} else {
+			direction = "up" // default direction
+		}
+	}
+
+	targetVersion := os.Getenv("MIGRATION_TARGET")
+
+	logger.Info().
+		Str("direction", direction).
+		Str("path", migrationsPath).
+		Str("target", targetVersion).
+		Msg("Starting migration")
 
 	// Load configuration
 	cfg, err := config.NewConfig()
@@ -34,17 +51,35 @@ func main() {
 		logger.Fatal().Err(err).Msgf("Error loading config")
 	}
 
-	migrtr := migrator.NewMigrator("migrations", cfg.DatabaseURL)
+	migrtr := migrator.NewMigrator(migrationsPath, cfg.DatabaseURL)
 
 	// Execute the requested command
-	switch arg {
+	switch direction {
 	case "down":
-		if err := migrtr.Down(); err != nil {
-			logger.Fatal().Err(err).Msgf("Error running migrations down")
+		if targetVersion != "" {
+			// Down to specific version
+			if err := migrtr.DownTo(targetVersion); err != nil {
+				logger.Fatal().Err(err).Msgf("Error running migrations down to version %s", targetVersion)
+			}
+		} else {
+			// Down all migrations
+			if err := migrtr.Down(); err != nil {
+				logger.Fatal().Err(err).Msgf("Error running migrations down")
+			}
+		}
+	case "up":
+		if targetVersion != "" {
+			// Up to specific version
+			if err := migrtr.UpTo(targetVersion); err != nil {
+				logger.Fatal().Err(err).Msgf("Error running migrations up to version %s", targetVersion)
+			}
+		} else {
+			// Up all pending migrations
+			if err := migrtr.Up(); err != nil {
+				logger.Fatal().Err(err).Msgf("Error running migrations up")
+			}
 		}
 	default:
-		if err := migrtr.Up(); err != nil {
-			logger.Fatal().Err(err).Msgf("Error running migrations up")
-		}
+		logger.Fatal().Msgf("Unknown migration direction: %s", direction)
 	}
 }
