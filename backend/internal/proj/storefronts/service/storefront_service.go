@@ -25,6 +25,8 @@ var (
 	ErrSlugAlreadyExists      = errors.New("slug already exists")
 	ErrInvalidLocation        = errors.New("invalid location data")
 	ErrFeatureNotAvailable    = errors.New("feature not available in current plan")
+	ErrRepositoryNotInitialized = errors.New("storefront repository not initialized")
+	ErrStaffLimitReached      = errors.New("staff limit reached for current plan")
 )
 
 // Лимиты по тарифным планам
@@ -271,7 +273,7 @@ func (s *StorefrontServiceImpl) Delete(ctx context.Context, userID int, storefro
 // ListUserStorefronts получает список витрин пользователя
 func (s *StorefrontServiceImpl) ListUserStorefronts(ctx context.Context, userID int) ([]*models.Storefront, error) {
 	if s.repo == nil {
-		return nil, fmt.Errorf("storefront repository not initialized")
+		return nil, ErrRepositoryNotInitialized
 	}
 	
 	filter := &models.StorefrontFilter{

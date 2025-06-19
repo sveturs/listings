@@ -2,18 +2,17 @@ package handler
 
 import (
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/proj/storefronts/service"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/rs/zerolog/log"
 )
-
-var logger = log.With().Str("component", "storefront_handler").Logger()
 
 // StorefrontHandler HTTP handler для витрин
 type StorefrontHandler struct {
@@ -35,10 +34,10 @@ func NewStorefrontHandler(service service.StorefrontService) *StorefrontHandler 
 // @Produce json
 // @Param storefront body models.StorefrontCreateDTO true "Storefront data"
 // @Success 201 {object} models.Storefront "Created storefront"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Storefront limit reached"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Storefront limit reached"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts [post]
 func (h *StorefrontHandler) CreateStorefront(c *fiber.Ctx) error {
@@ -46,26 +45,18 @@ func (h *StorefrontHandler) CreateStorefront(c *fiber.Ctx) error {
 
 	var dto models.StorefrontCreateDTO
 	if err := c.BodyParser(&dto); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid request body",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_request_body")
 	}
 
 	storefront, err := h.service.CreateStorefront(c.Context(), userID, &dto)
 	if err != nil {
 		switch err {
 		case service.ErrStorefrontLimitReached:
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Storefront limit reached for your subscription plan",
-			})
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.limit_reached")
 		case service.ErrInvalidLocation:
-			return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-				Error: "Invalid location data",
-			})
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_location")
 		default:
-			return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-				Error: "Failed to create storefront",
-			})
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.create_failed")
 		}
 	}
 
@@ -80,27 +71,21 @@ func (h *StorefrontHandler) CreateStorefront(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Success 200 {object} models.Storefront "Storefront details"
-// @Failure 404 {object} ErrorResponse "Storefront not found"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/{id} [get]
 func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	storefront, err := h.service.GetByID(c.Context(), id)
 	if err != nil {
 		if err == postgres.ErrNotFound {
-			return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
-				Error: "Storefront not found",
-			})
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to get storefront",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_failed")
 	}
 
 	return c.JSON(storefront)
@@ -114,8 +99,8 @@ func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Success 200 {object} models.Storefront "Storefront details"
-// @Failure 404 {object} ErrorResponse "Storefront not found"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug} [get]
 func (h *StorefrontHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
 	slug := c.Params("slug")
@@ -123,13 +108,9 @@ func (h *StorefrontHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
 	storefront, err := h.service.GetBySlug(c.Context(), slug)
 	if err != nil {
 		if err == postgres.ErrNotFound {
-			return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
-				Error: "Storefront not found",
-			})
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to get storefront",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_failed")
 	}
 
 	return c.JSON(storefront)
@@ -143,12 +124,12 @@ func (h *StorefrontHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Param storefront body models.StorefrontUpdateDTO true "Update data"
-// @Success 200 {object} SuccessResponse "Storefront updated"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions"
-// @Failure 404 {object} ErrorResponse "Storefront not found"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} map[string]string "Storefront updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id} [put]
 func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
@@ -156,42 +137,30 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 	
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	var dto models.StorefrontUpdateDTO
 	if err := c.BodyParser(&dto); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid request body",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_request_body")
 	}
 
 	err = h.service.Update(c.Context(), userID, id, &dto)
 	if err != nil {
 		switch err {
 		case service.ErrInsufficientPermissions:
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
 		case service.ErrFeatureNotAvailable:
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Feature not available in your subscription plan",
-			})
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.feature_not_available")
 		case postgres.ErrNotFound:
-			return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
-				Error: "Storefront not found",
-			})
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
 		default:
-			return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-				Error: "Failed to update storefront",
-			})
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_failed")
 		}
 	}
 
-	return c.JSON(SuccessResponse{
-		Message: "Storefront updated successfully",
+	return c.JSON(fiber.Map{
+		"message": "Storefront updated successfully",
 	})
 }
 
@@ -202,11 +171,11 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Storefront ID"
-// @Success 200 {object} SuccessResponse "Storefront deleted"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Only owner can delete storefront"
-// @Failure 404 {object} ErrorResponse "Storefront not found"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} map[string]string "Storefront deleted"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Only owner can delete storefront"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id} [delete]
 func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
@@ -214,31 +183,23 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 	
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	err = h.service.Delete(c.Context(), userID, id)
 	if err != nil {
 		switch err {
 		case service.ErrUnauthorized:
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Only owner can delete storefront",
-			})
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.only_owner_can_delete")
 		case postgres.ErrNotFound:
-			return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
-				Error: "Storefront not found",
-			})
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
 		default:
-			return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-				Error: "Failed to delete storefront",
-			})
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.delete_failed")
 		}
 	}
 
-	return c.JSON(SuccessResponse{
-		Message: "Storefront deleted successfully",
+	return c.JSON(fiber.Map{
+		"message": "Storefront deleted successfully",
 	})
 }
 
@@ -262,7 +223,7 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 // @Param limit query int false "Results per page (max 100)"
 // @Param offset query int false "Results offset"
 // @Success 200 {object} StorefrontsListResponse "List of storefronts"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts [get]
 func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 	filter := &models.StorefrontFilter{
@@ -320,9 +281,7 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 
 	storefronts, total, err := h.service.Search(c.Context(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to list storefronts",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.list_failed")
 	}
 
 	return c.JSON(StorefrontsListResponse{
@@ -340,8 +299,8 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Success 200 {object} []models.Storefront "List of user's storefronts"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/my [get]
 func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
@@ -355,16 +314,13 @@ func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
 		// Логируем конкретную ошибку
 		logger.Error().Err(err).Int("userID", userID).Msg("Failed to get user storefronts")
 		
-		// Возвращаем 400 если репозиторий не инициализирован
-		if err.Error() == "storefront repository not initialized" {
-			return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-				Error: err.Error(),
-			})
+		// Обрабатываем специфичные ошибки
+		switch err {
+		case service.ErrRepositoryNotInitialized:
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.repository_not_initialized")
+		default:
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_user_storefronts_failed")
 		}
-		
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to get user storefronts",
-		})
 	}
 
 	return c.JSON(storefronts)
@@ -382,8 +338,8 @@ func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
 // @Param max_lng query float64 true "Maximum longitude"
 // @Param min_rating query float32 false "Minimum rating filter"
 // @Success 200 {object} []models.StorefrontMapData "Map markers data"
-// @Failure 400 {object} ErrorResponse "Invalid bounds"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid bounds"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/map [get]
 func (h *StorefrontHandler) GetMapData(c *fiber.Ctx) error {
 	// Парсим границы карты
@@ -393,9 +349,7 @@ func (h *StorefrontHandler) GetMapData(c *fiber.Ctx) error {
 	maxLng, err4 := strconv.ParseFloat(c.Query("max_lng"), 64)
 
 	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid map bounds",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_map_bounds")
 	}
 
 	bounds := postgres.GeoBounds{
@@ -413,9 +367,7 @@ func (h *StorefrontHandler) GetMapData(c *fiber.Ctx) error {
 
 	mapData, err := h.service.GetMapData(c.Context(), bounds, filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to get map data",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_map_data_failed")
 	}
 
 	return c.JSON(mapData)
@@ -443,8 +395,8 @@ func (h *StorefrontHandler) GetMapData(c *fiber.Ctx) error {
 // @Param limit query int false "Number of results (max 100)" default(20)
 // @Param offset query int false "Results offset" default(0)
 // @Success 200 {object} opensearch.StorefrontSearchResult "Search results"
-// @Failure 400 {object} ErrorResponse "Invalid parameters"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/search [get]
 func (h *StorefrontHandler) SearchOpenSearch(c *fiber.Ctx) error {
 	params := &opensearch.StorefrontSearchParams{
@@ -506,9 +458,7 @@ func (h *StorefrontHandler) SearchOpenSearch(c *fiber.Ctx) error {
 
 	result, err := h.service.SearchOpenSearch(c.Context(), params)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to search storefronts",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.search_failed")
 	}
 
 	return c.JSON(result)
@@ -525,17 +475,15 @@ func (h *StorefrontHandler) SearchOpenSearch(c *fiber.Ctx) error {
 // @Param radius_km query float64 false "Radius in kilometers (default 5)"
 // @Param limit query int false "Maximum results (default 20, max 100)"
 // @Success 200 {object} []models.Storefront "Nearby storefronts"
-// @Failure 400 {object} ErrorResponse "Invalid coordinates"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid coordinates"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/nearby [get]
 func (h *StorefrontHandler) GetNearbyStorefronts(c *fiber.Ctx) error {
 	lat, err1 := strconv.ParseFloat(c.Query("lat"), 64)
 	lng, err2 := strconv.ParseFloat(c.Query("lng"), 64)
 
 	if err1 != nil || err2 != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid coordinates",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_coordinates")
 	}
 
 	radiusKm := c.QueryFloat("radius_km", 5.0)
@@ -546,9 +494,7 @@ func (h *StorefrontHandler) GetNearbyStorefronts(c *fiber.Ctx) error {
 
 	storefronts, err := h.service.GetNearby(c.Context(), lat, lng, radiusKm, limit)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to get nearby storefronts",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_nearby_failed")
 	}
 
 	return c.JSON(storefronts)
@@ -563,24 +509,20 @@ func (h *StorefrontHandler) GetNearbyStorefronts(c *fiber.Ctx) error {
 // @Param lat query float64 true "Building latitude"
 // @Param lng query float64 true "Building longitude"
 // @Success 200 {object} []models.StorefrontMapData "Businesses in building"
-// @Failure 400 {object} ErrorResponse "Invalid coordinates"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid coordinates"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/building [get]
 func (h *StorefrontHandler) GetBusinessesInBuilding(c *fiber.Ctx) error {
 	lat, err1 := strconv.ParseFloat(c.Query("lat"), 64)
 	lng, err2 := strconv.ParseFloat(c.Query("lng"), 64)
 
 	if err1 != nil || err2 != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid coordinates",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_coordinates")
 	}
 
 	businesses, err := h.service.GetBusinessesInBuilding(c.Context(), lat, lng)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to get businesses in building",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_businesses_in_building_failed")
 	}
 
 	return c.JSON(businesses)
@@ -594,11 +536,11 @@ func (h *StorefrontHandler) GetBusinessesInBuilding(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Param hours body []models.StorefrontHours true "Working hours"
-// @Success 200 {object} SuccessResponse "Hours updated"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} map[string]string "Hours updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/hours [put]
 func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
@@ -606,32 +548,26 @@ func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
 	
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	var hours []*models.StorefrontHours
 	if err := c.BodyParser(&hours); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid request body",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_request_body")
 	}
 
 	err = h.service.UpdateWorkingHours(c.Context(), userID, id, hours)
 	if err != nil {
-		if err == service.ErrInsufficientPermissions {
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+		switch err {
+		case service.ErrInsufficientPermissions:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
+		default:
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_working_hours_failed")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to update working hours",
-		})
 	}
 
-	return c.JSON(SuccessResponse{
-		Message: "Working hours updated successfully",
+	return c.JSON(fiber.Map{
+		"message": "Working hours updated successfully",
 	})
 }
 
@@ -643,11 +579,11 @@ func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Param methods body []models.StorefrontPaymentMethod true "Payment methods"
-// @Success 200 {object} SuccessResponse "Payment methods updated"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} map[string]string "Payment methods updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/payment-methods [put]
 func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
@@ -655,32 +591,26 @@ func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
 	
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	var methods []*models.StorefrontPaymentMethod
 	if err := c.BodyParser(&methods); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid request body",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_request_body")
 	}
 
 	err = h.service.UpdatePaymentMethods(c.Context(), userID, id, methods)
 	if err != nil {
-		if err == service.ErrInsufficientPermissions {
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+		switch err {
+		case service.ErrInsufficientPermissions:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
+		default:
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_payment_methods_failed")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to update payment methods",
-		})
 	}
 
-	return c.JSON(SuccessResponse{
-		Message: "Payment methods updated successfully",
+	return c.JSON(fiber.Map{
+		"message": "Payment methods updated successfully",
 	})
 }
 
@@ -692,11 +622,11 @@ func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Param options body []models.StorefrontDeliveryOption true "Delivery options"
-// @Success 200 {object} SuccessResponse "Delivery options updated"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} map[string]string "Delivery options updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/delivery-options [put]
 func (h *StorefrontHandler) UpdateDeliveryOptions(c *fiber.Ctx) error {
@@ -704,32 +634,26 @@ func (h *StorefrontHandler) UpdateDeliveryOptions(c *fiber.Ctx) error {
 	
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	var options []*models.StorefrontDeliveryOption
 	if err := c.BodyParser(&options); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid request body",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_request_body")
 	}
 
 	err = h.service.UpdateDeliveryOptions(c.Context(), userID, id, options)
 	if err != nil {
-		if err == service.ErrInsufficientPermissions {
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+		switch err {
+		case service.ErrInsufficientPermissions:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
+		default:
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_delivery_options_failed")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to update delivery options",
-		})
 	}
 
-	return c.JSON(SuccessResponse{
-		Message: "Delivery options updated successfully",
+	return c.JSON(fiber.Map{
+		"message": "Delivery options updated successfully",
 	})
 }
 
@@ -740,27 +664,23 @@ func (h *StorefrontHandler) UpdateDeliveryOptions(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Storefront ID"
-// @Success 200 {object} SuccessResponse "View recorded"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} map[string]string "View recorded"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/{id}/view [post]
 func (h *StorefrontHandler) RecordView(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	err = h.service.RecordView(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to record view",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.record_view_failed")
 	}
 
-	return c.JSON(SuccessResponse{
-		Message: "View recorded",
+	return c.JSON(fiber.Map{
+		"message": "View recorded",
 	})
 }
 
@@ -774,10 +694,10 @@ func (h *StorefrontHandler) RecordView(c *fiber.Ctx) error {
 // @Param from query string true "Start date (YYYY-MM-DD)"
 // @Param to query string true "End date (YYYY-MM-DD)"
 // @Success 200 {object} []models.StorefrontAnalytics "Analytics data"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/analytics [get]
 func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
@@ -785,9 +705,7 @@ func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
 	
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	fromStr := c.Query("from")
@@ -795,42 +713,28 @@ func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
 
 	from, err := time.Parse("2006-01-02", fromStr)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid from date format",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_from_date")
 	}
 
 	to, err := time.Parse("2006-01-02", toStr)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid to date format",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_to_date")
 	}
 
 	analytics, err := h.service.GetAnalytics(c.Context(), userID, id, from, to)
 	if err != nil {
-		if err == service.ErrInsufficientPermissions {
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+		switch err {
+		case service.ErrInsufficientPermissions:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
+		default:
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_analytics_failed")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to get analytics",
-		})
 	}
 
 	return c.JSON(analytics)
 }
 
 // Response types
-
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
-type SuccessResponse struct {
-	Message string `json:"message"`
-}
 
 type StorefrontsListResponse struct {
 	Storefronts []*models.Storefront `json:"storefronts"`
@@ -848,10 +752,10 @@ type StorefrontsListResponse struct {
 // @Param id path int true "Storefront ID"
 // @Param logo formData file true "Logo file"
 // @Success 200 {object} map[string]string "Logo URL"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/logo [post]
 func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
@@ -859,45 +763,35 @@ func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
 	
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	file, err := c.FormFile("logo")
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Failed to get logo file",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.failed_to_get_logo_file")
 	}
 
 	// Читаем файл
 	src, err := file.Open()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to open file",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_open_file")
 	}
 	defer src.Close()
 
 	// Читаем данные
 	data := make([]byte, file.Size)
 	if _, err := src.Read(data); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to read file",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_read_file")
 	}
 
 	url, err := h.service.UploadLogo(c.Context(), userID, storefrontID, data, file.Filename)
 	if err != nil {
-		if err == service.ErrInsufficientPermissions {
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+		switch err {
+		case service.ErrInsufficientPermissions:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
+		default:
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_upload_logo")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to upload logo",
-		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -914,10 +808,10 @@ func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param banner formData file true "Banner file"
 // @Success 200 {object} map[string]string "Banner URL"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/banner [post]
 func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
@@ -925,45 +819,35 @@ func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 	
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	file, err := c.FormFile("banner")
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Failed to get banner file",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.failed_to_get_banner_file")
 	}
 
 	// Читаем файл
 	src, err := file.Open()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to open file",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_open_file")
 	}
 	defer src.Close()
 
 	// Читаем данные
 	data := make([]byte, file.Size)
 	if _, err := src.Read(data); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to read file",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_read_file")
 	}
 
 	url, err := h.service.UploadBanner(c.Context(), userID, storefrontID, data, file.Filename)
 	if err != nil {
-		if err == service.ErrInsufficientPermissions {
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+		switch err {
+		case service.ErrInsufficientPermissions:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
+		default:
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_upload_banner")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to upload banner",
-		})
 	}
 
 	return c.JSON(fiber.Map{

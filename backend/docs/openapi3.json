@@ -11464,7 +11464,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11509,7 +11509,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11519,7 +11519,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11529,7 +11529,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11539,7 +11539,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11594,7 +11594,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11604,7 +11604,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11685,7 +11685,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11695,7 +11695,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11734,7 +11734,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11744,7 +11744,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11815,7 +11815,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11825,7 +11825,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11981,7 +11981,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -11991,7 +11991,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12033,7 +12033,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12043,7 +12043,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12085,7 +12085,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12095,7 +12095,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12141,7 +12141,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -12151,7 +12154,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12161,7 +12164,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12171,7 +12174,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12181,7 +12184,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12191,7 +12194,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12226,7 +12229,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -12236,7 +12242,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12246,7 +12252,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12256,7 +12262,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12266,7 +12272,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12398,7 +12404,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12408,7 +12414,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12418,7 +12424,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12428,7 +12434,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12498,7 +12504,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12508,7 +12514,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12518,7 +12524,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12528,7 +12534,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12579,7 +12585,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -12589,7 +12598,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12599,7 +12608,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12609,7 +12618,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12619,7 +12628,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12670,7 +12679,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -12680,7 +12692,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12690,7 +12702,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12700,7 +12712,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12710,7 +12722,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12780,7 +12792,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12790,7 +12802,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12800,7 +12812,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12810,7 +12822,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12861,7 +12873,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -12871,7 +12886,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12881,7 +12896,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12891,7 +12906,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12901,7 +12916,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12944,7 +12959,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -12954,7 +12969,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13001,7 +13016,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -13011,7 +13029,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13021,7 +13039,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13031,7 +13049,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13041,7 +13059,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13099,7 +13117,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -13109,7 +13130,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13119,7 +13140,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13129,7 +13150,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13139,7 +13160,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13149,7 +13170,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13196,7 +13217,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -13206,7 +13230,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13216,7 +13240,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13226,7 +13250,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13236,7 +13260,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13246,7 +13270,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13278,7 +13302,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -13288,7 +13315,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13298,7 +13325,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -18267,14 +18294,6 @@
                     }
                 }
             },
-            "internal_proj_storefronts_handler.ErrorResponse": {
-                "type": "object",
-                "properties": {
-                    "error": {
-                        "type": "string"
-                    }
-                }
-            },
             "internal_proj_storefronts_handler.StaffListResponse": {
                 "type": "object",
                 "properties": {
@@ -18306,14 +18325,6 @@
                     },
                     "total": {
                         "type": "integer"
-                    }
-                }
-            },
-            "internal_proj_storefronts_handler.SuccessResponse": {
-                "type": "object",
-                "properties": {
-                    "message": {
-                        "type": "string"
                     }
                 }
             },

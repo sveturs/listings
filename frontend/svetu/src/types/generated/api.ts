@@ -9568,7 +9568,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9607,7 +9607,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -9616,7 +9616,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Storefront limit reached */
@@ -9625,7 +9625,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9634,7 +9634,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9683,7 +9683,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9692,7 +9692,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9724,7 +9724,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
         /** @description Bad request */
@@ -9733,7 +9735,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -9742,7 +9744,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -9751,7 +9753,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Storefront not found */
@@ -9760,7 +9762,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9769,7 +9771,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9797,7 +9799,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
         /** @description Unauthorized */
@@ -9806,7 +9810,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Only owner can delete storefront */
@@ -9815,7 +9819,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Storefront not found */
@@ -9824,7 +9828,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9833,7 +9837,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9948,7 +9952,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -9957,7 +9961,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -9966,7 +9970,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9975,7 +9979,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10040,7 +10044,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10049,7 +10053,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10058,7 +10062,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10067,7 +10071,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10113,7 +10117,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
         /** @description Bad request */
@@ -10122,7 +10128,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10131,7 +10137,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10140,7 +10146,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10149,7 +10155,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10196,7 +10202,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
         /** @description Bad request */
@@ -10205,7 +10213,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10214,7 +10222,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10223,7 +10231,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10232,7 +10240,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10296,7 +10304,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10305,7 +10313,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10314,7 +10322,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10323,7 +10331,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10369,7 +10377,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
         /** @description Bad request */
@@ -10378,7 +10388,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10387,7 +10397,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10396,7 +10406,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10405,7 +10415,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10455,7 +10465,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10464,7 +10474,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10497,7 +10507,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
         /** @description Bad request */
@@ -10506,7 +10518,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10515,7 +10527,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions or staff limit reached */
@@ -10524,7 +10536,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10533,7 +10545,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10581,7 +10593,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
         /** @description Bad request */
@@ -10590,7 +10604,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10599,7 +10613,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10608,7 +10622,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Staff not found */
@@ -10617,7 +10631,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10626,7 +10640,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10672,7 +10686,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
         /** @description Bad request */
@@ -10681,7 +10697,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10690,7 +10706,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10699,7 +10715,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Staff not found */
@@ -10708,7 +10724,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10717,7 +10733,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10758,7 +10774,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.SuccessResponse'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
         /** @description Bad request */
@@ -10767,7 +10785,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10776,7 +10794,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10827,7 +10845,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10836,7 +10854,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10895,7 +10913,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10904,7 +10922,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10952,7 +10970,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10961,7 +10979,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11018,7 +11036,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11027,7 +11045,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11106,7 +11124,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11115,7 +11133,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11166,7 +11184,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11175,7 +11193,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.ErrorResponse'];
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
@@ -13487,9 +13505,6 @@ export interface components {
       role: components['schemas']['backend_internal_domain_models.StaffRole'];
       user_id: number;
     };
-    'internal_proj_storefronts_handler.ErrorResponse': {
-      error?: string;
-    };
     'internal_proj_storefronts_handler.StaffListResponse': {
       staff?: components['schemas']['backend_internal_domain_models.StorefrontStaff'][];
       total?: number;
@@ -13499,9 +13514,6 @@ export interface components {
       offset?: number;
       storefronts?: components['schemas']['backend_internal_domain_models.Storefront'][];
       total?: number;
-    };
-    'internal_proj_storefronts_handler.SuccessResponse': {
-      message?: string;
     };
     'internal_proj_users_handler.AdminAdminsResponse': {
       /** @example admin@example.com */
