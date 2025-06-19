@@ -117,7 +117,7 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 					'storage_type', mi.storage_type,
 					'storage_bucket', mi.storage_bucket,
 					'public_url', mi.public_url,
-					'created_at', mi.created_at
+					'created_at', to_char(mi.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
 				) ORDER BY mi.is_main DESC, mi.id ASC
 			) as images
 		FROM marketplace_chats c
@@ -284,7 +284,7 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 						'public_url', ca.public_url,
 						'thumbnail_url', ca.thumbnail_url,
 						'metadata', ca.metadata,
-						'created_at', ca.created_at
+						'created_at', to_char(ca.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
 					) ORDER BY ca.created_at ASC
 				) as attachments
 			FROM ordered_messages om
@@ -342,7 +342,7 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 						'public_url', ca.public_url,
 						'thumbnail_url', ca.thumbnail_url,
 						'metadata', ca.metadata,
-						'created_at', ca.created_at
+						'created_at', to_char(ca.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
 					) ORDER BY ca.created_at ASC
 				) as attachments
 			FROM ordered_messages om
