@@ -24,20 +24,20 @@ func NewHandler(services service.ServicesInterface) *Handler {
 
 // GetPrefix возвращает префикс для маршрутов
 func (h *Handler) GetPrefix() string {
-	return "/storefronts"
+	return "/api/v1/storefronts"
 }
 
 // RegisterRoutes регистрирует маршруты
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	api := app.Group("/api/v1")
 	
+	// Регистрируем защищенный маршрут /my первым, чтобы он имел приоритет
+	api.Get("/storefronts/my", mw.AuthRequiredJWT, h.storefrontHandler.GetMyStorefronts)
+	
 	// Публичные маршруты (без авторизации)
 	public := api.Group("/storefronts")
 	{
-		// Получение витрины
-		public.Get("/:id", h.storefrontHandler.GetStorefront)
-		public.Get("/slug/:slug", h.storefrontHandler.GetStorefrontBySlug)
-		
+		// Конкретные маршруты (должны быть перед параметризованными)
 		// Списки и поиск
 		public.Get("/", h.storefrontHandler.ListStorefronts)
 		public.Get("/search", h.storefrontHandler.SearchOpenSearch)
@@ -46,6 +46,13 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		// Картографические данные
 		public.Get("/map", h.storefrontHandler.GetMapData)
 		public.Get("/building", h.storefrontHandler.GetBusinessesInBuilding)
+		
+		// Маршруты с slug
+		public.Get("/slug/:slug", h.storefrontHandler.GetStorefrontBySlug)
+		
+		// Параметризованные маршруты (должны быть последними)
+		// Получение витрины
+		public.Get("/:id", h.storefrontHandler.GetStorefront)
 		
 		// Персонал (просмотр)
 		public.Get("/:id/staff", h.storefrontHandler.GetStaff)
@@ -62,9 +69,6 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		protected.Post("/", h.storefrontHandler.CreateStorefront)
 		protected.Put("/:id", h.storefrontHandler.UpdateStorefront)
 		protected.Delete("/:id", h.storefrontHandler.DeleteStorefront)
-		
-		// Мои витрины
-		protected.Get("/my", h.storefrontHandler.GetMyStorefronts)
 		
 		// Настройки витрины
 		protected.Put("/:id/hours", h.storefrontHandler.UpdateWorkingHours)

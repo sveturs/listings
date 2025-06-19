@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
+import { tokenManager } from '@/utils/tokenManager';
 import type { components } from '@/types/generated/api';
 import type { PaymentMethodType } from '@/types/storefront';
 
@@ -244,11 +245,68 @@ export const fetchMyStorefronts = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchMyStorefronts', async (_, { rejectWithValue }) => {
   try {
+    const accessToken = tokenManager.getAccessToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
     const response = await fetch('/api/v1/storefronts/my', {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
+      credentials: 'include', // Важно для отправки cookies
+    });
+
+    if (!response.ok) {
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: 'Network error' }));
+      return rejectWithValue(
+        errorData.error || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+    // API возвращает массив витрин, преобразуем в ожидаемый формат
+    if (Array.isArray(data)) {
+      return {
+        storefronts: data,
+        total: data.length,
+        limit: data.length,
+        offset: 0,
+      };
+    }
+    return data;
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+  }
+});
+
+// Получение витрины по slug
+export const fetchStorefrontBySlug = createAsyncThunk<
+  Storefront,
+  string,
+  { rejectValue: string }
+>('storefronts/fetchStorefrontBySlug', async (slug, { rejectWithValue }) => {
+  try {
+    const accessToken = tokenManager.getAccessToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(`/api/v1/storefronts/slug/${slug}`, {
+      method: 'GET',
+      headers,
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -519,6 +577,21 @@ const storefrontSlice = createSlice({
       .addCase(fetchStorefrontById.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Failed to fetch storefront';
+      });
+
+    // Получение витрины по slug
+    builder
+      .addCase(fetchStorefrontBySlug.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchStorefrontBySlug.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currentStorefront = action.payload;
+      })
+      .addCase(fetchStorefrontBySlug.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Failed to fetch storefront by slug';
       });
 
     // Получение моих витрин

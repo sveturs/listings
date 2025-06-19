@@ -10,7 +10,10 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 )
+
+var logger = log.With().Str("component", "storefront_handler").Logger()
 
 // StorefrontHandler HTTP handler для витрин
 type StorefrontHandler struct {
@@ -342,10 +345,23 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/my [get]
 func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
+	logger.Info().Msg("GetMyStorefronts called")
+	
 	userID := c.Locals("user_id").(int)
+	logger.Info().Int("userID", userID).Msg("Getting storefronts for user")
 
 	storefronts, err := h.service.ListUserStorefronts(c.Context(), userID)
 	if err != nil {
+		// Логируем конкретную ошибку
+		logger.Error().Err(err).Int("userID", userID).Msg("Failed to get user storefronts")
+		
+		// Возвращаем 400 если репозиторий не инициализирован
+		if err.Error() == "storefront repository not initialized" {
+			return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
+				Error: err.Error(),
+			})
+		}
+		
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error: "Failed to get user storefronts",
 		})

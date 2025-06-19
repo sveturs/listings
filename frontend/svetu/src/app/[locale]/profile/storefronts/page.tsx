@@ -44,6 +44,11 @@ export default function MyStorefrontsPage() {
     dispatch(fetchMyStorefronts());
   }, [dispatch]);
 
+  // Временный лог для отладки
+  useEffect(() => {
+    console.log('User storefronts:', userStorefronts);
+  }, [userStorefronts]);
+
   const handleCreateStorefront = () => {
     router.push('/create-storefront');
   };
@@ -109,7 +114,9 @@ export default function MyStorefrontsPage() {
           <div className="flex justify-center items-center min-h-[600px]">
             <div className="text-center">
               <span className="loading loading-spinner loading-lg text-primary"></span>
-              <p className="mt-4 text-base-content/60">{t('common.loading')}</p>
+              <p className="mt-4 text-base-content/60">
+                {t('admin.common.loading')}
+              </p>
             </div>
           </div>
         </div>
@@ -383,8 +390,8 @@ export default function MyStorefrontsPage() {
                     </Link>
 
                     <div className="dropdown dropdown-end dropdown-top">
-                      <button 
-                        tabIndex={0} 
+                      <button
+                        tabIndex={0}
                         className="btn btn-ghost btn-square"
                         aria-label={t('storefronts.settings')}
                       >
