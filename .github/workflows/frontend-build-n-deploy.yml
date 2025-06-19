@@ -37,6 +37,9 @@ jobs:
                 with:
                     context: ./frontend/svetu
                     push: true
+                    build-args: |
+                        GIT_COMMIT=${{ github.sha }}
+                        BUILD_TIME=${{ env.TIMESTAMP }}
                     tags: |
                         ${{ secrets.DOCKER_REGISTRY }}/svetu/frontend/app:${{ env.TIMESTAMP }}
                         ${{ secrets.DOCKER_REGISTRY }}/svetu/frontend/app:latest

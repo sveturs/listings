@@ -34,6 +34,12 @@ import (
 	"backend/internal/server"
 )
 
+// Build information set by ldflags
+var (
+	gitCommit = "unknown"
+	buildTime = "unknown"
+)
+
 func main() {
 	// Загрузка конфигурации из файла окружения
 	envFile := os.Getenv("ENV_FILE")
@@ -54,7 +60,11 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("Failed to load config: %v", err)
 	}
-	logger.Info().Any("config", cfg).Msg("Config loaded successfully")
+	logger.Info().
+		Str("gitCommit", gitCommit).
+		Str("buildTime", buildTime).
+		Any("config", cfg).
+		Msg("Config loaded successfully")
 
 	// Создание и запуск сервера
 	// Удаляем второй аргумент fileStorage, так как NewServer инициализирует его внутри себя

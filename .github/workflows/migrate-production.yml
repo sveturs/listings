@@ -46,10 +46,7 @@ jobs:
                     ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
                       set -e
                       
-                      cd /opt/svetu
-                      
-                      # Загружаем переменные окружения
-                      source .env
+                      cd /opt/hostel-data
                       
                       # Скачиваем последний образ мигратора
                       echo "📥 Pulling migrator image..."
@@ -62,6 +59,15 @@ jobs:
                         exit 1
                       fi
                       echo "📊 Using database container: $DB_CONTAINER"
+                      
+                      # Определяем Docker сеть для базы данных
+                      DB_NETWORK=$(docker inspect $DB_CONTAINER --format '{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}' | head -n 1)
+                      DB_NETWORK_NAME=$(docker network ls --filter id=$DB_NETWORK --format "{{.Name}}")
+                      if [ -z "$DB_NETWORK_NAME" ]; then
+                        echo "❌ Database network not found"
+                        exit 1
+                      fi
+                      echo "🌐 Using Docker network: $DB_NETWORK_NAME"
                       
                       # Подготовка направления миграции
                       if [ "${{ github.event.inputs.migration_direction }}" = "up" ]; then
@@ -80,7 +86,7 @@ jobs:
                       fi
                       
                       # Запуск миграции
-                      docker run --rm --network svetu_default \
+                      docker run --rm --network $DB_NETWORK_NAME \
                         -e DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_CONTAINER}:5432/${POSTGRES_DB}?sslmode=disable" \
                         -e MIGRATIONS_PATH="/migrations" \
                         -e MIGRATION_DIRECTION="${{ github.event.inputs.migration_direction }}" \

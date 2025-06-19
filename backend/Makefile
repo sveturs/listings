@@ -1,13 +1,16 @@
 .PHONY: docs docs-fmt docs-clean
 
 build_migrator:
-	go build -o bin/migrator ./cmd/migrator
+	go build -ldflags "-X main.gitCommit=$$(git rev-parse --short HEAD) -X main.buildTime=$$(date +%Y%m%d_%H%M%S)" \
+		-o bin/migrator ./cmd/migrator
 
 build_api:
-	go build -o bin/api ./cmd/api
+	go build -ldflags "-X main.gitCommit=$$(git rev-parse --short HEAD) -X main.buildTime=$$(date +%Y%m%d_%H%M%S)" \
+		-o bin/api ./cmd/api
 
 build_reindex:
-	go build -o bin/reindex ./cmd/reindex
+	go build -ldflags "-X main.gitCommit=$$(git rev-parse --short HEAD) -X main.buildTime=$$(date +%Y%m%d_%H%M%S)" \
+		-o bin/reindex ./cmd/reindex
 
 build_all: build_api build_migrator build_reindex
 	@echo "Build DONE"
@@ -42,3 +45,34 @@ docs-clean:
 
 migrate_up:
 	bin/migrator up
+
+migrate_down:
+	bin/migrator down
+
+# Docker commands for migrator
+docker_build_migrator:
+	docker build -f Dockerfile.migrator -t migrator:local \
+		--build-arg GIT_COMMIT=$$(git rev-parse --short HEAD) \
+		--build-arg BUILD_TIME=$$(date +%Y%m%d_%H%M%S) \
+		.
+
+# Build with buildx (if installed)
+docker_buildx_migrator:
+	#docker buildx build -f Dockerfile.migrator -t migrator:local --load \
+#		--build-arg GIT_COMMIT=$$(git rev-parse --short HEAD) \
+#		--build-arg BUILD_TIME=$$(date +%Y%m%d_%H%M%S) \
+#		.
+
+docker_run_migrator_up:
+	docker run --rm --network host \
+		-e DATABASE_URL="${DATABASE_URL}" \
+		-e MIGRATIONS_PATH="/migrations" \
+		-e MIGRATION_DIRECTION="up" \
+		migrator:local
+
+docker_run_migrator_down:
+	docker run --rm --network host \
+		-e DATABASE_URL="${DATABASE_URL}" \
+		-e MIGRATIONS_PATH="/migrations" \
+		-e MIGRATION_DIRECTION="down" \
+		migrator:local

@@ -37,6 +37,9 @@ jobs:
                 with:
                     context: ./backend
                     push: true
+                    build-args: |
+                        GIT_COMMIT=${{ github.sha }}
+                        BUILD_TIME=${{ env.TIMESTAMP }}
                     tags: |
                         ${{ secrets.DOCKER_REGISTRY }}/svetu/backend/api:${{ env.TIMESTAMP }}
                         ${{ secrets.DOCKER_REGISTRY }}/svetu/backend/api:latest

@@ -4,17 +4,23 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"os"
 	"strings"
 	"time"
 
 	"backend/internal/config"
+	"backend/internal/logger"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
 
 	"github.com/joho/godotenv"
+)
+
+// Build information set by ldflags
+var (
+	gitCommit = "unknown"
+	buildTime = "unknown"
 )
 
 func main() {
@@ -25,14 +31,23 @@ func main() {
 	}
 
 	if err := godotenv.Load(envFile); err != nil {
-		log.Printf("Warning: Could not load .env file: %s", err)
+		logger.Info().Msgf("Warning: Could not load .env file: %s", err)
+	}
+	// Initialize logger
+	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL")); err != nil {
+		logger.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
 
 	// Чтение конфигурации
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to load config: %v", err)
 	}
+	logger.Info().
+		Str("gitCommit", gitCommit).
+		Str("buildTime", buildTime).
+		Any("config", cfg).
+		Msg("Config loaded successfully")
 
 	// Парсинг аргументов командной строки
 	entityTypeFlag := flag.String("type", "listings", "Type of entities to reindex (listings, reviews)")
@@ -48,42 +63,42 @@ func main() {
 			Password: cfg.OpenSearch.Password,
 		})
 		if err != nil {
-			log.Printf("Error connecting to OpenSearch: %v", err)
+			logger.Info().Msgf("Error connecting to OpenSearch: %v", err)
 		}
 	}
 
 	// Инициализация файлового хранилища
 	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
 	if err != nil {
-		log.Printf("Warning: Failed to initialize file storage: %v. Proceeding without file storage.", err)
+		logger.Info().Msgf("Warning: Failed to initialize file storage: %v. Proceeding without file storage.", err)
 		// Не прерываем выполнение программы, так как для индексации это не критично
 	}
 
 	// Подключение к базе данных
 	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage)
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		logger.Fatal().Err(err).Msgf("Error connecting to database: %v", err)
 	}
 	defer db.Close()
 
 	// Проверка подключения к БД
 	if err := db.Ping(context.Background()); err != nil {
-		log.Fatalf("Error pinging database: %v", err)
+		logger.Fatal().Err(err).Msgf("Error pinging database: %v", err)
 	}
 
-	log.Printf("Starting reindexing of %s with batch size %d", *entityTypeFlag, *batchSizeFlag)
+	logger.Info().Msgf("Starting reindexing of %s with batch size %d", *entityTypeFlag, *batchSizeFlag)
 	start := time.Now()
 
 	// Выполнение операции реиндексации в зависимости от типа сущности
 	switch strings.ToLower(*entityTypeFlag) {
 	case "listings", "marketplace":
 		if err := db.ReindexAllListings(context.Background()); err != nil {
-			log.Fatalf("Error reindexing listings: %v", err)
+			logger.Fatal().Err(err).Msgf("Error reindexing listings: %v", err)
 		}
 	// Можно добавить другие типы реиндексации здесь
 	default:
-		log.Fatalf("Unknown entity type: %s", *entityTypeFlag)
+		logger.Fatal().Err(err).Msgf("Unknown entity type: %s", *entityTypeFlag)
 	}
 
-	log.Printf("Reindexing completed in %v", time.Since(start))
+	logger.Info().Msgf("Reindexing completed in %v", time.Since(start))
 }

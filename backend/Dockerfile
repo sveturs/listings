@@ -13,9 +13,15 @@ RUN go mod download
 # Copy source code
 COPY . .
 
+# Аргументы для версии
+ARG GIT_COMMIT=unknown
+ARG BUILD_TIME=unknown
+
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/api
-RUN CGO_ENABLED=0 GOOS=linux go build -o reindex ./cmd/reindex
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X main.gitCommit=${GIT_COMMIT} -X main.buildTime=${BUILD_TIME}" \
+      -o main ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X main.gitCommit=${GIT_COMMIT} -X main.buildTime=${BUILD_TIME}" \
+      -o reindex ./cmd/reindex
 
 # Final stage
 FROM alpine:latest

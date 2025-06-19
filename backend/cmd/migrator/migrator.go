@@ -7,8 +7,13 @@ import (
 	"github.com/joho/godotenv"
 
 	"backend/internal/app/migrator"
-	"backend/internal/config"
 	"backend/internal/logger"
+)
+
+// Build information set by ldflags
+var (
+	gitCommit = "unknown"
+	buildTime = "unknown"
 )
 
 func main() {
@@ -20,6 +25,12 @@ func main() {
 	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL")); err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
+
+	// Log build information
+	logger.Info().
+		Str("gitCommit", gitCommit).
+		Str("buildTime", buildTime).
+		Msg("Migrator version")
 
 	// Get migration settings from environment variables
 	migrationsPath := os.Getenv("MIGRATIONS_PATH")
@@ -46,12 +57,12 @@ func main() {
 		Msg("Starting migration")
 
 	// Load configuration
-	cfg, err := config.NewConfig()
-	if err != nil {
-		logger.Fatal().Err(err).Msgf("Error loading config")
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		logger.Fatal().Str("DATABASE_URL", dbURL).Msgf("Error loading env")
 	}
 
-	migrtr := migrator.NewMigrator(migrationsPath, cfg.DatabaseURL)
+	migrtr := migrator.NewMigrator(migrationsPath, dbURL)
 
 	// Execute the requested command
 	switch direction {

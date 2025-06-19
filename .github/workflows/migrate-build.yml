@@ -41,6 +41,9 @@ jobs:
                     context: ./backend
                     file: ./backend/Dockerfile.migrator
                     push: true
+                    build-args: |
+                        GIT_COMMIT=${{ github.sha }}
+                        BUILD_TIME=${{ env.TIMESTAMP }}
                     tags: |
                         ${{ secrets.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TIMESTAMP }}
                         ${{ secrets.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
