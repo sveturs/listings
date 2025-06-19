@@ -3,8 +3,10 @@ package routes
 import (
 	"backend/internal/middleware"
 	"backend/internal/proj/storefronts/handler"
+	"context"
 
 	"github.com/gofiber/fiber/v2"
+	"backend/internal/domain/models"
 )
 
 // RegisterStorefrontRoutes регистрирует маршруты для витрин
@@ -98,4 +100,55 @@ func handleAKSWebhook(c *fiber.Ctx) error {
 func handleBEXWebhook(c *fiber.Ctx) error {
 	// TODO: Implement BEX tracking webhook
 	return c.SendStatus(fiber.StatusOK)
+}
+
+// RegisterProductRoutes регистрирует маршруты для управления товарами
+func RegisterProductRoutes(app *fiber.App, h *handler.ProductHandler, authMiddleware *middleware.Middleware, db interface{ GetBySlug(context.Context, string) (*models.Storefront, error) }) {
+	api := app.Group("/api/v1")
+
+	// Middleware для извлечения storefrontID из slug
+	storefrontMiddleware := func(c *fiber.Ctx) error {
+		slug := c.Params("slug")
+		if slug == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Storefront slug is required",
+			})
+		}
+
+		// Get storefront by slug
+		storefront, err := db.GetBySlug(c.Context(), slug)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Storefront not found",
+			})
+		}
+		
+		c.Locals("storefrontID", storefront.ID)
+		return c.Next()
+	}
+
+	// Публичные маршруты (без авторизации)
+	public := api.Group("/storefronts/:slug/products", storefrontMiddleware)
+	{
+		// Получение списка товаров
+		public.Get("/", h.GetProducts)
+		// Получение конкретного товара
+		public.Get("/:id", h.GetProduct)
+	}
+
+	// Защищенные маршруты (требуют авторизации)
+	protected := api.Group("/storefronts/:slug/products", storefrontMiddleware)
+	protected.Use(authMiddleware.AuthRequiredJWT)
+	{
+		// Создание товара
+		protected.Post("/", h.CreateProduct)
+		// Обновление товара
+		protected.Put("/:id", h.UpdateProduct)
+		// Удаление товара
+		protected.Delete("/:id", h.DeleteProduct)
+		// Обновление запасов
+		protected.Post("/:id/inventory", h.UpdateInventory)
+		// Получение статистики
+		protected.Get("/stats", h.GetProductStats)
+	}
 }

@@ -1,5 +1,27 @@
 basePath: /api/v1
 definitions:
+  ErrorResponse:
+    properties:
+      code:
+        example: 400
+        type: integer
+      error:
+        example: Invalid request
+        type: string
+      message:
+        example: Validation failed
+        type: string
+    type: object
+  SuccessResponse:
+    properties:
+      data: {}
+      message:
+        example: Operation completed successfully
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
   backend_internal_domain_models.AddContactRequest:
     properties:
       added_from_chat_id:
@@ -438,6 +460,41 @@ definitions:
     required:
     - content
     - receiver_id
+    type: object
+  backend_internal_domain_models.CreateProductRequest:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      barcode:
+        type: string
+      category_id:
+        type: integer
+      currency:
+        type: string
+      description:
+        minLength: 10
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      price:
+        minimum: 0
+        type: number
+      sku:
+        type: string
+      stock_quantity:
+        minimum: 0
+        type: integer
+    required:
+    - category_id
+    - currency
+    - description
+    - name
+    - price
     type: object
   backend_internal_domain_models.CreateReviewConfirmationRequest:
     properties:
@@ -1145,6 +1202,21 @@ definitions:
       price:
         type: number
     type: object
+  backend_internal_domain_models.ProductStats:
+    properties:
+      active_products:
+        type: integer
+      low_stock:
+        type: integer
+      out_of_stock:
+        type: integer
+      total_products:
+        type: integer
+      total_sold:
+        type: integer
+      total_value:
+        type: number
+    type: object
   backend_internal_domain_models.RatingBreakdown:
     properties:
       direct:
@@ -1607,6 +1679,99 @@ definitions:
         description: Комиссии и лимиты
         type: number
     type: object
+  backend_internal_domain_models.StorefrontProduct:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      barcode:
+        type: string
+      category:
+        $ref: '#/definitions/backend_internal_domain_models.MarketplaceCategory'
+      category_id:
+        type: integer
+      created_at:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      images:
+        description: Relations
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.StorefrontProductImage'
+        type: array
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+      sku:
+        type: string
+      sold_count:
+        type: integer
+      stock_quantity:
+        type: integer
+      stock_status:
+        description: in_stock, low_stock, out_of_stock
+        type: string
+      storefront_id:
+        type: integer
+      updated_at:
+        type: string
+      variants:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.StorefrontProductVariant'
+        type: array
+      view_count:
+        type: integer
+    type: object
+  backend_internal_domain_models.StorefrontProductImage:
+    properties:
+      created_at:
+        type: string
+      display_order:
+        type: integer
+      id:
+        type: integer
+      image_url:
+        type: string
+      is_default:
+        type: boolean
+      storefront_product_id:
+        type: integer
+      thumbnail_url:
+        type: string
+    type: object
+  backend_internal_domain_models.StorefrontProductVariant:
+    properties:
+      attributes:
+        additionalProperties: true
+        description: 'e.g., {"color": "red", "size": "L"}'
+        type: object
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        description: e.g., "Red - Large"
+        type: string
+      price:
+        type: number
+      sku:
+        type: string
+      stock_quantity:
+        type: integer
+      storefront_product_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   backend_internal_domain_models.StorefrontRatingSummary:
     properties:
       average_rating:
@@ -1780,12 +1945,58 @@ definitions:
       template_code:
         type: string
     type: object
+  backend_internal_domain_models.UpdateInventoryRequest:
+    properties:
+      notes:
+        type: string
+      quantity:
+        type: integer
+      reason:
+        type: string
+      type:
+        enum:
+        - in
+        - out
+        - adjustment
+        type: string
+    required:
+    - quantity
+    - reason
+    - type
+    type: object
   backend_internal_domain_models.UpdatePrivacySettingsRequest:
     properties:
       allow_contact_requests:
         type: boolean
       allow_messages_from_contacts_only:
         type: boolean
+    type: object
+  backend_internal_domain_models.UpdateProductRequest:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      barcode:
+        type: string
+      category_id:
+        type: integer
+      description:
+        minLength: 10
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      price:
+        minimum: 0
+        type: number
+      sku:
+        type: string
+      stock_quantity:
+        minimum: 0
+        type: integer
     type: object
   backend_internal_domain_models.User:
     properties:
@@ -2098,6 +2309,31 @@ definitions:
       success:
         example: true
         type: boolean
+    type: object
+  internal_proj_analytics_handler.EventRequest:
+    properties:
+      event_data:
+        items:
+          type: integer
+        type: array
+      event_type:
+        enum:
+        - page_view
+        - product_view
+        - add_to_cart
+        - checkout
+        - order
+        type: string
+      session_id:
+        type: string
+      storefront_id:
+        type: integer
+      user_id:
+        type: integer
+    required:
+    - event_type
+    - session_id
+    - storefront_id
     type: object
   internal_proj_balance_handler.DepositRequest:
     properties:
@@ -5781,6 +6017,36 @@ paths:
       summary: Get user transactions (Admin)
       tags:
       - admin-users
+  /api/v1/analytics/event:
+    post:
+      consumes:
+      - application/json
+      description: Records an analytics event for a storefront
+      parameters:
+      - description: Event data
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_analytics_handler.EventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event recorded
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Record analytics event
+      tags:
+      - analytics
   /api/v1/auth/login:
     post:
       consumes:
@@ -10495,6 +10761,332 @@ paths:
       summary: Record storefront view
       tags:
       - storefronts
+  /api/v1/storefronts/{slug}/products:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated list of products for a storefront
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Filter by category ID
+        in: query
+        name: category_id
+        type: integer
+      - description: Search in name and description
+        in: query
+        name: search
+        type: string
+      - description: Minimum price filter
+        in: query
+        name: min_price
+        type: number
+      - description: Maximum price filter
+        in: query
+        name: max_price
+        type: number
+      - description: Stock status filter (in_stock, low_stock, out_of_stock)
+        in: query
+        name: stock_status
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      - description: Filter by SKU
+        in: query
+        name: sku
+        type: string
+      - description: Filter by barcode
+        in: query
+        name: barcode
+        type: string
+      - description: Sort by field (name, price, created_at, stock_quantity)
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort order (asc, desc)
+        in: query
+        name: sort_order
+        type: string
+      - description: 'Number of items per page (default: 20)'
+        in: query
+        name: limit
+        type: integer
+      - description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of products
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_domain_models.StorefrontProduct'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get storefront products
+      tags:
+      - storefront-products
+    post:
+      consumes:
+      - application/json
+      description: Creates a new product for the storefront
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product data
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created product
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.StorefrontProduct'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a storefront product
+      tags:
+      - storefront-products
+  /api/v1/storefronts/{slug}/products/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently deletes a product
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product deleted successfully
+          schema:
+            $ref: '#/definitions/SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a storefront product
+      tags:
+      - storefront-products
+    get:
+      consumes:
+      - application/json
+      description: Returns details of a specific product
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product details
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.StorefrontProduct'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get a storefront product
+      tags:
+      - storefront-products
+    put:
+      consumes:
+      - application/json
+      description: Updates product details
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Product update data
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product updated successfully
+          schema:
+            $ref: '#/definitions/SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a storefront product
+      tags:
+      - storefront-products
+  /api/v1/storefronts/{slug}/products/{id}/inventory:
+    post:
+      consumes:
+      - application/json
+      description: Records inventory movement and updates stock
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Inventory update data
+        in: body
+        name: inventory
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UpdateInventoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Inventory updated successfully
+          schema:
+            $ref: '#/definitions/SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update product inventory
+      tags:
+      - storefront-products
+  /api/v1/storefronts/{slug}/products/stats:
+    get:
+      consumes:
+      - application/json
+      description: Returns statistics about storefront products
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product statistics
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.ProductStats'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get product statistics
+      tags:
+      - storefront-products
   /api/v1/storefronts/building:
     get:
       consumes:
