@@ -386,26 +386,37 @@ export default function StorefrontDashboardPage() {
               </div>
             </div>
 
-            {/* Time Range Selector */}
-            <div className="btn-group">
-              <button
-                className={`btn btn-sm ${timeRange === 'week' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setTimeRange('week')}
+            <div className="flex items-center gap-4">
+              {/* Analytics Button */}
+              <Link
+                href={`/${locale}/storefronts/${currentStorefront.slug}/analytics`}
+                className="btn btn-outline btn-sm"
               >
-                {t('common.week')}
-              </button>
-              <button
-                className={`btn btn-sm ${timeRange === 'month' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setTimeRange('month')}
-              >
-                {t('common.month')}
-              </button>
-              <button
-                className={`btn btn-sm ${timeRange === 'year' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setTimeRange('year')}
-              >
-                {t('common.year')}
-              </button>
+                <ChartBarIcon className="w-4 h-4" />
+                {t('storefronts.detailedAnalytics')}
+              </Link>
+
+              {/* Time Range Selector */}
+              <div className="btn-group">
+                <button
+                  className={`btn btn-sm ${timeRange === 'week' ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => setTimeRange('week')}
+                >
+                  {t('common.week')}
+                </button>
+                <button
+                  className={`btn btn-sm ${timeRange === 'month' ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => setTimeRange('month')}
+                >
+                  {t('common.month')}
+                </button>
+                <button
+                  className={`btn btn-sm ${timeRange === 'year' ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => setTimeRange('year')}
+                >
+                  {t('common.year')}
+                </button>
+              </div>
             </div>
           </div>
         </div>

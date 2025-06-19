@@ -7,7 +7,13 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchStorefrontBySlug } from '@/store/slices/storefrontSlice';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowLeftIcon,
+  ChartBarIcon,
+  UserGroupIcon,
+  CalendarIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
 
 export default function StorefrontAnalyticsPage() {
   const t = useTranslations();
@@ -123,12 +129,56 @@ export default function StorefrontAnalyticsPage() {
           <span>{t('storefronts.analyticsComingSoon')}</span>
         </div>
 
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Placeholder cards for future analytics */}
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title">
+                <ChartBarIcon className="w-6 h-6" />
+                {t('storefronts.conversionRate')}
+              </h2>
+              <p className="text-base-content/60">{t('common.comingSoon')}</p>
+            </div>
+          </div>
+
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title">
+                <UserGroupIcon className="w-6 h-6" />
+                {t('storefronts.customerDemographics')}
+              </h2>
+              <p className="text-base-content/60">{t('common.comingSoon')}</p>
+            </div>
+          </div>
+
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title">
+                <CalendarIcon className="w-6 h-6" />
+                {t('storefronts.seasonalTrends')}
+              </h2>
+              <p className="text-base-content/60">{t('common.comingSoon')}</p>
+            </div>
+          </div>
+
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title">
+                <CurrencyDollarIcon className="w-6 h-6" />
+                {t('storefronts.revenueForecasting')}
+              </h2>
+              <p className="text-base-content/60">{t('common.comingSoon')}</p>
+            </div>
+          </div>
+        </div>
+
         <div className="mt-8 text-center">
           <Link
             href={`/${locale}/storefronts/${slug}/dashboard`}
             className="btn btn-primary"
           >
-            {t('storefronts.goToDashboard')}
+            <ArrowLeftIcon className="w-4 h-4" />
+            {t('storefronts.backToDashboard')}
           </Link>
         </div>
       </div>
