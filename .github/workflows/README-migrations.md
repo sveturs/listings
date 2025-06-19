@@ -2,9 +2,9 @@
 
 Простая система миграций базы данных для продакшн сервера.
 
-## 📦 1. Build Migration Tool
+## 📦 1. Migrate - Build
 
-**Файл:** `.github/workflows/migrator-build.yml`
+**Файл:** `.github/workflows/migrate-build.yml`
 
 **Что делает:** Собирает Docker образ с мигратором и всеми файлами миграций.
 
@@ -14,7 +14,7 @@
 - `harbor.svetu.rs/svetu/migrator:latest`
 - `harbor.svetu.rs/svetu/migrator:TIMESTAMP`
 
-## 🚀 2. Production Database Migration
+## 🚀 2. Migrate - Production
 
 **Файл:** `.github/workflows/migrate-production.yml`
 
@@ -34,21 +34,21 @@
 
 ### Сборка образа мигратора
 
-1. GitHub Actions → Build Migration Tool
+1. GitHub Actions → Migrate - Build
 2. Run workflow
 3. Образ будет собран и загружен в Harbor
 
 ### Применение миграций (UP)
 
 #### Все новые миграции
-1. GitHub Actions → Production Database Migration
+1. GitHub Actions → Migrate - Production
 2. Параметры:
    - `migration_direction`: up
    - `target_version`: (оставить пустым)
 3. Run workflow
 
 #### До конкретной версии
-1. GitHub Actions → Production Database Migration
+1. GitHub Actions → Migrate - Production
 2. Параметры:
    - `migration_direction`: up
    - `target_version`: 000050 (номер версии)
@@ -58,7 +58,7 @@
 
 #### Откат одной миграции
 1. Посмотрите текущую версию в базе
-2. GitHub Actions → Production Database Migration
+2. GitHub Actions → Migrate - Production
 3. Параметры:
    - `migration_direction`: down
    - `target_version`: предыдущая версия
@@ -67,7 +67,7 @@
 #### Откат всех миграций
 ⚠️ **ВНИМАНИЕ: Откатывает ВСЕ миграции!**
 
-1. GitHub Actions → Production Database Migration  
+1. GitHub Actions → Migrate - Production  
 2. Параметры:
    - `migration_direction`: down
    - `target_version`: (оставить пустым)
@@ -115,7 +115,7 @@ docker run --rm --network svetu_default \
 
 ## 🔗 Связанные файлы
 
-- `.github/workflows/migrator-build.yml` - сборка образа
+- `.github/workflows/migrate-build.yml` - сборка образа
 - `.github/workflows/migrate-production.yml` - запуск миграций
 - `backend/Dockerfile.migrator` - Dockerfile для мигратора
 - `backend/migrations/` - файлы миграций

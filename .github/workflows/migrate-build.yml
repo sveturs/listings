@@ -1,4 +1,4 @@
-name: Build Migration Tool
+name: Migrate - Build
 
 on:
     workflow_dispatch:
