@@ -1,0 +1,7 @@
+{
+  "name": "Kill Port 3000",
+  "description": "Quick button to kill process on port 3000",
+  "uuid": "kill-port-3000@svetu",
+  "shell-version": ["46"],
+  "version": 1
+}

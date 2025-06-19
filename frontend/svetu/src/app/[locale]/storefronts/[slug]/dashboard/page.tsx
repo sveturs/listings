@@ -8,6 +8,7 @@ import {
   fetchStorefrontBySlug,
   fetchStorefrontAnalytics,
 } from '@/store/slices/storefrontSlice';
+import { usePageViewTracking } from '@/hooks/useAnalytics';
 import Link from 'next/link';
 import {
   ChartBarIcon,
@@ -55,13 +56,15 @@ export default function StorefrontDashboardPage() {
   const dispatch = useAppDispatch();
   const slug = params.slug as string;
 
-  const { currentStorefront, isLoading } = useAppSelector(
-    (state) => state.storefronts
-  );
+  const { currentStorefront, isLoading, analytics, isLoadingAnalytics } =
+    useAppSelector((state) => state.storefronts);
 
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>(
     'month'
   );
+
+  // Отслеживание просмотра страницы дашборда
+  usePageViewTracking(currentStorefront?.id, 'dashboard');
 
   useEffect(() => {
     if (slug) {
@@ -96,7 +99,7 @@ export default function StorefrontDashboardPage() {
     }
   }, [dispatch, currentStorefront?.id, timeRange]);
 
-  if (isLoading || !currentStorefront) {
+  if (isLoading || !currentStorefront || isLoadingAnalytics) {
     return (
       <div className="min-h-screen bg-base-200">
         <div className="container mx-auto px-4 py-8">
@@ -113,50 +116,189 @@ export default function StorefrontDashboardPage() {
     );
   }
 
-  // Mock data for charts (replace with real data from analytics)
-  const viewsData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [
-      {
-        label: t('storefronts.views'),
-        data: [65, 59, 80, 81, 56, 55, 40],
-        fill: true,
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-        tension: 0.4,
-      },
-    ],
-  };
+  // Prepare real data for charts
+  const prepareChartData = () => {
+    if (!analytics || analytics.length === 0) {
+      // Return empty data structure
+      return {
+        viewsData: {
+          labels: [],
+          datasets: [
+            {
+              label: t('storefronts.views'),
+              data: [],
+              fill: true,
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: 'rgba(75, 192, 192, 0.1)',
+              tension: 0.4,
+            },
+          ],
+        },
+        salesData: {
+          labels: [],
+          datasets: [
+            {
+              label: t('storefronts.sales'),
+              data: [],
+              backgroundColor: 'rgba(99, 102, 241, 0.8)',
+              borderColor: 'rgb(99, 102, 241)',
+              borderWidth: 1,
+            },
+          ],
+        },
+        stats: {
+          totalRevenue: 0,
+          revenueChange: 0,
+          totalOrders: 0,
+          ordersChange: 0,
+          totalCustomers: 0,
+          customersChange: 0,
+          avgOrderValue: 0,
+          avgOrderChange: 0,
+        },
+      };
+    }
 
-  const salesData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [
-      {
-        label: t('storefronts.sales'),
-        data: [12, 19, 3, 5, 2, 3, 7],
-        backgroundColor: 'rgba(99, 102, 241, 0.8)',
-        borderColor: 'rgb(99, 102, 241)',
-        borderWidth: 1,
-      },
-    ],
-  };
+    // Process analytics data
+    const sortedAnalytics = [...analytics].sort(
+      (a, b) => new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime()
+    );
 
-  const categoryData = {
-    labels: ['Electronics', 'Clothing', 'Food', 'Books', 'Other'],
-    datasets: [
-      {
-        data: [300, 150, 100, 80, 70],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 206, 86, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)',
+    const labels = sortedAnalytics.map((a) =>
+      new Date(a.date || 0).toLocaleDateString('en-US', { weekday: 'short' })
+    );
+
+    const pageViews = sortedAnalytics.map((a) => a.page_views || 0);
+    const orders = sortedAnalytics.map((a) => a.orders_count || 0);
+    const revenue = sortedAnalytics.map((a) => a.revenue || 0);
+
+    // Calculate totals and changes
+    const totalRevenue = revenue.reduce((sum, r) => sum + r, 0);
+    const totalOrders = orders.reduce((sum, o) => sum + o, 0);
+    const totalCustomers = sortedAnalytics.reduce(
+      (sum, a) => sum + (a.unique_visitors || 0),
+      0
+    );
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    // Calculate changes (comparing last period with previous)
+    const midPoint = Math.floor(sortedAnalytics.length / 2);
+    const firstHalf = sortedAnalytics.slice(0, midPoint);
+    const secondHalf = sortedAnalytics.slice(midPoint);
+
+    const firstHalfRevenue = firstHalf.reduce(
+      (sum, a) => sum + (a.revenue || 0),
+      0
+    );
+    const secondHalfRevenue = secondHalf.reduce(
+      (sum, a) => sum + (a.revenue || 0),
+      0
+    );
+    const revenueChange =
+      firstHalfRevenue > 0
+        ? ((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100
+        : 0;
+
+    const firstHalfOrders = firstHalf.reduce(
+      (sum, a) => sum + (a.orders_count || 0),
+      0
+    );
+    const secondHalfOrders = secondHalf.reduce(
+      (sum, a) => sum + (a.orders_count || 0),
+      0
+    );
+    const ordersChange =
+      firstHalfOrders > 0
+        ? ((secondHalfOrders - firstHalfOrders) / firstHalfOrders) * 100
+        : 0;
+
+    return {
+      viewsData: {
+        labels,
+        datasets: [
+          {
+            label: t('storefronts.views'),
+            data: pageViews,
+            fill: true,
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            tension: 0.4,
+          },
         ],
-        borderWidth: 0,
       },
-    ],
+      salesData: {
+        labels,
+        datasets: [
+          {
+            label: t('storefronts.sales'),
+            data: orders,
+            backgroundColor: 'rgba(99, 102, 241, 0.8)',
+            borderColor: 'rgb(99, 102, 241)',
+            borderWidth: 1,
+          },
+        ],
+      },
+      stats: {
+        totalRevenue,
+        revenueChange,
+        totalOrders,
+        ordersChange,
+        totalCustomers,
+        customersChange: 0, // TODO: Calculate based on previous period
+        avgOrderValue,
+        avgOrderChange: 0, // TODO: Calculate based on previous period
+      },
+    };
   };
+
+  const { viewsData, salesData, stats } = prepareChartData();
+
+  // Process category data from analytics
+  const categoryData = (() => {
+    if (!analytics || analytics.length === 0) {
+      return {
+        labels: [],
+        datasets: [{ data: [], backgroundColor: [], borderWidth: 0 }],
+      };
+    }
+
+    // Aggregate top categories from all analytics
+    const categoryMap = new Map();
+    analytics.forEach((a) => {
+      if (a.top_categories && typeof a.top_categories === 'object') {
+        const categories = Array.isArray(a.top_categories)
+          ? a.top_categories
+          : [];
+        categories.forEach((cat: any) => {
+          if (cat.name && cat.count) {
+            const current = categoryMap.get(cat.name) || 0;
+            categoryMap.set(cat.name, current + cat.count);
+          }
+        });
+      }
+    });
+
+    const sortedCategories = Array.from(categoryMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    return {
+      labels: sortedCategories.map(([name]) => name),
+      datasets: [
+        {
+          data: sortedCategories.map(([, count]) => count),
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+          ],
+          borderWidth: 0,
+        },
+      ],
+    };
+  })();
 
   const chartOptions = {
     responsive: true,
@@ -181,18 +323,6 @@ export default function StorefrontDashboardPage() {
         position: 'right' as const,
       },
     },
-  };
-
-  // Mock stats (replace with real data)
-  const stats = {
-    totalRevenue: 15234.56,
-    revenueChange: 12.5,
-    totalOrders: 234,
-    ordersChange: -5.2,
-    totalCustomers: 1234,
-    customersChange: 8.3,
-    avgOrderValue: 65.12,
-    avgOrderChange: 3.1,
   };
 
   return (

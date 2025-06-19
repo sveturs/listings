@@ -17,6 +17,37 @@ import (
 // Поддерживает как Bearer токены в заголовке, так и fallback на session cookies
 func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	logger.Info().Str("path", c.Path()).Msg("AuthRequiredJWT middleware called")
+	
+	// Временное решение: пропускаем публичные маршруты storefronts и аналитики
+	path := c.Path()
+	
+	// Пропускаем маршруты аналитики для записи событий
+	if strings.HasPrefix(path, "/api/v1/analytics/event") {
+		logger.Info().Str("path", path).Msg("Skipping auth for analytics event")
+		return c.Next()
+	}
+	
+	if strings.HasPrefix(path, "/api/v1/storefronts") && !strings.Contains(path, "/my") {
+		// Проверяем что это не защищенные маршруты
+		method := c.Method()
+		if method == "GET" && (strings.Contains(path, "/slug/") || strings.HasSuffix(path, "/storefronts") || 
+			strings.Contains(path, "/search") || strings.Contains(path, "/nearby") || 
+			strings.Contains(path, "/map") || strings.Contains(path, "/building") ||
+			strings.Contains(path, "/staff")) {
+			logger.Info().Str("path", path).Msg("Skipping auth for public storefront route")
+			return c.Next()
+		}
+		if method == "POST" && strings.Contains(path, "/view") {
+			logger.Info().Str("path", path).Msg("Skipping auth for storefront view tracking")
+			return c.Next()
+		}
+		// Проверка на ID маршрут
+		parts := strings.Split(path, "/")
+		if len(parts) == 5 && parts[3] == "storefronts" && method == "GET" {
+			logger.Info().Str("path", path).Msg("Skipping auth for public storefront by ID")
+			return c.Next()
+		}
+	}
 
 	// Приоритет 1: Проверяем JWT токен в заголовке Authorization
 	authHeader := c.Get("Authorization")

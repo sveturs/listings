@@ -27,6 +27,7 @@ var (
 	ErrFeatureNotAvailable    = errors.New("feature not available in current plan")
 	ErrRepositoryNotInitialized = errors.New("storefront repository not initialized")
 	ErrStaffLimitReached      = errors.New("staff limit reached for current plan")
+	ErrStorefrontNotFound     = errors.New("storefront not found")
 )
 
 // Лимиты по тарифным планам

@@ -10681,7 +10681,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns analytics data for specified period",
+                "description": "Returns analytics data for a storefront",
                 "consumes": [
                     "application/json"
                 ],
@@ -10702,27 +10702,22 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Start date (YYYY-MM-DD)",
+                        "description": "Start date (RFC3339 format)",
                         "name": "from",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
+                        "description": "End date (RFC3339 format)",
                         "name": "to",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "Analytics data",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/backend_internal_domain_models.StorefrontAnalytics"
-                            }
+                            "$ref": "#/definitions/backend_internal_domain_models.StorefrontAnalytics"
                         }
                     },
                     "400": {
@@ -10739,6 +10734,12 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Insufficient permissions",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront not found",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }

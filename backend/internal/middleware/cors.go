@@ -17,6 +17,8 @@ func (m *Middleware) CORS() fiber.Handler {
 			"http://localhost:3002",       // для фронтенда
 			"http://hostel_frontend:3001", // для Docker
 			"http://backend:3000",         // для Docker
+			"http://100.88.44.15:3000",    // IP адрес бэкенда
+			"http://100.88.44.15:3001",    // IP адрес фронтенда
 		}, ","),
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-Token",

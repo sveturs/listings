@@ -35,9 +35,15 @@ func NewModule(db *postgres.Database, fileRepo filestorage.FileStorageInterface)
 }
 
 // RegisterRoutes регистрирует маршруты модуля
-func (m *Module) RegisterRoutes(app *fiber.App, authMiddleware *middleware.Middleware) {
+func (m *Module) RegisterRoutes(app *fiber.App, authMiddleware *middleware.Middleware) error {
 	routes.RegisterStorefrontRoutes(app, m.handler, authMiddleware)
 	routes.RegisterStorefrontWebhooks(app)
+	return nil
+}
+
+// GetPrefix возвращает префикс маршрутов модуля
+func (m *Module) GetPrefix() string {
+	return "/api/v1/storefronts"
 }
 
 // GetService возвращает сервис витрин (для использования другими модулями)

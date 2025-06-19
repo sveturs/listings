@@ -9993,22 +9993,20 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns analytics data for specified period
+      description: Returns analytics data for a storefront
       parameters:
       - description: Storefront ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Start date (YYYY-MM-DD)
+      - description: Start date (RFC3339 format)
         in: query
         name: from
-        required: true
         type: string
-      - description: End date (YYYY-MM-DD)
+      - description: End date (RFC3339 format)
         in: query
         name: to
-        required: true
         type: string
       produces:
       - application/json
@@ -10016,9 +10014,7 @@ paths:
         "200":
           description: Analytics data
           schema:
-            items:
-              $ref: '#/definitions/backend_internal_domain_models.StorefrontAnalytics'
-            type: array
+            $ref: '#/definitions/backend_internal_domain_models.StorefrontAnalytics'
         "400":
           description: Bad request
           schema:
@@ -10029,6 +10025,10 @@ paths:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "403":
           description: Insufficient permissions
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Storefront not found
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":

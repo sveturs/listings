@@ -9918,15 +9918,15 @@ export interface paths {
     };
     /**
      * Get storefront analytics
-     * @description Returns analytics data for specified period
+     * @description Returns analytics data for a storefront
      */
     get: {
       parameters: {
-        query: {
-          /** @description Start date (YYYY-MM-DD) */
-          from: string;
-          /** @description End date (YYYY-MM-DD) */
-          to: string;
+        query?: {
+          /** @description Start date (RFC3339 format) */
+          from?: string;
+          /** @description End date (RFC3339 format) */
+          to?: string;
         };
         header?: never;
         path: {
@@ -9943,7 +9943,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.StorefrontAnalytics'][];
+            'application/json': components['schemas']['backend_internal_domain_models.StorefrontAnalytics'];
           };
         };
         /** @description Bad request */
@@ -9966,6 +9966,15 @@ export interface paths {
         };
         /** @description Insufficient permissions */
         403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
           headers: {
             [name: string]: unknown;
           };

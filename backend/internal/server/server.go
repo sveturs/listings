@@ -17,6 +17,7 @@ import (
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	balanceHandler "backend/internal/proj/balance/handler"
+	"backend/internal/proj/analytics"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
@@ -47,6 +48,7 @@ type Server struct {
 	geocode       *geocodeHandler.Handler
 	contacts      *contactsHandler.Handler
 	docs          *docsHandler.Handler
+	analytics     *analytics.Module
 	fileStorage   filestorage.FileStorageInterface
 }
 
@@ -85,6 +87,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
+	analyticsModule := analytics.NewModule(db)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -126,6 +129,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		geocode:       geocodeHandler,
 		contacts:      contactsHandler,
 		docs:          docsHandlerInstance,
+		analytics:     analyticsModule,
 		fileStorage:   fileStorage,
 	}
 
@@ -241,7 +245,7 @@ func (s *Server) registerProjectRoutes() {
 
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	registrars = append(registrars, s.notifications, s.users, s.review, s.marketplace, s.balance, s.storefront,
-		s.geocode, s.contacts, s.payments, s.docs)
+		s.geocode, s.contacts, s.payments, s.docs, s.analytics)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {
