@@ -411,8 +411,6 @@ class ChatService {
 
   // WebSocket соединение
   connectWebSocket(onMessage: (event: MessageEvent) => void): WebSocket | null {
-    const wsUrl = configManager.getApiUrl().replace(/^http/, 'ws');
-
     // Получаем JWT токен из tokenManager
     const accessToken = tokenManager.getAccessToken();
 
@@ -424,14 +422,24 @@ class ChatService {
       return null;
     }
 
-    // Добавляем токен как query параметр для WebSocket
-    const wsUrlWithAuth = `${wsUrl}/ws/chat?token=${accessToken}`;
+    // В development используем относительный путь для прокси
+    // В production используем полный URL
+    let wsUrl: string;
+    if (process.env.NODE_ENV === 'development') {
+      // Используем относительный путь, который будет проксироваться через Next.js
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${protocol}//${window.location.host}/ws/chat?token=${accessToken}`;
+    } else {
+      // В production используем полный URL
+      const apiUrl = configManager.getApiUrl().replace(/^http/, 'ws');
+      wsUrl = `${apiUrl}/ws/chat?token=${accessToken}`;
+    }
 
     console.log(
       '[ChatService] Connecting WebSocket:',
-      wsUrlWithAuth.replace(/token=.*/, 'token=***')
+      wsUrl.replace(/token=.*/, 'token=***')
     );
-    const ws = new WebSocket(wsUrlWithAuth);
+    const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       console.log('WebSocket connected');
