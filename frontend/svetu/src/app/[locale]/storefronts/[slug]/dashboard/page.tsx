@@ -102,7 +102,7 @@ export default function StorefrontDashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
-                href="/profile/storefronts"
+                href={`/${locale}/profile/storefronts`}
                 className="btn btn-ghost btn-sm btn-square"
               >
                 <ArrowLeftIcon className="w-5 h-5" />
