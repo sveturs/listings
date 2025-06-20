@@ -45,7 +45,7 @@ func (s *ProductService) ValidateStorefrontOwnership(ctx context.Context, storef
 	}
 	
 	if storefront.UserID != userID {
-		return fmt.Errorf("unauthorized: user does not own this storefront")
+		return fmt.Errorf("unauthorized: user %d does not own storefront %d (owner is %d)", userID, storefrontID, storefront.UserID)
 	}
 	
 	return nil
@@ -90,7 +90,7 @@ func (s *ProductService) GetProduct(ctx context.Context, storefrontID, productID
 func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
 	// Validate ownership
 	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ownership validation failed: %w", err)
 	}
 	
 	// Validate request

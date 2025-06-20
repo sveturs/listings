@@ -36,7 +36,7 @@ export default function PreviewStep({
 
       // Создаем товар
       const productResponse = await apiClient.post(
-        `/api/v1/storefronts/${storefrontSlug}/products`,
+        `/api/v1/storefronts/slug/${storefrontSlug}/products`,
         state.productData
       );
 
@@ -286,12 +286,13 @@ export default function PreviewStep({
                     const attribute = categoryAttributes.find(
                       (attr) => attr.id === parseInt(id)
                     );
-                    const { displayName, getOptionLabel } = attribute && attribute.id
-                      ? getTranslatedAttribute(attribute as any, locale)
-                      : {
-                          displayName: `Attribute ${id}`,
-                          getOptionLabel: (v: string) => v,
-                        };
+                    const { displayName, getOptionLabel } =
+                      attribute && attribute.id
+                        ? getTranslatedAttribute(attribute as any, locale)
+                        : {
+                            displayName: `Attribute ${id}`,
+                            getOptionLabel: (v: string) => v,
+                          };
 
                     return (
                       <div

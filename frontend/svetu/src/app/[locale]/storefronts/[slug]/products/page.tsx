@@ -59,7 +59,7 @@ export default function ProductsPage({ params }: PageProps) {
       }
 
       const queryString = params.toString();
-      const url = `/api/v1/storefronts/${slug}/products${queryString ? `?${queryString}` : ''}`;
+      const url = `/api/v1/storefronts/slug/${slug}/products${queryString ? `?${queryString}` : ''}`;
       const response = await apiClient.get(url);
       if (response.data) {
         setProducts(response.data);
@@ -82,7 +82,7 @@ export default function ProductsPage({ params }: PageProps) {
 
     try {
       await apiClient.delete(
-        `/api/v1/storefronts/${slug}/products/${productToDelete.id}`
+        `/api/v1/storefronts/slug/${slug}/products/${productToDelete.id}`
       );
       toast.success(t('storefronts.products.productDeleted'));
       setDeleteModalOpen(false);

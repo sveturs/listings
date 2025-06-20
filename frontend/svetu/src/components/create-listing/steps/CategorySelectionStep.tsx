@@ -122,7 +122,10 @@ export default function CategorySelectionStep({
               {categories
                 .slice(0, 6) // Показываем первые 6 категорий как популярные
                 .map((category) => (
-                  <label key={category.id} className="cursor-pointer">
+                  <label
+                    key={`popular-${category.id}`}
+                    className="cursor-pointer"
+                  >
                     <input
                       type="radio"
                       name="category"
@@ -183,7 +186,7 @@ export default function CategorySelectionStep({
               {categories
                 .slice(6) // Остальные категории
                 .map((category) => (
-                  <label key={category.id} className="cursor-pointer">
+                  <label key={`all-${category.id}`} className="cursor-pointer">
                     <input
                       type="radio"
                       name="category"

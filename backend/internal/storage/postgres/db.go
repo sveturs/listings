@@ -1314,22 +1314,26 @@ func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]model
 
 func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
 	var s models.Storefront
+	var theme, settings, seoMeta, aiConfig json.RawMessage
+	
 	err := db.pool.QueryRow(ctx, `
-		SELECT id, user_id, slug, name, description, logo_url, banner_url, theme,
+		SELECT id, user_id, slug, name, description, logo_url, banner_url, 
+			COALESCE(theme, '{}')::jsonb,
 			phone, email, website, address, city, postal_code, country, latitude, longitude,
-			settings, seo_meta, is_active, is_verified, verification_date, rating, reviews_count,
+			COALESCE(settings, '{}')::jsonb, COALESCE(seo_meta, '{}')::jsonb, 
+			is_active, is_verified, verification_date, rating, reviews_count,
 			products_count, sales_count, views_count, subscription_plan, subscription_expires_at,
-			commission_rate, ai_agent_enabled, ai_agent_config, live_shopping_enabled,
-			group_buying_enabled, created_at, updated_at
+			commission_rate, ai_agent_enabled, COALESCE(ai_agent_config, '{}')::jsonb, 
+			live_shopping_enabled, group_buying_enabled, created_at, updated_at
 		FROM storefronts
 		WHERE id = $1
 	`, id).Scan(
-		&s.ID, &s.UserID, &s.Slug, &s.Name, &s.Description, &s.LogoURL, &s.BannerURL, &s.Theme,
+		&s.ID, &s.UserID, &s.Slug, &s.Name, &s.Description, &s.LogoURL, &s.BannerURL, &theme,
 		&s.Phone, &s.Email, &s.Website, &s.Address, &s.City, &s.PostalCode, &s.Country,
-		&s.Latitude, &s.Longitude, &s.Settings, &s.SEOMeta, &s.IsActive, &s.IsVerified,
+		&s.Latitude, &s.Longitude, &settings, &seoMeta, &s.IsActive, &s.IsVerified,
 		&s.VerificationDate, &s.Rating, &s.ReviewsCount, &s.ProductsCount, &s.SalesCount,
 		&s.ViewsCount, &s.SubscriptionPlan, &s.SubscriptionExpiresAt, &s.CommissionRate,
-		&s.AIAgentEnabled, &s.AIAgentConfig, &s.LiveShoppingEnabled, &s.GroupBuyingEnabled,
+		&s.AIAgentEnabled, &aiConfig, &s.LiveShoppingEnabled, &s.GroupBuyingEnabled,
 		&s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
@@ -1338,6 +1342,21 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 		}
 		return nil, err
 	}
+	
+	// Конвертируем json.RawMessage в JSONB
+	if theme != nil {
+		json.Unmarshal(theme, &s.Theme)
+	}
+	if settings != nil {
+		json.Unmarshal(settings, &s.Settings)
+	}
+	if seoMeta != nil {
+		json.Unmarshal(seoMeta, &s.SEOMeta)
+	}
+	if aiConfig != nil {
+		json.Unmarshal(aiConfig, &s.AIAgentConfig)
+	}
+	
 	return &s, nil
 }
 
