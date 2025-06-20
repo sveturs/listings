@@ -3812,6 +3812,58 @@
                 }
             }
         },
+        "/api/v1/analytics/event": {
+            "post": {
+                "description": "Records an analytics event for a storefront",
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Record analytics event",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/internal_proj_analytics_handler.EventRequest"
+                            }
+                        }
+                    },
+                    "description": "Event data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Event recorded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "description": "Authenticates user and returns JWT access token",
@@ -13338,6 +13390,627 @@
                 }
             }
         },
+        "/api/v1/storefronts/{slug}/products": {
+            "get": {
+                "description": "Returns paginated list of products for a storefront",
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Get storefront products",
+                "parameters": [
+                    {
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Filter by category ID",
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Search in name and description",
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Minimum price filter",
+                        "name": "min_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Maximum price filter",
+                        "name": "max_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Stock status filter (in_stock, low_stock, out_of_stock)",
+                        "name": "stock_status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Filter by active status",
+                        "name": "is_active",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "description": "Filter by SKU",
+                        "name": "sku",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Filter by barcode",
+                        "name": "barcode",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Sort by field (name, price, created_at, stock_quantity)",
+                        "name": "sort_by",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Sort order (asc, desc)",
+                        "name": "sort_order",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Number of items per page (default: 20)",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of products",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontProduct"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new product for the storefront",
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Create a storefront product",
+                "parameters": [
+                    {
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.CreateProductRequest"
+                            }
+                        }
+                    },
+                    "description": "Product data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created product",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontProduct"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{slug}/products/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns statistics about storefront products",
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Get product statistics",
+                "parameters": [
+                    {
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.ProductStats"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{slug}/products/{id}": {
+            "get": {
+                "description": "Returns details of a specific product",
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Get a storefront product",
+                "parameters": [
+                    {
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontProduct"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates product details",
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Update a storefront product",
+                "parameters": [
+                    {
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.UpdateProductRequest"
+                            }
+                        }
+                    },
+                    "description": "Product update data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Product updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently deletes a product",
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Delete a storefront product",
+                "parameters": [
+                    {
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{slug}/products/{id}/inventory": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Records inventory movement and updates stock",
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Update product inventory",
+                "parameters": [
+                    {
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.UpdateInventoryRequest"
+                            }
+                        }
+                    },
+                    "description": "Inventory update data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Inventory updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/translation/limits": {
             "get": {
                 "description": "Returns current usage limits and statistics for the translation service",
@@ -14072,6 +14745,37 @@
             }
         },
         "schemas": {
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "example": 400
+                    },
+                    "error": {
+                        "type": "string",
+                        "example": "Invalid request"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Validation failed"
+                    }
+                }
+            },
+            "SuccessResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {},
+                    "message": {
+                        "type": "string",
+                        "example": "Operation completed successfully"
+                    },
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                }
+            },
             "backend_internal_domain_models.AddContactRequest": {
                 "type": "object",
                 "required": [
@@ -14727,6 +15431,54 @@
                     },
                     "receiver_id": {
                         "type": "integer"
+                    }
+                }
+            },
+            "backend_internal_domain_models.CreateProductRequest": {
+                "type": "object",
+                "required": [
+                    "category_id",
+                    "currency",
+                    "description",
+                    "name",
+                    "price"
+                ],
+                "properties": {
+                    "attributes": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "barcode": {
+                        "type": "string"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 10
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "minLength": 3
+                    },
+                    "price": {
+                        "type": "number",
+                        "minimum": 0
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "stock_quantity": {
+                        "type": "integer",
+                        "minimum": 0
                     }
                 }
             },
@@ -15766,6 +16518,29 @@
                     }
                 }
             },
+            "backend_internal_domain_models.ProductStats": {
+                "type": "object",
+                "properties": {
+                    "active_products": {
+                        "type": "integer"
+                    },
+                    "low_stock": {
+                        "type": "integer"
+                    },
+                    "out_of_stock": {
+                        "type": "integer"
+                    },
+                    "total_products": {
+                        "type": "integer"
+                    },
+                    "total_sold": {
+                        "type": "integer"
+                    },
+                    "total_value": {
+                        "type": "number"
+                    }
+                }
+            },
             "backend_internal_domain_models.RatingBreakdown": {
                 "type": "object",
                 "properties": {
@@ -16470,6 +17245,144 @@
                     }
                 }
             },
+            "backend_internal_domain_models.StorefrontProduct": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "barcode": {
+                        "type": "string"
+                    },
+                    "category": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.MarketplaceCategory"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "images": {
+                        "description": "Relations",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontProductImage"
+                        }
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "number"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "sold_count": {
+                        "type": "integer"
+                    },
+                    "stock_quantity": {
+                        "type": "integer"
+                    },
+                    "stock_status": {
+                        "description": "in_stock, low_stock, out_of_stock",
+                        "type": "string"
+                    },
+                    "storefront_id": {
+                        "type": "integer"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "variants": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontProductVariant"
+                        }
+                    },
+                    "view_count": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "backend_internal_domain_models.StorefrontProductImage": {
+                "type": "object",
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "display_order": {
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "image_url": {
+                        "type": "string"
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "storefront_product_id": {
+                        "type": "integer"
+                    },
+                    "thumbnail_url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "backend_internal_domain_models.StorefrontProductVariant": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "description": "e.g., {\"color\": \"red\", \"size\": \"L\"}",
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "description": "e.g., \"Red - Large\"",
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "number"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "stock_quantity": {
+                        "type": "integer"
+                    },
+                    "storefront_product_id": {
+                        "type": "integer"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                }
+            },
             "backend_internal_domain_models.StorefrontRatingSummary": {
                 "type": "object",
                 "properties": {
@@ -16730,6 +17643,33 @@
                     }
                 }
             },
+            "backend_internal_domain_models.UpdateInventoryRequest": {
+                "type": "object",
+                "required": [
+                    "quantity",
+                    "reason",
+                    "type"
+                ],
+                "properties": {
+                    "notes": {
+                        "type": "string"
+                    },
+                    "quantity": {
+                        "type": "integer"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "in",
+                            "out",
+                            "adjustment"
+                        ]
+                    }
+                }
+            },
             "backend_internal_domain_models.UpdatePrivacySettingsRequest": {
                 "type": "object",
                 "properties": {
@@ -16738,6 +17678,44 @@
                     },
                     "allow_messages_from_contacts_only": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "backend_internal_domain_models.UpdateProductRequest": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "barcode": {
+                        "type": "string"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 10
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "minLength": 3
+                    },
+                    "price": {
+                        "type": "number",
+                        "minimum": 0
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "stock_quantity": {
+                        "type": "integer",
+                        "minimum": 0
                     }
                 }
             },
@@ -17198,6 +18176,41 @@
                     "success": {
                         "type": "boolean",
                         "example": true
+                    }
+                }
+            },
+            "internal_proj_analytics_handler.EventRequest": {
+                "type": "object",
+                "required": [
+                    "event_type",
+                    "session_id",
+                    "storefront_id"
+                ],
+                "properties": {
+                    "event_data": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "event_type": {
+                        "type": "string",
+                        "enum": [
+                            "page_view",
+                            "product_view",
+                            "add_to_cart",
+                            "checkout",
+                            "order"
+                        ]
+                    },
+                    "session_id": {
+                        "type": "string"
+                    },
+                    "storefront_id": {
+                        "type": "integer"
+                    },
+                    "user_id": {
+                        "type": "integer"
                     }
                 }
             },

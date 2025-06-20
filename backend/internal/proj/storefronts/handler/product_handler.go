@@ -1,0 +1,413 @@
+package handler
+
+import (
+	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+	"backend/internal/domain/models"
+	"backend/internal/proj/storefronts/service"
+)
+
+// ProductHandler handles HTTP requests for storefront products
+type ProductHandler struct {
+	productService *service.ProductService
+}
+
+// NewProductHandler creates a new product handler
+func NewProductHandler(productService *service.ProductService) *ProductHandler {
+	return &ProductHandler{
+		productService: productService,
+	}
+}
+
+// GetProducts retrieves products for a storefront
+// @Summary Get storefront products
+// @Description Returns paginated list of products for a storefront
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param slug path string true "Storefront slug"
+// @Param category_id query int false "Filter by category ID"
+// @Param search query string false "Search in name and description"
+// @Param min_price query number false "Minimum price filter"
+// @Param max_price query number false "Maximum price filter"
+// @Param stock_status query string false "Stock status filter (in_stock, low_stock, out_of_stock)"
+// @Param is_active query bool false "Filter by active status"
+// @Param sku query string false "Filter by SKU"
+// @Param barcode query string false "Filter by barcode"
+// @Param sort_by query string false "Sort by field (name, price, created_at, stock_quantity)"
+// @Param sort_order query string false "Sort order (asc, desc)"
+// @Param limit query int false "Number of items per page (default: 20)"
+// @Param offset query int false "Number of items to skip"
+// @Success 200 {object} []models.StorefrontProduct "List of products"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/storefronts/{slug}/products [get]
+func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	filter := models.ProductFilter{
+		StorefrontID: storefrontID,
+		Limit:        20, // default limit
+	}
+
+	// Parse query parameters
+	if categoryID := c.QueryInt("category_id"); categoryID > 0 {
+		filter.CategoryID = &categoryID
+	}
+
+	if search := c.Query("search"); search != "" {
+		filter.Search = &search
+	}
+
+	if minPrice, err := strconv.ParseFloat(c.Query("min_price"), 64); err == nil {
+		filter.MinPrice = &minPrice
+	}
+
+	if maxPrice, err := strconv.ParseFloat(c.Query("max_price"), 64); err == nil {
+		filter.MaxPrice = &maxPrice
+	}
+
+	if stockStatus := c.Query("stock_status"); stockStatus != "" {
+		filter.StockStatus = &stockStatus
+	}
+
+	if isActive := c.Query("is_active"); isActive != "" {
+		active := isActive == "true"
+		filter.IsActive = &active
+	}
+
+	if sku := c.Query("sku"); sku != "" {
+		filter.SKU = &sku
+	}
+
+	if barcode := c.Query("barcode"); barcode != "" {
+		filter.Barcode = &barcode
+	}
+
+	filter.SortBy = c.Query("sort_by", "created_at")
+	filter.SortOrder = c.Query("sort_order", "desc")
+
+	if limit := c.QueryInt("limit"); limit > 0 {
+		filter.Limit = limit
+	}
+
+	filter.Offset = c.QueryInt("offset")
+
+	products, err := h.productService.GetProducts(c.Context(), filter)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get products",
+		})
+	}
+
+	return c.JSON(products)
+}
+
+// GetProduct retrieves a single product
+// @Summary Get a storefront product
+// @Description Returns details of a specific product
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param slug path string true "Storefront slug"
+// @Param id path int true "Product ID"
+// @Success 200 {object} models.StorefrontProduct "Product details"
+// @Failure 404 {object} models.ErrorResponse "Product not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/storefronts/{slug}/products/{id} [get]
+func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	productID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	product, err := h.productService.GetProduct(c.Context(), storefrontID, productID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get product",
+		})
+	}
+
+	if product == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Product not found",
+		})
+	}
+
+	return c.JSON(product)
+}
+
+// CreateProduct creates a new product
+// @Summary Create a storefront product
+// @Description Creates a new product for the storefront
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param slug path string true "Storefront slug"
+// @Param product body models.CreateProductRequest true "Product data"
+// @Success 201 {object} models.StorefrontProduct "Created product"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{slug}/products [post]
+func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	var req models.CreateProductRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	product, err := h.productService.CreateProduct(c.Context(), storefrontID, userID, &req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(product)
+}
+
+// UpdateProduct updates an existing product
+// @Summary Update a storefront product
+// @Description Updates product details
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param slug path string true "Storefront slug"
+// @Param id path int true "Product ID"
+// @Param product body models.UpdateProductRequest true "Product update data"
+// @Success 200 {object} models.SuccessResponse "Product updated successfully"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 404 {object} models.ErrorResponse "Product not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{slug}/products/{id} [put]
+func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	productID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	var req models.UpdateProductRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	if err := h.productService.UpdateProduct(c.Context(), storefrontID, productID, userID, &req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Product updated successfully",
+	})
+}
+
+// DeleteProduct deletes a product
+// @Summary Delete a storefront product
+// @Description Permanently deletes a product
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param slug path string true "Storefront slug"
+// @Param id path int true "Product ID"
+// @Success 200 {object} models.SuccessResponse "Product deleted successfully"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 404 {object} models.ErrorResponse "Product not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{slug}/products/{id} [delete]
+func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	productID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	if err := h.productService.DeleteProduct(c.Context(), storefrontID, productID, userID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Product deleted successfully",
+	})
+}
+
+// UpdateInventory updates product stock
+// @Summary Update product inventory
+// @Description Records inventory movement and updates stock
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param slug path string true "Storefront slug"
+// @Param id path int true "Product ID"
+// @Param inventory body models.UpdateInventoryRequest true "Inventory update data"
+// @Success 200 {object} models.SuccessResponse "Inventory updated successfully"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 404 {object} models.ErrorResponse "Product not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{slug}/products/{id}/inventory [post]
+func (h *ProductHandler) UpdateInventory(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	productID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	var req models.UpdateInventoryRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	if err := h.productService.UpdateInventory(c.Context(), storefrontID, productID, userID, &req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Inventory updated successfully",
+	})
+}
+
+// GetProductStats returns product statistics
+// @Summary Get product statistics
+// @Description Returns statistics about storefront products
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param slug path string true "Storefront slug"
+// @Success 200 {object} models.ProductStats "Product statistics"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{slug}/products/stats [get]
+func (h *ProductHandler) GetProductStats(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	stats, err := h.productService.GetProductStats(c.Context(), storefrontID, userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(stats)
+}
+
+// Helper functions to get context values
+func getStorefrontIDFromContext(c *fiber.Ctx) (int, error) {
+	storefrontID, ok := c.Locals("storefrontID").(int)
+	if !ok {
+		return 0, fiber.NewError(fiber.StatusBadRequest, "storefront ID not found in context")
+	}
+	return storefrontID, nil
+}
+
+func getUserIDFromContext(c *fiber.Ctx) (int, error) {
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		return 0, fiber.NewError(fiber.StatusUnauthorized, "user ID not found in context")
+	}
+	return userID, nil
+}

@@ -670,7 +670,7 @@ SELECT
                 'slug', c2.slug,
                 'icon', c2.icon,
                 'parent_id', c2.parent_id,
-                'created_at', to_char(c2.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+                'created_at', c2.created_at,
                 'level', c2.level,
                 'path', array_to_string(c2.category_path, ','),
                 'listing_count', c2.listing_count,
@@ -702,12 +702,13 @@ ORDER BY c1.name ASC;
 		var node models.CategoryTreeNode
 		var translationsJson, childrenJson []byte
 		var pathStr string
+		var icon sql.NullString
 
 		err := rows.Scan(
 			&node.ID,
 			&node.Name,
 			&node.Slug,
-			&node.Icon,
+			&icon,
 			&node.ParentID,
 			&node.CreatedAt,
 			&node.Level,
@@ -720,6 +721,11 @@ ORDER BY c1.name ASC;
 		if err != nil {
 			log.Printf("Error scanning row: %v", err)
 			return nil, fmt.Errorf("error scanning category: %w", err)
+		}
+
+		// Обработка NULL icon
+		if icon.Valid {
+			node.Icon = icon.String
 		}
 
 		// Добавляем логирование переводов и детей

@@ -13,8 +13,11 @@ import (
 
 // Module представляет модуль витрин
 type Module struct {
-	handler *handler.StorefrontHandler
-	service service.StorefrontService
+	handler        *handler.StorefrontHandler
+	productHandler *handler.ProductHandler
+	service        service.StorefrontService
+	productService *service.ProductService
+	db             *postgres.Database
 }
 
 // NewModule создает новый модуль витрин
@@ -24,19 +27,25 @@ func NewModule(db *postgres.Database, fileRepo filestorage.FileStorageInterface)
 	
 	// Создаем сервисы
 	storefrontService := service.NewStorefrontService(repo, fileRepo)
+	productService := service.NewProductService(db)
 	
-	// Создаем handler
+	// Создаем handlers
 	h := handler.NewStorefrontHandler(storefrontService)
+	productHandler := handler.NewProductHandler(productService)
 	
 	return &Module{
-		handler: h,
-		service: storefrontService,
+		handler:        h,
+		productHandler: productHandler,
+		service:        storefrontService,
+		productService: productService,
+		db:             db,
 	}
 }
 
 // RegisterRoutes регистрирует маршруты модуля
 func (m *Module) RegisterRoutes(app *fiber.App, authMiddleware *middleware.Middleware) error {
 	routes.RegisterStorefrontRoutes(app, m.handler, authMiddleware)
+	routes.RegisterProductRoutes(app, m.productHandler, authMiddleware, m.db)
 	routes.RegisterStorefrontWebhooks(app)
 	return nil
 }

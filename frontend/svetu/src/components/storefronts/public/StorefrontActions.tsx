@@ -21,7 +21,7 @@ export default function StorefrontActions({ storefront, isOwner }: StorefrontAct
 
   const handleContact = () => {
     if (!user) {
-      router.push('/');
+      router.push(`/${locale}/`);
       return;
     }
     
@@ -30,7 +30,7 @@ export default function StorefrontActions({ storefront, isOwner }: StorefrontAct
 
   const handleFollow = async () => {
     if (!user) {
-      router.push('/');
+      router.push(`/${locale}/`);
       return;
     }
     

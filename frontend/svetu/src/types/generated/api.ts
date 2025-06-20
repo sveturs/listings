@@ -3059,6 +3059,68 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/analytics/event': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Record analytics event
+     * @description Records an analytics event for a storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Event data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_analytics_handler.EventRequest'];
+        };
+      };
+      responses: {
+        /** @description Event recorded */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/auth/login': {
     parameters: {
       query?: never;
@@ -10814,6 +10876,489 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/{slug}/products': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront products
+     * @description Returns paginated list of products for a storefront
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Filter by category ID */
+          category_id?: number;
+          /** @description Search in name and description */
+          search?: string;
+          /** @description Minimum price filter */
+          min_price?: number;
+          /** @description Maximum price filter */
+          max_price?: number;
+          /** @description Stock status filter (in_stock, low_stock, out_of_stock) */
+          stock_status?: string;
+          /** @description Filter by active status */
+          is_active?: boolean;
+          /** @description Filter by SKU */
+          sku?: string;
+          /** @description Filter by barcode */
+          barcode?: string;
+          /** @description Sort by field (name, price, created_at, stock_quantity) */
+          sort_by?: string;
+          /** @description Sort order (asc, desc) */
+          sort_order?: string;
+          /** @description Number of items per page (default: 20) */
+          limit?: number;
+          /** @description Number of items to skip */
+          offset?: number;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of products */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.StorefrontProduct'][];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create a storefront product
+     * @description Creates a new product for the storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Product data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CreateProductRequest'];
+        };
+      };
+      responses: {
+        /** @description Created product */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{slug}/products/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a storefront product
+     * @description Returns details of a specific product
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    /**
+     * Update a storefront product
+     * @description Updates product details
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Product update data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.UpdateProductRequest'];
+        };
+      };
+      responses: {
+        /** @description Product updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Delete a storefront product
+     * @description Permanently deletes a product
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product deleted successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{slug}/products/{id}/inventory': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Update product inventory
+     * @description Records inventory movement and updates stock
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Inventory update data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.UpdateInventoryRequest'];
+        };
+      };
+      responses: {
+        /** @description Inventory updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{slug}/products/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get product statistics
+     * @description Returns statistics about storefront products
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.ProductStats'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts/building': {
     parameters: {
       query?: never;
@@ -11899,6 +12444,21 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    ErrorResponse: {
+      /** @example 400 */
+      code?: number;
+      /** @example Invalid request */
+      error?: string;
+      /** @example Validation failed */
+      message?: string;
+    };
+    SuccessResponse: {
+      data?: unknown;
+      /** @example Operation completed successfully */
+      message?: string;
+      /** @example true */
+      success?: boolean;
+    };
     'backend_internal_domain_models.AddContactRequest': {
       added_from_chat_id?: number;
       contact_user_id: number;
@@ -12118,6 +12678,20 @@ export interface components {
       content: string;
       listing_id?: number;
       receiver_id: number;
+    };
+    'backend_internal_domain_models.CreateProductRequest': {
+      attributes?: {
+        [key: string]: unknown;
+      };
+      barcode?: string;
+      category_id: number;
+      currency: string;
+      description: string;
+      is_active?: boolean;
+      name: string;
+      price: number;
+      sku?: string;
+      stock_quantity?: number;
     };
     'backend_internal_domain_models.CreateReviewConfirmationRequest': {
       notes?: string;
@@ -12475,6 +13049,14 @@ export interface components {
       listing_id?: number;
       price?: number;
     };
+    'backend_internal_domain_models.ProductStats': {
+      active_products?: number;
+      low_stock?: number;
+      out_of_stock?: number;
+      total_products?: number;
+      total_sold?: number;
+      total_value?: number;
+    };
     'backend_internal_domain_models.RatingBreakdown': {
       /** @description Прямые отзывы */
       direct?: components['schemas']['backend_internal_domain_models.BreakdownItem'];
@@ -12723,6 +13305,57 @@ export interface components {
       /** @description Комиссии и лимиты */
       transaction_fee?: number;
     };
+    'backend_internal_domain_models.StorefrontProduct': {
+      attributes?: {
+        [key: string]: unknown;
+      };
+      barcode?: string;
+      category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+      category_id?: number;
+      created_at?: string;
+      currency?: string;
+      description?: string;
+      id?: number;
+      /** @description Relations */
+      images?: components['schemas']['backend_internal_domain_models.StorefrontProductImage'][];
+      is_active?: boolean;
+      name?: string;
+      price?: number;
+      sku?: string;
+      sold_count?: number;
+      stock_quantity?: number;
+      /** @description in_stock, low_stock, out_of_stock */
+      stock_status?: string;
+      storefront_id?: number;
+      updated_at?: string;
+      variants?: components['schemas']['backend_internal_domain_models.StorefrontProductVariant'][];
+      view_count?: number;
+    };
+    'backend_internal_domain_models.StorefrontProductImage': {
+      created_at?: string;
+      display_order?: number;
+      id?: number;
+      image_url?: string;
+      is_default?: boolean;
+      storefront_product_id?: number;
+      thumbnail_url?: string;
+    };
+    'backend_internal_domain_models.StorefrontProductVariant': {
+      /** @description e.g., {"color": "red", "size": "L"} */
+      attributes?: {
+        [key: string]: unknown;
+      };
+      created_at?: string;
+      id?: number;
+      is_active?: boolean;
+      /** @description e.g., "Red - Large" */
+      name?: string;
+      price?: number;
+      sku?: string;
+      stock_quantity?: number;
+      storefront_product_id?: number;
+      updated_at?: string;
+    };
     'backend_internal_domain_models.StorefrontRatingSummary': {
       average_rating?: number;
       name?: string;
@@ -12815,9 +13448,29 @@ export interface components {
       styles?: string;
       template_code?: string;
     };
+    'backend_internal_domain_models.UpdateInventoryRequest': {
+      notes?: string;
+      quantity: number;
+      reason: string;
+      /** @enum {string} */
+      type: 'in' | 'out' | 'adjustment';
+    };
     'backend_internal_domain_models.UpdatePrivacySettingsRequest': {
       allow_contact_requests?: boolean;
       allow_messages_from_contacts_only?: boolean;
+    };
+    'backend_internal_domain_models.UpdateProductRequest': {
+      attributes?: {
+        [key: string]: unknown;
+      };
+      barcode?: string;
+      category_id?: number;
+      description?: string;
+      is_active?: boolean;
+      name?: string;
+      price?: number;
+      sku?: string;
+      stock_quantity?: number;
     };
     'backend_internal_domain_models.User': {
       created_at?: string;
@@ -12993,6 +13646,19 @@ export interface components {
       data?: unknown;
       /** @example true */
       success?: boolean;
+    };
+    'internal_proj_analytics_handler.EventRequest': {
+      event_data?: number[];
+      /** @enum {string} */
+      event_type:
+        | 'page_view'
+        | 'product_view'
+        | 'add_to_cart'
+        | 'checkout'
+        | 'order';
+      session_id: string;
+      storefront_id: number;
+      user_id?: number;
     };
     'internal_proj_balance_handler.DepositRequest': {
       /** @example 1000.5 */
