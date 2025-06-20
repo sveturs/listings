@@ -9,6 +9,7 @@ import { storefrontApi } from '@/services/storefrontApi';
 import type { Storefront } from '@/types/storefront';
 import { ReviewsSection } from '@/components/reviews';
 import { ImageGallery } from '@/components/reviews/ImageGallery';
+import { usePageViewTracking } from '@/hooks/useAnalytics';
 import StorefrontHeader from '@/components/storefronts/public/StorefrontHeader';
 import StorefrontInfo from '@/components/storefronts/public/StorefrontInfo';
 import StorefrontActions from '@/components/storefronts/public/StorefrontActions';
@@ -34,6 +35,9 @@ export default function StorefrontPage({ params }: Props) {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
+
+  // Отслеживание просмотра публичной страницы витрины
+  usePageViewTracking(storefront?.id, 'public');
 
   const fetchStorefront = useCallback(async () => {
     try {

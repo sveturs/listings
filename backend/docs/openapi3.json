@@ -12351,7 +12351,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns analytics data for specified period",
+                "description": "Returns analytics data for a storefront",
                 "tags": [
                     "storefronts"
                 ],
@@ -12367,19 +12367,17 @@
                         }
                     },
                     {
-                        "description": "Start date (YYYY-MM-DD)",
+                        "description": "Start date (RFC3339 format)",
                         "name": "from",
                         "in": "query",
-                        "required": true,
                         "schema": {
                             "type": "string"
                         }
                     },
                     {
-                        "description": "End date (YYYY-MM-DD)",
+                        "description": "End date (RFC3339 format)",
                         "name": "to",
                         "in": "query",
-                        "required": true,
                         "schema": {
                             "type": "string"
                         }
@@ -12391,10 +12389,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontAnalytics"
-                                    }
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontAnalytics"
                                 }
                             }
                         }
@@ -12421,6 +12416,16 @@
                     },
                     "403": {
                         "description": "Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront not found",
                         "content": {
                             "application/json": {
                                 "schema": {

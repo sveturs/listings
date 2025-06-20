@@ -28,12 +28,18 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
         offset: (currentPage - 1) * 12
       });
       
-      setProducts(response.data || []);
-      if (response.pagination) {
-        setTotalPages(Math.ceil(response.pagination.total / response.pagination.limit));
+      // Исправляем структуру ответа: API возвращает { data: { data: [...], success: true, meta: {...} } }
+      const actualData = (response as any).data?.data || response.data || [];
+      setProducts(actualData);
+      
+      // Проверяем пагинацию в правильном месте
+      const pagination = (response as any).data?.meta || (response as any).pagination;
+      if (pagination && pagination.total && pagination.limit) {
+        setTotalPages(Math.ceil(pagination.total / pagination.limit));
       }
     } catch (error) {
       console.error('Error fetching products:', error);
+      setProducts([]); // Устанавливаем пустой массив при ошибке
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +103,7 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {products.map((product) => (
+          {Array.isArray(products) ? products.map((product) => (
             <Link 
               key={product.id} 
               href={`/${locale}/marketplace/${product.id}`}
@@ -133,7 +139,11 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
                 </p>
               </div>
             </Link>
-          ))}
+          )) : (
+            <div className="col-span-full text-center text-base-content/60">
+              Нет данных о продуктах
+            </div>
+          )}
         </div>
 
         {totalPages > 1 && (

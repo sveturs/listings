@@ -6925,7 +6925,7 @@ paths:
         - reviews
   "/api/v1/storefronts/{id}/analytics":
     get:
-      description: Returns analytics data for specified period
+      description: Returns analytics data for a storefront
       parameters:
         - description: Storefront ID
           in: path
@@ -6933,16 +6933,14 @@ paths:
           required: true
           schema:
             type: integer
-        - description: Start date (YYYY-MM-DD)
+        - description: Start date (RFC3339 format)
           in: query
           name: from
-          required: true
           schema:
             type: string
-        - description: End date (YYYY-MM-DD)
+        - description: End date (RFC3339 format)
           in: query
           name: to
-          required: true
           schema:
             type: string
       responses:
@@ -6951,9 +6949,7 @@ paths:
           content:
             application/json:
               schema:
-                items:
-                  $ref: "#/components/schemas/backend_internal_domain_models.StorefrontAnalytics"
-                type: array
+                $ref: "#/components/schemas/backend_internal_domain_models.StorefrontAnalytics"
         "400":
           description: Bad request
           content:
@@ -6968,6 +6964,12 @@ paths:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Storefront not found
           content:
             application/json:
               schema:

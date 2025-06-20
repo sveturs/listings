@@ -56,6 +56,7 @@ type StorefrontRepository interface {
 	RecordView(ctx context.Context, storefrontID int) error
 	RecordAnalytics(ctx context.Context, analytics *models.StorefrontAnalytics) error
 	GetAnalytics(ctx context.Context, storefrontID int, from, to time.Time) ([]*models.StorefrontAnalytics, error)
+	RecordEvent(ctx context.Context, event *StorefrontEvent) error
 	
 	// Проверки прав
 	IsOwner(ctx context.Context, storefrontID, userID int) (bool, error)
@@ -714,10 +715,3 @@ func boolPtr(b bool) *bool {
 	return &b
 }
 
-// Дополнительные методы будут реализованы по мере необходимости:
-// - SetWorkingHours, GetWorkingHours, IsOpenNow
-// - SetPaymentMethods, GetPaymentMethods
-// - SetDeliveryOptions, GetDeliveryOptions
-// - AddStaff, UpdateStaff, RemoveStaff, GetStaff
-// - RecordView, RecordAnalytics, GetAnalytics
-// - GetClusters

@@ -56,7 +56,7 @@ func RegisterStorefrontRoutes(app *fiber.App, h *handler.StorefrontHandler, auth
 		protected.Delete("/:id/staff/:userId", h.RemoveStaff)
 		
 		// Аналитика (просмотр)
-		protected.Get("/:id/analytics", h.GetAnalytics)
+		protected.Get("/:id/analytics", h.GetStorefrontAnalytics)
 	}
 }
 

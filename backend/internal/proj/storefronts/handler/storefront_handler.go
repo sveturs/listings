@@ -854,3 +854,70 @@ func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 		"banner_url": url,
 	})
 }
+
+// GetStorefrontAnalytics возвращает аналитику витрины
+// @Summary Get storefront analytics
+// @Description Returns analytics data for a storefront
+// @Tags storefronts
+// @Accept json
+// @Produce json
+// @Param id path int true "Storefront ID"
+// @Param from query string false "Start date (RFC3339 format)"
+// @Param to query string false "End date (RFC3339 format)"
+// @Success 200 {object} models.StorefrontAnalytics "Analytics data"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{id}/analytics [get]
+func (h *StorefrontHandler) GetStorefrontAnalytics(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+	
+	storefrontID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
+	}
+
+	// Парсим даты из query параметров
+	fromStr := c.Query("from")
+	toStr := c.Query("to")
+	
+	var from, to time.Time
+	now := time.Now()
+	
+	if fromStr != "" {
+		from, err = time.Parse(time.RFC3339, fromStr)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_from_date")
+		}
+	} else {
+		// По умолчанию - последние 30 дней
+		from = now.AddDate(0, 0, -30)
+	}
+	
+	if toStr != "" {
+		to, err = time.Parse(time.RFC3339, toStr)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_to_date")
+		}
+	} else {
+		to = now
+	}
+
+	analytics, err := h.service.GetAnalytics(c.Context(), userID, storefrontID, from, to)
+	if err != nil {
+		switch err {
+		case service.ErrStorefrontNotFound:
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
+		case service.ErrInsufficientPermissions:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
+		default:
+			logger.Error().Err(err).Int("storefront_id", storefrontID).Msg("Failed to get storefront analytics")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_get_analytics")
+		}
+	}
+
+	return c.JSON(analytics)
+}

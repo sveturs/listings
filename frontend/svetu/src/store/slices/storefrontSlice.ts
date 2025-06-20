@@ -68,7 +68,7 @@ export interface StorefrontState {
   hasMore: boolean;
 
   // Дополнительные данные
-  analytics: StorefrontAnalytics | null;
+  analytics: StorefrontAnalytics[] | null;
   ratingSummary: StorefrontRatingSummary | null;
 
   // Настройки витрины
@@ -429,7 +429,7 @@ export const deleteStorefront = createAsyncThunk<
 
 // Получение аналитики витрины
 export const fetchStorefrontAnalytics = createAsyncThunk<
-  StorefrontAnalytics,
+  StorefrontAnalytics[],
   { id: number; from?: string; to?: string },
   { rejectValue: string }
 >(
@@ -687,7 +687,10 @@ const storefrontSlice = createSlice({
       })
       .addCase(fetchStorefrontAnalytics.fulfilled, (state, action) => {
         state.isLoadingAnalytics = false;
-        state.analytics = action.payload;
+        // API возвращает массив аналитики, берем последний элемент для совместимости
+        state.analytics = Array.isArray(action.payload)
+          ? action.payload
+          : [action.payload];
       })
       .addCase(fetchStorefrontAnalytics.rejected, (state, action) => {
         state.isLoadingAnalytics = false;

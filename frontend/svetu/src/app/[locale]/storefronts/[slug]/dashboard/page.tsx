@@ -1,67 +1,43 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useParams, useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import {
-  fetchStorefrontBySlug,
-  fetchStorefrontAnalytics,
-} from '@/store/slices/storefrontSlice';
+import { fetchStorefrontBySlug } from '@/store/slices/storefrontSlice';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import {
-  ChartBarIcon,
-  ShoppingBagIcon,
-  UserGroupIcon,
-  StarIcon,
-  CurrencyDollarIcon,
-  CalendarIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   ArrowLeftIcon,
+  ShoppingBagIcon,
+  BellIcon,
+  ChatBubbleLeftRightIcon,
+  Cog6ToothIcon,
+  PlusIcon,
+  TagIcon,
+  TruckIcon,
+  UsersIcon,
+  ClipboardDocumentListIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
-
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
 
 export default function StorefrontDashboardPage() {
   const t = useTranslations();
+  const locale = useLocale();
+  const router = useRouter();
   const params = useParams();
   const dispatch = useAppDispatch();
   const slug = params.slug as string;
+  const { user } = useAuth();
 
   const { currentStorefront, isLoading } = useAppSelector(
     (state) => state.storefronts
   );
 
-  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>(
-    'month'
-  );
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -69,32 +45,37 @@ export default function StorefrontDashboardPage() {
     }
   }, [dispatch, slug]);
 
+  // Проверка доступа
   useEffect(() => {
-    if (currentStorefront?.id) {
-      const endDate = new Date();
-      const startDate = new Date();
-
-      switch (timeRange) {
-        case 'week':
-          startDate.setDate(startDate.getDate() - 7);
-          break;
-        case 'month':
-          startDate.setMonth(startDate.getMonth() - 1);
-          break;
-        case 'year':
-          startDate.setFullYear(startDate.getFullYear() - 1);
-          break;
+    if (!isLoading && currentStorefront) {
+      if (!user) {
+        setAccessDenied(true);
+        router.push(`/${locale}/storefronts/${slug}`);
+        return;
       }
 
-      dispatch(
-        fetchStorefrontAnalytics({
-          id: currentStorefront.id,
-          from: startDate.toISOString(),
-          to: endDate.toISOString(),
-        })
-      );
+      if (currentStorefront.user_id !== user.id) {
+        setAccessDenied(true);
+        router.push(`/${locale}/storefronts/${slug}`);
+      }
     }
-  }, [dispatch, currentStorefront?.id, timeRange]);
+  }, [currentStorefront, user, isLoading, router, slug, locale]);
+
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-base-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold mb-2">
+            {t('common.accessDenied')}
+          </h1>
+          <p className="text-base-content/60">
+            {t('storefronts.dashboardAccessDenied')}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading || !currentStorefront) {
     return (
@@ -113,88 +94,6 @@ export default function StorefrontDashboardPage() {
     );
   }
 
-  // Mock data for charts (replace with real data from analytics)
-  const viewsData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [
-      {
-        label: t('storefronts.views'),
-        data: [65, 59, 80, 81, 56, 55, 40],
-        fill: true,
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-        tension: 0.4,
-      },
-    ],
-  };
-
-  const salesData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [
-      {
-        label: t('storefronts.sales'),
-        data: [12, 19, 3, 5, 2, 3, 7],
-        backgroundColor: 'rgba(99, 102, 241, 0.8)',
-        borderColor: 'rgb(99, 102, 241)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const categoryData = {
-    labels: ['Electronics', 'Clothing', 'Food', 'Books', 'Other'],
-    datasets: [
-      {
-        data: [300, 150, 100, 80, 70],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 206, 86, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)',
-        ],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
-  };
-
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'right' as const,
-      },
-    },
-  };
-
-  // Mock stats (replace with real data)
-  const stats = {
-    totalRevenue: 15234.56,
-    revenueChange: 12.5,
-    totalOrders: 234,
-    ordersChange: -5.2,
-    totalCustomers: 1234,
-    customersChange: 8.3,
-    avgOrderValue: 65.12,
-    avgOrderChange: 3.1,
-  };
-
   return (
     <div className="min-h-screen bg-base-200">
       {/* Header */}
@@ -211,269 +110,441 @@ export default function StorefrontDashboardPage() {
               <div>
                 <h1 className="text-2xl font-bold">{currentStorefront.name}</h1>
                 <p className="text-sm text-base-content/60">
-                  {t('storefronts.dashboardTitle')}
+                  {t('storefronts.managementDashboard')}
                 </p>
               </div>
             </div>
 
-            {/* Time Range Selector */}
-            <div className="btn-group">
-              <button
-                className={`btn btn-sm ${timeRange === 'week' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setTimeRange('week')}
+            <div className="flex items-center gap-2">
+              {/* Analytics Button */}
+              <Link
+                href={`/${locale}/storefronts/${currentStorefront.slug}/analytics`}
+                className="btn btn-outline btn-sm"
               >
-                {t('common.week')}
-              </button>
-              <button
-                className={`btn btn-sm ${timeRange === 'month' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setTimeRange('month')}
+                <ChartBarIcon className="w-4 h-4" />
+                {t('storefronts.viewAnalytics')}
+              </Link>
+
+              {/* Settings Button */}
+              <Link
+                href={`/${locale}/storefronts/${currentStorefront.slug}/settings`}
+                className="btn btn-ghost btn-sm btn-square"
               >
-                {t('common.month')}
-              </button>
-              <button
-                className={`btn btn-sm ${timeRange === 'year' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setTimeRange('year')}
-              >
-                {t('common.year')}
-              </button>
+                <Cog6ToothIcon className="w-5 h-5" />
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Revenue */}
-          <div className="card bg-base-100 shadow-md">
-            <div className="card-body">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-base-content/60">
-                    {t('storefronts.totalRevenue')}
-                  </p>
-                  <p className="text-2xl font-bold mt-1">
-                    ${stats.totalRevenue.toFixed(2)}
-                  </p>
-                  <div className="flex items-center gap-1 mt-2">
-                    {stats.revenueChange > 0 ? (
-                      <ArrowTrendingUpIcon className="w-4 h-4 text-success" />
-                    ) : (
-                      <ArrowTrendingDownIcon className="w-4 h-4 text-error" />
-                    )}
-                    <span
-                      className={`text-sm ${stats.revenueChange > 0 ? 'text-success' : 'text-error'}`}
-                    >
-                      {Math.abs(stats.revenueChange)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="p-3 bg-primary/10 rounded-xl">
-                  <CurrencyDollarIcon className="w-8 h-8 text-primary" />
-                </div>
-              </div>
+        {/* Quick Stats Bar */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="stat bg-base-100 rounded-lg shadow-sm">
+            <div className="stat-figure text-primary">
+              <ShoppingBagIcon className="w-8 h-8" />
+            </div>
+            <div className="stat-title">{t('storefronts.activeProducts')}</div>
+            <div className="stat-value text-primary">48</div>
+            <div className="stat-desc">
+              {t('storefronts.totalProducts', { count: 52 })}
             </div>
           </div>
 
-          {/* Total Orders */}
-          <div className="card bg-base-100 shadow-md">
-            <div className="card-body">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-base-content/60">
-                    {t('storefronts.totalOrders')}
-                  </p>
-                  <p className="text-2xl font-bold mt-1">{stats.totalOrders}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    {stats.ordersChange > 0 ? (
-                      <ArrowTrendingUpIcon className="w-4 h-4 text-success" />
-                    ) : (
-                      <ArrowTrendingDownIcon className="w-4 h-4 text-error" />
-                    )}
-                    <span
-                      className={`text-sm ${stats.ordersChange > 0 ? 'text-success' : 'text-error'}`}
-                    >
-                      {Math.abs(stats.ordersChange)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="p-3 bg-secondary/10 rounded-xl">
-                  <ShoppingBagIcon className="w-8 h-8 text-secondary" />
-                </div>
-              </div>
+          <div className="stat bg-base-100 rounded-lg shadow-sm">
+            <div className="stat-figure text-secondary">
+              <ClipboardDocumentListIcon className="w-8 h-8" />
             </div>
+            <div className="stat-title">{t('storefronts.pendingOrders')}</div>
+            <div className="stat-value text-secondary">12</div>
+            <div className="stat-desc">{t('storefronts.requiresAction')}</div>
           </div>
 
-          {/* Total Customers */}
-          <div className="card bg-base-100 shadow-md">
-            <div className="card-body">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-base-content/60">
-                    {t('storefronts.totalCustomers')}
-                  </p>
-                  <p className="text-2xl font-bold mt-1">
-                    {stats.totalCustomers}
-                  </p>
-                  <div className="flex items-center gap-1 mt-2">
-                    {stats.customersChange > 0 ? (
-                      <ArrowTrendingUpIcon className="w-4 h-4 text-success" />
-                    ) : (
-                      <ArrowTrendingDownIcon className="w-4 h-4 text-error" />
-                    )}
-                    <span
-                      className={`text-sm ${stats.customersChange > 0 ? 'text-success' : 'text-error'}`}
-                    >
-                      {Math.abs(stats.customersChange)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="p-3 bg-accent/10 rounded-xl">
-                  <UserGroupIcon className="w-8 h-8 text-accent" />
-                </div>
-              </div>
+          <div className="stat bg-base-100 rounded-lg shadow-sm">
+            <div className="stat-figure text-accent">
+              <ChatBubbleLeftRightIcon className="w-8 h-8" />
             </div>
+            <div className="stat-title">{t('storefronts.unreadMessages')}</div>
+            <div className="stat-value text-accent">7</div>
+            <div className="stat-desc">{t('storefronts.fromCustomers')}</div>
           </div>
 
-          {/* Average Order Value */}
-          <div className="card bg-base-100 shadow-md">
-            <div className="card-body">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-base-content/60">
-                    {t('storefronts.avgOrderValue')}
-                  </p>
-                  <p className="text-2xl font-bold mt-1">
-                    ${stats.avgOrderValue.toFixed(2)}
-                  </p>
-                  <div className="flex items-center gap-1 mt-2">
-                    {stats.avgOrderChange > 0 ? (
-                      <ArrowTrendingUpIcon className="w-4 h-4 text-success" />
-                    ) : (
-                      <ArrowTrendingDownIcon className="w-4 h-4 text-error" />
-                    )}
-                    <span
-                      className={`text-sm ${stats.avgOrderChange > 0 ? 'text-success' : 'text-error'}`}
-                    >
-                      {Math.abs(stats.avgOrderChange)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="p-3 bg-warning/10 rounded-xl">
-                  <ChartBarIcon className="w-8 h-8 text-warning" />
-                </div>
-              </div>
+          <div className="stat bg-base-100 rounded-lg shadow-sm">
+            <div className="stat-figure text-warning">
+              <ExclamationTriangleIcon className="w-8 h-8" />
             </div>
+            <div className="stat-title">{t('storefronts.lowStock')}</div>
+            <div className="stat-value text-warning">3</div>
+            <div className="stat-desc">{t('storefronts.productsLowStock')}</div>
           </div>
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Views Chart */}
-          <div className="card bg-base-100 shadow-md">
-            <div className="card-body">
-              <h2 className="card-title text-lg mb-4">
-                {t('storefronts.viewsOverTime')}
-              </h2>
-              <div className="h-64">
-                <Line data={viewsData} options={chartOptions} />
-              </div>
-            </div>
-          </div>
-
-          {/* Sales Chart */}
-          <div className="card bg-base-100 shadow-md">
-            <div className="card-body">
-              <h2 className="card-title text-lg mb-4">
-                {t('storefronts.salesOverTime')}
-              </h2>
-              <div className="h-64">
-                <Bar data={salesData} options={chartOptions} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Additional Charts */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sales by Category */}
-          <div className="card bg-base-100 shadow-md">
-            <div className="card-body">
-              <h2 className="card-title text-lg mb-4">
-                {t('storefronts.salesByCategory')}
-              </h2>
-              <div className="h-64">
-                <Doughnut data={categoryData} options={doughnutOptions} />
+          {/* Left Column - Main Actions */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Quick Actions */}
+            <div className="card bg-base-100 shadow-md">
+              <div className="card-body">
+                <h2 className="card-title text-lg mb-4">
+                  {t('storefronts.quickActions')}
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <Link
+                    href={`/${locale}/storefronts/${currentStorefront.slug}/products/new`}
+                    className="btn btn-primary"
+                  >
+                    <PlusIcon className="w-5 h-5" />
+                    {t('storefronts.addProduct')}
+                  </Link>
+                  <Link
+                    href={`/${locale}/storefronts/${currentStorefront.slug}/orders`}
+                    className="btn btn-outline"
+                  >
+                    <ClipboardDocumentListIcon className="w-5 h-5" />
+                    {t('storefronts.manageOrders')}
+                  </Link>
+                  <Link
+                    href={`/${locale}/storefronts/${currentStorefront.slug}/products`}
+                    className="btn btn-outline"
+                  >
+                    <ShoppingBagIcon className="w-5 h-5" />
+                    {t('storefronts.products')}
+                  </Link>
+                  <Link
+                    href={`/${locale}/storefronts/${currentStorefront.slug}/customers`}
+                    className="btn btn-outline"
+                  >
+                    <UsersIcon className="w-5 h-5" />
+                    {t('storefronts.customers')}
+                  </Link>
+                  <Link
+                    href={`/${locale}/storefronts/${currentStorefront.slug}/promotions`}
+                    className="btn btn-outline"
+                  >
+                    <TagIcon className="w-5 h-5" />
+                    {t('storefronts.promotions')}
+                  </Link>
+                  <Link
+                    href={`/${locale}/storefronts/${currentStorefront.slug}/delivery`}
+                    className="btn btn-outline"
+                  >
+                    <TruckIcon className="w-5 h-5" />
+                    {t('storefronts.delivery')}
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Orders */}
+            <div className="card bg-base-100 shadow-md">
+              <div className="card-body">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="card-title text-lg">
+                    {t('storefronts.recentOrders')}
+                  </h2>
+                  <Link
+                    href={`/${locale}/storefronts/${currentStorefront.slug}/orders`}
+                    className="btn btn-ghost btn-sm"
+                  >
+                    {t('common.viewAll')}
+                  </Link>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="table table-zebra">
+                    <thead>
+                      <tr>
+                        <th>{t('storefronts.orderId')}</th>
+                        <th>{t('storefronts.customer')}</th>
+                        <th>{t('storefronts.products')}</th>
+                        <th>{t('storefronts.total')}</th>
+                        <th>{t('storefronts.status')}</th>
+                        <th>{t('common.actions')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>#1234</td>
+                        <td>John Doe</td>
+                        <td>2 items</td>
+                        <td>$89.99</td>
+                        <td>
+                          <span className="badge badge-warning badge-sm">
+                            <ClockIcon className="w-3 h-3 mr-1" />
+                            {t('storefronts.pending')}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="btn btn-ghost btn-xs">
+                            {t('common.view')}
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>#1233</td>
+                        <td>Jane Smith</td>
+                        <td>1 item</td>
+                        <td>$45.00</td>
+                        <td>
+                          <span className="badge badge-info badge-sm">
+                            <TruckIcon className="w-3 h-3 mr-1" />
+                            {t('storefronts.shipping')}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="btn btn-ghost btn-xs">
+                            {t('common.view')}
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>#1232</td>
+                        <td>Bob Wilson</td>
+                        <td>3 items</td>
+                        <td>$125.50</td>
+                        <td>
+                          <span className="badge badge-success badge-sm">
+                            <CheckCircleIcon className="w-3 h-3 mr-1" />
+                            {t('storefronts.completed')}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="btn btn-ghost btn-xs">
+                            {t('common.view')}
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Low Stock Alert */}
+            <div className="card bg-warning/10 border-warning shadow-md">
+              <div className="card-body">
+                <div className="flex items-center gap-3 mb-4">
+                  <ExclamationTriangleIcon className="w-6 h-6 text-warning" />
+                  <h2 className="card-title text-lg">
+                    {t('storefronts.lowStockAlert')}
+                  </h2>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-2 bg-base-100 rounded">
+                    <span>iPhone 15 Pro Max</span>
+                    <span className="badge badge-warning">
+                      {t('storefronts.stockLeft', { count: 2 })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 bg-base-100 rounded">
+                    <span>MacBook Pro M3</span>
+                    <span className="badge badge-warning">
+                      {t('storefronts.stockLeft', { count: 1 })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 bg-base-100 rounded">
+                    <span>Sony WH-1000XM5</span>
+                    <span className="badge badge-error">
+                      {t('storefronts.outOfStock')}
+                    </span>
+                  </div>
+                </div>
+
+                <Link
+                  href={`/${locale}/storefronts/${currentStorefront.slug}/inventory`}
+                  className="btn btn-warning btn-sm w-full mt-4"
+                >
+                  {t('storefronts.manageInventory')}
+                </Link>
               </div>
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="card bg-base-100 shadow-md lg:col-span-2">
-            <div className="card-body">
-              <h2 className="card-title text-lg mb-4">
-                {t('storefronts.recentActivity')}
-              </h2>
-              <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-4 p-3 bg-base-200 rounded-lg"
-                  >
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <ShoppingBagIcon className="w-5 h-5 text-primary" />
+          {/* Right Column - Notifications & Messages */}
+          <div className="space-y-6">
+            {/* Notifications */}
+            <div className="card bg-base-100 shadow-md">
+              <div className="card-body">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="card-title text-lg">
+                    <BellIcon className="w-5 h-5" />
+                    {t('storefronts.notifications')}
+                  </h2>
+                  <span className="badge badge-primary">
+                    5 {t('common.new')}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="p-3 bg-base-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="p-1 bg-primary/10 rounded">
+                        <ShoppingBagIcon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {t('storefronts.newOrderReceived')}
+                        </p>
+                        <p className="text-xs text-base-content/60">
+                          5 {t('common.minutesAgo')}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">New order #123{i}</p>
-                      <p className="text-xs text-base-content/60">
-                        2 hours ago
+                  </div>
+
+                  <div className="p-3 bg-base-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="p-1 bg-accent/10 rounded">
+                        <ChatBubbleLeftRightIcon className="w-4 h-4 text-accent" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {t('storefronts.newMessage')}
+                        </p>
+                        <p className="text-xs text-base-content/60">
+                          15 {t('common.minutesAgo')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-base-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="p-1 bg-warning/10 rounded">
+                        <ExclamationTriangleIcon className="w-4 h-4 text-warning" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {t('storefronts.productLowStock')}
+                        </p>
+                        <p className="text-xs text-base-content/60">
+                          1 {t('common.hourAgo')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button className="btn btn-ghost btn-sm w-full mt-4">
+                  {t('storefronts.viewAllNotifications')}
+                </button>
+              </div>
+            </div>
+
+            {/* Recent Messages */}
+            <div className="card bg-base-100 shadow-md">
+              <div className="card-body">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="card-title text-lg">
+                    <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                    {t('storefronts.messages')}
+                  </h2>
+                  <span className="badge badge-accent">
+                    7 {t('storefronts.unread')}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-2 hover:bg-base-200 rounded cursor-pointer">
+                    <div className="avatar">
+                      <div className="w-10 h-10 rounded-full bg-primary/10">
+                        <span className="text-lg font-bold flex items-center justify-center h-full">
+                          JD
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between">
+                        <p className="text-sm font-medium">John Doe</p>
+                        <p className="text-xs text-base-content/60">5m</p>
+                      </div>
+                      <p className="text-sm text-base-content/70 truncate">
+                        {t('storefronts.messagePreview')}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold">$99.99</p>
+                    <div className="badge badge-accent badge-xs"></div>
                   </div>
-                ))}
-              </div>
-              <button className="btn btn-ghost btn-sm w-full mt-4">
-                {t('common.viewAll')}
-              </button>
-            </div>
-          </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">
-            {t('storefronts.quickActions')}
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link
-              href={`/storefronts/${currentStorefront.slug}/products/new`}
-              className="btn btn-outline"
-            >
-              <ShoppingBagIcon className="w-5 h-5" />
-              {t('storefronts.addProduct')}
-            </Link>
-            <Link
-              href={`/storefronts/${currentStorefront.slug}/orders`}
-              className="btn btn-outline"
-            >
-              <CalendarIcon className="w-5 h-5" />
-              {t('storefronts.viewOrders')}
-            </Link>
-            <Link
-              href={`/storefronts/${currentStorefront.slug}/customers`}
-              className="btn btn-outline"
-            >
-              <UserGroupIcon className="w-5 h-5" />
-              {t('storefronts.viewCustomers')}
-            </Link>
-            <Link
-              href={`/storefronts/${currentStorefront.slug}/settings`}
-              className="btn btn-outline"
-            >
-              <StarIcon className="w-5 h-5" />
-              {t('storefronts.settings')}
-            </Link>
+                  <div className="flex items-start gap-3 p-2 hover:bg-base-200 rounded cursor-pointer">
+                    <div className="avatar">
+                      <div className="w-10 h-10 rounded-full bg-secondary/10">
+                        <span className="text-lg font-bold flex items-center justify-center h-full">
+                          JS
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between">
+                        <p className="text-sm font-medium">Jane Smith</p>
+                        <p className="text-xs text-base-content/60">1h</p>
+                      </div>
+                      <p className="text-sm text-base-content/70 truncate">
+                        {t('storefronts.messagePreview2')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  href={`/${locale}/chat`}
+                  className="btn btn-ghost btn-sm w-full mt-4"
+                >
+                  {t('storefronts.goToMessages')}
+                </Link>
+              </div>
+            </div>
+
+            {/* Store Status */}
+            <div className="card bg-base-100 shadow-md">
+              <div className="card-body">
+                <h2 className="card-title text-lg mb-4">
+                  {t('storefronts.storeStatus')}
+                </h2>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">
+                      {t('storefronts.storeOpen')}
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-success"
+                      defaultChecked
+                    />
+                  </div>
+
+                  <div className="divider my-2"></div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">
+                      {t('storefronts.acceptingOrders')}
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-primary"
+                      defaultChecked
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">
+                      {t('storefronts.vacationMode')}
+                    </span>
+                    <input type="checkbox" className="toggle" />
+                  </div>
+                </div>
+
+                <Link
+                  href={`/${locale}/storefronts/${currentStorefront.slug}/settings`}
+                  className="btn btn-outline btn-sm w-full mt-4"
+                >
+                  <Cog6ToothIcon className="w-4 h-4" />
+                  {t('storefronts.storeSettings')}
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
