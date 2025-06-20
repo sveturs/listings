@@ -15,10 +15,12 @@ export default function StorefrontInfo({ storefront }: StorefrontInfoProps) {
   const dateLocale = locale === 'ru' ? ru : enUS;
 
   const formatHours = (hours: any[]) => {
-    if (!hours || hours.length === 0) return null;
+    if (!hours || !Array.isArray(hours) || hours.length === 0) return null;
     
     const today = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase().slice(0, 3);
-    const todayHours = hours.find(h => h.day_of_week.toLowerCase().startsWith(today));
+    const todayHours = hours.find(h => {
+      return h && typeof h.day_of_week === 'string' && h.day_of_week.toLowerCase().startsWith(today);
+    });
     
     if (!todayHours) return null;
     
@@ -28,7 +30,7 @@ export default function StorefrontInfo({ storefront }: StorefrontInfoProps) {
     
     return (
       <span className="text-success">
-        {t('storefronts.open')} • {todayHours.open_time} - {todayHours.close_time}
+        {t('storefronts.open')} • {todayHours.open_time || ''} - {todayHours.close_time || ''}
       </span>
     );
   };

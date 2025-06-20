@@ -47,53 +47,61 @@ export default function BusinessHoursStep({
           </p>
 
           <div className="space-y-4">
-            {formData.businessHours.map((hours, index) => (
-              <div key={index} className="flex items-center gap-4">
-                <div className="w-32">
-                  <span className="font-medium">
-                    {t(`common.days.${dayNames[hours.dayOfWeek]}`)}
-                  </span>
-                </div>
-
-                <div className="form-control">
-                  <label className="cursor-pointer label">
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-primary"
-                      checked={!hours.isClosed}
-                      onChange={(e) =>
-                        handleHoursChange(index, 'isClosed', !e.target.checked)
-                      }
-                    />
-                    <span className="label-text ml-2">
-                      {hours.isClosed ? t('common.closed') : t('common.open')}
+            {formData.businessHours &&
+              Array.isArray(formData.businessHours) &&
+              formData.businessHours.map((hours, index) => (
+                <div key={index} className="flex items-center gap-4">
+                  <div className="w-32">
+                    <span className="font-medium">
+                      {t(
+                        `common.days.${dayNames[hours.dayOfWeek] || 'monday'}`
+                      )}
                     </span>
-                  </label>
-                </div>
+                  </div>
 
-                {!hours.isClosed && (
-                  <>
-                    <input
-                      type="time"
-                      className="input input-bordered input-sm"
-                      value={hours.openTime}
-                      onChange={(e) =>
-                        handleHoursChange(index, 'openTime', e.target.value)
-                      }
-                    />
-                    <span>-</span>
-                    <input
-                      type="time"
-                      className="input input-bordered input-sm"
-                      value={hours.closeTime}
-                      onChange={(e) =>
-                        handleHoursChange(index, 'closeTime', e.target.value)
-                      }
-                    />
-                  </>
-                )}
-              </div>
-            ))}
+                  <div className="form-control">
+                    <label className="cursor-pointer label">
+                      <input
+                        type="checkbox"
+                        className="toggle toggle-primary"
+                        checked={!hours.isClosed}
+                        onChange={(e) =>
+                          handleHoursChange(
+                            index,
+                            'isClosed',
+                            !e.target.checked
+                          )
+                        }
+                      />
+                      <span className="label-text ml-2">
+                        {hours.isClosed ? t('common.closed') : t('common.open')}
+                      </span>
+                    </label>
+                  </div>
+
+                  {!hours.isClosed && (
+                    <>
+                      <input
+                        type="time"
+                        className="input input-bordered input-sm"
+                        value={hours.openTime}
+                        onChange={(e) =>
+                          handleHoursChange(index, 'openTime', e.target.value)
+                        }
+                      />
+                      <span>-</span>
+                      <input
+                        type="time"
+                        className="input input-bordered input-sm"
+                        value={hours.closeTime}
+                        onChange={(e) =>
+                          handleHoursChange(index, 'closeTime', e.target.value)
+                        }
+                      />
+                    </>
+                  )}
+                </div>
+              ))}
           </div>
 
           <div className="divider"></div>

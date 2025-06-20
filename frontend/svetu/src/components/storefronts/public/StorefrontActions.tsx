@@ -115,35 +115,41 @@ export default function StorefrontActions({ storefront, isOwner }: StorefrontAct
           </div>
 
           {/* Payment Methods */}
-          {storefront.payment_methods && storefront.payment_methods.length > 0 && (
+          {storefront.payment_methods && Array.isArray(storefront.payment_methods) && storefront.payment_methods.length > 0 && (
             <div className="mt-4 pt-4 border-t border-base-300">
               <p className="text-sm font-semibold mb-2">{t('storefronts.acceptedPayments')}</p>
               <div className="flex flex-wrap gap-2">
-                {storefront.payment_methods.map((method, index) => (
-                  <div key={index} className="badge badge-outline">
-                    {method.method_type === 'cash' && t('storefronts.payment_methods.cash')}
-                    {method.method_type === 'card' && t('storefronts.payment_methods.card')}
-                    {method.method_type === 'bank_transfer' && t('storefronts.payment_methods.bank_transfer')}
-                    {method.method_type === 'cod' && t('storefronts.payment_methods.cod')}
-                  </div>
-                ))}
+                {storefront.payment_methods.map((method, index) => {
+                  if (!method || typeof method.method_type !== 'string') return null;
+                  return (
+                    <div key={index} className="badge badge-outline">
+                      {method.method_type === 'cash' && t('storefronts.payment_methods.cash')}
+                      {method.method_type === 'card' && t('storefronts.payment_methods.card')}
+                      {method.method_type === 'bank_transfer' && t('storefronts.payment_methods.bank_transfer')}
+                      {method.method_type === 'cod' && t('storefronts.payment_methods.cod')}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* Delivery Options */}
-          {storefront.delivery_options && storefront.delivery_options.length > 0 && (
+          {storefront.delivery_options && Array.isArray(storefront.delivery_options) && storefront.delivery_options.length > 0 && (
             <div className="mt-4 pt-4 border-t border-base-300">
               <p className="text-sm font-semibold mb-2">{t('storefronts.deliveryOptions')}</p>
               <div className="space-y-1">
-                {storefront.delivery_options.map((option, index) => (
-                  <div key={index} className="text-sm">
-                    <span className="font-medium">{option.name}</span>
-                    {option.base_price && option.base_price > 0 && (
-                      <span className="text-base-content/60"> - {option.base_price} RSD</span>
-                    )}
-                  </div>
-                ))}
+                {storefront.delivery_options.map((option, index) => {
+                  if (!option || typeof option.name !== 'string') return null;
+                  return (
+                    <div key={index} className="text-sm">
+                      <span className="font-medium">{option.name}</span>
+                      {typeof option.base_price === 'number' && option.base_price > 0 && (
+                        <span className="text-base-content/60"> - {option.base_price} RSD</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

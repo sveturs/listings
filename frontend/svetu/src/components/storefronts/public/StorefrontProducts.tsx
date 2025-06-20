@@ -28,14 +28,21 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
         offset: (currentPage - 1) * 12
       });
       
-      // Исправляем структуру ответа: API возвращает { data: { data: [...], success: true, meta: {...} } }
-      const actualData = (response as any).data?.data || response.data || [];
-      setProducts(actualData);
-      
-      // Проверяем пагинацию в правильном месте
-      const pagination = (response as any).data?.meta || (response as any).pagination;
-      if (pagination && pagination.total && pagination.limit) {
-        setTotalPages(Math.ceil(pagination.total / pagination.limit));
+      // Безопасное извлечение данных из ответа API
+      if (response && typeof response === 'object') {
+        // API возвращает { data: { data: [...], success: true, meta: {...} } }
+        const responseData = (response as any).data;
+        const actualData = Array.isArray(responseData?.data) ? responseData.data : 
+                          Array.isArray(responseData) ? responseData : [];
+        setProducts(actualData);
+        
+        // Безопасная проверка пагинации
+        const pagination = responseData?.meta || (response as any).pagination;
+        if (pagination && typeof pagination.total === 'number' && typeof pagination.limit === 'number' && pagination.limit > 0) {
+          setTotalPages(Math.ceil(pagination.total / pagination.limit));
+        }
+      } else {
+        setProducts([]);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
