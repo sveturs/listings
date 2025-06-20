@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   fetchStorefrontBySlug,
@@ -31,6 +31,7 @@ export default function EditStorefrontPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const t = useTranslations();
+  const locale = useLocale();
   const slug = params.slug as string;
 
   const { currentStorefront, isLoading, error } = useAppSelector(
@@ -163,7 +164,7 @@ export default function EditStorefrontPage() {
       ).unwrap();
 
       toast.success(t('storefronts.updateSuccess'));
-      router.push(`/storefronts/${slug}/dashboard`);
+      router.push(`/${locale}/storefronts/${slug}/dashboard`);
     } catch {
       toast.error(t('storefronts.updateError'));
     }
@@ -207,7 +208,10 @@ export default function EditStorefrontPage() {
               {error || t('storefronts.loadError')}
             </p>
             <div className="card-actions justify-center mt-6">
-              <Link href="/profile/storefronts" className="btn btn-primary">
+              <Link
+                href={`/${locale}/profile/storefronts`}
+                className="btn btn-primary"
+              >
                 <ArrowLeftIcon className="w-5 h-5" />
                 {t('common.back')}
               </Link>
@@ -226,7 +230,7 @@ export default function EditStorefrontPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
-                href={`/storefronts/${slug}/dashboard`}
+                href={`/${locale}/storefronts/${slug}/dashboard`}
                 className="btn btn-ghost btn-circle"
               >
                 <ArrowLeftIcon className="w-5 h-5" />

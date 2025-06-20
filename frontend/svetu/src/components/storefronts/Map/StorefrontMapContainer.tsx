@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { useStorefronts } from '@/hooks/useStorefronts';
 import type {
@@ -48,6 +49,7 @@ const StorefrontMapContainer: React.FC<StorefrontMapContainerProps> = ({
   className = '',
 }) => {
   const router = useRouter();
+  const locale = useLocale();
   const { filters, updateFilters, resetFilters, isLoading } = useStorefronts();
 
   const [mapStorefronts, setMapStorefronts] = useState<StorefrontMapData[]>([]);
@@ -146,9 +148,9 @@ const StorefrontMapContainer: React.FC<StorefrontMapContainerProps> = ({
   const handleStorefrontClick = useCallback(
     (storefront: StorefrontMapData) => {
       // Переход на страницу витрины
-      router.push(`/storefronts/${storefront.slug}`);
+      router.push(`/${locale}/storefronts/${storefront.slug}`);
     },
-    [router]
+    [router, locale]
   );
 
   const handleBoundsChange = useCallback((_bounds: L.LatLngBounds) => {

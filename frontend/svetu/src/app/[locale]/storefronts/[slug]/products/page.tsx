@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -28,11 +28,12 @@ interface PageProps {
 
 export default function ProductsPage({ params }: PageProps) {
   const [slug, setSlug] = useState<string>('');
-  
+
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
   }, [params]);
   const t = useTranslations();
+  const locale = useLocale();
   const [products, setProducts] = useState<StorefrontProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -43,7 +44,7 @@ export default function ProductsPage({ params }: PageProps) {
 
   const loadProducts = async () => {
     if (!slug) return; // Wait for slug to be loaded
-    
+
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -51,8 +52,10 @@ export default function ProductsPage({ params }: PageProps) {
       if (filterStatus !== 'all') {
         if (filterStatus === 'active') params.append('is_active', 'true');
         if (filterStatus === 'inactive') params.append('is_active', 'false');
-        if (filterStatus === 'out_of_stock') params.append('stock_status', 'out_of_stock');
-        if (filterStatus === 'low_stock') params.append('stock_status', 'low_stock');
+        if (filterStatus === 'out_of_stock')
+          params.append('stock_status', 'out_of_stock');
+        if (filterStatus === 'low_stock')
+          params.append('stock_status', 'low_stock');
       }
 
       const queryString = params.toString();
@@ -122,7 +125,7 @@ export default function ProductsPage({ params }: PageProps) {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <Link
-            href={`/storefronts/${slug}/dashboard`}
+            href={`/${locale}/storefronts/${slug}/dashboard`}
             className="inline-flex items-center text-primary hover:underline mb-2"
           >
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
@@ -138,7 +141,7 @@ export default function ProductsPage({ params }: PageProps) {
           </p>
         </div>
         <Link
-          href={`/storefronts/${slug}/products/new`}
+          href={`/${locale}/storefronts/${slug}/products/new`}
           className="btn btn-primary"
         >
           <PlusIcon className="w-5 h-5" />
@@ -209,7 +212,7 @@ export default function ProductsPage({ params }: PageProps) {
           </p>
           {!search && filterStatus === 'all' && (
             <Link
-              href={`/storefronts/${slug}/products/new`}
+              href={`/${locale}/storefronts/${slug}/products/new`}
               className="btn btn-primary"
             >
               <PlusIcon className="w-5 h-5" />
@@ -223,7 +226,9 @@ export default function ProductsPage({ params }: PageProps) {
             <div key={product.id} className="card bg-base-100 shadow-xl">
               {/* Product Image */}
               <figure className="px-4 pt-4">
-                {product.images && product.images.length > 0 && product.images[0].thumbnail_url ? (
+                {product.images &&
+                product.images.length > 0 &&
+                product.images[0].thumbnail_url ? (
                   <Image
                     src={product.images[0].thumbnail_url}
                     alt={product.name || 'Product image'}
@@ -281,7 +286,7 @@ export default function ProductsPage({ params }: PageProps) {
                 {/* Actions */}
                 <div className="card-actions justify-end mt-4">
                   <Link
-                    href={`/storefronts/${slug}/products/${product.id}/edit`}
+                    href={`/${locale}/storefronts/${slug}/products/${product.id}/edit`}
                     className="btn btn-sm btn-ghost"
                   >
                     <PencilIcon className="w-4 h-4" />
