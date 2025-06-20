@@ -4,6 +4,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/proj/storefronts/service"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,11 +18,11 @@ import (
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Param staff body AddStaffRequest true "Staff data"
-// @Success 200 {object} SuccessResponse "Staff added"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions or staff limit reached"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} map[string]string "Staff added"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions or staff limit reached"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/staff [post]
 func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
@@ -29,16 +30,12 @@ func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
 	
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	var req AddStaffRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid request body",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_request_body")
 	}
 
 	// Валидация роли
@@ -48,25 +45,23 @@ func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
 		models.StaffRoleModerator: true,
 	}
 	if !validRoles[req.Role] {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid staff role",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_staff_role")
 	}
 
 	err = h.service.AddStaff(c.Context(), userID, storefrontID, req.UserID, req.Role)
 	if err != nil {
-		if err == service.ErrInsufficientPermissions {
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+		switch err {
+		case service.ErrInsufficientPermissions:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
+		case service.ErrStaffLimitReached:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.staff_limit_reached")
+		default:
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.add_staff_failed")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to add staff",
-		})
 	}
 
-	return c.JSON(SuccessResponse{
-		Message: "Staff member added successfully",
+	return c.JSON(fiber.Map{
+		"message": "Staff member added successfully",
 	})
 }
 
@@ -79,12 +74,12 @@ func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param staffId path int true "Staff ID"
 // @Param permissions body models.JSONB true "Permissions map"
-// @Success 200 {object} SuccessResponse "Permissions updated"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions"
-// @Failure 404 {object} ErrorResponse "Staff not found"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} map[string]string "Permissions updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 404 {object} utils.ErrorResponseSwag "Staff not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/staff/{staffId}/permissions [put]
 func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
@@ -92,38 +87,28 @@ func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
 	
 	staffID, err := strconv.Atoi(c.Params("staffId"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid staff ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_staff_id")
 	}
 
 	var permissions models.JSONB
 	if err := c.BodyParser(&permissions); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid request body",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_request_body")
 	}
 
 	err = h.service.UpdateStaffPermissions(c.Context(), userID, staffID, permissions)
 	if err != nil {
 		switch err {
 		case service.ErrInsufficientPermissions:
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
 		case postgres.ErrNotFound:
-			return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
-				Error: "Staff member not found",
-			})
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.staff_not_found")
 		default:
-			return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-				Error: "Failed to update permissions",
-			})
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_permissions_failed")
 		}
 	}
 
-	return c.JSON(SuccessResponse{
-		Message: "Permissions updated successfully",
+	return c.JSON(fiber.Map{
+		"message": "Permissions updated successfully",
 	})
 }
 
@@ -135,12 +120,12 @@ func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Param userId path int true "User ID of staff member"
-// @Success 200 {object} SuccessResponse "Staff removed"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 401 {object} ErrorResponse "Unauthorized"
-// @Failure 403 {object} ErrorResponse "Insufficient permissions"
-// @Failure 404 {object} ErrorResponse "Staff not found"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} map[string]string "Staff removed"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 404 {object} utils.ErrorResponseSwag "Staff not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/staff/{userId} [delete]
 func (h *StorefrontHandler) RemoveStaff(c *fiber.Ctx) error {
@@ -148,38 +133,28 @@ func (h *StorefrontHandler) RemoveStaff(c *fiber.Ctx) error {
 	
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	staffUserID, err := strconv.Atoi(c.Params("userId"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid user ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_user_id")
 	}
 
 	err = h.service.RemoveStaff(c.Context(), userID, storefrontID, staffUserID)
 	if err != nil {
 		switch err {
 		case service.ErrInsufficientPermissions:
-			return c.Status(fiber.StatusForbidden).JSON(ErrorResponse{
-				Error: "Insufficient permissions",
-			})
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
 		case postgres.ErrNotFound:
-			return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
-				Error: "Staff member not found",
-			})
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.staff_not_found")
 		default:
-			return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-				Error: "Failed to remove staff",
-			})
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.remove_staff_failed")
 		}
 	}
 
-	return c.JSON(SuccessResponse{
-		Message: "Staff member removed successfully",
+	return c.JSON(fiber.Map{
+		"message": "Staff member removed successfully",
 	})
 }
 
@@ -191,22 +166,18 @@ func (h *StorefrontHandler) RemoveStaff(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Success 200 {object} StaffListResponse "Staff list"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/{id}/staff [get]
 func (h *StorefrontHandler) GetStaff(c *fiber.Ctx) error {
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error: "Invalid storefront ID",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
 	staff, err := h.service.GetStaff(c.Context(), storefrontID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Error: "Failed to get staff",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_staff_failed")
 	}
 
 	return c.JSON(StaffListResponse{

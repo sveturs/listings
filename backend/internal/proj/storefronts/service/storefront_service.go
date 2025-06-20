@@ -25,6 +25,8 @@ var (
 	ErrSlugAlreadyExists      = errors.New("slug already exists")
 	ErrInvalidLocation        = errors.New("invalid location data")
 	ErrFeatureNotAvailable    = errors.New("feature not available in current plan")
+	ErrRepositoryNotInitialized = errors.New("storefront repository not initialized")
+	ErrStaffLimitReached      = errors.New("staff limit reached for current plan")
 )
 
 // Лимиты по тарифным планам
@@ -148,8 +150,13 @@ func NewStorefrontService(services ServicesInterface) StorefrontService {
 func (s *StorefrontServiceImpl) SetServices(services ServicesInterface) {
 	s.services = services
 	if services != nil && services.Storage() != nil {
-		if storefrontRepo, ok := services.Storage().Storefront().(postgres.StorefrontRepository); ok {
+		// Получаем интерфейс репозитория
+		repoInterface := services.Storage().Storefront()
+		if storefrontRepo, ok := repoInterface.(postgres.StorefrontRepository); ok {
 			s.repo = storefrontRepo
+			logger.Info().Msg("Storefront repository initialized successfully")
+		} else {
+			logger.Error().Str("type", fmt.Sprintf("%T", repoInterface)).Msg("Failed to cast storefront repository")
 		}
 	}
 }
@@ -265,6 +272,10 @@ func (s *StorefrontServiceImpl) Delete(ctx context.Context, userID int, storefro
 
 // ListUserStorefronts получает список витрин пользователя
 func (s *StorefrontServiceImpl) ListUserStorefronts(ctx context.Context, userID int) ([]*models.Storefront, error) {
+	if s.repo == nil {
+		return nil, ErrRepositoryNotInitialized
+	}
+	
 	filter := &models.StorefrontFilter{
 		UserID: &userID,
 		Limit:  100,

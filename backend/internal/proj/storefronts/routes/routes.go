@@ -37,13 +37,13 @@ func RegisterStorefrontRoutes(app *fiber.App, h *handler.StorefrontHandler, auth
 	protected := api.Group("/storefronts")
 	protected.Use(authMiddleware.AuthRequiredJWT)
 	{
+		// Мои витрины (должен быть перед /:id чтобы не конфликтовать)
+		protected.Get("/my", h.GetMyStorefronts)
+		
 		// Управление витринами
 		protected.Post("/", h.CreateStorefront)
 		protected.Put("/:id", h.UpdateStorefront)
 		protected.Delete("/:id", h.DeleteStorefront)
-		
-		// Мои витрины
-		protected.Get("/my", h.GetMyStorefronts)
 		
 		// Настройки витрины
 		protected.Put("/:id/hours", h.UpdateWorkingHours)

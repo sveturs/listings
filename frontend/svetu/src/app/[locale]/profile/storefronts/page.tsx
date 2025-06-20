@@ -44,6 +44,11 @@ export default function MyStorefrontsPage() {
     dispatch(fetchMyStorefronts());
   }, [dispatch]);
 
+  // Временный лог для отладки
+  useEffect(() => {
+    console.log('User storefronts:', userStorefronts);
+  }, [userStorefronts]);
+
   const handleCreateStorefront = () => {
     router.push('/create-storefront');
   };
@@ -109,7 +114,9 @@ export default function MyStorefrontsPage() {
           <div className="flex justify-center items-center min-h-[600px]">
             <div className="text-center">
               <span className="loading loading-spinner loading-lg text-primary"></span>
-              <p className="mt-4 text-base-content/60">{t('common.loading')}</p>
+              <p className="mt-4 text-base-content/60">
+                {t('admin.common.loading')}
+              </p>
             </div>
           </div>
         </div>
@@ -251,11 +258,11 @@ export default function MyStorefrontsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
             {filteredStorefronts.map((storefront: Storefront) => (
               <div
                 key={storefront.id}
-                className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+                className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 group relative"
               >
                 {/* Card Header with Banner */}
                 <figure className="relative h-48 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden">
@@ -373,7 +380,7 @@ export default function MyStorefrontsPage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="card-actions">
+                  <div className="card-actions pb-6">
                     <Link
                       href={`/storefronts/${storefront.slug}/dashboard`}
                       className="btn btn-primary flex-1"
@@ -382,13 +389,18 @@ export default function MyStorefrontsPage() {
                       {t('storefronts.dashboard')}
                     </Link>
 
-                    <div className="dropdown dropdown-end">
-                      <label tabIndex={0} className="btn btn-ghost btn-square">
+                    <div className="dropdown dropdown-end dropdown-top">
+                      <button
+                        tabIndex={0}
+                        className="btn btn-ghost btn-square"
+                        aria-label={t('storefronts.settings')}
+                      >
                         <CogIcon className="w-5 h-5" />
-                      </label>
+                      </button>
                       <ul
                         tabIndex={0}
-                        className="dropdown-content z-[1] menu menu-sm p-2 shadow-lg bg-base-100 rounded-box w-56 mt-2"
+                        className="dropdown-content z-[999] menu menu-sm p-2 shadow-xl bg-base-100 rounded-box w-56 mb-1 border border-base-300"
+                        role="menu"
                       >
                         <li>
                           <Link

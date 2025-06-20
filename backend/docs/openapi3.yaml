@@ -6698,7 +6698,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: List storefronts
       tags:
         - storefronts
@@ -6723,25 +6723,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Storefront limit reached
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Create new storefront
@@ -6763,31 +6763,33 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                additionalProperties:
+                  type: string
+                type: object
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Only owner can delete storefront
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "404":
           description: Storefront not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Delete storefront
@@ -6814,13 +6816,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Get storefront by ID
       tags:
         - storefronts
@@ -6846,37 +6848,39 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                additionalProperties:
+                  type: string
+                type: object
         "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "404":
           description: Storefront not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Update storefront
@@ -6955,25 +6959,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Get storefront analytics
@@ -7016,25 +7020,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Upload storefront banner
@@ -7066,31 +7070,33 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                additionalProperties:
+                  type: string
+                type: object
         "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Update delivery options
@@ -7121,31 +7127,33 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                additionalProperties:
+                  type: string
+                type: object
         "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Update working hours
@@ -7188,25 +7196,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Upload storefront logo
@@ -7238,31 +7246,33 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                additionalProperties:
+                  type: string
+                type: object
         "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Update payment methods
@@ -7290,13 +7300,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Get storefront staff
       tags:
         - storefronts
@@ -7323,31 +7333,33 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                additionalProperties:
+                  type: string
+                type: object
         "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions or staff limit reached
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Add staff member
@@ -7383,37 +7395,39 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                additionalProperties:
+                  type: string
+                type: object
         "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "404":
           description: Staff not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Update staff permissions
@@ -7442,37 +7456,39 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                additionalProperties:
+                  type: string
+                type: object
         "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "404":
           description: Staff not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Remove staff member
@@ -7495,19 +7511,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.SuccessResponse"
+                additionalProperties:
+                  type: string
+                type: object
         "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Record storefront view
       tags:
         - storefronts
@@ -7541,13 +7559,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Get businesses in building
       tags:
         - storefronts
@@ -7599,13 +7617,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Get storefronts for map
       tags:
         - storefronts
@@ -7627,13 +7645,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
       summary: Get my storefronts
@@ -7679,13 +7697,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Get nearby storefronts
       tags:
         - storefronts
@@ -7784,13 +7802,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Search storefronts using OpenSearch
       tags:
         - storefronts
@@ -7817,13 +7835,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/internal_proj_storefronts_handler.ErrorResponse"
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Get storefront by slug
       tags:
         - storefronts
@@ -11123,11 +11141,6 @@ components:
         - role
         - user_id
       type: object
-    internal_proj_storefronts_handler.ErrorResponse:
-      properties:
-        error:
-          type: string
-      type: object
     internal_proj_storefronts_handler.StaffListResponse:
       properties:
         staff:
@@ -11149,11 +11162,6 @@ components:
           type: array
         total:
           type: integer
-      type: object
-    internal_proj_storefronts_handler.SuccessResponse:
-      properties:
-        message:
-          type: string
       type: object
     internal_proj_users_handler.AdminAdminsResponse:
       properties:

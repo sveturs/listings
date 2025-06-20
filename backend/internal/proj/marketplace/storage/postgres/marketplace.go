@@ -296,7 +296,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
                         'file_size', file_size,
                         'content_type', content_type,
                         'is_main', is_main,
-                        'created_at', created_at,
+                        'created_at', to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
                         'storage_type', storage_type,
                         'storage_bucket', storage_bucket,
                         'public_url', public_url
@@ -670,7 +670,7 @@ SELECT
                 'slug', c2.slug,
                 'icon', c2.icon,
                 'parent_id', c2.parent_id,
-                'created_at', c2.created_at,
+                'created_at', to_char(c2.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
                 'level', c2.level,
                 'path', array_to_string(c2.category_path, ','),
                 'listing_count', c2.listing_count,

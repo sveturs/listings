@@ -9954,7 +9954,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -9997,25 +9997,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Storefront limit reached",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10064,13 +10064,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid coordinates",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10139,13 +10139,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid bounds",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10182,13 +10182,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10249,13 +10249,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid coordinates",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10379,13 +10379,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid parameters",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10423,13 +10423,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Storefront not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10467,13 +10467,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Storefront not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10517,37 +10517,40 @@ const docTemplate = `{
                     "200": {
                         "description": "Storefront updated",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.SuccessResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
                         "description": "Storefront not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10582,31 +10585,34 @@ const docTemplate = `{
                     "200": {
                         "description": "Storefront deleted",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.SuccessResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Only owner can delete storefront",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
                         "description": "Storefront not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10722,25 +10728,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10793,25 +10799,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10860,31 +10866,34 @@ const docTemplate = `{
                     "200": {
                         "description": "Delivery options updated",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.SuccessResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -10933,31 +10942,34 @@ const docTemplate = `{
                     "200": {
                         "description": "Hours updated",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.SuccessResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -11010,25 +11022,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -11077,31 +11089,34 @@ const docTemplate = `{
                     "200": {
                         "description": "Payment methods updated",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.SuccessResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -11140,13 +11155,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -11191,31 +11206,34 @@ const docTemplate = `{
                     "200": {
                         "description": "Staff added",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.SuccessResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions or staff limit reached",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -11269,37 +11287,40 @@ const docTemplate = `{
                     "200": {
                         "description": "Permissions updated",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.SuccessResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
                         "description": "Staff not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -11344,37 +11365,40 @@ const docTemplate = `{
                     "200": {
                         "description": "Staff removed",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.SuccessResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "403": {
                         "description": "Insufficient permissions",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "404": {
                         "description": "Staff not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -11406,19 +11430,22 @@ const docTemplate = `{
                     "200": {
                         "description": "View recorded",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.SuccessResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_storefronts_handler.ErrorResponse"
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -16276,14 +16303,6 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_proj_storefronts_handler.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
         "internal_proj_storefronts_handler.StaffListResponse": {
             "type": "object",
             "properties": {
@@ -16315,14 +16334,6 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
-                }
-            }
-        },
-        "internal_proj_storefronts_handler.SuccessResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
                 }
             }
         },
