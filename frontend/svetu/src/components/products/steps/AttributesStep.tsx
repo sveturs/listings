@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useCreateProduct } from '@/contexts/CreateProductContext';
 import { apiClient } from '@/services/api-client';
 import { toast } from '@/utils/toast';
+import { getTranslatedAttribute } from '@/utils/translatedAttribute';
 import type { components } from '@/types/generated/api';
 
 type CategoryAttribute =
@@ -27,11 +28,15 @@ export default function AttributesStep({
   onBack,
 }: AttributesStepProps) {
   const t = useTranslations();
+  const locale = useLocale();
   const { state, setAttribute, setError, clearError } = useCreateProduct();
   const [attributes, setAttributes] = useState<CategoryAttribute[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<Record<number, any>>(
     state.attributes || {}
+  );
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(['basic', 'technical'])
   );
 
   const loadAttributes = async () => {
@@ -65,79 +70,118 @@ export default function AttributesStep({
     }
   }, [state.category]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Группируем атрибуты по логическим группам
+  // Группируем атрибуты по логическим группам с учетом группы атрибутов
   const groupAttributes = (): AttributeGroup[] => {
-    const groups: AttributeGroup[] = [
-      {
-        id: 'basic',
+    const groupsMap = new Map<string, AttributeGroup>();
+
+    // Предопределенные группы с иконками
+    const predefinedGroups: Record<
+      string,
+      { name: string; icon: string; priority: number }
+    > = {
+      basic: {
         name: t('storefronts.products.attributeGroups.basic'),
         icon: '🏷️',
-        attributes: [],
+        priority: 1,
       },
-      {
-        id: 'technical',
+      technical: {
         name: t('storefronts.products.attributeGroups.technical'),
         icon: '⚙️',
-        attributes: [],
+        priority: 2,
       },
-      {
-        id: 'condition',
+      condition: {
         name: t('storefronts.products.attributeGroups.condition'),
         icon: '✨',
-        attributes: [],
+        priority: 3,
       },
-      {
-        id: 'accessories',
+      accessories: {
         name: t('storefronts.products.attributeGroups.accessories'),
         icon: '📦',
-        attributes: [],
+        priority: 4,
       },
-      {
-        id: 'other',
+      dimensions: {
+        name: t('storefronts.products.attributeGroups.dimensions'),
+        icon: '📏',
+        priority: 5,
+      },
+      other: {
         name: t('storefronts.products.attributeGroups.other'),
         icon: '📋',
-        attributes: [],
+        priority: 99,
       },
-    ];
+    };
 
-    // Распределяем атрибуты по группам на основе их названий
+    // Создаем группы на основе attribute_group_id или логики названий
     attributes.forEach((attr) => {
+      let groupId = 'other';
       const name = attr.name?.toLowerCase() || '';
 
+      // Группировка по названию атрибута
       if (
-        ['brand', 'model', 'manufacturer'].some((key) => name.includes(key))
+        ['brand', 'model', 'manufacturer', 'year'].some((key) =>
+          name.includes(key)
+        )
       ) {
-        groups[0].attributes.push(attr); // basic
+        groupId = 'basic';
       } else if (
         [
           'storage',
           'memory',
-          'screen_size',
+          'screen',
           'resolution',
           'processor',
           'ram',
+          'battery',
         ].some((key) => name.includes(key))
       ) {
-        groups[1].attributes.push(attr); // technical
+        groupId = 'technical';
       } else if (
-        ['condition', 'device_condition', 'warranty', 'used', 'new'].some(
-          (key) => name.includes(key)
+        ['condition', 'warranty', 'used', 'new'].some((key) =>
+          name.includes(key)
         )
       ) {
-        groups[2].attributes.push(attr); // condition
+        groupId = 'condition';
       } else if (
         ['accessories', 'included', 'box', 'charger', 'cable'].some((key) =>
           name.includes(key)
         )
       ) {
-        groups[3].attributes.push(attr); // accessories
-      } else {
-        groups[4].attributes.push(attr); // other
+        groupId = 'accessories';
+      } else if (
+        ['width', 'height', 'length', 'weight', 'size'].some((key) =>
+          name.includes(key)
+        )
+      ) {
+        groupId = 'dimensions';
       }
+
+      if (!groupsMap.has(groupId)) {
+        const groupInfo = predefinedGroups[groupId] || predefinedGroups.other;
+        groupsMap.set(groupId, {
+          id: groupId,
+          name: groupInfo.name,
+          icon: groupInfo.icon,
+          attributes: [],
+        });
+      }
+
+      groupsMap.get(groupId)!.attributes.push(attr);
     });
 
-    // Возвращаем только группы с атрибутами
-    return groups.filter((group) => group.attributes.length > 0);
+    // Сортируем группы по приоритету и атрибуты внутри групп по sort_order
+    const groups = Array.from(groupsMap.values()).sort((a, b) => {
+      const priorityA = predefinedGroups[a.id]?.priority || 99;
+      const priorityB = predefinedGroups[b.id]?.priority || 99;
+      return priorityA - priorityB;
+    });
+
+    groups.forEach((group) => {
+      group.attributes.sort(
+        (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
+      );
+    });
+
+    return groups;
   };
 
   const handleAttributeChange = (attributeId: number, value: any) => {
@@ -177,11 +221,19 @@ export default function AttributesStep({
     const isRequired = attribute.is_required;
     const hasError = state.errors[`attribute_${attribute.id}`];
 
+    // Получаем переведенные значения
+    const { displayName, getOptionLabel } = attribute.id
+      ? getTranslatedAttribute(attribute as any, locale)
+      : {
+          displayName: attribute.display_name || attribute.name || '',
+          getOptionLabel: (v: string) => v,
+        };
+
     return (
       <div key={attribute.id} className="form-control">
         <label className="label">
           <span className="label-text font-medium">
-            {attribute.display_name || attribute.name}
+            {displayName}
             {isRequired && <span className="text-error ml-1">*</span>}
           </span>
         </label>
@@ -201,18 +253,27 @@ export default function AttributesStep({
 
         {/* Number input */}
         {attribute.attribute_type === 'number' && (
-          <input
-            type="number"
-            className={`input input-bordered ${hasError ? 'input-error' : ''}`}
-            placeholder={`Enter ${attribute.display_name || attribute.name}`}
-            value={value}
-            onChange={(e) =>
-              handleAttributeChange(
-                attribute.id!,
-                parseFloat(e.target.value) || 0
-              )
-            }
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              className={`input input-bordered flex-1 ${hasError ? 'input-error' : ''}`}
+              placeholder="0"
+              value={value}
+              onChange={(e) =>
+                handleAttributeChange(
+                  attribute.id!,
+                  parseFloat(e.target.value) || 0
+                )
+              }
+              min="0"
+              step={attrOptions?.step || 1}
+            />
+            {attrOptions?.unit && (
+              <span className="text-sm text-base-content/60 min-w-fit">
+                {attrOptions.unit}
+              </span>
+            )}
+          </div>
         )}
 
         {/* Select */}
@@ -225,7 +286,7 @@ export default function AttributesStep({
             }
           >
             <option value="">
-              Select {attribute.display_name || attribute.name}
+              {t('common.select')} {displayName.toLowerCase()}
             </option>
             {(() => {
               let options: string[] = [];
@@ -241,7 +302,7 @@ export default function AttributesStep({
 
               return options.map((option) => (
                 <option key={`${attribute.id}-${option}`} value={option}>
-                  {option}
+                  {getOptionLabel(option)}
                 </option>
               ));
             })()}
@@ -260,14 +321,14 @@ export default function AttributesStep({
               }
             />
             <span className="text-sm text-base-content/70">
-              {value ? 'Yes' : 'No'}
+              {value ? t('common.yes') : t('common.no')}
             </span>
           </div>
         )}
 
         {/* Multiselect checkboxes */}
         {attribute.attribute_type === 'multiselect' && attrOptions?.values && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
             {attrOptions.values.map((option: string) => {
               const currentValues = (value as string[]) || [];
               const isChecked = currentValues.includes(option);
@@ -279,7 +340,7 @@ export default function AttributesStep({
                 >
                   <input
                     type="checkbox"
-                    className="checkbox checkbox-primary"
+                    className="checkbox checkbox-primary checkbox-sm"
                     checked={isChecked}
                     onChange={(e) => {
                       if (e.target.checked) {
@@ -295,7 +356,7 @@ export default function AttributesStep({
                       }
                     }}
                   />
-                  <span className="label-text">{option}</span>
+                  <span className="label-text">{getOptionLabel(option)}</span>
                 </label>
               );
             })}
@@ -351,24 +412,126 @@ export default function AttributesStep({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {attributeGroups.map((group) => (
-            <div key={group.id} className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <h3 className="card-title text-xl mb-4 flex items-center gap-3">
-                  <span className="text-2xl">{group.icon}</span>
-                  {group.name}
-                  <div className="badge badge-neutral">
-                    {group.attributes.length}
-                  </div>
-                </h3>
-
-                <div className="space-y-4">
-                  {group.attributes.map(renderAttribute)}
-                </div>
-              </div>
+        <div className="space-y-6 mb-8">
+          {/* Сводка обязательных полей */}
+          {attributes.some((attr) => attr.is_required) && (
+            <div className="alert alert-info">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                className="stroke-current shrink-0 w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span>{t('storefronts.products.requiredFieldsInfo')}</span>
             </div>
-          ))}
+          )}
+
+          {/* Группы атрибутов */}
+          <div className="grid grid-cols-1 gap-4">
+            {attributeGroups.map((group) => {
+              const isExpanded = expandedGroups.has(group.id);
+              const hasRequiredFields = group.attributes.some(
+                (attr) => attr.is_required
+              );
+              const filledRequiredFields = group.attributes
+                .filter((attr) => attr.is_required)
+                .every(
+                  (attr) => formData[attr.id!] && formData[attr.id!] !== ''
+                );
+
+              return (
+                <div key={group.id} className="card bg-base-100 shadow-lg">
+                  <div
+                    className="card-body cursor-pointer select-none"
+                    onClick={() => {
+                      const newExpanded = new Set(expandedGroups);
+                      if (isExpanded) {
+                        newExpanded.delete(group.id);
+                      } else {
+                        newExpanded.add(group.id);
+                      }
+                      setExpandedGroups(newExpanded);
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="card-title text-xl flex items-center gap-3">
+                        <span className="text-2xl">{group.icon}</span>
+                        {group.name}
+                        <div className="badge badge-neutral">
+                          {group.attributes.length}
+                        </div>
+                        {hasRequiredFields && (
+                          <div
+                            className={`badge ${filledRequiredFields ? 'badge-success' : 'badge-warning'}`}
+                          >
+                            {filledRequiredFields ? '✓' : t('common.required')}
+                          </div>
+                        )}
+                      </h3>
+                      <svg
+                        className={`w-6 h-6 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="px-8 pb-8">
+                      <div className="space-y-4">
+                        {group.attributes.map(renderAttribute)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Прогресс заполнения */}
+      {attributes.length > 0 && (
+        <div className="card bg-base-200 mb-6">
+          <div className="card-body p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium">{t('common.progress')}</h4>
+              <span className="text-sm text-base-content/70">
+                {
+                  Object.keys(formData).filter(
+                    (key) =>
+                      formData[parseInt(key)] && formData[parseInt(key)] !== ''
+                  ).length
+                }{' '}
+                / {attributes.length}
+              </span>
+            </div>
+            <progress
+              className="progress progress-primary"
+              value={
+                Object.keys(formData).filter(
+                  (key) =>
+                    formData[parseInt(key)] && formData[parseInt(key)] !== ''
+                ).length
+              }
+              max={attributes.length}
+            ></progress>
+          </div>
         </div>
       )}
 

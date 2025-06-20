@@ -1,11 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useCreateProduct } from '@/contexts/CreateProductContext';
 import { apiClient } from '@/services/api-client';
 import { toast } from '@/utils/toast';
+import { getTranslatedAttribute } from '@/utils/translatedAttribute';
+import type { components } from '@/types/generated/api';
+
+type CategoryAttribute =
+  components['schemas']['backend_internal_domain_models.CategoryAttribute'];
 
 interface PreviewStepProps {
   onBack: () => void;
@@ -21,6 +26,9 @@ export default function PreviewStep({
   const router = useRouter();
   const { state } = useCreateProduct();
   const [submitting, setSubmitting] = useState(false);
+  const [categoryAttributes, setCategoryAttributes] = useState<
+    CategoryAttribute[]
+  >([]);
 
   const handleSubmit = async () => {
     try {
@@ -52,6 +60,30 @@ export default function PreviewStep({
     }
   };
 
+  // Загружаем атрибуты категории для получения метаданных
+  useEffect(() => {
+    const loadAttributes = async () => {
+      if (!state.category) return;
+
+      try {
+        const response = await apiClient.get(
+          `/api/v1/marketplace/categories/${state.category.id}/attributes`
+        );
+
+        if (response.data) {
+          const responseData = response.data.data || response.data;
+          if (Array.isArray(responseData)) {
+            setCategoryAttributes(responseData);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load attributes:', error);
+      }
+    };
+
+    loadAttributes();
+  }, [state.category]);
+
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -59,13 +91,37 @@ export default function PreviewStep({
     }).format(price);
   };
 
-  const renderAttributeValue = (value: any): string => {
+  const renderAttributeValue = (
+    value: any,
+    attribute?: CategoryAttribute,
+    getOptionLabel?: (value: string) => string
+  ): string => {
     if (Array.isArray(value)) {
-      return value.join(', ');
+      return value
+        .map((v) => (getOptionLabel ? getOptionLabel(v) : v))
+        .join(', ');
     }
     if (typeof value === 'boolean') {
-      return value ? 'Yes' : 'No';
+      return value ? t('common.yes') : t('common.no');
     }
+
+    // Для числовых значений добавляем единицы измерения если есть
+    if (typeof value === 'number' && attribute?.attribute_type === 'number') {
+      const options = attribute.options as any;
+      if (options?.unit) {
+        return `${value} ${options.unit}`;
+      }
+    }
+
+    // Для select опций используем переведенное значение
+    if (
+      typeof value === 'string' &&
+      attribute?.attribute_type === 'select' &&
+      getOptionLabel
+    ) {
+      return getOptionLabel(value);
+    }
+
     return String(value || '');
   };
 
@@ -226,16 +282,31 @@ export default function PreviewStep({
                     if (!value || (Array.isArray(value) && value.length === 0))
                       return null;
 
+                    // Находим атрибут для получения переведенного названия
+                    const attribute = categoryAttributes.find(
+                      (attr) => attr.id === parseInt(id)
+                    );
+                    const { displayName, getOptionLabel } = attribute && attribute.id
+                      ? getTranslatedAttribute(attribute as any, locale)
+                      : {
+                          displayName: `Attribute ${id}`,
+                          getOptionLabel: (v: string) => v,
+                        };
+
                     return (
                       <div
                         key={id}
                         className="flex justify-between items-center py-2 border-b border-base-200 last:border-b-0"
                       >
                         <span className="font-medium text-base-content/70">
-                          Attribute {id}:
+                          {displayName}:
                         </span>
                         <span className="text-base-content">
-                          {renderAttributeValue(value)}
+                          {renderAttributeValue(
+                            value,
+                            attribute,
+                            getOptionLabel
+                          )}
                         </span>
                       </div>
                     );

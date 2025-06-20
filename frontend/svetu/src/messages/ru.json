@@ -1610,6 +1610,17 @@
       "basicInfo": "Основная информация",
       "images": "Изображения",
       "variants": "Варианты",
+      "attributeGroups": {
+        "basic": "Основная информация",
+        "technical": "Технические характеристики",
+        "condition": "Состояние и гарантия",
+        "accessories": "Комплектация",
+        "dimensions": "Размеры и вес",
+        "other": "Другие атрибуты"
+      },
+      "requiredFieldsInfo": "Поля, отмеченные *, обязательны для заполнения",
+      "noAttributesTitle": "Дополнительные атрибуты отсутствуют",
+      "noAttributesMessage": "У этой категории нет специфических атрибутов",
       "categorySelection": "Выбор категории",
       "categorySelectionDescription": "Выберите подходящую категорию для вашего товара",
       "selectCategory": "Выберите категорию",

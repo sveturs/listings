@@ -1675,7 +1675,18 @@
       "addProductDescription": "Add new products to your storefront catalog",
       "basicInfo": "Basic Info",
       "images": "Images",
-      "variants": "Variants"
+      "variants": "Variants",
+      "attributeGroups": {
+        "basic": "Basic Information",
+        "technical": "Technical Specifications",
+        "condition": "Condition & Warranty",
+        "accessories": "Included Accessories",
+        "dimensions": "Dimensions & Weight",
+        "other": "Other Attributes"
+      },
+      "requiredFieldsInfo": "Fields marked with * are required",
+      "noAttributesTitle": "No Additional Attributes",
+      "noAttributesMessage": "This category doesn't have any specific attributes"
     },
     "new": "new",
     "minutes": "{count, plural, one {# minute ago} other {# minutes ago}}",
