@@ -360,7 +360,7 @@ export default function MyStorefrontsPage() {
                         {storefront.products_count || 0}
                       </div>
                       <div className="text-xs text-base-content/60">
-                        {t('storefronts.products')}
+                        {t('storefronts.products.title')}
                       </div>
                     </div>
                     <div className="text-center p-3 bg-base-200 rounded-xl">
