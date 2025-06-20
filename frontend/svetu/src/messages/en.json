@@ -13,7 +13,12 @@
     "saved": "Saved",
     "updated": "Updated",
     "noData": "No data available",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "status": "Status",
+    "view": "View",
+    "new": "New",
+    "minutesAgo": "{minutes} minutes ago",
+    "hourAgo": "{hours} hour ago"
   },
   "home": {
     "marketplace": "Marketplace",
@@ -1217,6 +1222,11 @@
     "save": "Save",
     "reviews": "reviews",
     "notSpecified": "Not specified",
+    "status": "Status",
+    "view": "View",
+    "new": "New",
+    "minutesAgo": "{minutes} minutes ago",
+    "hourAgo": "{hours} hour ago",
     "rating": "Rating",
     "actions": "Actions",
     "share": "Share",
@@ -1569,6 +1579,7 @@
       "crypto": "Cryptocurrency"
     },
     "delivery": {
+      "title": "Delivery",
       "pickup": "Pickup",
       "pickupDescription": "Customers can pick up orders from your location",
       "local_delivery": "Local Delivery",
@@ -1666,6 +1677,11 @@
       "images": "Images",
       "variants": "Variants"
     },
+    "new": "new",
+    "minutes": "{count, plural, one {# minute ago} other {# minutes ago}}",
+    "hour": "1 hour ago",
+    "hours": "{count, plural, one {# hour ago} other {# hours ago}}",
+    "orderStatus": "Status",
     "error": {
       "invalid_request_body": "Invalid request body",
       "limit_reached": "Storefront limit reached for your subscription plan",

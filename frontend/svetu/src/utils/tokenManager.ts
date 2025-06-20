@@ -10,6 +10,7 @@ class TokenManager {
   private config: TokenManagerConfig;
   private lastRefreshAttempt: number = 0;
   private refreshAttempts: number = 0;
+  private rateLimitedUntil: number = 0; // Время до которого мы заблокированы из-за rate limit
   private readonly MIN_REFRESH_INTERVAL = 30000; // 30 секунд между попытками
   private readonly MAX_REFRESH_ATTEMPTS = 3;
 
@@ -81,19 +82,29 @@ class TokenManager {
     this.clearRefreshTimer();
     this.refreshAttempts = 0;
     this.lastRefreshAttempt = 0;
+    this.rateLimitedUntil = 0; // Сбрасываем rate limit
   }
 
   /**
    * Обновляет access token используя refresh token из httpOnly cookie
    */
   async refreshAccessToken(): Promise<string> {
+    // Проверяем, не заблокированы ли мы из-за rate limit
+    const now = Date.now();
+    if (this.rateLimitedUntil > now) {
+      const remainingTime = this.rateLimitedUntil - now;
+      console.warn(
+        `[TokenManager] Rate limited, waiting ${remainingTime}ms before retry`
+      );
+      return this.accessToken || '';
+    }
+
     // Если уже идет процесс обновления, возвращаем существующий промис
     if (this.refreshPromise) {
       return this.refreshPromise;
     }
 
     // Проверяем, не слишком ли часто мы пытаемся обновить токен
-    const now = Date.now();
     const timeSinceLastAttempt = now - this.lastRefreshAttempt;
 
     if (timeSinceLastAttempt < this.MIN_REFRESH_INTERVAL) {
@@ -123,6 +134,7 @@ class TokenManager {
     try {
       const token = await this.refreshPromise;
       this.refreshAttempts = 0; // Сбрасываем счетчик при успехе
+      this.rateLimitedUntil = 0; // Сбрасываем rate limit при успехе
       return token;
     } catch (error) {
       this.refreshAttempts++;
@@ -168,8 +180,12 @@ class TokenManager {
             `[TokenManager] Rate limited (429), retry after ${delay}ms`
           );
 
+          // Устанавливаем время блокировки
+          this.rateLimitedUntil = Date.now() + delay;
+
           // Планируем повторную попытку после задержки
           setTimeout(() => {
+            this.rateLimitedUntil = 0; // Сбрасываем блокировку
             this.refreshAccessToken().catch(console.error);
           }, delay);
 

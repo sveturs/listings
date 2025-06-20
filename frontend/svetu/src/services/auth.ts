@@ -81,8 +81,20 @@ export class AuthService {
   static async restoreSession(): Promise<SessionResponse | null> {
     console.log('[AuthService] Attempting to restore session...');
     try {
-      // Пытаемся обновить токены используя refresh token
-      const accessToken = await tokenManager.refreshAccessToken();
+      // Сначала проверяем, есть ли у нас валидный токен
+      let accessToken = tokenManager.getAccessToken();
+
+      // Если токен есть и он еще не истек, используем его
+      if (accessToken && !tokenManager.isTokenExpired(accessToken)) {
+        console.log('[AuthService] Using existing valid access token');
+        return await this.getSession();
+      }
+
+      // Только если токен отсутствует или истек, пытаемся обновить
+      console.log(
+        '[AuthService] Access token expired or missing, attempting refresh...'
+      );
+      accessToken = await tokenManager.refreshAccessToken();
 
       if (accessToken) {
         console.log('[AuthService] Access token obtained, fetching session...');

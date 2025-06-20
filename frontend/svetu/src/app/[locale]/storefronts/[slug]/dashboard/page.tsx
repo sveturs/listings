@@ -209,7 +209,7 @@ export default function StorefrontDashboardPage() {
                     className="btn btn-outline"
                   >
                     <ShoppingBagIcon className="w-5 h-5" />
-                    {t('storefronts.products')}
+                    {t('storefronts.products.title')}
                   </Link>
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/customers`}
@@ -230,7 +230,8 @@ export default function StorefrontDashboardPage() {
                     className="btn btn-outline"
                   >
                     <TruckIcon className="w-5 h-5" />
-                    {t('storefronts.delivery')}
+                    {t('storefronts.delivery.title') ||
+                      t('storefronts.delivery.shipping')}
                   </Link>
                 </div>
               </div>
@@ -257,9 +258,9 @@ export default function StorefrontDashboardPage() {
                       <tr>
                         <th>{t('storefronts.orderId')}</th>
                         <th>{t('storefronts.customer')}</th>
-                        <th>{t('storefronts.products')}</th>
+                        <th>{t('storefronts.products.title')}</th>
                         <th>{t('storefronts.total')}</th>
-                        <th>{t('storefronts.status')}</th>
+                        <th>{t('common.status')}</th>
                         <th>{t('common.actions')}</th>
                       </tr>
                     </thead>
@@ -277,7 +278,7 @@ export default function StorefrontDashboardPage() {
                         </td>
                         <td>
                           <button className="btn btn-ghost btn-xs">
-                            {t('common.view')}
+                            {t('common.viewAll')}
                           </button>
                         </td>
                       </tr>
@@ -294,7 +295,7 @@ export default function StorefrontDashboardPage() {
                         </td>
                         <td>
                           <button className="btn btn-ghost btn-xs">
-                            {t('common.view')}
+                            {t('common.viewAll')}
                           </button>
                         </td>
                       </tr>
@@ -311,7 +312,7 @@ export default function StorefrontDashboardPage() {
                         </td>
                         <td>
                           <button className="btn btn-ghost btn-xs">
-                            {t('common.view')}
+                            {t('common.viewAll')}
                           </button>
                         </td>
                       </tr>
@@ -388,7 +389,7 @@ export default function StorefrontDashboardPage() {
                           {t('storefronts.newOrderReceived')}
                         </p>
                         <p className="text-xs text-base-content/60">
-                          5 {t('common.minutesAgo')}
+                          {t('common.minutesAgo', { minutes: 5 })}
                         </p>
                       </div>
                     </div>
@@ -404,7 +405,7 @@ export default function StorefrontDashboardPage() {
                           {t('storefronts.newMessage')}
                         </p>
                         <p className="text-xs text-base-content/60">
-                          15 {t('common.minutesAgo')}
+                          {t('common.minutesAgo', { minutes: 15 })}
                         </p>
                       </div>
                     </div>
@@ -420,7 +421,7 @@ export default function StorefrontDashboardPage() {
                           {t('storefronts.productLowStock')}
                         </p>
                         <p className="text-xs text-base-content/60">
-                          1 {t('common.hourAgo')}
+                          {t('common.hourAgo', { hours: 1 })}
                         </p>
                       </div>
                     </div>

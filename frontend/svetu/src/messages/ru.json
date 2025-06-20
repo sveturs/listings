@@ -13,7 +13,12 @@
     "saved": "Сохранено",
     "updated": "Обновлено",
     "noData": "Нет данных",
-    "tryAgain": "Попробуйте снова"
+    "tryAgain": "Попробуйте снова",
+    "status": "Статус",
+    "view": "Просмотр",
+    "new": "Новый",
+    "minutesAgo": "{minutes} минут назад",
+    "hourAgo": "{hours} час назад"
   },
   "home": {
     "marketplace": "Объявления",
@@ -1224,6 +1229,13 @@
     "publishing": "Публикация...",
     "publish": "Опубликовать",
     "free_above": "Бесплатно от",
+    "status": "Статус",
+    "view": "Просмотр",
+    "new": "Новый",
+    "minutesAgo": "{minutes} минут назад",
+    "hourAgo": "{hours} час назад",
+    "viewAll": "Посмотреть все",
+    "actions": "Действия",
     "days": {
       "monday": "Понедельник",
       "tuesday": "Вторник",
@@ -1415,7 +1427,15 @@
     "manageOrders": "Управление заказами",
     "customers": "Клиенты",
     "promotions": "Акции",
-    "delivery": "Доставка",
+    "delivery": {
+      "title": "Доставка",
+      "pickup": "Самовывоз",
+      "pickupDescription": "Клиенты могут забрать заказы из вашего местоположения",
+      "local_delivery": "Местная доставка",
+      "local_deliveryDescription": "Доставка в пределах вашего города или района",
+      "shipping": "Отправка",
+      "shippingDescription": "Отправка заказов по стране или за границу"
+    },
     "recentOrders": "Последние заказы",
     "orderId": "ID заказа",
     "customer": "Клиент",
@@ -1647,6 +1667,11 @@
       "productsCount": "товаров",
       "selectedCategory": "Выбранная категория"
     },
+    "new": "новых",
+    "minutes": "{count, plural, one {# минуту назад} few {# минуты назад} many {# минут назад} other {# минут назад}}",
+    "hour": "1 час назад",
+    "hours": "{count, plural, one {# час назад} few {# часа назад} many {# часов назад} other {# часов назад}}",
+    "orderStatus": "Статус",
     "error": {
       "invalid_request_body": "Неверный формат запроса",
       "limit_reached": "Достигнут лимит витрин для вашего тарифного плана",

@@ -105,7 +105,7 @@ export default function StorefrontHeader({
                 <div className="text-2xl font-bold">
                   {storefront.stats?.total_products || 0}
                 </div>
-                <div className="text-sm text-base-content/60">{t('storefronts.products')}</div>
+                <div className="text-sm text-base-content/60">{t('storefronts.products.title')}</div>
               </div>
               <div className="divider divider-horizontal mx-0"></div>
               <div>

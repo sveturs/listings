@@ -200,6 +200,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshSession = useCallback(
     async (retries = 3, skipLoadingState = false) => {
+      // Если уже идет обновление сессии, не запускаем новое
+      if (isRefreshingSession) {
+        console.log(
+          '[AuthContext] Session refresh already in progress, skipping'
+        );
+        return;
+      }
+
       const now = Date.now();
       if (now - lastRefreshAttempt.current < REFRESH_COOLDOWN) {
         if (process.env.NODE_ENV === 'development') {
@@ -211,6 +219,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Устанавливаем состояние загрузки только если это не фоновое обновление
       if (!skipLoadingState) {
+        setIsRefreshingSession(true);
+      } else {
+        // Даже для фоновых обновлений устанавливаем флаг, чтобы предотвратить параллельные вызовы
         setIsRefreshingSession(true);
       }
 
@@ -257,7 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsRefreshingSession(false);
       }
     },
-    [updateUser, REFRESH_COOLDOWN]
+    [updateUser, REFRESH_COOLDOWN, isRefreshingSession]
   );
 
   useEffect(() => {
@@ -293,19 +304,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Проверяем, есть ли refresh token cookie (возможно после Google OAuth)
-    const hasRefreshToken = document.cookie.includes('refresh_token=');
+    // const hasRefreshToken = document.cookie.includes('refresh_token=');
 
     if (hasValidCache) {
       // Проверяем актуальность в фоне, не блокируя UI (skipLoadingState = true)
       setTimeout(() => refreshSession(3, true), 100);
-    } else if (hasRefreshToken) {
-      // Если есть refresh token, но нет кеша (возможно после Google OAuth)
-      console.log(
-        '[AuthContext] Detected refresh token, attempting to restore session'
-      );
-      refreshSession();
     } else {
-      // Если нет ни кеша, ни refresh token, делаем полную проверку с loading state
+      // Если нет валидного кеша, делаем полную проверку
+      // Это покрывает случаи:
+      // - есть refresh token (после Google OAuth)
+      // - нет ни кеша, ни refresh token
       refreshSession();
     }
 
