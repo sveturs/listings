@@ -37,7 +37,7 @@ func NewChatHandler(services globalService.ServicesInterface, config *config.Con
 // @Tags marketplace-chat
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceChat}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceChat}
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getChatsError"
 // @Security BearerAuth
@@ -217,7 +217,7 @@ func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param body body models.CreateMessageRequest true "Message data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceMessage}
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceMessage}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest or marketplace.receiverRequired"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.sendMessageError"
@@ -327,7 +327,7 @@ func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Message ID"
 // @Param files formData file true "Files to upload"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.ChatAttachment}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ChatAttachment}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidMessageId or marketplace.noFilesUploaded or marketplace.tooManyFiles"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.messageNotFound"
@@ -412,7 +412,7 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attachment ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.ChatAttachment}
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ChatAttachment}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 403 {object} utils.ErrorResponseSwag "marketplace.accessDenied"

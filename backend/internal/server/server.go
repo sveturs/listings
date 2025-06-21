@@ -27,7 +27,7 @@ import (
 	notificationHandler "backend/internal/proj/notifications/handler"
 	paymentHandler "backend/internal/proj/payments/handler"
 	reviewHandler "backend/internal/proj/reviews/handler"
-	storefrontHandler "backend/internal/proj/storefronts/handler"
+	"backend/internal/proj/storefronts"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
@@ -44,7 +44,7 @@ type Server struct {
 	notifications *notificationHandler.Handler
 	balance       *balanceHandler.Handler
 	payments      *paymentHandler.Handler
-	storefront    *storefrontHandler.Handler
+	storefront    *storefronts.Module
 	geocode       *geocodeHandler.Handler
 	contacts      *contactsHandler.Handler
 	docs          *docsHandler.Handler
@@ -81,7 +81,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(services)
 	balanceHandler := balanceHandler.NewHandler(services)
-	storefrontHandler := storefrontHandler.NewHandler(services)
+	storefrontModule := storefronts.NewModule(services)
 	contactsHandler := contactsHandler.NewHandler(services)
 	paymentsHandler := paymentHandler.NewHandler(services)
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
@@ -124,7 +124,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		marketplace:   marketplaceHandlerInstance,
 		notifications: notificationsHandler,
 		balance:       balanceHandler,
-		storefront:    storefrontHandler,
+		storefront:    storefrontModule,
 		payments:      paymentsHandler,
 		geocode:       geocodeHandler,
 		contacts:      contactsHandler,

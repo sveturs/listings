@@ -158,7 +158,7 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param language query string false "Language filter"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.Translation} "Translations retrieved successfully"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Translation} "Translations retrieved successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getTranslationsError"
 // @Router /api/v1/marketplace/translations/{id} [get]

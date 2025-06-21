@@ -176,19 +176,19 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 // GetByID получает витрину по ID
 func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefront, error) {
 	var s models.Storefront
-	var theme, settings, seoMeta, aiConfig []byte
+	var theme, settings, seoMeta, aiConfig json.RawMessage
 
 	err := r.db.pool.QueryRow(ctx, `
 		SELECT 
 			id, user_id, slug, name, description,
-			logo_url, banner_url, theme,
+			logo_url, banner_url, COALESCE(theme, '{}')::jsonb,
 			phone, email, website,
 			address, city, postal_code, country, latitude, longitude,
-			settings, seo_meta,
+			COALESCE(settings, '{}')::jsonb, COALESCE(seo_meta, '{}')::jsonb,
 			is_active, is_verified, verification_date,
 			rating, reviews_count, products_count, sales_count, views_count,
 			subscription_plan, subscription_expires_at, commission_rate,
-			ai_agent_enabled, ai_agent_config, live_shopping_enabled, group_buying_enabled,
+			ai_agent_enabled, COALESCE(ai_agent_config, '{}')::jsonb, live_shopping_enabled, group_buying_enabled,
 			created_at, updated_at
 		FROM storefronts
 		WHERE id = $1
@@ -212,7 +212,7 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 		return nil, fmt.Errorf("failed to get storefront: %w", err)
 	}
 
-	// Парсим JSONB поля
+	// Конвертируем json.RawMessage в JSONB
 	if theme != nil {
 		json.Unmarshal(theme, &s.Theme)
 	}

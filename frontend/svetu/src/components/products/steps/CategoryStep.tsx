@@ -42,9 +42,19 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
           // Создаем плоский список всех категорий, сохраняя иерархию
           const flattenCategories = (cats: any[]): MarketplaceCategory[] => {
             const result: MarketplaceCategory[] = [];
+            const seenIds = new Set<number>();
 
             const flatten = (categories: any[]) => {
               categories.forEach((cat) => {
+                // Пропускаем дубликаты
+                if (seenIds.has(cat.id)) {
+                  console.warn(
+                    `CategoryStep - Duplicate category ID found: ${cat.id}`
+                  );
+                  return;
+                }
+
+                seenIds.add(cat.id);
                 result.push({
                   id: cat.id,
                   name: cat.name,
@@ -64,7 +74,8 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
             return result;
           };
 
-          setAllCategories(flattenCategories(responseData));
+          const flattened = flattenCategories(responseData);
+          setAllCategories(flattened);
         }
       }
     } catch (error: any) {
@@ -99,13 +110,14 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
 
   // Получить текущие категории для отображения
   const getCurrentCategories = () => {
-    return allCategories.filter((cat) => {
+    const filtered = allCategories.filter((cat) => {
       if (currentParentId === null) {
         return !cat.parent_id; // Корневые категории
       } else {
         return cat.parent_id === currentParentId; // Подкатегории
       }
     });
+    return filtered;
   };
 
   // Получить дочерние категории

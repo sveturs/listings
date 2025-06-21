@@ -1,0 +1,349 @@
+package storefronts
+
+import (
+	"backend/internal/middleware"
+	"backend/internal/proj/global/service"
+	"backend/internal/proj/storefronts/handler"
+	storefrontService "backend/internal/proj/storefronts/service"
+	"backend/internal/storage/postgres"
+	"github.com/gofiber/fiber/v2"
+)
+
+// Module представляет модуль витрин с продуктами
+type Module struct {
+	services          service.ServicesInterface
+	storefrontHandler *handler.StorefrontHandler
+	productHandler    *handler.ProductHandler
+}
+
+// NewModule создает новый модуль витрин
+func NewModule(services service.ServicesInterface) *Module {
+	storefrontSvc := services.Storefront()
+	// ProductService использует тот же storage, что и все остальные сервисы
+	// Предполагаем, что Storage реализует нужные методы
+	productStorage, ok := services.Storage().(storefrontService.Storage)
+	if !ok {
+		// Если storage не реализует нужный интерфейс, создаем заглушку
+		panic("Storage does not implement product storage interface")
+	}
+	// Пока передаем nil для searchRepo, так как OpenSearch репозиторий не инициализирован в этом месте
+	// TODO: Получить OpenSearch репозиторий из глобального сервиса
+	productSvc := storefrontService.NewProductService(productStorage, nil)
+	
+	return &Module{
+		services:          services,
+		storefrontHandler: handler.NewStorefrontHandler(storefrontSvc),
+		productHandler:    handler.NewProductHandler(productSvc),
+	}
+}
+
+// GetPrefix возвращает префикс для маршрутов
+func (m *Module) GetPrefix() string {
+	return "/api/v1/storefronts"
+}
+
+// RegisterRoutes регистрирует все маршруты модуля
+func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
+	api := app.Group("/api/v1")
+	
+	// Регистрируем защищенный маршрут /my первым, чтобы он имел приоритет
+	api.Get("/storefronts/my", mw.AuthRequiredJWT, m.storefrontHandler.GetMyStorefronts)
+	
+	// Публичные маршруты витрин (без авторизации)
+	public := api.Group("/storefronts")
+	{
+		// Конкретные маршруты (должны быть перед параметризованными)
+		// Списки и поиск
+		public.Get("/", m.storefrontHandler.ListStorefronts)
+		public.Get("/search", m.storefrontHandler.SearchOpenSearch)
+		public.Get("/nearby", m.storefrontHandler.GetNearbyStorefronts)
+		
+		// Картографические данные
+		public.Get("/map", m.storefrontHandler.GetMapData)
+		public.Get("/building", m.storefrontHandler.GetBusinessesInBuilding)
+		
+		// Маршруты с slug
+		public.Get("/slug/:slug", m.storefrontHandler.GetStorefrontBySlug)
+		
+		// Публичные маршруты товаров с использованием slug
+		public.Get("/slug/:slug/products", m.getProductsBySlug)
+		public.Get("/slug/:slug/products/:id", m.getProductBySlug)
+		
+		// Параметризованные маршруты (должны быть последними)
+		// Получение витрины
+		public.Get("/:id", m.storefrontHandler.GetStorefront)
+		
+		// Персонал (просмотр)
+		public.Get("/:id/staff", m.storefrontHandler.GetStaff)
+		
+		// Аналитика (запись просмотра)
+		public.Post("/:id/view", m.storefrontHandler.RecordView)
+	}
+
+	// Защищенные маршруты витрин (требуют авторизации)
+	protected := api.Group("/storefronts")
+	protected.Use(mw.AuthRequiredJWT)
+	{
+		// Управление витринами
+		protected.Post("/", m.storefrontHandler.CreateStorefront)
+		protected.Put("/:id", m.storefrontHandler.UpdateStorefront)
+		protected.Delete("/:id", m.storefrontHandler.DeleteStorefront)
+		
+		// Настройки витрины
+		protected.Put("/:id/hours", m.storefrontHandler.UpdateWorkingHours)
+		protected.Put("/:id/payment-methods", m.storefrontHandler.UpdatePaymentMethods)
+		protected.Put("/:id/delivery-options", m.storefrontHandler.UpdateDeliveryOptions)
+		
+		// Управление персоналом
+		protected.Post("/:id/staff", m.storefrontHandler.AddStaff)
+		protected.Put("/:id/staff/:staffId/permissions", m.storefrontHandler.UpdateStaffPermissions)
+		protected.Delete("/:id/staff/:userId", m.storefrontHandler.RemoveStaff)
+		
+		// Загрузка изображений
+		protected.Post("/:id/logo", m.storefrontHandler.UploadLogo)
+		protected.Post("/:id/banner", m.storefrontHandler.UploadBanner)
+		
+		// Аналитика (просмотр)
+		protected.Get("/:id/analytics", m.storefrontHandler.GetAnalytics)
+		
+		// Защищенные маршруты товаров с использованием slug
+		protected.Post("/slug/:slug/products", m.createProductBySlug)
+		protected.Put("/slug/:slug/products/:id", m.updateProductBySlug)
+		protected.Delete("/slug/:slug/products/:id", m.deleteProductBySlug)
+		protected.Post("/slug/:slug/products/:id/inventory", m.updateInventoryBySlug)
+		protected.Get("/slug/:slug/products/stats", m.getProductStatsBySlug)
+	}
+	
+	return nil
+}
+
+// Wrapper функции для добавления storefrontID в контекст по slug
+
+func (m *Module) getProductsBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	return m.productHandler.GetProducts(c)
+}
+
+func (m *Module) getProductBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	return m.productHandler.GetProduct(c)
+}
+
+func (m *Module) createProductBySlug(c *fiber.Ctx) error {
+	slug := c.Params("slug")
+	if slug == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Storefront slug is required",
+		})
+	}
+	
+	// Получаем витрину через сервис по slug
+	storefront, err := m.services.Storefront().GetBySlug(c.Context(), slug)
+	if err != nil {
+		if err == postgres.ErrNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Storefront not found",
+				"slug": slug,
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get storefront: " + err.Error(),
+			"slug": slug,
+		})
+	}
+	
+	// Сохраняем ID в контекст
+	c.Locals("storefrontID", storefront.ID)
+	
+	// Проверяем доступ
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "User ID not found in context",
+		})
+	}
+	
+	// Проверяем, является ли пользователь владельцем или персоналом
+	if storefront.UserID != userID {
+		// Проверяем, есть ли пользователь в персонале
+		staff, err := m.services.Storefront().GetStaff(c.Context(), storefront.ID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to check permissions: " + err.Error(),
+			})
+		}
+		
+		// Ищем пользователя среди персонала с правами на продукты
+		hasAccess := false
+		for _, s := range staff {
+			if s.UserID == userID {
+				// Проверяем права на управление продуктами
+				permissions, ok := s.Permissions["products"].(bool)
+				if ok && permissions {
+					hasAccess = true
+					break
+				}
+			}
+		}
+		
+		if !hasAccess {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Access denied: user is not owner or staff with product permissions",
+				"storefrontOwnerID": storefront.UserID,
+				"currentUserID": userID,
+			})
+		}
+	}
+	
+	return m.productHandler.CreateProduct(c)
+}
+
+func (m *Module) updateProductBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	return m.productHandler.UpdateProduct(c)
+}
+
+func (m *Module) deleteProductBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	return m.productHandler.DeleteProduct(c)
+}
+
+func (m *Module) updateInventoryBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	return m.productHandler.UpdateInventory(c)
+}
+
+func (m *Module) getProductStatsBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	return m.productHandler.GetProductStats(c)
+}
+
+// setStorefrontIDBySlug добавляет storefront ID в контекст по slug
+func (m *Module) setStorefrontIDBySlug(c *fiber.Ctx) error {
+	slug := c.Params("slug")
+	if slug == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Storefront slug is required",
+		})
+	}
+	
+	// Получаем витрину через сервис по slug
+	storefront, err := m.services.Storefront().GetBySlug(c.Context(), slug)
+	if err != nil {
+		if err == postgres.ErrNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Storefront not found",
+				"slug": slug,
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get storefront: " + err.Error(),
+			"slug": slug,
+		})
+	}
+	
+	c.Locals("storefrontID", storefront.ID)
+	return nil
+}
+
+// checkStorefrontAccess проверяет доступ к витрине
+func (m *Module) checkStorefrontAccess(c *fiber.Ctx) error {
+	storefrontID, ok := c.Locals("storefrontID").(int)
+	if !ok {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Storefront ID not found in context",
+		})
+	}
+	
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "User ID not found in context",
+		})
+	}
+	
+	// Получаем витрину для проверки владельца
+	storefront, err := m.services.Storefront().GetByID(c.Context(), storefrontID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get storefront",
+		})
+	}
+	
+	// Проверяем, является ли пользователь владельцем или персоналом
+	if storefront.UserID != userID {
+		// Проверяем, есть ли пользователь в персонале
+		staff, err := m.services.Storefront().GetStaff(c.Context(), storefrontID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to check permissions: " + err.Error(),
+			})
+		}
+		
+		// Ищем пользователя среди персонала с правами на продукты
+		hasAccess := false
+		for _, s := range staff {
+			if s.UserID == userID {
+				// Проверяем права на управление продуктами
+				permissions, ok := s.Permissions["products"].(bool)
+				if ok && permissions {
+					hasAccess = true
+					break
+				}
+			}
+		}
+		
+		if !hasAccess {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Access denied: user is not owner or staff with product permissions",
+				"storefrontOwnerID": storefront.UserID,
+				"currentUserID": userID,
+			})
+		}
+	}
+	
+	return nil
+}
+
+// withStorefrontAccess создает middleware для проверки доступа к витрине
+func (m *Module) withStorefrontAccess() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		return m.checkStorefrontAccess(c)
+	}
+}

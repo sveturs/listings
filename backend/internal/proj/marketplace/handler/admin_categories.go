@@ -112,7 +112,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceCategory} "Category information"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceCategory} "Category information"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.categoryNotFound"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
