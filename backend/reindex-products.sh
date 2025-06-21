@@ -85,24 +85,15 @@ if [ "$CREATE_INDEX" = true ]; then
     fi
 fi
 
-# Сборка приложения
-echo -e "${YELLOW}Building reindex tool...${NC}"
-go build -o bin/reindex-products ./cmd/reindex-products/main.go
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: Failed to build reindex tool${NC}"
-    exit 1
-fi
-
-# Запуск переиндексации
-echo -e "${YELLOW}Starting reindexing...${NC}"
+# Запуск переиндексации через admin API
+echo -e "${YELLOW}Starting reindexing via admin API...${NC}"
 echo
 
-FLAGS=""
-if [ "$CREATE_INDEX" = true ]; then
-    FLAGS="$FLAGS -create"
-fi
-
-./bin/reindex-products -batch $BATCH_SIZE -index $INDEX_NAME $FLAGS
+# TODO: Реализовать переиндексацию через admin API endpoint
+# Пока что это заглушка
+echo -e "${YELLOW}Reindexing functionality will be implemented via admin API${NC}"
+echo "For now, storefront products indexing is integrated into ProductService"
+echo "New products will be automatically indexed when created/updated"
 
 if [ $? -eq 0 ]; then
     echo

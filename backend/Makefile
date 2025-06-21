@@ -49,6 +49,9 @@ migrate_up:
 migrate_down:
 	bin/migrator down
 
+reindex_products:
+	./reindex-products.sh
+
 # Docker commands for migrator
 docker_build_migrator:
 	docker build -f Dockerfile.migrator -t migrator:local \
