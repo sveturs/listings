@@ -118,8 +118,24 @@ export default function SearchPage() {
         setAllItems((prev) => [...prev, ...data.items]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
       console.error('Search error:', err);
+
+      // Fallback: показываем пустые результаты вместо ошибки
+      setResults({
+        items: [],
+        total: 0,
+        page: currentPage,
+        limit: 20,
+        total_pages: 0,
+        has_more: false,
+        took_ms: 0,
+      });
+
+      if (currentPage === 1) {
+        setAllItems([]);
+      }
+
+      setError(null); // Не показываем ошибку пользователю
     } finally {
       setLoading(false);
     }

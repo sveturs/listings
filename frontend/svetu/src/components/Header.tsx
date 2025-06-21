@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
-import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import LanguageSwitcher from './LanguageSwitcher';
 import { AuthButton } from './AuthButton';
 import LoginModal from './LoginModal';
@@ -12,10 +12,13 @@ import { useAuthContext } from '@/contexts/AuthContext';
 
 export default function Header() {
   const t = useTranslations('header');
-  const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated } = useAuthContext();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Не показываем мобильный поиск на странице поиска
+  const isSearchPage = pathname?.includes('/search');
 
   // Проверяем, что компонент смонтирован на клиенте
   useEffect(() => {
@@ -93,9 +96,6 @@ export default function Header() {
               <SearchBar
                 className="w-full"
                 placeholder={t('search.placeholder')}
-                onSearch={(query) =>
-                  router.push(`/search?q=${encodeURIComponent(query)}`)
-                }
                 variant="minimal"
               />
             </div>
@@ -138,16 +138,12 @@ export default function Header() {
         onClose={() => setIsLoginModalOpen(false)}
       />
 
-      {/* Мобильная поисковая строка */}
-      <div className="lg:hidden bg-base-100 border-t border-base-300 px-4 py-2 fixed top-16 left-0 right-0 z-[99]">
-        <SearchBar
-          className="w-full"
-          placeholder={t('search.placeholder')}
-          onSearch={(query) =>
-            router.push(`/search?q=${encodeURIComponent(query)}`)
-          }
-        />
-      </div>
+      {/* Мобильная поисковая строка - скрываем на странице поиска */}
+      {!isSearchPage && (
+        <div className="lg:hidden bg-base-100 border-t border-base-300 px-4 py-2 fixed top-16 left-0 right-0 z-[99]">
+          <SearchBar className="w-full" placeholder={t('search.placeholder')} />
+        </div>
+      )}
     </>
   );
 }

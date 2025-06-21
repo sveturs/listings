@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
 import { useDebounce } from '@/hooks/useDebounce';
 import {
   UnifiedSearchService,
@@ -28,6 +28,7 @@ export default function SearchBar({
   showTrending = false,
 }: SearchBarProps) {
   const t = useTranslations('search');
+  const locale = useLocale();
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -107,10 +108,12 @@ export default function SearchBar({
       if (onSearch) {
         onSearch(trimmedQuery);
       } else {
-        router.push(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+        // Строим URL с правильной локалью
+        const searchUrl = `/${locale}/search?q=${encodeURIComponent(trimmedQuery)}`;
+        router.push(searchUrl);
       }
     },
-    [query, onSearch, router]
+    [query, onSearch, router, locale]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -162,14 +165,14 @@ export default function SearchBar({
     // Если это категория, переходим на страницу категории
     if (suggestion.type === 'category' && suggestion.category) {
       router.push(
-        `/category/${suggestion.category.slug || suggestion.category.id}`
+        `/${locale}/category/${suggestion.category.slug || suggestion.category.id}`
       );
       return;
     }
 
     // Если это товар, можно перейти на страницу товара (если есть id)
     if (suggestion.type === 'product' && suggestion.product_id) {
-      router.push(`/listing/${suggestion.product_id}`);
+      router.push(`/${locale}/listing/${suggestion.product_id}`);
       return;
     }
 
