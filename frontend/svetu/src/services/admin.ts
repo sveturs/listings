@@ -109,7 +109,7 @@ export interface AttributeGroupItem {
 
 // Use generated PaginatedResponse type
 type PaginatedResponse<T> =
-  components['schemas']['backend_internal_domain_models.PaginatedResponse'] & {
+  components['schemas']['models.PaginatedResponse'] & {
     data: T[];
   };
 

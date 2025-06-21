@@ -36,7 +36,28 @@
       "contacts": "Contacts",
       "userContacts": "My Contacts",
       "createListing": "Create Listing"
+    },
+    "search": {
+      "placeholder": "Search products and services..."
     }
+  },
+  "search": {
+    "placeholder": "Search products and services...",
+    "inCategory": "in category",
+    "category": "Category",
+    "noResults": "No results found",
+    "resultsFor": "Search results for",
+    "filters": "Filters",
+    "sortBy": "Sort by",
+    "relevance": "Relevance",
+    "price": "Price",
+    "date": "Date",
+    "popularity": "Popularity",
+    "priceRange": "Price range",
+    "minPrice": "Min price",
+    "maxPrice": "Max price",
+    "showMore": "Show more",
+    "showLess": "Show less"
   },
   "blog": {
     "title": "Blog",
@@ -76,6 +97,7 @@
     "logout": "Logout",
     "loggingOut": "Logging out...",
     "profile": "Profile",
+    "myContacts": "My Contacts",
     "adminPanel": "Admin Panel",
     "common": {
       "close": "Close"

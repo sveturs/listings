@@ -9568,6 +9568,93 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Unified search across all product types
+     * @description Searches both marketplace listings and storefront products
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Search query */
+          query?: string;
+          /** @description Product types to search */
+          product_types?: ('marketplace' | 'storefront')[];
+          /** @description Page number */
+          page?: number;
+          /** @description Items per page */
+          limit?: number;
+          /** @description Category ID */
+          category_id?: string;
+          /** @description Minimum price */
+          price_min?: number;
+          /** @description Maximum price */
+          price_max?: number;
+          /** @description Sort field */
+          sort_by?: 'relevance' | 'price' | 'date' | 'popularity';
+          /** @description Sort order */
+          sort_order?: 'asc' | 'desc';
+          /** @description Storefront ID filter */
+          storefront_id?: number;
+          /** @description City filter */
+          city?: string;
+          /** @description Language */
+          language?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Search parameters */
+      requestBody?: {
+        content: {
+          'application/json': components['schemas']['handler.UnifiedSearchParams'];
+        };
+      };
+      responses: {
+        /** @description Search results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['handler.UnifiedSearchResult'];
+          };
+        };
+        /** @description search.invalidParams */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description search.searchError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts': {
     parameters: {
       query?: never;
@@ -13096,6 +13183,79 @@ export interface components {
       translations?: {
         [key: string]: string;
       };
+    };
+    'handler.UnifiedCategoryInfo': {
+      id?: number;
+      name?: string;
+      slug?: string;
+    };
+    'handler.UnifiedLocationInfo': {
+      city?: string;
+      country?: string;
+      lat?: number;
+      lng?: number;
+    };
+    'handler.UnifiedProductImage': {
+      alt_text?: string;
+      is_main?: boolean;
+      url?: string;
+    };
+    'handler.UnifiedSearchItem': {
+      category?: components['schemas']['handler.UnifiedCategoryInfo'];
+      currency?: string;
+      description?: string;
+      highlights?: {
+        [key: string]: string[];
+      };
+      /** @description Уникальный ID (ml_123 или sp_456) */
+      id?: string;
+      images?: components['schemas']['handler.UnifiedProductImage'][];
+      location?: components['schemas']['handler.UnifiedLocationInfo'];
+      name?: string;
+      price?: number;
+      product_id?: number;
+      /** @description "marketplace" или "storefront" */
+      product_type?: string;
+      score?: number;
+      /** @description Только для storefront товаров */
+      storefront?: components['schemas']['handler.UnifiedStorefrontInfo'];
+    };
+    'handler.UnifiedSearchParams': {
+      attribute_filters?: {
+        [key: string]: unknown;
+      };
+      category_id?: string;
+      city?: string;
+      language?: string;
+      limit?: number;
+      page?: number;
+      price_max?: number;
+      price_min?: number;
+      /** @description ["marketplace", "storefront"] */
+      product_types?: string[];
+      query?: string;
+      sort_by?: string;
+      sort_order?: string;
+      storefront_id?: number;
+    };
+    'handler.UnifiedSearchResult': {
+      facets?: {
+        [key: string]: unknown;
+      };
+      has_more?: boolean;
+      items?: components['schemas']['handler.UnifiedSearchItem'][];
+      limit?: number;
+      page?: number;
+      took_ms?: number;
+      total?: number;
+      total_pages?: number;
+    };
+    'handler.UnifiedStorefrontInfo': {
+      id?: number;
+      is_verified?: boolean;
+      name?: string;
+      rating?: number;
+      slug?: string;
     };
     'handler.UnreadCountData': {
       /** @example 5 */

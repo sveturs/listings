@@ -105,7 +105,9 @@ if [ $? -eq 0 ]; then
     curl -s "http://localhost:9200/$INDEX_NAME/_count" | jq '.count' | xargs echo "Total documents:"
     
     # Показать размер индекса
-    curl -s "http://localhost:9200/$INDEX_NAME/_stats/store" | jq '.indices["'$INDEX_NAME'"].total.store.size_in_bytes' | xargs -I {} echo "Index size: $(({} / 1024 / 1024)) MB"
+    SIZE_BYTES=$(curl -s "http://localhost:9200/$INDEX_NAME/_stats/store" | jq '.indices["'$INDEX_NAME'"].total.store.size_in_bytes // 0')
+    SIZE_MB=$((SIZE_BYTES / 1024 / 1024))
+    echo "Index size: ${SIZE_MB} MB"
 else
     echo
     echo -e "${RED}Reindexing failed!${NC}"

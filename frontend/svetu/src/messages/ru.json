@@ -36,7 +36,28 @@
       "contacts": "Контакты",
       "userContacts": "Мои контакты",
       "createListing": "Подать объявление"
+    },
+    "search": {
+      "placeholder": "Поиск товаров и услуг..."
     }
+  },
+  "search": {
+    "placeholder": "Поиск товаров и услуг...",
+    "inCategory": "в категории",
+    "category": "Категория",
+    "noResults": "Ничего не найдено",
+    "resultsFor": "Результаты поиска для",
+    "filters": "Фильтры",
+    "sortBy": "Сортировать по",
+    "relevance": "Релевантности",
+    "price": "Цене",
+    "date": "Дате",
+    "popularity": "Популярности",
+    "priceRange": "Диапазон цен",
+    "minPrice": "Мин. цена",
+    "maxPrice": "Макс. цена",
+    "showMore": "Показать больше",
+    "showLess": "Показать меньше"
   },
   "blog": {
     "title": "Блог",
@@ -76,6 +97,7 @@
     "logout": "Выйти",
     "loggingOut": "Выход...",
     "profile": "Профиль",
+    "myContacts": "Мои контакты",
     "adminPanel": "Панель администратора",
     "common": {
       "close": "Закрыть"

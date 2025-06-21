@@ -9897,6 +9897,144 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/search": {
+            "get": {
+                "description": "Searches both marketplace listings and storefront products",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search"
+                ],
+                "summary": "Unified search across all product types",
+                "parameters": [
+                    {
+                        "description": "Search parameters",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UnifiedSearchParams"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "marketplace",
+                                "storefront"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Product types to search",
+                        "name": "product_types",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Minimum price",
+                        "name": "price_min",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Maximum price",
+                        "name": "price_max",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "relevance",
+                            "price",
+                            "date",
+                            "popularity"
+                        ],
+                        "type": "string",
+                        "description": "Sort field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort order",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID filter",
+                        "name": "storefront_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "City filter",
+                        "name": "city",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "ru",
+                        "description": "Language",
+                        "name": "language",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UnifiedSearchResult"
+                        }
+                    },
+                    "400": {
+                        "description": "search.invalidParams",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "search.searchError",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts": {
             "get": {
                 "description": "Returns paginated list of storefronts with filters",
@@ -14055,6 +14193,213 @@ const docTemplate = `{
                     "additionalProperties": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "handler.UnifiedCategoryInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UnifiedLocationInfo": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "lng": {
+                    "type": "number"
+                }
+            }
+        },
+        "handler.UnifiedProductImage": {
+            "type": "object",
+            "properties": {
+                "alt_text": {
+                    "type": "string"
+                },
+                "is_main": {
+                    "type": "boolean"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UnifiedSearchItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/handler.UnifiedCategoryInfo"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "highlights": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "id": {
+                    "description": "Уникальный ID (ml_123 или sp_456)",
+                    "type": "string"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.UnifiedProductImage"
+                    }
+                },
+                "location": {
+                    "$ref": "#/definitions/handler.UnifiedLocationInfo"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "product_type": {
+                    "description": "\"marketplace\" или \"storefront\"",
+                    "type": "string"
+                },
+                "score": {
+                    "type": "number"
+                },
+                "storefront": {
+                    "description": "Только для storefront товаров",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handler.UnifiedStorefrontInfo"
+                        }
+                    ]
+                }
+            }
+        },
+        "handler.UnifiedSearchParams": {
+            "type": "object",
+            "properties": {
+                "attribute_filters": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "price_max": {
+                    "type": "number"
+                },
+                "price_min": {
+                    "type": "number"
+                },
+                "product_types": {
+                    "description": "[\"marketplace\", \"storefront\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "query": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                },
+                "storefront_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.UnifiedSearchResult": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "has_more": {
+                    "type": "boolean"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.UnifiedSearchItem"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "took_ms": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.UnifiedStorefrontInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_verified": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "slug": {
+                    "type": "string"
                 }
             }
         },

@@ -35,12 +35,9 @@ import {
 } from '@/store/slices/storefrontSlice';
 import type { components } from '@/types/generated/api';
 
-type Storefront =
-  components['schemas']['backend_internal_domain_models.Storefront'];
-type StorefrontCreateDTO =
-  components['schemas']['backend_internal_domain_models.StorefrontCreateDTO'];
-type StorefrontUpdateDTO =
-  components['schemas']['backend_internal_domain_models.StorefrontUpdateDTO'];
+type Storefront = components['schemas']['models.Storefront'];
+type StorefrontCreateDTO = components['schemas']['models.StorefrontCreateDTO'];
+type StorefrontUpdateDTO = components['schemas']['models.StorefrontUpdateDTO'];
 
 /**
  * Хук для работы с витринами

@@ -16,8 +16,7 @@ import { toast } from '@/utils/toast';
 import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
-type StorefrontProduct =
-  components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
 
 interface PageProps {
   params: Promise<{

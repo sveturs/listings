@@ -1002,6 +1002,142 @@ definitions:
           type: string
         type: object
     type: object
+  handler.UnifiedCategoryInfo:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+    type: object
+  handler.UnifiedLocationInfo:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      lat:
+        type: number
+      lng:
+        type: number
+    type: object
+  handler.UnifiedProductImage:
+    properties:
+      alt_text:
+        type: string
+      is_main:
+        type: boolean
+      url:
+        type: string
+    type: object
+  handler.UnifiedSearchItem:
+    properties:
+      category:
+        $ref: '#/definitions/handler.UnifiedCategoryInfo'
+      currency:
+        type: string
+      description:
+        type: string
+      highlights:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+      id:
+        description: Уникальный ID (ml_123 или sp_456)
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/handler.UnifiedProductImage'
+        type: array
+      location:
+        $ref: '#/definitions/handler.UnifiedLocationInfo'
+      name:
+        type: string
+      price:
+        type: number
+      product_id:
+        type: integer
+      product_type:
+        description: '"marketplace" или "storefront"'
+        type: string
+      score:
+        type: number
+      storefront:
+        allOf:
+        - $ref: '#/definitions/handler.UnifiedStorefrontInfo'
+        description: Только для storefront товаров
+    type: object
+  handler.UnifiedSearchParams:
+    properties:
+      attribute_filters:
+        additionalProperties: true
+        type: object
+      category_id:
+        type: string
+      city:
+        type: string
+      language:
+        type: string
+      limit:
+        type: integer
+      page:
+        type: integer
+      price_max:
+        type: number
+      price_min:
+        type: number
+      product_types:
+        description: '["marketplace", "storefront"]'
+        items:
+          type: string
+        type: array
+      query:
+        type: string
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+      storefront_id:
+        type: integer
+    type: object
+  handler.UnifiedSearchResult:
+    properties:
+      facets:
+        additionalProperties: true
+        type: object
+      has_more:
+        type: boolean
+      items:
+        items:
+          $ref: '#/definitions/handler.UnifiedSearchItem'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      took_ms:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  handler.UnifiedStorefrontInfo:
+    properties:
+      id:
+        type: integer
+      is_verified:
+        type: boolean
+      name:
+        type: string
+      rating:
+        type: number
+      slug:
+        type: string
+    type: object
   handler.UnreadCountData:
     properties:
       count:
@@ -9990,6 +10126,100 @@ paths:
       summary: Get user rating summary
       tags:
       - reviews
+  /api/v1/search:
+    get:
+      consumes:
+      - application/json
+      description: Searches both marketplace listings and storefront products
+      parameters:
+      - description: Search parameters
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handler.UnifiedSearchParams'
+      - description: Search query
+        in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        description: Product types to search
+        in: query
+        items:
+          enum:
+          - marketplace
+          - storefront
+          type: string
+        name: product_types
+        type: array
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Category ID
+        in: query
+        name: category_id
+        type: string
+      - description: Minimum price
+        in: query
+        name: price_min
+        type: number
+      - description: Maximum price
+        in: query
+        name: price_max
+        type: number
+      - description: Sort field
+        enum:
+        - relevance
+        - price
+        - date
+        - popularity
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
+      - description: Storefront ID filter
+        in: query
+        name: storefront_id
+        type: integer
+      - description: City filter
+        in: query
+        name: city
+        type: string
+      - default: ru
+        description: Language
+        in: query
+        name: language
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results
+          schema:
+            $ref: '#/definitions/handler.UnifiedSearchResult'
+        "400":
+          description: search.invalidParams
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: search.searchError
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Unified search across all product types
+      tags:
+      - search
   /api/v1/storefronts:
     get:
       consumes:

@@ -39,4 +39,7 @@ type ServicesInterface interface {
 
 	// ChatAttachment возвращает сервис для работы с вложениями чата
 	ChatAttachment() marketplaceService.ChatAttachmentServiceInterface
+	
+	// UnifiedSearch возвращает сервис для унифицированного поиска
+	UnifiedSearch() UnifiedSearchServiceInterface
 }

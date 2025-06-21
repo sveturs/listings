@@ -307,8 +307,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // const hasRefreshToken = document.cookie.includes('refresh_token=');
 
     if (hasValidCache) {
-      // Проверяем актуальность в фоне, не блокируя UI (skipLoadingState = true)
-      setTimeout(() => refreshSession(3, true), 100);
+      // Проверяем токен в кеше
+      const cachedUserJson = storageUtils.getItem('svetu_user');
+      if (cachedUserJson) {
+        try {
+          const cachedUser = JSON.parse(cachedUserJson);
+          if (cachedUser && cachedUser.accessToken) {
+            // Импортируем tokenManager для проверки
+            import('@/utils/tokenManager').then(({ tokenManager }) => {
+              if (tokenManager.isTokenExpired(cachedUser.accessToken)) {
+                // Токен истек, обновляем в фоне
+                setTimeout(() => refreshSession(3, true), 100);
+              } else {
+                console.log(
+                  '[AuthContext] Cached token is still valid, skipping refresh'
+                );
+              }
+            });
+          }
+        } catch (error) {
+          console.warn('Failed to parse cached user:', error);
+        }
+      }
     } else {
       // Если нет валидного кеша, делаем полную проверку
       // Это покрывает случаи:

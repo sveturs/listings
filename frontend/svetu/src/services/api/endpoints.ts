@@ -2,14 +2,10 @@ import { apiClient, ApiResponse } from '../api-client';
 import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированной схемы
-type UserProfile =
-  components['schemas']['backend_internal_domain_models.UserProfile'];
-type MarketplaceListing =
-  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
-type ChatMessage =
-  components['schemas']['backend_internal_domain_models.MarketplaceMessage'];
-type ListingsResponse =
-  components['schemas']['internal_proj_marketplace_handler.ListingsResponse'];
+type UserProfile = components['schemas']['models.UserProfile'];
+type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
+type ChatMessage = components['schemas']['models.MarketplaceMessage'];
+type ListingsResponse = components['schemas']['handler.ListingsResponse'];
 
 /**
  * Базовый класс для API endpoints

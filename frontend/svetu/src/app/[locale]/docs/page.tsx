@@ -15,17 +15,32 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AdminGuard from '@/components/AdminGuard';
-import type { components } from '@/types/generated/api';
+// Simplified types for docs functionality
+interface DocFile {
+  name: string;
+  path: string;
+  is_dir: boolean;
+  size?: number;
+  modified_at?: string;
+  children?: DocFile[];
+}
 
-type DocFile = components['schemas']['internal_proj_docserver_handler.DocFile'];
-type DocFilesResponse =
-  components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-    data?: components['schemas']['internal_proj_docserver_handler.DocFilesResponse'];
+interface DocFilesResponse {
+  success?: boolean;
+  message?: string;
+  data?: {
+    files: DocFile[];
   };
-type DocContentResponse =
-  components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-    data?: components['schemas']['internal_proj_docserver_handler.DocContentResponse'];
+}
+
+interface DocContentResponse {
+  success?: boolean;
+  message?: string;
+  data?: {
+    content: string;
+    file_path: string;
   };
+}
 
 export default function DocsPage() {
   const [files, setFiles] = useState<DocFile[]>([]);
@@ -153,7 +168,7 @@ export default function DocsPage() {
     return items.map((item) => {
       const isExpanded = expandedDirs.has(item.path || '');
 
-      if (item.type === 'directory') {
+      if (item.is_dir) {
         return (
           <div key={item.path}>
             <div
