@@ -98,7 +98,7 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceListing} "Listing details"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceListing} "Listing details"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getError"
@@ -416,7 +416,7 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.PriceHistoryEntry} "Price history entries"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.PriceHistoryEntry} "Price history entries"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.priceHistoryError"
 // @Router /api/v1/marketplace/listings/{id}/price-history [get]

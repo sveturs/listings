@@ -24,7 +24,7 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      requestBody: components['requestBodies']['backend_internal_domain_models.CategoryAttribute'];
+      requestBody: components['requestBodies']['models.CategoryAttribute'];
       responses: {
         /** @description marketplace.attributeCreated */
         201: {
@@ -32,8 +32,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.AttributeCreateResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AttributeCreateResponse'];
             };
           };
         };
@@ -43,7 +43,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.createAttributeError */
@@ -52,7 +52,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -101,8 +101,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.IDMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.IDMessageResponse'];
             };
           };
         };
@@ -112,7 +112,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.createCategoryError */
@@ -121,7 +121,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -164,8 +164,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CustomUIComponentUsage'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CustomUIComponentUsage'][];
             };
           };
         };
@@ -175,7 +175,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.internalServerError */
@@ -184,7 +184,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -226,8 +226,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.MarketplaceCategory'];
             };
           };
         };
@@ -237,7 +237,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.categoryNotFound */
@@ -246,7 +246,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getCategoriesError */
@@ -255,7 +255,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -292,8 +292,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -303,7 +303,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.updateCategoryError */
@@ -312,7 +312,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -340,8 +340,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -351,7 +351,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.deleteCategoryError */
@@ -360,7 +360,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -409,8 +409,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -420,7 +420,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.addAttributeToCategoryError */
@@ -429,7 +429,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -480,8 +480,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -491,7 +491,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.updateAttributeCategoryError */
@@ -500,7 +500,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -530,8 +530,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -541,7 +541,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.removeAttributeFromCategoryError */
@@ -550,7 +550,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -597,8 +597,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -608,7 +608,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.moveCategoryError */
@@ -617,7 +617,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -667,8 +667,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -678,7 +678,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.reorderCategoriesError */
@@ -687,7 +687,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -729,8 +729,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CustomUIComponent'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CustomUIComponent'][];
             };
           };
         };
@@ -740,7 +740,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -760,7 +760,7 @@ export interface paths {
       /** @description Component data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CreateCustomComponentRequest'];
+          'application/json': components['schemas']['models.CreateCustomComponentRequest'];
         };
       };
       responses: {
@@ -770,8 +770,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CustomUIComponent'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CustomUIComponent'];
             };
           };
         };
@@ -781,7 +781,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.internalServerError */
@@ -790,7 +790,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -830,8 +830,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CustomUIComponent'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CustomUIComponent'];
             };
           };
         };
@@ -841,7 +841,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.componentNotFound */
@@ -850,7 +850,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -872,7 +872,7 @@ export interface paths {
       /** @description Component data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.UpdateCustomComponentRequest'];
+          'application/json': components['schemas']['models.UpdateCustomComponentRequest'];
         };
       };
       responses: {
@@ -882,8 +882,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CustomUIComponent'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CustomUIComponent'];
             };
           };
         };
@@ -893,7 +893,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.internalServerError */
@@ -902,7 +902,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -937,7 +937,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            '*/*': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            '*/*': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -973,8 +973,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ComponentTemplate'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ComponentTemplate'][];
             };
           };
         };
@@ -984,7 +984,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1004,7 +1004,7 @@ export interface paths {
       /** @description Template data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CreateTemplateRequest'];
+          'application/json': components['schemas']['models.CreateTemplateRequest'];
         };
       };
       responses: {
@@ -1014,8 +1014,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ComponentTemplate'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ComponentTemplate'];
             };
           };
         };
@@ -1025,7 +1025,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.internalServerError */
@@ -1034,7 +1034,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1076,8 +1076,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CustomUIComponentUsage'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CustomUIComponentUsage'][];
             };
           };
         };
@@ -1087,7 +1087,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1107,7 +1107,7 @@ export interface paths {
       /** @description Usage data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CreateComponentUsageRequest'];
+          'application/json': components['schemas']['models.CreateComponentUsageRequest'];
         };
       };
       responses: {
@@ -1117,8 +1117,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CustomUIComponentUsage'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CustomUIComponentUsage'];
             };
           };
         };
@@ -1128,7 +1128,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.internalServerError */
@@ -1137,7 +1137,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1187,7 +1187,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            '*/*': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            '*/*': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.internalServerError */
@@ -1196,7 +1196,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            '*/*': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            '*/*': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1235,8 +1235,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AdminAdminsResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AdminAdminsResponse'];
             };
           };
         };
@@ -1246,7 +1246,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.admins.error.check_failed */
@@ -1255,7 +1255,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1294,8 +1294,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.AdminUser'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.AdminUser'][];
             };
           };
         };
@@ -1305,7 +1305,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.admins.error.fetch_failed */
@@ -1314,7 +1314,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1334,7 +1334,7 @@ export interface paths {
       /** @description Administrator data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.AdminUser'];
+          'application/json': components['schemas']['models.AdminUser'];
         };
       };
       responses: {
@@ -1344,8 +1344,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.AdminUser'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.AdminUser'];
             };
           };
         };
@@ -1355,7 +1355,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.admins.error.unauthorized */
@@ -1364,7 +1364,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.admins.error.add_failed */
@@ -1373,7 +1373,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1416,8 +1416,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AdminMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AdminMessageResponse'];
             };
           };
         };
@@ -1427,7 +1427,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.admins.error.unauthorized */
@@ -1436,7 +1436,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.admins.error.remove_failed */
@@ -1445,7 +1445,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1484,8 +1484,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AdminAdminsResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AdminAdminsResponse'];
             };
           };
         };
@@ -1495,7 +1495,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.admins.error.unauthorized */
@@ -1504,7 +1504,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.admins.error.check_failed */
@@ -1513,7 +1513,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1561,8 +1561,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.PaginatedResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.PaginatedResponse'];
             };
           };
         };
@@ -1572,7 +1572,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -1581,7 +1581,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1623,8 +1623,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CategoryAttribute'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CategoryAttribute'];
             };
           };
         };
@@ -1634,7 +1634,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Attribute not found */
@@ -1643,7 +1643,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -1652,7 +1652,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1671,7 +1671,7 @@ export interface paths {
         };
         cookie?: never;
       };
-      requestBody: components['requestBodies']['backend_internal_domain_models.CategoryAttribute'];
+      requestBody: components['requestBodies']['models.CategoryAttribute'];
       responses: {
         /** @description Success message */
         200: {
@@ -1679,8 +1679,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -1690,7 +1690,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -1699,7 +1699,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1727,8 +1727,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -1738,7 +1738,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -1747,7 +1747,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1796,8 +1796,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.TranslationResult'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.TranslationResult'];
             };
           };
         };
@@ -1807,7 +1807,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Attribute not found */
@@ -1816,7 +1816,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Translation error */
@@ -1825,7 +1825,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1859,7 +1859,7 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
-            attributes?: components['schemas']['backend_internal_domain_models.CategoryAttribute'][];
+            attributes?: components['schemas']['models.CategoryAttribute'][];
           };
         };
       };
@@ -1870,8 +1870,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.BulkUpdateResult'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.BulkUpdateResult'];
             };
           };
         };
@@ -1881,8 +1881,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_marketplace_handler.PartialOperationResponse'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.BulkUpdateResult'];
+            'application/json': components['schemas']['handler.PartialOperationResponse'] & {
+              data?: components['schemas']['handler.BulkUpdateResult'];
             };
           };
         };
@@ -1892,7 +1892,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -1946,8 +1946,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -1957,7 +1957,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -1966,7 +1966,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2003,8 +2003,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -2014,7 +2014,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -2023,7 +2023,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2052,8 +2052,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -2063,7 +2063,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -2072,7 +2072,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2111,8 +2111,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CategoryAttributeMapping'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CategoryAttributeMapping'][];
             };
           };
         };
@@ -2122,7 +2122,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -2131,7 +2131,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2170,7 +2170,7 @@ export interface paths {
       /** @description List of attribute mappings to import */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CategoryAttributeMapping'][];
+          'application/json': components['schemas']['models.CategoryAttributeMapping'][];
         };
       };
       responses: {
@@ -2180,8 +2180,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.ImportAttributesResult'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ImportAttributesResult'];
             };
           };
         };
@@ -2191,8 +2191,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_marketplace_handler.PartialOperationResponse'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.ImportAttributesResult'];
+            'application/json': components['schemas']['handler.PartialOperationResponse'] & {
+              data?: components['schemas']['handler.ImportAttributesResult'];
             };
           };
         };
@@ -2202,7 +2202,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Category not found */
@@ -2211,7 +2211,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -2220,7 +2220,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2269,8 +2269,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -2280,7 +2280,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Category not found */
@@ -2289,7 +2289,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -2298,7 +2298,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2337,8 +2337,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.ReindexStartedResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReindexStartedResponse'];
             };
           };
         };
@@ -2348,7 +2348,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.adminRequired */
@@ -2357,7 +2357,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.adminCheckError */
@@ -2366,7 +2366,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2405,8 +2405,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -2416,7 +2416,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.adminRequired */
@@ -2425,7 +2425,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.adminCheckError */
@@ -2434,7 +2434,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2473,8 +2473,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.ReindexStartedResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReindexStartedResponse'];
             };
           };
         };
@@ -2484,7 +2484,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.adminRequired */
@@ -2493,7 +2493,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.adminCheckError */
@@ -2502,7 +2502,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2541,8 +2541,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.ReindexStartedResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReindexStartedResponse'];
             };
           };
         };
@@ -2552,7 +2552,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.adminRequired */
@@ -2561,7 +2561,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.adminCheckError */
@@ -2570,7 +2570,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2609,8 +2609,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -2620,7 +2620,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.required */
@@ -2629,7 +2629,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.syncError */
@@ -2638,7 +2638,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2680,8 +2680,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AdminUserListResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AdminUserListResponse'];
             };
           };
         };
@@ -2691,7 +2691,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2733,8 +2733,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.UserProfile'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.UserProfile'];
             };
           };
         };
@@ -2744,7 +2744,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.users.error.user_not_found */
@@ -2753,7 +2753,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2775,7 +2775,7 @@ export interface paths {
       /** @description User update data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.UserProfileUpdate'];
+          'application/json': components['schemas']['models.UserProfileUpdate'];
         };
       };
       responses: {
@@ -2785,8 +2785,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AdminMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AdminMessageResponse'];
             };
           };
         };
@@ -2796,7 +2796,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.users.error.update_failed */
@@ -2805,7 +2805,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2833,8 +2833,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AdminMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AdminMessageResponse'];
             };
           };
         };
@@ -2844,7 +2844,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.users.error.delete_failed */
@@ -2853,7 +2853,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2892,8 +2892,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.UserBalance'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.UserBalance'];
             };
           };
         };
@@ -2903,7 +2903,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.balance.error.fetch_balance_failed */
@@ -2912,7 +2912,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -2950,7 +2950,7 @@ export interface paths {
       /** @description Status update (active, blocked, pending) */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_users_handler.AdminStatusUpdateRequest'];
+          'application/json': components['schemas']['handler.AdminStatusUpdateRequest'];
         };
       };
       responses: {
@@ -2960,8 +2960,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AdminMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AdminMessageResponse'];
             };
           };
         };
@@ -2971,7 +2971,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.users.error.status_update_failed */
@@ -2980,7 +2980,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3026,8 +3026,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.BalanceTransaction'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.BalanceTransaction'][];
             };
           };
         };
@@ -3037,7 +3037,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description admin.balance.error.fetch_transactions_failed */
@@ -3046,7 +3046,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3082,7 +3082,7 @@ export interface paths {
       /** @description Event data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_analytics_handler.EventRequest'];
+          'application/json': components['schemas']['handler.EventRequest'];
         };
       };
       responses: {
@@ -3092,7 +3092,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
           };
         };
         /** @description Bad request */
@@ -3101,7 +3101,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -3110,7 +3110,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3144,7 +3144,7 @@ export interface paths {
       /** @description Login credentials */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_users_handler.LoginRequest'];
+          'application/json': components['schemas']['handler.LoginRequest'];
         };
       };
       responses: {
@@ -3154,8 +3154,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AuthResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AuthResponse'];
             };
           };
         };
@@ -3165,7 +3165,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.login.error.invalid_credentials */
@@ -3174,7 +3174,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.login.error.failed */
@@ -3183,7 +3183,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3222,8 +3222,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_users_handler.MessageResponse'];
             };
           };
         };
@@ -3263,8 +3263,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.TokenResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.TokenResponse'];
             };
           };
         };
@@ -3274,7 +3274,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3308,7 +3308,7 @@ export interface paths {
       /** @description Registration data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_users_handler.RegisterRequest'];
+          'application/json': components['schemas']['handler.RegisterRequest'];
         };
       };
       responses: {
@@ -3318,8 +3318,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AuthResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AuthResponse'];
             };
           };
         };
@@ -3329,7 +3329,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.register.error.email_exists */
@@ -3338,7 +3338,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.register.error.failed */
@@ -3347,7 +3347,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3384,8 +3384,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.UserBalance'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.UserBalance'];
             };
           };
         };
@@ -3395,7 +3395,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description balance.getError */
@@ -3404,7 +3404,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3440,7 +3440,7 @@ export interface paths {
       /** @description Deposit details */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_balance_handler.DepositRequest'];
+          'application/json': components['schemas']['handler.DepositRequest'];
         };
       };
       responses: {
@@ -3450,8 +3450,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.PaymentSession'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.PaymentSession'];
             };
           };
         };
@@ -3461,7 +3461,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -3470,7 +3470,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description balance.createDepositError */
@@ -3479,7 +3479,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3516,8 +3516,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.PaymentMethod'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.PaymentMethod'][];
             };
           };
         };
@@ -3527,7 +3527,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3571,8 +3571,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.BalanceTransaction'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.BalanceTransaction'][];
             };
           };
         };
@@ -3582,7 +3582,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description balance.getTransactionsError */
@@ -3591,7 +3591,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3637,8 +3637,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ContactsListResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ContactsListResponse'];
             };
           };
         };
@@ -3648,7 +3648,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description contacts.fetchError */
@@ -3657,7 +3657,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3677,7 +3677,7 @@ export interface paths {
       /** @description Данные для добавления контакта */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.AddContactRequest'];
+          'application/json': components['schemas']['models.AddContactRequest'];
         };
       };
       responses: {
@@ -3687,8 +3687,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.UserContact'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.UserContact'];
             };
           };
         };
@@ -3698,7 +3698,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description contacts.userNotAllowRequests */
@@ -3707,7 +3707,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description contacts.alreadyExists */
@@ -3716,7 +3716,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description contacts.addError */
@@ -3725,7 +3725,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3768,8 +3768,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_contacts_handler.ContactRemoveResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ContactRemoveResponse'];
             };
           };
         };
@@ -3779,7 +3779,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description contacts.removeError */
@@ -3788,7 +3788,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3827,8 +3827,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_contacts_handler.ContactStatusCheckResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ContactStatusCheckResponse'];
             };
           };
         };
@@ -3838,7 +3838,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description contacts.checkError */
@@ -3847,7 +3847,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3885,7 +3885,7 @@ export interface paths {
       /** @description Новый статус контакта */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.UpdateContactRequest'];
+          'application/json': components['schemas']['models.UpdateContactRequest'];
         };
       };
       responses: {
@@ -3895,8 +3895,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_contacts_handler.ContactStatusUpdateResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ContactStatusUpdateResponse'];
             };
           };
         };
@@ -3906,7 +3906,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description contacts.updateError */
@@ -3915,7 +3915,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3953,8 +3953,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.UserPrivacySettings'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.UserPrivacySettings'];
             };
           };
         };
@@ -3964,7 +3964,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -3983,7 +3983,7 @@ export interface paths {
       /** @description Новые настройки приватности */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.UpdatePrivacySettingsRequest'];
+          'application/json': components['schemas']['models.UpdatePrivacySettingsRequest'];
         };
       };
       responses: {
@@ -3993,8 +3993,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.UserPrivacySettings'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.UserPrivacySettings'];
             };
           };
         };
@@ -4004,7 +4004,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description privacy.updateError */
@@ -4013,7 +4013,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4054,8 +4054,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_docserver_handler.DocContentResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.DocContentResponse'];
             };
           };
         };
@@ -4065,7 +4065,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description docs.fileNotFound */
@@ -4074,7 +4074,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description docs.readError */
@@ -4083,7 +4083,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4122,8 +4122,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_docserver_handler.DocFilesResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.DocFilesResponse'];
             };
           };
         };
@@ -4133,7 +4133,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4177,8 +4177,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.GeoLocation'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.GeoLocation'][];
             };
           };
         };
@@ -4188,7 +4188,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4232,8 +4232,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.GeoLocation'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.GeoLocation'];
             };
           };
         };
@@ -4243,7 +4243,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description geocode.reverseError */
@@ -4252,7 +4252,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4291,8 +4291,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.AttributeGroupsResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AttributeGroupsResponse'];
             };
           };
         };
@@ -4302,7 +4302,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4323,7 +4323,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            '*/*': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            '*/*': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.createGroupError */
@@ -4332,7 +4332,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            '*/*': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            '*/*': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4372,8 +4372,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.AttributeGroupResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AttributeGroupResponse'];
             };
           };
         };
@@ -4383,7 +4383,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.groupNotFound */
@@ -4392,7 +4392,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4414,7 +4414,7 @@ export interface paths {
       /** @description Updated group data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.UpdateAttributeGroupRequest'];
+          'application/json': components['schemas']['models.UpdateAttributeGroupRequest'];
         };
       };
       responses: {
@@ -4424,8 +4424,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -4435,7 +4435,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.updateGroupError */
@@ -4444,7 +4444,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4472,8 +4472,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -4483,7 +4483,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.deleteGroupError */
@@ -4492,7 +4492,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4531,8 +4531,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.AttributeGroupWithItemsData'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AttributeGroupWithItemsData'];
             };
           };
         };
@@ -4542,7 +4542,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.groupNotFound */
@@ -4551,7 +4551,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getGroupItemsError */
@@ -4560,7 +4560,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4583,7 +4583,7 @@ export interface paths {
       /** @description Attribute data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.AddItemToGroupRequest'];
+          'application/json': components['schemas']['models.AddItemToGroupRequest'];
         };
       };
       responses: {
@@ -4593,8 +4593,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.IDMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.IDMessageResponse'];
             };
           };
         };
@@ -4604,7 +4604,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.addItemError */
@@ -4613,7 +4613,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4658,8 +4658,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -4669,7 +4669,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.removeItemError */
@@ -4678,7 +4678,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4717,8 +4717,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.AttributeGroupsResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AttributeGroupsResponse'];
             };
           };
         };
@@ -4728,7 +4728,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getCategoryGroupsError */
@@ -4737,7 +4737,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4760,7 +4760,7 @@ export interface paths {
       /** @description Group attachment data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.AttachGroupToCategoryRequest'];
+          'application/json': components['schemas']['models.AttachGroupToCategoryRequest'];
         };
       };
       responses: {
@@ -4770,8 +4770,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.IDMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.IDMessageResponse'];
             };
           };
         };
@@ -4781,7 +4781,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.attachGroupError */
@@ -4790,7 +4790,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4835,8 +4835,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -4846,7 +4846,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.detachGroupError */
@@ -4855,7 +4855,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4894,8 +4894,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ChatAttachment'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ChatAttachment'];
             };
           };
         };
@@ -4905,7 +4905,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -4914,7 +4914,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.accessDenied */
@@ -4923,7 +4923,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.attachmentNotFound or marketplace.messageNotFound */
@@ -4932,7 +4932,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -4961,8 +4961,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -4972,7 +4972,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -4981,7 +4981,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.deleteAttachmentForbidden */
@@ -4990,7 +4990,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.deleteAttachmentError */
@@ -4999,7 +4999,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5035,8 +5035,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.MarketplaceCategory'][];
             };
           };
         };
@@ -5046,7 +5046,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5088,8 +5088,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.AttributeRangesResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AttributeRangesResponse'];
             };
           };
         };
@@ -5099,7 +5099,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.rangesError */
@@ -5108,7 +5108,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5150,8 +5150,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CategoryAttribute'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CategoryAttribute'][];
             };
           };
         };
@@ -5161,7 +5161,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.attributesError */
@@ -5170,7 +5170,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5214,8 +5214,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CategorySuggestion'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CategorySuggestion'][];
             };
           };
         };
@@ -5225,7 +5225,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.categorySuggestionsError */
@@ -5234,7 +5234,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5273,8 +5273,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CategoryTreeNode'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CategoryTreeNode'][];
             };
           };
         };
@@ -5284,7 +5284,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5323,8 +5323,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.MarketplaceChat'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.MarketplaceChat'][];
             };
           };
         };
@@ -5334,7 +5334,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getChatsError */
@@ -5343,7 +5343,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5393,8 +5393,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.ChatMessagesResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ChatMessagesResponse'];
             };
           };
         };
@@ -5404,7 +5404,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -5413,7 +5413,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getMessagesError */
@@ -5422,7 +5422,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5466,8 +5466,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -5477,7 +5477,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -5486,7 +5486,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.archiveChatError */
@@ -5495,7 +5495,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5546,8 +5546,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.EnhanceImagesResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.EnhanceImagesResponse'];
             };
           };
         };
@@ -5557,7 +5557,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.authRequired */
@@ -5566,7 +5566,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.forbidden */
@@ -5575,7 +5575,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.notFound or marketplace.imageNotFound */
@@ -5584,7 +5584,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.enhanceError */
@@ -5593,7 +5593,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5644,8 +5644,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.EnhancePreviewResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.EnhancePreviewResponse'];
             };
           };
         };
@@ -5655,7 +5655,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.authRequired */
@@ -5664,7 +5664,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.forbidden */
@@ -5673,7 +5673,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.notFound */
@@ -5682,7 +5682,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.enhanceError */
@@ -5691,7 +5691,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5735,8 +5735,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.SuggestionItem'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.SuggestionItem'][];
             };
           };
         };
@@ -5746,7 +5746,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.suggestionsError */
@@ -5755,7 +5755,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5794,8 +5794,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.MarketplaceListing'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.MarketplaceListing'][];
             };
           };
         };
@@ -5805,7 +5805,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getFavoritesError */
@@ -5814,7 +5814,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5858,8 +5858,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -5869,7 +5869,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -5878,7 +5878,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.notFound */
@@ -5887,7 +5887,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.addToFavoritesError */
@@ -5896,7 +5896,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5923,8 +5923,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -5934,7 +5934,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -5943,7 +5943,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.removeFromFavoritesError */
@@ -5952,7 +5952,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -5991,8 +5991,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.FavoriteStatusData'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.FavoriteStatusData'];
             };
           };
         };
@@ -6002,7 +6002,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -6011,7 +6011,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.checkFavoritesError */
@@ -6020,7 +6020,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6059,8 +6059,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.FavoritesCountData'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.FavoritesCountData'];
             };
           };
         };
@@ -6070,7 +6070,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getFavoritesCountError */
@@ -6079,7 +6079,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6124,8 +6124,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -6135,7 +6135,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.authRequired */
@@ -6144,7 +6144,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.forbidden */
@@ -6153,7 +6153,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.notFound */
@@ -6162,7 +6162,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.deleteError */
@@ -6171,7 +6171,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6228,8 +6228,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.ListingsResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ListingsResponse'];
             };
           };
         };
@@ -6239,7 +6239,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6259,7 +6259,7 @@ export interface paths {
       /** @description Listing data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+          'application/json': components['schemas']['models.MarketplaceListing'];
         };
       };
       responses: {
@@ -6269,8 +6269,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.IDMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.IDMessageResponse'];
             };
           };
         };
@@ -6280,7 +6280,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -6289,7 +6289,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.duplicateTitle */
@@ -6298,7 +6298,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.createError */
@@ -6307,7 +6307,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6347,8 +6347,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.MarketplaceListing'];
             };
           };
         };
@@ -6358,7 +6358,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.notFound */
@@ -6367,7 +6367,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getError */
@@ -6376,7 +6376,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6398,7 +6398,7 @@ export interface paths {
       /** @description Updated listing data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+          'application/json': components['schemas']['models.MarketplaceListing'];
         };
       };
       responses: {
@@ -6408,8 +6408,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -6419,7 +6419,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -6428,7 +6428,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.forbidden */
@@ -6437,7 +6437,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.notFound */
@@ -6446,7 +6446,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.updateError */
@@ -6455,7 +6455,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6483,8 +6483,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -6494,7 +6494,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -6503,7 +6503,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.forbidden */
@@ -6512,7 +6512,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.deleteError */
@@ -6521,7 +6521,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6574,8 +6574,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.ImagesUploadResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ImagesUploadResponse'];
             };
           };
         };
@@ -6585,7 +6585,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.authRequired */
@@ -6594,7 +6594,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.forbidden */
@@ -6603,7 +6603,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.notFound */
@@ -6612,7 +6612,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.uploadError */
@@ -6621,7 +6621,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6661,8 +6661,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.PriceHistoryEntry'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.PriceHistoryEntry'][];
             };
           };
         };
@@ -6672,7 +6672,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.priceHistoryError */
@@ -6681,7 +6681,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6726,8 +6726,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.MarketplaceListing'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.MarketplaceListing'][];
             };
           };
         };
@@ -6737,7 +6737,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.similarListingsError */
@@ -6746,7 +6746,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6804,7 +6804,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_marketplace_handler.MapBoundsResponse'];
+            'application/json': components['schemas']['handler.MapBoundsResponse'];
           };
         };
         /** @description marketplace.invalidBounds */
@@ -6813,7 +6813,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.mapError */
@@ -6822,7 +6822,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6880,7 +6880,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_marketplace_handler.MapClustersResponse'];
+            'application/json': components['schemas']['handler.MapClustersResponse'];
           };
         };
         /** @description marketplace.invalidBounds */
@@ -6889,7 +6889,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.mapError */
@@ -6898,7 +6898,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -6934,7 +6934,7 @@ export interface paths {
       /** @description Message data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CreateMessageRequest'];
+          'application/json': components['schemas']['models.CreateMessageRequest'];
         };
       };
       responses: {
@@ -6944,8 +6944,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.MarketplaceMessage'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.MarketplaceMessage'];
             };
           };
         };
@@ -6955,7 +6955,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -6964,7 +6964,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.sendMessageError */
@@ -6973,7 +6973,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7025,8 +7025,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ChatAttachment'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ChatAttachment'][];
             };
           };
         };
@@ -7036,7 +7036,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -7045,7 +7045,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.messageNotFound */
@@ -7054,7 +7054,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.uploadAttachmentsError */
@@ -7063,7 +7063,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7097,7 +7097,7 @@ export interface paths {
       /** @description Message IDs to mark as read */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.MarkAsReadRequest'];
+          'application/json': components['schemas']['models.MarkAsReadRequest'];
         };
       };
       responses: {
@@ -7107,8 +7107,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -7118,7 +7118,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -7127,7 +7127,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.markAsReadError */
@@ -7136,7 +7136,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7173,8 +7173,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.UnreadCountData'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.UnreadCountData'];
             };
           };
         };
@@ -7184,7 +7184,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getUnreadCountError */
@@ -7193,7 +7193,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7244,8 +7244,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.ImageModerationResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ImageModerationResponse'];
             };
           };
         };
@@ -7255,7 +7255,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.authRequired */
@@ -7264,7 +7264,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.adminRequired */
@@ -7273,7 +7273,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.moderationError */
@@ -7282,7 +7282,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7314,7 +7314,7 @@ export interface paths {
       /** @description Search parameters */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_search.ServiceParams'];
+          'application/json': components['schemas']['search.ServiceParams'];
         };
       };
       responses: {
@@ -7324,7 +7324,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_marketplace_handler.SearchResponse'];
+            'application/json': components['schemas']['handler.SearchResponse'];
           };
         };
         /** @description marketplace.searchError */
@@ -7333,7 +7333,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7377,7 +7377,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
               data?: string[];
             };
           };
@@ -7388,7 +7388,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.suggestionsError */
@@ -7397,7 +7397,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7442,8 +7442,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Translation'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.Translation'][];
             };
           };
         };
@@ -7453,7 +7453,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.getTranslationsError */
@@ -7462,7 +7462,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7487,7 +7487,7 @@ export interface paths {
       /** @description Translation data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_marketplace_handler.TranslationUpdateRequest'];
+          'application/json': components['schemas']['handler.TranslationUpdateRequest'];
         };
       };
       responses: {
@@ -7497,8 +7497,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
             };
           };
         };
@@ -7508,7 +7508,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.authRequired */
@@ -7517,7 +7517,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.forbidden */
@@ -7526,7 +7526,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.notFound */
@@ -7535,7 +7535,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.updateTranslationError */
@@ -7544,7 +7544,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7579,7 +7579,7 @@ export interface paths {
       /** @description Batch translation request */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_marketplace_handler.BatchTranslateRequest'];
+          'application/json': components['schemas']['handler.BatchTranslateRequest'];
         };
       };
       responses: {
@@ -7589,8 +7589,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.BatchTranslateData'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.BatchTranslateData'];
             };
           };
         };
@@ -7600,7 +7600,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7634,7 +7634,7 @@ export interface paths {
       /** @description Text for language detection */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_marketplace_handler.DetectLanguageRequest'];
+          'application/json': components['schemas']['handler.DetectLanguageRequest'];
         };
       };
       responses: {
@@ -7644,8 +7644,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.DetectedLanguageData'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.DetectedLanguageData'];
             };
           };
         };
@@ -7655,7 +7655,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.detectLanguageError */
@@ -7664,7 +7664,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7698,7 +7698,7 @@ export interface paths {
       /** @description Translation request */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_marketplace_handler.TranslateTextRequest'];
+          'application/json': components['schemas']['handler.TranslateTextRequest'];
         };
       };
       responses: {
@@ -7708,8 +7708,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.TranslatedTextData'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.TranslatedTextData'];
             };
           };
         };
@@ -7719,7 +7719,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description marketplace.translateError */
@@ -7728,7 +7728,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7770,8 +7770,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Notification'][];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.Notification'][];
             };
           };
         };
@@ -7781,7 +7781,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7824,8 +7824,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_notifications_handler.NotificationMarkReadResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.NotificationMarkReadResponse'];
             };
           };
         };
@@ -7835,7 +7835,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description notifications.updateError */
@@ -7844,7 +7844,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7891,8 +7891,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_notifications_handler.PublicEmailSendResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.PublicEmailSendResponse'];
             };
           };
         };
@@ -7902,7 +7902,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description email.sendError */
@@ -7911,7 +7911,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -7948,8 +7948,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_notifications_handler.NotificationSettingsResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.NotificationSettingsResponse'];
             };
           };
         };
@@ -7981,8 +7981,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_notifications_handler.NotificationSettingsUpdateResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.NotificationSettingsUpdateResponse'];
             };
           };
         };
@@ -7992,7 +7992,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description notifications.updateError */
@@ -8001,7 +8001,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8048,8 +8048,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_notifications_handler.TelegramConnectResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.TelegramConnectResponse'];
             };
           };
         };
@@ -8059,7 +8059,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description telegram.connectionError */
@@ -8068,7 +8068,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8105,8 +8105,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_notifications_handler.TelegramStatusResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.TelegramStatusResponse'];
             };
           };
         };
@@ -8116,7 +8116,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8155,8 +8155,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_notifications_handler.TelegramTokenResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.TelegramTokenResponse'];
             };
           };
         };
@@ -8166,7 +8166,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8212,8 +8212,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_notifications_handler.TelegramWebhookResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.TelegramWebhookResponse'];
             };
           };
         };
@@ -8251,7 +8251,7 @@ export interface paths {
       /** @description Stripe webhook payload */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_payments_handler.StripeWebhookRequest'];
+          'application/json': components['schemas']['handler.StripeWebhookRequest'];
         };
       };
       responses: {
@@ -8261,8 +8261,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_payments_handler.WebhookResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.WebhookResponse'];
             };
           };
         };
@@ -8272,7 +8272,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8330,8 +8330,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.ReviewsListResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReviewsListResponse'];
             };
           };
         };
@@ -8341,7 +8341,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8383,8 +8383,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Review'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.Review'];
             };
           };
         };
@@ -8394,7 +8394,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8403,7 +8403,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8425,7 +8425,7 @@ export interface paths {
       /** @description Updated review data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.Review'];
+          'application/json': components['schemas']['models.Review'];
         };
       };
       responses: {
@@ -8435,8 +8435,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.ReviewMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReviewMessageResponse'];
             };
           };
         };
@@ -8446,7 +8446,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8455,7 +8455,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8483,8 +8483,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.ReviewMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReviewMessageResponse'];
             };
           };
         };
@@ -8494,7 +8494,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8503,7 +8503,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8539,7 +8539,7 @@ export interface paths {
       /** @description Confirmation request */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CreateReviewConfirmationRequest'];
+          'application/json': components['schemas']['models.CreateReviewConfirmationRequest'];
         };
       };
       responses: {
@@ -8549,8 +8549,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.ReviewMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReviewMessageResponse'];
             };
           };
         };
@@ -8560,7 +8560,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Not authorized */
@@ -8569,7 +8569,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8578,7 +8578,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8615,7 +8615,7 @@ export interface paths {
       /** @description Dispute request */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CreateReviewDisputeRequest'];
+          'application/json': components['schemas']['models.CreateReviewDisputeRequest'];
         };
       };
       responses: {
@@ -8625,8 +8625,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.ReviewMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReviewMessageResponse'];
             };
           };
         };
@@ -8636,7 +8636,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8645,7 +8645,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8687,8 +8687,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.PhotosResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.PhotosResponse'];
             };
           };
         };
@@ -8698,7 +8698,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8707,7 +8707,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8749,8 +8749,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Review'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.Review'];
             };
           };
         };
@@ -8760,7 +8760,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Review not found */
@@ -8769,7 +8769,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8778,7 +8778,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8815,7 +8815,7 @@ export interface paths {
       /** @description Response data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_reviews_handler.ResponseRequest'];
+          'application/json': components['schemas']['handler.ResponseRequest'];
         };
       };
       responses: {
@@ -8825,8 +8825,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.ReviewMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReviewMessageResponse'];
             };
           };
         };
@@ -8836,7 +8836,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Review not found */
@@ -8845,7 +8845,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8854,7 +8854,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8891,7 +8891,7 @@ export interface paths {
       /** @description Vote data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_reviews_handler.VoteRequest'];
+          'application/json': components['schemas']['handler.VoteRequest'];
         };
       };
       responses: {
@@ -8901,8 +8901,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.ReviewMessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReviewMessageResponse'];
             };
           };
         };
@@ -8912,7 +8912,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Review not found */
@@ -8921,7 +8921,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8930,7 +8930,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -8972,8 +8972,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.CanReviewResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.CanReviewResponse'];
             };
           };
         };
@@ -8983,7 +8983,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -8992,7 +8992,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9028,7 +9028,7 @@ export interface paths {
       /** @description Review data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CreateReviewRequest'];
+          'application/json': components['schemas']['models.CreateReviewRequest'];
         };
       };
       responses: {
@@ -9038,8 +9038,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.Review'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.Review'];
             };
           };
         };
@@ -9049,7 +9049,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Listing not found */
@@ -9058,7 +9058,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9067,7 +9067,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9109,8 +9109,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.RatingResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.RatingResponse'];
             };
           };
         };
@@ -9120,7 +9120,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9129,7 +9129,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9173,8 +9173,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ReviewStats'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ReviewStats'];
             };
           };
         };
@@ -9184,7 +9184,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9228,8 +9228,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.ReviewStats'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ReviewStats'];
             };
           };
         };
@@ -9239,7 +9239,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9248,7 +9248,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9290,8 +9290,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.ReviewsListResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReviewsListResponse'];
             };
           };
         };
@@ -9301,7 +9301,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9310,7 +9310,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9352,8 +9352,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.StorefrontRatingSummary'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.StorefrontRatingSummary'];
             };
           };
         };
@@ -9363,7 +9363,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9372,7 +9372,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9413,8 +9413,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.PhotosResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.PhotosResponse'];
             };
           };
         };
@@ -9424,7 +9424,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9433,7 +9433,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9473,8 +9473,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_reviews_handler.ReviewsListResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.ReviewsListResponse'];
             };
           };
         };
@@ -9484,7 +9484,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9493,7 +9493,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9535,8 +9535,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.UserRatingSummary'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.UserRatingSummary'];
             };
           };
         };
@@ -9546,7 +9546,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9555,7 +9555,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9621,7 +9621,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.StorefrontsListResponse'];
+            'application/json': components['schemas']['handler.StorefrontsListResponse'];
           };
         };
         /** @description Internal server error */
@@ -9630,7 +9630,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9650,7 +9650,7 @@ export interface paths {
       /** @description Storefront data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.StorefrontCreateDTO'];
+          'application/json': components['schemas']['models.StorefrontCreateDTO'];
         };
       };
       responses: {
@@ -9660,7 +9660,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.Storefront'];
+            'application/json': components['schemas']['models.Storefront'];
           };
         };
         /** @description Bad request */
@@ -9669,7 +9669,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -9678,7 +9678,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Storefront limit reached */
@@ -9687,7 +9687,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9696,7 +9696,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9736,7 +9736,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.Storefront'];
+            'application/json': components['schemas']['models.Storefront'];
           };
         };
         /** @description Storefront not found */
@@ -9745,7 +9745,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9754,7 +9754,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9776,7 +9776,7 @@ export interface paths {
       /** @description Update data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.StorefrontUpdateDTO'];
+          'application/json': components['schemas']['models.StorefrontUpdateDTO'];
         };
       };
       responses: {
@@ -9797,7 +9797,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -9806,7 +9806,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -9815,7 +9815,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Storefront not found */
@@ -9824,7 +9824,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9833,7 +9833,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9872,7 +9872,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Only owner can delete storefront */
@@ -9881,7 +9881,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Storefront not found */
@@ -9890,7 +9890,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9899,7 +9899,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -9938,8 +9938,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.AggregatedRating'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.AggregatedRating'];
             };
           };
         };
@@ -9949,7 +9949,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -9958,7 +9958,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10005,7 +10005,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.StorefrontAnalytics'];
+            'application/json': components['schemas']['models.StorefrontAnalytics'];
           };
         };
         /** @description Bad request */
@@ -10014,7 +10014,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10023,7 +10023,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10032,7 +10032,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Storefront not found */
@@ -10041,7 +10041,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10050,7 +10050,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10115,7 +10115,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10124,7 +10124,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10133,7 +10133,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10142,7 +10142,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10178,7 +10178,7 @@ export interface paths {
       /** @description Delivery options */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.StorefrontDeliveryOption'][];
+          'application/json': components['schemas']['models.StorefrontDeliveryOption'][];
         };
       };
       responses: {
@@ -10199,7 +10199,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10208,7 +10208,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10217,7 +10217,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10226,7 +10226,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10263,7 +10263,7 @@ export interface paths {
       /** @description Working hours */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.StorefrontHours'][];
+          'application/json': components['schemas']['models.StorefrontHours'][];
         };
       };
       responses: {
@@ -10284,7 +10284,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10293,7 +10293,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10302,7 +10302,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10311,7 +10311,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10375,7 +10375,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10384,7 +10384,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10393,7 +10393,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10402,7 +10402,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10438,7 +10438,7 @@ export interface paths {
       /** @description Payment methods */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.StorefrontPaymentMethod'][];
+          'application/json': components['schemas']['models.StorefrontPaymentMethod'][];
         };
       };
       responses: {
@@ -10459,7 +10459,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10468,7 +10468,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10477,7 +10477,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10486,7 +10486,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10527,7 +10527,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['internal_proj_storefronts_handler.StaffListResponse'];
+            'application/json': components['schemas']['handler.StaffListResponse'];
           };
         };
         /** @description Bad request */
@@ -10536,7 +10536,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10545,7 +10545,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10568,7 +10568,7 @@ export interface paths {
       /** @description Staff data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_storefronts_handler.AddStaffRequest'];
+          'application/json': components['schemas']['handler.AddStaffRequest'];
         };
       };
       responses: {
@@ -10589,7 +10589,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10598,7 +10598,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions or staff limit reached */
@@ -10607,7 +10607,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10616,7 +10616,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10654,7 +10654,7 @@ export interface paths {
       /** @description Permissions map */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.JSONB'];
+          'application/json': components['schemas']['models.JSONB'];
         };
       };
       responses: {
@@ -10675,7 +10675,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10684,7 +10684,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10693,7 +10693,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Staff not found */
@@ -10702,7 +10702,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10711,7 +10711,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10768,7 +10768,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Unauthorized */
@@ -10777,7 +10777,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Insufficient permissions */
@@ -10786,7 +10786,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Staff not found */
@@ -10795,7 +10795,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10804,7 +10804,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10856,7 +10856,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -10865,7 +10865,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -10930,7 +10930,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.StorefrontProduct'][];
+            'application/json': components['schemas']['models.StorefrontProduct'][];
           };
         };
         /** @description Bad request */
@@ -10971,7 +10971,7 @@ export interface paths {
       /** @description Product data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.CreateProductRequest'];
+          'application/json': components['schemas']['models.CreateProductRequest'];
         };
       };
       responses: {
@@ -10981,7 +10981,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+            'application/json': components['schemas']['models.StorefrontProduct'];
           };
         };
         /** @description Bad request */
@@ -11050,7 +11050,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+            'application/json': components['schemas']['models.StorefrontProduct'];
           };
         };
         /** @description Product not found */
@@ -11092,7 +11092,7 @@ export interface paths {
       /** @description Product update data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.UpdateProductRequest'];
+          'application/json': components['schemas']['models.UpdateProductRequest'];
         };
       };
       responses: {
@@ -11242,7 +11242,7 @@ export interface paths {
       /** @description Inventory update data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.UpdateInventoryRequest'];
+          'application/json': components['schemas']['models.UpdateInventoryRequest'];
         };
       };
       responses: {
@@ -11328,7 +11328,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.ProductStats'];
+            'application/json': components['schemas']['models.ProductStats'];
           };
         };
         /** @description Unauthorized */
@@ -11390,7 +11390,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.StorefrontMapData'][];
+            'application/json': components['schemas']['models.StorefrontMapData'][];
           };
         };
         /** @description Invalid coordinates */
@@ -11399,7 +11399,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11408,7 +11408,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11458,7 +11458,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.StorefrontMapData'][];
+            'application/json': components['schemas']['models.StorefrontMapData'][];
           };
         };
         /** @description Invalid bounds */
@@ -11467,7 +11467,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11476,7 +11476,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11515,7 +11515,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.Storefront'][];
+            'application/json': components['schemas']['models.Storefront'][];
           };
         };
         /** @description Unauthorized */
@@ -11524,7 +11524,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11533,7 +11533,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11581,7 +11581,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.Storefront'][];
+            'application/json': components['schemas']['models.Storefront'][];
           };
         };
         /** @description Invalid coordinates */
@@ -11590,7 +11590,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11599,7 +11599,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11669,7 +11669,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult'];
+            'application/json': components['schemas']['opensearch.StorefrontSearchResult'];
           };
         };
         /** @description Invalid parameters */
@@ -11678,7 +11678,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11687,7 +11687,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11729,7 +11729,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_internal_domain_models.Storefront'];
+            'application/json': components['schemas']['models.Storefront'];
           };
         };
         /** @description Storefront not found */
@@ -11738,7 +11738,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11747,7 +11747,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11786,8 +11786,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.TranslationLimitsData'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.TranslationLimitsData'];
             };
           };
         };
@@ -11824,7 +11824,7 @@ export interface paths {
       /** @description Provider configuration (google, openai) */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_marketplace_handler.SetProviderRequest'];
+          'application/json': components['schemas']['handler.SetProviderRequest'];
         };
       };
       responses: {
@@ -11834,8 +11834,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.SetProviderResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.SetProviderResponse'];
             };
           };
         };
@@ -11845,7 +11845,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11885,8 +11885,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.AggregatedRating'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.AggregatedRating'];
             };
           };
         };
@@ -11896,7 +11896,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal server error */
@@ -11905,7 +11905,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -11947,8 +11947,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.PublicUserResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.PublicUserResponse'];
             };
           };
         };
@@ -11958,7 +11958,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -11967,7 +11967,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description users.profile.error.not_found */
@@ -11976,7 +11976,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -12018,8 +12018,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AdminCheckResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AdminCheckResponse'];
             };
           };
         };
@@ -12029,7 +12029,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -12038,7 +12038,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description users.admin_check.error.user_not_found */
@@ -12047,7 +12047,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -12084,7 +12084,7 @@ export interface paths {
       /** @description Login credentials (email and password required) */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_users_handler.LoginRequest'];
+          'application/json': components['schemas']['handler.LoginRequest'];
         };
       };
       responses: {
@@ -12094,8 +12094,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.LoginResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.LoginResponse'];
             };
           };
         };
@@ -12105,7 +12105,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description users.login.error.invalid_credentials */
@@ -12114,7 +12114,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -12151,8 +12151,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.UserProfile'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.UserProfile'];
             };
           };
         };
@@ -12162,7 +12162,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description users.profile.error.fetch */
@@ -12171,7 +12171,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -12190,7 +12190,7 @@ export interface paths {
       /** @description Profile update data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_domain_models.UserProfileUpdate'];
+          'application/json': components['schemas']['models.UserProfileUpdate'];
         };
       };
       responses: {
@@ -12200,8 +12200,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.MessageResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_users_handler.MessageResponse'];
             };
           };
         };
@@ -12211,7 +12211,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description auth.required */
@@ -12220,7 +12220,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description users.profile.error.update */
@@ -12229,7 +12229,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -12265,7 +12265,7 @@ export interface paths {
       /** @description Registration data (name, email, password required, phone optional) */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_users_handler.RegisterRequest'];
+          'application/json': components['schemas']['handler.RegisterRequest'];
         };
       };
       responses: {
@@ -12275,8 +12275,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.RegisterResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.RegisterResponse'];
             };
           };
         };
@@ -12286,7 +12286,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description users.register.error.password_hash_failed or users.register.error.create_failed */
@@ -12295,7 +12295,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -12386,7 +12386,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
       };
@@ -12425,8 +12425,8 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.SessionResponse'];
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.SessionResponse'];
             };
           };
         };
@@ -12459,28 +12459,690 @@ export interface components {
       /** @example true */
       success?: boolean;
     };
-    'backend_internal_domain_models.AddContactRequest': {
+    'backend_internal_proj_marketplace_handler.MessageResponse': {
+      /** @example marketplace.operationSuccess */
+      message?: string;
+      /** @example true */
+      success?: boolean;
+    };
+    'backend_internal_proj_users_handler.MessageResponse': {
+      /** @example Операция выполнена успешно */
+      message?: string;
+    };
+    'handler.AddStaffRequest': {
+      role: components['schemas']['models.StaffRole'];
+      user_id: number;
+    };
+    'handler.AdminAdminsResponse': {
+      /** @example admin@example.com */
+      email?: string;
+      /** @example true */
+      is_admin?: boolean;
+    };
+    'handler.AdminCheckResponse': {
+      /** @example false */
+      is_admin?: boolean;
+    };
+    'handler.AdminMessageResponse': {
+      /** @example admin.users.success.profile_updated */
+      message?: string;
+    };
+    'handler.AdminStatusUpdateRequest': {
+      /**
+       * @example active
+       * @enum {string}
+       */
+      status: 'active' | 'blocked' | 'pending';
+    };
+    'handler.AdminUserListResponse': {
+      data?: components['schemas']['models.UserProfile'][];
+      /** @example 10 */
+      limit?: number;
+      /** @example 1 */
+      page?: number;
+      /** @example 10 */
+      pages?: number;
+      /** @example 100 */
+      total?: number;
+    };
+    'handler.AttributeCreateResponse': {
+      /** @example 123 */
+      id?: number;
+      /** @example marketplace.attributeCreated */
+      message?: string;
+    };
+    'handler.AttributeGroupResponse': {
+      group?: components['schemas']['models.AttributeGroup'];
+    };
+    'handler.AttributeGroupWithItemsData': {
+      group?: components['schemas']['models.AttributeGroup'];
+      items?: components['schemas']['models.AttributeGroupItem'][];
+    };
+    'handler.AttributeGroupsResponse': {
+      groups?: components['schemas']['models.AttributeGroup'][];
+    };
+    'handler.AttributeRange': {
+      /** @example 1000000 */
+      max?: number;
+      /** @example 0 */
+      min?: number;
+    };
+    'handler.AttributeRangesResponse': {
+      data?: {
+        [key: string]: components['schemas']['handler.AttributeRange'];
+      };
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.AuthResponse': {
+      /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
+      access_token?: string;
+      /** @example 3600 */
+      expires_in?: number;
+      /** @example Bearer */
+      token_type?: string;
+      user?: components['schemas']['handler.UserResponse'];
+    };
+    'handler.BatchTranslateData': {
+      /** @example 3 */
+      listing_count?: number;
+      /** @example google */
+      provider?: string;
+      /** @example en */
+      target_lang?: string;
+    };
+    'handler.BatchTranslateRequest': Record<string, never>;
+    'handler.BulkUpdateResult': {
+      errors?: string[];
+      /** @example 5 */
+      success_count?: number;
+      /** @example 10 */
+      total_count?: number;
+    };
+    'handler.CategorySummary': {
+      /** @example 10 */
+      id?: number;
+      /** @example Smartphones */
+      name?: string;
+      /** @example smartphones */
+      slug?: string;
+    };
+    'handler.ChatMessagesResponse': {
+      limit?: number;
+      messages?: components['schemas']['models.MarketplaceMessage'][];
+      page?: number;
+      total?: number;
+    };
+    /** @description Ответ при удалении контакта из списка */
+    'handler.ContactRemoveResponse': {
+      /**
+       * @description Сообщение об успешном удалении
+       * @example contacts.removed
+       */
+      message?: string;
+    };
+    /** @description Информация о статусе связи между пользователями */
+    'handler.ContactStatusCheckResponse': {
+      /**
+       * @description Являются ли пользователи контактами
+       * @example true
+       */
+      are_contacts?: boolean;
+      /**
+       * @description ID проверяемого контакта
+       * @example 456
+       */
+      contact_id?: number;
+      /**
+       * @description ID текущего пользователя
+       * @example 123
+       */
+      user_id?: number;
+    };
+    /** @description Ответ при изменении статуса контакта */
+    'handler.ContactStatusUpdateResponse': {
+      /**
+       * @description Сообщение об успешном обновлении
+       * @example contacts.statusUpdated
+       */
+      message?: string;
+    };
+    'handler.Coordinates': {
+      /** @example 55.7558 */
+      lat?: number;
+      /** @example 37.6173 */
+      lng?: number;
+    };
+    'handler.DepositRequest': {
+      /** @example 1000.5 */
+      amount?: number;
+      /** @example card */
+      payment_method?: string;
+    };
+    'handler.DetectLanguageRequest': {
+      /** @example Hello world */
+      text?: string;
+    };
+    'handler.DetectedLanguageData': {
+      /** @example 0.99 */
+      confidence?: number;
+      /** @example en */
+      language?: string;
+    };
+    'handler.DocContentResponse': {
+      /** @example # Documentation
+       *
+       *     This is the content of the markdown file. */
+      content?: string;
+      /** @example docs/README.md */
+      path?: string;
+    };
+    'handler.DocFile': {
+      children?: components['schemas']['handler.DocFile'][];
+      /** @example README.md */
+      name?: string;
+      /** @example docs/README.md */
+      path?: string;
+      /**
+       * @example file
+       * @enum {string}
+       */
+      type?: 'file' | 'directory';
+    };
+    'handler.DocFilesResponse': {
+      files?: components['schemas']['handler.DocFile'][];
+      /** @example ./docs */
+      rootPath?: string;
+    };
+    'handler.EnhanceImagesData': {
+      /** @example enhance_123_1234567890 */
+      job_id?: string;
+      /** @example marketplace.imageEnhancementStarted */
+      message?: string;
+    };
+    'handler.EnhanceImagesResponse': {
+      data?: components['schemas']['handler.EnhanceImagesData'];
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.EnhancePreviewData': {
+      /** @example https://example.com/preview/123/quality */
+      preview_url?: string;
+    };
+    'handler.EnhancePreviewResponse': {
+      data?: components['schemas']['handler.EnhancePreviewData'];
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.EventRequest': {
+      event_data?: number[];
+      /** @enum {string} */
+      event_type:
+        | 'page_view'
+        | 'product_view'
+        | 'add_to_cart'
+        | 'checkout'
+        | 'order';
+      session_id: string;
+      storefront_id: number;
+      user_id?: number;
+    };
+    'handler.FavoriteStatusData': {
+      /** @example true */
+      is_in_favorites?: boolean;
+    };
+    'handler.FavoritesCountData': {
+      /** @example 5 */
+      count?: number;
+    };
+    'handler.IDMessageResponse': {
+      /** @example 123 */
+      id?: number;
+      /** @example marketplace.created */
+      message?: string;
+    };
+    'handler.ImageModerationResponse': {
+      data?: components['schemas']['handler.ModerationData'];
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.ImagesUploadResponse': {
+      /** @example 3 */
+      count?: number;
+      images?: components['schemas']['models.MarketplaceImage'][];
+      /** @example marketplace.imagesUploaded */
+      message?: string;
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.ImportAttributesResult': {
+      errors?: string[];
+      /** @example 5 */
+      success_count?: number;
+      /** @example 10 */
+      total_count?: number;
+    };
+    'handler.ListingsResponse': {
+      data?: components['schemas']['models.MarketplaceListing'][];
+      meta?: components['schemas']['handler.PaginationMeta'];
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.LoginRequest': {
+      /** @example user@example.com */
+      email: string;
+      /** @example password123 */
+      password: string;
+    };
+    'handler.LoginResponse': {
+      /** @example users.login.success.authenticated */
+      message?: string;
+      user?: components['schemas']['models.User'];
+    };
+    'handler.MapBounds': {
+      ne?: components['schemas']['handler.Coordinates'];
+      sw?: components['schemas']['handler.Coordinates'];
+    };
+    'handler.MapBoundsData': {
+      bounds?: components['schemas']['handler.MapBounds'];
+      /** @example 25 */
+      count?: number;
+      listings?: components['schemas']['models.MapMarker'][];
+      /** @example 10 */
+      zoom?: number;
+    };
+    'handler.MapBoundsResponse': {
+      data?: components['schemas']['handler.MapBoundsData'];
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.MapClustersData': {
+      /** @example 50 */
+      count?: number;
+      data?: unknown;
+      /** @example clusters */
+      type?: string;
+      /** @example 10 */
+      zoom?: number;
+    };
+    'handler.MapClustersResponse': {
+      data?: components['schemas']['handler.MapClustersData'];
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.ModerationData': {
+      /** @example false */
+      has_prohibited?: boolean;
+      /** @example [
+       *       "image",
+       *       "photo"
+       *     ] */
+      labels?: string[];
+      prohibited_labels?: string[];
+    };
+    /** @description Ответ при изменении статуса уведомления */
+    'handler.NotificationMarkReadResponse': {
+      /**
+       * @description Сообщение об успешной отметке
+       * @example notifications.markedAsRead
+       */
+      message?: string;
+    };
+    /** @description Настройки уведомлений пользователя */
+    'handler.NotificationSettingsResponse': {
+      /** @description Массив настроек для разных типов уведомлений */
+      data?: components['schemas']['models.NotificationSettings'][];
+    };
+    /** @description Ответ при обновлении настроек уведомлений */
+    'handler.NotificationSettingsUpdateResponse': {
+      /**
+       * @description Сообщение об успешном обновлении
+       * @example notifications.settingsUpdated
+       */
+      message?: string;
+      /** @description Обновленные настройки */
+      settings?: components['schemas']['models.NotificationSettings'][];
+    };
+    'handler.PaginationMeta': {
+      /** @example true */
+      has_more?: boolean;
+      /** @example 20 */
+      limit?: number;
+      /** @example 1 */
+      page?: number;
+      /** @example 100 */
+      total?: number;
+      /** @example 5 */
+      total_pages?: number;
+    };
+    'handler.PartialOperationResponse': {
+      data?: unknown;
+      /** @example marketplace.partialOperationCompleted */
+      error?: string;
+      /** @example false */
+      success?: boolean;
+    };
+    'handler.PhotosResponse': {
+      /** @example Photos uploaded successfully */
+      message?: string;
+      photos?: string[];
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.ProviderData': {
+      /** @example google */
+      provider?: string;
+    };
+    /** @description Ответ при отправке email с публичной формы */
+    'handler.PublicEmailSendResponse': {
+      /**
+       * @description Сообщение о результате
+       * @example email.sentSuccessfully
+       */
+      message?: string;
+      /**
+       * @description Флаг успешной отправки
+       * @example true
+       */
+      success?: boolean;
+    };
+    'handler.PublicUserResponse': {
+      /** @example 2023-01-01T12:00:00Z */
+      created_at?: string;
+      /** @example user@example.com */
+      email?: string;
+      /** @example 1 */
+      id?: number;
+      /** @example Иван Иванов */
+      name?: string;
+      /** @example https://example.com/avatar.jpg */
+      picture_url?: string;
+    };
+    'handler.RatingResponse': {
+      /** @example 4.5 */
+      rating?: number;
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.RegisterRequest': {
+      /** @example user@example.com */
+      email: string;
+      /** @example John Doe */
+      name: string;
+      /** @example password123 */
+      password: string;
+      /** @example +1234567890 */
+      phone?: string;
+    };
+    'handler.RegisterResponse': {
+      /** @example Пользователь успешно зарегистрирован */
+      message?: string;
+      user?: components['schemas']['models.User'];
+    };
+    'handler.ReindexStartedResponse': {
+      /** @example marketplace.reindexStarted */
+      message?: string;
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.ResponseRequest': {
+      /** @example Thank you for your review! */
+      response?: string;
+    };
+    'handler.ReviewMessageResponse': {
+      /** @example Operation completed successfully */
+      message?: string;
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.ReviewsListResponse': {
+      data?: components['schemas']['models.Review'][];
+      meta?: components['schemas']['handler.ReviewsMeta'];
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.ReviewsMeta': {
+      /** @example 20 */
+      limit?: number;
+      /** @example 1 */
+      page?: number;
+      /** @example 100 */
+      total?: number;
+    };
+    'handler.SearchMetadata': {
+      facets?: {
+        [key: string]: components['schemas']['search.Bucket'][];
+      };
+      /** @example true */
+      has_more?: boolean;
+      /** @example 1 */
+      page?: number;
+      /** @example 20 */
+      size?: number;
+      spelling_suggestion?: string;
+      suggestions?: string[];
+      /** @example 25 */
+      took_ms?: number;
+      /** @example 100 */
+      total?: number;
+      /** @example 5 */
+      total_pages?: number;
+    };
+    'handler.SearchResponse': {
+      data?: components['schemas']['models.MarketplaceListing'][];
+      meta?: components['schemas']['handler.SearchMetadata'];
+    };
+    'handler.SessionResponse': {
+      /** @example true */
+      authenticated?: boolean;
+      user?: components['schemas']['handler.SessionUserResponse'];
+    };
+    'handler.SessionUserResponse': {
+      /** @example Moscow */
+      city?: string;
+      /** @example Russia */
+      country?: string;
+      /** @example user@example.com */
+      email?: string;
+      /** @example 1 */
+      id?: number;
+      /** @example false */
+      is_admin?: boolean;
+      /** @example John Doe */
+      name?: string;
+      /** @example +1234567890 */
+      phone?: string;
+      /** @example https://example.com/avatar.jpg */
+      picture_url?: string;
+      /** @example password */
+      provider?: string;
+    };
+    'handler.SetProviderRequest': {
+      /** @example google */
+      provider?: string;
+    };
+    'handler.SetProviderResponse': {
+      data?: components['schemas']['handler.ProviderData'];
+      /** @example marketplace.providerSet */
+      message?: string;
+      /** @example true */
+      success?: boolean;
+    };
+    'handler.StaffListResponse': {
+      staff?: components['schemas']['models.StorefrontStaff'][];
+      total?: number;
+    };
+    'handler.StorefrontsListResponse': {
+      limit?: number;
+      offset?: number;
+      storefronts?: components['schemas']['models.Storefront'][];
+      total?: number;
+    };
+    'handler.StripeWebhookRequest': {
+      /** @example 1234567890 */
+      created?: number;
+      data?: {
+        [key: string]: unknown;
+      };
+      /** @example evt_1234567890 */
+      id?: string;
+      /** @example event */
+      object?: string;
+      /** @example checkout.session.completed */
+      type?: string;
+    };
+    'handler.SuggestionItem': {
+      category?: components['schemas']['handler.CategorySummary'];
+      /** @example iPhone 13 */
+      text?: string;
+      /** @example product */
+      type?: string;
+    };
+    /** @description Ответ при успешном подключении Telegram */
+    'handler.TelegramConnectResponse': {
+      /**
+       * @description Сообщение об успешном подключении
+       * @example telegram.connected
+       */
+      message?: string;
+    };
+    /** @description Информация о подключении Telegram к аккаунту */
+    'handler.TelegramStatusResponse': {
+      /**
+       * @description Подключен ли Telegram
+       * @example true
+       */
+      connected?: boolean;
+      /**
+       * @description Имя пользователя в Telegram (если подключен)
+       * @example john_doe
+       */
+      username?: string;
+    };
+    /** @description Токен для связывания аккаунта с Telegram ботом */
+    'handler.TelegramTokenResponse': {
+      /**
+       * @description Время генерации токена
+       * @example 2024-01-15T10:30:00Z
+       */
+      generated_at?: string;
+      /**
+       * @description Сгенерированный токен
+       * @example 123_abc...
+       */
+      token?: string;
+    };
+    /** @description Ответ на webhook запрос от Telegram */
+    'handler.TelegramWebhookResponse': {
+      /**
+       * @description Статус обработки
+       * @example OK
+       */
+      status?: string;
+    };
+    'handler.TokenResponse': {
+      /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
+      access_token?: string;
+      /** @example 3600 */
+      expires_in?: number;
+      /** @example Bearer */
+      token_type?: string;
+    };
+    'handler.TranslateTextRequest': {
+      /** @example google */
+      provider?: string;
+      /** @example en */
+      source_lang?: string;
+      /** @example ru */
+      target_lang?: string;
+      /** @example Hello world */
+      text?: string;
+    };
+    'handler.TranslatedTextData': {
+      /** @example google */
+      provider?: string;
+      /** @example en */
+      source_lang?: string;
+      /** @example ru */
+      target_lang?: string;
+      /** @example Привет мир */
+      translated_text?: string;
+    };
+    'handler.TranslationLimitsData': {
+      /** @example 10000 */
+      daily_limit?: number;
+      /** @example google */
+      provider?: string;
+      /** @example 6550 */
+      remaining?: number;
+      /** @example 3450 */
+      used_today?: number;
+    };
+    'handler.TranslationResult': {
+      /** @example 123 */
+      attribute_id?: number;
+      errors?: string[];
+      translations?: {
+        [key: string]: unknown;
+      };
+    };
+    'handler.TranslationUpdateRequest': {
+      /** @example false */
+      is_verified?: boolean;
+      /** @example en */
+      language?: string;
+      /** @example google */
+      provider?: string;
+      translations?: {
+        [key: string]: string;
+      };
+    };
+    'handler.UnreadCountData': {
+      /** @example 5 */
+      count?: number;
+    };
+    'handler.UserResponse': {
+      /** @example user@example.com */
+      email?: string;
+      /** @example 1 */
+      id?: number;
+      /** @example John Doe */
+      name?: string;
+      /** @example https://example.com/avatar.jpg */
+      picture_url?: string;
+    };
+    'handler.VoteRequest': {
+      /** @example helpful */
+      vote_type?: string;
+    };
+    'handler.WebhookResponse': {
+      /** @example payments.webhook.processed */
+      message?: string;
+      /** @example success */
+      status?: string;
+    };
+    'models.AddContactRequest': {
       added_from_chat_id?: number;
       contact_user_id: number;
       notes?: string;
     };
-    'backend_internal_domain_models.AddItemToGroupRequest': {
+    'models.AddItemToGroupRequest': {
       attribute_id: number;
       custom_display_name?: string;
       icon?: string;
       sort_order?: number;
       visibility_condition?: number[];
     };
-    'backend_internal_domain_models.AdminUser': {
+    'models.AdminUser': {
       created_at?: string;
       created_by?: number;
       email?: string;
       id?: number;
       notes?: string;
     };
-    'backend_internal_domain_models.AggregatedRating': {
+    'models.AggregatedRating': {
       average?: number;
-      breakdown?: components['schemas']['backend_internal_domain_models.RatingBreakdown'];
+      breakdown?: components['schemas']['models.RatingBreakdown'];
       distribution?: {
         [key: string]: number;
       };
@@ -12494,7 +13156,7 @@ export interface components {
       total_reviews?: number;
       verified_percentage?: number;
     };
-    'backend_internal_domain_models.AttachGroupToCategoryRequest': {
+    'models.AttachGroupToCategoryRequest': {
       collapsed_by_default?: boolean;
       component_id?: number;
       configuration?: number[];
@@ -12503,7 +13165,7 @@ export interface components {
       is_active?: boolean;
       sort_order?: number;
     };
-    'backend_internal_domain_models.AttributeGroup': {
+    'models.AttributeGroup': {
       created_at?: string;
       description?: string;
       display_name?: string;
@@ -12515,8 +13177,8 @@ export interface components {
       sort_order?: number;
       updated_at?: string;
     };
-    'backend_internal_domain_models.AttributeGroupItem': {
-      attribute?: components['schemas']['backend_internal_domain_models.CategoryAttribute'];
+    'models.AttributeGroupItem': {
+      attribute?: components['schemas']['models.CategoryAttribute'];
       attribute_id?: number;
       created_at?: string;
       custom_display_name?: string;
@@ -12526,7 +13188,7 @@ export interface components {
       sort_order?: number;
       visibility_condition?: number[];
     };
-    'backend_internal_domain_models.BalanceTransaction': {
+    'models.BalanceTransaction': {
       amount?: number;
       completed_at?: string;
       created_at?: string;
@@ -12539,17 +13201,17 @@ export interface components {
       type?: string;
       user_id?: number;
     };
-    'backend_internal_domain_models.BreakdownItem': {
+    'models.BreakdownItem': {
       average?: number;
       count?: number;
     };
-    'backend_internal_domain_models.CanReviewResponse': {
+    'models.CanReviewResponse': {
       can_review?: boolean;
       existing_review_id?: number;
       has_existing_review?: boolean;
       reason?: string;
     };
-    'backend_internal_domain_models.CategoryAttribute': {
+    'models.CategoryAttribute': {
       attribute_type?: string;
       created_at?: string;
       custom_component?: string;
@@ -12574,8 +13236,8 @@ export interface components {
       };
       validation_rules?: number[];
     };
-    'backend_internal_domain_models.CategoryAttributeMapping': {
-      attribute?: components['schemas']['backend_internal_domain_models.CategoryAttribute'];
+    'models.CategoryAttributeMapping': {
+      attribute?: components['schemas']['models.CategoryAttribute'];
       attribute_id?: number;
       category_id?: number;
       custom_component?: string;
@@ -12585,13 +13247,13 @@ export interface components {
       show_in_list?: boolean;
       sort_order?: number;
     };
-    'backend_internal_domain_models.CategorySuggestion': {
+    'models.CategorySuggestion': {
       id?: number;
       listing_count?: number;
       name?: string;
     };
-    'backend_internal_domain_models.CategoryTreeNode': {
-      children?: components['schemas']['backend_internal_domain_models.CategoryTreeNode'][];
+    'models.CategoryTreeNode': {
+      children?: components['schemas']['models.CategoryTreeNode'][];
       /** @description Новое поле */
       children_count?: number;
       created_at?: string;
@@ -12609,7 +13271,7 @@ export interface components {
         [key: string]: string;
       };
     };
-    'backend_internal_domain_models.ChatAttachment': {
+    'models.ChatAttachment': {
       /** @description MIME тип */
       content_type?: string;
       created_at?: string;
@@ -12636,7 +13298,7 @@ export interface components {
       /** @description URL превью для видео */
       thumbnail_url?: string;
     };
-    'backend_internal_domain_models.ComponentTemplate': {
+    'models.ComponentTemplate': {
       category_id?: number;
       component_id?: number;
       created_at?: string;
@@ -12647,13 +13309,13 @@ export interface components {
       preview_image?: string;
       template_config?: number[];
     };
-    'backend_internal_domain_models.ContactsListResponse': {
-      contacts?: components['schemas']['backend_internal_domain_models.UserContact'][];
+    'models.ContactsListResponse': {
+      contacts?: components['schemas']['models.UserContact'][];
       limit?: number;
       page?: number;
       total?: number;
     };
-    'backend_internal_domain_models.CreateComponentUsageRequest': {
+    'models.CreateComponentUsageRequest': {
       category_id?: number;
       component_id: number;
       conditions_logic?: number[];
@@ -12663,7 +13325,7 @@ export interface components {
       priority?: number;
       usage_context: string;
     };
-    'backend_internal_domain_models.CreateCustomComponentRequest': {
+    'models.CreateCustomComponentRequest': {
       /** @enum {string} */
       component_type: 'category' | 'attribute' | 'filter';
       description?: string;
@@ -12673,13 +13335,13 @@ export interface components {
       styles?: string;
       template_code: string;
     };
-    'backend_internal_domain_models.CreateMessageRequest': {
+    'models.CreateMessageRequest': {
       chat_id?: number;
       content: string;
       listing_id?: number;
       receiver_id: number;
     };
-    'backend_internal_domain_models.CreateProductRequest': {
+    'models.CreateProductRequest': {
       attributes?: {
         [key: string]: unknown;
       };
@@ -12693,12 +13355,12 @@ export interface components {
       sku?: string;
       stock_quantity?: number;
     };
-    'backend_internal_domain_models.CreateReviewConfirmationRequest': {
+    'models.CreateReviewConfirmationRequest': {
       notes?: string;
       /** @enum {string} */
       status: 'confirmed' | 'disputed';
     };
-    'backend_internal_domain_models.CreateReviewDisputeRequest': {
+    'models.CreateReviewDisputeRequest': {
       description: string;
       /** @enum {string} */
       reason:
@@ -12708,7 +13370,7 @@ export interface components {
         | 'spam'
         | 'other';
     };
-    'backend_internal_domain_models.CreateReviewRequest': {
+    'models.CreateReviewRequest': {
       comment?: string;
       cons?: string;
       entity_id: number;
@@ -12720,13 +13382,13 @@ export interface components {
       rating: number;
       storefront_id?: number;
     };
-    'backend_internal_domain_models.CreateTemplateRequest': {
+    'models.CreateTemplateRequest': {
       component_id: number;
       description?: string;
       name: string;
       variables?: number[];
     };
-    'backend_internal_domain_models.CustomUIComponent': {
+    'models.CustomUIComponent': {
       /** @example category */
       component_type?: string;
       created_at?: string;
@@ -12745,10 +13407,10 @@ export interface components {
       updated_at?: string;
       updated_by?: number;
     };
-    'backend_internal_domain_models.CustomUIComponentUsage': {
+    'models.CustomUIComponentUsage': {
       category_id?: number;
       category_name?: string;
-      component?: components['schemas']['backend_internal_domain_models.CustomUIComponent'];
+      component?: components['schemas']['models.CustomUIComponent'];
       component_id?: number;
       component_name?: string;
       conditions_logic?: number[];
@@ -12764,7 +13426,7 @@ export interface components {
       usage_context?: string;
     };
     /** @enum {string} */
-    'backend_internal_domain_models.DeliveryProvider':
+    'models.DeliveryProvider':
       | 'posta_srbije'
       | 'aks'
       | 'bex'
@@ -12772,21 +13434,21 @@ export interface components {
       | 'city_express'
       | 'self_pickup'
       | 'own_delivery';
-    'backend_internal_domain_models.DeliveryZone': {
+    'models.DeliveryZone': {
       name?: string;
       postal_codes?: string[];
       price_modifier?: number;
     };
-    'backend_internal_domain_models.GeoLocation': {
+    'models.GeoLocation': {
       city?: string;
       country?: string;
       lat?: number;
       lon?: number;
     };
-    'backend_internal_domain_models.JSONB': {
+    'models.JSONB': {
       [key: string]: unknown;
     };
-    'backend_internal_domain_models.ListingAttributeValue': {
+    'models.ListingAttributeValue': {
       attribute_id?: number;
       attribute_name?: string;
       attribute_type?: string;
@@ -12813,9 +13475,9 @@ export interface components {
       /** @description Добавляем поле для единиц измерения */
       unit?: string;
     };
-    'backend_internal_domain_models.Location': {
+    'models.Location': {
       /** @description Дополнительная информация */
-      building_info?: components['schemas']['backend_internal_domain_models.JSONB'];
+      building_info?: components['schemas']['models.JSONB'];
       /** @description Координаты здания (после геокодинга) */
       building_lat?: number;
       building_lng?: number;
@@ -12830,7 +13492,7 @@ export interface components {
       user_lat?: number;
       user_lng?: number;
     };
-    'backend_internal_domain_models.MapMarker': {
+    'models.MapMarker': {
       category_id?: number;
       city?: string;
       condition?: string;
@@ -12845,10 +13507,10 @@ export interface components {
       title?: string;
       user_id?: number;
     };
-    'backend_internal_domain_models.MarkAsReadRequest': {
+    'models.MarkAsReadRequest': {
       message_ids: number[];
     };
-    'backend_internal_domain_models.MarketplaceCategory': {
+    'models.MarketplaceCategory': {
       count?: number;
       created_at?: string;
       custom_ui_component?: string;
@@ -12866,24 +13528,24 @@ export interface components {
         [key: string]: string;
       };
     };
-    'backend_internal_domain_models.MarketplaceChat': {
+    'models.MarketplaceChat': {
       /** @description Дополнительные поля для отображения */
-      buyer?: components['schemas']['backend_internal_domain_models.User'];
+      buyer?: components['schemas']['models.User'];
       buyer_id?: number;
       created_at?: string;
       id?: number;
       is_archived?: boolean;
-      last_message?: components['schemas']['backend_internal_domain_models.MarketplaceMessage'];
+      last_message?: components['schemas']['models.MarketplaceMessage'];
       last_message_at?: string;
-      listing?: components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+      listing?: components['schemas']['models.MarketplaceListing'];
       listing_id?: number;
-      other_user?: components['schemas']['backend_internal_domain_models.User'];
-      seller?: components['schemas']['backend_internal_domain_models.User'];
+      other_user?: components['schemas']['models.User'];
+      seller?: components['schemas']['models.User'];
       seller_id?: number;
       unread_count?: number;
       updated_at?: string;
     };
-    'backend_internal_domain_models.MarketplaceImage': {
+    'models.MarketplaceImage': {
       /** @description MIME-тип файла */
       content_type?: string;
       created_at?: string;
@@ -12904,10 +13566,10 @@ export interface components {
       /** @description Тип хранилища: "local" или "minio" */
       storage_type?: string;
     };
-    'backend_internal_domain_models.MarketplaceListing': {
-      attributes?: components['schemas']['backend_internal_domain_models.ListingAttributeValue'][];
+    'models.MarketplaceListing': {
+      attributes?: components['schemas']['models.ListingAttributeValue'][];
       average_rating?: number;
-      category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+      category?: components['schemas']['models.MarketplaceCategory'];
       category_id?: number;
       category_path?: string[];
       category_path_ids?: number[];
@@ -12922,7 +13584,7 @@ export interface components {
       has_discount?: boolean;
       helpful_votes?: number;
       id?: number;
-      images?: components['schemas']['backend_internal_domain_models.MarketplaceImage'][];
+      images?: components['schemas']['models.MarketplaceImage'][];
       is_favorite?: boolean;
       latitude?: number;
       location?: string;
@@ -12941,14 +13603,14 @@ export interface components {
       /** @description связь с витриной */
       storefront_id?: number;
       title?: string;
-      translations?: components['schemas']['backend_internal_domain_models.TranslationMap'];
+      translations?: components['schemas']['models.TranslationMap'];
       updated_at?: string;
-      user?: components['schemas']['backend_internal_domain_models.User'];
+      user?: components['schemas']['models.User'];
       user_id?: number;
       views_count?: number;
     };
-    'backend_internal_domain_models.MarketplaceMessage': {
-      attachments?: components['schemas']['backend_internal_domain_models.ChatAttachment'][];
+    'models.MarketplaceMessage': {
+      attachments?: components['schemas']['models.ChatAttachment'][];
       attachments_count?: number;
       chat_id?: number;
       content?: string;
@@ -12957,14 +13619,14 @@ export interface components {
       has_attachments?: boolean;
       id?: number;
       is_read?: boolean;
-      listing?: components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+      listing?: components['schemas']['models.MarketplaceListing'];
       listing_id?: number;
       /** @description Добавляем поля для мультиязычности */
       original_language?: string;
-      receiver?: components['schemas']['backend_internal_domain_models.User'];
+      receiver?: components['schemas']['models.User'];
       receiver_id?: number;
       /** @description Дополнительные поля для отображения */
-      sender?: components['schemas']['backend_internal_domain_models.User'];
+      sender?: components['schemas']['models.User'];
       sender_id?: number;
       translations?: {
         [key: string]: {
@@ -12973,7 +13635,7 @@ export interface components {
       };
       updated_at?: string;
     };
-    'backend_internal_domain_models.Notification': {
+    'models.Notification': {
       created_at?: string;
       data?: number[];
       delivered_to?: number[];
@@ -12985,7 +13647,7 @@ export interface components {
       type?: string;
       user_id?: number;
     };
-    'backend_internal_domain_models.NotificationSettings': {
+    'models.NotificationSettings': {
       created_at?: string;
       /** @description Добавляем поле для email */
       email_enabled?: boolean;
@@ -12994,14 +13656,14 @@ export interface components {
       updated_at?: string;
       user_id?: number;
     };
-    'backend_internal_domain_models.PaginatedResponse': {
+    'models.PaginatedResponse': {
       data?: unknown;
       page?: number;
       page_size?: number;
       total?: number;
       total_pages?: number;
     };
-    'backend_internal_domain_models.PaymentMethod': {
+    'models.PaymentMethod': {
       code?: string;
       created_at?: string;
       credentials?: number[];
@@ -13015,7 +13677,7 @@ export interface components {
       type?: string;
     };
     /** @enum {string} */
-    'backend_internal_domain_models.PaymentMethodType':
+    'models.PaymentMethodType':
       | 'cash'
       | 'cod'
       | 'card'
@@ -13025,7 +13687,7 @@ export interface components {
       | 'postanska'
       | 'keks_pay'
       | 'ips';
-    'backend_internal_domain_models.PaymentSession': {
+    'models.PaymentSession': {
       amount?: number;
       completed_at?: string;
       created_at?: string;
@@ -13038,7 +13700,7 @@ export interface components {
       status?: string;
       user_id?: number;
     };
-    'backend_internal_domain_models.PriceHistoryEntry': {
+    'models.PriceHistoryEntry': {
       change_percentage?: number;
       /** @description manual, import, system, etc. */
       change_source?: string;
@@ -13049,7 +13711,7 @@ export interface components {
       listing_id?: number;
       price?: number;
     };
-    'backend_internal_domain_models.ProductStats': {
+    'models.ProductStats': {
       active_products?: number;
       low_stock?: number;
       out_of_stock?: number;
@@ -13057,15 +13719,15 @@ export interface components {
       total_sold?: number;
       total_value?: number;
     };
-    'backend_internal_domain_models.RatingBreakdown': {
+    'models.RatingBreakdown': {
       /** @description Прямые отзывы */
-      direct?: components['schemas']['backend_internal_domain_models.BreakdownItem'];
+      direct?: components['schemas']['models.BreakdownItem'];
       /** @description Через товары */
-      listings?: components['schemas']['backend_internal_domain_models.BreakdownItem'];
+      listings?: components['schemas']['models.BreakdownItem'];
       /** @description Через магазины */
-      storefronts?: components['schemas']['backend_internal_domain_models.BreakdownItem'];
+      storefronts?: components['schemas']['models.BreakdownItem'];
     };
-    'backend_internal_domain_models.Review': {
+    'models.Review': {
       comment?: string;
       cons?: string;
       created_at?: string;
@@ -13087,7 +13749,7 @@ export interface components {
       photos?: string[];
       pros?: string;
       rating?: number;
-      responses?: components['schemas']['backend_internal_domain_models.ReviewResponse'][];
+      responses?: components['schemas']['models.ReviewResponse'][];
       seller_confirmed?: boolean;
       status?: string;
       translations?: {
@@ -13097,23 +13759,23 @@ export interface components {
       };
       updated_at?: string;
       /** @description Дополнительные поля для отображения */
-      user?: components['schemas']['backend_internal_domain_models.User'];
+      user?: components['schemas']['models.User'];
       user_id?: number;
       votes_count?: {
         helpful?: number;
         not_helpful?: number;
       };
     };
-    'backend_internal_domain_models.ReviewResponse': {
+    'models.ReviewResponse': {
       created_at?: string;
       id?: number;
       response?: string;
       review_id?: number;
       updated_at?: string;
-      user?: components['schemas']['backend_internal_domain_models.User'];
+      user?: components['schemas']['models.User'];
       user_id?: number;
     };
-    'backend_internal_domain_models.ReviewStats': {
+    'models.ReviewStats': {
       average_rating?: number;
       /** @description Количество отзывов с фото */
       photo_reviews?: number;
@@ -13125,16 +13787,16 @@ export interface components {
       verified_reviews?: number;
     };
     /** @enum {string} */
-    'backend_internal_domain_models.StaffRole':
+    'models.StaffRole':
       | 'owner'
       | 'manager'
       | 'cashier'
       | 'support'
       | 'moderator';
-    'backend_internal_domain_models.Storefront': {
+    'models.Storefront': {
       /** @description Локация */
       address?: string;
-      ai_agent_config?: components['schemas']['backend_internal_domain_models.JSONB'];
+      ai_agent_config?: components['schemas']['models.JSONB'];
       /** @description AI и killer features */
       ai_agent_enabled?: boolean;
       banner_url?: string;
@@ -13163,21 +13825,21 @@ export interface components {
       rating?: number;
       reviews_count?: number;
       sales_count?: number;
-      seo_meta?: components['schemas']['backend_internal_domain_models.JSONB'];
+      seo_meta?: components['schemas']['models.JSONB'];
       /** @description Настройки бизнеса */
-      settings?: components['schemas']['backend_internal_domain_models.JSONB'];
+      settings?: components['schemas']['models.JSONB'];
       slug?: string;
       subscription_expires_at?: string;
       /** @description Подписка (монетизация) */
-      subscription_plan?: components['schemas']['backend_internal_domain_models.SubscriptionPlan'];
-      theme?: components['schemas']['backend_internal_domain_models.JSONB'];
+      subscription_plan?: components['schemas']['models.SubscriptionPlan'];
+      theme?: components['schemas']['models.JSONB'];
       updated_at?: string;
       user_id?: number;
       verification_date?: string;
       views_count?: number;
       website?: string;
     };
-    'backend_internal_domain_models.StorefrontAnalytics': {
+    'models.StorefrontAnalytics': {
       add_to_cart_count?: number;
       avg_order_value?: number;
       /** @description в секундах */
@@ -13189,41 +13851,41 @@ export interface components {
       date?: string;
       id?: number;
       /** @description География заказов */
-      orders_by_city?: components['schemas']['backend_internal_domain_models.JSONB'];
+      orders_by_city?: components['schemas']['models.JSONB'];
       /** @description Продажи */
       orders_count?: number;
       /** @description Трафик */
       page_views?: number;
       /** @description Методы оплаты */
-      payment_methods_usage?: components['schemas']['backend_internal_domain_models.JSONB'];
+      payment_methods_usage?: components['schemas']['models.JSONB'];
       /** @description Товары */
       product_views?: number;
       revenue?: number;
       storefront_id?: number;
-      top_categories?: components['schemas']['backend_internal_domain_models.JSONB'];
+      top_categories?: components['schemas']['models.JSONB'];
       /** @description Топ товары/категории */
-      top_products?: components['schemas']['backend_internal_domain_models.JSONB'];
+      top_products?: components['schemas']['models.JSONB'];
       /** @description Источники трафика */
-      traffic_sources?: components['schemas']['backend_internal_domain_models.JSONB'];
+      traffic_sources?: components['schemas']['models.JSONB'];
       unique_visitors?: number;
     };
-    'backend_internal_domain_models.StorefrontCreateDTO': {
+    'models.StorefrontCreateDTO': {
       description?: string;
       email?: string;
       /** @description Локация */
-      location: components['schemas']['backend_internal_domain_models.Location'];
+      location: components['schemas']['models.Location'];
       name: string;
       /** @description Контактная информация */
       phone?: string;
-      seo_meta?: components['schemas']['backend_internal_domain_models.JSONB'];
+      seo_meta?: components['schemas']['models.JSONB'];
       /** @description Настройки */
-      settings?: components['schemas']['backend_internal_domain_models.JSONB'];
+      settings?: components['schemas']['models.JSONB'];
       /** @description Генерируется автоматически если пустой */
       slug?: string;
-      theme?: components['schemas']['backend_internal_domain_models.JSONB'];
+      theme?: components['schemas']['models.JSONB'];
       website?: string;
     };
-    'backend_internal_domain_models.StorefrontDeliveryOption': {
+    'models.StorefrontDeliveryOption': {
       available_days?: number[];
       /** @description Ценообразование */
       base_price?: number;
@@ -13248,17 +13910,17 @@ export interface components {
       name?: string;
       price_per_kg?: number;
       price_per_km?: number;
-      provider?: components['schemas']['backend_internal_domain_models.DeliveryProvider'];
+      provider?: components['schemas']['models.DeliveryProvider'];
       /** @description Интеграция с провайдером */
-      provider_config?: components['schemas']['backend_internal_domain_models.JSONB'];
+      provider_config?: components['schemas']['models.JSONB'];
       storefront_id?: number;
       /** @description Поддерживаемые методы оплаты для этой доставки */
-      supported_payment_methods?: components['schemas']['backend_internal_domain_models.PaymentMethodType'][];
+      supported_payment_methods?: components['schemas']['models.PaymentMethodType'][];
       updated_at?: string;
       /** @description Зоны и доступность */
-      zones?: components['schemas']['backend_internal_domain_models.DeliveryZone'][];
+      zones?: components['schemas']['models.DeliveryZone'][];
     };
-    'backend_internal_domain_models.StorefrontHours': {
+    'models.StorefrontHours': {
       close_time?: string;
       /** @description 0=Sunday, 6=Saturday */
       day_of_week?: number;
@@ -13270,7 +13932,7 @@ export interface components {
       special_note?: string;
       storefront_id?: number;
     };
-    'backend_internal_domain_models.StorefrontMapData': {
+    'models.StorefrontMapData': {
       accepts_cards?: boolean;
       /** @description Краткая информация для попапа */
       address?: string;
@@ -13289,35 +13951,35 @@ export interface components {
       supports_cod?: boolean;
       working_now?: boolean;
     };
-    'backend_internal_domain_models.StorefrontPaymentMethod': {
+    'models.StorefrontPaymentMethod': {
       /** @description Специфично для COD (наложенный платеж) */
       cod_fee?: number;
       created_at?: string;
       id?: number;
       is_enabled?: boolean;
       max_amount?: number;
-      method_type?: components['schemas']['backend_internal_domain_models.PaymentMethodType'];
+      method_type?: components['schemas']['models.PaymentMethodType'];
       min_amount?: number;
       /** @description Настройки провайдера */
       provider?: string;
-      settings?: components['schemas']['backend_internal_domain_models.JSONB'];
+      settings?: components['schemas']['models.JSONB'];
       storefront_id?: number;
       /** @description Комиссии и лимиты */
       transaction_fee?: number;
     };
-    'backend_internal_domain_models.StorefrontProduct': {
+    'models.StorefrontProduct': {
       attributes?: {
         [key: string]: unknown;
       };
       barcode?: string;
-      category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+      category?: components['schemas']['models.MarketplaceCategory'];
       category_id?: number;
       created_at?: string;
       currency?: string;
       description?: string;
       id?: number;
       /** @description Relations */
-      images?: components['schemas']['backend_internal_domain_models.StorefrontProductImage'][];
+      images?: components['schemas']['models.StorefrontProductImage'][];
       is_active?: boolean;
       name?: string;
       price?: number;
@@ -13328,10 +13990,10 @@ export interface components {
       stock_status?: string;
       storefront_id?: number;
       updated_at?: string;
-      variants?: components['schemas']['backend_internal_domain_models.StorefrontProductVariant'][];
+      variants?: components['schemas']['models.StorefrontProductVariant'][];
       view_count?: number;
     };
-    'backend_internal_domain_models.StorefrontProductImage': {
+    'models.StorefrontProductImage': {
       created_at?: string;
       display_order?: number;
       id?: number;
@@ -13340,7 +14002,7 @@ export interface components {
       storefront_product_id?: number;
       thumbnail_url?: string;
     };
-    'backend_internal_domain_models.StorefrontProductVariant': {
+    'models.StorefrontProductVariant': {
       /** @description e.g., {"color": "red", "size": "L"} */
       attributes?: {
         [key: string]: unknown;
@@ -13356,7 +14018,7 @@ export interface components {
       storefront_product_id?: number;
       updated_at?: string;
     };
-    'backend_internal_domain_models.StorefrontRatingSummary': {
+    'models.StorefrontRatingSummary': {
       average_rating?: number;
       name?: string;
       rating_1?: number;
@@ -13367,19 +14029,19 @@ export interface components {
       storefront_id?: number;
       total_reviews?: number;
     };
-    'backend_internal_domain_models.StorefrontStaff': {
+    'models.StorefrontStaff': {
       actions_count?: number;
       created_at?: string;
       id?: number;
       /** @description Отслеживание активности */
       last_active_at?: string;
-      permissions?: components['schemas']['backend_internal_domain_models.JSONB'];
-      role?: components['schemas']['backend_internal_domain_models.StaffRole'];
+      permissions?: components['schemas']['models.JSONB'];
+      role?: components['schemas']['models.StaffRole'];
       storefront_id?: number;
       updated_at?: string;
       user_id?: number;
     };
-    'backend_internal_domain_models.StorefrontUpdateDTO': {
+    'models.StorefrontUpdateDTO': {
       /** @description Функции */
       ai_agent_enabled?: boolean;
       banner_url?: string;
@@ -13388,25 +14050,25 @@ export interface components {
       group_buying_enabled?: boolean;
       live_shopping_enabled?: boolean;
       /** @description Локация */
-      location?: components['schemas']['backend_internal_domain_models.Location'];
+      location?: components['schemas']['models.Location'];
       /** @description Брендинг */
       logo_url?: string;
       name?: string;
       /** @description Контактная информация */
       phone?: string;
-      seo_meta?: components['schemas']['backend_internal_domain_models.JSONB'];
+      seo_meta?: components['schemas']['models.JSONB'];
       /** @description Настройки */
-      settings?: components['schemas']['backend_internal_domain_models.JSONB'];
-      theme?: components['schemas']['backend_internal_domain_models.JSONB'];
+      settings?: components['schemas']['models.JSONB'];
+      theme?: components['schemas']['models.JSONB'];
       website?: string;
     };
     /** @enum {string} */
-    'backend_internal_domain_models.SubscriptionPlan':
+    'models.SubscriptionPlan':
       | 'starter'
       | 'professional'
       | 'business'
       | 'enterprise';
-    'backend_internal_domain_models.Translation': {
+    'models.Translation': {
       created_at?: string;
       entity_id?: number;
       entity_type?: string;
@@ -13421,12 +14083,12 @@ export interface components {
       translated_text?: string;
       updated_at?: string;
     };
-    'backend_internal_domain_models.TranslationMap': {
+    'models.TranslationMap': {
       [key: string]: {
         [key: string]: string;
       };
     };
-    'backend_internal_domain_models.UpdateAttributeGroupRequest': {
+    'models.UpdateAttributeGroupRequest': {
       description?: string;
       display_name?: string;
       icon?: string;
@@ -13434,12 +14096,12 @@ export interface components {
       name?: string;
       sort_order?: number;
     };
-    'backend_internal_domain_models.UpdateContactRequest': {
+    'models.UpdateContactRequest': {
       notes?: string;
       /** @enum {string} */
       status: 'accepted' | 'blocked';
     };
-    'backend_internal_domain_models.UpdateCustomComponentRequest': {
+    'models.UpdateCustomComponentRequest': {
       component_type?: string;
       description?: string;
       is_active?: boolean;
@@ -13448,18 +14110,18 @@ export interface components {
       styles?: string;
       template_code?: string;
     };
-    'backend_internal_domain_models.UpdateInventoryRequest': {
+    'models.UpdateInventoryRequest': {
       notes?: string;
       quantity: number;
       reason: string;
       /** @enum {string} */
       type: 'in' | 'out' | 'adjustment';
     };
-    'backend_internal_domain_models.UpdatePrivacySettingsRequest': {
+    'models.UpdatePrivacySettingsRequest': {
       allow_contact_requests?: boolean;
       allow_messages_from_contacts_only?: boolean;
     };
-    'backend_internal_domain_models.UpdateProductRequest': {
+    'models.UpdateProductRequest': {
       attributes?: {
         [key: string]: unknown;
       };
@@ -13472,7 +14134,7 @@ export interface components {
       sku?: string;
       stock_quantity?: number;
     };
-    'backend_internal_domain_models.User': {
+    'models.User': {
       created_at?: string;
       email?: string;
       google_id?: string;
@@ -13482,17 +14144,17 @@ export interface components {
       picture_url?: string;
       provider?: string;
     };
-    'backend_internal_domain_models.UserBalance': {
+    'models.UserBalance': {
       balance?: number;
       currency?: string;
       frozen_balance?: number;
       updated_at?: string;
       user_id?: number;
     };
-    'backend_internal_domain_models.UserContact': {
+    'models.UserContact': {
       /** @description Дополнительные поля */
       added_from_chat_id?: number;
-      contact_user?: components['schemas']['backend_internal_domain_models.User'];
+      contact_user?: components['schemas']['models.User'];
       contact_user_id?: number;
       created_at?: string;
       id?: number;
@@ -13501,17 +14163,17 @@ export interface components {
       status?: string;
       updated_at?: string;
       /** @description Связанные объекты */
-      user?: components['schemas']['backend_internal_domain_models.User'];
+      user?: components['schemas']['models.User'];
       user_id?: number;
     };
-    'backend_internal_domain_models.UserPrivacySettings': {
+    'models.UserPrivacySettings': {
       allow_contact_requests?: boolean;
       allow_messages_from_contacts_only?: boolean;
       created_at?: string;
       updated_at?: string;
       user_id?: number;
     };
-    'backend_internal_domain_models.UserProfile': {
+    'models.UserProfile': {
       account_status?: string;
       bio?: string;
       /** @description Теперь используем обычные строки, а не указатели */
@@ -13532,7 +14194,7 @@ export interface components {
       settings?: number[];
       timezone?: string;
     };
-    'backend_internal_domain_models.UserProfileUpdate': {
+    'models.UserProfileUpdate': {
       bio?: string;
       /** @description Указатель правильный для обновлений */
       city?: string;
@@ -13542,7 +14204,7 @@ export interface components {
       settings?: number[];
       timezone?: string;
     };
-    'backend_internal_domain_models.UserRatingSummary': {
+    'models.UserRatingSummary': {
       average_rating?: number;
       name?: string;
       rating_1?: number;
@@ -13553,13 +14215,47 @@ export interface components {
       total_reviews?: number;
       user_id?: number;
     };
-    'backend_internal_domain_search.Bucket': {
+    'opensearch.StorefrontSearchItem': {
+      address?: string;
+      city?: string;
+      country?: string;
+      description?: string;
+      /** @description Расстояние в км (если есть) */
+      distance?: number;
+      email?: string;
+      hasDelivery?: boolean;
+      hasSelfPickup?: boolean;
+      /** @description Подсвеченные фрагменты */
+      highlights?: {
+        [key: string]: string[];
+      };
+      id?: number;
+      isOpenNow?: boolean;
+      isVerified?: boolean;
+      latitude?: number;
+      longitude?: number;
+      name?: string;
+      paymentMethods?: string[];
+      phone?: string;
+      productsCount?: number;
+      rating?: number;
+      reviewsCount?: number;
+      /** @description Релевантность */
+      score?: number;
+      slug?: string;
+      userID?: number;
+    };
+    'opensearch.StorefrontSearchResult': {
+      storefronts?: components['schemas']['opensearch.StorefrontSearchItem'][];
+      total?: number;
+    };
+    'search.Bucket': {
       /** @description Количество документов */
       count?: number;
       /** @description Ключ бакета */
       key?: string;
     };
-    'backend_internal_domain_search.ServiceParams': {
+    'search.ServiceParams': {
       /** @description Запрашиваемые агрегации */
       aggregations?: string[];
       /** @description поле для фильтров атрибутов */
@@ -13603,718 +14299,6 @@ export interface components {
       status?: string;
       /** @description ID витрины */
       storefrontID?: string;
-    };
-    'backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem': {
-      address?: string;
-      city?: string;
-      country?: string;
-      description?: string;
-      /** @description Расстояние в км (если есть) */
-      distance?: number;
-      email?: string;
-      hasDelivery?: boolean;
-      hasSelfPickup?: boolean;
-      /** @description Подсвеченные фрагменты */
-      highlights?: {
-        [key: string]: string[];
-      };
-      id?: number;
-      isOpenNow?: boolean;
-      isVerified?: boolean;
-      latitude?: number;
-      longitude?: number;
-      name?: string;
-      paymentMethods?: string[];
-      phone?: string;
-      productsCount?: number;
-      rating?: number;
-      reviewsCount?: number;
-      /** @description Релевантность */
-      score?: number;
-      slug?: string;
-      userID?: number;
-    };
-    'backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult': {
-      storefronts?: components['schemas']['backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem'][];
-      total?: number;
-    };
-    'backend_pkg_utils.ErrorResponseSwag': {
-      /** @example Описание ошибки */
-      error?: string;
-    };
-    'backend_pkg_utils.SuccessResponseSwag': {
-      data?: unknown;
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_analytics_handler.EventRequest': {
-      event_data?: number[];
-      /** @enum {string} */
-      event_type:
-        | 'page_view'
-        | 'product_view'
-        | 'add_to_cart'
-        | 'checkout'
-        | 'order';
-      session_id: string;
-      storefront_id: number;
-      user_id?: number;
-    };
-    'internal_proj_balance_handler.DepositRequest': {
-      /** @example 1000.5 */
-      amount?: number;
-      /** @example card */
-      payment_method?: string;
-    };
-    /** @description Ответ при удалении контакта из списка */
-    'internal_proj_contacts_handler.ContactRemoveResponse': {
-      /**
-       * @description Сообщение об успешном удалении
-       * @example contacts.removed
-       */
-      message?: string;
-    };
-    /** @description Информация о статусе связи между пользователями */
-    'internal_proj_contacts_handler.ContactStatusCheckResponse': {
-      /**
-       * @description Являются ли пользователи контактами
-       * @example true
-       */
-      are_contacts?: boolean;
-      /**
-       * @description ID проверяемого контакта
-       * @example 456
-       */
-      contact_id?: number;
-      /**
-       * @description ID текущего пользователя
-       * @example 123
-       */
-      user_id?: number;
-    };
-    /** @description Ответ при изменении статуса контакта */
-    'internal_proj_contacts_handler.ContactStatusUpdateResponse': {
-      /**
-       * @description Сообщение об успешном обновлении
-       * @example contacts.statusUpdated
-       */
-      message?: string;
-    };
-    'internal_proj_docserver_handler.DocContentResponse': {
-      /** @example # Documentation
-       *
-       *     This is the content of the markdown file. */
-      content?: string;
-      /** @example docs/README.md */
-      path?: string;
-    };
-    'internal_proj_docserver_handler.DocFile': {
-      children?: components['schemas']['internal_proj_docserver_handler.DocFile'][];
-      /** @example README.md */
-      name?: string;
-      /** @example docs/README.md */
-      path?: string;
-      /**
-       * @example file
-       * @enum {string}
-       */
-      type?: 'file' | 'directory';
-    };
-    'internal_proj_docserver_handler.DocFilesResponse': {
-      files?: components['schemas']['internal_proj_docserver_handler.DocFile'][];
-      /** @example ./docs */
-      rootPath?: string;
-    };
-    'internal_proj_marketplace_handler.AttributeCreateResponse': {
-      /** @example 123 */
-      id?: number;
-      /** @example marketplace.attributeCreated */
-      message?: string;
-    };
-    'internal_proj_marketplace_handler.AttributeGroupResponse': {
-      group?: components['schemas']['backend_internal_domain_models.AttributeGroup'];
-    };
-    'internal_proj_marketplace_handler.AttributeGroupWithItemsData': {
-      group?: components['schemas']['backend_internal_domain_models.AttributeGroup'];
-      items?: components['schemas']['backend_internal_domain_models.AttributeGroupItem'][];
-    };
-    'internal_proj_marketplace_handler.AttributeGroupsResponse': {
-      groups?: components['schemas']['backend_internal_domain_models.AttributeGroup'][];
-    };
-    'internal_proj_marketplace_handler.AttributeRange': {
-      /** @example 1000000 */
-      max?: number;
-      /** @example 0 */
-      min?: number;
-    };
-    'internal_proj_marketplace_handler.AttributeRangesResponse': {
-      data?: {
-        [
-          key: string
-        ]: components['schemas']['internal_proj_marketplace_handler.AttributeRange'];
-      };
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.BatchTranslateData': {
-      /** @example 3 */
-      listing_count?: number;
-      /** @example google */
-      provider?: string;
-      /** @example en */
-      target_lang?: string;
-    };
-    'internal_proj_marketplace_handler.BatchTranslateRequest': Record<
-      string,
-      never
-    >;
-    'internal_proj_marketplace_handler.BulkUpdateResult': {
-      errors?: string[];
-      /** @example 5 */
-      success_count?: number;
-      /** @example 10 */
-      total_count?: number;
-    };
-    'internal_proj_marketplace_handler.CategorySummary': {
-      /** @example 10 */
-      id?: number;
-      /** @example Smartphones */
-      name?: string;
-      /** @example smartphones */
-      slug?: string;
-    };
-    'internal_proj_marketplace_handler.ChatMessagesResponse': {
-      limit?: number;
-      messages?: components['schemas']['backend_internal_domain_models.MarketplaceMessage'][];
-      page?: number;
-      total?: number;
-    };
-    'internal_proj_marketplace_handler.Coordinates': {
-      /** @example 55.7558 */
-      lat?: number;
-      /** @example 37.6173 */
-      lng?: number;
-    };
-    'internal_proj_marketplace_handler.DetectLanguageRequest': {
-      /** @example Hello world */
-      text?: string;
-    };
-    'internal_proj_marketplace_handler.DetectedLanguageData': {
-      /** @example 0.99 */
-      confidence?: number;
-      /** @example en */
-      language?: string;
-    };
-    'internal_proj_marketplace_handler.EnhanceImagesData': {
-      /** @example enhance_123_1234567890 */
-      job_id?: string;
-      /** @example marketplace.imageEnhancementStarted */
-      message?: string;
-    };
-    'internal_proj_marketplace_handler.EnhanceImagesResponse': {
-      data?: components['schemas']['internal_proj_marketplace_handler.EnhanceImagesData'];
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.EnhancePreviewData': {
-      /** @example https://example.com/preview/123/quality */
-      preview_url?: string;
-    };
-    'internal_proj_marketplace_handler.EnhancePreviewResponse': {
-      data?: components['schemas']['internal_proj_marketplace_handler.EnhancePreviewData'];
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.FavoriteStatusData': {
-      /** @example true */
-      is_in_favorites?: boolean;
-    };
-    'internal_proj_marketplace_handler.FavoritesCountData': {
-      /** @example 5 */
-      count?: number;
-    };
-    'internal_proj_marketplace_handler.IDMessageResponse': {
-      /** @example 123 */
-      id?: number;
-      /** @example marketplace.created */
-      message?: string;
-    };
-    'internal_proj_marketplace_handler.ImageModerationResponse': {
-      data?: components['schemas']['internal_proj_marketplace_handler.ModerationData'];
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.ImagesUploadResponse': {
-      /** @example 3 */
-      count?: number;
-      images?: components['schemas']['backend_internal_domain_models.MarketplaceImage'][];
-      /** @example marketplace.imagesUploaded */
-      message?: string;
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.ImportAttributesResult': {
-      errors?: string[];
-      /** @example 5 */
-      success_count?: number;
-      /** @example 10 */
-      total_count?: number;
-    };
-    'internal_proj_marketplace_handler.ListingsResponse': {
-      data?: components['schemas']['backend_internal_domain_models.MarketplaceListing'][];
-      meta?: components['schemas']['internal_proj_marketplace_handler.PaginationMeta'];
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.MapBounds': {
-      ne?: components['schemas']['internal_proj_marketplace_handler.Coordinates'];
-      sw?: components['schemas']['internal_proj_marketplace_handler.Coordinates'];
-    };
-    'internal_proj_marketplace_handler.MapBoundsData': {
-      bounds?: components['schemas']['internal_proj_marketplace_handler.MapBounds'];
-      /** @example 25 */
-      count?: number;
-      listings?: components['schemas']['backend_internal_domain_models.MapMarker'][];
-      /** @example 10 */
-      zoom?: number;
-    };
-    'internal_proj_marketplace_handler.MapBoundsResponse': {
-      data?: components['schemas']['internal_proj_marketplace_handler.MapBoundsData'];
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.MapClustersData': {
-      /** @example 50 */
-      count?: number;
-      data?: unknown;
-      /** @example clusters */
-      type?: string;
-      /** @example 10 */
-      zoom?: number;
-    };
-    'internal_proj_marketplace_handler.MapClustersResponse': {
-      data?: components['schemas']['internal_proj_marketplace_handler.MapClustersData'];
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.MessageResponse': {
-      /** @example marketplace.operationSuccess */
-      message?: string;
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.ModerationData': {
-      /** @example false */
-      has_prohibited?: boolean;
-      /** @example [
-       *       "image",
-       *       "photo"
-       *     ] */
-      labels?: string[];
-      prohibited_labels?: string[];
-    };
-    'internal_proj_marketplace_handler.PaginationMeta': {
-      /** @example true */
-      has_more?: boolean;
-      /** @example 20 */
-      limit?: number;
-      /** @example 1 */
-      page?: number;
-      /** @example 100 */
-      total?: number;
-      /** @example 5 */
-      total_pages?: number;
-    };
-    'internal_proj_marketplace_handler.PartialOperationResponse': {
-      data?: unknown;
-      /** @example marketplace.partialOperationCompleted */
-      error?: string;
-      /** @example false */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.ProviderData': {
-      /** @example google */
-      provider?: string;
-    };
-    'internal_proj_marketplace_handler.ReindexStartedResponse': {
-      /** @example marketplace.reindexStarted */
-      message?: string;
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.SearchMetadata': {
-      facets?: {
-        [
-          key: string
-        ]: components['schemas']['backend_internal_domain_search.Bucket'][];
-      };
-      /** @example true */
-      has_more?: boolean;
-      /** @example 1 */
-      page?: number;
-      /** @example 20 */
-      size?: number;
-      spelling_suggestion?: string;
-      suggestions?: string[];
-      /** @example 25 */
-      took_ms?: number;
-      /** @example 100 */
-      total?: number;
-      /** @example 5 */
-      total_pages?: number;
-    };
-    'internal_proj_marketplace_handler.SearchResponse': {
-      data?: components['schemas']['backend_internal_domain_models.MarketplaceListing'][];
-      meta?: components['schemas']['internal_proj_marketplace_handler.SearchMetadata'];
-    };
-    'internal_proj_marketplace_handler.SetProviderRequest': {
-      /** @example google */
-      provider?: string;
-    };
-    'internal_proj_marketplace_handler.SetProviderResponse': {
-      data?: components['schemas']['internal_proj_marketplace_handler.ProviderData'];
-      /** @example marketplace.providerSet */
-      message?: string;
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_marketplace_handler.SuggestionItem': {
-      category?: components['schemas']['internal_proj_marketplace_handler.CategorySummary'];
-      /** @example iPhone 13 */
-      text?: string;
-      /** @example product */
-      type?: string;
-    };
-    'internal_proj_marketplace_handler.TranslateTextRequest': {
-      /** @example google */
-      provider?: string;
-      /** @example en */
-      source_lang?: string;
-      /** @example ru */
-      target_lang?: string;
-      /** @example Hello world */
-      text?: string;
-    };
-    'internal_proj_marketplace_handler.TranslatedTextData': {
-      /** @example google */
-      provider?: string;
-      /** @example en */
-      source_lang?: string;
-      /** @example ru */
-      target_lang?: string;
-      /** @example Привет мир */
-      translated_text?: string;
-    };
-    'internal_proj_marketplace_handler.TranslationLimitsData': {
-      /** @example 10000 */
-      daily_limit?: number;
-      /** @example google */
-      provider?: string;
-      /** @example 6550 */
-      remaining?: number;
-      /** @example 3450 */
-      used_today?: number;
-    };
-    'internal_proj_marketplace_handler.TranslationResult': {
-      /** @example 123 */
-      attribute_id?: number;
-      errors?: string[];
-      translations?: {
-        [key: string]: unknown;
-      };
-    };
-    'internal_proj_marketplace_handler.TranslationUpdateRequest': {
-      /** @example false */
-      is_verified?: boolean;
-      /** @example en */
-      language?: string;
-      /** @example google */
-      provider?: string;
-      translations?: {
-        [key: string]: string;
-      };
-    };
-    'internal_proj_marketplace_handler.UnreadCountData': {
-      /** @example 5 */
-      count?: number;
-    };
-    /** @description Ответ при изменении статуса уведомления */
-    'internal_proj_notifications_handler.NotificationMarkReadResponse': {
-      /**
-       * @description Сообщение об успешной отметке
-       * @example notifications.markedAsRead
-       */
-      message?: string;
-    };
-    /** @description Настройки уведомлений пользователя */
-    'internal_proj_notifications_handler.NotificationSettingsResponse': {
-      /** @description Массив настроек для разных типов уведомлений */
-      data?: components['schemas']['backend_internal_domain_models.NotificationSettings'][];
-    };
-    /** @description Ответ при обновлении настроек уведомлений */
-    'internal_proj_notifications_handler.NotificationSettingsUpdateResponse': {
-      /**
-       * @description Сообщение об успешном обновлении
-       * @example notifications.settingsUpdated
-       */
-      message?: string;
-      /** @description Обновленные настройки */
-      settings?: components['schemas']['backend_internal_domain_models.NotificationSettings'][];
-    };
-    /** @description Ответ при отправке email с публичной формы */
-    'internal_proj_notifications_handler.PublicEmailSendResponse': {
-      /**
-       * @description Сообщение о результате
-       * @example email.sentSuccessfully
-       */
-      message?: string;
-      /**
-       * @description Флаг успешной отправки
-       * @example true
-       */
-      success?: boolean;
-    };
-    /** @description Ответ при успешном подключении Telegram */
-    'internal_proj_notifications_handler.TelegramConnectResponse': {
-      /**
-       * @description Сообщение об успешном подключении
-       * @example telegram.connected
-       */
-      message?: string;
-    };
-    /** @description Информация о подключении Telegram к аккаунту */
-    'internal_proj_notifications_handler.TelegramStatusResponse': {
-      /**
-       * @description Подключен ли Telegram
-       * @example true
-       */
-      connected?: boolean;
-      /**
-       * @description Имя пользователя в Telegram (если подключен)
-       * @example john_doe
-       */
-      username?: string;
-    };
-    /** @description Токен для связывания аккаунта с Telegram ботом */
-    'internal_proj_notifications_handler.TelegramTokenResponse': {
-      /**
-       * @description Время генерации токена
-       * @example 2024-01-15T10:30:00Z
-       */
-      generated_at?: string;
-      /**
-       * @description Сгенерированный токен
-       * @example 123_abc...
-       */
-      token?: string;
-    };
-    /** @description Ответ на webhook запрос от Telegram */
-    'internal_proj_notifications_handler.TelegramWebhookResponse': {
-      /**
-       * @description Статус обработки
-       * @example OK
-       */
-      status?: string;
-    };
-    'internal_proj_payments_handler.StripeWebhookRequest': {
-      /** @example 1234567890 */
-      created?: number;
-      data?: {
-        [key: string]: unknown;
-      };
-      /** @example evt_1234567890 */
-      id?: string;
-      /** @example event */
-      object?: string;
-      /** @example checkout.session.completed */
-      type?: string;
-    };
-    'internal_proj_payments_handler.WebhookResponse': {
-      /** @example payments.webhook.processed */
-      message?: string;
-      /** @example success */
-      status?: string;
-    };
-    'internal_proj_reviews_handler.PhotosResponse': {
-      /** @example Photos uploaded successfully */
-      message?: string;
-      photos?: string[];
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_reviews_handler.RatingResponse': {
-      /** @example 4.5 */
-      rating?: number;
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_reviews_handler.ResponseRequest': {
-      /** @example Thank you for your review! */
-      response?: string;
-    };
-    'internal_proj_reviews_handler.ReviewMessageResponse': {
-      /** @example Operation completed successfully */
-      message?: string;
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_reviews_handler.ReviewsListResponse': {
-      data?: components['schemas']['backend_internal_domain_models.Review'][];
-      meta?: components['schemas']['internal_proj_reviews_handler.ReviewsMeta'];
-      /** @example true */
-      success?: boolean;
-    };
-    'internal_proj_reviews_handler.ReviewsMeta': {
-      /** @example 20 */
-      limit?: number;
-      /** @example 1 */
-      page?: number;
-      /** @example 100 */
-      total?: number;
-    };
-    'internal_proj_reviews_handler.VoteRequest': {
-      /** @example helpful */
-      vote_type?: string;
-    };
-    'internal_proj_storefronts_handler.AddStaffRequest': {
-      role: components['schemas']['backend_internal_domain_models.StaffRole'];
-      user_id: number;
-    };
-    'internal_proj_storefronts_handler.StaffListResponse': {
-      staff?: components['schemas']['backend_internal_domain_models.StorefrontStaff'][];
-      total?: number;
-    };
-    'internal_proj_storefronts_handler.StorefrontsListResponse': {
-      limit?: number;
-      offset?: number;
-      storefronts?: components['schemas']['backend_internal_domain_models.Storefront'][];
-      total?: number;
-    };
-    'internal_proj_users_handler.AdminAdminsResponse': {
-      /** @example admin@example.com */
-      email?: string;
-      /** @example true */
-      is_admin?: boolean;
-    };
-    'internal_proj_users_handler.AdminCheckResponse': {
-      /** @example false */
-      is_admin?: boolean;
-    };
-    'internal_proj_users_handler.AdminMessageResponse': {
-      /** @example admin.users.success.profile_updated */
-      message?: string;
-    };
-    'internal_proj_users_handler.AdminStatusUpdateRequest': {
-      /**
-       * @example active
-       * @enum {string}
-       */
-      status: 'active' | 'blocked' | 'pending';
-    };
-    'internal_proj_users_handler.AdminUserListResponse': {
-      data?: components['schemas']['backend_internal_domain_models.UserProfile'][];
-      /** @example 10 */
-      limit?: number;
-      /** @example 1 */
-      page?: number;
-      /** @example 10 */
-      pages?: number;
-      /** @example 100 */
-      total?: number;
-    };
-    'internal_proj_users_handler.AuthResponse': {
-      /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
-      access_token?: string;
-      /** @example 3600 */
-      expires_in?: number;
-      /** @example Bearer */
-      token_type?: string;
-      user?: components['schemas']['internal_proj_users_handler.UserResponse'];
-    };
-    'internal_proj_users_handler.LoginRequest': {
-      /** @example user@example.com */
-      email: string;
-      /** @example password123 */
-      password: string;
-    };
-    'internal_proj_users_handler.LoginResponse': {
-      /** @example users.login.success.authenticated */
-      message?: string;
-      user?: components['schemas']['backend_internal_domain_models.User'];
-    };
-    'internal_proj_users_handler.MessageResponse': {
-      /** @example Операция выполнена успешно */
-      message?: string;
-    };
-    'internal_proj_users_handler.PublicUserResponse': {
-      /** @example 2023-01-01T12:00:00Z */
-      created_at?: string;
-      /** @example user@example.com */
-      email?: string;
-      /** @example 1 */
-      id?: number;
-      /** @example Иван Иванов */
-      name?: string;
-      /** @example https://example.com/avatar.jpg */
-      picture_url?: string;
-    };
-    'internal_proj_users_handler.RegisterRequest': {
-      /** @example user@example.com */
-      email: string;
-      /** @example John Doe */
-      name: string;
-      /** @example password123 */
-      password: string;
-      /** @example +1234567890 */
-      phone?: string;
-    };
-    'internal_proj_users_handler.RegisterResponse': {
-      /** @example Пользователь успешно зарегистрирован */
-      message?: string;
-      user?: components['schemas']['backend_internal_domain_models.User'];
-    };
-    'internal_proj_users_handler.SessionResponse': {
-      /** @example true */
-      authenticated?: boolean;
-      user?: components['schemas']['internal_proj_users_handler.SessionUserResponse'];
-    };
-    'internal_proj_users_handler.SessionUserResponse': {
-      /** @example Moscow */
-      city?: string;
-      /** @example Russia */
-      country?: string;
-      /** @example user@example.com */
-      email?: string;
-      /** @example 1 */
-      id?: number;
-      /** @example false */
-      is_admin?: boolean;
-      /** @example John Doe */
-      name?: string;
-      /** @example +1234567890 */
-      phone?: string;
-      /** @example https://example.com/avatar.jpg */
-      picture_url?: string;
-      /** @example password */
-      provider?: string;
-    };
-    'internal_proj_users_handler.TokenResponse': {
-      /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
-      access_token?: string;
-      /** @example 3600 */
-      expires_in?: number;
-      /** @example Bearer */
-      token_type?: string;
-    };
-    'internal_proj_users_handler.UserResponse': {
-      /** @example user@example.com */
-      email?: string;
-      /** @example 1 */
-      id?: number;
-      /** @example John Doe */
-      name?: string;
-      /** @example https://example.com/avatar.jpg */
-      picture_url?: string;
     };
     'tgbotapi.Animation': {
       file_id?: string;
@@ -14701,14 +14685,23 @@ export interface components {
       /** @description optional */
       mime_type?: string;
     };
+    'utils.ErrorResponseSwag': {
+      /** @example Описание ошибки */
+      error?: string;
+    };
+    'utils.SuccessResponseSwag': {
+      data?: unknown;
+      /** @example true */
+      success?: boolean;
+    };
   };
   responses: never;
   parameters: never;
   requestBodies: {
     /** @description Attribute data */
-    'backend_internal_domain_models.CategoryAttribute': {
+    'models.CategoryAttribute': {
       content: {
-        'application/json': components['schemas']['backend_internal_domain_models.CategoryAttribute'];
+        'application/json': components['schemas']['models.CategoryAttribute'];
       };
     };
     postApiV1Reviews_id_photos: {

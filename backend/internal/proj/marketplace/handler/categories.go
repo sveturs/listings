@@ -41,7 +41,7 @@ func NewCategoriesHandler(services globalService.ServicesInterface) *CategoriesH
 // @Tags marketplace-categories
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
 // @Router /api/v1/marketplace/categories [get]
 func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
@@ -60,7 +60,7 @@ func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 // @Tags marketplace-categories
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryTreeNode}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryTreeNode}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoryTreeError"
 // @Router /api/v1/marketplace/category-tree [get]
 func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
@@ -97,7 +97,7 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttribute}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttribute}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.attributesError"
 // @Router /api/v1/marketplace/categories/{id}/attributes [get]

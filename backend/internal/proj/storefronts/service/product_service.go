@@ -5,11 +5,14 @@ import (
 	"fmt"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
+	"backend/internal/proj/storefronts/storage/opensearch"
 )
 
 // ProductService handles business logic for storefront products
 type ProductService struct {
-	storage Storage
+	storage      Storage
+	searchRepo   opensearch.ProductSearchRepository
 }
 
 // Storage interface for product operations
@@ -27,9 +30,10 @@ type Storage interface {
 }
 
 // NewProductService creates a new product service
-func NewProductService(storage Storage) *ProductService {
+func NewProductService(storage Storage, searchRepo opensearch.ProductSearchRepository) *ProductService {
 	return &ProductService{
-		storage: storage,
+		storage:    storage,
+		searchRepo: searchRepo,
 	}
 }
 
@@ -104,6 +108,16 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
 	
+	// Index product in OpenSearch
+	if s.searchRepo != nil {
+		if err := s.searchRepo.IndexProduct(ctx, product); err != nil {
+			logger.Error().Err(err).Msgf("Failed to index product %d in OpenSearch", product.ID)
+			// Не возвращаем ошибку, так как товар уже создан в БД
+		} else {
+			logger.Info().Msgf("Successfully indexed product %d in OpenSearch", product.ID)
+		}
+	}
+	
 	return product, nil
 }
 
@@ -134,6 +148,20 @@ func (s *ProductService) UpdateProduct(ctx context.Context, storefrontID, produc
 		return fmt.Errorf("failed to update product: %w", err)
 	}
 	
+	// Re-index product in OpenSearch
+	if s.searchRepo != nil {
+		// Get updated product for indexing
+		updatedProduct, err := s.storage.GetStorefrontProduct(ctx, storefrontID, productID)
+		if err != nil {
+			logger.Error().Err(err).Msgf("Failed to get updated product %d for indexing", productID)
+		} else if err := s.searchRepo.UpdateProduct(ctx, updatedProduct); err != nil {
+			logger.Error().Err(err).Msgf("Failed to update product %d in OpenSearch", productID)
+			// Не возвращаем ошибку, так как товар уже обновлен в БД
+		} else {
+			logger.Info().Msgf("Successfully updated product %d in OpenSearch", productID)
+		}
+	}
+	
 	return nil
 }
 
@@ -147,6 +175,16 @@ func (s *ProductService) DeleteProduct(ctx context.Context, storefrontID, produc
 	// Delete product
 	if err := s.storage.DeleteStorefrontProduct(ctx, storefrontID, productID); err != nil {
 		return fmt.Errorf("failed to delete product: %w", err)
+	}
+	
+	// Delete from OpenSearch
+	if s.searchRepo != nil {
+		if err := s.searchRepo.DeleteProduct(ctx, productID); err != nil {
+			logger.Error().Err(err).Msgf("Failed to delete product %d from OpenSearch", productID)
+			// Не возвращаем ошибку, так как товар уже удален из БД
+		} else {
+			logger.Info().Msgf("Successfully deleted product %d from OpenSearch", productID)
+		}
 	}
 	
 	return nil

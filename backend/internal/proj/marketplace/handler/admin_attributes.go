@@ -317,7 +317,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryAttribute} "Attribute information"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.CategoryAttribute} "Attribute information"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
 // @Failure 404 {object} utils.ErrorResponseSwag "Attribute not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -762,7 +762,7 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param categoryId path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttributeMapping} "Category attributes with settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttributeMapping} "Category attributes with settings"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth

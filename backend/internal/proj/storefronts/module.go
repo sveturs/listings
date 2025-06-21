@@ -26,7 +26,9 @@ func NewModule(services service.ServicesInterface) *Module {
 		// Если storage не реализует нужный интерфейс, создаем заглушку
 		panic("Storage does not implement product storage interface")
 	}
-	productSvc := storefrontService.NewProductService(productStorage)
+	// Пока передаем nil для searchRepo, так как OpenSearch репозиторий не инициализирован в этом месте
+	// TODO: Получить OpenSearch репозиторий из глобального сервиса
+	productSvc := storefrontService.NewProductService(productStorage, nil)
 	
 	return &Module{
 		services:          services,
