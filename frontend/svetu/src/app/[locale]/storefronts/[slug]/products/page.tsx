@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   PlusIcon,
   PencilIcon,
@@ -14,6 +13,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { toast } from '@/utils/toast';
 import { apiClient } from '@/services/api-client';
+import ViewToggle from '@/components/common/ViewToggle';
+import { useViewPreference } from '@/hooks/useViewPreference';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
+import SafeImage from '@/components/SafeImage';
 import type { components } from '@/types/generated/api';
 
 type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
@@ -40,8 +44,13 @@ export default function ProductsPage({ params }: PageProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] =
     useState<StorefrontProduct | null>(null);
+  const [viewMode, setViewMode] = useViewPreference('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [_totalProducts, setTotalProducts] = useState(0);
+  const PRODUCTS_PER_PAGE = 20;
 
-  const loadProducts = async () => {
+  const loadProducts = async (page = 1, append = false) => {
     if (!slug) return; // Wait for slug to be loaded
 
     try {
@@ -57,11 +66,35 @@ export default function ProductsPage({ params }: PageProps) {
           params.append('stock_status', 'low_stock');
       }
 
+      // Add pagination params
+      params.append('page', page.toString());
+      params.append('limit', PRODUCTS_PER_PAGE.toString());
+
       const queryString = params.toString();
-      const url = `/api/v1/storefronts/slug/${slug}/products${queryString ? `?${queryString}` : ''}`;
+      const url = `/api/v1/storefronts/slug/${slug}/products?${queryString}`;
       const response = await apiClient.get(url);
       if (response.data) {
-        setProducts(response.data);
+        const responseData = response.data;
+        const newProducts = Array.isArray(responseData)
+          ? responseData
+          : responseData.products || responseData.data || [];
+
+        if (append) {
+          setProducts((prev) => [...prev, ...newProducts]);
+        } else {
+          setProducts(newProducts);
+        }
+
+        // Handle pagination metadata
+        const meta = responseData.meta || responseData.pagination;
+        if (meta) {
+          setTotalProducts(meta.total || 0);
+          const totalPages = Math.ceil((meta.total || 0) / PRODUCTS_PER_PAGE);
+          setHasMore(page < totalPages);
+        } else {
+          // Fallback: assume there are more if we got a full page
+          setHasMore(newProducts.length === PRODUCTS_PER_PAGE);
+        }
       }
     } catch (error) {
       console.error('Failed to load products:', error);
@@ -71,8 +104,23 @@ export default function ProductsPage({ params }: PageProps) {
     }
   };
 
+  const handleLoadMore = () => {
+    if (hasMore && !loading) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      loadProducts(nextPage, true);
+    }
+  };
+
+  const loadMoreRef = useInfiniteScroll({
+    loading,
+    hasMore,
+    onLoadMore: handleLoadMore,
+  });
+
   useEffect(() => {
-    loadProducts();
+    setCurrentPage(1);
+    loadProducts(1, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, search, filterStatus]);
 
@@ -86,7 +134,8 @@ export default function ProductsPage({ params }: PageProps) {
       toast.success(t('storefronts.products.productDeleted'));
       setDeleteModalOpen(false);
       setProductToDelete(null);
-      loadProducts();
+      setCurrentPage(1);
+      loadProducts(1, false);
     } catch (error) {
       console.error('Failed to delete product:', error);
       toast.error(t('storefronts.products.errorDeletingProduct'));
@@ -217,7 +266,14 @@ export default function ProductsPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Products Grid */}
+      {/* View Toggle */}
+      {products.length > 0 && (
+        <div className="flex justify-end mb-4">
+          <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
+        </div>
+      )}
+
+      {/* Products Grid/List */}
       {loading ? (
         <div className="flex justify-center py-12">
           <span className="loading loading-spinner loading-lg"></span>
@@ -241,90 +297,183 @@ export default function ProductsPage({ params }: PageProps) {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <div key={product.id} className="card bg-base-100 shadow-xl">
-              {/* Product Image */}
-              <figure className="px-4 pt-4">
-                {product.images &&
-                product.images.length > 0 &&
-                product.images[0].thumbnail_url ? (
-                  <Image
-                    src={product.images[0].thumbnail_url}
+        <div
+          className={
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+              : 'space-y-4'
+          }
+        >
+          {products.map((product) =>
+            viewMode === 'grid' ? (
+              <div key={product.id} className="card bg-base-100 shadow-xl">
+                {/* Product Image */}
+                <figure className="px-4 pt-4">
+                  <SafeImage
+                    src={product.images?.[0]?.thumbnail_url}
                     alt={product.name || 'Product image'}
                     width={300}
                     height={200}
                     className="rounded-xl object-cover h-48 w-full"
+                    fallback={
+                      <div className="bg-base-200 rounded-xl h-48 w-full flex items-center justify-center">
+                        <PhotoIcon className="w-16 h-16 text-base-content/20" />
+                      </div>
+                    }
                   />
-                ) : (
-                  <div className="bg-base-200 rounded-xl h-48 w-full flex items-center justify-center">
-                    <PhotoIcon className="w-16 h-16 text-base-content/20" />
-                  </div>
-                )}
-              </figure>
+                </figure>
 
-              <div className="card-body">
-                {/* Product Name */}
-                <h2 className="card-title text-lg">
-                  {product.name}
-                  {!product.is_active && (
-                    <span className="badge badge-ghost">
-                      {t('storefronts.products.inactive')}
-                    </span>
+                <div className="card-body">
+                  {/* Product Name */}
+                  <h2 className="card-title text-lg">
+                    {product.name}
+                    {!product.is_active && (
+                      <span className="badge badge-ghost">
+                        {t('storefronts.products.inactive')}
+                      </span>
+                    )}
+                  </h2>
+
+                  {/* Category */}
+                  {product.category && (
+                    <p className="text-sm text-base-content/60">
+                      {product.category.name}
+                    </p>
                   )}
-                </h2>
 
-                {/* Category */}
-                {product.category && (
+                  {/* Price and Stock */}
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-xl font-bold">
+                      {product.price} {product.currency}
+                    </span>
+                    {getStockStatusBadge(product)}
+                  </div>
+
+                  {/* Stock Quantity */}
                   <p className="text-sm text-base-content/60">
-                    {product.category.name}
+                    {t('storefronts.products.stockCount', {
+                      count: product.stock_quantity || 0,
+                    })}
                   </p>
-                )}
 
-                {/* Price and Stock */}
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-xl font-bold">
-                    {product.price} {product.currency}
-                  </span>
-                  {getStockStatusBadge(product)}
-                </div>
+                  {/* SKU */}
+                  {product.sku && (
+                    <p className="text-xs text-base-content/40">
+                      SKU: {product.sku}
+                    </p>
+                  )}
 
-                {/* Stock Quantity */}
-                <p className="text-sm text-base-content/60">
-                  {t('storefronts.products.stockCount', {
-                    count: product.stock_quantity || 0,
-                  })}
-                </p>
-
-                {/* SKU */}
-                {product.sku && (
-                  <p className="text-xs text-base-content/40">
-                    SKU: {product.sku}
-                  </p>
-                )}
-
-                {/* Actions */}
-                <div className="card-actions justify-end mt-4">
-                  <Link
-                    href={`/${locale}/storefronts/${slug}/products/${product.id}/edit`}
-                    className="btn btn-sm btn-ghost"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setProductToDelete(product);
-                      setDeleteModalOpen(true);
-                    }}
-                    className="btn btn-sm btn-ghost text-error"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
+                  {/* Actions */}
+                  <div className="card-actions justify-end mt-4">
+                    <Link
+                      href={`/${locale}/storefronts/${slug}/products/${product.id}/edit`}
+                      className="btn btn-sm btn-ghost"
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setProductToDelete(product);
+                        setDeleteModalOpen(true);
+                      }}
+                      className="btn btn-sm btn-ghost text-error"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ) : (
+              // List view
+              <div key={product.id} className="card bg-base-100 shadow-xl">
+                <div className="card-body p-4">
+                  <div className="flex gap-4">
+                    {/* Product Image */}
+                    <figure className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-base-200">
+                      <SafeImage
+                        src={product.images?.[0]?.thumbnail_url}
+                        alt={product.name || 'Product image'}
+                        fill
+                        className="object-cover"
+                        fallback={
+                          <div className="w-full h-full flex items-center justify-center">
+                            <PhotoIcon className="w-12 h-12 text-base-content/20" />
+                          </div>
+                        }
+                      />
+                    </figure>
+
+                    {/* Product Info */}
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-grow">
+                          <h2 className="text-lg font-semibold line-clamp-1">
+                            {product.name}
+                            {!product.is_active && (
+                              <span className="badge badge-ghost badge-sm ml-2">
+                                {t('storefronts.products.inactive')}
+                              </span>
+                            )}
+                          </h2>
+                          {product.category && (
+                            <p className="text-sm text-base-content/60">
+                              {product.category.name}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-4 mt-2">
+                            <span className="text-xl font-bold">
+                              {product.price} {product.currency}
+                            </span>
+                            {getStockStatusBadge(product)}
+                            <span className="text-sm text-base-content/60">
+                              {t('storefronts.products.stockCount', {
+                                count: product.stock_quantity || 0,
+                              })}
+                            </span>
+                            {product.sku && (
+                              <span className="text-xs text-base-content/40">
+                                SKU: {product.sku}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <Link
+                            href={`/${locale}/storefronts/${slug}/products/${product.id}/edit`}
+                            className="btn btn-sm btn-ghost"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setProductToDelete(product);
+                              setDeleteModalOpen(true);
+                            }}
+                            className="btn btn-sm btn-ghost text-error"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          )}
         </div>
+      )}
+
+      {products.length > 0 && (
+        <InfiniteScrollTrigger
+          ref={loadMoreRef}
+          loading={loading}
+          hasMore={hasMore}
+          onLoadMore={handleLoadMore}
+          showButton={true}
+        />
       )}
 
       {/* Delete Confirmation Modal */}
