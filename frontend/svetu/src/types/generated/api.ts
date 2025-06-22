@@ -11446,6 +11446,287 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/{storefront_id}/import/file': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import products from file
+     * @description Import products from uploaded file (supports XML, CSV, ZIP formats)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Import file
+             */
+            file: string;
+            /**
+             * @description File type
+             * @enum {string}
+             */
+            file_type: 'xml' | 'csv' | 'zip';
+            /**
+             * @description Update mode
+             * @default upsert
+             * @enum {string}
+             */
+            update_mode?: 'create_only' | 'update_only' | 'upsert';
+            /**
+             * @description Category mapping mode
+             * @default auto
+             * @enum {string}
+             */
+            category_mapping_mode?: 'auto' | 'manual' | 'skip';
+          };
+        };
+      };
+      responses: {
+        /** @description Import job created */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.ImportJob'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{storefront_id}/import/url': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import products from URL
+     * @description Import products from a URL (supports XML, CSV, ZIP formats)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Import request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.ImportRequest'];
+        };
+      };
+      responses: {
+        /** @description Import job created */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.ImportJob'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{storefront_id}/import/validate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Validate import file
+     * @description Validate import file structure and data without actually importing
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Import file
+             */
+            file: string;
+            /**
+             * @description File type
+             * @enum {string}
+             */
+            file_type: 'xml' | 'csv' | 'zip';
+          };
+        };
+      };
+      responses: {
+        /** @description Validation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.ImportJobStatus'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts/building': {
     parameters: {
       query?: never;
@@ -11496,6 +11777,86 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/import/csv-template': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get CSV import template
+     * @description Get CSV template with headers and example data for product import
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description CSV template */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'text/csv': string;
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/import/formats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get supported import formats
+     * @description Get information about supported import formats and their requirements
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Import formats information */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            };
           };
         };
       };
@@ -13604,6 +13965,68 @@ export interface components {
       country?: string;
       lat?: number;
       lon?: number;
+    };
+    'models.ImportError': {
+      created_at?: string;
+      error_message?: string;
+      field_name?: string;
+      id?: number;
+      job_id?: number;
+      line_number?: number;
+      raw_data?: string;
+    };
+    'models.ImportJob': {
+      completed_at?: string;
+      created_at?: string;
+      error_message?: string;
+      failed_records?: number;
+      file_name?: string;
+      /** @description xml, csv, zip */
+      file_type?: string;
+      /** @description for URL imports */
+      file_url?: string;
+      id?: number;
+      processed_records?: number;
+      started_at?: string;
+      /** @description pending, processing, completed, failed */
+      status?: string;
+      storefront_id?: number;
+      successful_records?: number;
+      total_records?: number;
+      updated_at?: string;
+      user_id?: number;
+    };
+    'models.ImportJobStatus': {
+      completed_at?: string;
+      errors?: components['schemas']['models.ImportError'][];
+      /** @description seconds */
+      estimated_time_left?: number;
+      failed_records?: number;
+      id?: number;
+      processed_records?: number;
+      /** @description 0-100 */
+      progress?: number;
+      started_at?: string;
+      status?: string;
+      successful_records?: number;
+      total_records?: number;
+    };
+    'models.ImportRequest': {
+      /**
+       * @description auto, manual, skip
+       * @enum {string}
+       */
+      category_mapping_mode?: 'auto' | 'manual' | 'skip';
+      file_name?: string;
+      /** @enum {string} */
+      file_type: 'xml' | 'csv' | 'zip';
+      file_url?: string;
+      storefront_id: number;
+      /**
+       * @description create_only, update_only, upsert
+       * @enum {string}
+       */
+      update_mode?: 'create_only' | 'update_only' | 'upsert';
     };
     'models.JSONB': {
       [key: string]: unknown;

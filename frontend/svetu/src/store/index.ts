@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import chatReducer from './slices/chatSlice';
 import reviewsReducer from './slices/reviewsSlice';
 import storefrontsReducer from './slices/storefrontSlice';
+import importReducer from './slices/importSlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
 
 export const store = configureStore({
@@ -9,18 +10,27 @@ export const store = configureStore({
     chat: chatReducer,
     reviews: reviewsReducer,
     storefronts: storefrontsReducer,
+    import: importReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Игнорируем проверку для WebSocket и Set
+        // Игнорируем проверку для WebSocket, Set и File объектов
         ignoredActions: [
           'chat/initWebSocket',
           'chat/setWebSocket',
           'chat/handleUserOnline',
           'chat/handleUserOffline',
+          'import/setSelectedFiles',
+          'import/importFromFile/pending',
+          'import/importFromFile/fulfilled',
         ],
-        ignoredPaths: ['chat.ws', 'chat.onlineUsers', 'chat.typingUsers'],
+        ignoredPaths: [
+          'chat.ws',
+          'chat.onlineUsers',
+          'chat.typingUsers',
+          'import.selectedFiles',
+        ],
       },
     }).concat(websocketMiddleware),
 });

@@ -10260,6 +10260,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/storefronts/import/csv-template": {
+            "get": {
+                "description": "Get CSV template with headers and example data for product import",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "storefronts",
+                    "import"
+                ],
+                "summary": "Get CSV import template",
+                "responses": {
+                    "200": {
+                        "description": "CSV template",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/import/formats": {
+            "get": {
+                "description": "Get information about supported import formats and their requirements",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts",
+                    "import"
+                ],
+                "summary": "Get supported import formats",
+                "responses": {
+                    "200": {
+                        "description": "Import formats information",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts/map": {
             "get": {
                 "description": "Returns storefronts within map bounds with minimal data for performance",
@@ -12122,6 +12165,263 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Product not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{storefront_id}/import/file": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Import products from uploaded file (supports XML, CSV, ZIP formats)",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts",
+                    "import"
+                ],
+                "summary": "Import products from file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Import file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "xml",
+                            "csv",
+                            "zip"
+                        ],
+                        "type": "string",
+                        "description": "File type",
+                        "name": "file_type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "create_only",
+                            "update_only",
+                            "upsert"
+                        ],
+                        "type": "string",
+                        "default": "upsert",
+                        "description": "Update mode",
+                        "name": "update_mode",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            "auto",
+                            "manual",
+                            "skip"
+                        ],
+                        "type": "string",
+                        "default": "auto",
+                        "description": "Category mapping mode",
+                        "name": "category_mapping_mode",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Import job created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ImportJob"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{storefront_id}/import/url": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Import products from a URL (supports XML, CSV, ZIP formats)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts",
+                    "import"
+                ],
+                "summary": "Import products from URL",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Import request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ImportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Import job created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ImportJob"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{storefront_id}/import/validate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validate import file structure and data without actually importing",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts",
+                    "import"
+                ],
+                "summary": "Validate import file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Import file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "xml",
+                            "csv",
+                            "zip"
+                        ],
+                        "type": "string",
+                        "description": "File type",
+                        "name": "file_type",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Validation result",
+                        "schema": {
+                            "$ref": "#/definitions/models.ImportJobStatus"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -15435,6 +15735,175 @@ const docTemplate = `{
                 },
                 "lon": {
                     "type": "number"
+                }
+            }
+        },
+        "models.ImportError": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "field_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "job_id": {
+                    "type": "integer"
+                },
+                "line_number": {
+                    "type": "integer"
+                },
+                "raw_data": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ImportJob": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "failed_records": {
+                    "type": "integer"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_type": {
+                    "description": "xml, csv, zip",
+                    "type": "string"
+                },
+                "file_url": {
+                    "description": "for URL imports",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "processed_records": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "pending, processing, completed, failed",
+                    "type": "string"
+                },
+                "storefront_id": {
+                    "type": "integer"
+                },
+                "successful_records": {
+                    "type": "integer"
+                },
+                "total_records": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ImportJobStatus": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ImportError"
+                    }
+                },
+                "estimated_time_left": {
+                    "description": "seconds",
+                    "type": "integer"
+                },
+                "failed_records": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "processed_records": {
+                    "type": "integer"
+                },
+                "progress": {
+                    "description": "0-100",
+                    "type": "number"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "successful_records": {
+                    "type": "integer"
+                },
+                "total_records": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ImportRequest": {
+            "type": "object",
+            "required": [
+                "file_type",
+                "storefront_id"
+            ],
+            "properties": {
+                "category_mapping_mode": {
+                    "description": "auto, manual, skip",
+                    "type": "string",
+                    "enum": [
+                        "auto",
+                        "manual",
+                        "skip"
+                    ]
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_type": {
+                    "type": "string",
+                    "enum": [
+                        "xml",
+                        "csv",
+                        "zip"
+                    ]
+                },
+                "file_url": {
+                    "type": "string"
+                },
+                "storefront_id": {
+                    "type": "integer"
+                },
+                "update_mode": {
+                    "description": "create_only, update_only, upsert",
+                    "type": "string",
+                    "enum": [
+                        "create_only",
+                        "update_only",
+                        "upsert"
+                    ]
                 }
             }
         },

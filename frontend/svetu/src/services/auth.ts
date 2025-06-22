@@ -8,7 +8,6 @@ import type {
 } from '@/types/auth';
 import type { components } from '@/types/generated/api';
 
-// Type aliases для удобства использования
 type ApiLoginRequest = components['schemas']['handler.LoginRequest'];
 type ApiAuthResponse = components['schemas']['handler.AuthResponse'];
 type ApiSuccessResponse<T> =

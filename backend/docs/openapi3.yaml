@@ -8020,6 +8020,212 @@ paths:
       summary: Get product statistics
       tags:
         - storefront-products
+  "/api/v1/storefronts/{storefront_id}/import/file":
+    post:
+      description: Import products from uploaded file (supports XML, CSV, ZIP formats)
+      parameters:
+        - description: Storefront ID
+          in: path
+          name: storefront_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: Import file
+                  type: string
+                  format: binary
+                file_type:
+                  description: File type
+                  type: string
+                  enum:
+                    - xml
+                    - csv
+                    - zip
+                update_mode:
+                  description: Update mode
+                  type: string
+                  enum:
+                    - create_only
+                    - update_only
+                    - upsert
+                  default: upsert
+                category_mapping_mode:
+                  description: Category mapping mode
+                  type: string
+                  enum:
+                    - auto
+                    - manual
+                    - skip
+                  default: auto
+              required:
+                - file
+                - file_type
+        required: true
+      responses:
+        "200":
+          description: Import job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/models.ImportJob"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Import products from file
+      tags:
+        - storefronts
+        - import
+  "/api/v1/storefronts/{storefront_id}/import/url":
+    post:
+      description: Import products from a URL (supports XML, CSV, ZIP formats)
+      parameters:
+        - description: Storefront ID
+          in: path
+          name: storefront_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/models.ImportRequest"
+        description: Import request
+        required: true
+      responses:
+        "200":
+          description: Import job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/models.ImportJob"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Import products from URL
+      tags:
+        - storefronts
+        - import
+  "/api/v1/storefronts/{storefront_id}/import/validate":
+    post:
+      description: Validate import file structure and data without actually importing
+      parameters:
+        - description: Storefront ID
+          in: path
+          name: storefront_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: Import file
+                  type: string
+                  format: binary
+                file_type:
+                  description: File type
+                  type: string
+                  enum:
+                    - xml
+                    - csv
+                    - zip
+              required:
+                - file
+                - file_type
+        required: true
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/models.ImportJobStatus"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Validate import file
+      tags:
+        - storefronts
+        - import
   /api/v1/storefronts/building:
     get:
       description: Returns all storefronts located in the same building
@@ -8061,6 +8267,35 @@ paths:
       tags:
         - storefronts
         - map
+  /api/v1/storefronts/import/csv-template:
+    get:
+      description: Get CSV template with headers and example data for product import
+      responses:
+        "200":
+          description: CSV template
+          content:
+            text/csv:
+              schema:
+                type: string
+      summary: Get CSV import template
+      tags:
+        - storefronts
+        - import
+  /api/v1/storefronts/import/formats:
+    get:
+      description: Get information about supported import formats and their requirements
+      responses:
+        "200":
+          description: Import formats information
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+      summary: Get supported import formats
+      tags:
+        - storefronts
+        - import
   /api/v1/storefronts/map:
     get:
       description: Returns storefronts within map bounds with minimal data for performance
@@ -10603,6 +10838,122 @@ components:
           type: number
         lon:
           type: number
+      type: object
+    models.ImportError:
+      properties:
+        created_at:
+          type: string
+        error_message:
+          type: string
+        field_name:
+          type: string
+        id:
+          type: integer
+        job_id:
+          type: integer
+        line_number:
+          type: integer
+        raw_data:
+          type: string
+      type: object
+    models.ImportJob:
+      properties:
+        completed_at:
+          type: string
+        created_at:
+          type: string
+        error_message:
+          type: string
+        failed_records:
+          type: integer
+        file_name:
+          type: string
+        file_type:
+          description: xml, csv, zip
+          type: string
+        file_url:
+          description: for URL imports
+          type: string
+        id:
+          type: integer
+        processed_records:
+          type: integer
+        started_at:
+          type: string
+        status:
+          description: pending, processing, completed, failed
+          type: string
+        storefront_id:
+          type: integer
+        successful_records:
+          type: integer
+        total_records:
+          type: integer
+        updated_at:
+          type: string
+        user_id:
+          type: integer
+      type: object
+    models.ImportJobStatus:
+      properties:
+        completed_at:
+          type: string
+        errors:
+          items:
+            $ref: "#/components/schemas/models.ImportError"
+          type: array
+        estimated_time_left:
+          description: seconds
+          type: integer
+        failed_records:
+          type: integer
+        id:
+          type: integer
+        processed_records:
+          type: integer
+        progress:
+          description: 0-100
+          type: number
+        started_at:
+          type: string
+        status:
+          type: string
+        successful_records:
+          type: integer
+        total_records:
+          type: integer
+      type: object
+    models.ImportRequest:
+      properties:
+        category_mapping_mode:
+          description: auto, manual, skip
+          enum:
+            - auto
+            - manual
+            - skip
+          type: string
+        file_name:
+          type: string
+        file_type:
+          enum:
+            - xml
+            - csv
+            - zip
+          type: string
+        file_url:
+          type: string
+        storefront_id:
+          type: integer
+        update_mode:
+          description: create_only, update_only, upsert
+          enum:
+            - create_only
+            - update_only
+            - upsert
+          type: string
+      required:
+        - file_type
+        - storefront_id
       type: object
     models.JSONB:
       additionalProperties: true

@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   fetchStorefronts,
   fetchStorefrontById,
+  fetchStorefrontBySlug,
   fetchMyStorefronts,
   createStorefront,
   updateStorefront,
@@ -78,6 +79,13 @@ export const useStorefronts = () => {
   const loadStorefrontById = useCallback(
     (id: number) => {
       return dispatch(fetchStorefrontById(id));
+    },
+    [dispatch]
+  );
+
+  const loadStorefrontBySlug = useCallback(
+    (slug: string) => {
+      return dispatch(fetchStorefrontBySlug(slug));
     },
     [dispatch]
   );
@@ -203,12 +211,21 @@ export const useStorefronts = () => {
     [searchStorefronts]
   );
 
-  // Получение витрины по слагу из текущего списка
+  // Получение витрины по слагу через API
   const getStorefrontBySlug = useCallback(
-    (slug: string) => {
-      return storefronts.find((storefront) => storefront.slug === slug);
+    async (slug: string) => {
+      try {
+        const result = await dispatch(fetchStorefrontBySlug(slug));
+        if (fetchStorefrontBySlug.fulfilled.match(result)) {
+          return result.payload;
+        }
+        return null;
+      } catch (error) {
+        console.error('Failed to load storefront by slug:', error);
+        return null;
+      }
     },
-    [storefronts]
+    [dispatch]
   );
 
   // Получение витрин по городу из текущего списка
@@ -251,6 +268,7 @@ export const useStorefronts = () => {
     // Actions
     loadStorefronts,
     loadStorefrontById,
+    loadStorefrontBySlug,
     loadMyStorefronts,
     createNewStorefront,
     updateExistingStorefront,

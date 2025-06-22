@@ -14,6 +14,7 @@ type Module struct {
 	services          service.ServicesInterface
 	storefrontHandler *handler.StorefrontHandler
 	productHandler    *handler.ProductHandler
+	importHandler     *handler.ImportHandler
 }
 
 // NewModule создает новый модуль витрин
@@ -30,10 +31,14 @@ func NewModule(services service.ServicesInterface) *Module {
 	// TODO: Получить OpenSearch репозиторий из глобального сервиса
 	productSvc := storefrontService.NewProductService(productStorage, nil)
 	
+	// Создаем сервис импорта
+	importSvc := storefrontService.NewImportService(productSvc)
+	
 	return &Module{
 		services:          services,
 		storefrontHandler: handler.NewStorefrontHandler(storefrontSvc),
 		productHandler:    handler.NewProductHandler(productSvc),
+		importHandler:     handler.NewImportHandler(importSvc),
 	}
 }
 
@@ -112,7 +117,31 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Delete("/slug/:slug/products/:id", m.deleteProductBySlug)
 		protected.Post("/slug/:slug/products/:id/inventory", m.updateInventoryBySlug)
 		protected.Get("/slug/:slug/products/stats", m.getProductStatsBySlug)
+		
+		// Маршруты импорта товаров
+		protected.Post("/:id/import/url", m.importHandler.ImportFromURL)
+		protected.Post("/:id/import/file", m.importHandler.ImportFromFile)
+		protected.Post("/:id/import/validate", m.importHandler.ValidateImportFile)
+		protected.Get("/:id/import/jobs", m.importHandler.GetJobs)
+		protected.Get("/:id/import/jobs/:jobId", m.importHandler.GetJobDetails)
+		protected.Get("/:id/import/jobs/:jobId/status", m.importHandler.GetJobStatus)
+		protected.Post("/:id/import/jobs/:jobId/cancel", m.importHandler.CancelJob)
+		protected.Post("/:id/import/jobs/:jobId/retry", m.importHandler.RetryJob)
+		
+		// Маршруты импорта через slug
+		protected.Post("/slug/:slug/import/url", m.importFromURLBySlug)
+		protected.Post("/slug/:slug/import/file", m.importFromFileBySlug)
+		protected.Post("/slug/:slug/import/validate", m.validateImportBySlug)
+		protected.Get("/slug/:slug/import/jobs", m.getJobsBySlug)
+		protected.Get("/slug/:slug/import/jobs/:jobId", m.getJobDetailsBySlug)
+		protected.Get("/slug/:slug/import/jobs/:jobId/status", m.getJobStatusBySlug)
+		protected.Post("/slug/:slug/import/jobs/:jobId/cancel", m.cancelJobBySlug)
+		protected.Post("/slug/:slug/import/jobs/:jobId/retry", m.retryJobBySlug)
 	}
+	
+	// Публичные маршруты импорта (для получения шаблонов и документации)
+	api.Get("/storefronts/import/csv-template", m.importHandler.GetCSVTemplate)
+	api.Get("/storefronts/import/formats", m.importHandler.GetImportFormats)
 	
 	return nil
 }
@@ -339,6 +368,116 @@ func (m *Module) checkStorefrontAccess(c *fiber.Ctx) error {
 	}
 	
 	return nil
+}
+
+// Функции-обертки для импорта через slug
+func (m *Module) importFromURLBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
+	return m.importHandler.ImportFromURL(c)
+}
+
+func (m *Module) importFromFileBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
+	return m.importHandler.ImportFromFile(c)
+}
+
+func (m *Module) validateImportBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
+	return m.importHandler.ValidateImportFile(c)
+}
+
+// Функции-обертки для работы с jobs через slug
+func (m *Module) getJobsBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
+	return m.importHandler.GetJobs(c)
+}
+
+func (m *Module) getJobDetailsBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	return m.importHandler.GetJobDetails(c)
+}
+
+func (m *Module) getJobStatusBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	return m.importHandler.GetJobStatus(c)
+}
+
+func (m *Module) cancelJobBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	return m.importHandler.CancelJob(c)
+}
+
+func (m *Module) retryJobBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	return m.importHandler.RetryJob(c)
 }
 
 // withStorefrontAccess создает middleware для проверки доступа к витрине
