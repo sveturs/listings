@@ -23,7 +23,7 @@ export class ImportApi {
     }
   ): Promise<ImportJob> {
     const response = await apiClient.post(
-      `/storefronts/slug/${storefrontSlug}/import/url`,
+      `/api/v1/storefronts/slug/${storefrontSlug}/import/url`,
       {
         url,
         ...options,
@@ -109,7 +109,7 @@ export class ImportApi {
     request: Omit<ImportRequest, 'storefront_id'>
   ): Promise<ImportJob> {
     const response = await apiClient.post(
-      `/storefronts/${storefrontId}/import/url`,
+      `/api/v1/storefronts/${storefrontId}/import/url`,
       {
         ...request,
         storefront_id: storefrontId,
@@ -198,7 +198,7 @@ export class ImportApi {
     formData.append('file_type', fileType);
 
     const response = await apiClient.post(
-      `/storefronts/${storefrontId}/import/validate`,
+      `/api/v1/storefronts/${storefrontId}/import/validate`,
       formData,
       {
         headers: {
@@ -214,7 +214,7 @@ export class ImportApi {
    * Gets import job status
    */
   static async getJobStatus(jobId: number): Promise<ImportJobStatus> {
-    const response = await apiClient.get(`/import/jobs/${jobId}/status`);
+    const response = await apiClient.get(`/api/v1/import/jobs/${jobId}/status`);
     return response.data;
   }
 
@@ -235,7 +235,7 @@ export class ImportApi {
     if (params?.offset) queryParams.append('offset', params.offset.toString());
 
     const queryString = queryParams.toString();
-    const url = `/storefronts/${storefrontId}/import/jobs${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/storefronts/${storefrontId}/import/jobs${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get(url);
     return response.data;
@@ -247,7 +247,7 @@ export class ImportApi {
   static async getJobDetails(
     jobId: number
   ): Promise<ImportJob & { errors?: any[] }> {
-    const response = await apiClient.get(`/import/jobs/${jobId}`);
+    const response = await apiClient.get(`/api/v1/import/jobs/${jobId}`);
     return response.data;
   }
 
@@ -266,7 +266,7 @@ export class ImportApi {
    * Gets supported import formats information
    */
   static async getFormats(): Promise<ImportFormats> {
-    const response = await apiClient.get('/storefronts/import/formats');
+    const response = await apiClient.get('/api/v1/storefronts/import/formats');
     return response.data;
   }
 
@@ -274,14 +274,14 @@ export class ImportApi {
    * Cancels an ongoing import job
    */
   static async cancelJob(jobId: number): Promise<void> {
-    await apiClient.post(`/import/jobs/${jobId}/cancel`);
+    await apiClient.post(`/api/v1/import/jobs/${jobId}/cancel`);
   }
 
   /**
    * Retries a failed import job
    */
   static async retryJob(jobId: number): Promise<ImportJob> {
-    const response = await apiClient.post(`/import/jobs/${jobId}/retry`);
+    const response = await apiClient.post(`/api/v1/import/jobs/${jobId}/retry`);
     return response.data;
   }
 
@@ -311,7 +311,7 @@ export class ImportApi {
     if (params?.end_date) queryParams.append('end_date', params.end_date);
 
     const queryString = queryParams.toString();
-    const url = `/storefronts/${storefrontId}/import/summary${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/storefronts/${storefrontId}/import/summary${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get(url);
     return response.data;
@@ -334,7 +334,7 @@ export class ImportApi {
     formData.append('file_type', fileType);
 
     const response = await apiClient.post(
-      '/storefronts/import/preview',
+      '/api/v1/storefronts/import/preview',
       formData,
       {
         headers: {
@@ -360,7 +360,7 @@ export class ImportApi {
     }>;
   }> {
     const response = await apiClient.post(
-      `/storefronts/${storefrontId}/import/category-mappings`,
+      `/api/v1/storefronts/${storefrontId}/import/category-mappings`,
       {
         categories: importCategories,
       }
@@ -381,7 +381,7 @@ export class ImportApi {
     }
   ): Promise<void> {
     await apiClient.post(
-      `/storefronts/${storefrontId}/import/category-mappings/create`,
+      `/api/v1/storefronts/${storefrontId}/import/category-mappings/create`,
       mapping
     );
   }

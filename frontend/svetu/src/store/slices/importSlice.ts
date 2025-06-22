@@ -290,7 +290,11 @@ const importSlice = createSlice({
       })
       .addCase(fetchImportJobs.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.jobs = action.payload.jobs;
+        if (action.payload && action.payload.jobs) {
+          state.jobs = action.payload.jobs;
+        } else {
+          state.jobs = [];
+        }
       })
       .addCase(fetchImportJobs.rejected, (state, action) => {
         state.isLoading = false;

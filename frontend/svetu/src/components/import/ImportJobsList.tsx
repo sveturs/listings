@@ -323,6 +323,16 @@ export default function ImportJobsList({
 
                       {/* Actions */}
                       <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            dispatch(setCurrentJob(job));
+                            dispatch(setJobDetailsModalOpen(true));
+                          }}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          {t('actions.viewDetails')}
+                        </button>
+
                         {job.failed_records > 0 && (
                           <button
                             onClick={(_e) => handleShowErrors(job)}

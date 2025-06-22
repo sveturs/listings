@@ -14,6 +14,7 @@ export default function ProductImportPage() {
     useStorefronts();
 
   const slug = params.slug as string;
+  const locale = params.locale as string;
 
   useEffect(() => {
     if (slug) {
@@ -87,7 +88,7 @@ export default function ProductImportPage() {
           <ol className="inline-flex items-center space-x-1 md:space-x-3">
             <li className="inline-flex items-center">
               <button
-                onClick={() => router.push(`/storefronts/${slug}`)}
+                onClick={() => router.push(`/${locale}/storefronts/${slug}`)}
                 className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <svg
@@ -114,7 +115,9 @@ export default function ProductImportPage() {
                   />
                 </svg>
                 <button
-                  onClick={() => router.push(`/storefronts/${slug}/products`)}
+                  onClick={() =>
+                    router.push(`/${locale}/storefronts/${slug}/products`)
+                  }
                   className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
                   Products
@@ -155,7 +158,9 @@ export default function ProductImportPage() {
             {/* Quick Actions */}
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => router.push(`/storefronts/${slug}/products`)}
+                onClick={() =>
+                  router.push(`/${locale}/storefronts/${slug}/products`)
+                }
                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
               >
                 <svg
@@ -175,7 +180,9 @@ export default function ProductImportPage() {
               </button>
 
               <button
-                onClick={() => router.push(`/storefronts/${slug}/products/new`)}
+                onClick={() =>
+                  router.push(`/${locale}/storefronts/${slug}/products/new`)
+                }
                 className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
               >
                 <svg
