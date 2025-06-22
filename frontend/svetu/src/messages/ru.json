@@ -18,7 +18,14 @@
     "view": "Просмотр",
     "new": "Новый",
     "minutesAgo": "{minutes} минут назад",
-    "hourAgo": "{hours} час назад"
+    "hourAgo": "{hours} час назад",
+    "loadMore": "Загрузить еще",
+    "justNow": "Только что",
+    "hoursAgo": "ч. назад",
+    "daysAgo": "д. назад",
+    "chat": "Чат",
+    "viewAll": "Посмотреть все",
+    "documentation": "Документация"
   },
   "home": {
     "marketplace": "Объявления",
@@ -76,7 +83,23 @@
     "clearFilters": "Сбросить фильтры",
     "loadingResults": "Загружаем результаты...",
     "searchError": "Ошибка поиска",
-    "tryAgain": "Попробуйте еще раз"
+    "tryAgain": "Попробуйте еще раз",
+    "listings": "Объявления",
+    "storeProducts": "Товары магазинов",
+    "byPrice": "По цене",
+    "byDate": "По дате",
+    "speed": "Скорость",
+    "milliseconds": "миллисекунд",
+    "applied": "применено",
+    "productTypes": "Тип товаров",
+    "private": "Частные",
+    "stores": "Магазины",
+    "from": "От",
+    "to": "До",
+    "reset": "Сбросить",
+    "searchHistory": "История поиска",
+    "clearHistory": "Очистить историю",
+    "popularSearches": "Популярные запросы"
   },
   "blog": {
     "title": "Блог",
@@ -1276,6 +1299,8 @@
     "minutesAgo": "{minutes} минут назад",
     "hourAgo": "{hours} час назад",
     "viewAll": "Посмотреть все",
+    "viewGrid": "Сеткой",
+    "viewList": "Списком",
     "actions": "Действия",
     "days": {
       "monday": "Понедельник",

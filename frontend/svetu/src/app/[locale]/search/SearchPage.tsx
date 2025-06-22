@@ -5,6 +5,10 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SearchBar } from '@/components/SearchBar';
 import MarketplaceCard from '@/components/MarketplaceCard';
+import ViewToggle from '@/components/common/ViewToggle';
+import { useViewPreference } from '@/hooks/useViewPreference';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
 import {
   UnifiedSearchService,
   UnifiedSearchResult,
@@ -41,6 +45,19 @@ export default function SearchPage() {
   const [page, setPage] = useState(1);
   const [allItems, setAllItems] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useViewPreference('grid');
+
+  const handleLoadMore = () => {
+    if (results && results.has_more) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  const loadMoreRef = useInfiniteScroll({
+    loading,
+    hasMore: results?.has_more || false,
+    onLoadMore: handleLoadMore,
+  });
 
   // Initial search when component mounts with query
   useEffect(() => {
@@ -157,12 +174,6 @@ export default function SearchPage() {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
-  const handleLoadMore = () => {
-    if (results && results.has_more) {
-      setPage((prev) => prev + 1);
-    }
-  };
-
   const convertToMarketplaceItem = (item: any): MarketplaceItem => {
     return {
       id: item.product_id,
@@ -223,7 +234,7 @@ export default function SearchPage() {
             {/* Быстрые фильтры */}
             <div className="flex flex-wrap gap-2 mt-3">
               <button
-                className={`btn btn-sm ${filters.product_types?.includes('marketplace') ? 'btn-primary' : 'btn-ghost'}`}
+                className={`btn btn-xs sm:btn-sm ${filters.product_types?.includes('marketplace') ? 'btn-primary' : 'btn-ghost'}`}
                 onClick={() => {
                   const types = filters.product_types || [];
                   if (types.includes('marketplace') && types.length > 1) {
@@ -237,10 +248,10 @@ export default function SearchPage() {
                   }
                 }}
               >
-                Объявления
+                {t('search.listings')}
               </button>
               <button
-                className={`btn btn-sm lg:btn-md ${filters.product_types?.includes('storefront') ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
+                className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.product_types?.includes('storefront') ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
                 onClick={() => {
                   const types = filters.product_types || [];
                   if (types.includes('storefront') && types.length > 1) {
@@ -254,10 +265,10 @@ export default function SearchPage() {
                   }
                 }}
               >
-                Товары магазинов
+                {t('search.storeProducts')}
               </button>
               <button
-                className={`btn btn-sm lg:btn-md ${filters.sort_by === 'price' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
+                className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'price' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
                 onClick={() =>
                   handleFilterChange({
                     sort_by:
@@ -278,10 +289,10 @@ export default function SearchPage() {
                     d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                По цене
+                {t('search.byPrice')}
               </button>
               <button
-                className={`btn btn-sm lg:btn-md ${filters.sort_by === 'date' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
+                className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'date' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
                 onClick={() =>
                   handleFilterChange({
                     sort_by: filters.sort_by === 'date' ? 'relevance' : 'date',
@@ -301,7 +312,7 @@ export default function SearchPage() {
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                По дате
+                {t('search.byDate')}
               </button>
             </div>
           </div>
@@ -330,9 +341,9 @@ export default function SearchPage() {
                   />
                 </svg>
               </div>
-              <div className="stat-title text-sm">Найдено</div>
+              <div className="stat-title text-sm">{t('search.found')}</div>
               <div className="stat-value text-2xl">{results.total || 0}</div>
-              <div className="stat-desc">результатов</div>
+              <div className="stat-desc">{t('search.results')}</div>
             </div>
 
             {/* Время поиска */}
@@ -352,9 +363,9 @@ export default function SearchPage() {
                   />
                 </svg>
               </div>
-              <div className="stat-title text-sm">Скорость</div>
+              <div className="stat-title text-sm">{t('search.speed')}</div>
               <div className="stat-value text-2xl">{results.took_ms || 0}</div>
-              <div className="stat-desc">миллисекунд</div>
+              <div className="stat-desc">{t('search.milliseconds')}</div>
             </div>
 
             {/* Категории */}
@@ -374,9 +385,9 @@ export default function SearchPage() {
                   />
                 </svg>
               </div>
-              <div className="stat-title text-sm">Время</div>
+              <div className="stat-title text-sm">{t('search.time')}</div>
               <div className="stat-value text-2xl">{results.took_ms || 0}</div>
-              <div className="stat-desc">мс</div>
+              <div className="stat-desc">{t('search.ms')}</div>
             </div>
 
             {/* Фильтры */}
@@ -396,9 +407,11 @@ export default function SearchPage() {
                   />
                 </svg>
               </div>
-              <div className="stat-title text-sm">Активных фильтров</div>
+              <div className="stat-title text-sm">
+                {t('search.activeFilters')}
+              </div>
               <div className="stat-value text-2xl">{activeFiltersCount()}</div>
-              <div className="stat-desc">применено</div>
+              <div className="stat-desc">{t('search.applied')}</div>
             </div>
           </div>
         )}
@@ -407,13 +420,13 @@ export default function SearchPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
             <div>
               <h2 className="text-2xl font-bold">
-                Результаты для &quot;{query}&quot;
+                {t('search.resultsFor')} &quot;{query}&quot;
               </h2>
             </div>
 
             {/* Кнопка фильтров для мобильных */}
             <button
-              className="btn btn-outline btn-sm lg:hidden"
+              className="btn btn-outline btn-xs sm:btn-sm lg:hidden"
               onClick={() => setShowFilters(!showFilters)}
             >
               <svg
@@ -429,7 +442,7 @@ export default function SearchPage() {
                   d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
                 />
               </svg>
-              Фильтры
+              {t('search.filters')}
               {activeFiltersCount() > 0 && (
                 <span className="badge badge-primary badge-sm ml-2">
                   {activeFiltersCount()}
@@ -489,7 +502,7 @@ export default function SearchPage() {
                             d="M6 18L18 6M6 6l12 12"
                           />
                         </svg>
-                        Сбросить
+                        {t('search.reset')}
                       </button>
                     )}
                   </div>
@@ -499,7 +512,7 @@ export default function SearchPage() {
                     <div>
                       <label className="label">
                         <span className="label-text font-medium">
-                          Тип товаров
+                          {t('search.productTypes')}
                         </span>
                       </label>
                       <div className="grid grid-cols-2 gap-3">
@@ -541,7 +554,9 @@ export default function SearchPage() {
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                               />
                             </svg>
-                            <span className="text-xs font-medium">Частные</span>
+                            <span className="text-xs font-medium">
+                              {t('search.private')}
+                            </span>
                           </div>
                         </div>
                         <div
@@ -583,7 +598,7 @@ export default function SearchPage() {
                               />
                             </svg>
                             <span className="text-xs font-medium">
-                              Магазины
+                              {t('search.stores')}
                             </span>
                           </div>
                         </div>
@@ -615,7 +630,9 @@ export default function SearchPage() {
                       <div className="flex gap-2">
                         <div className="form-control flex-1">
                           <label className="input-group">
-                            <span className="bg-base-200">От</span>
+                            <span className="bg-base-200">
+                              {t('search.from')}
+                            </span>
                             <input
                               type="number"
                               className="input input-bordered w-full"
@@ -632,7 +649,9 @@ export default function SearchPage() {
                         </div>
                         <div className="form-control flex-1">
                           <label className="input-group">
-                            <span className="bg-base-200">До</span>
+                            <span className="bg-base-200">
+                              {t('search.to')}
+                            </span>
                             <input
                               type="number"
                               className="input input-bordered w-full"
@@ -736,27 +755,29 @@ export default function SearchPage() {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-3xl font-bold mb-4">{t('noResults')}</h3>
+                  <h3 className="text-3xl font-bold mb-4">
+                    {t('search.noResults')}
+                  </h3>
                   <p className="text-base-content/60 mb-8 max-w-md mx-auto">
-                    К сожалению, по вашему запросу ничего не найдено. Попробуйте
-                    изменить параметры поиска или воспользуйтесь популярными
-                    категориями.
+                    {t('search.noResultsDescription')}
                   </p>
 
-                  <div className="divider">Попробуйте</div>
+                  <div className="divider">
+                    {locale === 'ru' ? 'Попробуйте' : 'Try'}
+                  </div>
 
                   <div className="flex flex-wrap gap-2 justify-center mb-8">
                     <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                      Электроника
+                      {locale === 'ru' ? 'Электроника' : 'Electronics'}
                     </button>
                     <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                      Одежда
+                      {locale === 'ru' ? 'Одежда' : 'Clothing'}
                     </button>
                     <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                      Дом и сад
+                      {locale === 'ru' ? 'Дом и сад' : 'Home & Garden'}
                     </button>
                     <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                      Авто
+                      {locale === 'ru' ? 'Авто' : 'Auto'}
                     </button>
                   </div>
 
@@ -784,7 +805,7 @@ export default function SearchPage() {
                           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                         />
                       </svg>
-                      Сбросить фильтры
+                      {t('search.clearFilters')}
                     </button>
                     <button
                       className="btn btn-primary"
@@ -808,7 +829,7 @@ export default function SearchPage() {
                           d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                         />
                       </svg>
-                      На главную
+                      {locale === 'ru' ? 'На главную' : 'Home'}
                     </button>
                   </div>
                 </div>
@@ -817,49 +838,35 @@ export default function SearchPage() {
 
             {allItems.length > 0 && (
               <>
-                <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="flex justify-end mb-4">
+                  <ViewToggle
+                    currentView={viewMode}
+                    onViewChange={setViewMode}
+                  />
+                </div>
+                <div
+                  className={
+                    viewMode === 'grid'
+                      ? 'grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                      : 'space-y-4'
+                  }
+                >
                   {allItems.map((item, index) => (
                     <MarketplaceCard
                       key={`${item.id}-${index}`}
                       item={convertToMarketplaceItem(item)}
                       locale={locale}
+                      viewMode={viewMode}
                     />
                   ))}
                 </div>
 
-                {results && results.has_more && (
-                  <div className="text-center mt-16">
-                    <button
-                      className="btn btn-primary btn-wide btn-lg shadow-lg hover:shadow-xl transition-all duration-200"
-                      onClick={handleLoadMore}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <span className="loading loading-spinner loading-sm"></span>
-                          Загрузка...
-                        </>
-                      ) : (
-                        <>
-                          {t('showMore')}
-                          <svg
-                            className="w-4 h-4 ml-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
+                <InfiniteScrollTrigger
+                  ref={loadMoreRef}
+                  loading={loading}
+                  hasMore={results?.has_more || false}
+                  onLoadMore={handleLoadMore}
+                />
               </>
             )}
           </main>
