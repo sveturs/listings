@@ -40,12 +40,30 @@ export type StorefrontRatingSummary =
   components['schemas']['models.StorefrontRatingSummary'];
 export type StorefrontMapData =
   components['schemas']['models.StorefrontMapData'];
-export type StorefrontSearchResult =
-  components['schemas']['opensearch.StorefrontSearchResult'];
-export type StorefrontSearchItem =
-  components['schemas']['opensearch.StorefrontSearchItem'];
-export type StorefrontsListResponse =
-  components['schemas']['handler.StorefrontsListResponse'];
+// TODO: Fix these types after API regeneration
+export interface StorefrontSearchResult {
+  storefronts?: StorefrontBase[];
+  total?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface StorefrontSearchItem {
+  id?: number;
+  name?: string;
+  slug?: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface StorefrontsListResponse {
+  storefronts?: StorefrontBase[];
+  total?: number;
+  page?: number;
+  limit?: number;
+  offset?: number;
+}
 
 // Связанные типы
 export type StorefrontStaff = components['schemas']['models.StorefrontStaff'];

@@ -15,30 +15,24 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AdminGuard from '@/components/AdminGuard';
-// Simplified types for docs functionality
+
+// TODO: Fix these types after API regeneration
 interface DocFile {
-  name: string;
-  path: string;
-  is_dir: boolean;
-  size?: number;
-  modified_at?: string;
+  path?: string;
+  name?: string;
+  type?: 'file' | 'directory';
   children?: DocFile[];
 }
 
 interface DocFilesResponse {
-  success?: boolean;
-  message?: string;
   data?: {
-    files: DocFile[];
+    files?: DocFile[];
   };
 }
 
 interface DocContentResponse {
-  success?: boolean;
-  message?: string;
   data?: {
-    content: string;
-    file_path: string;
+    content?: string;
   };
 }
 
@@ -168,7 +162,7 @@ export default function DocsPage() {
     return items.map((item) => {
       const isExpanded = expandedDirs.has(item.path || '');
 
-      if (item.is_dir) {
+      if (item.type === 'directory') {
         return (
           <div key={item.path}>
             <div

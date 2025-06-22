@@ -9,10 +9,11 @@ type StorefrontAnalytics = components['schemas']['models.StorefrontAnalytics'];
 type StorefrontRatingSummary =
   components['schemas']['models.StorefrontRatingSummary'];
 type StorefrontMapData = components['schemas']['models.StorefrontMapData'];
-type StorefrontSearchResult =
-  components['schemas']['opensearch.StorefrontSearchResult'];
-type StorefrontsListResponse =
-  components['schemas']['handler.StorefrontsListResponse'];
+// TODO: Fix these types after API regeneration - import from storefront.ts for now
+import type {
+  StorefrontSearchResult,
+  StorefrontsListResponse,
+} from '@/types/storefront';
 type StorefrontHours = components['schemas']['models.StorefrontHours'];
 type StorefrontPaymentMethod =
   components['schemas']['models.StorefrontPaymentMethod'];
