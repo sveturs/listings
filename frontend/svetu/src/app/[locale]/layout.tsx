@@ -71,7 +71,7 @@ export default async function RootLayout({
               <AuthStateManager />
               <WebSocketManager />
               <Header />
-              <main className="min-h-screen pt-16">{children}</main>
+              <main className="min-h-screen pt-28 lg:pt-16">{children}</main>
             </AuthProvider>
           </ReduxProvider>
         </NextIntlClientProvider>

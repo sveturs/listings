@@ -11,7 +11,7 @@ class TokenManager {
   private lastRefreshAttempt: number = 0;
   private refreshAttempts: number = 0;
   private rateLimitedUntil: number = 0; // Время до которого мы заблокированы из-за rate limit
-  private readonly MIN_REFRESH_INTERVAL = 30000; // 30 секунд между попытками
+  private readonly MIN_REFRESH_INTERVAL = 60000; // 60 секунд между попытками (увеличено для избежания rate limit)
   private readonly MAX_REFRESH_ATTEMPTS = 3;
 
   constructor(config: TokenManagerConfig = {}) {

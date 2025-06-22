@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Auth</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Очистка данных авторизации</h1>
+        <p>Используйте эту страницу для решения проблем с авторизацией</p>
+        
+        <button onclick="clearAll()">Очистить все данные авторизации</button>
+        <button onclick="clearTokens()">Очистить только токены</button>
+        <button onclick="showCurrentData()">Показать текущие данные</button>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        
+        function addLog(message) {
+            log.textContent += message + '\n';
+        }
+        
+        function clearAll() {
+            log.textContent = '';
+            addLog('Начинаем полную очистку...');
+            
+            // Очищаем localStorage
+            const localStorageKeys = ['svetu_user', 'svetu_access_token'];
+            localStorageKeys.forEach(key => {
+                if (localStorage.getItem(key)) {
+                    localStorage.removeItem(key);
+                    addLog(`✓ Удален localStorage: ${key}`);
+                }
+            });
+            
+            // Очищаем sessionStorage
+            const sessionStorageKeys = ['svetu_access_token', 'svetu_user'];
+            sessionStorageKeys.forEach(key => {
+                if (sessionStorage.getItem(key)) {
+                    sessionStorage.removeItem(key);
+                    addLog(`✓ Удален sessionStorage: ${key}`);
+                }
+            });
+            
+            // Очищаем cookies
+            document.cookie.split(";").forEach(c => {
+                const eqPos = c.indexOf("=");
+                const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+                if (name.includes('token') || name.includes('session')) {
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+                    addLog(`✓ Удален cookie: ${name}`);
+                }
+            });
+            
+            addLog('\n✅ Очистка завершена!');
+            addLog('Теперь вы можете попробовать войти снова.');
+            addLog('\nНОТА: Если проблема с rate limit, подождите 15 минут перед новой попыткой.');
+        }
+        
+        function clearTokens() {
+            log.textContent = '';
+            addLog('Очищаем только токены...');
+            
+            // Удаляем токены из sessionStorage
+            if (sessionStorage.getItem('svetu_access_token')) {
+                sessionStorage.removeItem('svetu_access_token');
+                addLog('✓ Удален access token из sessionStorage');
+            }
+            
+            // Удаляем токен из localStorage если есть
+            const userData = localStorage.getItem('svetu_user');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    delete user.accessToken;
+                    localStorage.setItem('svetu_user', JSON.stringify(user));
+                    addLog('✓ Удален access token из данных пользователя');
+                } catch (e) {
+                    addLog('⚠️ Ошибка при обработке данных пользователя');
+                }
+            }
+            
+            addLog('\n✅ Токены очищены!');
+        }
+        
+        function showCurrentData() {
+            log.textContent = '';
+            addLog('=== Текущие данные авторизации ===\n');
+            
+            // localStorage
+            addLog('📦 localStorage:');
+            ['svetu_user', 'svetu_access_token'].forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    addLog(`  ${key}: ${value.substring(0, 50)}...`);
+                } else {
+                    addLog(`  ${key}: (пусто)`);
+                }
+            });
+            
+            // sessionStorage
+            addLog('\n📦 sessionStorage:');
+            ['svetu_access_token', 'svetu_user'].forEach(key => {
+                const value = sessionStorage.getItem(key);
+                if (value) {
+                    addLog(`  ${key}: ${value.substring(0, 50)}...`);
+                } else {
+                    addLog(`  ${key}: (пусто)`);
+                }
+            });
+            
+            // Cookies
+            addLog('\n🍪 Cookies:');
+            const cookies = document.cookie.split(';');
+            cookies.forEach(cookie => {
+                const [name, value] = cookie.split('=');
+                if (name && (name.includes('token') || name.includes('session'))) {
+                    addLog(`  ${name.trim()}: ${value ? value.substring(0, 30) + '...' : '(пусто)'}`);
+                }
+            });
+            
+            if (cookies.length === 0 || cookies[0] === '') {
+                addLog('  (нет cookies)');
+            }
+        }
+        
+        // Показываем текущие данные при загрузке
+        showCurrentData();
+    </script>
+</body>
+</html>

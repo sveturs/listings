@@ -21,6 +21,7 @@ import (
 	contactsHandler "backend/internal/proj/contacts/handler"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
+	globalHandler "backend/internal/proj/global/handler"
 	globalService "backend/internal/proj/global/service"
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	marketplaceService "backend/internal/proj/marketplace/service"
@@ -49,6 +50,7 @@ type Server struct {
 	contacts      *contactsHandler.Handler
 	docs          *docsHandler.Handler
 	analytics     *analytics.Module
+	global        *globalHandler.Handler
 	fileStorage   filestorage.FileStorageInterface
 }
 
@@ -87,6 +89,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
+	globalHandlerInstance := globalHandler.NewHandler(services)
 	analyticsModule := analytics.NewModule(db)
 
 	app := fiber.New(fiber.Config{
@@ -130,6 +133,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		contacts:      contactsHandler,
 		docs:          docsHandlerInstance,
 		analytics:     analyticsModule,
+		global:        globalHandlerInstance,
 		fileStorage:   fileStorage,
 	}
 
@@ -244,7 +248,8 @@ func (s *Server) registerProjectRoutes() {
 	var registrars []RouteRegistrar
 
 	// Добавляем все проекты, которые реализуют RouteRegistrar
-	registrars = append(registrars, s.notifications, s.users, s.review, s.marketplace, s.balance, s.storefront,
+	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
+	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.marketplace, s.balance, s.storefront,
 		s.geocode, s.contacts, s.payments, s.docs, s.analytics)
 
 	// Регистрируем роуты каждого проекта

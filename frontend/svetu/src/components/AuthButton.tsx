@@ -149,6 +149,9 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
             <li>
               <Link href="/profile">{t('profile')}</Link>
             </li>
+            <li>
+              <Link href="/user-contacts">{t('myContacts')}</Link>
+            </li>
             {user.is_admin && (
               <li>
                 <Link href="/admin">{t('adminPanel')}</Link>

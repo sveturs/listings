@@ -151,11 +151,11 @@ export default function MarketplaceCard({
             <div>
               {item.has_discount && item.old_price && (
                 <p className="text-sm line-through text-base-content/50">
-                  {formatPrice(item.old_price, 'USD')}
+                  {formatPrice(item.old_price, 'RSD')}
                 </p>
               )}
               <p className="text-lg font-bold text-primary">
-                {formatPrice(item.price, 'USD')}
+                {formatPrice(item.price, 'RSD')}
               </p>
             </div>
           )}

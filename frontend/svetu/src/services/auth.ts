@@ -9,12 +9,10 @@ import type {
 import type { components } from '@/types/generated/api';
 
 // Type aliases для удобства использования
-type ApiLoginRequest =
-  components['schemas']['internal_proj_users_handler.LoginRequest'];
-type ApiAuthResponse =
-  components['schemas']['internal_proj_users_handler.AuthResponse'];
+type ApiLoginRequest = components['schemas']['handler.LoginRequest'];
+type ApiAuthResponse = components['schemas']['handler.AuthResponse'];
 type ApiSuccessResponse<T> =
-  components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+  components['schemas']['utils.SuccessResponseSwag'] & {
     data?: T;
   };
 

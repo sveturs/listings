@@ -36,7 +36,47 @@
       "contacts": "Контакты",
       "userContacts": "Мои контакты",
       "createListing": "Подать объявление"
+    },
+    "search": {
+      "placeholder": "Поиск товаров и услуг..."
     }
+  },
+  "search": {
+    "placeholder": "Поиск товаров и услуг...",
+    "inCategory": "в категории",
+    "category": "Категория",
+    "noResults": "Ничего не найдено",
+    "resultsFor": "Результаты поиска для",
+    "filters": "Фильтры",
+    "sortBy": "Сортировать по",
+    "relevance": "Релевантности",
+    "price": "Цене",
+    "date": "Дате",
+    "popularity": "Популярности",
+    "priceRange": "Диапазон цен",
+    "minPrice": "Мин. цена",
+    "maxPrice": "Макс. цена",
+    "showMore": "Показать больше",
+    "showLess": "Показать меньше",
+    "found": "Найдено",
+    "results": "результатов",
+    "time": "Время",
+    "ms": "мс",
+    "activeFilters": "Активные фильтры",
+    "noResultsTitle": "По вашему запросу ничего не найдено",
+    "noResultsDescription": "Попробуйте изменить условия поиска или использовать другие ключевые слова",
+    "categories": "Категории",
+    "priceMin": "Цена от",
+    "priceMax": "Цена до",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "retry": "Повторить",
+    "showFilters": "Показать фильтры",
+    "hideFilters": "Скрыть фильтры",
+    "clearFilters": "Сбросить фильтры",
+    "loadingResults": "Загружаем результаты...",
+    "searchError": "Ошибка поиска",
+    "tryAgain": "Попробуйте еще раз"
   },
   "blog": {
     "title": "Блог",
@@ -76,6 +116,7 @@
     "logout": "Выйти",
     "loggingOut": "Выход...",
     "profile": "Профиль",
+    "myContacts": "Мои контакты",
     "adminPanel": "Панель администратора",
     "common": {
       "close": "Закрыть"

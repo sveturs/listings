@@ -33,6 +33,7 @@ type Service struct {
 	geocode        geocodeService.GeocodeServiceInterface
 	fileStorage    filestorage.FileStorageInterface
 	chatAttachment *marketplaceService.ChatAttachmentService
+	unifiedSearch  UnifiedSearchServiceInterface
 }
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
@@ -107,6 +108,9 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	}
 	s.storefront = storefrontSvc
 	
+	// Инициализация сервиса унифицированного поиска
+	s.unifiedSearch = NewUnifiedSearchService(s)
+	
 	return s
 }
 
@@ -178,4 +182,8 @@ func (s *Service) Contacts() marketplaceService.ContactsServiceInterface {
 
 func (s *Service) ChatAttachment() marketplaceService.ChatAttachmentServiceInterface {
 	return s.chatAttachment
+}
+
+func (s *Service) UnifiedSearch() UnifiedSearchServiceInterface {
+	return s.unifiedSearch
 }

@@ -82,7 +82,7 @@ const StorefrontMapContainer: React.FC<StorefrontMapContainerProps> = ({
 
           // Преобразуем в формат для карты
           const mapData: StorefrontMapData[] = (response.storefronts || []).map(
-            (storefront) => ({
+            (storefront: any) => ({
               id: storefront.id,
               name: storefront.name,
               latitude: storefront.latitude,
