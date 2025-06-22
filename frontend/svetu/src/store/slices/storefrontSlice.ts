@@ -16,8 +16,8 @@ type StorefrontDeliveryOption =
 type StorefrontPaymentMethod =
   components['schemas']['models.StorefrontPaymentMethod'];
 type StorefrontHours = components['schemas']['models.StorefrontHours'];
-// TODO: Fix this type after API regeneration - import from storefront.ts for now
-import type { StorefrontsListResponse } from '@/types/storefront';
+type StorefrontsListResponse =
+  components['schemas']['handler.StorefrontsListResponse'];
 
 // Интерфейсы для фильтров и настроек
 export interface StorefrontFilters {

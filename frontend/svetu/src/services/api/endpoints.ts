@@ -5,13 +5,7 @@ import type { components } from '@/types/generated/api';
 type UserProfile = components['schemas']['models.UserProfile'];
 type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
 type ChatMessage = components['schemas']['models.MarketplaceMessage'];
-// TODO: Fix this type after API regeneration
-interface ListingsResponse {
-  listings?: MarketplaceListing[];
-  total?: number;
-  page?: number;
-  limit?: number;
-}
+type ListingsResponse = components['schemas']['handler.ListingsResponse'];
 
 /**
  * Базовый класс для API endpoints

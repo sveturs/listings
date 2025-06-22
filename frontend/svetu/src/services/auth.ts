@@ -8,23 +8,12 @@ import type {
 } from '@/types/auth';
 import type { components } from '@/types/generated/api';
 
-// TODO: Fix these types after API regeneration
-interface ApiLoginRequest {
-  email: string;
-  password: string;
-}
-
-interface ApiAuthResponse {
-  token?: string;
-  access_token?: string;
-  user?: components['schemas']['models.UserProfile'];
-}
-
-interface ApiSuccessResponse<T> {
-  success?: boolean;
-  message?: string;
-  data?: T;
-}
+type ApiLoginRequest = components['schemas']['handler.LoginRequest'];
+type ApiAuthResponse = components['schemas']['handler.AuthResponse'];
+type ApiSuccessResponse<T> =
+  components['schemas']['utils.SuccessResponseSwag'] & {
+    data?: T;
+  };
 
 const API_BASE = configManager.getApiUrl();
 

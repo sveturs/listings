@@ -15,26 +15,11 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AdminGuard from '@/components/AdminGuard';
+import type { components } from '@/types/generated/api';
 
-// TODO: Fix these types after API regeneration
-interface DocFile {
-  path?: string;
-  name?: string;
-  type?: 'file' | 'directory';
-  children?: DocFile[];
-}
-
-interface DocFilesResponse {
-  data?: {
-    files?: DocFile[];
-  };
-}
-
-interface DocContentResponse {
-  data?: {
-    content?: string;
-  };
-}
+type DocFile = components['schemas']['handler.DocFile'];
+type DocFilesResponse = components['schemas']['handler.DocFilesResponse'];
+type DocContentResponse = components['schemas']['handler.DocContentResponse'];
 
 export default function DocsPage() {
   const [files, setFiles] = useState<DocFile[]>([]);
@@ -90,8 +75,10 @@ export default function DocsPage() {
         credentials: 'include',
       });
       if (response.ok) {
-        const data: DocFilesResponse = await response.json();
-        setFiles(data.data?.files || []);
+        const result = await response.json();
+        // API обертывает в SuccessResponseSwag
+        const data: DocFilesResponse = result.data || result;
+        setFiles(data.files || []);
       } else {
         console.error(
           'Failed to fetch doc files:',
@@ -119,8 +106,10 @@ export default function DocsPage() {
         }
       );
       if (response.ok) {
-        const data: DocContentResponse = await response.json();
-        setFileContent(data.data?.content || '');
+        const result = await response.json();
+        // API обертывает в SuccessResponseSwag
+        const data: DocContentResponse = result.data || result;
+        setFileContent(data.content || '');
         setSelectedFile(path);
         // Закрываем сайдбар на мобильных устройствах после выбора файла
         setSidebarOpen(false);
