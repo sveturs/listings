@@ -160,3 +160,9 @@ type ImportSummary struct {
 	ProcessingTime    string    `json:"processing_time"`
 	CompletedAt       time.Time `json:"completed_at"`
 }
+
+// ImportJobsResponse represents response for list of import jobs
+type ImportJobsResponse struct {
+	Jobs  []ImportJob `json:"jobs"`
+	Total int         `json:"total"`
+}

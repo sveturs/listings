@@ -203,8 +203,10 @@ func (s *ImportService) processXMLData(data []byte, storefrontID int) ([]models.
 	// Try Digital Vision format first
 	products, errors, err := parser.ParseDigitalVisionXML(data)
 	if err != nil {
-		// If Digital Vision format fails, try generic XML
-		return parser.ParseGenericXML(data)
+		// Log the Digital Vision parsing error for debugging
+		fmt.Printf("Digital Vision XML parsing failed: %v\n", err)
+		// If Digital Vision format fails, try generic XML (but it's not implemented)
+		return nil, nil, fmt.Errorf("Digital Vision XML parsing failed: %v (generic XML parsing not implemented)", err)
 	}
 	
 	return products, errors, nil
@@ -340,8 +342,10 @@ func (s *ImportService) createProduct(ctx context.Context, importProduct models.
 	// Create product using import-specific method (bypasses ownership check)
 	product, err := s.productService.CreateProductForImport(ctx, storefrontID, &createReq)
 	if err != nil {
+		fmt.Printf("Failed to create product %s: %v\n", importProduct.Name, err)
 		return fmt.Errorf("failed to create product: %w", err)
 	}
+	fmt.Printf("Successfully created product: %s (ID: %d)\n", product.Name, product.ID)
 
 	// Add images if provided
 	if len(importProduct.ImageURLs) > 0 {
@@ -420,4 +424,112 @@ func (s *ImportService) ValidateImportFile(ctx context.Context, fileData []byte,
 	}
 
 	return status, nil
+}
+
+// GetJobs returns list of import jobs for a storefront
+func (s *ImportService) GetJobs(ctx context.Context, storefrontID int, status string, limit, offset int) (*models.ImportJobsResponse, error) {
+	// TODO: Implement database queries for import jobs
+	// For now, return mock data
+	jobs := []models.ImportJob{
+		{
+			ID:                1,
+			StorefrontID:      storefrontID,
+			FileName:          "test.xml",
+			FileType:          "xml",
+			Status:            "completed",
+			TotalRecords:      2,
+			ProcessedRecords:  2,
+			SuccessfulRecords: 0,
+			FailedRecords:     2,
+			ErrorMessage:      stringPtr("Import completed with errors"),
+			CreatedAt:         time.Now().Add(-time.Hour),
+			UpdatedAt:         time.Now().Add(-time.Minute * 30),
+		},
+	}
+
+	// Filter by status if provided
+	if status != "" {
+		var filteredJobs []models.ImportJob
+		for _, job := range jobs {
+			if job.Status == status {
+				filteredJobs = append(filteredJobs, job)
+			}
+		}
+		jobs = filteredJobs
+	}
+
+	return &models.ImportJobsResponse{
+		Jobs:  jobs,
+		Total: len(jobs),
+	}, nil
+}
+
+// GetJobDetails returns detailed information about an import job
+func (s *ImportService) GetJobDetails(ctx context.Context, jobID int) (*models.ImportJob, error) {
+	// TODO: Implement database query for job details
+	// For now, return mock data
+	job := &models.ImportJob{
+		ID:                jobID,
+		StorefrontID:      4, // Mock storefront ID
+		FileName:          "test.xml",
+		FileType:          "xml",
+		Status:            "completed",
+		TotalRecords:      2,
+		ProcessedRecords:  2,
+		SuccessfulRecords: 0,
+		FailedRecords:     2,
+		ErrorMessage:      stringPtr("Import completed with errors"),
+		CreatedAt:         time.Now().Add(-time.Hour),
+		UpdatedAt:         time.Now().Add(-time.Minute * 30),
+	}
+
+	return job, nil
+}
+
+// GetJobStatus returns status of an import job
+func (s *ImportService) GetJobStatus(ctx context.Context, jobID int) (*models.ImportJobStatus, error) {
+	// TODO: Implement database query for job status
+	// For now, return mock data
+	status := &models.ImportJobStatus{
+		Status:            "completed",
+		TotalRecords:      2,
+		ProcessedRecords:  2,
+		SuccessfulRecords: 0,
+		FailedRecords:     2,
+		Progress:          100.0,
+	}
+
+	return status, nil
+}
+
+// CancelJob cancels a running import job
+func (s *ImportService) CancelJob(ctx context.Context, jobID int) error {
+	// TODO: Implement job cancellation logic
+	return nil
+}
+
+// RetryJob retries a failed import job
+func (s *ImportService) RetryJob(ctx context.Context, jobID int) (*models.ImportJob, error) {
+	// TODO: Implement job retry logic
+	// For now, return a new mock job
+	job := &models.ImportJob{
+		ID:                jobID + 100, // New job ID
+		StorefrontID:      4,           // Mock storefront ID
+		FileName:          "test.xml",
+		FileType:          "xml",
+		Status:            "pending",
+		TotalRecords:      0,
+		ProcessedRecords:  0,
+		SuccessfulRecords: 0,
+		FailedRecords:     0,
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
+	}
+
+	return job, nil
+}
+
+// Helper function to convert string to string pointer
+func stringPtr(s string) *string {
+	return &s
 }

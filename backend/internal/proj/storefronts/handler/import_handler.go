@@ -362,6 +362,211 @@ func (h *ImportHandler) GetImportFormats(c *fiber.Ctx) error {
 	})
 }
 
+// GetJobs returns list of import jobs for a storefront
+// @Summary Get import jobs
+// @Description Get list of import jobs for a storefront
+// @Tags storefronts,import
+// @Accept json
+// @Produce json
+// @Param storefront_id path int true "Storefront ID"
+// @Param status query string false "Filter by status"
+// @Param limit query int false "Limit number of results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} models.ImportJobsResponse "List of import jobs"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{storefront_id}/import/jobs [get]
+func (h *ImportHandler) GetJobs(c *fiber.Ctx) error {
+	// Try to get storefront ID from locals first (for slug-based routes)
+	var storefrontID int
+	var err error
+	
+	if id, ok := c.Locals("storefrontID").(int); ok {
+		storefrontID = id
+	} else {
+		// Fall back to path parameter
+		storefrontID, err = strconv.Atoi(c.Params("storefront_id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+				Error:   "Invalid storefront ID",
+				Message: err.Error(),
+			})
+		}
+	}
+
+	// Parse query parameters
+	status := c.Query("status")
+	limit := 20
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+	
+	offset := 0
+	if o := c.Query("offset"); o != "" {
+		if parsed, err := strconv.Atoi(o); err == nil && parsed >= 0 {
+			offset = parsed
+		}
+	}
+
+	jobs, err := h.importService.GetJobs(c.Context(), storefrontID, status, limit, offset)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
+			Error:   "Failed to get import jobs",
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(jobs)
+}
+
+// GetJobDetails returns detailed information about an import job
+// @Summary Get import job details
+// @Description Get detailed information about an import job including errors
+// @Tags storefronts,import
+// @Accept json
+// @Produce json
+// @Param jobId path int true "Job ID"
+// @Success 200 {object} models.ImportJob "Import job details"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 404 {object} models.ErrorResponse "Job not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/import/jobs/{jobId} [get]
+func (h *ImportHandler) GetJobDetails(c *fiber.Ctx) error {
+	jobID, err := strconv.Atoi(c.Params("jobId"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Invalid job ID",
+			Message: err.Error(),
+		})
+	}
+
+	job, err := h.importService.GetJobDetails(c.Context(), jobID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
+			Error:   "Failed to get job details",
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(job)
+}
+
+// GetJobStatus returns status of an import job
+// @Summary Get import job status
+// @Description Get current status of an import job
+// @Tags storefronts,import
+// @Accept json
+// @Produce json
+// @Param jobId path int true "Job ID"
+// @Success 200 {object} models.ImportJobStatus "Import job status"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 404 {object} models.ErrorResponse "Job not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/import/jobs/{jobId}/status [get]
+func (h *ImportHandler) GetJobStatus(c *fiber.Ctx) error {
+	jobID, err := strconv.Atoi(c.Params("jobId"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Invalid job ID",
+			Message: err.Error(),
+		})
+	}
+
+	status, err := h.importService.GetJobStatus(c.Context(), jobID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
+			Error:   "Failed to get job status",
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(status)
+}
+
+// CancelJob cancels a running import job
+// @Summary Cancel import job
+// @Description Cancel a running import job
+// @Tags storefronts,import
+// @Accept json
+// @Produce json
+// @Param jobId path int true "Job ID"
+// @Success 200 {object} models.SuccessResponse "Job cancelled successfully"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 404 {object} models.ErrorResponse "Job not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/import/jobs/{jobId}/cancel [post]
+func (h *ImportHandler) CancelJob(c *fiber.Ctx) error {
+	jobID, err := strconv.Atoi(c.Params("jobId"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Invalid job ID",
+			Message: err.Error(),
+		})
+	}
+
+	err = h.importService.CancelJob(c.Context(), jobID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
+			Error:   "Failed to cancel job",
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(models.SuccessResponse{
+		Success: true,
+		Message: "Job cancelled successfully",
+	})
+}
+
+// RetryJob retries a failed import job
+// @Summary Retry import job
+// @Description Retry a failed import job
+// @Tags storefronts,import
+// @Accept json
+// @Produce json
+// @Param jobId path int true "Job ID"
+// @Success 200 {object} models.ImportJob "New import job created"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 404 {object} models.ErrorResponse "Job not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/import/jobs/{jobId}/retry [post]
+func (h *ImportHandler) RetryJob(c *fiber.Ctx) error {
+	jobID, err := strconv.Atoi(c.Params("jobId"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Invalid job ID",
+			Message: err.Error(),
+		})
+	}
+
+	job, err := h.importService.RetryJob(c.Context(), jobID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
+			Error:   "Failed to retry job",
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(job)
+}
+
 // Helper function to check if string contains comma or quote
 func containsCommaOrQuote(s string) bool {
 	return strings.Contains(s, ",") || strings.Contains(s, `"`)

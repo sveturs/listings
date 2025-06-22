@@ -88,7 +88,7 @@ export class ImportApi {
 
       xhr.open(
         'POST',
-        `/api/v1/storefronts/slug/${storefrontSlug}/import/file`
+        `http://localhost:3000/api/v1/storefronts/slug/${storefrontSlug}/import/file`
       );
       xhr.withCredentials = true; // Include cookies
 
@@ -172,7 +172,10 @@ export class ImportApi {
         reject(new Error('Network error'));
       });
 
-      xhr.open('POST', `/api/v1/storefronts/${storefrontId}/import/file`);
+      xhr.open(
+        'POST',
+        `http://localhost:3000/api/v1/storefronts/${storefrontId}/import/file`
+      );
       xhr.withCredentials = true; // Include cookies
 
       // Add authorization header if token exists
@@ -255,7 +258,19 @@ export class ImportApi {
    * Downloads CSV template for product import
    */
   static async downloadCsvTemplate(): Promise<Blob> {
-    const response = await fetch('/api/v1/storefronts/import/csv-template');
+    const accessToken = tokenManager.getAccessToken();
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(
+      'http://localhost:3000/api/v1/storefronts/import/csv-template',
+      {
+        headers,
+        credentials: 'include',
+      }
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -289,7 +304,19 @@ export class ImportApi {
    * Exports import results as CSV
    */
   static async exportResults(jobId: number): Promise<Blob> {
-    const response = await fetch(`/api/v1/import/jobs/${jobId}/export`);
+    const accessToken = tokenManager.getAccessToken();
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(
+      `http://localhost:3000/api/v1/import/jobs/${jobId}/export`,
+      {
+        headers,
+        credentials: 'include',
+      }
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -390,7 +417,19 @@ export class ImportApi {
    * Downloads sample import file for given format
    */
   static async downloadSample(format: 'csv' | 'xml'): Promise<Blob> {
-    const response = await fetch(`/api/v1/storefronts/import/sample/${format}`);
+    const accessToken = tokenManager.getAccessToken();
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(
+      `http://localhost:3000/api/v1/storefronts/import/sample/${format}`,
+      {
+        headers,
+        credentials: 'include',
+      }
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
