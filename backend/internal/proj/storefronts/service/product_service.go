@@ -226,6 +226,71 @@ func (s *ProductService) GetProductStats(ctx context.Context, storefrontID, user
 	return stats, nil
 }
 
+// CreateProductForImport creates a product without ownership validation (for system imports)
+func (s *ProductService) CreateProductForImport(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
+	// Validate request
+	if err := s.validateCreateRequest(req); err != nil {
+		return nil, fmt.Errorf("invalid request: %w", err)
+	}
+	
+	// Create product without ownership check
+	product, err := s.storage.CreateStorefrontProduct(ctx, storefrontID, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create product: %w", err)
+	}
+	
+	// Index product in OpenSearch
+	if s.searchRepo != nil {
+		if err := s.searchRepo.IndexProduct(ctx, product); err != nil {
+			logger.Error().Err(err).Msgf("Failed to index product %d in OpenSearch", product.ID)
+			// Не возвращаем ошибку, так как товар уже создан в БД
+		} else {
+			logger.Info().Msgf("Successfully indexed product %d in OpenSearch", product.ID)
+		}
+	}
+	
+	return product, nil
+}
+
+// UpdateProductForImport updates a product without ownership validation (for system imports) 
+func (s *ProductService) UpdateProductForImport(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error {
+	// Validate request
+	if err := s.validateUpdateRequest(req); err != nil {
+		return fmt.Errorf("invalid request: %w", err)
+	}
+	
+	// Check product exists
+	product, err := s.storage.GetStorefrontProduct(ctx, storefrontID, productID)
+	if err != nil {
+		return fmt.Errorf("failed to get product: %w", err)
+	}
+	
+	if product == nil {
+		return fmt.Errorf("product not found")
+	}
+	
+	// Update product without ownership check
+	if err := s.storage.UpdateStorefrontProduct(ctx, storefrontID, productID, req); err != nil {
+		return fmt.Errorf("failed to update product: %w", err)
+	}
+	
+	// Re-index product in OpenSearch
+	if s.searchRepo != nil {
+		// Get updated product for indexing
+		updatedProduct, err := s.storage.GetStorefrontProduct(ctx, storefrontID, productID)
+		if err != nil {
+			logger.Error().Err(err).Msgf("Failed to get updated product %d for indexing", productID)
+		} else if err := s.searchRepo.UpdateProduct(ctx, updatedProduct); err != nil {
+			logger.Error().Err(err).Msgf("Failed to update product %d in OpenSearch", productID)
+			// Не возвращаем ошибку, так как товар уже обновлен в БД
+		} else {
+			logger.Info().Msgf("Successfully updated product %d in OpenSearch", productID)
+		}
+	}
+	
+	return nil
+}
+
 // Validation helpers
 
 func (s *ProductService) validateCreateRequest(req *models.CreateProductRequest) error {

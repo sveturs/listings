@@ -1,4 +1,9 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import {
+  createSlice,
+  createAsyncThunk,
+  createSelector,
+  PayloadAction,
+} from '@reduxjs/toolkit';
 import { RootState } from '../index';
 import { tokenManager } from '@/utils/tokenManager';
 import type { components } from '@/types/generated/api';
@@ -233,6 +238,38 @@ export const fetchStorefrontById = createAsyncThunk<
   }
 });
 
+// Получение витрины по slug
+export const fetchStorefrontBySlug = createAsyncThunk<
+  Storefront,
+  string,
+  { rejectValue: string }
+>('storefronts/fetchStorefrontBySlug', async (slug, { rejectWithValue }) => {
+  try {
+    const response = await fetch(`/api/v1/storefronts/slug/${slug}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: 'Network error' }));
+      return rejectWithValue(
+        errorData.error || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+  }
+});
+
 // Получение моих витрин
 export const fetchMyStorefronts = createAsyncThunk<
   StorefrontsListResponse,
@@ -274,46 +311,6 @@ export const fetchMyStorefronts = createAsyncThunk<
         offset: 0,
       };
     }
-    return data;
-  } catch (error) {
-    return rejectWithValue(
-      error instanceof Error ? error.message : 'Unknown error'
-    );
-  }
-});
-
-// Получение витрины по slug
-export const fetchStorefrontBySlug = createAsyncThunk<
-  Storefront,
-  string,
-  { rejectValue: string }
->('storefronts/fetchStorefrontBySlug', async (slug, { rejectWithValue }) => {
-  try {
-    const accessToken = tokenManager.getAccessToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-
-    const response = await fetch(`/api/v1/storefronts/slug/${slug}`, {
-      method: 'GET',
-      headers,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: 'Network error' }));
-      return rejectWithValue(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
     return data;
   } catch (error) {
     return rejectWithValue(
@@ -732,17 +729,23 @@ export const selectAnalytics = (state: RootState) =>
 export const selectIsLoadingAnalytics = (state: RootState) =>
   state.storefronts.isLoadingAnalytics;
 
-// Фильтрованные селекторы
-export const selectVerifiedStorefronts = (state: RootState) =>
-  state.storefronts.storefronts.filter((storefront) => storefront.is_verified);
+// Фильтрованные селекторы (мемоизированные)
 
-export const selectStorefrontsByCity = (state: RootState, city: string) =>
-  state.storefronts.storefronts.filter(
-    (storefront) => storefront.city === city
-  );
+export const selectVerifiedStorefronts = createSelector(
+  [selectStorefronts],
+  (storefronts) => storefronts.filter((storefront) => storefront.is_verified)
+);
 
-export const selectActiveStorefronts = (state: RootState) =>
-  state.storefronts.storefronts.filter((storefront) => storefront.is_active);
+export const selectStorefrontsByCity = createSelector(
+  [selectStorefronts, (state: RootState, city: string) => city],
+  (storefronts, city) =>
+    storefronts.filter((storefront) => storefront.city === city)
+);
+
+export const selectActiveStorefronts = createSelector(
+  [selectStorefronts],
+  (storefronts) => storefronts.filter((storefront) => storefront.is_active)
+);
 
 // Экспорт reducer
 export default storefrontSlice.reducer;

@@ -1593,6 +1593,7 @@
       "addProduct": "Добавить товар",
       "addNewProduct": "Добавить новый товар",
       "addFirstProduct": "Добавить первый товар",
+      "importProducts": "Импорт товаров",
       "createProduct": "Создать товар",
       "productCreated": "Товар успешно создан",
       "productDeleted": "Товар успешно удален",
@@ -1774,6 +1775,158 @@
       "invalid_user_id": "Неверный идентификатор пользователя",
       "remove_staff_failed": "Не удалось удалить сотрудника",
       "get_staff_failed": "Не удалось получить список сотрудников"
+    }
+  },
+  "import": {
+    "title": "Импорт товаров",
+    "tabs": {
+      "uploadFile": "Загрузить файл",
+      "importFromUrl": "Импорт по URL"
+    },
+    "dragDrop": {
+      "title": "Перетащите файл сюда или нажмите для выбора",
+      "subtitle": "Поддерживаются форматы CSV, XML, ZIP (до 100МБ)"
+    },
+    "template": {
+      "title": "Шаблон CSV",
+      "description": "Скачайте шаблон для правильного оформления данных"
+    },
+    "url": {
+      "label": "URL файла для импорта",
+      "help": "Введите ссылку на CSV, XML или ZIP файл с товарами"
+    },
+    "fileType": {
+      "label": "Тип файла",
+      "select": "Выберите тип файла"
+    },
+    "options": {
+      "updateMode": {
+        "label": "Режим обновления",
+        "upsert": "Создать новые / Обновить существующие",
+        "createOnly": "Только создание новых",
+        "updateOnly": "Только обновление существующих"
+      },
+      "categoryMapping": {
+        "label": "Сопоставление категорий",
+        "auto": "Автоматическое",
+        "manual": "Ручное",
+        "skip": "Пропустить"
+      }
+    },
+    "progress": {
+      "uploading": "Загрузка файла..."
+    },
+    "validation": {
+      "success": {
+        "title": "Файл успешно проверен",
+        "description": "Данные готовы к импорту"
+      },
+      "warnings": "Предупреждения при валидации",
+      "moreErrors": "и еще {count} ошибок..."
+    },
+    "actions": {
+      "cancel": "Отмена",
+      "validate": "Проверить",
+      "validating": "Проверка...",
+      "import": "Импортировать",
+      "importing": "Импорт...",
+      "proceedImport": "Продолжить импорт",
+      "back": "Назад",
+      "selectFile": "Выбрать файл",
+      "removeFile": "Удалить файл",
+      "downloadTemplate": "Скачать шаблон",
+      "refresh": "Обновить",
+      "viewErrors": "Посмотреть ошибки",
+      "retry": "Повторить",
+      "close": "Закрыть",
+      "confirmCancel": "Вы уверены, что хотите отменить импорт?",
+      "retrying": "Повтор..."
+    },
+    "errors": {
+      "invalidFileType": "Неподдерживаемый тип файла",
+      "fileTooLarge": "Файл слишком большой. Максимальный размер: {size}"
+    },
+    "status": {
+      "pending": "Ожидание",
+      "processing": "Обработка",
+      "completed": "Завершен",
+      "failed": "Ошибка"
+    },
+    "jobs": {
+      "title": "История импорта",
+      "filters": {
+        "all": "Все",
+        "pending": "Ожидают",
+        "processing": "Обрабатываются",
+        "completed": "Завершенные",
+        "failed": "С ошибками"
+      },
+      "empty": {
+        "title": "Импорты не найдены",
+        "description": "Здесь будут отображаться ваши импорты товаров"
+      },
+      "details": {
+        "title": "Детали импорта",
+        "fileInfo": "Информация о файле",
+        "fileName": "Имя файла",
+        "fileType": "Тип файла",
+        "fileUrl": "URL файла",
+        "statistics": "Статистика",
+        "total": "Всего",
+        "processed": "Обработано",
+        "successful": "Успешно",
+        "failed": "Ошибки",
+        "timing": "Время выполнения",
+        "created": "Создан",
+        "started": "Начат",
+        "completed": "Завершен",
+        "duration": "Длительность",
+        "error": "Ошибка",
+        "complete": "завершено",
+        "notSet": "Не установлено"
+      }
+    },
+    "errors": {
+      "title": "Ошибки импорта",
+      "subtitle": "Файл: {fileName}",
+      "export": "Экспорт ошибок",
+      "searchPlaceholder": "Поиск по ошибкам...",
+      "allFields": "Все поля",
+      "of": "из",
+      "loading": "Загрузка ошибок...",
+      "noErrors": {
+        "title": "Ошибок не обнаружено",
+        "description": "Импорт прошел без ошибок"
+      },
+      "noResults": {
+        "title": "Ошибки не найдены",
+        "description": "Попробуйте изменить критерии поиска"
+      },
+      "line": "Строка",
+      "rawData": "Исходные данные",
+      "showing": "Показано",
+      "to": "по",
+      "entries": "записей",
+      "previous": "Назад",
+      "next": "Вперед"
+    },
+    "manager": {
+      "title": "Управление импортом товаров",
+      "description": "Загружайте товары из CSV, XML файлов или по URL",
+      "startImport": "Начать импорт"
+    },
+    "stats": {
+      "pending": "Ожидают",
+      "processing": "Обрабатываются",
+      "completed": "Завершены",
+      "failed": "С ошибками"
+    },
+    "formats": {
+      "title": "Поддерживаемые форматы",
+      "extensions": "Расширения",
+      "encoding": "Кодировка",
+      "maxFileSize": "Максимальный размер файла",
+      "maxProducts": "Максимум товаров за импорт"
     }
   }
 }

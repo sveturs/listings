@@ -1633,6 +1633,7 @@
       "addProduct": "Add Product",
       "addNewProduct": "Add New Product",
       "addFirstProduct": "Add Your First Product",
+      "importProducts": "Import Products",
       "createProduct": "Create Product",
       "productCreated": "Product created successfully",
       "productDeleted": "Product deleted successfully",
@@ -1790,6 +1791,158 @@
       "invalid_user_id": "Invalid user ID",
       "remove_staff_failed": "Failed to remove staff member",
       "get_staff_failed": "Failed to get staff list"
+    }
+  },
+  "import": {
+    "title": "Product Import",
+    "tabs": {
+      "uploadFile": "Upload File",
+      "importFromUrl": "Import from URL"
+    },
+    "dragDrop": {
+      "title": "Drag and drop file here or click to select",
+      "subtitle": "Supports CSV, XML, ZIP formats (up to 100MB)"
+    },
+    "template": {
+      "title": "CSV Template",
+      "description": "Download template for proper data formatting"
+    },
+    "url": {
+      "label": "Import file URL",
+      "help": "Enter link to CSV, XML or ZIP file with products"
+    },
+    "fileType": {
+      "label": "File Type",
+      "select": "Select file type"
+    },
+    "options": {
+      "updateMode": {
+        "label": "Update Mode",
+        "upsert": "Create New / Update Existing",
+        "createOnly": "Create Only",
+        "updateOnly": "Update Only"
+      },
+      "categoryMapping": {
+        "label": "Category Mapping",
+        "auto": "Automatic",
+        "manual": "Manual",
+        "skip": "Skip"
+      }
+    },
+    "progress": {
+      "uploading": "Uploading file..."
+    },
+    "validation": {
+      "success": {
+        "title": "File validated successfully",
+        "description": "Data is ready for import"
+      },
+      "warnings": "Validation warnings",
+      "moreErrors": "and {count} more errors..."
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "validate": "Validate",
+      "validating": "Validating...",
+      "import": "Import",
+      "importing": "Importing...",
+      "proceedImport": "Proceed with Import",
+      "back": "Back",
+      "selectFile": "Select File",
+      "removeFile": "Remove File",
+      "downloadTemplate": "Download Template",
+      "refresh": "Refresh",
+      "viewErrors": "View Errors",
+      "retry": "Retry",
+      "close": "Close",
+      "confirmCancel": "Are you sure you want to cancel the import?",
+      "retrying": "Retrying..."
+    },
+    "errors": {
+      "invalidFileType": "Unsupported file type",
+      "fileTooLarge": "File too large. Maximum size: {size}"
+    },
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "jobs": {
+      "title": "Import History",
+      "filters": {
+        "all": "All",
+        "pending": "Pending",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "empty": {
+        "title": "No imports found",
+        "description": "Your product imports will appear here"
+      },
+      "details": {
+        "title": "Import Details",
+        "fileInfo": "File Information",
+        "fileName": "File Name",
+        "fileType": "File Type",
+        "fileUrl": "File URL",
+        "statistics": "Statistics",
+        "total": "Total",
+        "processed": "Processed",
+        "successful": "Successful",
+        "failed": "Failed",
+        "timing": "Timing",
+        "created": "Created",
+        "started": "Started",
+        "completed": "Completed",
+        "duration": "Duration",
+        "error": "Error",
+        "complete": "complete",
+        "notSet": "Not set"
+      }
+    },
+    "errors": {
+      "title": "Import Errors",
+      "subtitle": "File: {fileName}",
+      "export": "Export Errors",
+      "searchPlaceholder": "Search errors...",
+      "allFields": "All Fields",
+      "of": "of",
+      "loading": "Loading errors...",
+      "noErrors": {
+        "title": "No errors found",
+        "description": "Import completed without errors"
+      },
+      "noResults": {
+        "title": "No errors found",
+        "description": "Try changing search criteria"
+      },
+      "line": "Line",
+      "rawData": "Raw Data",
+      "showing": "Showing",
+      "to": "to",
+      "entries": "entries",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "manager": {
+      "title": "Product Import Management",
+      "description": "Upload products from CSV, XML files or URLs",
+      "startImport": "Start Import"
+    },
+    "stats": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "formats": {
+      "title": "Supported Formats",
+      "extensions": "Extensions",
+      "encoding": "Encoding",
+      "maxFileSize": "Maximum file size",
+      "maxProducts": "Maximum products per import"
     }
   }
 }
