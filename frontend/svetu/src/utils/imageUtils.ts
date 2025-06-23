@@ -19,6 +19,11 @@ const ALLOWED_PROTOCOLS = ['http:', 'https:'];
 export function isSafeImageUrl(url: string): boolean {
   if (!url) return false;
 
+  // Относительные пути разрешены (например, /listings/...)
+  if (url.startsWith('/')) {
+    return true;
+  }
+
   try {
     const urlObj = new URL(url);
 

@@ -19,7 +19,20 @@ export default function SafeImage({
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const safeUrl = getSafeImageUrl(src);
+  // Для относительных путей не преобразуем в полный URL - позволяем Next.js rewrites работать
+  const urlToCheck = src || '';
+  const safeUrl = getSafeImageUrl(urlToCheck);
+
+  // Отладка для объявления 177
+  if (src && src.includes('177')) {
+    console.log('SafeImage - Item 177 debug:', {
+      src,
+      urlToCheck,
+      safeUrl,
+      hasError,
+      isLoading,
+    });
+  }
 
   // Если URL небезопасный или произошла ошибка, показываем fallback
   if (!safeUrl || hasError) {
@@ -70,8 +83,16 @@ export default function SafeImage({
         {...props}
         src={safeUrl}
         alt={alt}
-        onLoad={() => setIsLoading(false)}
+        onLoad={() => {
+          if (src && src.includes('177')) {
+            console.log('SafeImage - Item 177 onLoad fired');
+          }
+          setIsLoading(false);
+        }}
         onError={(e) => {
+          if (src && src.includes('177')) {
+            console.log('SafeImage - Item 177 onError fired:', e);
+          }
           setHasError(true);
           setIsLoading(false);
           if (onError) {
@@ -80,7 +101,8 @@ export default function SafeImage({
         }}
         style={{
           ...props.style,
-          display: isLoading ? 'none' : 'block',
+          opacity: isLoading ? 0 : 1,
+          transition: 'opacity 0.3s ease-in-out',
         }}
       />
     </>

@@ -3,7 +3,6 @@
 import { MarketplaceItem, MarketplaceImage } from '@/types/marketplace';
 import SafeImage from '@/components/SafeImage';
 import Link from 'next/link';
-import configManager from '@/config';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -47,26 +46,45 @@ export default function MarketplaceCard({
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-    );
+    const diffInMs = now.getTime() - date.getTime();
+
+    // Если дата в будущем, просто показываем её
+    if (diffInMs < 0) {
+      return date.toLocaleDateString(locale);
+    }
+
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
 
     if (diffInHours < 1) return t('justNow');
     if (diffInHours < 24) return `${diffInHours} ${t('hoursAgo')}`;
 
     const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays} ${t('daysAgo')}`;
+    if (diffInDays < 7) {
+      return locale === 'ru'
+        ? `${diffInDays} д. назад`
+        : `${diffInDays} days ago`;
+    }
 
     return date.toLocaleDateString(locale);
   };
 
   const getImageUrl = (image?: MarketplaceImage) => {
     if (!image) return null;
-    return configManager.buildImageUrl(image.public_url);
+    // Возвращаем public_url как есть, SafeImage сам обработает путь
+    return image.public_url;
   };
 
   const mainImage = item.images?.find((img) => img.is_main) || item.images?.[0];
   const imageUrl = getImageUrl(mainImage);
+
+  // Отладка для объявления 177
+  if (item.id === 177) {
+    console.log('MarketplaceCard - Item 177 debug:', {
+      item,
+      mainImage,
+      imageUrl,
+    });
+  }
 
   const handleChatClick = (e: React.MouseEvent) => {
     e.preventDefault();

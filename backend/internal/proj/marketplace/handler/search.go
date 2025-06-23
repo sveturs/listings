@@ -141,10 +141,18 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	}
 
 	// Преобразуем []*models.MarketplaceListing в []models.MarketplaceListing
+	// ВАЖНО: Используем глубокую копию для сохранения срезов (Images)
 	listings := make([]models.MarketplaceListing, 0, len(items))
 	for _, item := range items {
 		if item != nil {
-			listings = append(listings, *item)
+			// Создаем глубокую копию структуры
+			listingCopy := *item
+			// Если изображения есть, создаем копию среза
+			if item.Images != nil {
+				listingCopy.Images = make([]models.MarketplaceImage, len(item.Images))
+				copy(listingCopy.Images, item.Images)
+			}
+			listings = append(listings, listingCopy)
 		}
 	}
 

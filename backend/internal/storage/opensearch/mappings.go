@@ -102,7 +102,7 @@ const ListingMapping = `
           }
       },
       "id": {
-        "type": "keyword"
+        "type": "integer"
       },
       "title": {
         "type": "text",
