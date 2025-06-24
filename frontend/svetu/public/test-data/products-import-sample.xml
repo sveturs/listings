@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<products>
+  <!-- Электроника -->
+  <product>
+    <name>iPhone 15 Pro Max 256GB</name>
+    <description>Новейший флагман Apple с титановым корпусом и улучшенной камерой. Процессор A17 Pro, дисплей 6.7 дюймов, поддержка 5G.</description>
+    <sku>IPH15PM256</sku>
+    <barcode>194253945678</barcode>
+    <price>1299.99</price>
+    <currency>EUR</currency>
+    <category_id>1</category_id>
+    <stock_quantity>25</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-15-pro-max-blue-titanium-select?wid=940&amp;hei=1112&amp;fmt=png-alpha&amp;.v=1697230626036</url>
+        <is_default>true</is_default>
+      </image>
+      <image>
+        <url>https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-15-pro-max-gallery1?wid=940&amp;hei=1112&amp;fmt=png-alpha&amp;.v=1697230627036</url>
+        <is_default>false</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="brand">Apple</attribute>
+      <attribute key="color">Blue Titanium</attribute>
+      <attribute key="storage">256GB</attribute>
+      <attribute key="display_size">6.7"</attribute>
+      <attribute key="warranty">12 месяцев</attribute>
+    </attributes>
+  </product>
+
+  <product>
+    <name>MacBook Pro 16" M3 Pro</name>
+    <description>Профессиональный ноутбук с процессором M3 Pro, 18 ГБ памяти, 512 ГБ SSD. Дисплей Liquid Retina XDR.</description>
+    <sku>MBP16M3P512</sku>
+    <barcode>194253123456</barcode>
+    <price>2499.00</price>
+    <currency>EUR</currency>
+    <category_id>1</category_id>
+    <stock_quantity>12</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/mbp16-spacegray-select-202310?wid=904&amp;hei=840&amp;fmt=jpeg&amp;qlt=90&amp;.v=1697311054290</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="brand">Apple</attribute>
+      <attribute key="processor">M3 Pro</attribute>
+      <attribute key="ram">18GB</attribute>
+      <attribute key="storage">512GB SSD</attribute>
+      <attribute key="color">Space Gray</attribute>
+    </attributes>
+  </product>
+
+  <!-- Одежда -->
+  <product>
+    <name>Nike Air Max 90</name>
+    <description>Классические кроссовки Nike Air Max 90 в белом цвете. Кожаный верх, видимая воздушная подушка.</description>
+    <sku>NAM90WH42</sku>
+    <barcode>826215789012</barcode>
+    <price>149.99</price>
+    <currency>EUR</currency>
+    <category_id>2</category_id>
+    <stock_quantity>50</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/wzitsrb4oucx9jukxsmc/air-max-90-mens-shoes-6n3vKB.png</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="brand">Nike</attribute>
+      <attribute key="size">42</attribute>
+      <attribute key="color">White</attribute>
+      <attribute key="material">Leather</attribute>
+      <attribute key="gender">Unisex</attribute>
+    </attributes>
+  </product>
+
+  <!-- Мебель -->
+  <product>
+    <name>IKEA MALM Кровать</name>
+    <description>Двуспальная кровать с высоким изголовьем. Размер 160x200 см, цвет белый. В комплекте реечное дно.</description>
+    <sku>MALMBED160W</sku>
+    <barcode>703542189765</barcode>
+    <price>299.00</price>
+    <currency>EUR</currency>
+    <category_id>3</category_id>
+    <stock_quantity>8</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://www.ikea.com/images/malm-bed-frame-high-white-stained-oak-veneer-luroey-0638608_pe699032_s5.jpg</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="brand">IKEA</attribute>
+      <attribute key="width">160cm</attribute>
+      <attribute key="length">200cm</attribute>
+      <attribute key="color">White</attribute>
+      <attribute key="material">ДСП, шпон дуба</attribute>
+    </attributes>
+  </product>
+
+  <!-- Книги -->
+  <product>
+    <name>1984 - Джордж Оруэлл</name>
+    <description>Культовый роман-антиутопия о тоталитарном обществе. Издательство АСТ, твердый переплет, 320 страниц.</description>
+    <sku>BOOK1984RU</sku>
+    <barcode>9785170982769</barcode>
+    <price>12.99</price>
+    <currency>EUR</currency>
+    <category_id>4</category_id>
+    <stock_quantity>100</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://img4.labirint.ru/rc/5d5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e/363x561q80/books74/731434/cover.jpg</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="author">Джордж Оруэлл</attribute>
+      <attribute key="publisher">АСТ</attribute>
+      <attribute key="pages">320</attribute>
+      <attribute key="year">2023</attribute>
+      <attribute key="language">Русский</attribute>
+      <attribute key="isbn">9785170982769</attribute>
+    </attributes>
+  </product>
+
+  <!-- Продукты питания -->
+  <product>
+    <name>Оливковое масло Extra Virgin</name>
+    <description>Греческое оливковое масло первого холодного отжима. Кислотность 0.3%, объем 1 литр.</description>
+    <sku>OLIVEOIL1L</sku>
+    <barcode>5201051234567</barcode>
+    <price>15.99</price>
+    <currency>EUR</currency>
+    <category_id>5</category_id>
+    <stock_quantity>200</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://localhost:9000/listings/olive-oil-bottle.jpg</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="origin">Greece</attribute>
+      <attribute key="volume">1L</attribute>
+      <attribute key="acidity">0.3%</attribute>
+      <attribute key="type">Extra Virgin</attribute>
+      <attribute key="harvest_year">2023</attribute>
+    </attributes>
+  </product>
+
+  <!-- Косметика -->
+  <product>
+    <name>La Mer Крем для лица</name>
+    <description>Легендарный увлажняющий крем La Mer с экстрактом морских водорослей. Объем 60 мл.</description>
+    <sku>LAMER60ML</sku>
+    <barcode>747930000020</barcode>
+    <price>320.00</price>
+    <currency>EUR</currency>
+    <category_id>6</category_id>
+    <stock_quantity>15</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://www.cremedelamer.com/media/export/cms/products/640x640/LM_SKU_5XYP01_640x640_0.jpg</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="brand">La Mer</attribute>
+      <attribute key="volume">60ml</attribute>
+      <attribute key="skin_type">All skin types</attribute>
+      <attribute key="main_ingredient">Miracle Broth™</attribute>
+    </attributes>
+  </product>
+
+  <!-- Спортивные товары -->
+  <product>
+    <name>Garmin Forerunner 955</name>
+    <description>Профессиональные спортивные часы с GPS, пульсометром и мультиспортивными функциями. Время работы до 15 дней.</description>
+    <sku>GARM955BLK</sku>
+    <barcode>753759298432</barcode>
+    <price>549.99</price>
+    <currency>EUR</currency>
+    <category_id>7</category_id>
+    <stock_quantity>30</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://res.garmin.com/en/products/010-02638-00/g/cf-lg.jpg</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="brand">Garmin</attribute>
+      <attribute key="battery_life">15 days</attribute>
+      <attribute key="water_resistance">5 ATM</attribute>
+      <attribute key="display">1.3" color</attribute>
+      <attribute key="features">GPS, Heart Rate, Music</attribute>
+    </attributes>
+  </product>
+
+  <!-- Игрушки -->
+  <product>
+    <name>LEGO Technic Porsche 911</name>
+    <description>Детальная модель Porsche 911 RSR из серии LEGO Technic. 1580 деталей, подвижные элементы.</description>
+    <sku>LEGO42123</sku>
+    <barcode>5702016616699</barcode>
+    <price>179.99</price>
+    <currency>EUR</currency>
+    <category_id>8</category_id>
+    <stock_quantity>20</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://www.lego.com/cdn/cs/set/assets/blt9b6829f20d18e47e/42123.png</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="brand">LEGO</attribute>
+      <attribute key="pieces">1580</attribute>
+      <attribute key="age">10+</attribute>
+      <attribute key="series">Technic</attribute>
+      <attribute key="model">Porsche 911 RSR</attribute>
+    </attributes>
+  </product>
+
+  <!-- Низкий запас -->
+  <product>
+    <name>PlayStation 5 Digital Edition</name>
+    <description>Игровая консоль нового поколения без дисковода. SSD 825 ГБ, поддержка 4K 120fps.</description>
+    <sku>PS5DIGITAL</sku>
+    <barcode>711719395003</barcode>
+    <price>449.99</price>
+    <currency>EUR</currency>
+    <category_id>1</category_id>
+    <stock_quantity>3</stock_quantity>
+    <is_active>true</is_active>
+    <images>
+      <image>
+        <url>https://gmedia.playstation.com/is/image/SIEPDC/ps5-digital-edition-console-front</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="brand">Sony</attribute>
+      <attribute key="storage">825GB SSD</attribute>
+      <attribute key="max_resolution">4K</attribute>
+      <attribute key="ray_tracing">Yes</attribute>
+    </attributes>
+  </product>
+
+  <!-- Неактивный товар -->
+  <product>
+    <name>Samsung Galaxy S22 Ultra</name>
+    <description>Флагманский смартфон прошлого поколения. Снят с продажи.</description>
+    <sku>SGS22U256</sku>
+    <barcode>8806094290523</barcode>
+    <price>899.00</price>
+    <currency>EUR</currency>
+    <category_id>1</category_id>
+    <stock_quantity>0</stock_quantity>
+    <is_active>false</is_active>
+    <images>
+      <image>
+        <url>https://images.samsung.com/is/image/samsung/p6pim/levant/sm-s908ezkdmea/gallery/levant-galaxy-s22-ultra-s908-sm-s908ezkdmea-530969670</url>
+        <is_default>true</is_default>
+      </image>
+    </images>
+    <attributes>
+      <attribute key="brand">Samsung</attribute>
+      <attribute key="storage">256GB</attribute>
+      <attribute key="color">Phantom Black</attribute>
+    </attributes>
+  </product>
+</products>
