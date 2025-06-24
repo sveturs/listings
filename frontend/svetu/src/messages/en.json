@@ -23,7 +23,9 @@
     "justNow": "Just now",
     "hoursAgo": "h ago",
     "daysAgo": "d ago",
+    "daysAgoWithCount": "{count} days ago",
     "chat": "Chat",
+    "sendMessage": "Send message",
     "viewAll": "View all",
     "documentation": "Documentation"
   },
@@ -1140,7 +1142,15 @@
       "description": "Add detailed information about your product",
       "none_required": "No required properties for this category",
       "tip": "Detailed information helps buyers",
-      "tip_description": "The more relevant information, the higher chance of sale"
+      "tip_description": "The more relevant information, the higher chance of sale",
+      "groups": {
+        "basic": "Basic characteristics",
+        "technical": "Technical specifications",
+        "condition": "Condition and warranty",
+        "accessories": "Accessories",
+        "dimensions": "Dimensions and weight",
+        "other": "Additional"
+      }
     },
     "photos": {
       "title": "Photos",

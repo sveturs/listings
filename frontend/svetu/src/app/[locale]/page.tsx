@@ -25,6 +25,19 @@ export default async function Home({
       page: 0,
       size: 20,
     });
+
+    // Отладка: проверим объявление 177
+    const item177 = marketplaceData?.data?.find((item) => item.id === 177);
+    if (item177) {
+      console.log('SSR - Item 177 found:', {
+        id: item177.id,
+        title: item177.title,
+        images: item177.images,
+        images_count: item177.images?.length || 0,
+      });
+    } else {
+      console.log('SSR - Item 177 not found in initial data');
+    }
   } catch (err) {
     error = err as Error;
     console.error('Failed to fetch marketplace data:', error);

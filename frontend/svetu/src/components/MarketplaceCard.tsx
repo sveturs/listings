@@ -60,9 +60,7 @@ export default function MarketplaceCard({
 
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) {
-      return locale === 'ru'
-        ? `${diffInDays} д. назад`
-        : `${diffInDays} days ago`;
+      return t('daysAgoWithCount', { count: diffInDays });
     }
 
     return date.toLocaleDateString(locale);
@@ -205,11 +203,7 @@ export default function MarketplaceCard({
                         <button
                           onClick={handleChatClick}
                           className="btn btn-primary btn-sm"
-                          title={
-                            locale === 'ru'
-                              ? 'Написать сообщение'
-                              : 'Send message'
-                          }
+                          title={t('sendMessage')}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -246,7 +240,7 @@ export default function MarketplaceCard({
         <button
           onClick={handleChatClick}
           className="btn btn-primary btn-circle btn-sm absolute top-3 right-3 shadow-lg z-10"
-          title={locale === 'ru' ? 'Написать сообщение' : 'Send message'}
+          title={t('sendMessage')}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

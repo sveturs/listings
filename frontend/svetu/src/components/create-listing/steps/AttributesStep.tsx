@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useCreateListing } from '@/contexts/CreateListingContext';
 import {
@@ -22,6 +22,13 @@ interface AttributeFormData {
   unit?: string;
 }
 
+interface AttributeGroup {
+  id: string;
+  name: string;
+  icon: string;
+  attributes: CategoryAttributeMapping[];
+}
+
 interface AttributesStepProps {
   onNext: () => void;
   onBack: () => void;
@@ -39,6 +46,9 @@ export default function AttributesStep({
     state.attributes || {}
   );
   const [loading, setLoading] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(['basic', 'technical'])
+  );
 
   useEffect(() => {
     const loadAttributes = async () => {
@@ -121,6 +131,148 @@ export default function AttributesStep({
   useEffect(() => {
     dispatch({ type: 'SET_ATTRIBUTES', payload: formData });
   }, [formData, dispatch]);
+
+  // Группируем атрибуты по логическим группам
+  const groupAttributes = useCallback((): AttributeGroup[] => {
+    const groupsMap = new Map<string, AttributeGroup>();
+
+    // Предопределенные группы с иконками
+    const predefinedGroups: Record<
+      string,
+      { name: string; icon: string; priority: number }
+    > = {
+      basic: {
+        name: t('create_listing.attributes.groups.basic'),
+        icon: '🏷️',
+        priority: 1,
+      },
+      technical: {
+        name: t('create_listing.attributes.groups.technical'),
+        icon: '⚙️',
+        priority: 2,
+      },
+      condition: {
+        name: t('create_listing.attributes.groups.condition'),
+        icon: '✨',
+        priority: 3,
+      },
+      accessories: {
+        name: t('create_listing.attributes.groups.accessories'),
+        icon: '📦',
+        priority: 4,
+      },
+      dimensions: {
+        name: t('create_listing.attributes.groups.dimensions'),
+        icon: '📏',
+        priority: 5,
+      },
+      other: {
+        name: t('create_listing.attributes.groups.other'),
+        icon: '📋',
+        priority: 6,
+      },
+    };
+
+    attributes.forEach((mapping) => {
+      const attr = mapping.attribute;
+      if (!attr) return;
+
+      let groupId = 'other';
+      const name = attr.name.toLowerCase();
+
+      // Определяем группу на основе имени атрибута
+      if (
+        ['brand', 'model', 'type', 'category', 'name', 'title'].some((key) =>
+          name.includes(key)
+        )
+      ) {
+        groupId = 'basic';
+      } else if (
+        [
+          'year',
+          'engine',
+          'fuel',
+          'transmission',
+          'power',
+          'volume',
+          'memory',
+          'storage',
+          'display',
+          'screen',
+          'resolution',
+          'processor',
+          'ram',
+          'battery',
+        ].some((key) => name.includes(key))
+      ) {
+        groupId = 'technical';
+      } else if (
+        ['condition', 'warranty', 'used', 'new'].some((key) =>
+          name.includes(key)
+        )
+      ) {
+        groupId = 'condition';
+      } else if (
+        ['accessories', 'included', 'box', 'charger', 'cable'].some((key) =>
+          name.includes(key)
+        )
+      ) {
+        groupId = 'accessories';
+      } else if (
+        ['width', 'height', 'length', 'weight', 'size'].some((key) =>
+          name.includes(key)
+        )
+      ) {
+        groupId = 'dimensions';
+      }
+
+      if (!groupsMap.has(groupId)) {
+        const groupInfo = predefinedGroups[groupId] || predefinedGroups.other;
+        groupsMap.set(groupId, {
+          id: groupId,
+          name: groupInfo.name,
+          icon: groupInfo.icon,
+          attributes: [],
+        });
+      }
+
+      groupsMap.get(groupId)!.attributes.push(mapping);
+    });
+
+    // Сортируем группы по приоритету и атрибуты внутри групп по sort_order
+    const groups = Array.from(groupsMap.values()).sort((a, b) => {
+      const priorityA = predefinedGroups[a.id]?.priority || 99;
+      const priorityB = predefinedGroups[b.id]?.priority || 99;
+      return priorityA - priorityB;
+    });
+
+    groups.forEach((group) => {
+      group.attributes.sort(
+        (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
+      );
+    });
+
+    return groups;
+  }, [attributes, t]);
+
+  // Автоматически разворачиваем группы с обязательными полями
+  useEffect(() => {
+    if (attributes.length > 0) {
+      const attributeGroups = groupAttributes();
+      const groupsWithRequired = attributeGroups
+        .filter((group) => group.attributes.some((attr) => attr.is_required))
+        .map((group) => group.id);
+
+      // Объединяем базовые группы с группами, содержащими обязательные поля
+      const autoExpandGroups = new Set([
+        'basic',
+        'technical',
+        ...groupsWithRequired,
+      ]);
+
+      setExpandedGroups(autoExpandGroups);
+    }
+  }, [attributes, groupAttributes]);
 
   const handleInputChange = (
     attributeId: number,
@@ -388,41 +540,141 @@ export default function AttributesStep({
               <span>{t('create_listing.attributes.none_required')}</span>
             </div>
           ) : (
-            <div className="space-y-4">
-              {attributes.map((mapping) => {
-                const attribute = mapping.attribute;
-                if (!attribute) return null;
-
-                const { displayName, getOptionLabel } = getTranslatedAttribute(
-                  attribute,
-                  locale
-                );
-
-                // Дополнительное логирование для отладки
-                if (
-                  attribute.name === 'accessories' ||
-                  attribute.name === 'brand'
-                ) {
-                  console.log(
-                    `Attribute ${attribute.name} displayName:`,
-                    displayName
-                  );
-                }
-
-                return (
-                  <div key={attribute.id} className="form-control">
-                    <label className="label">
-                      <span className="label-text font-medium">
-                        {displayName}
-                      </span>
-                      {mapping.is_required && (
-                        <span className="label-text-alt text-error">*</span>
-                      )}
-                    </label>
-                    {renderAttribute(mapping, getOptionLabel)}
+            <div className="space-y-6 mb-8">
+              {/* Сводка обязательных полей */}
+              {attributes.some((mapping) => mapping.is_required) && (
+                <div className="alert alert-info">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    className="stroke-current shrink-0 w-6 h-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div>
+                    <h3 className="font-bold">
+                      {t('common.required')} атрибуты
+                    </h3>
+                    <div className="text-xs">
+                      Обязательные поля автоматически развернуты для удобства
+                      заполнения
+                    </div>
                   </div>
-                );
-              })}
+                </div>
+              )}
+
+              {/* Группы атрибутов */}
+              <div className="grid grid-cols-1 gap-4">
+                {groupAttributes().map((group) => {
+                  const isExpanded = expandedGroups.has(group.id);
+                  const hasRequiredFields = group.attributes.some(
+                    (mapping) => mapping.is_required
+                  );
+                  const filledRequiredFields = group.attributes
+                    .filter((mapping) => mapping.is_required)
+                    .every((mapping) => {
+                      const attr = mapping.attribute!;
+                      const formAttr = formData[attr.id];
+                      return (
+                        formAttr &&
+                        (formAttr.text_value !== undefined ||
+                          formAttr.numeric_value !== undefined ||
+                          formAttr.boolean_value !== undefined ||
+                          (formAttr.json_value &&
+                            Array.isArray(formAttr.json_value) &&
+                            formAttr.json_value.length > 0))
+                      );
+                    });
+
+                  return (
+                    <div key={group.id} className="card bg-base-100 shadow-lg">
+                      <div
+                        className="card-body cursor-pointer select-none"
+                        onClick={() => {
+                          const newExpanded = new Set(expandedGroups);
+                          if (isExpanded) {
+                            newExpanded.delete(group.id);
+                          } else {
+                            newExpanded.add(group.id);
+                          }
+                          setExpandedGroups(newExpanded);
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h3 className="card-title text-xl flex items-center gap-3">
+                            <span className="text-2xl">{group.icon}</span>
+                            {group.name}
+                            <div className="badge badge-neutral">
+                              {group.attributes.length}
+                            </div>
+                            {hasRequiredFields && (
+                              <div
+                                className={`badge ${filledRequiredFields ? 'badge-success' : 'badge-warning'}`}
+                              >
+                                {filledRequiredFields
+                                  ? '✓'
+                                  : t('common.required')}
+                              </div>
+                            )}
+                          </h3>
+                          <svg
+                            className={`w-6 h-6 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="card-body pt-0">
+                          <div className="space-y-4">
+                            {group.attributes.map((mapping) => {
+                              const attribute = mapping.attribute;
+                              if (!attribute) return null;
+
+                              const { displayName, getOptionLabel } =
+                                getTranslatedAttribute(attribute, locale);
+
+                              return (
+                                <div
+                                  key={attribute.id}
+                                  className="form-control"
+                                >
+                                  <label className="label">
+                                    <span className="label-text font-medium">
+                                      {displayName}
+                                    </span>
+                                    {mapping.is_required && (
+                                      <span className="label-text-alt text-error">
+                                        *
+                                      </span>
+                                    )}
+                                  </label>
+                                  {renderAttribute(mapping, getOptionLabel)}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

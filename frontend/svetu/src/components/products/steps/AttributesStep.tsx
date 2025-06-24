@@ -69,6 +69,25 @@ export default function AttributesStep({
     }
   }, [state.category]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Автоматически разворачиваем группы с обязательными полями
+  useEffect(() => {
+    if (attributes.length > 0) {
+      const attributeGroups = groupAttributes();
+      const groupsWithRequired = attributeGroups
+        .filter((group) => group.attributes.some((attr) => attr.is_required))
+        .map((group) => group.id);
+
+      // Объединяем базовые группы с группами, содержащими обязательные поля
+      const autoExpandGroups = new Set([
+        'basic',
+        'technical',
+        ...groupsWithRequired,
+      ]);
+
+      setExpandedGroups(autoExpandGroups);
+    }
+  }, [attributes]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Группируем атрибуты по логическим группам с учетом группы атрибутов
   const groupAttributes = (): AttributeGroup[] => {
     const groupsMap = new Map<string, AttributeGroup>();

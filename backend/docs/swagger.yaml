@@ -1925,6 +1925,15 @@ definitions:
       total_records:
         type: integer
     type: object
+  models.ImportJobsResponse:
+    properties:
+      jobs:
+        items:
+          $ref: '#/definitions/models.ImportJob'
+        type: array
+      total:
+        type: integer
+    type: object
   models.ImportRequest:
     properties:
       category_mapping_mode:
@@ -6967,6 +6976,182 @@ paths:
       summary: Обратное геокодирование
       tags:
       - geocode
+  /api/v1/import/jobs/{jobId}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about an import job including errors
+      parameters:
+      - description: Job ID
+        in: path
+        name: jobId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import job details
+          schema:
+            $ref: '#/definitions/models.ImportJob'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Job not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get import job details
+      tags:
+      - storefronts
+      - import
+  /api/v1/import/jobs/{jobId}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel a running import job
+      parameters:
+      - description: Job ID
+        in: path
+        name: jobId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Job cancelled successfully
+          schema:
+            $ref: '#/definitions/SuccessResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Job not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel import job
+      tags:
+      - storefronts
+      - import
+  /api/v1/import/jobs/{jobId}/retry:
+    post:
+      consumes:
+      - application/json
+      description: Retry a failed import job
+      parameters:
+      - description: Job ID
+        in: path
+        name: jobId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New import job created
+          schema:
+            $ref: '#/definitions/models.ImportJob'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Job not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Retry import job
+      tags:
+      - storefronts
+      - import
+  /api/v1/import/jobs/{jobId}/status:
+    get:
+      consumes:
+      - application/json
+      description: Get current status of an import job
+      parameters:
+      - description: Job ID
+        in: path
+        name: jobId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import job status
+          schema:
+            $ref: '#/definitions/models.ImportJobStatus'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Job not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get import job status
+      tags:
+      - storefronts
+      - import
   /api/v1/marketplace/admin/attribute-groups:
     get:
       consumes:
@@ -11502,6 +11687,58 @@ paths:
       security:
       - BearerAuth: []
       summary: Import products from file
+      tags:
+      - storefronts
+      - import
+  /api/v1/storefronts/{storefront_id}/import/jobs:
+    get:
+      consumes:
+      - application/json
+      description: Get list of import jobs for a storefront
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: storefront_id
+        required: true
+        type: integer
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Limit number of results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of import jobs
+          schema:
+            $ref: '#/definitions/models.ImportJobsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get import jobs
       tags:
       - storefronts
       - import
