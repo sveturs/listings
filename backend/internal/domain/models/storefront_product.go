@@ -162,3 +162,63 @@ func (p *StorefrontProduct) CalculateTotalStock() int {
 	}
 	return total
 }
+
+// Bulk operation models
+
+// BulkCreateProductsRequest represents a request to create multiple products
+type BulkCreateProductsRequest struct {
+	Products []CreateProductRequest `json:"products" validate:"required,min=1,max=100,dive"`
+}
+
+// BulkCreateProductsResponse represents the response for bulk product creation
+type BulkCreateProductsResponse struct {
+	Created []int                `json:"created"`    // IDs of successfully created products
+	Failed  []BulkOperationError `json:"failed"`     // Errors for failed operations
+}
+
+// BulkUpdateProductsRequest represents a request to update multiple products
+type BulkUpdateProductsRequest struct {
+	Updates []BulkUpdateItem `json:"updates" validate:"required,min=1,max=100,dive"`
+}
+
+// BulkUpdateItem represents a single product update in bulk operation
+type BulkUpdateItem struct {
+	ProductID int                  `json:"product_id" validate:"required"`
+	Updates   UpdateProductRequest `json:"updates" validate:"required"`
+}
+
+// BulkUpdateProductsResponse represents the response for bulk product updates
+type BulkUpdateProductsResponse struct {
+	Updated []int                `json:"updated"`    // IDs of successfully updated products
+	Failed  []BulkOperationError `json:"failed"`     // Errors for failed operations
+}
+
+// BulkDeleteProductsRequest represents a request to delete multiple products
+type BulkDeleteProductsRequest struct {
+	ProductIDs []int `json:"product_ids" validate:"required,min=1,max=100"`
+}
+
+// BulkDeleteProductsResponse represents the response for bulk product deletion
+type BulkDeleteProductsResponse struct {
+	Deleted []int                `json:"deleted"`    // IDs of successfully deleted products
+	Failed  []BulkOperationError `json:"failed"`     // Errors for failed operations
+}
+
+// BulkUpdateStatusRequest represents a request to update status of multiple products
+type BulkUpdateStatusRequest struct {
+	ProductIDs []int `json:"product_ids" validate:"required,min=1,max=100"`
+	IsActive   bool  `json:"is_active"`
+}
+
+// BulkUpdateStatusResponse represents the response for bulk status update
+type BulkUpdateStatusResponse struct {
+	Updated []int                `json:"updated"`    // IDs of successfully updated products
+	Failed  []BulkOperationError `json:"failed"`     // Errors for failed operations
+}
+
+// BulkOperationError represents an error for a single item in bulk operation
+type BulkOperationError struct {
+	Index     int    `json:"index,omitempty"`     // Index in the request array
+	ProductID int    `json:"product_id,omitempty"` // Product ID if available
+	Error     string `json:"error"`                // Error message
+}

@@ -1344,6 +1344,126 @@ definitions:
       count:
         type: integer
     type: object
+  models.BulkCreateProductsRequest:
+    properties:
+      products:
+        items:
+          $ref: '#/definitions/models.CreateProductRequest'
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - products
+    type: object
+  models.BulkCreateProductsResponse:
+    properties:
+      created:
+        description: IDs of successfully created products
+        items:
+          type: integer
+        type: array
+      failed:
+        description: Errors for failed operations
+        items:
+          $ref: '#/definitions/models.BulkOperationError'
+        type: array
+    type: object
+  models.BulkDeleteProductsRequest:
+    properties:
+      product_ids:
+        items:
+          type: integer
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - product_ids
+    type: object
+  models.BulkDeleteProductsResponse:
+    properties:
+      deleted:
+        description: IDs of successfully deleted products
+        items:
+          type: integer
+        type: array
+      failed:
+        description: Errors for failed operations
+        items:
+          $ref: '#/definitions/models.BulkOperationError'
+        type: array
+    type: object
+  models.BulkOperationError:
+    properties:
+      error:
+        description: Error message
+        type: string
+      index:
+        description: Index in the request array
+        type: integer
+      product_id:
+        description: Product ID if available
+        type: integer
+    type: object
+  models.BulkUpdateItem:
+    properties:
+      product_id:
+        type: integer
+      updates:
+        $ref: '#/definitions/models.UpdateProductRequest'
+    required:
+    - product_id
+    - updates
+    type: object
+  models.BulkUpdateProductsRequest:
+    properties:
+      updates:
+        items:
+          $ref: '#/definitions/models.BulkUpdateItem'
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - updates
+    type: object
+  models.BulkUpdateProductsResponse:
+    properties:
+      failed:
+        description: Errors for failed operations
+        items:
+          $ref: '#/definitions/models.BulkOperationError'
+        type: array
+      updated:
+        description: IDs of successfully updated products
+        items:
+          type: integer
+        type: array
+    type: object
+  models.BulkUpdateStatusRequest:
+    properties:
+      is_active:
+        type: boolean
+      product_ids:
+        items:
+          type: integer
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - product_ids
+    type: object
+  models.BulkUpdateStatusResponse:
+    properties:
+      failed:
+        description: Errors for failed operations
+        items:
+          $ref: '#/definitions/models.BulkOperationError'
+        type: array
+      updated:
+        description: IDs of successfully updated products
+        items:
+          type: integer
+        type: array
+    type: object
   models.CanReviewResponse:
     properties:
       can_review:
@@ -11585,6 +11705,182 @@ paths:
       security:
       - BearerAuth: []
       summary: Update product inventory
+      tags:
+      - storefront-products
+  /api/v1/storefronts/{slug}/products/bulk/create:
+    post:
+      consumes:
+      - application/json
+      description: Create multiple products in a single request
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Products to create
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.BulkCreateProductsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bulk creation result
+          schema:
+            $ref: '#/definitions/models.BulkCreateProductsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Bulk create products
+      tags:
+      - storefront-products
+  /api/v1/storefronts/{slug}/products/bulk/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete multiple products in a single request
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product IDs to delete
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.BulkDeleteProductsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bulk deletion result
+          schema:
+            $ref: '#/definitions/models.BulkDeleteProductsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Bulk delete products
+      tags:
+      - storefront-products
+  /api/v1/storefronts/{slug}/products/bulk/status:
+    put:
+      consumes:
+      - application/json
+      description: Update active/inactive status of multiple products
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product IDs and status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.BulkUpdateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bulk status update result
+          schema:
+            $ref: '#/definitions/models.BulkUpdateStatusResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Bulk update product status
+      tags:
+      - storefront-products
+  /api/v1/storefronts/{slug}/products/bulk/update:
+    put:
+      consumes:
+      - application/json
+      description: Update multiple products in a single request
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Products to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.BulkUpdateProductsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bulk update result
+          schema:
+            $ref: '#/definitions/models.BulkUpdateProductsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Bulk update products
       tags:
       - storefront-products
   /api/v1/storefronts/{slug}/products/stats:

@@ -1,0 +1,151 @@
+import { apiClient } from './api-client';
+import type { components } from '@/types/generated/api';
+import configManager from '@/config';
+import { tokenManager } from '@/utils/tokenManager';
+
+// Типы из сгенерированного API
+type BulkCreateProductsRequest =
+  components['schemas']['models.BulkCreateProductsRequest'];
+type BulkCreateProductsResponse =
+  components['schemas']['models.BulkCreateProductsResponse'];
+type BulkUpdateProductsRequest =
+  components['schemas']['models.BulkUpdateProductsRequest'];
+type BulkUpdateProductsResponse =
+  components['schemas']['models.BulkUpdateProductsResponse'];
+type BulkDeleteProductsRequest =
+  components['schemas']['models.BulkDeleteProductsRequest'];
+type BulkDeleteProductsResponse =
+  components['schemas']['models.BulkDeleteProductsResponse'];
+type BulkUpdateStatusRequest =
+  components['schemas']['models.BulkUpdateStatusRequest'];
+type BulkUpdateStatusResponse =
+  components['schemas']['models.BulkUpdateStatusResponse'];
+
+export const productApi = {
+  /**
+   * Массовое создание товаров
+   */
+  bulkCreate: async (
+    storefrontSlug: string,
+    request: BulkCreateProductsRequest
+  ) => {
+    const response = await apiClient.post<BulkCreateProductsResponse>(
+      `/api/v1/storefronts/slug/${storefrontSlug}/products/bulk/create`,
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * Массовое обновление товаров
+   */
+  bulkUpdate: async (
+    storefrontSlug: string,
+    request: BulkUpdateProductsRequest
+  ) => {
+    const response = await apiClient.put<BulkUpdateProductsResponse>(
+      `/api/v1/storefronts/slug/${storefrontSlug}/products/bulk/update`,
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * Массовое удаление товаров
+   */
+  bulkDelete: async (storefrontSlug: string, productIds: number[]) => {
+    const request: BulkDeleteProductsRequest = { product_ids: productIds };
+    const response = await apiClient.post<BulkDeleteProductsResponse>(
+      `/api/v1/storefronts/slug/${storefrontSlug}/products/bulk/delete`,
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * Массовое обновление статуса товаров
+   */
+  bulkUpdateStatus: async (
+    storefrontSlug: string,
+    productIds: number[],
+    isActive: boolean
+  ) => {
+    const request: BulkUpdateStatusRequest = {
+      product_ids: productIds,
+      is_active: isActive,
+    };
+    const response = await apiClient.put<BulkUpdateStatusResponse>(
+      `/api/v1/storefronts/slug/${storefrontSlug}/products/bulk/status`,
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * Экспорт товаров в CSV
+   */
+  exportToCSV: async (storefrontSlug: string, productIds?: number[]) => {
+    const params = productIds?.length ? `?ids=${productIds.join(',')}` : '';
+    const response = await fetch(
+      `${configManager.getApiUrl()}/api/v1/storefronts/slug/${storefrontSlug}/products/export/csv${params}`,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Export failed');
+    }
+
+    const blob = await response.blob();
+
+    // Создаем ссылку для скачивания
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute(
+      'download',
+      `products_${storefrontSlug}_${Date.now()}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
+  /**
+   * Экспорт товаров в XML
+   */
+  exportToXML: async (storefrontSlug: string, productIds?: number[]) => {
+    const params = productIds?.length ? `?ids=${productIds.join(',')}` : '';
+    const response = await fetch(
+      `${configManager.getApiUrl()}/api/v1/storefronts/slug/${storefrontSlug}/products/export/xml${params}`,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Export failed');
+    }
+
+    const blob = await response.blob();
+
+    // Создаем ссылку для скачивания
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute(
+      'download',
+      `products_${storefrontSlug}_${Date.now()}.xml`
+    );
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+};

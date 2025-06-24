@@ -118,6 +118,12 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Post("/slug/:slug/products/:id/inventory", m.updateInventoryBySlug)
 		protected.Get("/slug/:slug/products/stats", m.getProductStatsBySlug)
 		
+		// Bulk операции с товарами
+		protected.Post("/slug/:slug/products/bulk/create", m.bulkCreateProductsBySlug)
+		protected.Put("/slug/:slug/products/bulk/update", m.bulkUpdateProductsBySlug)
+		protected.Delete("/slug/:slug/products/bulk/delete", m.bulkDeleteProductsBySlug)
+		protected.Put("/slug/:slug/products/bulk/status", m.bulkUpdateStatusBySlug)
+		
 		// Маршруты импорта товаров
 		protected.Post("/:id/import/url", m.importHandler.ImportFromURL)
 		protected.Post("/:id/import/file", m.importHandler.ImportFromFile)
@@ -478,6 +484,63 @@ func (m *Module) retryJobBySlug(c *fiber.Ctx) error {
 	}
 	
 	return m.importHandler.RetryJob(c)
+}
+
+// Функции-обертки для bulk операций с товарами
+func (m *Module) bulkCreateProductsBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	// Storefront ID уже в locals, ProductHandler его оттуда возьмет
+	return m.productHandler.BulkCreateProducts(c)
+}
+
+func (m *Module) bulkUpdateProductsBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	// Storefront ID уже в locals, ProductHandler его оттуда возьмет
+	return m.productHandler.BulkUpdateProducts(c)
+}
+
+func (m *Module) bulkDeleteProductsBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	// Storefront ID уже в locals, ProductHandler его оттуда возьмет
+	return m.productHandler.BulkDeleteProducts(c)
+}
+
+func (m *Module) bulkUpdateStatusBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+	
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+	
+	// Storefront ID уже в locals, ProductHandler его оттуда возьмет
+	return m.productHandler.BulkUpdateStatus(c)
 }
 
 // withStorefrontAccess создает middleware для проверки доступа к витрине

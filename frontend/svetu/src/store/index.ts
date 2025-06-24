@@ -3,6 +3,7 @@ import chatReducer from './slices/chatSlice';
 import reviewsReducer from './slices/reviewsSlice';
 import storefrontsReducer from './slices/storefrontSlice';
 import importReducer from './slices/importSlice';
+import productReducer from './slices/productSlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
 
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
     reviews: reviewsReducer,
     storefronts: storefrontsReducer,
     import: importReducer,
+    products: productReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -30,6 +32,7 @@ export const store = configureStore({
           'chat.onlineUsers',
           'chat.typingUsers',
           'import.selectedFiles',
+          'products.selectedIds',
         ],
       },
     }).concat(websocketMiddleware),

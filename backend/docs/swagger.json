@@ -12126,6 +12126,270 @@
                 }
             }
         },
+        "/api/v1/storefronts/{slug}/products/bulk/create": {
+            "post": {
+                "description": "Create multiple products in a single request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Bulk create products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Products to create",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BulkCreateProductsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk creation result",
+                        "schema": {
+                            "$ref": "#/definitions/models.BulkCreateProductsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{slug}/products/bulk/delete": {
+            "delete": {
+                "description": "Delete multiple products in a single request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Bulk delete products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Product IDs to delete",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BulkDeleteProductsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk deletion result",
+                        "schema": {
+                            "$ref": "#/definitions/models.BulkDeleteProductsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{slug}/products/bulk/status": {
+            "put": {
+                "description": "Update active/inactive status of multiple products",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Bulk update product status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Product IDs and status",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BulkUpdateStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk status update result",
+                        "schema": {
+                            "$ref": "#/definitions/models.BulkUpdateStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{slug}/products/bulk/update": {
+            "put": {
+                "description": "Update multiple products in a single request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Bulk update products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Products to update",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BulkUpdateProductsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk update result",
+                        "schema": {
+                            "$ref": "#/definitions/models.BulkUpdateProductsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts/{slug}/products/stats": {
             "get": {
                 "security": [
@@ -15357,6 +15621,181 @@
                 },
                 "count": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.BulkCreateProductsRequest": {
+            "type": "object",
+            "required": [
+                "products"
+            ],
+            "properties": {
+                "products": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/models.CreateProductRequest"
+                    }
+                }
+            }
+        },
+        "models.BulkCreateProductsResponse": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "IDs of successfully created products",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "failed": {
+                    "description": "Errors for failed operations",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.BulkOperationError"
+                    }
+                }
+            }
+        },
+        "models.BulkDeleteProductsRequest": {
+            "type": "object",
+            "required": [
+                "product_ids"
+            ],
+            "properties": {
+                "product_ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "models.BulkDeleteProductsResponse": {
+            "type": "object",
+            "properties": {
+                "deleted": {
+                    "description": "IDs of successfully deleted products",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "failed": {
+                    "description": "Errors for failed operations",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.BulkOperationError"
+                    }
+                }
+            }
+        },
+        "models.BulkOperationError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "description": "Error message",
+                    "type": "string"
+                },
+                "index": {
+                    "description": "Index in the request array",
+                    "type": "integer"
+                },
+                "product_id": {
+                    "description": "Product ID if available",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.BulkUpdateItem": {
+            "type": "object",
+            "required": [
+                "product_id",
+                "updates"
+            ],
+            "properties": {
+                "product_id": {
+                    "type": "integer"
+                },
+                "updates": {
+                    "$ref": "#/definitions/models.UpdateProductRequest"
+                }
+            }
+        },
+        "models.BulkUpdateProductsRequest": {
+            "type": "object",
+            "required": [
+                "updates"
+            ],
+            "properties": {
+                "updates": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/models.BulkUpdateItem"
+                    }
+                }
+            }
+        },
+        "models.BulkUpdateProductsResponse": {
+            "type": "object",
+            "properties": {
+                "failed": {
+                    "description": "Errors for failed operations",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.BulkOperationError"
+                    }
+                },
+                "updated": {
+                    "description": "IDs of successfully updated products",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "models.BulkUpdateStatusRequest": {
+            "type": "object",
+            "required": [
+                "product_ids"
+            ],
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "product_ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "models.BulkUpdateStatusResponse": {
+            "type": "object",
+            "properties": {
+                "failed": {
+                    "description": "Errors for failed operations",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.BulkOperationError"
+                    }
+                },
+                "updated": {
+                    "description": "IDs of successfully updated products",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },

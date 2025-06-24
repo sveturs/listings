@@ -537,3 +537,268 @@ func (s *Database) getProductVariants(ctx context.Context, productID int) ([]mod
 
 	return variants, nil
 }
+
+// Bulk operation methods
+
+// BulkCreateProducts creates multiple products in a single transaction
+func (s *Database) BulkCreateProducts(ctx context.Context, storefrontID int, products []models.CreateProductRequest) ([]int, []error) {
+	var createdIDs []int
+	var errors []error
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, []error{fmt.Errorf("failed to begin transaction: %w", err)}
+	}
+	defer tx.Rollback(ctx)
+
+	for i, req := range products {
+		// Create product
+		var productID int
+		attributesJSON, _ := json.Marshal(req.Attributes)
+
+		err := tx.QueryRow(ctx,
+			`INSERT INTO storefront_products (
+				storefront_id, name, description, price, currency, category_id,
+				sku, barcode, stock_quantity, is_active, attributes
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+			storefrontID, req.Name, req.Description, req.Price, req.Currency,
+			req.CategoryID, req.SKU, req.Barcode, req.StockQuantity, req.IsActive, attributesJSON,
+		).Scan(&productID)
+
+		if err != nil {
+			errors = append(errors, fmt.Errorf("product %d: %w", i, err))
+			continue
+		}
+
+		createdIDs = append(createdIDs, productID)
+	}
+
+	if len(createdIDs) > 0 {
+		if err := tx.Commit(ctx); err != nil {
+			return nil, []error{fmt.Errorf("failed to commit transaction: %w", err)}
+		}
+	}
+
+	return createdIDs, errors
+}
+
+// BulkUpdateProducts updates multiple products in a single transaction
+func (s *Database) BulkUpdateProducts(ctx context.Context, storefrontID int, updates []models.BulkUpdateItem) ([]int, []error) {
+	var updatedIDs []int
+	var errors []error
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, []error{fmt.Errorf("failed to begin transaction: %w", err)}
+	}
+	defer tx.Rollback(ctx)
+
+	// Verify all products belong to the storefront
+	productIDs := make([]int, len(updates))
+	for i, update := range updates {
+		productIDs[i] = update.ProductID
+	}
+
+	var validProductIDs []int
+	rows, err := tx.Query(ctx,
+		`SELECT id FROM storefront_products WHERE id = ANY($1) AND storefront_id = $2`,
+		pq.Array(productIDs), storefrontID,
+	)
+	if err != nil {
+		return nil, []error{fmt.Errorf("failed to verify products: %w", err)}
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err == nil {
+			validProductIDs = append(validProductIDs, id)
+		}
+	}
+
+	// Create a map for quick lookup
+	validProductMap := make(map[int]bool)
+	for _, id := range validProductIDs {
+		validProductMap[id] = true
+	}
+
+	// Update each product
+	for _, update := range updates {
+		if !validProductMap[update.ProductID] {
+			errors = append(errors, fmt.Errorf("product %d: not found or doesn't belong to storefront", update.ProductID))
+			continue
+		}
+
+		// Build dynamic update query
+		setClauses := []string{}
+		args := []interface{}{}
+		argIndex := 1
+
+		if update.Updates.Name != nil {
+			setClauses = append(setClauses, fmt.Sprintf("name = $%d", argIndex))
+			args = append(args, *update.Updates.Name)
+			argIndex++
+		}
+
+		if update.Updates.Description != nil {
+			setClauses = append(setClauses, fmt.Sprintf("description = $%d", argIndex))
+			args = append(args, *update.Updates.Description)
+			argIndex++
+		}
+
+		if update.Updates.Price != nil {
+			setClauses = append(setClauses, fmt.Sprintf("price = $%d", argIndex))
+			args = append(args, *update.Updates.Price)
+			argIndex++
+		}
+
+		if update.Updates.CategoryID != nil {
+			setClauses = append(setClauses, fmt.Sprintf("category_id = $%d", argIndex))
+			args = append(args, *update.Updates.CategoryID)
+			argIndex++
+		}
+
+		if update.Updates.StockQuantity != nil {
+			setClauses = append(setClauses, fmt.Sprintf("stock_quantity = $%d", argIndex))
+			args = append(args, *update.Updates.StockQuantity)
+			argIndex++
+		}
+
+		if update.Updates.IsActive != nil {
+			setClauses = append(setClauses, fmt.Sprintf("is_active = $%d", argIndex))
+			args = append(args, *update.Updates.IsActive)
+			argIndex++
+		}
+
+		if len(setClauses) == 0 {
+			errors = append(errors, fmt.Errorf("product %d: no updates provided", update.ProductID))
+			continue
+		}
+
+		// Add updated_at
+		setClauses = append(setClauses, "updated_at = CURRENT_TIMESTAMP")
+		// Don't increment argIndex as we're not adding a parameter
+
+		// Add WHERE clause
+		args = append(args, update.ProductID)
+		query := fmt.Sprintf(
+			"UPDATE storefront_products SET %s WHERE id = $%d",
+			strings.Join(setClauses, ", "),
+			argIndex,
+		)
+
+		_, err := tx.Exec(ctx, query, args...)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("product %d: %w", update.ProductID, err))
+			continue
+		}
+
+		updatedIDs = append(updatedIDs, update.ProductID)
+	}
+
+	if len(updatedIDs) > 0 {
+		if err := tx.Commit(ctx); err != nil {
+			return nil, []error{fmt.Errorf("failed to commit transaction: %w", err)}
+		}
+	}
+
+	return updatedIDs, errors
+}
+
+// BulkDeleteProducts deletes multiple products in a single transaction
+func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, productIDs []int) ([]int, []error) {
+	var deletedIDs []int
+	var errors []error
+
+	if len(productIDs) == 0 {
+		return deletedIDs, errors
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, []error{fmt.Errorf("failed to begin transaction: %w", err)}
+	}
+	defer tx.Rollback(ctx)
+
+	// Delete products that belong to the storefront
+	rows, err := tx.Query(ctx,
+		`DELETE FROM storefront_products 
+		WHERE id = ANY($1) AND storefront_id = $2 
+		RETURNING id`,
+		pq.Array(productIDs), storefrontID,
+	)
+	if err != nil {
+		return nil, []error{fmt.Errorf("failed to delete products: %w", err)}
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err == nil {
+			deletedIDs = append(deletedIDs, id)
+		}
+	}
+
+	// Check which products were not deleted
+	deletedMap := make(map[int]bool)
+	for _, id := range deletedIDs {
+		deletedMap[id] = true
+	}
+
+	for _, id := range productIDs {
+		if !deletedMap[id] {
+			errors = append(errors, fmt.Errorf("product %d: not found or doesn't belong to storefront", id))
+		}
+	}
+
+	if len(deletedIDs) > 0 {
+		if err := tx.Commit(ctx); err != nil {
+			return nil, []error{fmt.Errorf("failed to commit transaction: %w", err)}
+		}
+	}
+
+	return deletedIDs, errors
+}
+
+// BulkUpdateStatus updates the status of multiple products
+func (s *Database) BulkUpdateStatus(ctx context.Context, storefrontID int, productIDs []int, isActive bool) ([]int, []error) {
+	var updatedIDs []int
+	var errors []error
+
+	if len(productIDs) == 0 {
+		return updatedIDs, errors
+	}
+
+	rows, err := s.pool.Query(ctx,
+		`UPDATE storefront_products 
+		SET is_active = $1, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = ANY($2) AND storefront_id = $3 
+		RETURNING id`,
+		isActive, pq.Array(productIDs), storefrontID,
+	)
+	if err != nil {
+		return nil, []error{fmt.Errorf("failed to update status: %w", err)}
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err == nil {
+			updatedIDs = append(updatedIDs, id)
+		}
+	}
+
+	// Check which products were not updated
+	updatedMap := make(map[int]bool)
+	for _, id := range updatedIDs {
+		updatedMap[id] = true
+	}
+
+	for _, id := range productIDs {
+		if !updatedMap[id] {
+			errors = append(errors, fmt.Errorf("product %d: not found or doesn't belong to storefront", id))
+		}
+	}
+
+	return updatedIDs, errors
+}
