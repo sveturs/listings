@@ -2963,6 +2963,218 @@ paths:
       summary: Обратное геокодирование
       tags:
         - geocode
+  "/api/v1/import/jobs/{jobId}":
+    get:
+      description: Get detailed information about an import job including errors
+      parameters:
+        - description: Job ID
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Import job details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/models.ImportJob"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Get import job details
+      tags:
+        - storefronts
+        - import
+  "/api/v1/import/jobs/{jobId}/cancel":
+    post:
+      description: Cancel a running import job
+      parameters:
+        - description: Job ID
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Cancel import job
+      tags:
+        - storefronts
+        - import
+  "/api/v1/import/jobs/{jobId}/retry":
+    post:
+      description: Retry a failed import job
+      parameters:
+        - description: Job ID
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: New import job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/models.ImportJob"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Retry import job
+      tags:
+        - storefronts
+        - import
+  "/api/v1/import/jobs/{jobId}/status":
+    get:
+      description: Get current status of an import job
+      parameters:
+        - description: Job ID
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Import job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/models.ImportJobStatus"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Get import job status
+      tags:
+        - storefronts
+        - import
   /api/v1/marketplace/admin/attribute-groups:
     get:
       description: Returns all attribute groups
@@ -8104,6 +8316,68 @@ paths:
       tags:
         - storefronts
         - import
+  "/api/v1/storefronts/{storefront_id}/import/jobs":
+    get:
+      description: Get list of import jobs for a storefront
+      parameters:
+        - description: Storefront ID
+          in: path
+          name: storefront_id
+          required: true
+          schema:
+            type: integer
+        - description: Filter by status
+          in: query
+          name: status
+          schema:
+            type: string
+        - description: Limit number of results
+          in: query
+          name: limit
+          schema:
+            type: integer
+        - description: Offset for pagination
+          in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of import jobs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/models.ImportJobsResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Get import jobs
+      tags:
+        - storefronts
+        - import
   "/api/v1/storefronts/{storefront_id}/import/url":
     post:
       description: Import products from a URL (supports XML, CSV, ZIP formats)
@@ -10921,6 +11195,15 @@ components:
         successful_records:
           type: integer
         total_records:
+          type: integer
+      type: object
+    models.ImportJobsResponse:
+      properties:
+        jobs:
+          items:
+            $ref: "#/components/schemas/models.ImportJob"
+          type: array
+        total:
           type: integer
       type: object
     models.ImportRequest:

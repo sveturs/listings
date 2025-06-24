@@ -145,13 +145,8 @@ func (c *OpenSearchClient) BulkIndex(indexName string, documents []map[string]in
 		bulkBody.WriteString(string(actionJSON))
 		bulkBody.WriteString("\n")
 
-		// Удаляем ID из документа для индексации
-		docCopy := make(map[string]interface{})
-		for k, v := range doc {
-			if k != "id" {
-				docCopy[k] = v
-			}
-		}
+		// Сохраняем документ как есть, включая ID
+		docCopy := doc
 
 		docJSON, err := json.Marshal(docCopy)
 		if err != nil {

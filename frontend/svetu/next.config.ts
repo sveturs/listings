@@ -62,6 +62,10 @@ const nextConfig: NextConfig = {
 
       return [
         {
+          source: '/listings/:path*',
+          destination: `${minioUrl}/listings/:path*`,
+        },
+        {
           source: '/chat-files/:path*',
           destination: `${minioUrl}/chat-files/:path*`,
         },

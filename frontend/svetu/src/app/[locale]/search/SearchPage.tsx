@@ -195,7 +195,7 @@ export default function SearchPage() {
               is_main: img.is_main,
               storage_type: 'minio',
               storage_bucket: '',
-              public_url: img.url,
+              public_url: img.public_url || img.url,
               created_at: new Date().toISOString(),
             }))
           : [],
