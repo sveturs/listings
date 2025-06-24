@@ -8,7 +8,7 @@ type BulkOperationError = components['schemas']['models.BulkOperationError'];
 
 interface ProductState {
   products: StorefrontProduct[];
-  selectedIds: Set<number>;
+  selectedIds: number[];
   loading: boolean;
   error: string | null;
 
@@ -51,7 +51,7 @@ interface ProductState {
 
 const initialState: ProductState = {
   products: [],
-  selectedIds: new Set(),
+  selectedIds: [],
   loading: false,
   error: null,
 
@@ -173,25 +173,21 @@ const productSlice = createSlice({
     // Управление выбором
     toggleProductSelection: (state, action: PayloadAction<number>) => {
       const id = action.payload;
-      const newSelectedIds = new Set(state.selectedIds);
+      const index = state.selectedIds.indexOf(id);
 
-      if (newSelectedIds.has(id)) {
-        newSelectedIds.delete(id);
+      if (index !== -1) {
+        state.selectedIds.splice(index, 1);
       } else {
-        newSelectedIds.add(id);
+        state.selectedIds.push(id);
       }
-
-      state.selectedIds = newSelectedIds;
     },
 
     selectAll: (state) => {
-      state.selectedIds = new Set(
-        state.products.filter((p) => p.id).map((p) => p.id!)
-      );
+      state.selectedIds = state.products.filter((p) => p.id).map((p) => p.id!);
     },
 
     clearSelection: (state) => {
-      state.selectedIds = new Set();
+      state.selectedIds = [];
     },
 
     selectByFilter: (
@@ -199,11 +195,11 @@ const productSlice = createSlice({
       action: PayloadAction<(product: StorefrontProduct) => boolean>
     ) => {
       const filterFn = action.payload;
-      const newSelectedIds = new Set<number>();
+      const newSelectedIds: number[] = [];
 
       state.products.forEach((product) => {
         if (product.id && filterFn(product)) {
-          newSelectedIds.add(product.id);
+          newSelectedIds.push(product.id);
         }
       });
 
@@ -214,7 +210,7 @@ const productSlice = createSlice({
     toggleSelectMode: (state) => {
       state.ui.isSelectMode = !state.ui.isSelectMode;
       if (!state.ui.isSelectMode) {
-        state.selectedIds = new Set();
+        state.selectedIds = [];
       }
     },
 
@@ -274,9 +270,9 @@ const productSlice = createSlice({
       );
 
       // Также удаляем из выбранных
-      const newSelectedIds = new Set(state.selectedIds);
-      action.payload.forEach((id) => newSelectedIds.delete(id));
-      state.selectedIds = newSelectedIds;
+      state.selectedIds = state.selectedIds.filter(
+        (id) => !idsToRemove.has(id)
+      );
     },
 
     // Прогресс операций
@@ -336,9 +332,9 @@ const productSlice = createSlice({
           );
 
           // Также удаляем из выбранных
-          const newSelectedIds = new Set(state.selectedIds);
-          action.payload.deleted.forEach((id) => newSelectedIds.delete(id));
-          state.selectedIds = newSelectedIds;
+          state.selectedIds = state.selectedIds.filter(
+            (id) => !idsToRemove.has(id)
+          );
         }
 
         // Сохраняем ошибки

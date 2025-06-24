@@ -16,7 +16,6 @@ import { ProductCard } from './ProductCard';
 import { BulkActions } from './BulkActions';
 import { InfiniteScrollTrigger } from '@/components/common/InfiniteScrollTrigger';
 import type { RootState, AppDispatch } from '@/store';
-import type { StorefrontProduct } from '@/types/storefront';
 import {
   toggleProductSelection,
   selectAll,
@@ -30,7 +29,6 @@ import {
 } from '@/store/slices/productSlice';
 
 interface ProductListProps {
-  products: StorefrontProduct[];
   storefrontSlug: string;
   loading?: boolean;
   hasMore?: boolean;
@@ -39,17 +37,17 @@ interface ProductListProps {
 }
 
 export function ProductList({
-  products,
   storefrontSlug,
   loading = false,
   hasMore = false,
   onLoadMore,
   totalCount = 0,
 }: ProductListProps) {
-  const t = useTranslations('products');
+  const t = useTranslations('storefronts.products');
   const dispatch = useDispatch<AppDispatch>();
 
   const {
+    products,
     selectedIds,
     ui: { isSelectMode, viewMode },
     bulkOperation: { isProcessing },
@@ -67,9 +65,10 @@ export function ProductList({
     return () => clearTimeout(timer);
   }, [localSearch, dispatch]);
 
-  const selectedCount = selectedIds.size;
+  const selectedCount = selectedIds.length;
   const allSelected =
-    products.length > 0 && products.every((p) => p.id && selectedIds.has(p.id));
+    products.length > 0 &&
+    products.every((p) => p.id && selectedIds.includes(p.id));
 
   const handleToggleSelectMode = () => {
     dispatch(toggleSelectMode());
@@ -91,19 +90,21 @@ export function ProductList({
   );
 
   const handleBulkDelete = async () => {
-    const productIds = Array.from(selectedIds);
-    await dispatch(bulkDeleteProducts({ storefrontSlug, productIds }));
+    await dispatch(
+      bulkDeleteProducts({ storefrontSlug, productIds: selectedIds })
+    );
     dispatch(clearSelection());
   };
 
   const handleBulkStatusChange = async (isActive: boolean) => {
-    const productIds = Array.from(selectedIds);
-    await dispatch(bulkUpdateStatus({ storefrontSlug, productIds, isActive }));
+    await dispatch(
+      bulkUpdateStatus({ storefrontSlug, productIds: selectedIds, isActive })
+    );
     dispatch(clearSelection());
   };
 
   const handleBulkExport = () => {
-    const productIds = selectedCount > 0 ? Array.from(selectedIds) : undefined;
+    const productIds = selectedCount > 0 ? selectedIds : undefined;
     dispatch(exportProducts({ storefrontSlug, productIds, format: 'csv' }));
   };
 
@@ -353,7 +354,9 @@ export function ProductList({
                   key={product.id}
                   product={product}
                   storefrontSlug={storefrontSlug}
-                  isSelected={product.id ? selectedIds.has(product.id) : false}
+                  isSelected={
+                    product.id ? selectedIds.includes(product.id) : false
+                  }
                   isSelectMode={isSelectMode}
                   onToggleSelect={handleToggleSelect}
                   viewMode="table"
@@ -374,7 +377,7 @@ export function ProductList({
               key={product.id}
               product={product}
               storefrontSlug={storefrontSlug}
-              isSelected={product.id ? selectedIds.has(product.id) : false}
+              isSelected={product.id ? selectedIds.includes(product.id) : false}
               isSelectMode={isSelectMode}
               onToggleSelect={handleToggleSelect}
               viewMode={viewMode}
@@ -410,6 +413,7 @@ export function ProductList({
           loading={loading}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
+          loadMoreText={t('loadMore')}
         />
       )}
     </div>

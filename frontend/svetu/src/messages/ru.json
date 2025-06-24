@@ -97,6 +97,10 @@
     "private": "Частные",
     "stores": "Магазины",
     "from": "От",
+    "search": {
+      "searchHistory": "История поиска",
+      "clearHistory": "Очистить историю"
+    },
     "to": "До",
     "reset": "Сбросить",
     "searchHistory": "История поиска",
@@ -1697,6 +1701,21 @@
         "dimensions": "Размеры и вес",
         "other": "Другие атрибуты"
       },
+      "filters": "Фильтры",
+      "bulk": {
+        "selectMode": "Режим выбора",
+        "selectAll": "Выбрать все",
+        "selected": "Выбрано: {count}",
+        "delete": "Удалить",
+        "activate": "Активировать",
+        "deactivate": "Деактивировать",
+        "export": "Экспорт",
+        "deleteConfirm": "Вы уверены, что хотите удалить {count} товар(ов)?",
+        "deleteSuccess": "Товары успешно удалены",
+        "statusUpdateSuccess": "Статус товаров успешно обновлен",
+        "exportSuccess": "Экспорт товаров начат",
+        "processing": "Обработка..."
+      },
       "requiredFieldsInfo": "Поля, отмеченные *, обязательны для заполнения",
       "noAttributesTitle": "Дополнительные атрибуты отсутствуют",
       "noAttributesMessage": "У этой категории нет специфических атрибутов",
@@ -1796,7 +1815,8 @@
       },
       "units": "шт.",
       "active": "Активен",
-      "edit": "Редактировать"
+      "edit": "Редактировать",
+      "loadMore": "Загрузить еще"
     },
     "new": "новых",
     "minutes": "{count, plural, one {# минуту назад} few {# минуты назад} many {# минут назад} other {# минут назад}}",

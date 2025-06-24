@@ -28,6 +28,7 @@ export default function MarketplaceList({
   locale,
 }: MarketplaceListProps) {
   const t = useTranslations('home');
+  const tCommon = useTranslations('common');
   const [items, setItems] = useState<MarketplaceItem[]>(initialData.data);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -124,6 +125,7 @@ export default function MarketplaceList({
         loading={loading}
         hasMore={hasMore}
         onLoadMore={loadMore}
+        loadMoreText={tCommon('loadMore')}
       />
     </>
   );

@@ -1,7 +1,6 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { useTranslations } from 'next-intl';
 
 interface InfiniteScrollTriggerProps {
   loading: boolean;
@@ -9,6 +8,7 @@ interface InfiniteScrollTriggerProps {
   onLoadMore: () => void;
   showButton?: boolean;
   className?: string;
+  loadMoreText?: string;
 }
 
 export const InfiniteScrollTrigger = forwardRef<
@@ -16,11 +16,16 @@ export const InfiniteScrollTrigger = forwardRef<
   InfiniteScrollTriggerProps
 >(
   (
-    { loading, hasMore, onLoadMore, showButton = true, className = '' },
+    {
+      loading,
+      hasMore,
+      onLoadMore,
+      showButton = true,
+      className = '',
+      loadMoreText = 'Load more',
+    },
     ref
   ) => {
-    const t = useTranslations('common');
-
     return (
       <>
         {/* Invisible trigger element for IntersectionObserver */}
@@ -42,9 +47,9 @@ export const InfiniteScrollTrigger = forwardRef<
             <button
               className="btn btn-outline btn-sm"
               onClick={onLoadMore}
-              aria-label={t('loadMore')}
+              aria-label={loadMoreText}
             >
-              {t('loadMore')}
+              {loadMoreText}
               <svg
                 className="w-4 h-4 ml-2"
                 fill="none"
