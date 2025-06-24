@@ -11734,6 +11734,314 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/{slug}/products/bulk/create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk create products
+     * @description Create multiple products in a single request
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Bearer token */
+          Authorization: string;
+        };
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Products to create */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.BulkCreateProductsRequest'];
+        };
+      };
+      responses: {
+        /** @description Bulk creation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.BulkCreateProductsResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{slug}/products/bulk/delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Bulk delete products
+     * @description Delete multiple products in a single request
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Bearer token */
+          Authorization: string;
+        };
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Product IDs to delete */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.BulkDeleteProductsRequest'];
+        };
+      };
+      responses: {
+        /** @description Bulk deletion result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.BulkDeleteProductsResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{slug}/products/bulk/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Bulk update product status
+     * @description Update active/inactive status of multiple products
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Bearer token */
+          Authorization: string;
+        };
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Product IDs and status */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.BulkUpdateStatusRequest'];
+        };
+      };
+      responses: {
+        /** @description Bulk status update result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.BulkUpdateStatusResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{slug}/products/bulk/update': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Bulk update products
+     * @description Update multiple products in a single request
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Bearer token */
+          Authorization: string;
+        };
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Products to update */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.BulkUpdateProductsRequest'];
+        };
+      };
+      responses: {
+        /** @description Bulk update result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.BulkUpdateProductsResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts/{slug}/products/stats': {
     parameters: {
       query?: never;
@@ -14158,6 +14466,55 @@ export interface components {
     'models.BreakdownItem': {
       average?: number;
       count?: number;
+    };
+    'models.BulkCreateProductsRequest': {
+      products: components['schemas']['models.CreateProductRequest'][];
+    };
+    'models.BulkCreateProductsResponse': {
+      /** @description IDs of successfully created products */
+      created?: number[];
+      /** @description Errors for failed operations */
+      failed?: components['schemas']['models.BulkOperationError'][];
+    };
+    'models.BulkDeleteProductsRequest': {
+      product_ids: number[];
+    };
+    'models.BulkDeleteProductsResponse': {
+      /** @description IDs of successfully deleted products */
+      deleted?: number[];
+      /** @description Errors for failed operations */
+      failed?: components['schemas']['models.BulkOperationError'][];
+    };
+    'models.BulkOperationError': {
+      /** @description Error message */
+      error?: string;
+      /** @description Index in the request array */
+      index?: number;
+      /** @description Product ID if available */
+      product_id?: number;
+    };
+    'models.BulkUpdateItem': {
+      product_id: number;
+      updates: components['schemas']['models.UpdateProductRequest'];
+    };
+    'models.BulkUpdateProductsRequest': {
+      updates: components['schemas']['models.BulkUpdateItem'][];
+    };
+    'models.BulkUpdateProductsResponse': {
+      /** @description Errors for failed operations */
+      failed?: components['schemas']['models.BulkOperationError'][];
+      /** @description IDs of successfully updated products */
+      updated?: number[];
+    };
+    'models.BulkUpdateStatusRequest': {
+      is_active?: boolean;
+      product_ids: number[];
+    };
+    'models.BulkUpdateStatusResponse': {
+      /** @description Errors for failed operations */
+      failed?: components['schemas']['models.BulkOperationError'][];
+      /** @description IDs of successfully updated products */
+      updated?: number[];
     };
     'models.CanReviewResponse': {
       can_review?: boolean;

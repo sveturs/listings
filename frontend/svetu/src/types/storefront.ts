@@ -6,6 +6,8 @@ export type StorefrontCreateDTO =
   components['schemas']['models.StorefrontCreateDTO'];
 export type StorefrontUpdateDTO =
   components['schemas']['models.StorefrontUpdateDTO'];
+export type StorefrontProduct =
+  components['schemas']['models.StorefrontProduct'];
 
 // Расширенный тип Storefront с дополнительными полями
 export interface Storefront extends StorefrontBase {

@@ -25,6 +25,12 @@ type Storage interface {
 	UpdateProductInventory(ctx context.Context, storefrontID, productID int, userID int, req *models.UpdateInventoryRequest) error
 	GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error)
 	
+	// Bulk operations
+	BulkCreateProducts(ctx context.Context, storefrontID int, products []models.CreateProductRequest) ([]int, []error)
+	BulkUpdateProducts(ctx context.Context, storefrontID int, updates []models.BulkUpdateItem) ([]int, []error)
+	BulkDeleteProducts(ctx context.Context, storefrontID int, productIDs []int) ([]int, []error)
+	BulkUpdateStatus(ctx context.Context, storefrontID int, productIDs []int, isActive bool) ([]int, []error)
+	
 	// Storefront operations
 	GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error)
 }
@@ -289,6 +295,189 @@ func (s *ProductService) UpdateProductForImport(ctx context.Context, storefrontI
 	}
 	
 	return nil
+}
+
+// Bulk operation methods
+
+// BulkCreateProducts creates multiple products
+func (s *ProductService) BulkCreateProducts(ctx context.Context, storefrontID, userID int, req models.BulkCreateProductsRequest) (*models.BulkCreateProductsResponse, error) {
+	// Validate ownership
+	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
+		return nil, err
+	}
+
+	// Validate all products
+	for i, product := range req.Products {
+		if err := s.validateCreateRequest(&product); err != nil {
+			return nil, fmt.Errorf("product %d: %w", i, err)
+		}
+	}
+
+	// Create products
+	createdIDs, errors := s.storage.BulkCreateProducts(ctx, storefrontID, req.Products)
+
+	// Convert errors to response format
+	var failedOps []models.BulkOperationError
+	for i, err := range errors {
+		if err != nil {
+			failedOps = append(failedOps, models.BulkOperationError{
+				Index: i,
+				Error: err.Error(),
+			})
+		}
+	}
+
+	// Index created products in OpenSearch
+	if len(createdIDs) > 0 && s.searchRepo != nil {
+		go func() {
+			for _, id := range createdIDs {
+				product, err := s.storage.GetStorefrontProduct(context.Background(), storefrontID, id)
+				if err != nil {
+					logger.Error().Err(err).Msgf("Failed to get product %d for indexing", id)
+					continue
+				}
+				if err := s.searchRepo.IndexProduct(context.Background(), product); err != nil {
+					logger.Error().Err(err).Msgf("Failed to index product %d in OpenSearch", id)
+				}
+			}
+		}()
+	}
+
+	return &models.BulkCreateProductsResponse{
+		Created: createdIDs,
+		Failed:  failedOps,
+	}, nil
+}
+
+// BulkUpdateProducts updates multiple products
+func (s *ProductService) BulkUpdateProducts(ctx context.Context, storefrontID, userID int, req models.BulkUpdateProductsRequest) (*models.BulkUpdateProductsResponse, error) {
+	// Validate ownership
+	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
+		return nil, err
+	}
+
+	// Validate all updates
+	for i, update := range req.Updates {
+		if err := s.validateUpdateRequest(&update.Updates); err != nil {
+			return nil, fmt.Errorf("update %d: %w", i, err)
+		}
+	}
+
+	// Update products
+	updatedIDs, errors := s.storage.BulkUpdateProducts(ctx, storefrontID, req.Updates)
+
+	// Convert errors to response format
+	var failedOps []models.BulkOperationError
+	for i, err := range errors {
+		if err != nil {
+			failedOps = append(failedOps, models.BulkOperationError{
+				ProductID: req.Updates[i].ProductID,
+				Error:     err.Error(),
+			})
+		}
+	}
+
+	// Re-index updated products in OpenSearch
+	if len(updatedIDs) > 0 && s.searchRepo != nil {
+		go func() {
+			for _, id := range updatedIDs {
+				product, err := s.storage.GetStorefrontProduct(context.Background(), storefrontID, id)
+				if err != nil {
+					logger.Error().Err(err).Msgf("Failed to get product %d for re-indexing", id)
+					continue
+				}
+				if err := s.searchRepo.UpdateProduct(context.Background(), product); err != nil {
+					logger.Error().Err(err).Msgf("Failed to update product %d in OpenSearch", id)
+				}
+			}
+		}()
+	}
+
+	return &models.BulkUpdateProductsResponse{
+		Updated: updatedIDs,
+		Failed:  failedOps,
+	}, nil
+}
+
+// BulkDeleteProducts deletes multiple products
+func (s *ProductService) BulkDeleteProducts(ctx context.Context, storefrontID, userID int, req models.BulkDeleteProductsRequest) (*models.BulkDeleteProductsResponse, error) {
+	// Validate ownership
+	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
+		return nil, err
+	}
+
+	// Delete products
+	deletedIDs, errors := s.storage.BulkDeleteProducts(ctx, storefrontID, req.ProductIDs)
+
+	// Convert errors to response format
+	var failedOps []models.BulkOperationError
+	for i, err := range errors {
+		if err != nil {
+			failedOps = append(failedOps, models.BulkOperationError{
+				ProductID: req.ProductIDs[i],
+				Error:     err.Error(),
+			})
+		}
+	}
+
+	// Remove deleted products from OpenSearch
+	if len(deletedIDs) > 0 && s.searchRepo != nil {
+		go func() {
+			for _, id := range deletedIDs {
+				if err := s.searchRepo.DeleteProduct(context.Background(), id); err != nil {
+					logger.Error().Err(err).Msgf("Failed to delete product %d from OpenSearch", id)
+				}
+			}
+		}()
+	}
+
+	return &models.BulkDeleteProductsResponse{
+		Deleted: deletedIDs,
+		Failed:  failedOps,
+	}, nil
+}
+
+// BulkUpdateStatus updates status of multiple products
+func (s *ProductService) BulkUpdateStatus(ctx context.Context, storefrontID, userID int, req models.BulkUpdateStatusRequest) (*models.BulkUpdateStatusResponse, error) {
+	// Validate ownership
+	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
+		return nil, err
+	}
+
+	// Update status
+	updatedIDs, errors := s.storage.BulkUpdateStatus(ctx, storefrontID, req.ProductIDs, req.IsActive)
+
+	// Convert errors to response format
+	var failedOps []models.BulkOperationError
+	for i, err := range errors {
+		if err != nil {
+			failedOps = append(failedOps, models.BulkOperationError{
+				ProductID: req.ProductIDs[i],
+				Error:     err.Error(),
+			})
+		}
+	}
+
+	// Re-index updated products in OpenSearch
+	if len(updatedIDs) > 0 && s.searchRepo != nil {
+		go func() {
+			for _, id := range updatedIDs {
+				product, err := s.storage.GetStorefrontProduct(context.Background(), storefrontID, id)
+				if err != nil {
+					logger.Error().Err(err).Msgf("Failed to get product %d for re-indexing", id)
+					continue
+				}
+				if err := s.searchRepo.UpdateProduct(context.Background(), product); err != nil {
+					logger.Error().Err(err).Msgf("Failed to update product %d in OpenSearch", id)
+				}
+			}
+		}()
+	}
+
+	return &models.BulkUpdateStatusResponse{
+		Updated: updatedIDs,
+		Failed:  failedOps,
+	}, nil
 }
 
 // Validation helpers

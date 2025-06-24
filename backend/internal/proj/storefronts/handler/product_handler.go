@@ -414,6 +414,192 @@ func (h *ProductHandler) GetProductStats(c *fiber.Ctx) error {
 	return c.JSON(stats)
 }
 
+// Bulk operation handlers
+
+// BulkCreateProducts creates multiple products
+// @Summary Bulk create products
+// @Description Create multiple products in a single request
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param slug path string true "Storefront slug"
+// @Param body body models.BulkCreateProductsRequest true "Products to create"
+// @Success 200 {object} models.BulkCreateProductsResponse "Bulk creation result"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/storefronts/{slug}/products/bulk/create [post]
+func (h *ProductHandler) BulkCreateProducts(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	var req models.BulkCreateProductsRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	response, err := h.productService.BulkCreateProducts(c.Context(), storefrontID, userID, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(response)
+}
+
+// BulkUpdateProducts updates multiple products
+// @Summary Bulk update products
+// @Description Update multiple products in a single request
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param slug path string true "Storefront slug"
+// @Param body body models.BulkUpdateProductsRequest true "Products to update"
+// @Success 200 {object} models.BulkUpdateProductsResponse "Bulk update result"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/storefronts/{slug}/products/bulk/update [put]
+func (h *ProductHandler) BulkUpdateProducts(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	var req models.BulkUpdateProductsRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	response, err := h.productService.BulkUpdateProducts(c.Context(), storefrontID, userID, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(response)
+}
+
+// BulkDeleteProducts deletes multiple products
+// @Summary Bulk delete products
+// @Description Delete multiple products in a single request
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param slug path string true "Storefront slug"
+// @Param body body models.BulkDeleteProductsRequest true "Product IDs to delete"
+// @Success 200 {object} models.BulkDeleteProductsResponse "Bulk deletion result"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/storefronts/{slug}/products/bulk/delete [delete]
+func (h *ProductHandler) BulkDeleteProducts(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	var req models.BulkDeleteProductsRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	response, err := h.productService.BulkDeleteProducts(c.Context(), storefrontID, userID, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(response)
+}
+
+// BulkUpdateStatus updates status of multiple products
+// @Summary Bulk update product status
+// @Description Update active/inactive status of multiple products
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param slug path string true "Storefront slug"
+// @Param body body models.BulkUpdateStatusRequest true "Product IDs and status"
+// @Success 200 {object} models.BulkUpdateStatusResponse "Bulk status update result"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/storefronts/{slug}/products/bulk/status [put]
+func (h *ProductHandler) BulkUpdateStatus(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	var req models.BulkUpdateStatusRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	response, err := h.productService.BulkUpdateStatus(c.Context(), storefrontID, userID, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(response)
+}
+
 // Helper functions to get context values
 func getStorefrontIDFromContext(c *fiber.Ctx) (int, error) {
 	storefrontID, ok := c.Locals("storefrontID").(int)
