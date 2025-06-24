@@ -1,26 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useDispatch } from 'react-redux';
 import Link from 'next/link';
-import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  PhotoIcon,
-  ArrowLeftIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
-import { toast } from '@/utils/toast';
+import { FiPlus, FiUpload, FiArrowLeft } from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
-import ViewToggle from '@/components/common/ViewToggle';
-import { useViewPreference } from '@/hooks/useViewPreference';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
-import SafeImage from '@/components/SafeImage';
-import type { components } from '@/types/generated/api';
-
-type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
+import { ProductList } from '@/components/products/ProductList';
+import {
+  setProducts,
+  appendProducts,
+  setPagination,
+} from '@/store/slices/productSlice';
+import type { AppDispatch } from '@/store';
 
 interface PageProps {
   params: Promise<{
@@ -31,484 +24,139 @@ interface PageProps {
 
 export default function ProductsPage({ params }: PageProps) {
   const [slug, setSlug] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const t = useTranslations('storefronts');
+  const locale = useLocale();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const LIMIT = 20;
 
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
   }, [params]);
-  const t = useTranslations();
-  const locale = useLocale();
-  const [products, setProducts] = useState<StorefrontProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [productToDelete, setProductToDelete] =
-    useState<StorefrontProduct | null>(null);
-  const [viewMode, setViewMode] = useViewPreference('grid');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [_totalProducts, setTotalProducts] = useState(0);
-  const PRODUCTS_PER_PAGE = 20;
 
-  const loadProducts = async (page = 1, append = false) => {
-    if (!slug) return; // Wait for slug to be loaded
+  const loadProducts = useCallback(
+    async (pageNum: number, append = false) => {
+      if (!slug) return;
 
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      if (filterStatus !== 'all') {
-        if (filterStatus === 'active') params.append('is_active', 'true');
-        if (filterStatus === 'inactive') params.append('is_active', 'false');
-        if (filterStatus === 'out_of_stock')
-          params.append('stock_status', 'out_of_stock');
-        if (filterStatus === 'low_stock')
-          params.append('stock_status', 'low_stock');
-      }
+      try {
+        setLoading(true);
 
-      // Add pagination params
-      params.append('page', page.toString());
-      params.append('limit', PRODUCTS_PER_PAGE.toString());
+        const params = new URLSearchParams({
+          limit: LIMIT.toString(),
+          offset: ((pageNum - 1) * LIMIT).toString(),
+        });
 
-      const queryString = params.toString();
-      const url = `/api/v1/storefronts/slug/${slug}/products?${queryString}`;
-      const response = await apiClient.get(url);
-      if (response.data) {
-        const responseData = response.data;
-        const newProducts = Array.isArray(responseData)
-          ? responseData
-          : responseData.products || responseData.data || [];
+        const response = await apiClient.get(
+          `/api/v1/storefronts/slug/${slug}/products?${params}`
+        );
 
-        if (append) {
-          setProducts((prev) => [...prev, ...newProducts]);
-        } else {
-          setProducts(newProducts);
+        if (response.data) {
+          const newProducts = Array.isArray(response.data)
+            ? response.data
+            : response.data.products || response.data.data || [];
+
+          if (append) {
+            dispatch(appendProducts(newProducts));
+          } else {
+            dispatch(setProducts(newProducts));
+          }
+
+          // Обработка метаданных пагинации
+          const meta = response.data.meta || response.data.pagination;
+          if (meta) {
+            setTotalCount(meta.total || 0);
+            const totalPages = Math.ceil((meta.total || 0) / LIMIT);
+            setHasMore(pageNum < totalPages);
+
+            dispatch(
+              setPagination({
+                page: pageNum,
+                total: meta.total || 0,
+                hasMore: pageNum < totalPages,
+              })
+            );
+          } else {
+            // Предполагаем, что есть еще данные, если получили полную страницу
+            setHasMore(newProducts.length === LIMIT);
+          }
         }
-
-        // Handle pagination metadata
-        const meta = responseData.meta || responseData.pagination;
-        if (meta) {
-          setTotalProducts(meta.total || 0);
-          const totalPages = Math.ceil((meta.total || 0) / PRODUCTS_PER_PAGE);
-          setHasMore(page < totalPages);
-        } else {
-          // Fallback: assume there are more if we got a full page
-          setHasMore(newProducts.length === PRODUCTS_PER_PAGE);
-        }
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        toast.error(t('products.errorLoadingProducts'));
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to load products:', error);
-      toast.error(t('storefronts.products.errorLoadingProducts'));
-    } finally {
-      setLoading(false);
+    },
+    [slug, dispatch, t]
+  );
+
+  useEffect(() => {
+    if (slug) {
+      setPage(1);
+      loadProducts(1, false);
     }
-  };
+  }, [slug, loadProducts]);
 
   const handleLoadMore = () => {
     if (hasMore && !loading) {
-      const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
+      const nextPage = page + 1;
+      setPage(nextPage);
       loadProducts(nextPage, true);
-    }
-  };
-
-  const loadMoreRef = useInfiniteScroll({
-    loading,
-    hasMore,
-    onLoadMore: handleLoadMore,
-  });
-
-  useEffect(() => {
-    setCurrentPage(1);
-    loadProducts(1, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug, search, filterStatus]);
-
-  const handleDelete = async () => {
-    if (!productToDelete || !slug) return;
-
-    try {
-      await apiClient.delete(
-        `/api/v1/storefronts/slug/${slug}/products/${productToDelete.id}`
-      );
-      toast.success(t('storefronts.products.productDeleted'));
-      setDeleteModalOpen(false);
-      setProductToDelete(null);
-      setCurrentPage(1);
-      loadProducts(1, false);
-    } catch (error) {
-      console.error('Failed to delete product:', error);
-      toast.error(t('storefronts.products.errorDeletingProduct'));
-    }
-  };
-
-  const getStockStatusBadge = (product: StorefrontProduct) => {
-    switch (product.stock_status) {
-      case 'out_of_stock':
-        return (
-          <span className="badge badge-error">
-            {t('storefronts.products.outOfStock')}
-          </span>
-        );
-      case 'low_stock':
-        return (
-          <span className="badge badge-warning">
-            {t('storefronts.products.lowStock')}
-          </span>
-        );
-      case 'in_stock':
-        return (
-          <span className="badge badge-success">
-            {t('storefronts.products.inStock')}
-          </span>
-        );
-      default:
-        return null;
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <Link
-            href={`/${locale}/storefronts/${slug}/dashboard`}
-            className="inline-flex items-center text-primary hover:underline mb-2"
-          >
-            <ArrowLeftIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.backToDashboard')}
-          </Link>
-          <h1 className="text-3xl font-bold">
-            {t('storefronts.products.title')}
-          </h1>
-          <p className="text-base-content/60 mt-2">
-            {t('storefronts.products.totalProducts', {
-              count: products.length,
-            })}
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Link
-            href={`/${locale}/storefronts/${slug}/products/import`}
-            className="btn btn-outline btn-secondary"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-            {t('storefronts.products.importProducts')}
-          </Link>
-          <Link
-            href={`/${locale}/storefronts/${slug}/products/new`}
-            className="btn btn-primary"
-          >
-            <PlusIcon className="w-5 h-5" />
-            {t('storefronts.products.addProduct')}
-          </Link>
-        </div>
-      </div>
+      {/* Заголовок */}
+      <div className="mb-8">
+        <Link
+          href={`/${locale}/storefronts/${slug}/dashboard`}
+          className="inline-flex items-center text-primary hover:underline mb-4"
+        >
+          <FiArrowLeft className="w-4 h-4 mr-2" />
+          {t('backToDashboard')}
+        </Link>
 
-      {/* Filters */}
-      <div className="card bg-base-100 shadow-xl mb-6">
-        <div className="card-body">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="form-control flex-1">
-              <div className="input-group">
-                <input
-                  type="text"
-                  placeholder={t('storefronts.products.searchPlaceholder')}
-                  className="input input-bordered w-full"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                <button className="btn btn-square">
-                  <MagnifyingGlassIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Status Filter */}
-            <div className="form-control w-full md:w-auto">
-              <select
-                className="select select-bordered"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="all">
-                  {t('storefronts.products.allProducts')}
-                </option>
-                <option value="active">
-                  {t('storefronts.products.activeOnly')}
-                </option>
-                <option value="inactive">
-                  {t('storefronts.products.inactiveOnly')}
-                </option>
-                <option value="out_of_stock">
-                  {t('storefronts.products.outOfStock')}
-                </option>
-                <option value="low_stock">
-                  {t('storefronts.products.lowStock')}
-                </option>
-              </select>
-            </div>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h1 className="text-4xl font-bold">{t('products.title')}</h1>
+            <p className="text-base-content/60 mt-2">
+              {t('products.addProductDescription')}
+            </p>
           </div>
-        </div>
-      </div>
 
-      {/* View Toggle */}
-      {products.length > 0 && (
-        <div className="flex justify-end mb-4">
-          <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
-        </div>
-      )}
-
-      {/* Products Grid/List */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <span className="loading loading-spinner loading-lg"></span>
-        </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-12">
-          <PhotoIcon className="w-16 h-16 mx-auto text-base-content/20 mb-4" />
-          <p className="text-base-content/60 mb-4">
-            {search || filterStatus !== 'all'
-              ? t('storefronts.products.noProductsFound')
-              : t('storefronts.products.noProducts')}
-          </p>
-          {!search && filterStatus === 'all' && (
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={`/${locale}/storefronts/${slug}/products/import`}
+              className="btn btn-outline gap-2"
+            >
+              <FiUpload className="w-5 h-5" />
+              {t('products.importProducts')}
+            </Link>
             <Link
               href={`/${locale}/storefronts/${slug}/products/new`}
-              className="btn btn-primary"
+              className="btn btn-primary gap-2"
             >
-              <PlusIcon className="w-5 h-5" />
-              {t('storefronts.products.addFirstProduct')}
+              <FiPlus className="w-5 h-5" />
+              {t('products.addProduct')}
             </Link>
-          )}
-        </div>
-      ) : (
-        <div
-          className={
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-              : 'space-y-4'
-          }
-        >
-          {products.map((product) =>
-            viewMode === 'grid' ? (
-              <div key={product.id} className="card bg-base-100 shadow-xl">
-                {/* Product Image */}
-                <figure className="px-4 pt-4">
-                  <SafeImage
-                    src={product.images?.[0]?.thumbnail_url}
-                    alt={product.name || 'Product image'}
-                    width={300}
-                    height={200}
-                    className="rounded-xl object-cover h-48 w-full"
-                    fallback={
-                      <div className="bg-base-200 rounded-xl h-48 w-full flex items-center justify-center">
-                        <PhotoIcon className="w-16 h-16 text-base-content/20" />
-                      </div>
-                    }
-                  />
-                </figure>
-
-                <div className="card-body">
-                  {/* Product Name */}
-                  <h2 className="card-title text-lg">
-                    {product.name}
-                    {!product.is_active && (
-                      <span className="badge badge-ghost">
-                        {t('storefronts.products.inactive')}
-                      </span>
-                    )}
-                  </h2>
-
-                  {/* Category */}
-                  {product.category && (
-                    <p className="text-sm text-base-content/60">
-                      {product.category.name}
-                    </p>
-                  )}
-
-                  {/* Price and Stock */}
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xl font-bold">
-                      {product.price} {product.currency}
-                    </span>
-                    {getStockStatusBadge(product)}
-                  </div>
-
-                  {/* Stock Quantity */}
-                  <p className="text-sm text-base-content/60">
-                    {t('storefronts.products.stockCount', {
-                      count: product.stock_quantity || 0,
-                    })}
-                  </p>
-
-                  {/* SKU */}
-                  {product.sku && (
-                    <p className="text-xs text-base-content/40">
-                      SKU: {product.sku}
-                    </p>
-                  )}
-
-                  {/* Actions */}
-                  <div className="card-actions justify-end mt-4">
-                    <Link
-                      href={`/${locale}/storefronts/${slug}/products/${product.id}/edit`}
-                      className="btn btn-sm btn-ghost"
-                    >
-                      <PencilIcon className="w-4 h-4" />
-                    </Link>
-                    <button
-                      onClick={() => {
-                        setProductToDelete(product);
-                        setDeleteModalOpen(true);
-                      }}
-                      className="btn btn-sm btn-ghost text-error"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // List view
-              <div key={product.id} className="card bg-base-100 shadow-xl">
-                <div className="card-body p-4">
-                  <div className="flex gap-4">
-                    {/* Product Image */}
-                    <figure className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-base-200">
-                      <SafeImage
-                        src={product.images?.[0]?.thumbnail_url}
-                        alt={product.name || 'Product image'}
-                        fill
-                        className="object-cover"
-                        fallback={
-                          <div className="w-full h-full flex items-center justify-center">
-                            <PhotoIcon className="w-12 h-12 text-base-content/20" />
-                          </div>
-                        }
-                      />
-                    </figure>
-
-                    {/* Product Info */}
-                    <div className="flex-grow">
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-grow">
-                          <h2 className="text-lg font-semibold line-clamp-1">
-                            {product.name}
-                            {!product.is_active && (
-                              <span className="badge badge-ghost badge-sm ml-2">
-                                {t('storefronts.products.inactive')}
-                              </span>
-                            )}
-                          </h2>
-                          {product.category && (
-                            <p className="text-sm text-base-content/60">
-                              {product.category.name}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-4 mt-2">
-                            <span className="text-xl font-bold">
-                              {product.price} {product.currency}
-                            </span>
-                            {getStockStatusBadge(product)}
-                            <span className="text-sm text-base-content/60">
-                              {t('storefronts.products.stockCount', {
-                                count: product.stock_quantity || 0,
-                              })}
-                            </span>
-                            {product.sku && (
-                              <span className="text-xs text-base-content/40">
-                                SKU: {product.sku}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-2">
-                          <Link
-                            href={`/${locale}/storefronts/${slug}/products/${product.id}/edit`}
-                            className="btn btn-sm btn-ghost"
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                          </Link>
-                          <button
-                            onClick={() => {
-                              setProductToDelete(product);
-                              setDeleteModalOpen(true);
-                            }}
-                            className="btn btn-sm btn-ghost text-error"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          )}
-        </div>
-      )}
-
-      {products.length > 0 && (
-        <InfiniteScrollTrigger
-          ref={loadMoreRef}
-          loading={loading}
-          hasMore={hasMore}
-          onLoadMore={handleLoadMore}
-          showButton={true}
-        />
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deleteModalOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg">
-              {t('storefronts.products.deleteProductTitle')}
-            </h3>
-            <p className="py-4">
-              {t('storefronts.products.deleteProductConfirm', {
-                name: productToDelete?.name || '',
-              })}
-            </p>
-            <div className="modal-action">
-              <button
-                className="btn btn-ghost"
-                onClick={() => {
-                  setDeleteModalOpen(false);
-                  setProductToDelete(null);
-                }}
-              >
-                {t('common.cancel')}
-              </button>
-              <button className="btn btn-error" onClick={handleDelete}>
-                {t('common.delete')}
-              </button>
-            </div>
           </div>
-          <div
-            className="modal-backdrop"
-            onClick={() => setDeleteModalOpen(false)}
-          ></div>
         </div>
-      )}
+      </div>
+
+      {/* Список товаров с массовыми операциями */}
+      <ProductList
+        storefrontSlug={slug}
+        loading={loading}
+        hasMore={hasMore}
+        onLoadMore={handleLoadMore}
+        totalCount={totalCount}
+      />
     </div>
   );
 }

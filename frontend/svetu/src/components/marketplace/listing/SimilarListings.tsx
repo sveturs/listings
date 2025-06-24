@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { apiClient } from '@/services/api-client';
 import config from '@/config';
 import ViewToggle from '@/components/common/ViewToggle';
@@ -18,6 +18,7 @@ interface SimilarListingsProps {
 
 export default function SimilarListings({ listingId }: SimilarListingsProps) {
   const locale = useLocale();
+  const tCommon = useTranslations('common');
   const [allListings, setAllListings] = useState<MarketplaceItem[]>([]);
   const [displayedListings, setDisplayedListings] = useState<MarketplaceItem[]>(
     []
@@ -280,6 +281,7 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
         hasMore={displayCount < allListings.length}
         onLoadMore={loadMore}
         showButton={false}
+        loadMoreText={tCommon('loadMore')}
       />
     </div>
   );

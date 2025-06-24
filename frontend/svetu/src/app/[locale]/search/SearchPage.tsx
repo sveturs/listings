@@ -28,6 +28,7 @@ interface SearchFilters {
 
 export default function SearchPage() {
   const t = useTranslations('search');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -866,6 +867,7 @@ export default function SearchPage() {
                   loading={loading}
                   hasMore={results?.has_more || false}
                   onLoadMore={handleLoadMore}
+                  loadMoreText={tCommon('loadMore')}
                 />
               </>
             )}

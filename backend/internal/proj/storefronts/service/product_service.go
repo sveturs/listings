@@ -63,22 +63,28 @@ func (s *ProductService) ValidateStorefrontOwnership(ctx context.Context, storef
 
 // GetProducts retrieves products for a storefront
 func (s *ProductService) GetProducts(ctx context.Context, filter models.ProductFilter) ([]*models.StorefrontProduct, error) {
+	logger.Info().Msgf("GetProducts called with filter: %+v", filter)
+	
 	// Validate storefront exists
 	storefront, err := s.storage.GetStorefrontByID(ctx, filter.StorefrontID)
 	if err != nil {
+		logger.Error().Err(err).Msgf("Failed to get storefront %d", filter.StorefrontID)
 		return nil, fmt.Errorf("failed to get storefront: %w", err)
 	}
 	
 	if storefront == nil {
+		logger.Error().Msgf("Storefront %d not found", filter.StorefrontID)
 		return nil, fmt.Errorf("storefront not found")
 	}
 	
 	// Get products
 	products, err := s.storage.GetStorefrontProducts(ctx, filter)
 	if err != nil {
+		logger.Error().Err(err).Msgf("Failed to get products for storefront %d", filter.StorefrontID)
 		return nil, fmt.Errorf("failed to get products: %w", err)
 	}
 	
+	logger.Info().Msgf("Found %d products for storefront %d", len(products), filter.StorefrontID)
 	return products, nil
 }
 

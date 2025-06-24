@@ -126,16 +126,32 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 		p := &models.StorefrontProduct{}
 		c := &models.MarketplaceCategory{}
 		var attributesJSON []byte
+		var categoryID sql.NullInt64
+		var categoryName, categorySlug, categoryIcon sql.NullString
+		var categoryParentID sql.NullInt64
 
 		err := rows.Scan(
 			&p.ID, &p.StorefrontID, &p.Name, &p.Description, &p.Price, &p.Currency,
 			&p.CategoryID, &p.SKU, &p.Barcode, &p.StockQuantity, &p.StockStatus,
 			&p.IsActive, &attributesJSON, &p.ViewCount, &p.SoldCount,
 			&p.CreatedAt, &p.UpdatedAt,
-			&c.ID, &c.Name, &c.Slug, &c.Icon, &c.ParentID,
+			&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan product: %w", err)
+		}
+		
+		// Only set category if it exists
+		if categoryID.Valid {
+			c.ID = int(categoryID.Int64)
+			c.Name = categoryName.String
+			c.Slug = categorySlug.String
+			c.Icon = categoryIcon.String
+			if categoryParentID.Valid {
+				parentID := int(categoryParentID.Int64)
+				c.ParentID = &parentID
+			}
+			p.Category = c
 		}
 
 		if attributesJSON != nil {
@@ -188,13 +204,16 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 	p := &models.StorefrontProduct{}
 	c := &models.MarketplaceCategory{}
 	var attributesJSON []byte
+	var categoryID sql.NullInt64
+	var categoryName, categorySlug, categoryIcon sql.NullString
+	var categoryParentID sql.NullInt64
 
 	err := s.pool.QueryRow(ctx, query, productID, storefrontID).Scan(
 		&p.ID, &p.StorefrontID, &p.Name, &p.Description, &p.Price, &p.Currency,
 		&p.CategoryID, &p.SKU, &p.Barcode, &p.StockQuantity, &p.StockStatus,
 		&p.IsActive, &attributesJSON, &p.ViewCount, &p.SoldCount,
 		&p.CreatedAt, &p.UpdatedAt,
-		&c.ID, &c.Name, &c.Slug, &c.Icon, &c.ParentID,
+		&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
 	)
 
 	if err == sql.ErrNoRows {
@@ -210,7 +229,18 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 		}
 	}
 
-	p.Category = c
+	// Only set category if it exists
+	if categoryID.Valid {
+		c.ID = int(categoryID.Int64)
+		c.Name = categoryName.String
+		c.Slug = categorySlug.String
+		c.Icon = categoryIcon.String
+		if categoryParentID.Valid {
+			parentID := int(categoryParentID.Int64)
+			c.ParentID = &parentID
+		}
+		p.Category = c
+	}
 
 	// Load images
 	images, err := s.getProductImages(ctx, []int{p.ID})

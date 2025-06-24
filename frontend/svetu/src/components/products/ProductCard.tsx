@@ -24,7 +24,7 @@ export const ProductCard = memo(function ProductCard({
   onToggleSelect,
   viewMode = 'grid',
 }: ProductCardProps) {
-  const t = useTranslations('products');
+  const t = useTranslations('storefronts.products');
 
   const mainImage =
     product.images?.find((img) => img.is_default) || product.images?.[0];
@@ -37,9 +37,22 @@ export const ProductCard = memo(function ProductCard({
     : 'text-base-content';
 
   const handleCardClick = (e: React.MouseEvent) => {
-    if (isSelectMode && onToggleSelect && product.id) {
-      e.preventDefault();
-      onToggleSelect(product.id);
+    // Не вызываем выбор если кликнули на чекбокс - он обработает сам
+    if (
+      isSelectMode &&
+      onToggleSelect &&
+      product.id &&
+      e.target !== e.currentTarget
+    ) {
+      const target = e.target as HTMLElement;
+      // Проверяем что клик не на чекбоксе или label
+      if (
+        !target.closest('input[type="checkbox"]') &&
+        !target.closest('label')
+      ) {
+        e.preventDefault();
+        onToggleSelect(product.id);
+      }
     }
   };
 

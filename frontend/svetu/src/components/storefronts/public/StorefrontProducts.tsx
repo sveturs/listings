@@ -17,6 +17,7 @@ interface StorefrontProductsProps {
 
 export default function StorefrontProducts({ storefrontId }: StorefrontProductsProps) {
   const t = useTranslations();
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const [products, setProducts] = useState<ListingCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -247,6 +248,7 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
           hasMore={hasMore}
           onLoadMore={handleLoadMore}
           showButton={true}
+          loadMoreText={tCommon('loadMore')}
         />
       </div>
     </div>

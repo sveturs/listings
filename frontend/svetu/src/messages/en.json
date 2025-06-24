@@ -1980,5 +1980,26 @@
       "maxFileSize": "Maximum file size",
       "maxProducts": "Maximum products per import"
     }
+  },
+  "products": {
+    "title": "Products",
+    "stock": "Stock",
+    "bulk": {
+      "selectMode": "Select Mode",
+      "selectAll": "Select All",
+      "selected": "Selected: {count}",
+      "delete": "Delete",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "export": "Export",
+      "deleteConfirm": "Are you sure you want to delete {count} product(s)?",
+      "deleteSuccess": "Products deleted successfully",
+      "statusUpdateSuccess": "Products status updated successfully",
+      "exportSuccess": "Products export started",
+      "processing": "Processing..."
+    },
+    "active": "Active",
+    "edit": "Edit",
+    "loadMore": "Load more"
   }
 }
