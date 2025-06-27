@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"backend/internal/domain/models"
-
 	"github.com/lib/pq"
 )
 
@@ -284,6 +283,7 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 		storefrontID, req.Name, req.Description, req.Price, req.Currency, req.CategoryID,
 		req.SKU, req.Barcode, req.StockQuantity, req.IsActive, attributesJSON,
 	).Scan(&product.ID, &product.StockStatus, &product.CreatedAt, &product.UpdatedAt)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create storefront product: %w", err)
 	}
@@ -487,6 +487,7 @@ func (s *Database) GetProductStats(ctx context.Context, storefrontID int) (*mode
 		&stats.TotalValue,
 		&stats.TotalSold,
 	)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product stats: %w", err)
 	}
@@ -593,6 +594,7 @@ func (s *Database) BulkCreateProducts(ctx context.Context, storefrontID int, pro
 			storefrontID, req.Name, req.Description, req.Price, req.Currency,
 			req.CategoryID, req.SKU, req.Barcode, req.StockQuantity, req.IsActive, attributesJSON,
 		).Scan(&productID)
+
 		if err != nil {
 			errors = append(errors, fmt.Errorf("product %d: %w", i, err))
 			continue

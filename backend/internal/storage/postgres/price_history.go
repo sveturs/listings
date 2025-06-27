@@ -2,11 +2,10 @@
 package postgres
 
 import (
+	"backend/internal/domain/models"
 	"context"
 	"fmt"
 	"time"
-
-	"backend/internal/domain/models"
 )
 
 func (db *Database) GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error) {
@@ -67,6 +66,7 @@ func (db *Database) AddPriceHistoryEntry(ctx context.Context, entry *models.Pric
 		entry.ChangeSource,
 		entry.ChangePercentage,
 	).Scan(&id)
+
 	if err != nil {
 		return fmt.Errorf("error inserting price history: %w", err)
 	}

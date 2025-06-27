@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -9,8 +10,6 @@ import (
 	"math"
 	"strings"
 	"time"
-
-	"backend/internal/domain/models"
 )
 
 // ErrNotFound ошибка когда запись не найдена
@@ -19,7 +18,7 @@ var ErrNotFound = errors.New("record not found")
 // StorefrontRepository интерфейс репозитория витрин
 type StorefrontRepository interface {
 	// Основные CRUD операции
-	Create(ctx context.Context, userID int, storefront *models.StorefrontCreateDTO) (*models.Storefront, error)
+	Create(ctx context.Context, storefront *models.StorefrontCreateDTO) (*models.Storefront, error)
 	GetByID(ctx context.Context, id int) (*models.Storefront, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Storefront, error)
 	Update(ctx context.Context, id int, updates *models.StorefrontUpdateDTO) error
@@ -83,7 +82,7 @@ func NewStorefrontRepository(db *Database) StorefrontRepository {
 }
 
 // Create создает новую витрину
-func (r *storefrontRepo) Create(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
+func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
 	tx, err := r.db.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
@@ -110,7 +109,8 @@ func (r *storefrontRepo) Create(ctx context.Context, userID int, dto *models.Sto
 		)
 		RETURNING id, created_at, updated_at
 	`,
-		userID, generateSlug(dto.Name), dto.Name, dto.Description,
+		// Временно используем userID = 1, потом получим из контекста
+		1, generateSlug(dto.Name), dto.Name, dto.Description,
 		"", "", dto.Theme,
 		dto.Phone, dto.Email, dto.Website,
 		dto.Location.FullAddress, dto.Location.City, dto.Location.PostalCode, dto.Location.Country,
@@ -118,6 +118,7 @@ func (r *storefrontRepo) Create(ctx context.Context, userID int, dto *models.Sto
 		dto.Settings, dto.SEOMeta,
 		false, models.SubscriptionPlanStarter, 3.00,
 	).Scan(&storefront.ID, &storefront.CreatedAt, &storefront.UpdatedAt)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create storefront: %w", err)
 	}
@@ -126,7 +127,8 @@ func (r *storefrontRepo) Create(ctx context.Context, userID int, dto *models.Sto
 	_, err = tx.Exec(ctx, `
 		INSERT INTO storefront_staff (storefront_id, user_id, role, permissions)
 		VALUES ($1, $2, $3, $4)
-	`, storefront.ID, userID, models.StaffRoleOwner, getOwnerPermissions())
+	`, storefront.ID, 1, models.StaffRoleOwner, getOwnerPermissions())
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to add owner to staff: %w", err)
 	}

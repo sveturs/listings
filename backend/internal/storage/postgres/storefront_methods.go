@@ -1,12 +1,11 @@
 package postgres
 
 import (
+	"backend/internal/domain/models"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"backend/internal/domain/models"
 )
 
 // SetWorkingHours устанавливает часы работы витрины
@@ -35,6 +34,7 @@ func (r *storefrontRepo) SetWorkingHours(ctx context.Context, hours []*models.St
 				storefront_id, day_of_week, open_time, close_time, is_closed, special_date, special_note
 			) VALUES ($1, $2, $3, $4, $5, $6, $7)
 		`, h.StorefrontID, h.DayOfWeek, h.OpenTime, h.CloseTime, h.IsClosed, h.SpecialDate, h.SpecialNote)
+
 		if err != nil {
 			return fmt.Errorf("failed to insert hours: %w", err)
 		}
@@ -51,6 +51,7 @@ func (r *storefrontRepo) GetWorkingHours(ctx context.Context, storefrontID int) 
 		WHERE storefront_id = $1
 		ORDER BY day_of_week, special_date
 	`, storefrontID)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get working hours: %w", err)
 	}
@@ -128,6 +129,7 @@ func (r *storefrontRepo) SetPaymentMethods(ctx context.Context, methods []*model
 				max_amount = EXCLUDED.max_amount
 		`, storefrontID, m.MethodType, m.IsEnabled, m.Provider, settingsJSON,
 			m.TransactionFee, m.MinAmount, m.MaxAmount)
+
 		if err != nil {
 			return fmt.Errorf("failed to upsert payment method: %w", err)
 		}
@@ -145,6 +147,7 @@ func (r *storefrontRepo) GetPaymentMethods(ctx context.Context, storefrontID int
 		WHERE storefront_id = $1
 		ORDER BY method_type
 	`, storefrontID)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get payment methods: %w", err)
 	}
@@ -253,6 +256,7 @@ func (r *storefrontRepo) GetDeliveryOptions(ctx context.Context, storefrontID in
 		WHERE storefront_id = $1
 		ORDER BY name
 	`, storefrontID)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get delivery options: %w", err)
 	}
@@ -320,6 +324,7 @@ func (r *storefrontRepo) UpdateStaff(ctx context.Context, id int, permissions mo
 		SET permissions = $2, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1
 	`, id, permissionsJSON)
+
 	if err != nil {
 		return err
 	}
@@ -336,6 +341,7 @@ func (r *storefrontRepo) RemoveStaff(ctx context.Context, storefrontID, userID i
 		DELETE FROM storefront_staff 
 		WHERE storefront_id = $1 AND user_id = $2 AND role != 'owner'
 	`, storefrontID, userID)
+
 	if err != nil {
 		return err
 	}
@@ -354,6 +360,7 @@ func (r *storefrontRepo) GetStaff(ctx context.Context, storefrontID int) ([]*mod
 		WHERE storefront_id = $1
 		ORDER BY role, created_at
 	`, storefrontID)
+
 	if err != nil {
 		return nil, err
 	}
@@ -461,6 +468,7 @@ func (r *storefrontRepo) GetAnalytics(ctx context.Context, storefrontID int, fro
 		WHERE storefront_id = $1 AND date BETWEEN $2 AND $3
 		ORDER BY date DESC
 	`, storefrontID, from, to)
+
 	if err != nil {
 		return nil, err
 	}
@@ -534,6 +542,7 @@ func (r *storefrontRepo) GetClusters(ctx context.Context, bounds GeoBounds, zoom
 		GROUP BY cluster_lat, cluster_lng
 		HAVING COUNT(*) > 1
 	`, clusterSize, bounds.MinLat, bounds.MaxLat, bounds.MinLng, bounds.MaxLng)
+
 	if err != nil {
 		return nil, err
 	}

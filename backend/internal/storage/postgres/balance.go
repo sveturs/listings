@@ -3,10 +3,9 @@
 package postgres
 
 import (
+	"backend/internal/domain/models"
 	"context"
 	"log"
-
-	"backend/internal/domain/models"
 )
 
 func (db *Database) GetUserBalance(ctx context.Context, userID int) (*models.UserBalance, error) {
@@ -35,6 +34,7 @@ func (db *Database) GetUserBalance(ctx context.Context, userID int) (*models.Use
 		&balance.Currency,
 		&balance.UpdatedAt,
 	)
+
 	if err != nil {
 		log.Printf("Error getting balance: %v", err)
 		return nil, err
@@ -141,6 +141,7 @@ func (db *Database) CreateTransaction(ctx context.Context, transaction *models.B
 		transaction.Description,
 		transaction.CreatedAt,
 	).Scan(&id)
+
 	if err != nil {
 		return 0, err
 	}
@@ -155,6 +156,7 @@ func (db *Database) UpdateBalance(ctx context.Context, userID int, amount float6
             updated_at = CURRENT_TIMESTAMP
         WHERE user_id = $2
     `, amount, userID)
+
 	if err != nil {
 		return err
 	}

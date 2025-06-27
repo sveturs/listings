@@ -230,6 +230,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 			"name": product.Category.Name,
 			"slug": product.Category.Slug,
 		}
+
 	}
 
 	// Рассчитываем дополнительные поля для ранжирования
@@ -486,13 +487,6 @@ func (r *ProductRepository) buildSort(params *ProductSearchParams) []map[string]
 	sort := []map[string]interface{}{}
 
 	switch params.SortBy {
-	case "relevance":
-		// Для сортировки по релевантности используем _score
-		sort = append(sort, map[string]interface{}{
-			"_score": map[string]interface{}{
-				"order": "desc",
-			},
-		})
 	case "price":
 		sort = append(sort, map[string]interface{}{
 			"price": map[string]interface{}{

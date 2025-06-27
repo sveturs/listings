@@ -2,10 +2,9 @@
 package postgres
 
 import (
+	"backend/internal/domain/models"
 	"context"
 	"fmt"
-
-	"backend/internal/domain/models"
 )
 
 // Методы для работы с переводами
@@ -33,6 +32,7 @@ func (db *Database) SaveTranslation(ctx context.Context, translation *models.Tra
 		translation.IsMachineTranslated,
 		translation.IsVerified,
 	).Scan(&translation.ID, &translation.CreatedAt, &translation.UpdatedAt)
+
 	if err != nil {
 		return fmt.Errorf("failed to save translation: %w", err)
 	}
@@ -91,6 +91,7 @@ func (db *Database) UpdateTranslation(ctx context.Context, translation *models.T
 		translation.IsVerified,
 		translation.ID,
 	).Scan(&translation.UpdatedAt)
+
 	if err != nil {
 		return fmt.Errorf("failed to update translation: %w", err)
 	}
@@ -103,6 +104,7 @@ func (db *Database) DeleteTranslations(ctx context.Context, entityType string, e
         DELETE FROM translations
         WHERE entity_type = $1 AND entity_id = $2
     `, entityType, entityID)
+
 	if err != nil {
 		return fmt.Errorf("failed to delete translations: %w", err)
 	}

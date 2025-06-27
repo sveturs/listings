@@ -1,11 +1,10 @@
 package postgres
 
 import (
+	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"fmt"
-
-	"backend/internal/domain/models"
 )
 
 // CreateChatAttachment создает новую запись о вложении
@@ -32,6 +31,7 @@ func (db *Database) CreateChatAttachment(ctx context.Context, attachment *models
 		attachment.ThumbnailURL,
 		attachment.Metadata,
 	).Scan(&attachment.ID, &attachment.CreatedAt)
+
 	if err != nil {
 		return fmt.Errorf("error creating chat attachment: %w", err)
 	}
@@ -67,6 +67,7 @@ func (db *Database) GetChatAttachment(ctx context.Context, attachmentID int) (*m
 		&attachment.Metadata,
 		&attachment.CreatedAt,
 	)
+
 	if err != nil {
 		return nil, fmt.Errorf("error getting chat attachment: %w", err)
 	}
@@ -151,6 +152,7 @@ func (db *Database) UpdateMessageAttachmentsCount(ctx context.Context, messageID
 
 	hasAttachments := count > 0
 	_, err := db.pool.Exec(ctx, query, messageID, hasAttachments, count)
+
 	if err != nil {
 		return fmt.Errorf("error updating message attachments count: %w", err)
 	}
@@ -186,6 +188,7 @@ func (db *Database) GetMessageByID(ctx context.Context, messageID int) (*models.
 		&message.HasAttachments,
 		&message.AttachmentsCount,
 	)
+
 	if err != nil {
 		return nil, fmt.Errorf("error getting message by id: %w", err)
 	}
