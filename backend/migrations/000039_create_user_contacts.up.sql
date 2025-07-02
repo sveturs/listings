@@ -45,11 +45,10 @@ CREATE TABLE IF NOT EXISTS user_privacy_settings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Триггер для настроек приватности
-CREATE TRIGGER update_user_privacy_settings_updated_at
-    BEFORE UPDATE ON user_privacy_settings
-    FOR EACH ROW EXECUTE FUNCTION update_user_contacts_updated_at();
-    
+-- Индекс для быстрого поиска по user_id (хотя он уже primary key)
+CREATE INDEX IF NOT EXISTS idx_user_privacy_settings_user_id ON user_privacy_settings(user_id);
+
+
     
 -- Создание таблицы для хранения вложений в чатах
 CREATE TABLE IF NOT EXISTS chat_attachments (
