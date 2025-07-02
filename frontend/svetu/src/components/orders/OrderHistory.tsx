@@ -44,16 +44,21 @@ export default function OrderHistory({
         offset: (page - 1) * limit,
       });
 
+      console.log('[OrderHistory] Response:', response);
+
+      // Проверяем что orders - это массив
+      const ordersArray = Array.isArray(response.orders) ? response.orders : [];
+      
       if (page === 1) {
-        setOrders(response.orders);
+        setOrders(ordersArray);
       } else {
-        setOrders((prev) => [...prev, ...response.orders]);
+        setOrders((prev) => [...prev, ...ordersArray]);
       }
 
       setTotal(response.total);
       setHasMore(
-        response.orders.length === limit &&
-          orders.length + response.orders.length < response.total
+        ordersArray.length === limit &&
+          orders.length + ordersArray.length < response.total
       );
     } catch (err) {
       console.error('Failed to fetch orders:', err);
@@ -151,9 +156,17 @@ export default function OrderHistory({
 
       {/* Orders List */}
       <div className="space-y-4">
-        {orders.map((order) => (
-          <OrderCard key={order.id} order={order} />
-        ))}
+        {Array.isArray(orders) && orders.length > 0 ? (
+          orders.map((order) => (
+            <OrderCard key={order.id} order={order} />
+          ))
+        ) : (
+          !loading && (
+            <div className="text-center py-8 text-gray-500">
+              {t('noOrders')}
+            </div>
+          )
+        )}
       </div>
 
       {/* Load More */}

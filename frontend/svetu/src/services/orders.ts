@@ -36,9 +36,24 @@ export const ordersService = {
     if (params?.offset) searchParams.append('offset', params.offset.toString());
 
     const response = await apiClient.get(`/api/v1/orders?${searchParams}`);
+    console.log('[ordersService] getUserOrders response:', response);
+    
+    // Backend возвращает объект с полями orders и total
+    if (response.data?.data && typeof response.data.data === 'object') {
+      const { orders = [], total = 0 } = response.data.data;
+      return {
+        orders: Array.isArray(orders) ? orders : [],
+        total: total || 0,
+      };
+    }
+    
+    // Fallback на случай если структура ответа другая
+    const orders = Array.isArray(response.data?.data) ? response.data.data : [];
+    const total = response.data?.meta?.total || response.data?.total || orders.length;
+    
     return {
-      orders: response.data.data,
-      total: response.data.meta?.total || 0,
+      orders,
+      total,
     };
   },
 
