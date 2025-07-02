@@ -2,16 +2,11 @@
 package service
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/domain/search"
-	"backend/internal/storage"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"mime/multipart"
-	//	"net/http"
-	//	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -19,19 +14,32 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/domain/search"
+	"backend/internal/storage"
+	//	"net/http"
+	//	"net/url"
 )
 
 type MarketplaceService struct {
 	storage            storage.Storage
 	translationService TranslationServiceInterface
+	OrderService       OrderServiceInterface
 }
 
 func NewMarketplaceService(storage storage.Storage, translationService TranslationServiceInterface) MarketplaceServiceInterface {
-	return &MarketplaceService{
+	ms := &MarketplaceService{
 		storage:            storage,
 		translationService: translationService,
 	}
+
+	// Создаем сервис заказов напрямую, избегая циклической зависимости
+	ms.OrderService = NewSimpleOrderService(storage)
+
+	return ms
 }
+
 func (s *MarketplaceService) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
 	return s.storage.GetUserFavorites(ctx, userID)
 }
@@ -40,6 +48,7 @@ func (s *MarketplaceService) GetUserFavorites(ctx context.Context, userID int) (
 func (s *MarketplaceService) SetTranslationService(svc TranslationServiceInterface) {
 	s.translationService = svc
 }
+
 func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
 	listing.Status = "active"
 	listing.ViewsCount = 0
@@ -129,6 +138,7 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 
 	return listingID, nil
 }
+
 func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID int, limit int) ([]*models.MarketplaceListing, error) {
 	// Получаем исходное объявление
 	listing, err := s.GetListingByID(ctx, listingID)
@@ -199,9 +209,11 @@ func isKeyAttribute(attrName string) bool {
 func (s *MarketplaceService) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
 	return s.storage.GetListings(ctx, filters, limit, offset)
 }
+
 func (s *MarketplaceService) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	return s.storage.GetFavoritedUsers(ctx, listingID)
 }
+
 func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
 	// Получаем объявление
 	listing, err := s.storage.GetListingByID(ctx, id)
@@ -221,9 +233,11 @@ func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*model
 
 	return listing, nil
 }
+
 func (s *MarketplaceService) GetOpenSearchRepository() (interface {
 	SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
-}, bool) {
+}, bool,
+) {
 	// Пытаемся привести хранилище к типу с нужным методом
 	if osRepo, ok := s.storage.(interface {
 		SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
@@ -311,6 +325,7 @@ func (s *MarketplaceService) GetCategorySuggestions(ctx context.Context, query s
 
 	return results, nil
 }
+
 func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
 	// Получаем текущую версию объявления перед обновлением
 	currentListing, err := s.storage.GetListingByID(ctx, listing.ID)
@@ -430,7 +445,6 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
                     SET metadata = $1
                     WHERE id = $2
                 `, listing.Metadata, listingID)
-
 				if err != nil {
 					log.Printf("Ошибка удаления метаданных о скидке: %v", err)
 					return err
@@ -446,7 +460,7 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
 		// Находим максимальную цену в истории с учетом минимальной продолжительности
 		var maxPrice float64
 		var maxPriceDate time.Time
-		var minDuration = 24 * time.Hour // Минимальная продолжительность - 1 день
+		minDuration := 24 * time.Hour // Минимальная продолжительность - 1 день
 
 		for _, entry := range priceHistory {
 			// Рассчитываем продолжительность действия цены
@@ -491,7 +505,6 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
                     SET metadata = $1
                     WHERE id = $2
                 `, listing.Metadata, listingID)
-
 				if err != nil {
 					log.Printf("Ошибка обновления метаданных: %v", err)
 					return err
@@ -510,7 +523,6 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
                         SET metadata = $1
                         WHERE id = $2
                     `, listing.Metadata, listingID)
-
 					if err != nil {
 						log.Printf("Ошибка удаления метаданных о малой скидке: %v", err)
 						return err
@@ -531,7 +543,6 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
                 SET metadata = $1
                 WHERE id = $2
             `, listing.Metadata, listingID)
-
 			if err != nil {
 				log.Printf("Ошибка удаления метаданных о неактуальной скидке: %v", err)
 				return err
@@ -617,7 +628,6 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
                 SET metadata = $1
                 WHERE id = $2
             `, listing.Metadata, listing.ID)
-
 			if err != nil {
 				log.Printf("Ошибка обновления метаданных: %v", err)
 				return err
@@ -643,6 +653,7 @@ func abs(x int) int {
 func (s *MarketplaceService) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
 	return s.storage.GetCategoryTree(ctx)
 }
+
 func (s *MarketplaceService) RefreshCategoryListingCounts(ctx context.Context) error {
 	_, err := s.storage.Exec(ctx, "REFRESH MATERIALIZED VIEW CONCURRENTLY category_listing_counts")
 	return err
@@ -890,6 +901,7 @@ func (s *MarketplaceService) AddToFavorites(ctx context.Context, userID int, lis
 func (s *MarketplaceService) RemoveFromFavorites(ctx context.Context, userID int, listingID int) error {
 	return s.storage.RemoveFromFavorites(ctx, userID, listingID)
 }
+
 func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation *models.Translation) error {
 	// Используем сервис перевода по умолчанию (Google Translate)
 	return s.UpdateTranslationWithProvider(ctx, translation, GoogleTranslate)
@@ -914,7 +926,7 @@ func (s *MarketplaceService) TranslateText(ctx context.Context, text, sourceLang
 	if s.translationService == nil {
 		return "", fmt.Errorf("translation service not available")
 	}
-	
+
 	return s.translationService.Translate(ctx, text, sourceLanguage, targetLanguage)
 }
 
@@ -969,6 +981,7 @@ func (s *MarketplaceService) UpdateTranslationWithProvider(ctx context.Context, 
 
 	return err
 }
+
 func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
 	log.Printf("Запрос поиска с параметрами: %+v", params)
 
@@ -1428,8 +1441,14 @@ func contains(arr []string, str string) bool {
 func (s *MarketplaceService) ReindexAllListings(ctx context.Context) error {
 	return s.storage.ReindexAllListings(ctx)
 }
+
 func (s *MarketplaceService) Storage() storage.Storage {
 	return s.storage
+}
+
+func (s *MarketplaceService) Service() *Service {
+	// Возвращаем nil, так как мы больше не создаем вложенный Service
+	return nil
 }
 
 func (s *MarketplaceService) GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error) {

@@ -1,14 +1,14 @@
 package main
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
 	"time"
-	"crypto/rand"
-	"encoding/hex"
-	
+
 	_ "github.com/lib/pq"
 )
 
@@ -44,23 +44,23 @@ func main() {
 
 	// Get admin user
 	adminEmail := "voroshilovdo@gmail.com"
-	
+
 	var userID int
 	var name, email, googleID, pictureURL string
-	
+
 	row := db.QueryRow(`
 		SELECT id, name, email, google_id, COALESCE(picture_url, '') 
 		FROM users 
 		WHERE email = $1
 	`, adminEmail)
-	
+
 	if err := row.Scan(&userID, &name, &email, &googleID, &pictureURL); err != nil {
 		log.Fatal("Failed to get user:", err)
 	}
 
 	// Generate session token
 	sessionToken := generateSessionToken()
-	
+
 	// Create session data
 	sessionData := &SessionData{
 		UserID:     userID,
@@ -74,13 +74,12 @@ func main() {
 	// Save session to database
 	sessionJSON, _ := json.Marshal(sessionData)
 	expiry := time.Now().Add(24 * time.Hour)
-	
+
 	_, err = db.Exec(`
 		INSERT INTO user_sessions (id, data, expiry) 
 		VALUES ($1, $2, $3)
 		ON CONFLICT (id) DO UPDATE SET data = $2, expiry = $3
 	`, sessionToken, string(sessionJSON), expiry)
-	
 	if err != nil {
 		log.Fatal("Failed to save session:", err)
 	}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCreateListing } from '@/contexts/CreateListingContext';
 
@@ -23,12 +23,6 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
   const [scriptMode, setScriptMode] = useState<'cyrillic' | 'latin' | 'mixed'>(
     state.localization.script || 'cyrillic'
   );
-
-  useEffect(() => {
-    console.log('BasicInfoStep - Updating formData:', formData);
-    setBasicInfo(formData);
-    setLocalization({ script: scriptMode });
-  }, [formData, scriptMode, setBasicInfo, setLocalization]);
 
   const currencies = [
     { code: 'RSD', symbol: 'РСД', name: 'Српски динар', popular: true },
@@ -102,6 +96,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
 
   const handleScriptChange = (newScript: 'cyrillic' | 'latin' | 'mixed') => {
     setScriptMode(newScript);
+    setLocalization({ script: newScript });
     if (newScript === 'cyrillic' && scriptMode === 'latin') {
       setFormData((prev) => ({
         ...prev,
@@ -172,9 +167,11 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                 }
                 className="input input-bordered"
                 value={formData.title}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, title: e.target.value }))
-                }
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  setFormData((prev) => ({ ...prev, title: newTitle }));
+                  setBasicInfo({ title: newTitle });
+                }}
                 maxLength={80}
               />
               <label className="label">
@@ -200,12 +197,14 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                 }
                 className="textarea textarea-bordered h-32"
                 value={formData.description}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const newDescription = e.target.value;
                   setFormData((prev) => ({
                     ...prev,
-                    description: e.target.value,
-                  }))
-                }
+                    description: newDescription,
+                  }));
+                  setBasicInfo({ description: newDescription });
+                }}
                 maxLength={1000}
               />
               <label className="label">
@@ -230,12 +229,14 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                   placeholder="0"
                   className="input input-bordered"
                   value={formData.price || ''}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const newPrice = parseInt(e.target.value) || 0;
                     setFormData((prev) => ({
                       ...prev,
-                      price: parseInt(e.target.value) || 0,
-                    }))
-                  }
+                      price: newPrice,
+                    }));
+                    setBasicInfo({ price: newPrice });
+                  }}
                   min="0"
                   step="50"
                 />
@@ -250,12 +251,14 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                 <select
                   className="select select-bordered"
                   value={formData.currency}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const newCurrency = e.target.value as any;
                     setFormData((prev) => ({
                       ...prev,
-                      currency: e.target.value as any,
-                    }))
-                  }
+                      currency: newCurrency,
+                    }));
+                    setBasicInfo({ currency: newCurrency });
+                  }}
                 >
                   {currencies
                     .filter((c) => c.popular)
@@ -293,12 +296,14 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                       name="condition"
                       value={condition.id}
                       checked={formData.condition === condition.id}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const newCondition = e.target.value as any;
                         setFormData((prev) => ({
                           ...prev,
-                          condition: e.target.value as any,
-                        }))
-                      }
+                          condition: newCondition,
+                        }));
+                        setBasicInfo({ condition: newCondition });
+                      }}
                       className="sr-only"
                     />
                     <div

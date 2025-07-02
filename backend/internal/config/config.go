@@ -27,7 +27,8 @@ type Config struct {
 	FileStorage           FileStorageConfig `yaml:"file_storage"`
 	FileUpload            FileUploadConfig  `yaml:"file_upload"`
 	MinIOPublicURL        string
-	Docs                  DocsConfig `yaml:"docs"`
+	Docs                  DocsConfig      `yaml:"docs"`
+	AllSecure             AllSecureConfig `yaml:"allsecure"`
 }
 
 type FileStorageConfig struct {
@@ -40,6 +41,18 @@ type FileStorageConfig struct {
 	MinioUseSSL     bool   `yaml:"minio_use_ssl"`
 	MinioBucketName string `yaml:"minio_bucket_name"`
 	MinioLocation   string `yaml:"minio_location"`
+}
+
+type AllSecureConfig struct {
+	BaseURL                   string  `yaml:"base_url"`
+	Username                  string  `yaml:"username"`
+	Password                  string  `yaml:"password"`
+	WebhookURL                string  `yaml:"webhook_url"`
+	WebhookSecret             string  `yaml:"webhook_secret"`
+	Timeout                   int     `yaml:"timeout"`
+	MarketplaceCommissionRate float64 `yaml:"marketplace_commission_rate"`
+	EscrowReleaseDays         int     `yaml:"escrow_release_days"`
+	SandboxMode               bool    `yaml:"sandbox_mode"`
 }
 
 type OpenSearchConfig struct {
@@ -65,7 +78,6 @@ type DocsConfig struct {
 }
 
 func NewConfig() (*Config, error) {
-
 	config := &Config{}
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -220,6 +232,52 @@ func NewConfig() (*Config, error) {
 		docsConfig.RootPath = "./docs"
 	}
 
+	// Настройки AllSecure
+	allSecureConfig := AllSecureConfig{
+		BaseURL:                   os.Getenv("ALLSECURE_BASE_URL"),
+		Username:                  os.Getenv("ALLSECURE_USERNAME"),
+		Password:                  os.Getenv("ALLSECURE_PASSWORD"),
+		WebhookURL:                os.Getenv("ALLSECURE_WEBHOOK_URL"),
+		WebhookSecret:             os.Getenv("ALLSECURE_WEBHOOK_SECRET"),
+		Timeout:                   30,
+		MarketplaceCommissionRate: 0.05, // 5% по умолчанию
+		EscrowReleaseDays:         7,    // 7 дней по умолчанию
+		SandboxMode:               true, // По умолчанию включен sandbox
+	}
+
+	// Если базовый URL не указан, используем production endpoint
+	if allSecureConfig.BaseURL == "" {
+		allSecureConfig.BaseURL = "https://asxgw.com"
+	}
+
+	// Настройка комиссии из переменной окружения
+	if commissionStr := os.Getenv("ALLSECURE_COMMISSION_RATE"); commissionStr != "" {
+		if commission, err := strconv.ParseFloat(commissionStr, 64); err == nil && commission > 0 && commission < 1 {
+			allSecureConfig.MarketplaceCommissionRate = commission
+		}
+	}
+
+	// Настройка дней удержания escrow
+	if escrowDaysStr := os.Getenv("ALLSECURE_ESCROW_DAYS"); escrowDaysStr != "" {
+		if escrowDays, err := strconv.Atoi(escrowDaysStr); err == nil && escrowDays > 0 {
+			allSecureConfig.EscrowReleaseDays = escrowDays
+		}
+	}
+
+	// Настройка sandbox режима
+	if sandboxStr := os.Getenv("ALLSECURE_SANDBOX_MODE"); sandboxStr != "" {
+		if sandbox, err := strconv.ParseBool(sandboxStr); err == nil {
+			allSecureConfig.SandboxMode = sandbox
+		}
+	}
+
+	// Настройка timeout
+	if timeoutStr := os.Getenv("ALLSECURE_TIMEOUT"); timeoutStr != "" {
+		if timeout, err := strconv.Atoi(timeoutStr); err == nil && timeout > 0 {
+			allSecureConfig.Timeout = timeout
+		}
+	}
+
 	return &Config{
 		Port:                  port,
 		DatabaseURL:           dbURL,
@@ -239,6 +297,7 @@ func NewConfig() (*Config, error) {
 		FileStorage:           config.FileStorage,
 		FileUpload:            fileUploadConfig,
 		Docs:                  docsConfig,
+		AllSecure:             allSecureConfig,
 	}, nil
 }
 

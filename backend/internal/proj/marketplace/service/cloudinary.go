@@ -4,12 +4,14 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/cloudinary/cloudinary-go/v2"
-	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"log"
 	"os"
+
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+
 	//	"strings"
-	"cloud.google.com/go/vision/apiv1"
+	vision "cloud.google.com/go/vision/apiv1"
 	visionpb "google.golang.org/genproto/googleapis/cloud/vision/v1"
 )
 
@@ -262,12 +264,12 @@ func (s *CloudinaryService) TestAvailableTransformations(ctx context.Context, im
 	})
 	log.Printf("Результат удаления фона (метод 2): %v", err3 == nil)
 }
+
 func (s *CloudinaryService) TestBackgroundRemoval(ctx context.Context, imagePath string) (bool, error) {
 	_, err := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
 		Transformation: "e_background_removal",
 		Tags:           []string{"test", "background_removal"},
 	})
-
 	if err != nil {
 		log.Printf("Тест удаления фона: ошибка: %v", err)
 		return false, err
@@ -285,7 +287,6 @@ func (s *CloudinaryService) EnhancePreview(ctx context.Context, imagePath string
 	origResp, err := s.cld.Upload.Upload(ctx, imagePath, uploader.UploadParams{
 		Tags: []string{"original", "preview"},
 	})
-
 	if err != nil {
 		log.Printf("EnhancePreview: ошибка загрузки оригинала: %v", err)
 		return nil, err
@@ -299,7 +300,6 @@ func (s *CloudinaryService) EnhancePreview(ctx context.Context, imagePath string
 		Transformation: transformationStr,
 		Tags:           []string{"enhanced", "preview", "ai_processed"},
 	})
-
 	if err != nil {
 		log.Printf("EnhancePreview: ошибка создания улучшенного предпросмотра: %v", err)
 		return nil, err
@@ -323,7 +323,6 @@ func (s *CloudinaryService) RemoveBackground(ctx context.Context, imagePath stri
 		BackgroundRemoval: "cloudinary_ai", // AI-удаление фона
 		Tags:              []string{"nobg", "product"},
 	})
-
 	if err != nil {
 		return nil, err
 	}

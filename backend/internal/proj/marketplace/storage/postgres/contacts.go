@@ -1,11 +1,12 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/logger"
 	"context"
 	"database/sql"
 	"fmt"
+
+	"backend/internal/domain/models"
+	"backend/internal/logger"
 )
 
 // Добавить контакт
@@ -29,7 +30,6 @@ func (s *Storage) AddContact(ctx context.Context, contact *models.UserContact) e
 		contact.Notes,
 		contact.AddedFromChatID,
 	).Scan(&contact.ID, &contact.CreatedAt, &contact.UpdatedAt)
-
 	if err != nil {
 		return fmt.Errorf("error adding contact: %w", err)
 	}
@@ -88,7 +88,6 @@ func (s *Storage) GetContact(ctx context.Context, userID, contactUserID int) (*m
 		&contact.ContactUser.Email,
 		&contactPicture,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // Контакт не найден
@@ -240,7 +239,6 @@ func (s *Storage) GetUserContacts(ctx context.Context, userID int, status string
 			&contact.ContactUser.Email,
 			&contactPicture,
 		)
-
 		if err != nil {
 			return nil, 0, fmt.Errorf("error scanning contact: %w", err)
 		}
@@ -332,7 +330,6 @@ func (s *Storage) GetUserPrivacySettings(ctx context.Context, userID int) (*mode
 			&settings.CreatedAt,
 			&settings.UpdatedAt,
 		)
-
 		if err != nil {
 			return nil, fmt.Errorf("error creating privacy settings: %w", err)
 		}

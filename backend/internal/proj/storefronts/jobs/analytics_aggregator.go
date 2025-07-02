@@ -1,13 +1,14 @@
 package jobs
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/logger"
-	"backend/internal/storage/postgres"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/logger"
+	"backend/internal/storage/postgres"
 )
 
 // AnalyticsAggregator агрегирует аналитику витрин
@@ -27,25 +28,25 @@ func NewAnalyticsAggregator(db *postgres.Database) *AnalyticsAggregator {
 // Run запускает агрегацию аналитики
 func (a *AnalyticsAggregator) Run(ctx context.Context) error {
 	a.logger.Info("Starting analytics aggregation")
-	
+
 	// Получаем все активные витрины
 	storefronts, err := a.getActiveStorefronts(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get active storefronts: %w", err)
 	}
-	
+
 	// Агрегируем данные для каждой витрины за вчерашний день
 	yesterday := time.Now().AddDate(0, 0, -1).Truncate(24 * time.Hour)
-	
+
 	for _, storefront := range storefronts {
 		if err := a.aggregateStorefrontAnalytics(ctx, storefront.ID, yesterday); err != nil {
-			a.logger.Error("Failed to aggregate analytics for storefront", 
-				"storefront_id", storefront.ID, 
+			a.logger.Error("Failed to aggregate analytics for storefront",
+				"storefront_id", storefront.ID,
 				"error", err)
 			continue
 		}
 	}
-	
+
 	a.logger.Info("Analytics aggregation completed")
 	return nil
 }
@@ -54,43 +55,43 @@ func (a *AnalyticsAggregator) Run(ctx context.Context) error {
 func (a *AnalyticsAggregator) aggregateStorefrontAnalytics(ctx context.Context, storefrontID int, date time.Time) error {
 	startOfDay := date
 	endOfDay := date.Add(24 * time.Hour).Add(-time.Second)
-	
+
 	// Собираем статистику событий
 	eventStats, err := a.getEventStats(ctx, storefrontID, startOfDay, endOfDay)
 	if err != nil {
 		return err
 	}
-	
+
 	// Собираем статистику заказов
 	orderStats, err := a.getOrderStats(ctx, storefrontID, startOfDay, endOfDay)
 	if err != nil {
 		return err
 	}
-	
+
 	// Собираем уникальных посетителей
 	uniqueVisitors, err := a.getUniqueVisitors(ctx, storefrontID, startOfDay, endOfDay)
 	if err != nil {
 		return err
 	}
-	
+
 	// Собираем источники трафика
 	trafficSources, err := a.getTrafficSources(ctx, storefrontID, startOfDay, endOfDay)
 	if err != nil {
 		return err
 	}
-	
+
 	// Собираем топ товары
 	topProducts, err := a.getTopProducts(ctx, storefrontID, startOfDay, endOfDay, 10)
 	if err != nil {
 		return err
 	}
-	
+
 	// Собираем распределение заказов по городам
 	ordersByCity, err := a.getOrdersByCity(ctx, storefrontID, startOfDay, endOfDay)
 	if err != nil {
 		return err
 	}
-	
+
 	// Рассчитываем метрики
 	bounceRate := a.calculateBounceRate(ctx, storefrontID, startOfDay, endOfDay)
 	avgSessionTime := a.calculateAvgSessionTime(ctx, storefrontID, startOfDay, endOfDay)
@@ -98,27 +99,27 @@ func (a *AnalyticsAggregator) aggregateStorefrontAnalytics(ctx context.Context, 
 	if uniqueVisitors > 0 {
 		conversionRate = float64(orderStats.OrdersCount) / float64(uniqueVisitors) * 100
 	}
-	
+
 	// Создаем запись аналитики
 	analytics := &models.StorefrontAnalytics{
-		StorefrontID:        storefrontID,
-		Date:               date,
-		PageViews:          eventStats["page_view"],
-		UniqueVisitors:     uniqueVisitors,
-		BounceRate:         bounceRate,
-		AvgSessionTime:     avgSessionTime,
-		OrdersCount:        orderStats.OrdersCount,
-		Revenue:           orderStats.Revenue,
-		AvgOrderValue:      orderStats.AvgOrderValue,
-		ConversionRate:     conversionRate,
-		ProductViews:       eventStats["product_view"],
-		AddToCartCount:     eventStats["add_to_cart"],
-		CheckoutCount:      eventStats["checkout"],
-		TrafficSources:     models.JSONB(trafficSources),
-		TopProducts:        models.JSONB(topProducts),
-		OrdersByCity:       models.JSONB(ordersByCity),
+		StorefrontID:   storefrontID,
+		Date:           date,
+		PageViews:      eventStats["page_view"],
+		UniqueVisitors: uniqueVisitors,
+		BounceRate:     bounceRate,
+		AvgSessionTime: avgSessionTime,
+		OrdersCount:    orderStats.OrdersCount,
+		Revenue:        orderStats.Revenue,
+		AvgOrderValue:  orderStats.AvgOrderValue,
+		ConversionRate: conversionRate,
+		ProductViews:   eventStats["product_view"],
+		AddToCartCount: eventStats["add_to_cart"],
+		CheckoutCount:  eventStats["checkout"],
+		TrafficSources: models.JSONB(trafficSources),
+		TopProducts:    models.JSONB(topProducts),
+		OrdersByCity:   models.JSONB(ordersByCity),
 	}
-	
+
 	// Сохраняем в базу
 	return a.saveAnalytics(ctx, analytics)
 }
@@ -129,13 +130,13 @@ func (a *AnalyticsAggregator) getActiveStorefronts(ctx context.Context) ([]*mode
 		SELECT id, name FROM marketplace_storefronts 
 		WHERE is_active = true AND deleted_at IS NULL
 	`
-	
+
 	rows, err := a.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var storefronts []*models.Storefront
 	for rows.Next() {
 		s := &models.Storefront{}
@@ -144,7 +145,7 @@ func (a *AnalyticsAggregator) getActiveStorefronts(ctx context.Context) ([]*mode
 		}
 		storefronts = append(storefronts, s)
 	}
-	
+
 	return storefronts, nil
 }
 
@@ -156,13 +157,13 @@ func (a *AnalyticsAggregator) getEventStats(ctx context.Context, storefrontID in
 		WHERE storefront_id = $1 AND created_at >= $2 AND created_at <= $3
 		GROUP BY event_type
 	`
-	
+
 	rows, err := a.db.QueryContext(ctx, query, storefrontID, from, to)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	stats := make(map[string]int)
 	for rows.Next() {
 		var eventType string
@@ -172,14 +173,14 @@ func (a *AnalyticsAggregator) getEventStats(ctx context.Context, storefrontID in
 		}
 		stats[eventType] = count
 	}
-	
+
 	return stats, nil
 }
 
 // OrderStats статистика заказов
 type OrderStats struct {
 	OrdersCount   int
-	Revenue      float64
+	Revenue       float64
 	AvgOrderValue float64
 }
 
@@ -196,14 +197,14 @@ func (a *AnalyticsAggregator) getOrderStats(ctx context.Context, storefrontID in
 			AND created_at <= $3
 			AND status NOT IN ('cancelled', 'failed')
 	`
-	
+
 	stats := &OrderStats{}
 	err := a.db.QueryRowContext(ctx, query, storefrontID, from, to).Scan(
 		&stats.OrdersCount,
 		&stats.Revenue,
 		&stats.AvgOrderValue,
 	)
-	
+
 	return stats, err
 }
 
@@ -217,7 +218,7 @@ func (a *AnalyticsAggregator) getUniqueVisitors(ctx context.Context, storefrontI
 			AND created_at <= $3
 			AND event_type = 'page_view'
 	`
-	
+
 	var count int
 	err := a.db.QueryRowContext(ctx, query, storefrontID, from, to).Scan(&count)
 	return count, err
@@ -244,7 +245,7 @@ func (a *AnalyticsAggregator) getTrafficSources(ctx context.Context, storefrontI
 			AND created_at <= $3
 			AND event_type = 'page_view'
 	`
-	
+
 	var result json.RawMessage
 	err := a.db.QueryRowContext(ctx, query, storefrontID, from, to).Scan(&result)
 	return result, err
@@ -273,7 +274,7 @@ func (a *AnalyticsAggregator) getTopProducts(ctx context.Context, storefrontID i
 			LIMIT $4
 		) t
 	`
-	
+
 	var result json.RawMessage
 	err := a.db.QueryRowContext(ctx, query, storefrontID, from, to, limit).Scan(&result)
 	if err != nil {
@@ -299,7 +300,7 @@ func (a *AnalyticsAggregator) getOrdersByCity(ctx context.Context, storefrontID 
 			GROUP BY delivery_city
 		) t
 	`
-	
+
 	var result json.RawMessage
 	err := a.db.QueryRowContext(ctx, query, storefrontID, from, to).Scan(&result)
 	if err != nil {
@@ -329,7 +330,7 @@ func (a *AnalyticsAggregator) calculateBounceRate(ctx context.Context, storefron
 			END as bounce_rate
 		FROM session_events
 	`
-	
+
 	var bounceRate float64
 	_ = a.db.QueryRowContext(ctx, query, storefrontID, from, to).Scan(&bounceRate)
 	return bounceRate
@@ -352,7 +353,7 @@ func (a *AnalyticsAggregator) calculateAvgSessionTime(ctx context.Context, store
 		SELECT COALESCE(AVG(duration)::int, 0)
 		FROM session_times
 	`
-	
+
 	var avgTime int
 	_ = a.db.QueryRowContext(ctx, query, storefrontID, from, to).Scan(&avgTime)
 	return avgTime
@@ -386,7 +387,7 @@ func (a *AnalyticsAggregator) saveAnalytics(ctx context.Context, analytics *mode
 			orders_by_city = EXCLUDED.orders_by_city,
 			updated_at = CURRENT_TIMESTAMP
 	`
-	
+
 	_, err := a.db.ExecContext(ctx, query,
 		analytics.StorefrontID, analytics.Date, analytics.PageViews, analytics.UniqueVisitors,
 		analytics.BounceRate, analytics.AvgSessionTime, analytics.OrdersCount, analytics.Revenue,
@@ -395,6 +396,6 @@ func (a *AnalyticsAggregator) saveAnalytics(ctx context.Context, analytics *mode
 		analytics.TrafficSources, analytics.TopProducts, analytics.TopCategories,
 		analytics.OrdersByCity,
 	)
-	
+
 	return err
 }

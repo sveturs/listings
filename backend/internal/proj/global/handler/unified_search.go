@@ -5,6 +5,7 @@ import (
 	"context"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -12,6 +13,7 @@ import (
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
+	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
 	"backend/pkg/utils"
 )
 
@@ -30,7 +32,7 @@ func NewUnifiedSearchHandler(services globalService.ServicesInterface) *UnifiedS
 // UnifiedSearchParams параметры унифицированного поиска
 type UnifiedSearchParams struct {
 	Query            string                 `json:"query" form:"query"`
-	ProductTypes     []string               `json:"product_types" form:"product_types"`     // ["marketplace", "storefront"]
+	ProductTypes     []string               `json:"product_types" form:"product_types"` // ["marketplace", "storefront"]
 	Page             int                    `json:"page" form:"page"`
 	Limit            int                    `json:"limit" form:"limit"`
 	CategoryID       string                 `json:"category_id" form:"category_id"`
@@ -46,13 +48,13 @@ type UnifiedSearchParams struct {
 
 // UnifiedSearchResult результат унифицированного поиска
 type UnifiedSearchResult struct {
-	Items      []UnifiedSearchItem `json:"items"`
-	Total      int                 `json:"total"`
-	Page       int                 `json:"page"`
-	Limit      int                 `json:"limit"`
-	TotalPages int                 `json:"total_pages"`
-	HasMore    bool                `json:"has_more"`
-	TookMs     int64               `json:"took_ms"`
+	Items      []UnifiedSearchItem    `json:"items"`
+	Total      int                    `json:"total"`
+	Page       int                    `json:"page"`
+	Limit      int                    `json:"limit"`
+	TotalPages int                    `json:"total_pages"`
+	HasMore    bool                   `json:"has_more"`
+	TookMs     int64                  `json:"took_ms"`
 	Facets     map[string]interface{} `json:"facets,omitempty"`
 }
 
@@ -129,17 +131,17 @@ type UnifiedStorefrontInfo struct {
 // @Router /api/v1/search [get]
 func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	ctx := c.Context()
-	
+
 	// Парсим параметры поиска
 	var params UnifiedSearchParams
-	
+
 	// Сначала пытаемся получить из JSON body
 	if c.Get("Content-Type") == "application/json" {
 		if err := c.BodyParser(&params); err != nil {
 			logger.Debug().Err(err).Msg("Failed to parse JSON body, trying query params")
 		}
 	}
-	
+
 	// Получаем параметры из query string (перезаписывают JSON если есть)
 	if query := c.Query("query"); query != "" {
 		params.Query = query
@@ -184,13 +186,17 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	if lang := c.Query("language"); lang != "" {
 		params.Language = lang
 	}
-	
+
 	// Обработка product_types
 	if productTypes := c.Query("product_types"); productTypes != "" {
-		// Простая обработка comma-separated значений
-		params.ProductTypes = []string{productTypes} // TODO: реализовать парсинг CSV
+		// Парсинг comma-separated значений
+		params.ProductTypes = strings.Split(productTypes, ",")
+		// Очистка пробелов
+		for i, pt := range params.ProductTypes {
+			params.ProductTypes[i] = strings.TrimSpace(pt)
+		}
 	}
-	
+
 	// Установка значений по умолчанию
 	if params.Page <= 0 {
 		params.Page = 1
@@ -207,14 +213,14 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	if len(params.ProductTypes) == 0 {
 		params.ProductTypes = []string{"marketplace", "storefront"}
 	}
-	
+
 	// Выполняем поиск
 	result, err := h.performUnifiedSearch(ctx, &params)
 	if err != nil {
 		logger.Error().Err(err).Msg("Unified search failed")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "search.searchError")
 	}
-	
+
 	return c.JSON(result)
 }
 
@@ -223,7 +229,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	var allItems []UnifiedSearchItem
 	var totalCount int
 	var tookMs int64
-	
+
 	// Поиск в marketplace (если включен)
 	if h.containsProductType(params.ProductTypes, "marketplace") {
 		marketplaceItems, count, took, err := h.searchMarketplace(ctx, params)
@@ -235,7 +241,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 			tookMs += took
 		}
 	}
-	
+
 	// Поиск в storefront (если включен)
 	if h.containsProductType(params.ProductTypes, "storefront") {
 		storefrontItems, count, took, err := h.searchStorefront(ctx, params)
@@ -247,16 +253,16 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 			tookMs += took
 		}
 	}
-	
+
 	// Сортируем результаты по релевантности (score)
 	if len(allItems) > 1 {
 		h.sortUnifiedResults(allItems, params.SortBy, params.SortOrder)
 	}
-	
+
 	// Применяем пагинацию к объединенным результатам
 	offset := (params.Page - 1) * params.Limit
 	end := offset + params.Limit
-	
+
 	if offset >= len(allItems) {
 		allItems = []UnifiedSearchItem{}
 	} else if end > len(allItems) {
@@ -264,11 +270,11 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	} else {
 		allItems = allItems[offset:end]
 	}
-	
+
 	// Вычисляем метаданные
 	totalPages := int(math.Ceil(float64(totalCount) / float64(params.Limit)))
 	hasMore := params.Page < totalPages
-	
+
 	return &UnifiedSearchResult{
 		Items:      allItems,
 		Total:      totalCount,
@@ -284,30 +290,30 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 func (h *UnifiedSearchHandler) searchMarketplace(ctx context.Context, params *UnifiedSearchParams) ([]UnifiedSearchItem, int, int64, error) {
 	// Конвертируем параметры в формат для marketplace поиска
 	searchParams := &search.ServiceParams{
-		Query:            params.Query,
-		Page:             params.Page,
-		Size:             params.Limit * 2, // Берем больше для лучшего смешивания результатов
-		CategoryID:       params.CategoryID,
-		PriceMin:         params.PriceMin,
-		PriceMax:         params.PriceMax,
-		Sort:             params.SortBy,
-		SortDirection:    params.SortOrder,
+		Query:         params.Query,
+		Page:          params.Page,
+		Size:          params.Limit * 2, // Берем больше для лучшего смешивания результатов
+		CategoryID:    params.CategoryID,
+		PriceMin:      params.PriceMin,
+		PriceMax:      params.PriceMax,
+		Sort:          params.SortBy,
+		SortDirection: params.SortOrder,
 		// AttributeFilters: params.AttributeFilters, // TODO: конвертировать типы
-		Language:         params.Language,
+		Language: params.Language,
 	}
-	
+
 	results, err := h.services.Marketplace().SearchListingsAdvanced(ctx, searchParams)
 	if err != nil {
 		return nil, 0, 0, err
 	}
-	
+
 	// Конвертируем результаты в унифицированный формат
 	items := make([]UnifiedSearchItem, 0, len(results.Items))
 	for _, listing := range results.Items {
 		if listing == nil {
 			continue
 		}
-		
+
 		item := UnifiedSearchItem{
 			ID:          "ml_" + strconv.Itoa(listing.ID),
 			ProductType: "marketplace",
@@ -321,19 +327,120 @@ func (h *UnifiedSearchHandler) searchMarketplace(ctx context.Context, params *Un
 			Location:    h.convertMarketplaceLocation(listing),
 			Score:       1.0, // TODO: получить реальный score из OpenSearch
 		}
-		
+
 		items = append(items, item)
 	}
-	
+
 	return items, results.Total, results.Took, nil
 }
 
 // searchStorefront поиск в storefront
 func (h *UnifiedSearchHandler) searchStorefront(ctx context.Context, params *UnifiedSearchParams) ([]UnifiedSearchItem, int, int64, error) {
-	// TODO: Реализовать поиск в storefront через OpenSearch
-	// Пока возвращаем пустой результат
-	logger.Debug().Msg("Storefront search not yet implemented")
-	return []UnifiedSearchItem{}, 0, 0, nil
+	// Получаем репозиторий поиска товаров витрин
+	searchRepo := h.services.Storage().StorefrontProductSearch()
+	if searchRepo == nil {
+		logger.Debug().Msg("Storefront product search repository not configured")
+		return []UnifiedSearchItem{}, 0, 0, nil
+	}
+
+	productSearchRepo, ok := searchRepo.(storefrontOpenSearch.ProductSearchRepository)
+	if !ok {
+		logger.Error().Msg("Invalid storefront product search repository type")
+		return []UnifiedSearchItem{}, 0, 0, nil
+	}
+
+	// Конвертируем параметры в формат для поиска товаров витрин
+	categoryID := 0
+	if params.CategoryID != "" {
+		// Попробуем конвертировать в int
+		if id, err := strconv.Atoi(params.CategoryID); err == nil {
+			categoryID = id
+		}
+	}
+
+	searchParams := &storefrontOpenSearch.ProductSearchParams{
+		Query:        params.Query,
+		StorefrontID: params.StorefrontID,
+		CategoryID:   categoryID,
+		PriceMin:     params.PriceMin,
+		PriceMax:     params.PriceMax,
+		City:         params.City,
+		Limit:        params.Limit * 2, // Берем больше для лучшего смешивания результатов
+		Offset:       (params.Page - 1) * params.Limit * 2,
+		SortBy:       params.SortBy,
+		SortOrder:    params.SortOrder,
+	}
+
+	// Выполняем поиск
+	results, err := productSearchRepo.SearchProducts(ctx, searchParams)
+	if err != nil {
+		logger.Error().Err(err).Msg("Storefront product search failed")
+		return nil, 0, 0, err
+	}
+
+	// Конвертируем результаты в унифицированный формат
+	items := make([]UnifiedSearchItem, 0, len(results.Products))
+	for _, product := range results.Products {
+		if product == nil {
+			continue
+		}
+
+		// Преобразуем изображения
+		images := make([]UnifiedProductImage, 0, len(product.Images))
+		for _, img := range product.Images {
+			images = append(images, UnifiedProductImage{
+				URL:     img.URL,
+				AltText: img.AltText,
+				IsMain:  img.IsMain,
+			})
+		}
+
+		// Создаем унифицированный элемент
+		item := UnifiedSearchItem{
+			ID:          "sp_" + strconv.Itoa(product.ProductID),
+			ProductType: "storefront",
+			ProductID:   product.ProductID,
+			Name:        product.Name,
+			Description: product.Description,
+			Price:       product.Price,
+			Currency:    product.Currency,
+			Images:      images,
+			Category: UnifiedCategoryInfo{
+				ID:   product.Category.ID,
+				Name: product.Category.Name,
+				Slug: product.Category.Slug,
+			},
+			Score: product.Score,
+		}
+
+		// Добавляем информацию о локации, если есть
+		if product.Storefront.City != "" || product.Storefront.Country != "" {
+			item.Location = &UnifiedLocationInfo{
+				City:    product.Storefront.City,
+				Country: product.Storefront.Country,
+			}
+		}
+
+		// Добавляем информацию о витрине
+		if product.StorefrontID > 0 {
+			item.Storefront = &UnifiedStorefrontInfo{
+				ID:         product.StorefrontID,
+				Name:       product.Storefront.Name,
+				Slug:       product.Storefront.Slug,
+				Rating:     product.Storefront.Rating,
+				IsVerified: product.Storefront.IsVerified,
+			}
+		}
+
+		// Добавляем highlights, если есть
+		if len(product.Highlights) > 0 {
+			item.Highlights = product.Highlights
+		}
+
+		items = append(items, item)
+	}
+
+	return items, results.Total, results.TookMs, nil
 }
 
 // Helper methods
@@ -379,18 +486,18 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	if listing == nil {
 		return nil
 	}
-	
+
 	location := &UnifiedLocationInfo{
 		City:    listing.City,
 		Country: listing.Country,
 	}
-	
+
 	if listing.Latitude != nil {
 		location.Lat = *listing.Latitude
 	}
 	if listing.Longitude != nil {
 		location.Lng = *listing.Longitude
 	}
-	
+
 	return location
 }

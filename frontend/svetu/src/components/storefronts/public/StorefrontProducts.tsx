@@ -4,22 +4,24 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
-import { marketplaceApi } from '@/services/marketplaceApi';
+import { storefrontProductsService } from '@/services/storefrontProducts';
 import ViewToggle from '@/components/common/ViewToggle';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
-import type { ListingCardData } from '@/types/marketplace';
+import type { components } from '@/types/generated/api';
+
+type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
 
 interface StorefrontProductsProps {
-  storefrontId: number;
+  storefrontSlug: string;
 }
 
-export default function StorefrontProducts({ storefrontId }: StorefrontProductsProps) {
+export default function StorefrontProducts({ storefrontSlug }: StorefrontProductsProps) {
   const t = useTranslations();
   const tCommon = useTranslations('common');
   const locale = useLocale();
-  const [products, setProducts] = useState<ListingCardData[]>([]);
+  const [products, setProducts] = useState<StorefrontProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [_totalPages, setTotalPages] = useState(1);
@@ -29,42 +31,29 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
   const fetchProducts = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await marketplaceApi.getListings({
-        storefront_id: storefrontId,
+      const response = await storefrontProductsService.getProducts(storefrontSlug, {
         limit: 12,
         offset: (currentPage - 1) * 12
       });
       
-      // Безопасное извлечение данных из ответа API
-      if (response && typeof response === 'object') {
-        // API возвращает { data: { data: [...], success: true, meta: {...} } }
-        const responseData = (response as any).data;
-        const actualData = Array.isArray(responseData?.data) ? responseData.data : 
-                          Array.isArray(responseData) ? responseData : [];
-        
-        if (currentPage === 1) {
-          setProducts(actualData);
-        } else {
-          setProducts(prev => [...prev, ...actualData]);
-        }
-        
-        // Безопасная проверка пагинации
-        const pagination = responseData?.meta || (response as any).pagination;
-        if (pagination && typeof pagination.total === 'number' && typeof pagination.limit === 'number' && pagination.limit > 0) {
-          const calculatedTotalPages = Math.ceil(pagination.total / pagination.limit);
-          setTotalPages(calculatedTotalPages);
-          setHasMore(currentPage < calculatedTotalPages);
-        }
+      if (currentPage === 1) {
+        setProducts(response.products);
       } else {
-        setProducts([]);
+        setProducts(prev => [...prev, ...response.products]);
       }
+      
+      // Расчет пагинации
+      const limit = 12;
+      const calculatedTotalPages = Math.ceil(response.total / limit);
+      setTotalPages(calculatedTotalPages);
+      setHasMore(currentPage < calculatedTotalPages);
     } catch (error) {
       console.error('Error fetching products:', error);
-      setProducts([]); // Устанавливаем пустой массив при ошибке
+      setProducts([]);
     } finally {
       setIsLoading(false);
     }
-  }, [storefrontId, currentPage]);
+  }, [storefrontSlug, currentPage]);
 
   useEffect(() => {
     fetchProducts();
@@ -127,7 +116,7 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
           <div className="flex items-center gap-2">
             <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
             <Link 
-              href={`/${locale}/marketplace?storefront_id=${storefrontId}`}
+              href={`/${locale}/storefronts/${storefrontSlug}/products`}
               className="btn btn-sm btn-ghost"
             >
               {t('common.viewAll')}
@@ -147,13 +136,13 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
             viewMode === 'grid' ? (
               <Link 
                 key={product.id} 
-                href={`/${locale}/marketplace/${product.id}`}
+                href={`/${locale}/storefronts/${storefrontSlug}/products/${product.id}`}
                 className="card bg-base-100 hover:shadow-lg transition-shadow"
               >
                 <figure className="aspect-[4/3] relative">
                   <SafeImage
-                    src={product.main_image}
-                    alt={product.title}
+                    src={product.images?.[0]?.image_url || ''}
+                    alt={product.name || ''}
                     fill
                     className="object-cover"
                     fallback={
@@ -164,41 +153,39 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
                       </div>
                     }
                   />
-                  {product.has_discount && product.discount_percentage && (
-                    <div className="absolute top-2 right-2 badge badge-error">
-                      -{product.discount_percentage}%
+                  {product.stock_status === 'out_of_stock' && (
+                    <div className="absolute top-2 right-2 badge badge-warning">
+                      {t('products.outOfStock')}
                     </div>
                   )}
                 </figure>
                 <div className="card-body p-4">
-                  <h3 className="font-semibold line-clamp-2">{product.title}</h3>
+                  <h3 className="font-semibold line-clamp-2">{product.name}</h3>
                   <div className="flex items-baseline gap-2">
                     <span className="text-xl font-bold text-primary">
-                      {product.price} $
+                      {product.price} {product.currency || '$'}
                     </span>
-                    {product.old_price && product.old_price > product.price && (
-                      <span className="text-sm line-through text-base-content/50">
-                        {product.old_price} $
-                      </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-base-content/60">
+                    <span>{t('products.inStock')}: {product.stock_quantity || 0}</span>
+                    {product.sold_count && product.sold_count > 0 && (
+                      <span>• {t('products.sold')}: {product.sold_count}</span>
                     )}
                   </div>
-                  <p className="text-sm text-base-content/60">
-                    {product.location}
-                  </p>
                 </div>
               </Link>
             ) : (
               <Link 
                 key={product.id} 
-                href={`/${locale}/marketplace/${product.id}`}
+                href={`/${locale}/storefronts/${storefrontSlug}/products/${product.id}`}
                 className="card bg-base-100 hover:shadow-lg transition-shadow"
               >
                 <div className="card-body p-4">
                   <div className="flex gap-4">
                     <figure className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
                       <SafeImage
-                        src={product.main_image}
-                        alt={product.title}
+                        src={product.images?.[0]?.image_url || ''}
+                        alt={product.name || ''}
                         fill
                         className="object-cover"
                         fallback={
@@ -209,27 +196,25 @@ export default function StorefrontProducts({ storefrontId }: StorefrontProductsP
                           </div>
                         }
                       />
-                      {product.has_discount && product.discount_percentage && (
-                        <div className="absolute top-1 right-1 badge badge-error badge-sm">
-                          -{product.discount_percentage}%
+                      {product.stock_status === 'out_of_stock' && (
+                        <div className="absolute top-1 right-1 badge badge-warning badge-sm">
+                          {t('products.outOfStock')}
                         </div>
                       )}
                     </figure>
                     <div className="flex-grow">
-                      <h3 className="font-semibold line-clamp-1">{product.title}</h3>
+                      <h3 className="font-semibold line-clamp-1">{product.name}</h3>
                       <div className="flex items-baseline gap-2 mt-1">
                         <span className="text-lg font-bold text-primary">
-                          {product.price} $
+                          {product.price} {product.currency || '$'}
                         </span>
-                        {product.old_price && product.old_price > product.price && (
-                          <span className="text-sm line-through text-base-content/50">
-                            {product.old_price} $
-                          </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-base-content/60 mt-1">
+                        <span>{t('products.inStock')}: {product.stock_quantity || 0}</span>
+                        {product.sold_count && product.sold_count > 0 && (
+                          <span>• {t('products.sold')}: {product.sold_count}</span>
                         )}
                       </div>
-                      <p className="text-sm text-base-content/60 mt-1">
-                        {product.location}
-                      </p>
                     </div>
                   </div>
                 </div>

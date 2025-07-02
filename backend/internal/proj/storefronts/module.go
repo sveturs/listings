@@ -6,6 +6,7 @@ import (
 	"backend/internal/proj/storefronts/handler"
 	storefrontService "backend/internal/proj/storefronts/service"
 	"backend/internal/storage/postgres"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -27,13 +28,16 @@ func NewModule(services service.ServicesInterface) *Module {
 		// Если storage не реализует нужный интерфейс, создаем заглушку
 		panic("Storage does not implement product storage interface")
 	}
-	// Пока передаем nil для searchRepo, так как OpenSearch репозиторий не инициализирован в этом месте
-	// TODO: Получить OpenSearch репозиторий из глобального сервиса
-	productSvc := storefrontService.NewProductService(productStorage, nil)
-	
+	// Получаем OpenSearch репозиторий для товаров витрин
+	var searchRepo storefrontService.ProductSearchRepository
+	if osProductRepo := services.Storage().StorefrontProductSearch(); osProductRepo != nil {
+		searchRepo = osProductRepo.(storefrontService.ProductSearchRepository)
+	}
+	productSvc := storefrontService.NewProductService(productStorage, searchRepo)
+
 	// Создаем сервис импорта
 	importSvc := storefrontService.NewImportService(productSvc)
-	
+
 	return &Module{
 		services:          services,
 		storefrontHandler: handler.NewStorefrontHandler(storefrontSvc),
@@ -50,10 +54,10 @@ func (m *Module) GetPrefix() string {
 // RegisterRoutes регистрирует все маршруты модуля
 func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	api := app.Group("/api/v1")
-	
+
 	// Регистрируем защищенный маршрут /my первым, чтобы он имел приоритет
 	api.Get("/storefronts/my", mw.AuthRequiredJWT, m.storefrontHandler.GetMyStorefronts)
-	
+
 	// Публичные маршруты витрин (без авторизации)
 	public := api.Group("/storefronts")
 	{
@@ -62,25 +66,25 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		public.Get("/", m.storefrontHandler.ListStorefronts)
 		public.Get("/search", m.storefrontHandler.SearchOpenSearch)
 		public.Get("/nearby", m.storefrontHandler.GetNearbyStorefronts)
-		
+
 		// Картографические данные
 		public.Get("/map", m.storefrontHandler.GetMapData)
 		public.Get("/building", m.storefrontHandler.GetBusinessesInBuilding)
-		
+
 		// Маршруты с slug
 		public.Get("/slug/:slug", m.storefrontHandler.GetStorefrontBySlug)
-		
+
 		// Публичные маршруты товаров с использованием slug
 		public.Get("/slug/:slug/products", m.getProductsBySlug)
 		public.Get("/slug/:slug/products/:id", m.getProductBySlug)
-		
+
 		// Параметризованные маршруты (должны быть последними)
 		// Получение витрины
 		public.Get("/:id", m.storefrontHandler.GetStorefront)
-		
+
 		// Персонал (просмотр)
 		public.Get("/:id/staff", m.storefrontHandler.GetStaff)
-		
+
 		// Аналитика (запись просмотра)
 		public.Post("/:id/view", m.storefrontHandler.RecordView)
 	}
@@ -93,37 +97,37 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Post("/", m.storefrontHandler.CreateStorefront)
 		protected.Put("/:id", m.storefrontHandler.UpdateStorefront)
 		protected.Delete("/:id", m.storefrontHandler.DeleteStorefront)
-		
+
 		// Настройки витрины
 		protected.Put("/:id/hours", m.storefrontHandler.UpdateWorkingHours)
 		protected.Put("/:id/payment-methods", m.storefrontHandler.UpdatePaymentMethods)
 		protected.Put("/:id/delivery-options", m.storefrontHandler.UpdateDeliveryOptions)
-		
+
 		// Управление персоналом
 		protected.Post("/:id/staff", m.storefrontHandler.AddStaff)
 		protected.Put("/:id/staff/:staffId/permissions", m.storefrontHandler.UpdateStaffPermissions)
 		protected.Delete("/:id/staff/:userId", m.storefrontHandler.RemoveStaff)
-		
+
 		// Загрузка изображений
 		protected.Post("/:id/logo", m.storefrontHandler.UploadLogo)
 		protected.Post("/:id/banner", m.storefrontHandler.UploadBanner)
-		
+
 		// Аналитика (просмотр)
 		protected.Get("/:id/analytics", m.storefrontHandler.GetAnalytics)
-		
+
 		// Защищенные маршруты товаров с использованием slug
 		protected.Post("/slug/:slug/products", m.createProductBySlug)
 		protected.Put("/slug/:slug/products/:id", m.updateProductBySlug)
 		protected.Delete("/slug/:slug/products/:id", m.deleteProductBySlug)
 		protected.Post("/slug/:slug/products/:id/inventory", m.updateInventoryBySlug)
 		protected.Get("/slug/:slug/products/stats", m.getProductStatsBySlug)
-		
+
 		// Bulk операции с товарами
 		protected.Post("/slug/:slug/products/bulk/create", m.bulkCreateProductsBySlug)
 		protected.Put("/slug/:slug/products/bulk/update", m.bulkUpdateProductsBySlug)
 		protected.Delete("/slug/:slug/products/bulk/delete", m.bulkDeleteProductsBySlug)
 		protected.Put("/slug/:slug/products/bulk/status", m.bulkUpdateStatusBySlug)
-		
+
 		// Маршруты импорта товаров
 		protected.Post("/:id/import/url", m.importHandler.ImportFromURL)
 		protected.Post("/:id/import/file", m.importHandler.ImportFromFile)
@@ -133,7 +137,7 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Get("/:id/import/jobs/:jobId/status", m.importHandler.GetJobStatus)
 		protected.Post("/:id/import/jobs/:jobId/cancel", m.importHandler.CancelJob)
 		protected.Post("/:id/import/jobs/:jobId/retry", m.importHandler.RetryJob)
-		
+
 		// Маршруты импорта через slug
 		protected.Post("/slug/:slug/import/url", m.importFromURLBySlug)
 		protected.Post("/slug/:slug/import/file", m.importFromFileBySlug)
@@ -144,11 +148,11 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Post("/slug/:slug/import/jobs/:jobId/cancel", m.cancelJobBySlug)
 		protected.Post("/slug/:slug/import/jobs/:jobId/retry", m.retryJobBySlug)
 	}
-	
+
 	// Публичные маршруты импорта (для получения шаблонов и документации)
 	api.Get("/storefronts/import/csv-template", m.importHandler.GetCSVTemplate)
 	api.Get("/storefronts/import/formats", m.importHandler.GetImportFormats)
-	
+
 	return nil
 }
 
@@ -175,25 +179,25 @@ func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 			"error": "Storefront slug is required",
 		})
 	}
-	
+
 	// Получаем витрину через сервис по slug
 	storefront, err := m.services.Storefront().GetBySlug(c.Context(), slug)
 	if err != nil {
 		if err == postgres.ErrNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "Storefront not found",
-				"slug": slug,
+				"slug":  slug,
 			})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get storefront: " + err.Error(),
-			"slug": slug,
+			"slug":  slug,
 		})
 	}
-	
+
 	// Сохраняем ID в контекст
 	c.Locals("storefrontID", storefront.ID)
-	
+
 	// Проверяем доступ
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
@@ -201,7 +205,7 @@ func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 			"error": "User ID not found in context",
 		})
 	}
-	
+
 	// Проверяем, является ли пользователь владельцем или персоналом
 	if storefront.UserID != userID {
 		// Проверяем, есть ли пользователь в персонале
@@ -211,7 +215,7 @@ func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 				"error": "Failed to check permissions: " + err.Error(),
 			})
 		}
-		
+
 		// Ищем пользователя среди персонала с правами на продукты
 		hasAccess := false
 		for _, s := range staff {
@@ -224,16 +228,16 @@ func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 				}
 			}
 		}
-		
+
 		if !hasAccess {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-				"error": "Access denied: user is not owner or staff with product permissions",
+				"error":             "Access denied: user is not owner or staff with product permissions",
 				"storefrontOwnerID": storefront.UserID,
-				"currentUserID": userID,
+				"currentUserID":     userID,
 			})
 		}
 	}
-	
+
 	return m.productHandler.CreateProduct(c)
 }
 
@@ -241,12 +245,12 @@ func (m *Module) updateProductBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	return m.productHandler.UpdateProduct(c)
 }
 
@@ -254,12 +258,12 @@ func (m *Module) deleteProductBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	return m.productHandler.DeleteProduct(c)
 }
 
@@ -267,12 +271,12 @@ func (m *Module) updateInventoryBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	return m.productHandler.UpdateInventory(c)
 }
 
@@ -280,12 +284,12 @@ func (m *Module) getProductStatsBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	return m.productHandler.GetProductStats(c)
 }
 
@@ -297,22 +301,22 @@ func (m *Module) setStorefrontIDBySlug(c *fiber.Ctx) error {
 			"error": "Storefront slug is required",
 		})
 	}
-	
+
 	// Получаем витрину через сервис по slug
 	storefront, err := m.services.Storefront().GetBySlug(c.Context(), slug)
 	if err != nil {
 		if err == postgres.ErrNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "Storefront not found",
-				"slug": slug,
+				"slug":  slug,
 			})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get storefront: " + err.Error(),
-			"slug": slug,
+			"slug":  slug,
 		})
 	}
-	
+
 	c.Locals("storefrontID", storefront.ID)
 	return nil
 }
@@ -325,14 +329,14 @@ func (m *Module) checkStorefrontAccess(c *fiber.Ctx) error {
 			"error": "Storefront ID not found in context",
 		})
 	}
-	
+
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "User ID not found in context",
 		})
 	}
-	
+
 	// Получаем витрину для проверки владельца
 	storefront, err := m.services.Storefront().GetByID(c.Context(), storefrontID)
 	if err != nil {
@@ -340,7 +344,7 @@ func (m *Module) checkStorefrontAccess(c *fiber.Ctx) error {
 			"error": "Failed to get storefront",
 		})
 	}
-	
+
 	// Проверяем, является ли пользователь владельцем или персоналом
 	if storefront.UserID != userID {
 		// Проверяем, есть ли пользователь в персонале
@@ -350,7 +354,7 @@ func (m *Module) checkStorefrontAccess(c *fiber.Ctx) error {
 				"error": "Failed to check permissions: " + err.Error(),
 			})
 		}
-		
+
 		// Ищем пользователя среди персонала с правами на продукты
 		hasAccess := false
 		for _, s := range staff {
@@ -363,16 +367,16 @@ func (m *Module) checkStorefrontAccess(c *fiber.Ctx) error {
 				}
 			}
 		}
-		
+
 		if !hasAccess {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-				"error": "Access denied: user is not owner or staff with product permissions",
+				"error":             "Access denied: user is not owner or staff with product permissions",
 				"storefrontOwnerID": storefront.UserID,
-				"currentUserID": userID,
+				"currentUserID":     userID,
 			})
 		}
 	}
-	
+
 	return nil
 }
 
@@ -381,12 +385,12 @@ func (m *Module) importFromURLBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
 	return m.importHandler.ImportFromURL(c)
 }
@@ -395,12 +399,12 @@ func (m *Module) importFromFileBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
 	return m.importHandler.ImportFromFile(c)
 }
@@ -409,12 +413,12 @@ func (m *Module) validateImportBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
 	return m.importHandler.ValidateImportFile(c)
 }
@@ -424,12 +428,12 @@ func (m *Module) getJobsBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
 	return m.importHandler.GetJobs(c)
 }
@@ -438,12 +442,12 @@ func (m *Module) getJobDetailsBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	return m.importHandler.GetJobDetails(c)
 }
 
@@ -451,12 +455,12 @@ func (m *Module) getJobStatusBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	return m.importHandler.GetJobStatus(c)
 }
 
@@ -464,12 +468,12 @@ func (m *Module) cancelJobBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	return m.importHandler.CancelJob(c)
 }
 
@@ -477,12 +481,12 @@ func (m *Module) retryJobBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	return m.importHandler.RetryJob(c)
 }
 
@@ -491,12 +495,12 @@ func (m *Module) bulkCreateProductsBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	// Storefront ID уже в locals, ProductHandler его оттуда возьмет
 	return m.productHandler.BulkCreateProducts(c)
 }
@@ -505,12 +509,12 @@ func (m *Module) bulkUpdateProductsBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	// Storefront ID уже в locals, ProductHandler его оттуда возьмет
 	return m.productHandler.BulkUpdateProducts(c)
 }
@@ -519,12 +523,12 @@ func (m *Module) bulkDeleteProductsBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	// Storefront ID уже в locals, ProductHandler его оттуда возьмет
 	return m.productHandler.BulkDeleteProducts(c)
 }
@@ -533,12 +537,12 @@ func (m *Module) bulkUpdateStatusBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
 		return err
 	}
-	
+
 	// Проверяем доступ после установки storefrontID
 	if err := m.checkStorefrontAccess(c); err != nil {
 		return err
 	}
-	
+
 	// Storefront ID уже в locals, ProductHandler его оттуда возьмет
 	return m.productHandler.BulkUpdateStatus(c)
 }

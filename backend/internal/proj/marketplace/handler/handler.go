@@ -37,6 +37,7 @@ type Handler struct {
 	AdminAttributes    *AdminAttributesHandler
 	CustomComponents   *CustomComponentHandler
 	MarketplaceHandler *MarketplaceHandler
+	Orders             *OrderHandler
 	service            globalService.ServicesInterface
 }
 
@@ -61,6 +62,13 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 
 		customComponentStorage := postgres.NewCustomComponentStorage(postgresDB)
 		customComponentHandler := NewCustomComponentHandler(customComponentStorage)
+
+		// Создаем OrderService если есть Orders сервис
+		var orderHandler *OrderHandler
+		if orderService := services.Orders(); orderService != nil {
+			orderHandler = NewOrderHandler(orderService)
+		}
+
 		return &Handler{
 			Listings:           NewListingsHandler(services),
 			Images:             NewImagesHandler(services),
@@ -74,6 +82,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			AdminAttributes:    NewAdminAttributesHandler(services),
 			CustomComponents:   customComponentHandler,
 			MarketplaceHandler: marketplaceHandler,
+			Orders:             orderHandler,
 			service:            services,
 		}
 	}
@@ -92,12 +101,12 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		AdminAttributes:    NewAdminAttributesHandler(services),
 		CustomComponents:   nil,
 		MarketplaceHandler: nil,
+		Orders:             nil,
 		service:            services,
 	}
 }
 
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
-
 	marketplace := app.Group("/api/v1/marketplace")
 	marketplace.Get("/listings", h.Listings.GetListings)
 	marketplace.Get("/categories", h.Categories.GetCategories)
@@ -142,6 +151,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplaceProtected.Post("/translations/translate", h.Translations.TranslateText)
 	marketplaceProtected.Post("/translations/detect-language", h.Translations.DetectLanguage)
 	marketplaceProtected.Get("/translations/:id", h.Translations.GetTranslations)
+
+	// Регистрируем маршруты для заказов маркетплейса под marketplace префиксом
+	if h.Orders != nil {
+		ordersGroup := marketplaceProtected.Group("/orders")
+		h.Orders.RegisterRoutes(ordersGroup)
+	}
 
 	adminRoutes := app.Group("/api/v1/admin", mw.AuthRequiredJWT, mw.AdminRequired)
 

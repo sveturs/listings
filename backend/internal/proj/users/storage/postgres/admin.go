@@ -2,10 +2,11 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"log"
+
+	"backend/internal/domain/models"
 )
 
 // GetAllUsers возвращает список всех пользователей с пагинацией

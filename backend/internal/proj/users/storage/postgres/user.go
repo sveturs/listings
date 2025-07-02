@@ -2,10 +2,11 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"errors"
 	"strings"
+
+	"backend/internal/domain/models"
 )
 
 func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
@@ -57,7 +58,6 @@ func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) 
         VALUES ($1, $2, $3, $4, 'google')
         RETURNING id, created_at
     `, user.Name, user.Email, user.GoogleID, user.PictureURL).Scan(&userID, &user.CreatedAt)
-
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +78,7 @@ func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) 
 
 	return user, nil
 }
+
 func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
 	err := s.pool.QueryRow(ctx, `
@@ -125,7 +126,6 @@ func (s *Storage) CreateUser(ctx context.Context, user *models.User) (*models.Us
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id, created_at
     `, user.Name, user.Email, user.GoogleID, user.PictureURL, user.Phone, passwordValue, user.Provider).Scan(&user.ID, &user.CreatedAt)
-
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			return nil, errors.New("email already exists")
@@ -177,7 +177,6 @@ func (s *Storage) CreateRefreshToken(ctx context.Context, token *models.RefreshT
 		token.IP,
 		token.DeviceName,
 	).Scan(&token.ID)
-
 	if err != nil {
 		return err
 	}
@@ -206,7 +205,6 @@ func (s *Storage) GetRefreshToken(ctx context.Context, tokenValue string) (*mode
 		&token.IsRevoked,
 		&token.RevokedAt,
 	)
-
 	if err != nil {
 		s.logger.Info("GetRefreshToken: token=%s..., error=%v", tokenValue[:20], err)
 		return nil, err
@@ -238,7 +236,6 @@ func (s *Storage) GetRefreshTokenByID(ctx context.Context, id int) (*models.Refr
 		&token.IsRevoked,
 		&token.RevokedAt,
 	)
-
 	if err != nil {
 		return nil, err
 	}

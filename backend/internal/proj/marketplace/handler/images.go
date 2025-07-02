@@ -2,19 +2,21 @@
 package handler
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/logger"
-	globalService "backend/internal/proj/global/service"
-	"backend/internal/proj/marketplace/service"
-	"backend/pkg/utils"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/logger"
+	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/marketplace/service"
+	"backend/pkg/utils"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // ImagesHandler handles requests related to listing images

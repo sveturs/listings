@@ -2,8 +2,6 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/proj/marketplace/service"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -15,6 +13,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/proj/marketplace/service"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	//"time"
@@ -86,7 +87,6 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		listing.Latitude, listing.Longitude, listing.City, listing.Country,
 		listing.ShowOnMap, listing.OriginalLanguage, listing.StorefrontID, listing.ExternalID,
 	).Scan(&listingID)
-
 	if err != nil {
 		return 0, fmt.Errorf("failed to insert listing: %w", err)
 	}
@@ -100,7 +100,6 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
     `,
 		"listing", listingID, listing.OriginalLanguage, "title",
 		listing.Title, false, true)
-
 	if err != nil {
 		log.Printf("Error saving original title translation: %v", err)
 	}
@@ -113,7 +112,6 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
     `,
 		"listing", listingID, listing.OriginalLanguage, "description",
 		listing.Description, false, true)
-
 	if err != nil {
 		log.Printf("Error saving original description translation: %v", err)
 	}
@@ -142,7 +140,6 @@ func (s *Storage) AddListingImage(ctx context.Context, image *models.Marketplace
         RETURNING id
     `, image.ListingID, image.FilePath, image.FileName, image.FileSize, image.ContentType, image.IsMain,
 		image.StorageType, image.StorageBucket, image.PublicURL).Scan(&id)
-
 	if err != nil {
 		return 0, err
 	}
@@ -204,6 +201,7 @@ func (s *Storage) DeleteListingImage(ctx context.Context, imageID string) (strin
 
 	return filePath, nil
 }
+
 func (s *Storage) processTranslations(rawTranslations interface{}) models.TranslationMap {
 	translations := make(models.TranslationMap)
 
@@ -244,7 +242,6 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
             WHERE table_name = 'marketplace_listings' AND column_name = 'storefront_id'
         )
     `).Scan(&hasStorefrontID)
-
 	if err != nil {
 		return nil, 0, fmt.Errorf("error checking storefront_id column: %w", err)
 	}
@@ -476,6 +473,10 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			tempCategoryName sql.NullString
 			tempCategorySlug sql.NullString
 			tempStorefrontID sql.NullInt32
+			tempStatus       sql.NullString
+			tempCondition    sql.NullString
+			tempDescription  sql.NullString
+			tempUserName     sql.NullString
 		)
 
 		err := rows.Scan(
@@ -483,10 +484,10 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			&listing.UserID,
 			&listing.CategoryID,
 			&listing.Title,
-			&listing.Description,
+			&tempDescription,
 			&listing.Price,
-			&listing.Condition,
-			&listing.Status,
+			&tempCondition,
+			&tempStatus,
 			&tempLocation,
 			&tempLatitude,
 			&tempLongitude,
@@ -499,7 +500,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			&listing.OriginalLanguage,
 			&tempStorefrontID,
 			&metadataJSON,
-			&listing.User.Name,
+			&tempUserName,
 			&tempEmail,
 			&listing.User.CreatedAt,
 			&tempPictureURL,
@@ -542,8 +543,20 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		}
 
 		// Обработка NULL значений
+		if tempDescription.Valid {
+			listing.Description = tempDescription.String
+		}
 		if tempLocation.Valid {
 			listing.Location = tempLocation.String
+		}
+		if tempCondition.Valid {
+			listing.Condition = tempCondition.String
+		}
+		if tempStatus.Valid {
+			listing.Status = tempStatus.String
+		}
+		if tempUserName.Valid {
+			listing.User.Name = tempUserName.String
 		}
 		if tempStorefrontID.Valid {
 			sfID := int(tempStorefrontID.Int32)
@@ -900,6 +913,7 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 
 	return listings, nil
 }
+
 func (s *Storage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	query := `
         SELECT user_id 
@@ -923,6 +937,7 @@ func (s *Storage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, 
 
 	return userIDs, nil
 }
+
 func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 	// Сначала удаляем записи из избранного
 	_, err := s.pool.Exec(ctx, `
@@ -938,7 +953,6 @@ func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
         DELETE FROM marketplace_listings
         WHERE id = $1 AND user_id = $2
     `, id, userID)
-
 	if err != nil {
 		return fmt.Errorf("error deleting listing: %w", err)
 	}
@@ -1004,7 +1018,6 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 		listing.ID,
 		listing.UserID,
 	)
-
 	if err != nil {
 		return fmt.Errorf("error updating listing: %w", err)
 	}
@@ -1585,7 +1598,7 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
 		}
 
 		// Установка разумных шагов в зависимости от диапазона
-		var step = 1.0
+		step := 1.0
 		if attrName == "engine_capacity" {
 			step = 0.1
 		} else if attrName == "area" || attrName == "land_area" {
@@ -1906,7 +1919,6 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 			&cat.CreatedAt,
 			&translationsJson,
 		)
-
 		if err != nil {
 			log.Printf("GetCategories: Error scanning category: %v", err)
 			continue
@@ -1955,6 +1967,7 @@ func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.Marketpl
 
 	return cat, nil
 }
+
 func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
 	listing := &models.MarketplaceListing{
 		User:     &models.User{},
@@ -1962,6 +1975,25 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	}
 
 	// Получаем основные данные объявления с original_language
+	var (
+		description    sql.NullString
+		condition      sql.NullString
+		status         sql.NullString
+		location       sql.NullString
+		latitude       sql.NullFloat64
+		longitude      sql.NullFloat64
+		city           sql.NullString
+		country        sql.NullString
+		originalLang   sql.NullString
+		storefrontID   sql.NullInt32
+		userName       sql.NullString
+		userEmail      sql.NullString
+		userPictureURL sql.NullString
+		userPhone      sql.NullString
+		categoryName   sql.NullString
+		categorySlug   sql.NullString
+	)
+
 	err := s.pool.QueryRow(ctx, `
         SELECT
             l.id, l.user_id, l.category_id, l.title, l.description,
@@ -1970,7 +2002,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
             l.storefront_id, -- Добавляем поле storefront_id
             u.name, u.email, u.created_at as user_created_at,
-            COALESCE(u.picture_url, ''), u.phone,
+            u.picture_url, u.phone,
             c.name as category_name, c.slug as category_slug, l.metadata
         FROM marketplace_listings l
         LEFT JOIN users u ON l.user_id = u.id
@@ -1978,18 +2010,73 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
         WHERE l.id = $1
     `, id).Scan(
 		&listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title,
-		&listing.Description, &listing.Price, &listing.Condition, &listing.Status,
-		&listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
-		&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
-		&listing.ShowOnMap, &listing.OriginalLanguage, &listing.StorefrontID,
-		&listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
-		&listing.User.PictureURL, &listing.User.Phone,
-		&listing.Category.Name, &listing.Category.Slug, &listing.Metadata,
+		&description, &listing.Price, &condition, &status,
+		&location, &latitude, &longitude, &city,
+		&country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
+		&listing.ShowOnMap, &originalLang, &storefrontID,
+		&userName, &userEmail, &listing.User.CreatedAt,
+		&userPictureURL, &userPhone,
+		&categoryName, &categorySlug, &listing.Metadata,
 	)
 	log.Printf("999 DEBUG: Listing %d metadata: %+v", id, listing.Metadata)
 
 	if err != nil {
+		// Если не найдено в marketplace_listings, попробуем найти в storefront_products
+		if err.Error() == "no rows in result set" {
+			return s.getStorefrontProductAsListing(ctx, id)
+		}
 		return nil, fmt.Errorf("error getting listing: %w", err)
+	}
+
+	// Обрабатываем nullable значения
+	if description.Valid {
+		listing.Description = description.String
+	}
+	if condition.Valid {
+		listing.Condition = condition.String
+	}
+	if status.Valid {
+		listing.Status = status.String
+	}
+	if location.Valid {
+		listing.Location = location.String
+	}
+	if latitude.Valid {
+		listing.Latitude = &latitude.Float64
+	}
+	if longitude.Valid {
+		listing.Longitude = &longitude.Float64
+	}
+	if city.Valid {
+		listing.City = city.String
+	}
+	if country.Valid {
+		listing.Country = country.String
+	}
+	if originalLang.Valid {
+		listing.OriginalLanguage = originalLang.String
+	}
+	if storefrontID.Valid {
+		intValue := int(storefrontID.Int32)
+		listing.StorefrontID = &intValue
+	}
+	if userName.Valid {
+		listing.User.Name = userName.String
+	}
+	if userEmail.Valid {
+		listing.User.Email = userEmail.String
+	}
+	if userPictureURL.Valid {
+		listing.User.PictureURL = userPictureURL.String
+	}
+	if userPhone.Valid {
+		listing.User.Phone = &userPhone.String
+	}
+	if categoryName.Valid {
+		listing.Category.Name = categoryName.String
+	}
+	if categorySlug.Valid {
+		listing.Category.Slug = categorySlug.String
 	}
 
 	// Обработка метаданных и скидок для согласованного отображения
@@ -2163,6 +2250,58 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 
 		listing.Attributes = attributes
 	}
+
+	return listing, nil
+}
+
+// getStorefrontProductAsListing получает товар из storefront_products и возвращает как MarketplaceListing
+func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*models.MarketplaceListing, error) {
+	listing := &models.MarketplaceListing{
+		User:     &models.User{},
+		Category: &models.MarketplaceCategory{},
+	}
+
+	// Получаем данные товара из storefront_products
+	var categoryName, categorySlug sql.NullString
+
+	err := s.pool.QueryRow(ctx, `
+        SELECT
+            sp.id, sp.storefront_id, 0 as user_id, sp.category_id, sp.name, sp.description,
+            sp.price, 'new' as condition, 'active' as status, '' as location, 
+            0 as latitude, 0 as longitude, '' as address_city, '' as address_country, 
+            sp.view_count, sp.created_at, sp.updated_at, false as show_on_map, 'sr' as original_language,
+            '' as user_name, '' as user_email, sp.created_at as user_created_at,
+            '' as user_picture_url, '' as user_phone,
+            c.name as category_name, c.slug as category_slug, '{}'::jsonb as metadata
+        FROM storefront_products sp
+        LEFT JOIN marketplace_categories c ON sp.category_id = c.id
+        WHERE sp.id = $1 AND sp.is_active = true
+    `, id).Scan(
+		&listing.ID, &listing.StorefrontID, &listing.UserID, &listing.CategoryID, &listing.Title,
+		&listing.Description, &listing.Price, &listing.Condition, &listing.Status,
+		&listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
+		&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
+		&listing.ShowOnMap, &listing.OriginalLanguage,
+		&listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
+		&listing.User.PictureURL, &listing.User.Phone,
+		&categoryName, &categorySlug, &listing.Metadata,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error getting storefront product: %w", err)
+	}
+
+	// Обрабатываем nullable значения категории
+	if categoryName.Valid {
+		listing.Category.Name = categoryName.String
+	}
+	if categorySlug.Valid {
+		listing.Category.Slug = categorySlug.String
+	}
+
+	// Для storefront продуктов нет изображений и атрибутов пока что
+	listing.Images = []models.MarketplaceImage{}
+	listing.Attributes = []models.ListingAttributeValue{}
+	listing.Translations = make(map[string]map[string]string)
 
 	return listing, nil
 }

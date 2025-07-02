@@ -37,6 +37,14 @@ export default function PreviewPublishStep({
       // Создаем объявление
       const response = await ListingsService.createListing(state);
 
+      // Проверяем наличие ID в ответе
+      if (!response?.data?.id) {
+        console.error('CreateListing response:', response);
+        throw new Error('No listing ID received from server');
+      }
+
+      console.log('Listing created successfully with ID:', response.data.id);
+
       // Если есть изображения, загружаем их
       if (state.images && state.images.length > 0) {
         setUploadingImages(true);
@@ -53,7 +61,7 @@ export default function PreviewPublishStep({
           );
 
           await ListingsService.uploadImages(
-            response.id,
+            response.data.id,
             files,
             state.mainImageIndex
           );
@@ -76,7 +84,7 @@ export default function PreviewPublishStep({
 
       // Перенаправляем на страницу объявления
       setTimeout(() => {
-        router.push(`/marketplace/${response.id}`);
+        router.push(`/marketplace/${response.data?.id}`);
       }, 1000);
     } catch (error) {
       console.error('Error publishing:', error);

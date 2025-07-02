@@ -602,7 +602,15 @@ const storefrontSlice = createSlice({
       })
       .addCase(fetchMyStorefronts.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.myStorefronts = action.payload.storefronts || [];
+        // Безопасное извлечение storefronts с проверкой на null
+        if (action.payload && 'storefronts' in action.payload) {
+          state.myStorefronts = action.payload.storefronts || [];
+        } else if (Array.isArray(action.payload)) {
+          // Если payload сам является массивом
+          state.myStorefronts = action.payload;
+        } else {
+          state.myStorefronts = [];
+        }
       })
       .addCase(fetchMyStorefronts.rejected, (state, action) => {
         state.isLoading = false;

@@ -1,25 +1,25 @@
 package main
 
 import (
-	"backend/internal/proj/global/service"
-	"backend/internal/storage/postgres"
-	"backend/internal/storage/filestorage"
-	"backend/internal/storage/opensearch"
-	"backend/internal/types"
-	"backend/pkg/utils"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"time"
+
+	"backend/internal/storage/filestorage"
+	"backend/internal/storage/opensearch"
+	"backend/internal/storage/postgres"
+	"backend/internal/types"
+	"backend/pkg/utils"
 )
 
 func main() {
 	// Simple hardcoded config
 	cfg := &struct {
-		Database struct{ ConnectionString string }
-		FileStorage  filestorage.Config
-		OpenSearch   opensearch.Config
+		Database    struct{ ConnectionString string }
+		FileStorage filestorage.Config
+		OpenSearch  opensearch.Config
 	}{
 		Database: struct{ ConnectionString string }{
 			ConnectionString: "postgres://postgres:password@localhost:5432/hostel_db?sslmode=disable",
@@ -27,13 +27,13 @@ func main() {
 		FileStorage: filestorage.Config{
 			Provider: "minio",
 			MinIO: &filestorage.MinIOConfig{
-				Endpoint:       "localhost:9000",
-				AccessKey:      "minioadmin",
-				SecretKey:      "1321321321321",
-				BucketName:     "listings",
-				Region:         "eu-central-1",
-				UseSSL:         false,
-				PublicBaseURL:  "http://localhost:3000",
+				Endpoint:      "localhost:9000",
+				AccessKey:     "minioadmin",
+				SecretKey:     "1321321321321",
+				BucketName:    "listings",
+				Region:        "eu-central-1",
+				UseSSL:        false,
+				PublicBaseURL: "http://localhost:3000",
 			},
 		},
 		OpenSearch: opensearch.Config{
@@ -65,7 +65,7 @@ func main() {
 	// Get admin user
 	ctx := context.Background()
 	adminEmail := "voroshilovdo@gmail.com" // Используем email администратора из логов
-	
+
 	user, err := db.GetUserByEmail(ctx, adminEmail)
 	if err != nil || user == nil {
 		log.Fatal("Failed to get user or user not found:", err)
@@ -73,7 +73,7 @@ func main() {
 
 	// Generate session token
 	sessionToken := utils.GenerateSessionToken()
-	
+
 	// Create session data
 	sessionData := &types.SessionData{
 		UserID:     user.ID,
@@ -87,7 +87,7 @@ func main() {
 	// Save session to database
 	sessionJSON, _ := json.Marshal(sessionData)
 	expiry := time.Now().Add(24 * time.Hour)
-	
+
 	if err := db.SaveSession(ctx, sessionToken, string(sessionJSON), expiry); err != nil {
 		log.Fatal("Failed to save session:", err)
 	}

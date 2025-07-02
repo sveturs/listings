@@ -2,11 +2,12 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"fmt"
 	"strings"
+
+	"backend/internal/domain/models"
 )
 
 // backend/internal/proj/users/storage/postgres/user_profile.go

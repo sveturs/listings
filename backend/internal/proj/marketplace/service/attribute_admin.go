@@ -1,11 +1,12 @@
 package service
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"fmt"
 	"time"
+
+	"backend/internal/domain/models"
 )
 
 // CreateAttribute создает новый атрибут категории
@@ -50,7 +51,6 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 		attribute.SortOrder,
 		attribute.CustomComponent,
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		return 0, fmt.Errorf("не удалось создать атрибут: %w", err)
 	}
@@ -146,7 +146,6 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 		attribute.CustomComponent,
 		attribute.ID,
 	)
-
 	if err != nil {
 		return fmt.Errorf("не удалось обновить атрибут: %w", err)
 	}
@@ -317,7 +316,6 @@ func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*mod
 		&attribute.CreatedAt,
 		&attribute.CustomComponent,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("не удалось получить атрибут: %w", err)
 	}
@@ -411,7 +409,6 @@ func (s *MarketplaceService) AddAttributeToCategoryWithOrder(ctx context.Context
 		ON CONFLICT (category_id, attribute_id)
 		DO UPDATE SET is_enabled = true, is_required = $3, sort_order = $4
 	`, categoryID, attributeID, isRequired, sortOrder)
-
 	if err != nil {
 		return fmt.Errorf("не удалось привязать атрибут к категории: %w", err)
 	}
@@ -429,7 +426,6 @@ func (s *MarketplaceService) RemoveAttributeFromCategory(ctx context.Context, ca
 		JOIN marketplace_listings ml ON lav.listing_id = ml.id
 		WHERE ml.category_id = $1 AND lav.attribute_id = $2
 	`, categoryID, attributeID).Scan(&count)
-
 	if err != nil {
 		return fmt.Errorf("не удалось проверить использование атрибута: %w", err)
 	}
@@ -443,7 +439,6 @@ func (s *MarketplaceService) RemoveAttributeFromCategory(ctx context.Context, ca
 		DELETE FROM category_attribute_mapping
 		WHERE category_id = $1 AND attribute_id = $2
 	`, categoryID, attributeID)
-
 	if err != nil {
 		return fmt.Errorf("не удалось отвязать атрибут от категории: %w", err)
 	}
@@ -460,7 +455,6 @@ func (s *MarketplaceService) UpdateAttributeCategory(ctx context.Context, catego
 		SET is_required = $1, is_enabled = $2
 		WHERE category_id = $3 AND attribute_id = $4
 	`, isRequired, isEnabled, categoryID, attributeID)
-
 	if err != nil {
 		return fmt.Errorf("не удалось обновить связь атрибута с категорией: %w", err)
 	}
@@ -485,7 +479,6 @@ func (s *MarketplaceService) UpdateAttributeCategoryExtended(
 		SET is_required = $1, is_enabled = $2, sort_order = $3, custom_component = $4
 		WHERE category_id = $5 AND attribute_id = $6
 	`, isRequired, isEnabled, sortOrder, customComponent, categoryID, attributeID)
-
 	if err != nil {
 		return fmt.Errorf("не удалось обновить связь атрибута с категорией: %w", err)
 	}
@@ -527,7 +520,6 @@ func (s *MarketplaceService) GetCategoryByID(ctx context.Context, id int) (*mode
 		&category.Count,
 		&category.ExternalID,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("не удалось получить категорию: %w", err)
 	}
@@ -797,7 +789,6 @@ func (s *MarketplaceService) SaveListingAttributes(ctx context.Context, listingI
 			)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		`, listingID, attr.AttributeID, valueType, textValue, numValue, boolValue, jsonValue, attr.Unit)
-
 		if err != nil {
 			return fmt.Errorf("не удалось сохранить значение атрибута %d: %w", attr.AttributeID, err)
 		}

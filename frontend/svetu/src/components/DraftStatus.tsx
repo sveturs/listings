@@ -7,7 +7,7 @@ import { sr, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
 
 export function DraftStatus() {
-  const t = useTranslations('createListing.draft');
+  const t = useTranslations('create_listing.draft');
   const locale = useLocale();
   const { isSavingDraft, hasUnsavedChanges, lastSavedAt } = useCreateListing();
 
@@ -72,7 +72,7 @@ interface DraftIndicatorProps {
 }
 
 export function DraftIndicator({ onClick }: DraftIndicatorProps) {
-  const t = useTranslations('createListing');
+  const t = useTranslations('create_listing');
   const { hasUnsavedChanges, isSavingDraft } = useCreateListing();
 
   return (
@@ -105,7 +105,7 @@ export function DraftIndicator({ onClick }: DraftIndicatorProps) {
 }
 
 export function OfflineIndicator() {
-  const t = useTranslations('createListing.draft');
+  const t = useTranslations('create_listing.draft');
   const isOnline =
     typeof window !== 'undefined' ? window.navigator.onLine : true;
 

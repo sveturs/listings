@@ -207,6 +207,9 @@ export default function SearchPage() {
       views_count: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      // Добавляем информацию о типе товара и storefront
+      product_type: item.product_type,
+      storefront_id: item.storefront?.id,
     };
   };
 

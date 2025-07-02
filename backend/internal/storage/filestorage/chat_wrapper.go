@@ -1,12 +1,13 @@
 package filestorage
 
 import (
-	"backend/internal/storage/minio"
 	"context"
 	"fmt"
 	"io"
 	"log"
 	"time"
+
+	"backend/internal/storage/minio"
 )
 
 // ChatFilesWrapper обертка для работы с bucket chat-files

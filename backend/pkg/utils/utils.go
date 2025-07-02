@@ -5,12 +5,13 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"strconv"
 	"time"
 
 	"backend/pkg/jwt"
+
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
-	"strconv"
 )
 
 // ErrorResponseSwag представляет структуру ответа об ошибке для swagger

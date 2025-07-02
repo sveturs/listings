@@ -2,10 +2,13 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
-	//    "encoding/json"
 	"fmt"
+
+	"backend/internal/domain/models"
+
+	//    "encoding/json"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -71,7 +74,6 @@ func (s *Storage) UpdateNotificationSettings(ctx context.Context, settings *mode
 		settings.TelegramEnabled,
 		settings.EmailEnabled,
 	)
-
 	if err != nil {
 		return fmt.Errorf("error updating notification settings: %w", err)
 	}
@@ -90,7 +92,6 @@ func (s *Storage) SaveTelegramConnection(ctx context.Context, userID int, chatID
             connected_at = CURRENT_TIMESTAMP
         RETURNING user_id
     `, userID, chatID, username)
-
 	if err != nil {
 		return fmt.Errorf("error saving telegram connection: %w", err)
 	}

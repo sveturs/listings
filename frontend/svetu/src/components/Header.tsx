@@ -2,20 +2,46 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
-import { usePathname } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/routing';
+import { usePathname, useSearchParams } from 'next/navigation';
 import LanguageSwitcher from './LanguageSwitcher';
 import { AuthButton } from './AuthButton';
 import LoginModal from './LoginModal';
 import { SearchBar } from './SearchBar';
 import { useAuthContext } from '@/contexts/AuthContext';
+import CartIcon from './cart/CartIcon';
+import ShoppingCartModal from './cart/ShoppingCartModal';
 
 export default function Header() {
   const t = useTranslations('header');
+  const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuthContext();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Функция для извлечения ID витрины из пути
+  const extractStorefrontIdFromPath = (path: string): number | null => {
+    // Для страниц витрин вида /storefronts/tech-store-dmitry или /storefronts/tech-store-dmitry/products/1
+    // можем временно извлечь ID из slug, если известно соответствие
+    if (path.includes('/storefronts/')) {
+      // Временное решение для витрины tech-store-dmitry = ID 4
+      if (path.includes('tech-store-dmitry')) {
+        return 4;
+      }
+      // Можно добавить другие известные витрины
+    }
+    return null;
+  };
+
+  // Определяем активную витрину из URL
+  const currentStorefrontId = searchParams.get('storefront')
+    ? Number(searchParams.get('storefront'))
+    : pathname?.includes('/storefronts/')
+      ? extractStorefrontIdFromPath(pathname)
+      : null;
 
   // Не показываем мобильный поиск на странице поиска
   const isSearchPage = pathname?.includes('/search');
@@ -31,6 +57,18 @@ export default function Header() {
       setIsLoginModalOpen(false);
     }
   }, [isAuthenticated, isLoginModalOpen]);
+
+  const handleCartClick = () => {
+    if (currentStorefrontId) {
+      setIsCartModalOpen(true);
+    }
+  };
+
+  const handleCheckout = () => {
+    if (currentStorefrontId) {
+      router.push(`/checkout?storefront=${currentStorefrontId}`);
+    }
+  };
 
   const navItems = [
     { href: '/blog', label: t('nav.blog') },
@@ -103,6 +141,14 @@ export default function Header() {
 
           {/* Правая часть */}
           <div className="flex-none flex items-center gap-2">
+            {/* Корзина - показываем только если есть активная витрина */}
+            {mounted && currentStorefrontId && (
+              <CartIcon
+                onClick={handleCartClick}
+                className="btn btn-ghost btn-sm"
+              />
+            )}
+
             {mounted && isAuthenticated && user && (
               <Link
                 href="/create-listing"
@@ -137,6 +183,16 @@ export default function Header() {
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
       />
+
+      {/* Модальное окно корзины */}
+      {currentStorefrontId && (
+        <ShoppingCartModal
+          storefrontId={currentStorefrontId}
+          isOpen={isCartModalOpen}
+          onClose={() => setIsCartModalOpen(false)}
+          onCheckout={handleCheckout}
+        />
+      )}
 
       {/* Мобильная поисковая строка - скрываем на странице поиска */}
       {!isSearchPage && (

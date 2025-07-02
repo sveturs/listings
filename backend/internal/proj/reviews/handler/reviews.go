@@ -87,7 +87,7 @@ func (h *ReviewHandler) CreateDraftReview(c *fiber.Ctx) error {
 		storefrontID := *listing.StorefrontID
 		request.StorefrontID = &storefrontID
 	}
-	
+
 	// Создаем черновик отзыва без фотографий
 	request.Photos = nil
 	createdReview, err := h.services.Review().CreateDraftReview(c.Context(), userID, &request)

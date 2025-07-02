@@ -11,7 +11,6 @@ import (
 
 // RegisterRoutes регистрирует все маршруты для проекта users
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
-
 	app.Post("/api/v1/auth/register", mw.RegistrationRateLimit(), mw.CSRFProtection(), h.Auth.Register)
 	app.Post("/api/v1/auth/login", mw.AuthRateLimit(), mw.CSRFProtection(), h.Auth.Login)
 	app.Post("/api/v1/auth/logout", mw.RateLimitByIP(10, time.Minute), h.Auth.Logout)

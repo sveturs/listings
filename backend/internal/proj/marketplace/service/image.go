@@ -1,15 +1,16 @@
 package service
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/storage/filestorage"
 	"context"
 	"fmt"
-	//	"io"
-	//	"log"
 	"mime/multipart"
 	"path/filepath"
 	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/storage/filestorage"
+	//	"io"
+	//	"log"
 )
 
 // ImageService представляет сервис для работы с изображениями

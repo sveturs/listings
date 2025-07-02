@@ -2,10 +2,11 @@
 package service
 
 import (
+	"context"
+
 	"backend/internal/domain/models"
 	"backend/internal/types"
 	"backend/pkg/jwt"
-	"context"
 )
 
 type AuthServiceInterface interface {

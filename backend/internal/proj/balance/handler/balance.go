@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"strconv"
 
@@ -47,6 +48,7 @@ func (h *BalanceHandler) GetBalance(c *fiber.Ctx) error {
 		log.Printf("Error getting balance for user %d: %v", userID, err)
 		// Если записи нет, возвращаем нулевой баланс
 		if err.Error() == "no rows in result set" {
+			log.Printf("No balance record found for user %d, returning zero balance", userID)
 			return utils.SuccessResponse(c, &models.UserBalance{
 				UserID:   userID,
 				Balance:  0,
@@ -56,6 +58,7 @@ func (h *BalanceHandler) GetBalance(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getError")
 	}
 
+	log.Printf("Balance for user %d: amount=%f, currency=%s", userID, balance.Balance, balance.Currency)
 	return utils.SuccessResponse(c, balance)
 }
 
@@ -63,6 +66,7 @@ func (h *BalanceHandler) GetBalance(c *fiber.Ctx) error {
 type DepositRequest struct {
 	Amount        float64 `json:"amount" example:"1000.50"`
 	PaymentMethod string  `json:"payment_method" example:"card"`
+	ReturnURL     string  `json:"return_url,omitempty" example:"http://localhost:3001/en/balance/deposit/success"`
 }
 
 // CreateDeposit creates a new deposit payment session
@@ -88,11 +92,14 @@ func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "balance.invalidRequest")
 	}
 
-	log.Printf("Processing deposit request: amount=%f, method=%s", request.Amount, request.PaymentMethod)
+	log.Printf("Processing deposit request: amount=%f, method=%s, return_url=%s", request.Amount, request.PaymentMethod, request.ReturnURL)
+
+	// Добавляем return_url в контекст для мок-сервиса
+	ctx := context.WithValue(c.Context(), "return_url", request.ReturnURL)
 
 	// Создаем платежную сессию вместо прямого создания депозита
 	session, err := h.paymentService.CreatePaymentSession(
-		c.Context(),
+		ctx,
 		userID,
 		request.Amount,
 		"rsd",
@@ -162,4 +169,67 @@ func (h *BalanceHandler) GetPaymentMethods(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, methods)
+}
+
+// CompleteMockPaymentRequest represents mock payment completion request
+type CompleteMockPaymentRequest struct {
+	SessionID string  `json:"session_id" example:"mock_session_7_1751361491"`
+	Amount    float64 `json:"amount,omitempty" example:"2000"`
+}
+
+// CompleteMockPayment completes a mock payment session
+// @Summary Complete mock payment
+// @Description Completes a mock payment session for testing purposes
+// @Tags balance
+// @Accept json
+// @Produce json
+// @Param request body CompleteMockPaymentRequest true "Payment session ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object} "Payment completed successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "balance.invalidRequest"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.completeMockPaymentError"
+// @Security BearerAuth
+// @Router /api/v1/balance/mock/complete [post]
+func (h *BalanceHandler) CompleteMockPayment(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+
+	var request CompleteMockPaymentRequest
+	if err := c.BodyParser(&request); err != nil {
+		log.Printf("Error parsing mock payment request: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "balance.invalidRequest")
+	}
+
+	log.Printf("Completing mock payment for session: %s, user: %d", request.SessionID, userID)
+
+	// В реальной системе здесь бы была проверка сессии и обновление статуса
+	// Для mock системы сразу создаем транзакцию пополнения
+
+	// Используем сумму из запроса, если она передана
+	amount := request.Amount
+	if amount == 0 {
+		// Если сумма не передана, используем дефолтное значение
+		amount = 2000.0
+	}
+
+	// Создаем транзакцию пополнения
+	transaction, err := h.balanceService.CreateDeposit(c.Context(), userID, amount, "mock_payment")
+	if err != nil {
+		log.Printf("Error creating deposit transaction: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.completeMockPaymentError")
+	}
+
+	log.Printf("Mock payment completed successfully, transaction: %+v", transaction)
+
+	// Получаем обновленный баланс
+	balance, err := h.balanceService.GetBalance(c.Context(), userID)
+	if err != nil {
+		log.Printf("Error getting updated balance: %v", err)
+		balance = &models.UserBalance{Balance: amount}
+	}
+
+	return utils.SuccessResponse(c, map[string]interface{}{
+		"success":     true,
+		"transaction": transaction,
+		"new_balance": balance.Balance,
+	})
 }

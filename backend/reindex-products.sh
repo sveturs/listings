@@ -85,17 +85,23 @@ if [ "$CREATE_INDEX" = true ]; then
     fi
 fi
 
-# Запуск переиндексации через admin API
-echo -e "${YELLOW}Starting reindexing via admin API...${NC}"
+# Запуск переиндексации
+echo -e "${YELLOW}Starting reindexing...${NC}"
 echo
 
-# TODO: Реализовать переиндексацию через admin API endpoint
-# Пока что это заглушка
-echo -e "${YELLOW}Reindexing functionality will be implemented via admin API${NC}"
-echo "For now, storefront products indexing is integrated into ProductService"
-echo "New products will be automatically indexed when created/updated"
+# Собираем аргументы для утилиты
+ARGS=""
+if [ "$CREATE_INDEX" = true ]; then
+    ARGS="$ARGS --recreate"
+fi
+ARGS="$ARGS --batch $BATCH_SIZE"
 
-if [ $? -eq 0 ]; then
+# Запускаем утилиту переиндексации
+go run ./cmd/reindex-products/main.go $ARGS
+
+RESULT=$?
+
+if [ $RESULT -eq 0 ]; then
     echo
     echo -e "${GREEN}Reindexing completed successfully!${NC}"
     

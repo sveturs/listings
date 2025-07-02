@@ -61,7 +61,7 @@ func (p *CSVParser) ParseCSV(csvData io.Reader) ([]models.ImportProductRequest, 
 
 		lineNumber++
 		product, errs := p.parseCSVRecord(record, headerMap, lineNumber)
-		
+
 		if len(errs) > 0 {
 			validationErrors = append(validationErrors, errs...)
 			continue
@@ -76,7 +76,7 @@ func (p *CSVParser) ParseCSV(csvData io.Reader) ([]models.ImportProductRequest, 
 // validateHeaders checks if required headers are present
 func (p *CSVParser) validateHeaders(headerMap map[string]int) error {
 	requiredHeaders := []string{"name", "price", "currency"}
-	
+
 	var missingHeaders []string
 	for _, header := range requiredHeaders {
 		if _, exists := headerMap[header]; !exists {
@@ -210,7 +210,7 @@ func (p *CSVParser) parseCSVRecord(record []string, headerMap map[string]int, li
 	if categoryStr != "" {
 		// For now, set default category ID (will be mapped by service layer)
 		product.CategoryID = 1
-		
+
 		// Store original category in attributes for mapping
 		if product.Attributes == nil {
 			product.Attributes = make(map[string]interface{})
@@ -253,7 +253,7 @@ func parseBool(value string, defaultValue bool) bool {
 	if value == "" {
 		return defaultValue
 	}
-	
+
 	value = strings.ToLower(value)
 	switch value {
 	case "true", "1", "yes", "y", "da", "активан":
@@ -268,7 +268,7 @@ func parseBool(value string, defaultValue bool) bool {
 // GetSupportedHeaders returns the list of supported CSV headers
 func (p *CSVParser) GetSupportedHeaders() []string {
 	return []string{
-		"sku",                // Product SKU/Code
+		"sku",               // Product SKU/Code
 		"name",              // Product name (required)
 		"description",       // Product description
 		"price",             // Retail price (required)
@@ -291,22 +291,22 @@ func (p *CSVParser) GetSupportedHeaders() []string {
 func (p *CSVParser) GenerateCSVTemplate() [][]string {
 	headers := p.GetSupportedHeaders()
 	exampleData := []string{
-		"SKU001",                           // sku
-		"Example Product Name",             // name
-		"This is an example product",       // description
-		"1000.00",                         // price
-		"800.00",                          // wholesale_price
-		"RSD",                             // currency
-		"Electronics",                     // category
-		"50",                              // stock_quantity
-		"1234567890123",                   // barcode
+		"SKU001",                     // sku
+		"Example Product Name",       // name
+		"This is an example product", // description
+		"1000.00",                    // price
+		"800.00",                     // wholesale_price
+		"RSD",                        // currency
+		"Electronics",                // category
+		"50",                         // stock_quantity
+		"1234567890123",              // barcode
 		"https://example.com/image1.jpg,https://example.com/image2.jpg", // image_url
-		"true",                            // is_active
-		"false",                           // on_sale
-		"900.00",                          // sale_price
-		"ExampleBrand",                    // brand
-		"Model123",                        // model
-		"Serbia",                          // country_of_origin
+		"true",         // is_active
+		"false",        // on_sale
+		"900.00",       // sale_price
+		"ExampleBrand", // brand
+		"Model123",     // model
+		"Serbia",       // country_of_origin
 	}
 
 	return [][]string{headers, exampleData}

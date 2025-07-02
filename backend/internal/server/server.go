@@ -16,8 +16,8 @@ import (
 	"backend/internal/config"
 	"backend/internal/logger"
 	"backend/internal/middleware"
-	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/analytics"
+	balanceHandler "backend/internal/proj/balance/handler"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
@@ -26,6 +26,7 @@ import (
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	notificationHandler "backend/internal/proj/notifications/handler"
+	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/storefronts"
@@ -45,6 +46,7 @@ type Server struct {
 	notifications *notificationHandler.Handler
 	balance       *balanceHandler.Handler
 	payments      *paymentHandler.Handler
+	orders        *orders.Module
 	storefront    *storefronts.Module
 	geocode       *geocodeHandler.Handler
 	contacts      *contactsHandler.Handler
@@ -84,6 +86,10 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(services)
 	balanceHandler := balanceHandler.NewHandler(services)
 	storefrontModule := storefronts.NewModule(services)
+	ordersModule, err := orders.NewModule(db)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to initialize orders module")
+	}
 	contactsHandler := contactsHandler.NewHandler(services)
 	paymentsHandler := paymentHandler.NewHandler(services)
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
@@ -127,8 +133,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		marketplace:   marketplaceHandlerInstance,
 		notifications: notificationsHandler,
 		balance:       balanceHandler,
-		storefront:    storefrontModule,
 		payments:      paymentsHandler,
+		orders:        ordersModule,
+		storefront:    storefrontModule,
 		geocode:       geocodeHandler,
 		contacts:      contactsHandler,
 		docs:          docsHandlerInstance,
@@ -177,7 +184,6 @@ func initializeOpenSearch(cfg *config.Config) (*opensearch.OpenSearchClient, err
 		Username: cfg.OpenSearch.Username,
 		Password: cfg.OpenSearch.Password,
 	})
-
 	if err != nil {
 		return nil, errors.New("Ошибка подключения к OpenSearch")
 	}
@@ -197,7 +203,6 @@ func (s *Server) setupMiddleware() {
 }
 
 func (s *Server) setupRoutes() {
-
 	s.app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Svetu API")
 	})
@@ -249,7 +254,7 @@ func (s *Server) registerProjectRoutes() {
 
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
-	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.marketplace, s.balance, s.storefront,
+	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.marketplace, s.balance, s.orders, s.storefront,
 		s.geocode, s.contacts, s.payments, s.docs, s.analytics)
 
 	// Регистрируем роуты каждого проекта

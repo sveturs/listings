@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -10,6 +9,8 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"backend/internal/domain/models"
 )
 
 // ErrNotFound ошибка когда запись не найдена
@@ -18,46 +19,46 @@ var ErrNotFound = errors.New("record not found")
 // StorefrontRepository интерфейс репозитория витрин
 type StorefrontRepository interface {
 	// Основные CRUD операции
-	Create(ctx context.Context, storefront *models.StorefrontCreateDTO) (*models.Storefront, error)
+	Create(ctx context.Context, userID int, storefront *models.StorefrontCreateDTO) (*models.Storefront, error)
 	GetByID(ctx context.Context, id int) (*models.Storefront, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Storefront, error)
 	Update(ctx context.Context, id int, updates *models.StorefrontUpdateDTO) error
 	Delete(ctx context.Context, id int) error
-	
+
 	// Поиск и фильтрация
 	List(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error)
 	GetMapData(ctx context.Context, bounds GeoBounds, filter *models.StorefrontFilter) ([]*models.StorefrontMapData, error)
 	GetClusters(ctx context.Context, bounds GeoBounds, zoomLevel int) ([]*models.MapCluster, error)
-	
+
 	// Геолокация
 	FindNearby(ctx context.Context, lat, lng, radiusKm float64, limit int) ([]*models.Storefront, error)
 	GetBusinessesInBuilding(ctx context.Context, lat, lng float64, radiusM float64) ([]*models.StorefrontMapData, error)
-	
+
 	// Управление персоналом
 	AddStaff(ctx context.Context, staff *models.StorefrontStaff) error
 	UpdateStaff(ctx context.Context, id int, permissions models.JSONB) error
 	RemoveStaff(ctx context.Context, storefrontID, userID int) error
 	GetStaff(ctx context.Context, storefrontID int) ([]*models.StorefrontStaff, error)
-	
+
 	// Часы работы
 	SetWorkingHours(ctx context.Context, hours []*models.StorefrontHours) error
 	GetWorkingHours(ctx context.Context, storefrontID int) ([]*models.StorefrontHours, error)
 	IsOpenNow(ctx context.Context, storefrontID int) (bool, error)
-	
+
 	// Методы оплаты
 	SetPaymentMethods(ctx context.Context, methods []*models.StorefrontPaymentMethod) error
 	GetPaymentMethods(ctx context.Context, storefrontID int) ([]*models.StorefrontPaymentMethod, error)
-	
+
 	// Методы доставки
 	SetDeliveryOptions(ctx context.Context, options []*models.StorefrontDeliveryOption) error
 	GetDeliveryOptions(ctx context.Context, storefrontID int) ([]*models.StorefrontDeliveryOption, error)
-	
+
 	// Аналитика
 	RecordView(ctx context.Context, storefrontID int) error
 	RecordAnalytics(ctx context.Context, analytics *models.StorefrontAnalytics) error
 	GetAnalytics(ctx context.Context, storefrontID int, from, to time.Time) ([]*models.StorefrontAnalytics, error)
 	RecordEvent(ctx context.Context, event *StorefrontEvent) error
-	
+
 	// Проверки прав
 	IsOwner(ctx context.Context, storefrontID, userID int) (bool, error)
 	HasPermission(ctx context.Context, storefrontID, userID int, permission string) (bool, error)
@@ -82,7 +83,7 @@ func NewStorefrontRepository(db *Database) StorefrontRepository {
 }
 
 // Create создает новую витрину
-func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
+func (r *storefrontRepo) Create(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
 	tx, err := r.db.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
@@ -109,8 +110,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 		)
 		RETURNING id, created_at, updated_at
 	`,
-		// Временно используем userID = 1, потом получим из контекста
-		1, generateSlug(dto.Name), dto.Name, dto.Description,
+		userID, generateSlug(dto.Name), dto.Name, dto.Description,
 		"", "", dto.Theme,
 		dto.Phone, dto.Email, dto.Website,
 		dto.Location.FullAddress, dto.Location.City, dto.Location.PostalCode, dto.Location.Country,
@@ -118,7 +118,6 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 		dto.Settings, dto.SEOMeta,
 		false, models.SubscriptionPlanStarter, 3.00,
 	).Scan(&storefront.ID, &storefront.CreatedAt, &storefront.UpdatedAt)
-	
 	if err != nil {
 		return nil, fmt.Errorf("failed to create storefront: %w", err)
 	}
@@ -127,8 +126,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 	_, err = tx.Exec(ctx, `
 		INSERT INTO storefront_staff (storefront_id, user_id, role, permissions)
 		VALUES ($1, $2, $3, $4)
-	`, storefront.ID, 1, models.StaffRoleOwner, getOwnerPermissions())
-	
+	`, storefront.ID, userID, models.StaffRoleOwner, getOwnerPermissions())
 	if err != nil {
 		return nil, fmt.Errorf("failed to add owner to staff: %w", err)
 	}
@@ -283,19 +281,19 @@ func (r *storefrontRepo) Update(ctx context.Context, id int, dto *models.Storefr
 		setClauses = append(setClauses, fmt.Sprintf("address = $%d", argCount))
 		args = append(args, dto.Location.FullAddress)
 		argCount++
-		
+
 		setClauses = append(setClauses, fmt.Sprintf("city = $%d", argCount))
 		args = append(args, dto.Location.City)
 		argCount++
-		
+
 		setClauses = append(setClauses, fmt.Sprintf("postal_code = $%d", argCount))
 		args = append(args, dto.Location.PostalCode)
 		argCount++
-		
+
 		setClauses = append(setClauses, fmt.Sprintf("latitude = $%d", argCount))
 		args = append(args, dto.Location.BuildingLat)
 		argCount++
-		
+
 		setClauses = append(setClauses, fmt.Sprintf("longitude = $%d", argCount))
 		args = append(args, dto.Location.BuildingLng)
 		argCount++
@@ -353,8 +351,8 @@ func (r *storefrontRepo) Update(ctx context.Context, id int, dto *models.Storefr
 
 // Delete удаляет витрину (soft delete)
 func (r *storefrontRepo) Delete(ctx context.Context, id int) error {
-	result, err := r.db.pool.Exec(ctx, 
-		"UPDATE storefronts SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1", 
+	result, err := r.db.pool.Exec(ctx,
+		"UPDATE storefronts SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
 		id,
 	)
 	if err != nil {
@@ -425,14 +423,14 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 				ll_to_earth($%d, $%d)
 			) <= $%d * 1000
 		`, argCount, argCount+1, argCount+2))
-		
+
 		countWhereConditions = append(countWhereConditions, fmt.Sprintf(`
 			earth_distance(
 				ll_to_earth(latitude, longitude),
 				ll_to_earth($%d, $%d)
 			) <= $%d * 1000
 		`, argCount, argCount+1, argCount+2))
-		
+
 		args = append(args, *filter.Latitude, *filter.Longitude, *filter.RadiusKm)
 		argCount += 3
 	}
@@ -455,11 +453,11 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 			orderBy = "products_count"
 		case "distance":
 			if filter.Latitude != nil && filter.Longitude != nil {
-				orderBy = fmt.Sprintf("earth_distance(ll_to_earth(latitude, longitude), ll_to_earth(%f, %f))", 
+				orderBy = fmt.Sprintf("earth_distance(ll_to_earth(latitude, longitude), ll_to_earth(%f, %f))",
 					*filter.Latitude, *filter.Longitude)
 			}
 		}
-		
+
 		if filter.SortOrder == "desc" {
 			orderBy += " DESC"
 		} else {
@@ -547,7 +545,7 @@ func (r *storefrontRepo) FindNearby(ctx context.Context, lat, lng, radiusKm floa
 		SortBy:    "distance",
 		SortOrder: "asc",
 	}
-	
+
 	storefronts, _, err := r.List(ctx, filter)
 	return storefronts, err
 }
@@ -627,12 +625,12 @@ func (r *storefrontRepo) GetMapData(ctx context.Context, bounds GeoBounds, filte
 // GetBusinessesInBuilding получает все бизнесы в здании
 func (r *storefrontRepo) GetBusinessesInBuilding(ctx context.Context, lat, lng float64, radiusM float64) ([]*models.StorefrontMapData, error) {
 	bounds := GeoBounds{
-		MinLat: lat - (radiusM/111000.0), // приблизительно
-		MaxLat: lat + (radiusM/111000.0),
-		MinLng: lng - (radiusM/(111000.0*math.Cos(lat*math.Pi/180))),
-		MaxLng: lng + (radiusM/(111000.0*math.Cos(lat*math.Pi/180))),
+		MinLat: lat - (radiusM / 111000.0), // приблизительно
+		MaxLat: lat + (radiusM / 111000.0),
+		MinLng: lng - (radiusM / (111000.0 * math.Cos(lat*math.Pi/180))),
+		MaxLng: lng + (radiusM / (111000.0 * math.Cos(lat*math.Pi/180))),
 	}
-	
+
 	return r.GetMapData(ctx, bounds, nil)
 }
 
@@ -645,7 +643,7 @@ func (r *storefrontRepo) IsOwner(ctx context.Context, storefrontID, userID int) 
 			WHERE id = $1 AND user_id = $2
 		)
 	`, storefrontID, userID).Scan(&exists)
-	
+
 	return exists, err
 }
 
@@ -666,7 +664,7 @@ func (r *storefrontRepo) HasPermission(ctx context.Context, storefrontID, userID
 		SELECT permissions FROM storefront_staff 
 		WHERE storefront_id = $1 AND user_id = $2
 	`, storefrontID, userID).Scan(&permissions)
-	
+
 	if err == sql.ErrNoRows {
 		return false, nil
 	}
@@ -696,22 +694,21 @@ func generateSlug(name string) string {
 
 func getOwnerPermissions() models.JSONB {
 	return models.JSONB{
-		"can_add_products":    true,
-		"can_edit_products":   true,
-		"can_delete_products": true,
-		"can_view_orders":     true,
-		"can_process_orders":  true,
-		"can_refund_orders":   true,
-		"can_edit_storefront": true,
-		"can_manage_staff":    true,
-		"can_view_analytics":  true,
-		"can_manage_payments": true,
+		"can_add_products":     true,
+		"can_edit_products":    true,
+		"can_delete_products":  true,
+		"can_view_orders":      true,
+		"can_process_orders":   true,
+		"can_refund_orders":    true,
+		"can_edit_storefront":  true,
+		"can_manage_staff":     true,
+		"can_view_analytics":   true,
+		"can_manage_payments":  true,
 		"can_reply_to_reviews": true,
-		"can_send_messages":   true,
+		"can_send_messages":    true,
 	}
 }
 
 func boolPtr(b bool) *bool {
 	return &b
 }
-

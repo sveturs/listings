@@ -3,8 +3,9 @@
 package balance
 
 import (
-	"backend/internal/domain/models"
 	"context"
+
+	"backend/internal/domain/models"
 )
 
 type BalanceServiceInterface interface {

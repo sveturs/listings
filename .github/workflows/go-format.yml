@@ -1,0 +1,81 @@
+name: Go Format Check
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**/*.go'
+      - 'backend/go.mod'
+      - 'backend/go.sum'
+
+jobs:
+  format-check:
+    name: Check Go Code Formatting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          
+      - name: Install formatting tools
+        run: |
+          go install mvdan.cc/gofumpt@latest
+          go install golang.org/x/tools/cmd/goimports@latest
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          
+      - name: Check Go formatting
+        working-directory: ./backend
+        run: |
+          echo "🔍 Checking Go code formatting..."
+          
+          # Check gofumpt formatting
+          if [ -n "$(gofumpt -d .)" ]; then
+            echo "❌ Code is not formatted with gofumpt. Run 'make format' to fix."
+            echo "Files that need formatting:"
+            gofumpt -d .
+            exit 1
+          fi
+          
+          # Check goimports formatting
+          if [ -n "$(goimports -d .)" ]; then
+            echo "❌ Imports are not formatted. Run 'make format' to fix."
+            echo "Files that need import formatting:"
+            goimports -d .
+            exit 1
+          fi
+          
+          echo "✅ Go code formatting is correct!"
+          
+      - name: Run golangci-lint
+        working-directory: ./backend
+        run: |
+          echo "🔍 Running Go linters..."
+          golangci-lint run ./...
+          echo "✅ Linting completed!"
+          
+      - name: Comment on PR if formatting needed
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `❌ **Go Code Formatting Check Failed**
+              
+              Your Go code needs formatting. Please run the following commands in the \`backend\` directory:
+              
+              \`\`\`bash
+              cd backend
+              make format
+              \`\`\`
+              
+              This will format your code with \`gofumpt\` and fix import statements with \`goimports\`.
+              
+              Then commit and push the changes.`
+            })

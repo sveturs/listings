@@ -2,14 +2,16 @@
 package handler
 
 import (
+	"context"
+	"time"
+
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
-	"context"
+
 	"github.com/gofiber/fiber/v2"
-	"time"
 )
 
 // IndexingHandler handles requests related to listing indexing

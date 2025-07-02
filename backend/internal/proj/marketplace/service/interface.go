@@ -1,11 +1,12 @@
 package service
 
 import (
+	"context"
+	"mime/multipart"
+
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/storage"
-	"context"
-	"mime/multipart"
 )
 
 type MarketplaceServiceInterface interface {
@@ -35,8 +36,9 @@ type MarketplaceServiceInterface interface {
 	ReindexAllListings(ctx context.Context) error
 	GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error)
 	Storage() storage.Storage
+	Service() *Service
 
-	//атрибуты
+	// атрибуты
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
 	SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
 	GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error)
@@ -69,7 +71,7 @@ type MarketplaceServiceInterface interface {
 	// Карта - геопространственные методы
 	GetListingsInBounds(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapMarker, error)
 	GetMapClusters(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapCluster, error)
-	
+
 	// Методы перевода
 	TranslateText(ctx context.Context, text, sourceLanguage, targetLanguage string) (string, error)
 	SaveTranslation(ctx context.Context, entityType string, entityID int, language, fieldName, translatedText string, metadata map[string]any) error
@@ -83,4 +85,36 @@ type ContactsServiceInterface interface {
 	GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error)
 	UpdatePrivacySettings(ctx context.Context, userID int, req *models.UpdatePrivacySettingsRequest) (*models.UserPrivacySettings, error)
 	AreContacts(ctx context.Context, userID1, userID2 int) (bool, error)
+}
+
+// CreateOrderRequest запрос на создание заказа
+type CreateOrderRequest struct {
+	BuyerID       int64   `json:"buyer_id"`
+	ListingID     int64   `json:"listing_id"`
+	Message       *string `json:"message,omitempty"`
+	PaymentMethod string  `json:"payment_method"`
+	ReturnURL     string  `json:"return_url"`
+}
+
+// PaymentResult результат создания платежа
+type PaymentResult struct {
+	TransactionID int64
+	PaymentURL    string
+	Status        string
+}
+
+type OrderServiceInterface interface {
+	CreateOrder(ctx context.Context, order *models.MarketplaceOrder) (*models.MarketplaceOrder, error)
+	GetOrder(ctx context.Context, orderID int) (*models.MarketplaceOrder, error)
+	GetOrdersByUser(ctx context.Context, userID int, isPurchaser bool) ([]models.MarketplaceOrder, error)
+	UpdateOrderStatus(ctx context.Context, orderID int, status string) error
+	
+	// Методы для работы с handler
+	CreateOrderFromRequest(ctx context.Context, req CreateOrderRequest) (*models.MarketplaceOrder, *PaymentResult, error)
+	GetBuyerOrders(ctx context.Context, buyerID int64, page, limit int) ([]*models.MarketplaceOrder, int, error)
+	GetSellerOrders(ctx context.Context, sellerID int64, page, limit int) ([]*models.MarketplaceOrder, int, error)
+	GetOrderDetails(ctx context.Context, orderID int64, userID int64) (*models.MarketplaceOrder, error)
+	MarkAsShipped(ctx context.Context, orderID int64, sellerID int64, shippingMethod string, trackingNumber string) error
+	ConfirmDelivery(ctx context.Context, orderID int64, buyerID int64) error
+	OpenDispute(ctx context.Context, orderID int64, userID int64, reason string) error
 }

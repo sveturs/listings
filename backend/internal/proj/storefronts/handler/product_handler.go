@@ -4,9 +4,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
 	"backend/internal/domain/models"
 	"backend/internal/proj/storefronts/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // ProductHandler handles HTTP requests for storefront products
@@ -188,7 +189,7 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 			"error": "Invalid request body: " + err.Error(),
 		})
 	}
-	
+
 	// Обработка пустых строк для SKU и Barcode
 	if req.SKU != nil && *req.SKU == "" {
 		req.SKU = nil
@@ -202,10 +203,10 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 		// Возвращаем 400 для ошибок валидации и владения
 		errorMsg := err.Error()
 		if strings.Contains(errorMsg, "ownership validation failed") ||
-		   strings.Contains(errorMsg, "invalid request:") ||
-		   strings.Contains(errorMsg, "unauthorized:") {
+			strings.Contains(errorMsg, "invalid request:") ||
+			strings.Contains(errorMsg, "unauthorized:") {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": errorMsg,
+				"error":   errorMsg,
 				"details": "validation or ownership error",
 			})
 		}

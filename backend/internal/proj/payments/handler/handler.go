@@ -8,18 +8,40 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/payments/service"
 	paymentService "backend/internal/proj/payments/service"
+	"backend/pkg/logger"
 	"backend/pkg/utils"
 )
 
 type Handler struct {
-	payment paymentService.PaymentServiceInterface
+	payment   paymentService.PaymentServiceInterface
+	allsecure *PaymentHandler // AllSecure payment handler
+	webhook   *WebhookHandler // AllSecure webhook handler
 }
 
 func NewHandler(services globalService.ServicesInterface) *Handler {
 	return &Handler{
-		payment: services.Payment(),
+		payment:   services.Payment(),
+		allsecure: nil, // Будет инициализирован через InitAllSecure
+		webhook:   nil, // Будет инициализирован через InitAllSecure
 	}
+}
+
+// InitAllSecure инициализирует AllSecure handlers
+// Вызывается после создания основного handler'а, когда доступна конфигурация
+func (h *Handler) InitAllSecure(allsecureService *service.AllSecureService) {
+	if allsecureService == nil {
+		log.Printf("Warning: AllSecure service is nil, skipping AllSecure handlers initialization")
+		return
+	}
+
+	logger := logger.New()
+
+	h.allsecure = NewPaymentHandler(allsecureService, *logger)
+	h.webhook = NewWebhookHandler(allsecureService, "", *logger) // webhook secret из конфига
+
+	log.Printf("AllSecure handlers initialized successfully")
 }
 
 // HandleWebhook processes webhook from payment system (Stripe)

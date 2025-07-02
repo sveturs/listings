@@ -25,17 +25,28 @@ interface UserListing {
   };
   images?: Array<{
     id: number;
-    url: string;
-    is_primary: boolean;
+    file_path: string;
+    file_name: string;
+    file_size: number;
+    content_type: string;
+    is_main: boolean;
+    storage_type: string;
+    storage_bucket?: string;
+    public_url?: string;
   }>;
 }
 
-interface ListingsResponse {
-  data: UserListing[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
+// Backend возвращает обернутый ответ через utils.SuccessResponse
+interface BackendResponse {
+  success: boolean;
+  data: {
+    success: boolean;
+    data: UserListing[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+    };
   };
 }
 
@@ -52,22 +63,36 @@ export default function MyListingsPage() {
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.get<ListingsResponse>(
+      const response = await apiClient.get<BackendResponse>(
         `/api/v1/marketplace/listings?user_id=${user?.id}`
       );
 
       if (!response.error && response.data) {
-        // Проверяем структуру ответа
-        if (response.data.data && Array.isArray(response.data.data)) {
-          setListings(response.data.data);
-        } else if (Array.isArray(response.data)) {
-          setListings(response.data);
+        // Backend возвращает вложенную структуру через utils.SuccessResponse
+        const backendData = response.data;
+
+        if (backendData.success && backendData.data) {
+          const listingsData = backendData.data;
+
+          if (listingsData.success && Array.isArray(listingsData.data)) {
+            console.log('Listings data:', listingsData.data);
+            // Логируем изображения для отладки
+            listingsData.data.forEach((listing, index) => {
+              if (listing.images && listing.images.length > 0) {
+                console.log(`Listing ${index} images:`, listing.images);
+              }
+            });
+            setListings(listingsData.data);
+          } else {
+            console.error('Unexpected listings structure:', listingsData);
+            setListings([]);
+          }
         } else {
-          console.error('Unexpected response structure:', response);
+          console.error('Backend response not successful:', backendData);
           setListings([]);
         }
       } else {
-        setError('Failed to load listings');
+        setError(response.error?.message || 'Failed to load listings');
       }
     } catch (err) {
       console.error('Error fetching listings:', err);
@@ -216,9 +241,11 @@ export default function MyListingsPage() {
                   >
                     {/* Image */}
                     <figure className="w-48 h-36">
-                      {listing.images && listing.images.length > 0 ? (
+                      {listing.images &&
+                      listing.images.length > 0 &&
+                      listing.images[0].public_url ? (
                         <Image
-                          src={listing.images[0].url}
+                          src={listing.images[0].public_url}
                           alt={listing.title}
                           width={192}
                           height={144}

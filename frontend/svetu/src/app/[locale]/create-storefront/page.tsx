@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAuthContext } from '@/contexts/AuthContext';
 import StepWizard from '@/components/create-listing/StepWizard';
 import BasicInfoStep from '@/components/storefronts/create/steps/BasicInfoStep';
@@ -28,32 +28,46 @@ const steps = [
 export default function CreateStorefrontPage() {
   const router = useRouter();
   const t = useTranslations();
+  const locale = useLocale();
   const { user, isLoading: authLoading } = useAuthContext();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && !authLoading && !user) {
       toast.error(t('create_storefront.auth_required'));
       router.push('/');
     }
-  }, [user, authLoading, router, t]);
+  }, [user, authLoading, router, t, isClient]);
 
   const handleStepChange = (newStep: number) => {
     setCurrentStep(newStep);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleComplete = () => {
     toast.success(t('create_storefront.success'));
-    router.push('/storefronts/my');
+    router.push(`/${locale}/profile/storefronts`);
   };
 
-  if (authLoading || !user) {
+  if (!isClient || authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="loading loading-spinner loading-lg"></div>
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 min-h-screen">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="loading loading-spinner loading-lg"></div>
+        </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   const renderStep = () => {

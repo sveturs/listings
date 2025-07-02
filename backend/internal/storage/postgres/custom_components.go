@@ -1,12 +1,13 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"backend/internal/domain/models"
 )
 
 // CreateComponent создает новый компонент
@@ -23,7 +24,7 @@ func (db *Database) CreateComponent(ctx context.Context, component *models.Custo
 		component.TemplateCode, component.Styles, component.PropsSchema,
 		component.IsActive, component.CreatedBy, component.UpdatedBy,
 	).Scan(&id)
-	
+
 	return id, err
 }
 
@@ -42,11 +43,11 @@ func (db *Database) GetComponent(ctx context.Context, id int) (*models.CustomUIC
 		&component.CreatedAt, &component.UpdatedAt,
 		&component.CreatedBy, &component.UpdatedBy,
 	)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("component not found")
 	}
-	
+
 	return component, err
 }
 
@@ -55,15 +56,15 @@ func (db *Database) UpdateComponent(ctx context.Context, id int, updates map[str
 	var setClauses []string
 	var args []interface{}
 	argCounter := 1
-	
+
 	for key, value := range updates {
 		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", key, argCounter))
 		args = append(args, value)
 		argCounter++
 	}
-	
+
 	setClauses = append(setClauses, "updated_at = CURRENT_TIMESTAMP")
-	
+
 	query := fmt.Sprintf(`
 		UPDATE custom_ui_components 
 		SET %s
@@ -71,16 +72,16 @@ func (db *Database) UpdateComponent(ctx context.Context, id int, updates map[str
 		strings.Join(setClauses, ", "),
 		argCounter,
 	)
-	
+
 	args = append(args, id)
-	
+
 	_, err := db.pool.Exec(ctx, query, args...)
 	return err
 }
 
 // DeleteComponent удаляет компонент
 func (db *Database) DeleteComponent(ctx context.Context, id int) error {
-	_, err := db.pool.Exec(ctx, 
+	_, err := db.pool.Exec(ctx,
 		"DELETE FROM custom_ui_components WHERE id = $1", id)
 	return err
 }
@@ -88,22 +89,22 @@ func (db *Database) DeleteComponent(ctx context.Context, id int) error {
 // ListComponents получает список компонентов с фильтрацией
 func (db *Database) ListComponents(ctx context.Context, filters map[string]interface{}) ([]*models.CustomUIComponent, error) {
 	log.Println("ListComponents called with filters:", filters)
-	
+
 	query := `
 		SELECT id, name, component_type, description, 
 		       template_code, styles, props_schema, is_active,
 		       created_at, updated_at, created_by, updated_by
 		FROM custom_ui_components WHERE 1=1`
-	
+
 	args := []interface{}{}
 	argNum := 1
-	
+
 	if componentType, ok := filters["component_type"].(string); ok && componentType != "" {
 		query += fmt.Sprintf(" AND component_type = $%d", argNum)
 		args = append(args, componentType)
 		argNum++
 	}
-	
+
 	if active, ok := filters["active"].(string); ok && active != "" {
 		if active == "true" {
 			query += fmt.Sprintf(" AND is_active = $%d", argNum)
@@ -115,9 +116,9 @@ func (db *Database) ListComponents(ctx context.Context, filters map[string]inter
 			argNum++
 		}
 	}
-	
+
 	query += " ORDER BY created_at DESC"
-	
+
 	log.Printf("Executing query: %s with args: %v", query, args)
 	rows, err := db.pool.Query(ctx, query, args...)
 	if err != nil {
@@ -125,7 +126,7 @@ func (db *Database) ListComponents(ctx context.Context, filters map[string]inter
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	components := []*models.CustomUIComponent{}
 	for rows.Next() {
 		component := &models.CustomUIComponent{}
@@ -142,7 +143,7 @@ func (db *Database) ListComponents(ctx context.Context, filters map[string]inter
 		}
 		components = append(components, component)
 	}
-	
+
 	log.Printf("Found %d components", len(components))
 	return components, nil
 }
@@ -162,7 +163,7 @@ func (db *Database) AddComponentUsage(ctx context.Context, usage *models.CustomU
 		usage.ConditionsLogic, usage.IsActive,
 		usage.CreatedBy, usage.UpdatedBy,
 	).Scan(&id)
-	
+
 	return id, err
 }
 
@@ -179,30 +180,30 @@ func (db *Database) GetComponentUsages(ctx context.Context, componentID, categor
 		JOIN custom_ui_components cuc ON ucu.component_id = cuc.id
 		JOIN marketplace_categories mc ON ucu.category_id = mc.id
 		WHERE 1=1`
-	
+
 	args := []interface{}{}
 	argNum := 1
-	
+
 	if componentID != nil {
 		query += fmt.Sprintf(" AND ucu.component_id = $%d", argNum)
 		args = append(args, *componentID)
 		argNum++
 	}
-	
+
 	if categoryID != nil {
 		query += fmt.Sprintf(" AND ucu.category_id = $%d", argNum)
 		args = append(args, *categoryID)
 		argNum++
 	}
-	
+
 	query += " ORDER BY ucu.created_at DESC"
-	
+
 	rows, err := db.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	usages := []*models.CustomUIComponentUsage{}
 	for rows.Next() {
 		usage := &models.CustomUIComponentUsage{}
@@ -217,7 +218,7 @@ func (db *Database) GetComponentUsages(ctx context.Context, componentID, categor
 		}
 		usages = append(usages, usage)
 	}
-	
+
 	return usages, nil
 }
 
@@ -239,42 +240,42 @@ func (db *Database) GetCategoryComponents(ctx context.Context, categoryID int, u
 		FROM custom_ui_component_usage ucu
 		JOIN custom_ui_components cuc ON ucu.component_id = cuc.id
 		WHERE ucu.category_id = $1 AND ucu.is_active = true`
-	
+
 	args := []interface{}{categoryID}
-	
+
 	if usageContext != "" {
 		query += " AND ucu.usage_context = $2"
 		args = append(args, usageContext)
 	}
-	
+
 	query += " ORDER BY ucu.priority ASC"
-	
+
 	rows, err := db.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	components := []*models.CustomUIComponentUsage{}
 	for rows.Next() {
 		usage := &models.CustomUIComponentUsage{}
 		component := &models.CustomUIComponent{}
-		
+
 		err := rows.Scan(
 			&usage.ID, &usage.ComponentID, &usage.CategoryID, &usage.UsageContext,
 			&usage.Placement, &usage.Priority, &usage.Configuration, &usage.ConditionsLogic,
 			&usage.IsActive, &usage.CreatedAt, &usage.UpdatedAt,
-			&component.Name, &component.ComponentType, &component.TemplateCode, 
+			&component.Name, &component.ComponentType, &component.TemplateCode,
 			&component.Styles, &component.PropsSchema,
 		)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		usage.Component = component
 		components = append(components, usage)
 	}
-	
+
 	return components, nil
 }
 
@@ -291,7 +292,7 @@ func (db *Database) CreateTemplate(ctx context.Context, template *models.Compone
 		template.TemplateConfig, template.PreviewImage, template.CategoryID,
 		template.CreatedBy,
 	).Scan(&id)
-	
+
 	return id, err
 }
 
@@ -301,21 +302,21 @@ func (db *Database) ListTemplates(ctx context.Context, componentID int) ([]*mode
 		SELECT id, component_id, name, description, template_config,
 		       preview_image, category_id, created_at, created_by
 		FROM component_templates`
-	
+
 	args := []interface{}{}
 	if componentID > 0 {
 		query += " WHERE component_id = $1"
 		args = append(args, componentID)
 	}
-	
+
 	query += " ORDER BY created_at DESC"
-	
+
 	rows, err := db.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	templates := []*models.ComponentTemplate{}
 	for rows.Next() {
 		template := &models.ComponentTemplate{}
@@ -330,6 +331,6 @@ func (db *Database) ListTemplates(ctx context.Context, componentID int) ([]*mode
 		}
 		templates = append(templates, template)
 	}
-	
+
 	return templates, nil
 }

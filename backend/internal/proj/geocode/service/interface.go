@@ -1,8 +1,9 @@
 package service
 
 import (
-	"backend/internal/domain/models"
 	"context"
+
+	"backend/internal/domain/models"
 )
 
 type GeocodeServiceInterface interface {

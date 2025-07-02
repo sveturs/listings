@@ -3,12 +3,14 @@
 package service
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/storage"
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
+
+	"backend/internal/domain/models"
+	"backend/internal/storage"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type ReviewService struct {
@@ -48,7 +50,6 @@ func (s *ReviewService) UpdateEntityRatingInSearch(ctx context.Context, entityTy
         FROM reviews
         WHERE entity_type = $1 AND entity_id = $2 AND status = 'published'
     `, entityType, entityID).Scan(&reviewCount, &averageRating)
-
 	if err != nil {
 		// Если не удалось получить статистику, используем переданное значение
 		averageRating = avgRating
@@ -80,7 +81,7 @@ func (s *ReviewService) CreateDraftReview(ctx context.Context, userId int, req *
 		Comment:          req.Comment,
 		Pros:             req.Pros,
 		Cons:             req.Cons,
-		Photos:           nil, // Фотографии добавятся позже
+		Photos:           nil,     // Фотографии добавятся позже
 		Status:           "draft", // Статус черновика
 		OriginalLanguage: req.OriginalLanguage,
 	}
@@ -185,6 +186,7 @@ func (s *ReviewService) CreateReview(ctx context.Context, userId int, req *model
 
 	return createdReview, nil
 }
+
 func (s *ReviewService) GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error) {
 	return s.storage.GetReviews(ctx, filter)
 }
@@ -289,6 +291,7 @@ func (s *ReviewService) checkVerifiedPurchase(ctx context.Context, userId int, e
 		return false
 	}
 }
+
 func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, entityId int) (*models.ReviewStats, error) {
 	stats := &models.ReviewStats{
 		RatingDistribution: make(map[int]int),
@@ -312,7 +315,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 			&stats.PhotoReviews,
 		)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				// Если нет записи в материализованном представлении, возвращаем пустую статистику
 				return stats, nil
 			}
@@ -356,7 +359,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 			&stats.PhotoReviews,
 		)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return stats, nil
 			}
 			return nil, err
@@ -668,7 +671,7 @@ func (s *ReviewService) ConfirmReview(ctx context.Context, userID int, reviewID 
 
 	// Проверяем права - только продавец/владелец может подтвердить
 	// TODO: добавить более детальную проверку прав в зависимости от entity_type
-	
+
 	// Проверяем, не было ли уже подтверждения
 	existing, err := s.storage.GetReviewConfirmation(ctx, reviewID)
 	if err != nil {

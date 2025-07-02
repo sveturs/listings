@@ -2,12 +2,13 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"backend/internal/domain/models"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -51,7 +52,6 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
 		review.IsVerifiedPurchase, review.Status, review.OriginalLanguage,
 		review.EntityOriginType, review.EntityOriginID,
 	).Scan(&review.ID, &review.CreatedAt, &review.UpdatedAt)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert review: %w", err)
 	}
@@ -340,7 +340,6 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
 		&review.HelpfulVotes, &review.NotHelpfulVotes,
 		&currentUserVote,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("error getting review: %w", err)
 	}
@@ -513,7 +512,6 @@ func (s *Storage) AddReviewVote(ctx context.Context, vote *models.ReviewVote) er
             )
         WHERE id = $1
     `, vote.ReviewID)
-
 	if err != nil {
 		return fmt.Errorf("error updating vote counts: %w", err)
 	}
@@ -562,6 +560,7 @@ func (s *Storage) UpdateReviewVotes(ctx context.Context, reviewId int) error {
 
 	return nil
 }
+
 func (s *Storage) GetReviewVotes(ctx context.Context, reviewId int) (helpful int, notHelpful int, err error) {
 	err = s.pool.QueryRow(ctx, `
         SELECT 
@@ -821,7 +820,6 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
     `
 
 	rows, err := s.pool.Query(ctx, query, 0, storefrontID)
-
 	if err != nil {
 		return nil, fmt.Errorf("error executing query: %w", err)
 	}
@@ -948,7 +946,6 @@ func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models
 		&summary.Rating3,
 		&summary.Rating4,
 		&summary.Rating5)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			// Если отзывов нет, возвращаем пустую сводку
@@ -1011,7 +1008,6 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
 		&summary.Rating3,
 		&summary.Rating4,
 		&summary.Rating5)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			// Если отзывов нет, возвращаем пустую сводку
@@ -1024,8 +1020,8 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
 }
 
 func (s *Storage) saveTranslation(ctx context.Context, tx pgx.Tx, entityType string, entityID int,
-	language string, fieldName string, text string, isMachineTranslated bool, isVerified bool) error {
-
+	language string, fieldName string, text string, isMachineTranslated bool, isVerified bool,
+) error {
 	_, err := tx.Exec(ctx, `
         INSERT INTO translations (
             entity_type, entity_id, language, field_name,

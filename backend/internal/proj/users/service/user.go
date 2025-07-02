@@ -2,9 +2,10 @@
 package service
 
 import (
+	"context"
+
 	"backend/internal/domain/models"
 	"backend/internal/storage"
-	"context"
 )
 
 type UserService struct {

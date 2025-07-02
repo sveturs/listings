@@ -116,12 +116,12 @@ func (p *XMLParser) convertDigitalVisionProduct(dv models.DigitalVisionProduct, 
 
 	// Set attributes from additional fields
 	product.Attributes = map[string]interface{}{
-		"kategorija1":     cleanCDATA(dv.Kategorija1),
-		"kategorija2":     cleanCDATA(dv.Kategorija2),
-		"kategorija3":     cleanCDATA(dv.Kategorija3),
-		"uvoznik":         dv.Uvoznik,
-		"godina_uvoza":    dv.GodinaUvoza,
-		"zemlja_porekla":  dv.ZemljaPorekla,
+		"kategorija1":    cleanCDATA(dv.Kategorija1),
+		"kategorija2":    cleanCDATA(dv.Kategorija2),
+		"kategorija3":    cleanCDATA(dv.Kategorija3),
+		"uvoznik":        dv.Uvoznik,
+		"godina_uvoza":   dv.GodinaUvoza,
+		"zemlja_porekla": dv.ZemljaPorekla,
 	}
 
 	// Category mapping will be handled by the service layer
@@ -158,7 +158,7 @@ func parsePrice(priceStr string) (float64, error) {
 
 	// Remove any non-numeric characters except dots and commas
 	cleanPrice := strings.ReplaceAll(priceStr, ",", ".")
-	
+
 	// Parse as float
 	price, err := strconv.ParseFloat(cleanPrice, 64)
 	if err != nil {

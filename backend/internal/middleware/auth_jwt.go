@@ -17,21 +17,28 @@ import (
 // Поддерживает как Bearer токены в заголовке, так и fallback на session cookies
 func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	logger.Info().Str("path", c.Path()).Msg("AuthRequiredJWT middleware called")
-	
+
 	// Временное решение: пропускаем публичные маршруты storefronts и аналитики
 	path := c.Path()
-	
+
 	// Пропускаем маршруты аналитики для записи событий
 	if strings.HasPrefix(path, "/api/v1/analytics/event") {
 		logger.Info().Str("path", path).Msg("Skipping auth for analytics event")
 		return c.Next()
 	}
-	
+
 	if strings.HasPrefix(path, "/api/v1/storefronts") && !strings.Contains(path, "/my") {
 		// Проверяем что это не защищенные маршруты
 		method := c.Method()
-		if method == "GET" && (strings.Contains(path, "/slug/") || strings.HasSuffix(path, "/storefronts") || 
-			strings.Contains(path, "/search") || strings.Contains(path, "/nearby") || 
+
+		// Пропускаем роуты корзины - они используют OptionalAuth в orders module
+		if strings.Contains(path, "/cart") {
+			logger.Info().Str("path", path).Msg("Skipping auth for cart route - handled by orders module")
+			return c.Next()
+		}
+
+		if method == "GET" && (strings.Contains(path, "/slug/") || strings.HasSuffix(path, "/storefronts") ||
+			strings.Contains(path, "/search") || strings.Contains(path, "/nearby") ||
 			strings.Contains(path, "/map") || strings.Contains(path, "/building") ||
 			strings.Contains(path, "/staff")) {
 			logger.Info().Str("path", path).Msg("Skipping auth for public storefront route")

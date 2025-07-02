@@ -1,3 +1,5 @@
+import configManager from '@/config';
+
 interface TokenManagerConfig {
   onTokenRefreshed?: (accessToken: string) => void;
   onRefreshFailed?: (error: Error) => void;
@@ -20,13 +22,23 @@ class TokenManager {
     // Восстанавливаем токен из sessionStorage при инициализации
     if (typeof window !== 'undefined') {
       const savedToken = sessionStorage.getItem('svetu_access_token');
+      // console.log(
+      //   '[TokenManager] Constructor - saved token from sessionStorage:',
+      //   savedToken ? 'exists' : 'null'
+      // );
       if (savedToken) {
         this.accessToken = savedToken;
         // Проверяем, не истек ли токен
         if (!this.isTokenExpired()) {
+          // console.log(
+          //   '[TokenManager] Constructor - token is valid, scheduling refresh'
+          // );
           this.scheduleTokenRefresh();
         } else {
           // Если токен истек, удаляем его
+          // console.log(
+          //   '[TokenManager] Constructor - token is expired, removing'
+          // );
           sessionStorage.removeItem('svetu_access_token');
           this.accessToken = null;
         }
@@ -68,6 +80,10 @@ class TokenManager {
    * Возвращает текущий access token
    */
   getAccessToken(): string | null {
+    // console.log(
+    //   '[TokenManager] getAccessToken called, token:',
+    //   this.accessToken ? 'exists' : 'null'
+    // );
     return this.accessToken;
   }
 
@@ -150,13 +166,16 @@ class TokenManager {
   private async performRefresh(): Promise<string> {
     try {
       console.log('[TokenManager] Attempting to refresh token...');
-      const response = await fetch('/api/v1/auth/refresh', {
-        method: 'POST',
-        credentials: 'include', // Важно для отправки httpOnly cookie
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${configManager.getApiUrl()}/api/v1/auth/refresh`,
+        {
+          method: 'POST',
+          credentials: 'include', // Важно для отправки httpOnly cookie
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         // Если 401, значит refresh token невалидный или отозван
@@ -340,6 +359,10 @@ export const tokenManager = new TokenManager({
     console.error('Token refresh failed:', error);
   },
 });
+
+// Экспортируем отдельно для использования в static контексте
+export const isTokenExpired = (token?: string) =>
+  tokenManager.isTokenExpired(token);
 
 // Экспортируем также класс для тестирования
 export { TokenManager };

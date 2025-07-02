@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
+
 	"backend/internal/logger"
 	"backend/internal/proj/analytics/service"
 	"backend/pkg/utils"
-	"encoding/json"
-	
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -73,7 +74,6 @@ func (h *AnalyticsHandler) RecordEvent(c *fiber.Ctx) error {
 		UserAgent:    userAgent,
 		Referrer:     referrer,
 	})
-
 	if err != nil {
 		logger.Error().Err(err).Str("event_type", req.EventType).Msg("Failed to record event")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "analytics.error.failed_to_record")

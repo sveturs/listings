@@ -40,20 +40,27 @@ export default function CreateListingPage() {
   const { user, isLoading: authLoading } = useAuthContext();
   const [currentStep, setCurrentStep] = useState(0);
   const [showDraftsModal, setShowDraftsModal] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   // Получаем ID черновика из URL параметров
   const draftId = searchParams.get('draft') || undefined;
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && !authLoading && !user) {
       toast.error(t('create_listing.auth_required'));
       router.push('/');
     }
-  }, [user, authLoading, router, t]);
+  }, [user, authLoading, router, t, isClient]);
 
   const handleStepChange = (newStep: number) => {
     setCurrentStep(newStep);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleComplete = () => {
@@ -61,12 +68,18 @@ export default function CreateListingPage() {
     router.push('/profile');
   };
 
-  if (authLoading || !user) {
+  if (!isClient || authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="loading loading-spinner loading-lg"></div>
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 min-h-screen">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="loading loading-spinner loading-lg"></div>
+        </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   const renderStep = () => {

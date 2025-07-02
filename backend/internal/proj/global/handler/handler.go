@@ -29,7 +29,7 @@ func (h *Handler) GetPrefix() string {
 
 // RegisterRoutes регистрирует все глобальные маршруты
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
-	// Регистрируем унифицированный поиск напрямую в app, 
+	// Регистрируем унифицированный поиск напрямую в app,
 	// чтобы избежать конфликтов с другими middleware
 	app.Get("/api/v1/search", h.UnifiedSearch.UnifiedSearch)
 

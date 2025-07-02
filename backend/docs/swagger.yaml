@@ -37,6 +37,14 @@ definitions:
         example: Операция выполнена успешно
         type: string
     type: object
+  handler.AddMessageRequest:
+    properties:
+      content:
+        minLength: 1
+        type: string
+    required:
+    - content
+    type: object
   handler.AddStaffRequest:
     properties:
       role:
@@ -214,6 +222,15 @@ definitions:
       total:
         type: integer
     type: object
+  handler.CompleteMockPaymentRequest:
+    properties:
+      amount:
+        example: 2000
+        type: number
+      session_id:
+        example: mock_session_7_1751361491
+        type: string
+    type: object
   handler.ContactRemoveResponse:
     description: Ответ при удалении контакта из списка
     properties:
@@ -255,6 +272,86 @@ definitions:
         example: 37.6173
         type: number
     type: object
+  handler.CreateMarketplaceOrderRequest:
+    properties:
+      listing_id:
+        type: integer
+      message:
+        type: string
+      payment_method:
+        enum:
+        - card
+        - bank_transfer
+        type: string
+    required:
+    - listing_id
+    - payment_method
+    type: object
+  handler.CreateOrderPaymentRequest:
+    properties:
+      amount:
+        type: string
+      cancel_url:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      order_id:
+        type: integer
+      return_url:
+        type: string
+    required:
+    - amount
+    - cancel_url
+    - currency
+    - order_id
+    - return_url
+    type: object
+  handler.CreateOrderPaymentResponse:
+    properties:
+      expires_at:
+        type: string
+      payment_url:
+        type: string
+      requires_action:
+        type: boolean
+      session_id:
+        type: string
+      status:
+        type: string
+    type: object
+  handler.CreatePaymentRequest:
+    properties:
+      amount:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      listing_id:
+        type: integer
+      return_url:
+        type: string
+    required:
+    - amount
+    - currency
+    - listing_id
+    - return_url
+    type: object
+  handler.CreatePaymentResponse:
+    properties:
+      gateway_uuid:
+        type: string
+      redirect_url:
+        type: string
+      requires_action:
+        type: boolean
+      status:
+        type: string
+      transaction_id:
+        type: integer
+    type: object
   handler.DepositRequest:
     properties:
       amount:
@@ -262,6 +359,9 @@ definitions:
         type: number
       payment_method:
         example: card
+        type: string
+      return_url:
+        example: http://localhost:3001/en/balance/deposit/success
         type: string
     type: object
   handler.DetectLanguageRequest:
@@ -518,6 +618,16 @@ definitions:
         example: true
         type: boolean
     type: object
+  handler.MarkAsShippedRequest:
+    properties:
+      shipping_method:
+        type: string
+      tracking_number:
+        type: string
+    required:
+    - shipping_method
+    - tracking_number
+    type: object
   handler.ModerationData:
     properties:
       has_prohibited:
@@ -564,6 +674,14 @@ definitions:
         items:
           $ref: '#/definitions/models.NotificationSettings'
         type: array
+    type: object
+  handler.OpenDisputeRequest:
+    properties:
+      reason:
+        minLength: 10
+        type: string
+    required:
+    - reason
     type: object
   handler.PaginationMeta:
     properties:
@@ -650,6 +768,15 @@ definitions:
       success:
         example: true
         type: boolean
+    type: object
+  handler.RefundPaymentRequest:
+    properties:
+      amount:
+        type: string
+      reason:
+        type: string
+    required:
+    - amount
     type: object
   handler.RegisterRequest:
     properties:
@@ -1168,10 +1295,8 @@ definitions:
   handler.WebhookResponse:
     properties:
       message:
-        example: payments.webhook.processed
         type: string
       status:
-        example: success
         type: string
     type: object
   models.AddContactRequest:
@@ -1201,6 +1326,19 @@ definitions:
         type: array
     required:
     - attribute_id
+    type: object
+  models.AddToCartRequest:
+    properties:
+      product_id:
+        type: integer
+      quantity:
+        minimum: 1
+        type: integer
+      variant_id:
+        type: integer
+    required:
+    - product_id
+    - quantity
     type: object
   models.AdminUser:
     properties:
@@ -1475,6 +1613,11 @@ definitions:
       reason:
         type: string
     type: object
+  models.CancelOrderRequest:
+    properties:
+      reason:
+        type: string
+    type: object
   models.CategoryAttribute:
     properties:
       attribute_type:
@@ -1732,6 +1875,34 @@ definitions:
     required:
     - content
     - receiver_id
+    type: object
+  models.CreateOrderRequest:
+    properties:
+      billing_address:
+        $ref: '#/definitions/models.ShippingAddress'
+      cart_id:
+        type: integer
+      customer_notes:
+        type: string
+      items:
+        description: альтернатива cart_id
+        items:
+          $ref: '#/definitions/models.OrderItemRequest'
+        type: array
+      payment_method:
+        type: string
+      shipping_address:
+        $ref: '#/definitions/models.ShippingAddress'
+      shipping_method:
+        type: string
+      storefront_id:
+        type: integer
+    required:
+    - billing_address
+    - payment_method
+    - shipping_address
+    - shipping_method
+    - storefront_id
     type: object
   models.CreateProductRequest:
     properties:
@@ -2442,6 +2613,83 @@ definitions:
       updated_at:
         type: string
     type: object
+  models.MarketplaceOrder:
+    properties:
+      buyer:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: Связанные данные (заполняются при необходимости)
+      buyer_id:
+        type: integer
+      created_at:
+        type: string
+      delivered_at:
+        type: string
+      id:
+        type: integer
+      item_price:
+        type: number
+      listing:
+        $ref: '#/definitions/models.MarketplaceListing'
+      listing_id:
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/models.OrderMessage'
+        type: array
+      payment_transaction:
+        $ref: '#/definitions/models.PaymentTransaction'
+      payment_transaction_id:
+        type: integer
+      platform_fee_amount:
+        type: number
+      platform_fee_rate:
+        type: number
+      protection_expires_at:
+        type: string
+      protection_period_days:
+        type: integer
+      seller:
+        $ref: '#/definitions/models.User'
+      seller_id:
+        type: integer
+      seller_payout_amount:
+        type: number
+      shipped_at:
+        type: string
+      shipping_method:
+        type: string
+      status:
+        $ref: '#/definitions/models.MarketplaceOrderStatus'
+      status_history:
+        items:
+          $ref: '#/definitions/models.OrderStatusHistory'
+        type: array
+      tracking_number:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.MarketplaceOrderStatus:
+    enum:
+    - pending
+    - paid
+    - shipped
+    - delivered
+    - completed
+    - disputed
+    - cancelled
+    - refunded
+    type: string
+    x-enum-varnames:
+    - MarketplaceOrderStatusPending
+    - MarketplaceOrderStatusPaid
+    - MarketplaceOrderStatusShipped
+    - MarketplaceOrderStatusDelivered
+    - MarketplaceOrderStatusCompleted
+    - MarketplaceOrderStatusDisputed
+    - MarketplaceOrderStatusCancelled
+    - MarketplaceOrderStatusRefunded
   models.Notification:
     properties:
       created_at:
@@ -2485,6 +2733,98 @@ definitions:
       user_id:
         type: integer
     type: object
+  models.OrderItemRequest:
+    properties:
+      product_id:
+        type: integer
+      quantity:
+        minimum: 1
+        type: integer
+      variant_id:
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  models.OrderMessage:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      message_type:
+        $ref: '#/definitions/models.OrderMessageType'
+      metadata:
+        additionalProperties: true
+        type: object
+      order_id:
+        type: integer
+      sender:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: Связанные данные
+      sender_id:
+        type: integer
+    type: object
+  models.OrderMessageType:
+    enum:
+    - text
+    - shipping_update
+    - dispute_opened
+    - dispute_message
+    - system
+    type: string
+    x-enum-varnames:
+    - OrderMessageTypeText
+    - OrderMessageTypeShippingUpdate
+    - OrderMessageTypeDisputeOpened
+    - OrderMessageTypeDisputeMessage
+    - OrderMessageTypeSystem
+  models.OrderStatus:
+    enum:
+    - pending
+    - confirmed
+    - processing
+    - shipped
+    - delivered
+    - cancelled
+    - refunded
+    type: string
+    x-enum-comments:
+      OrderStatusCancelled: отменен
+      OrderStatusConfirmed: оплачен, подтвержден
+      OrderStatusDelivered: доставлен
+      OrderStatusPending: ожидает оплаты
+      OrderStatusProcessing: в обработке
+      OrderStatusRefunded: возвращен
+      OrderStatusShipped: отправлен
+    x-enum-varnames:
+    - OrderStatusPending
+    - OrderStatusConfirmed
+    - OrderStatusProcessing
+    - OrderStatusShipped
+    - OrderStatusDelivered
+    - OrderStatusCancelled
+    - OrderStatusRefunded
+  models.OrderStatusHistory:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      id:
+        type: integer
+      new_status:
+        type: string
+      old_status:
+        type: string
+      order_id:
+        type: integer
+      reason:
+        type: string
+    type: object
   models.PaginatedResponse:
     properties:
       data: {}
@@ -2496,6 +2836,22 @@ definitions:
         type: integer
       total_pages:
         type: integer
+    type: object
+  models.PaymentGateway:
+    properties:
+      config:
+        additionalProperties: true
+        type: object
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
     type: object
   models.PaymentMethod:
     properties:
@@ -2569,6 +2925,10 @@ definitions:
       external_id:
         type: string
       id:
+        description: Изменено на string для поддержки external IDs
+        type: string
+      order_id:
+        description: Добавлено для поддержки заказов
         type: integer
       payment_method:
         type: string
@@ -2576,6 +2936,93 @@ definitions:
         type: string
       status:
         type: string
+      user_id:
+        type: integer
+    type: object
+  models.PaymentSource:
+    enum:
+    - marketplace_listing
+    - storefront_order
+    type: string
+    x-enum-varnames:
+    - PaymentSourceMarketplaceListing
+    - PaymentSourceStorefrontOrder
+  models.PaymentTransaction:
+    properties:
+      amount:
+        type: number
+      authorized_at:
+        type: string
+      auto_capture_at:
+        type: string
+      capture_attempted_at:
+        type: string
+      capture_attempts:
+        type: integer
+      capture_deadline_at:
+        type: string
+      capture_mode:
+        description: Delayed capture fields
+        type: string
+      captured_at:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      customer_email:
+        type: string
+      description:
+        type: string
+      error_details:
+        additionalProperties: true
+        type: object
+      failed_at:
+        type: string
+      gateway:
+        allOf:
+        - $ref: '#/definitions/models.PaymentGateway'
+        description: Relations
+      gateway_id:
+        type: integer
+      gateway_reference_id:
+        type: string
+      gateway_response:
+        additionalProperties: true
+        type: object
+      gateway_status:
+        type: string
+      gateway_transaction_id:
+        type: string
+      id:
+        type: integer
+      listing:
+        $ref: '#/definitions/models.MarketplaceListing'
+      listing_id:
+        description: Legacy поле для обратной совместимости
+        type: integer
+      marketplace_commission:
+        type: number
+      order_reference:
+        type: string
+      payment_method:
+        type: string
+      seller_amount:
+        type: number
+      source_id:
+        type: integer
+      source_type:
+        allOf:
+        - $ref: '#/definitions/models.PaymentSource'
+        description: Новые поля для унифицированной системы
+      status:
+        type: string
+      storefront_id:
+        type: integer
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
       user_id:
         type: integer
     type: object
@@ -2734,6 +3181,75 @@ definitions:
       total_reviews:
         type: integer
       verified_reviews:
+        type: integer
+    type: object
+  models.ShippingAddress:
+    properties:
+      apartment:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      house_number:
+        type: string
+      notes:
+        type: string
+      phone:
+        type: string
+      postal_code:
+        type: string
+      street:
+        type: string
+    type: object
+  models.ShoppingCart:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/models.ShoppingCartItem'
+        type: array
+      session_id:
+        type: string
+      storefront:
+        $ref: '#/definitions/models.Storefront'
+      storefront_id:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.ShoppingCartItem:
+    properties:
+      cart_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      price_per_unit:
+        type: number
+      product:
+        $ref: '#/definitions/models.StorefrontProduct'
+      product_id:
+        type: integer
+      quantity:
+        type: integer
+      total_price:
+        type: number
+      updated_at:
+        type: string
+      variant:
+        $ref: '#/definitions/models.StorefrontProductVariant'
+      variant_id:
         type: integer
     type: object
   models.StaffRole:
@@ -3048,6 +3564,146 @@ definitions:
       working_now:
         type: boolean
     type: object
+  models.StorefrontOrder:
+    properties:
+      billing_address:
+        $ref: '#/definitions/models.JSONB'
+      cancelled_at:
+        type: string
+      commission_amount:
+        type: number
+      confirmed_at:
+        description: Временные метки
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      customer:
+        $ref: '#/definitions/models.User'
+      customer_id:
+        description: Реальное поле в БД
+        type: integer
+      customer_notes:
+        type: string
+      delivered_at:
+        type: string
+      discount:
+        type: number
+      escrow_days:
+        type: integer
+      escrow_release_date:
+        type: string
+      id:
+        type: integer
+      items:
+        description: Связанные данные
+        items:
+          $ref: '#/definitions/models.StorefrontOrderItem'
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      notes:
+        description: Заметки и метаданные
+        type: string
+      order_number:
+        type: string
+      payment_method:
+        description: Платежные данные
+        type: string
+      payment_status:
+        type: string
+      payment_transaction:
+        $ref: '#/definitions/models.PaymentTransaction'
+      payment_transaction_id:
+        type: string
+      seller_amount:
+        type: number
+      seller_notes:
+        type: string
+      shipped_at:
+        type: string
+      shipping:
+        description: Алиас для ShippingAmount
+        type: number
+      shipping_address:
+        allOf:
+        - $ref: '#/definitions/models.JSONB'
+        description: Доставка и адреса
+      shipping_amount:
+        type: number
+      shipping_method:
+        type: string
+      shipping_provider:
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/models.OrderStatus'
+        description: Статус и escrow
+      storefront:
+        $ref: '#/definitions/models.Storefront'
+      storefront_id:
+        type: integer
+      subtotal:
+        description: Финансовые данные
+        type: number
+      subtotal_amount:
+        type: number
+      tax:
+        description: Алиас для TaxAmount
+        type: number
+      tax_amount:
+        type: number
+      total:
+        description: Алиас для TotalAmount
+        type: number
+      total_amount:
+        type: number
+      tracking_number:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        description: Для совместимости с API
+        type: integer
+    type: object
+  models.StorefrontOrderItem:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      order_id:
+        type: integer
+      price_per_unit:
+        type: number
+      product:
+        allOf:
+        - $ref: '#/definitions/models.StorefrontProduct'
+        description: Связанные данные
+      product_attributes:
+        allOf:
+        - $ref: '#/definitions/models.JSONB'
+        description: Snapshot атрибутов
+      product_id:
+        type: integer
+      product_name:
+        description: Snapshot данных на момент заказа
+        type: string
+      product_sku:
+        type: string
+      quantity:
+        type: integer
+      total_price:
+        type: number
+      variant:
+        $ref: '#/definitions/models.StorefrontProductVariant'
+      variant_id:
+        type: integer
+      variant_name:
+        type: string
+    type: object
   models.StorefrontPaymentMethod:
     properties:
       cod_fee:
@@ -3311,6 +3967,15 @@ definitions:
       sort_order:
         type: integer
     type: object
+  models.UpdateCartItemRequest:
+    properties:
+      quantity:
+        description: 0 = удалить из корзины
+        minimum: 0
+        type: integer
+    required:
+    - quantity
+    type: object
   models.UpdateContactRequest:
     properties:
       notes:
@@ -3360,6 +4025,17 @@ definitions:
     - quantity
     - reason
     - type
+    type: object
+  models.UpdateOrderStatusRequest:
+    properties:
+      seller_notes:
+        type: string
+      status:
+        $ref: '#/definitions/models.OrderStatus'
+      tracking_number:
+        type: string
+    required:
+    - status
     type: object
   models.UpdatePrivacySettingsRequest:
     properties:
@@ -6623,6 +7299,47 @@ paths:
       summary: Create deposit
       tags:
       - balance
+  /api/v1/balance/mock/complete:
+    post:
+      consumes:
+      - application/json
+      description: Completes a mock payment session for testing purposes
+      parameters:
+      - description: Payment session ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CompleteMockPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment completed successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: balance.invalidRequest
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: balance.completeMockPaymentError
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Complete mock payment
+      tags:
+      - balance
   /api/v1/balance/payment-methods:
     get:
       consumes:
@@ -9145,6 +9862,220 @@ paths:
       summary: Moderate image content
       tags:
       - marketplace-images
+  /api/v1/marketplace/orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about specific order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order details
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.MarketplaceOrder'
+              type: object
+      summary: Get order details
+      tags:
+      - orders
+  /api/v1/marketplace/orders/{id}/confirm-delivery:
+    post:
+      consumes:
+      - application/json
+      description: Confirm order delivery by buyer
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Delivery confirmed
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+      summary: Confirm order delivery
+      tags:
+      - orders
+  /api/v1/marketplace/orders/{id}/dispute:
+    post:
+      consumes:
+      - application/json
+      description: Open dispute for order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dispute reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.OpenDisputeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dispute opened
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+      summary: Open order dispute
+      tags:
+      - orders
+  /api/v1/marketplace/orders/{id}/message:
+    post:
+      consumes:
+      - application/json
+      description: Add message to order conversation
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Message content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AddMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Message added
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+      summary: Add message to order
+      tags:
+      - orders
+  /api/v1/marketplace/orders/{id}/ship:
+    post:
+      consumes:
+      - application/json
+      description: Mark order as shipped by seller
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Shipping details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.MarkAsShippedRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order marked as shipped
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+      summary: Mark order as shipped
+      tags:
+      - orders
+  /api/v1/marketplace/orders/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new order for marketplace listing with payment preauthorization
+      parameters:
+      - description: Order details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateMarketplaceOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order created successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Create marketplace order
+      tags:
+      - orders
+  /api/v1/marketplace/orders/my/purchases:
+    get:
+      consumes:
+      - application/json
+      description: Get list of orders where current user is buyer
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Orders list
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+      summary: Get my purchases
+      tags:
+      - orders
+  /api/v1/marketplace/orders/my/sales:
+    get:
+      consumes:
+      - application/json
+      description: Get list of orders where current user is seller
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Orders list
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+      summary: Get my sales
+      tags:
+      - orders
   /api/v1/marketplace/search:
     get:
       consumes:
@@ -9704,6 +10635,321 @@ paths:
       summary: Telegram webhook
       tags:
       - notifications
+  /api/v1/orders:
+    get:
+      description: Gets a list of orders for the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Filter by storefront
+        in: query
+        name: storefront_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User orders
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.StorefrontOrder'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get user orders
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Creates a new order from cart items or direct items
+      parameters:
+      - description: Order data
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created order
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.StorefrontOrder'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "409":
+          description: Insufficient stock
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Create new order
+      tags:
+      - orders
+  /api/v1/orders/{id}:
+    get:
+      description: Gets detailed information about a specific order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order details
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.StorefrontOrder'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Order not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get order details
+      tags:
+      - orders
+  /api/v1/orders/{id}/cancel:
+    put:
+      description: Cancels an existing order if it's in a cancellable state
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Cancellation reason
+        in: body
+        name: cancel
+        required: true
+        schema:
+          $ref: '#/definitions/models.CancelOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cancelled order
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.StorefrontOrder'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Order not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "409":
+          description: Order cannot be cancelled
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Cancel order
+      tags:
+      - orders
+  /api/v1/orders/{id}/payment:
+    post:
+      consumes:
+      - application/json
+      description: Создает новый платеж для заказа через платежную систему
+      parameters:
+      - description: Order payment details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateOrderPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment session created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.CreateOrderPaymentResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Order not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Create Order Payment
+      tags:
+      - order-payments
+  /api/v1/orders/{id}/payment/cancel:
+    post:
+      description: Отменяет платеж заказа
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment cancelled successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+        "400":
+          description: Invalid order ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Order or payment not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Cancel Order Payment
+      tags:
+      - order-payments
+  /api/v1/orders/{id}/payment/status:
+    get:
+      description: Получает текущий статус платежа заказа
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment status
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PaymentSession'
+              type: object
+        "400":
+          description: Invalid order ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Order or payment not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Get Order Payment Status
+      tags:
+      - order-payments
   /api/v1/payments/stripe/webhook:
     post:
       consumes:
@@ -11914,6 +13160,232 @@ paths:
       summary: Get product statistics
       tags:
       - storefront-products
+  /api/v1/storefronts/{storefront_id}/cart:
+    delete:
+      description: Removes all items from the shopping cart
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: storefront_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cart cleared
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Clear shopping cart
+      tags:
+      - cart
+    get:
+      description: Gets the current contents of the shopping cart for a storefront
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: storefront_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cart contents
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ShoppingCart'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get shopping cart
+      tags:
+      - cart
+  /api/v1/storefronts/{storefront_id}/cart/items:
+    post:
+      consumes:
+      - application/json
+      description: Adds a product to the shopping cart for a specific storefront
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: storefront_id
+        required: true
+        type: integer
+      - description: Item to add
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddToCartRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated cart
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ShoppingCart'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Add item to cart
+      tags:
+      - cart
+  /api/v1/storefronts/{storefront_id}/cart/items/{item_id}:
+    delete:
+      description: Removes an item from the shopping cart
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: storefront_id
+        required: true
+        type: integer
+      - description: Cart item ID
+        in: path
+        name: item_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated cart
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ShoppingCart'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Item not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Remove item from cart
+      tags:
+      - cart
+    put:
+      consumes:
+      - application/json
+      description: Updates the quantity of an item in the cart
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: storefront_id
+        required: true
+        type: integer
+      - description: Cart item ID
+        in: path
+        name: item_id
+        required: true
+        type: integer
+      - description: Updated quantity
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateCartItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated cart
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ShoppingCart'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Item not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update cart item quantity
+      tags:
+      - cart
   /api/v1/storefronts/{storefront_id}/import/file:
     post:
       consumes:
@@ -12138,6 +13610,123 @@ paths:
       tags:
       - storefronts
       - import
+  /api/v1/storefronts/{storefront_id}/orders:
+    get:
+      description: Gets a list of orders for a specific storefront (owner only)
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: storefront_id
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Storefront orders
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.StorefrontOrder'
+                  type: array
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get storefront orders
+      tags:
+      - orders
+  /api/v1/storefronts/{storefront_id}/orders/{order_id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Updates the status of an order (seller only)
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: storefront_id
+        required: true
+        type: integer
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      - description: Status update
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated order
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.StorefrontOrder'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Order not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update order status
+      tags:
+      - orders
   /api/v1/storefronts/building:
     get:
       consumes:
@@ -12754,6 +14343,40 @@ paths:
       summary: Register user (deprecated)
       tags:
       - users
+  /api/v1/webhooks/orders/payment:
+    post:
+      consumes:
+      - application/json
+      description: Обрабатывает webhook уведомления о статусе платежа заказа
+      parameters:
+      - description: Webhook signature
+        in: header
+        name: signature
+        type: string
+      - description: Webhook payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Webhook processed successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+        "400":
+          description: Invalid webhook payload
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Handle Order Payment Webhook
+      tags:
+      - order-payments
   /auth/google:
     get:
       consumes:
@@ -12821,6 +14444,205 @@ paths:
       summary: Get current session
       tags:
       - auth
+  /payments/{id}/capture:
+    post:
+      consumes:
+      - application/json
+      description: Захватывает авторизованный платеж
+      parameters:
+      - description: Transaction ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment captured successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+        "400":
+          description: Invalid transaction ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Transaction not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Capture Payment
+      tags:
+      - payments
+  /payments/{id}/refund:
+    post:
+      consumes:
+      - application/json
+      description: Возвращает средства по платежу
+      parameters:
+      - description: Transaction ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Refund details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RefundPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Refund processed successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Transaction not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Refund Payment
+      tags:
+      - payments
+  /payments/{id}/status:
+    get:
+      description: Получает текущий статус платежа
+      parameters:
+      - description: Transaction ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment status
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PaymentTransaction'
+              type: object
+        "400":
+          description: Invalid transaction ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Transaction not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Get Payment Status
+      tags:
+      - payments
+  /payments/create:
+    post:
+      consumes:
+      - application/json
+      description: Создает новый платеж через AllSecure
+      parameters:
+      - description: Payment details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.CreatePaymentResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Create Payment
+      tags:
+      - payments
+  /webhooks/allsecure:
+    post:
+      consumes:
+      - application/json
+      description: Обработка уведомлений от AllSecure о статусе платежей
+      parameters:
+      - description: Webhook signature
+        in: header
+        name: X-Signature
+        required: true
+        type: string
+      - description: Webhook payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Webhook processed successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponseSwag'
+        "400":
+          description: Invalid signature or payload
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: AllSecure Webhook Handler
+      tags:
+      - payments
+      - webhooks
 securityDefinitions:
   Bearer:
     description: Bearer token для авторизации

@@ -3490,6 +3490,79 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/balance/mock/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete mock payment
+     * @description Completes a mock payment session for testing purposes
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Payment session ID */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.CompleteMockPaymentRequest'];
+        };
+      };
+      responses: {
+        /** @description Payment completed successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: Record<string, never>;
+            };
+          };
+        };
+        /** @description balance.invalidRequest */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description balance.completeMockPaymentError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/balance/payment-methods': {
     parameters: {
       query?: never;
@@ -7641,6 +7714,392 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/orders/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get order details
+     * @description Get detailed information about specific order
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.MarketplaceOrder'];
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/orders/{id}/confirm-delivery': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirm order delivery
+     * @description Confirm order delivery by buyer
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Delivery confirmed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/orders/{id}/dispute': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Open order dispute
+     * @description Open dispute for order
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Dispute reason */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.OpenDisputeRequest'];
+        };
+      };
+      responses: {
+        /** @description Dispute opened */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/orders/{id}/message': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add message to order
+     * @description Add message to order conversation
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Message content */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.AddMessageRequest'];
+        };
+      };
+      responses: {
+        /** @description Message added */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/orders/{id}/ship': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Mark order as shipped
+     * @description Mark order as shipped by seller
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Shipping details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.MarkAsShippedRequest'];
+        };
+      };
+      responses: {
+        /** @description Order marked as shipped */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/orders/create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create marketplace order
+     * @description Creates a new order for marketplace listing with payment preauthorization
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Order details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.CreateMarketplaceOrderRequest'];
+        };
+      };
+      responses: {
+        /** @description Order created successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/orders/my/purchases': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get my purchases
+     * @description Get list of orders where current user is buyer
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Page number */
+          page?: number;
+          /** @description Items per page */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Orders list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/orders/my/sales': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get my sales
+     * @description Get list of orders where current user is seller
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Page number */
+          page?: number;
+          /** @description Items per page */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Orders list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/search': {
     parameters: {
       query?: never;
@@ -8567,6 +9026,563 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/orders': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user orders
+     * @description Gets a list of orders for the authenticated user
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Page number */
+          page?: number;
+          /** @description Items per page */
+          limit?: number;
+          /** @description Filter by status */
+          status?: string;
+          /** @description Filter by storefront */
+          storefront_id?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description User orders */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.StorefrontOrder'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create new order
+     * @description Creates a new order from cart items or direct items
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Order data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.CreateOrderRequest'];
+        };
+      };
+      responses: {
+        /** @description Created order */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.StorefrontOrder'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient stock */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/orders/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get order details
+     * @description Gets detailed information about a specific order
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.StorefrontOrder'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Order not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/orders/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Cancel order
+     * @description Cancels an existing order if it's in a cancellable state
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Cancellation reason */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.CancelOrderRequest'];
+        };
+      };
+      responses: {
+        /** @description Cancelled order */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.StorefrontOrder'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Order not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Order cannot be cancelled */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/orders/{id}/payment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Order Payment
+     * @description Создает новый платеж для заказа через платежную систему
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Order payment details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.CreateOrderPaymentRequest'];
+        };
+      };
+      responses: {
+        /** @description Payment session created successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.CreateOrderPaymentResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Order not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/orders/{id}/payment/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Order Payment
+     * @description Отменяет платеж заказа
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Payment cancelled successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid order ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Order or payment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/orders/{id}/payment/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Order Payment Status
+     * @description Получает текущий статус платежа заказа
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Payment status */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.PaymentSession'];
+            };
+          };
+        };
+        /** @description Invalid order ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Order or payment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -12102,6 +13118,370 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/{storefront_id}/cart': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shopping cart
+     * @description Gets the current contents of the shopping cart for a storefront
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Cart contents */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ShoppingCart'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    /**
+     * Clear shopping cart
+     * @description Removes all items from the shopping cart
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Cart cleared */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{storefront_id}/cart/items': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add item to cart
+     * @description Adds a product to the shopping cart for a specific storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Item to add */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.AddToCartRequest'];
+        };
+      };
+      responses: {
+        /** @description Updated cart */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ShoppingCart'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{storefront_id}/cart/items/{item_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update cart item quantity
+     * @description Updates the quantity of an item in the cart
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+          /** @description Cart item ID */
+          item_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Updated quantity */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.UpdateCartItemRequest'];
+        };
+      };
+      responses: {
+        /** @description Updated cart */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ShoppingCart'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Item not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Remove item from cart
+     * @description Removes an item from the shopping cart
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+          /** @description Cart item ID */
+          item_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Updated cart */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ShoppingCart'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Item not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts/{storefront_id}/import/file': {
     parameters: {
       query?: never;
@@ -12462,6 +13842,189 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{storefront_id}/orders': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront orders
+     * @description Gets a list of orders for a specific storefront (owner only)
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Page number */
+          page?: number;
+          /** @description Items per page */
+          limit?: number;
+          /** @description Filter by status */
+          status?: string;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Storefront orders */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.StorefrontOrder'][];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{storefront_id}/orders/{order_id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update order status
+     * @description Updates the status of an order (seller only)
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+          /** @description Order ID */
+          order_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Status update */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.UpdateOrderStatusRequest'];
+        };
+      };
+      responses: {
+        /** @description Updated order */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.StorefrontOrder'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Order not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -13495,6 +15058,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/webhooks/orders/payment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Handle Order Payment Webhook
+     * @description Обрабатывает webhook уведомления о статусе платежа заказа
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: {
+          /** @description Webhook signature */
+          signature?: string;
+        };
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['Payload'];
+      responses: {
+        /** @description Webhook processed successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid webhook payload */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/auth/google': {
     parameters: {
       query?: never;
@@ -13629,6 +15252,371 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/payments/{id}/capture': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Capture Payment
+     * @description Захватывает авторизованный платеж
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Transaction ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Payment captured successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid transaction ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Transaction not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/payments/{id}/refund': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Refund Payment
+     * @description Возвращает средства по платежу
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Transaction ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Refund details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.RefundPaymentRequest'];
+        };
+      };
+      responses: {
+        /** @description Refund processed successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Transaction not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/payments/{id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Payment Status
+     * @description Получает текущий статус платежа
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Transaction ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Payment status */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.PaymentTransaction'];
+            };
+          };
+        };
+        /** @description Invalid transaction ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Transaction not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/payments/create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Payment
+     * @description Создает новый платеж через AllSecure
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Payment details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.CreatePaymentRequest'];
+        };
+      };
+      responses: {
+        /** @description Payment created successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.CreatePaymentResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/webhooks/allsecure': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * AllSecure Webhook Handler
+     * @description Обработка уведомлений от AllSecure о статусе платежей
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Webhook signature */
+          'X-Signature': string;
+        };
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['Payload'];
+      responses: {
+        /** @description Webhook processed successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid signature or payload */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -13657,6 +15645,9 @@ export interface components {
     'backend_internal_proj_users_handler.MessageResponse': {
       /** @example Операция выполнена успешно */
       message?: string;
+    };
+    'handler.AddMessageRequest': {
+      content: string;
     };
     'handler.AddStaffRequest': {
       role: components['schemas']['models.StaffRole'];
@@ -13762,6 +15753,12 @@ export interface components {
       page?: number;
       total?: number;
     };
+    'handler.CompleteMockPaymentRequest': {
+      /** @example 2000 */
+      amount?: number;
+      /** @example mock_session_7_1751361491 */
+      session_id?: string;
+    };
     /** @description Ответ при удалении контакта из списка */
     'handler.ContactRemoveResponse': {
       /**
@@ -13802,11 +15799,48 @@ export interface components {
       /** @example 37.6173 */
       lng?: number;
     };
+    'handler.CreateMarketplaceOrderRequest': {
+      listing_id: number;
+      message?: string;
+      /** @enum {string} */
+      payment_method: 'card' | 'bank_transfer';
+    };
+    'handler.CreateOrderPaymentRequest': {
+      amount: string;
+      cancel_url: string;
+      currency: string;
+      description?: string;
+      order_id: number;
+      return_url: string;
+    };
+    'handler.CreateOrderPaymentResponse': {
+      expires_at?: string;
+      payment_url?: string;
+      requires_action?: boolean;
+      session_id?: string;
+      status?: string;
+    };
+    'handler.CreatePaymentRequest': {
+      amount: string;
+      currency: string;
+      description?: string;
+      listing_id: number;
+      return_url: string;
+    };
+    'handler.CreatePaymentResponse': {
+      gateway_uuid?: string;
+      redirect_url?: string;
+      requires_action?: boolean;
+      status?: string;
+      transaction_id?: number;
+    };
     'handler.DepositRequest': {
       /** @example 1000.5 */
       amount?: number;
       /** @example card */
       payment_method?: string;
+      /** @example http://localhost:3001/en/balance/deposit/success */
+      return_url?: string;
     };
     'handler.DetectLanguageRequest': {
       /** @example Hello world */
@@ -13959,6 +15993,10 @@ export interface components {
       /** @example true */
       success?: boolean;
     };
+    'handler.MarkAsShippedRequest': {
+      shipping_method: string;
+      tracking_number: string;
+    };
     'handler.ModerationData': {
       /** @example false */
       has_prohibited?: boolean;
@@ -13991,6 +16029,9 @@ export interface components {
       message?: string;
       /** @description Обновленные настройки */
       settings?: components['schemas']['models.NotificationSettings'][];
+    };
+    'handler.OpenDisputeRequest': {
+      reason: string;
     };
     'handler.PaginationMeta': {
       /** @example true */
@@ -14052,6 +16093,10 @@ export interface components {
       rating?: number;
       /** @example true */
       success?: boolean;
+    };
+    'handler.RefundPaymentRequest': {
+      amount: string;
+      reason?: string;
     };
     'handler.RegisterRequest': {
       /** @example user@example.com */
@@ -14378,9 +16423,7 @@ export interface components {
       vote_type?: string;
     };
     'handler.WebhookResponse': {
-      /** @example payments.webhook.processed */
       message?: string;
-      /** @example success */
       status?: string;
     };
     'models.AddContactRequest': {
@@ -14394,6 +16437,11 @@ export interface components {
       icon?: string;
       sort_order?: number;
       visibility_condition?: number[];
+    };
+    'models.AddToCartRequest': {
+      product_id: number;
+      quantity: number;
+      variant_id?: number;
     };
     'models.AdminUser': {
       created_at?: string;
@@ -14520,6 +16568,9 @@ export interface components {
       can_review?: boolean;
       existing_review_id?: number;
       has_existing_review?: boolean;
+      reason?: string;
+    };
+    'models.CancelOrderRequest': {
       reason?: string;
     };
     'models.CategoryAttribute': {
@@ -14651,6 +16702,17 @@ export interface components {
       content: string;
       listing_id?: number;
       receiver_id: number;
+    };
+    'models.CreateOrderRequest': {
+      billing_address: components['schemas']['models.ShippingAddress'];
+      cart_id?: number;
+      customer_notes?: string;
+      /** @description альтернатива cart_id */
+      items?: components['schemas']['models.OrderItemRequest'][];
+      payment_method: string;
+      shipping_address: components['schemas']['models.ShippingAddress'];
+      shipping_method: string;
+      storefront_id: number;
     };
     'models.CreateProductRequest': {
       attributes?: {
@@ -15012,6 +17074,43 @@ export interface components {
       };
       updated_at?: string;
     };
+    'models.MarketplaceOrder': {
+      /** @description Связанные данные (заполняются при необходимости) */
+      buyer?: components['schemas']['models.User'];
+      buyer_id?: number;
+      created_at?: string;
+      delivered_at?: string;
+      id?: number;
+      item_price?: number;
+      listing?: components['schemas']['models.MarketplaceListing'];
+      listing_id?: number;
+      messages?: components['schemas']['models.OrderMessage'][];
+      payment_transaction?: components['schemas']['models.PaymentTransaction'];
+      payment_transaction_id?: number;
+      platform_fee_amount?: number;
+      platform_fee_rate?: number;
+      protection_expires_at?: string;
+      protection_period_days?: number;
+      seller?: components['schemas']['models.User'];
+      seller_id?: number;
+      seller_payout_amount?: number;
+      shipped_at?: string;
+      shipping_method?: string;
+      status?: components['schemas']['models.MarketplaceOrderStatus'];
+      status_history?: components['schemas']['models.OrderStatusHistory'][];
+      tracking_number?: string;
+      updated_at?: string;
+    };
+    /** @enum {string} */
+    'models.MarketplaceOrderStatus':
+      | 'pending'
+      | 'paid'
+      | 'shipped'
+      | 'delivered'
+      | 'completed'
+      | 'disputed'
+      | 'cancelled'
+      | 'refunded';
     'models.Notification': {
       created_at?: string;
       data?: number[];
@@ -15033,12 +17132,65 @@ export interface components {
       updated_at?: string;
       user_id?: number;
     };
+    'models.OrderItemRequest': {
+      product_id: number;
+      quantity: number;
+      variant_id?: number;
+    };
+    'models.OrderMessage': {
+      content?: string;
+      created_at?: string;
+      id?: number;
+      message_type?: components['schemas']['models.OrderMessageType'];
+      metadata?: {
+        [key: string]: unknown;
+      };
+      order_id?: number;
+      /** @description Связанные данные */
+      sender?: components['schemas']['models.User'];
+      sender_id?: number;
+    };
+    /** @enum {string} */
+    'models.OrderMessageType':
+      | 'text'
+      | 'shipping_update'
+      | 'dispute_opened'
+      | 'dispute_message'
+      | 'system';
+    /** @enum {string} */
+    'models.OrderStatus':
+      | 'pending'
+      | 'confirmed'
+      | 'processing'
+      | 'shipped'
+      | 'delivered'
+      | 'cancelled'
+      | 'refunded';
+    'models.OrderStatusHistory': {
+      created_at?: string;
+      created_by?: number;
+      id?: number;
+      new_status?: string;
+      old_status?: string;
+      order_id?: number;
+      reason?: string;
+    };
     'models.PaginatedResponse': {
       data?: unknown;
       page?: number;
       page_size?: number;
       total?: number;
       total_pages?: number;
+    };
+    'models.PaymentGateway': {
+      config?: {
+        [key: string]: unknown;
+      };
+      created_at?: string;
+      id?: number;
+      is_active?: boolean;
+      name?: string;
+      updated_at?: string;
     };
     'models.PaymentMethod': {
       code?: string;
@@ -15071,10 +17223,59 @@ export interface components {
       currency?: string;
       expires_at?: string;
       external_id?: string;
-      id?: number;
+      /** @description Изменено на string для поддержки external IDs */
+      id?: string;
+      /** @description Добавлено для поддержки заказов */
+      order_id?: number;
       payment_method?: string;
       payment_url?: string;
       status?: string;
+      user_id?: number;
+    };
+    /** @enum {string} */
+    'models.PaymentSource': 'marketplace_listing' | 'storefront_order';
+    'models.PaymentTransaction': {
+      amount?: number;
+      authorized_at?: string;
+      auto_capture_at?: string;
+      capture_attempted_at?: string;
+      capture_attempts?: number;
+      capture_deadline_at?: string;
+      /** @description Delayed capture fields */
+      capture_mode?: string;
+      captured_at?: string;
+      created_at?: string;
+      currency?: string;
+      customer_email?: string;
+      description?: string;
+      error_details?: {
+        [key: string]: unknown;
+      };
+      failed_at?: string;
+      /** @description Relations */
+      gateway?: components['schemas']['models.PaymentGateway'];
+      gateway_id?: number;
+      gateway_reference_id?: string;
+      gateway_response?: {
+        [key: string]: unknown;
+      };
+      gateway_status?: string;
+      gateway_transaction_id?: string;
+      id?: number;
+      listing?: components['schemas']['models.MarketplaceListing'];
+      /** @description Legacy поле для обратной совместимости */
+      listing_id?: number;
+      marketplace_commission?: number;
+      order_reference?: string;
+      payment_method?: string;
+      seller_amount?: number;
+      source_id?: number;
+      /** @description Новые поля для унифицированной системы */
+      source_type?: components['schemas']['models.PaymentSource'];
+      status?: string;
+      storefront_id?: number;
+      updated_at?: string;
+      user?: components['schemas']['models.User'];
       user_id?: number;
     };
     'models.PriceHistoryEntry': {
@@ -15162,6 +17363,41 @@ export interface components {
       };
       total_reviews?: number;
       verified_reviews?: number;
+    };
+    'models.ShippingAddress': {
+      apartment?: string;
+      city?: string;
+      country?: string;
+      email?: string;
+      full_name?: string;
+      house_number?: string;
+      notes?: string;
+      phone?: string;
+      postal_code?: string;
+      street?: string;
+    };
+    'models.ShoppingCart': {
+      created_at?: string;
+      id?: number;
+      items?: components['schemas']['models.ShoppingCartItem'][];
+      session_id?: string;
+      storefront?: components['schemas']['models.Storefront'];
+      storefront_id?: number;
+      updated_at?: string;
+      user_id?: number;
+    };
+    'models.ShoppingCartItem': {
+      cart_id?: number;
+      created_at?: string;
+      id?: number;
+      price_per_unit?: number;
+      product?: components['schemas']['models.StorefrontProduct'];
+      product_id?: number;
+      quantity?: number;
+      total_price?: number;
+      updated_at?: string;
+      variant?: components['schemas']['models.StorefrontProductVariant'];
+      variant_id?: number;
     };
     /** @enum {string} */
     'models.StaffRole':
@@ -15328,6 +17564,83 @@ export interface components {
       supports_cod?: boolean;
       working_now?: boolean;
     };
+    'models.StorefrontOrder': {
+      billing_address?: components['schemas']['models.JSONB'];
+      cancelled_at?: string;
+      commission_amount?: number;
+      /** @description Временные метки */
+      confirmed_at?: string;
+      created_at?: string;
+      currency?: string;
+      customer?: components['schemas']['models.User'];
+      /** @description Реальное поле в БД */
+      customer_id?: number;
+      customer_notes?: string;
+      delivered_at?: string;
+      discount?: number;
+      escrow_days?: number;
+      escrow_release_date?: string;
+      id?: number;
+      /** @description Связанные данные */
+      items?: components['schemas']['models.StorefrontOrderItem'][];
+      metadata?: {
+        [key: string]: unknown;
+      };
+      /** @description Заметки и метаданные */
+      notes?: string;
+      order_number?: string;
+      /** @description Платежные данные */
+      payment_method?: string;
+      payment_status?: string;
+      payment_transaction?: components['schemas']['models.PaymentTransaction'];
+      payment_transaction_id?: string;
+      seller_amount?: number;
+      seller_notes?: string;
+      shipped_at?: string;
+      /** @description Алиас для ShippingAmount */
+      shipping?: number;
+      /** @description Доставка и адреса */
+      shipping_address?: components['schemas']['models.JSONB'];
+      shipping_amount?: number;
+      shipping_method?: string;
+      shipping_provider?: string;
+      /** @description Статус и escrow */
+      status?: components['schemas']['models.OrderStatus'];
+      storefront?: components['schemas']['models.Storefront'];
+      storefront_id?: number;
+      /** @description Финансовые данные */
+      subtotal?: number;
+      subtotal_amount?: number;
+      /** @description Алиас для TaxAmount */
+      tax?: number;
+      tax_amount?: number;
+      /** @description Алиас для TotalAmount */
+      total?: number;
+      total_amount?: number;
+      tracking_number?: string;
+      updated_at?: string;
+      /** @description Для совместимости с API */
+      user_id?: number;
+    };
+    'models.StorefrontOrderItem': {
+      created_at?: string;
+      id?: number;
+      order_id?: number;
+      price_per_unit?: number;
+      /** @description Связанные данные */
+      product?: components['schemas']['models.StorefrontProduct'];
+      /** @description Snapshot атрибутов */
+      product_attributes?: components['schemas']['models.JSONB'];
+      product_id?: number;
+      /** @description Snapshot данных на момент заказа */
+      product_name?: string;
+      product_sku?: string;
+      quantity?: number;
+      total_price?: number;
+      variant?: components['schemas']['models.StorefrontProductVariant'];
+      variant_id?: number;
+      variant_name?: string;
+    };
     'models.StorefrontPaymentMethod': {
       /** @description Специфично для COD (наложенный платеж) */
       cod_fee?: number;
@@ -15473,6 +17786,10 @@ export interface components {
       name?: string;
       sort_order?: number;
     };
+    'models.UpdateCartItemRequest': {
+      /** @description 0 = удалить из корзины */
+      quantity: number;
+    };
     'models.UpdateContactRequest': {
       notes?: string;
       /** @enum {string} */
@@ -15493,6 +17810,11 @@ export interface components {
       reason: string;
       /** @enum {string} */
       type: 'in' | 'out' | 'adjustment';
+    };
+    'models.UpdateOrderStatusRequest': {
+      seller_notes?: string;
+      status: components['schemas']['models.OrderStatus'];
+      tracking_number?: string;
     };
     'models.UpdatePrivacySettingsRequest': {
       allow_contact_requests?: boolean;
@@ -16090,6 +18412,12 @@ export interface components {
            */
           photos: string;
         };
+      };
+    };
+    /** @description Webhook payload */
+    Payload: {
+      content: {
+        'application/json': Record<string, never>;
       };
     };
   };

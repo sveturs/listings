@@ -2,17 +2,19 @@
 package service
 
 import (
+	"context"
+	"log"
+	"sync"
+	"time"
+
 	"backend/internal/domain/models"
 	"backend/internal/storage"
 	"backend/internal/types"
 	"backend/pkg/jwt"
-	"context"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	oauth2v2 "google.golang.org/api/oauth2/v2"
-	"log"
-	"sync"
-	"time"
 )
 
 type AuthService struct {

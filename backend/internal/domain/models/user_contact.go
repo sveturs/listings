@@ -10,11 +10,11 @@ type UserContact struct {
 	Status        string    `json:"status" db:"status"` // pending, accepted, blocked
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
-	
+
 	// Дополнительные поля
 	AddedFromChatID *int   `json:"added_from_chat_id,omitempty" db:"added_from_chat_id"`
 	Notes           string `json:"notes,omitempty" db:"notes"`
-	
+
 	// Связанные объекты
 	User        *User `json:"user,omitempty"`
 	ContactUser *User `json:"contact_user,omitempty"`

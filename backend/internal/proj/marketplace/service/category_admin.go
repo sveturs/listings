@@ -1,9 +1,10 @@
 package service
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"fmt"
+
+	"backend/internal/domain/models"
 )
 
 // Реализации методов для администрирования категорий
@@ -25,7 +26,6 @@ func (s *MarketplaceService) CreateCategory(ctx context.Context, category *model
 		category.HasCustomUI,
 		category.CustomUIComponent,
 	).Scan(&id)
-
 	if err != nil {
 		return 0, fmt.Errorf("не удалось создать категорию: %w", err)
 	}
@@ -70,7 +70,6 @@ func (s *MarketplaceService) UpdateCategory(ctx context.Context, category *model
 		category.CustomUIComponent,
 		category.ID,
 	)
-
 	if err != nil {
 		return fmt.Errorf("не удалось обновить категорию: %w", err)
 	}
@@ -192,7 +191,6 @@ func (s *MarketplaceService) MoveCategory(ctx context.Context, id int, newParent
 		)
 		SELECT EXISTS(SELECT 1 FROM category_tree WHERE id = $2)
 	`, id, newParentID).Scan(&isDescendant)
-
 	if err != nil {
 		return fmt.Errorf("не удалось проверить иерархию категорий: %w", err)
 	}

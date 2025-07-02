@@ -1,8 +1,9 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
+
+	"backend/internal/domain/models"
 )
 
 // CustomComponentStorage определяет интерфейс для работы с кастомными компонентами
@@ -12,12 +13,12 @@ type CustomComponentStorage interface {
 	UpdateComponent(ctx context.Context, id int, updates map[string]interface{}) error
 	DeleteComponent(ctx context.Context, id int) error
 	ListComponents(ctx context.Context, filters map[string]interface{}) ([]*models.CustomUIComponent, error)
-	
+
 	AddComponentUsage(ctx context.Context, usage *models.CustomUIComponentUsage) (int, error)
 	GetComponentUsages(ctx context.Context, componentID, categoryID *int) ([]*models.CustomUIComponentUsage, error)
 	RemoveComponentUsage(ctx context.Context, id int) error
 	GetCategoryComponents(ctx context.Context, categoryID int, usageContext string) ([]*models.CustomUIComponentUsage, error)
-	
+
 	CreateTemplate(ctx context.Context, template *models.ComponentTemplate) (int, error)
 	ListTemplates(ctx context.Context, componentID int) ([]*models.ComponentTemplate, error)
 }

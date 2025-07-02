@@ -12,6 +12,7 @@ import {
   type ValidationError,
 } from '@/utils/validation';
 import { Link } from '@/i18n/routing';
+import { BalanceWidget } from '@/components/balance/BalanceWidget';
 
 export default function ProfilePage() {
   const {
@@ -428,6 +429,26 @@ export default function ProfilePage() {
                 </svg>
                 {t('actions.myStorefronts')}
               </Link>
+              <Link
+                href="/profile/orders/purchases"
+                className="btn btn-secondary"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                  />
+                </svg>
+                {t('actions.myOrders')}
+              </Link>
               <Link href="/create-listing" className="btn btn-ghost">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -448,6 +469,12 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+
+        {/* Balance Section */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold mb-4">{t('balance.title')}</h2>
+          <BalanceWidget showActions={true} />
+        </div>
       </div>
     </div>
   );

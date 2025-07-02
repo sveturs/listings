@@ -1,0 +1,60 @@
+run:
+  timeout: 5m
+  go: "1.21"
+
+linters-settings:
+  gofumpt:
+    lang-version: "1.21"
+    extra-rules: true
+  
+  goimports:
+    local-prefixes: github.com/sveturs/svetu
+  
+  govet:
+    enable-all: true
+  
+  golint:
+    min-confidence: 0.8
+  
+  misspell:
+    locale: US
+  
+  lll:
+    line-length: 120
+
+linters:
+  enable:
+    - gofumpt      # Stricter gofmt
+    - goimports    # Auto-manage imports
+    - govet        # Go vet
+    - golint       # Go lint
+    - misspell     # Spelling mistakes
+    - lll          # Line length limit
+    - unused       # Unused code
+    - ineffassign  # Ineffectual assignments
+    - goconst      # Repeated strings that could be constants
+    - gocritic     # Go code critic
+    - gosec        # Security issues
+    - errcheck     # Unchecked errors
+  
+  disable:
+    - typecheck    # Disable if you have build tags issues
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gosec
+        - lll
+    
+    # Exclude generated files
+    - path: ".*\\.pb\\.go"
+      linters:
+        - all
+  
+  # Maximum issues count per one linter
+  max-issues-per-linter: 50
+  
+  # Maximum count of issues with the same text
+  max-same-issues: 3

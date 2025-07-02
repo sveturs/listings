@@ -2,13 +2,14 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
+
+	"backend/internal/domain/models"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -42,7 +43,6 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
 		&chat.Listing.Title,
 		&chat.UnreadCount,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("error getting chat: %w", err)
 	}
@@ -62,7 +62,6 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
 		&sellerName, &sellerPicture,
 		&buyerName, &buyerPicture,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("error getting user details: %w", err)
 	}
@@ -500,7 +499,7 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 	// Но если есть ChatID, проверяем, что чат существует
 
 	// Проверяем из контекста, существует ли листинг
-	var listingExists = true
+	listingExists := true
 	if listingExistsValue := ctx.Value("listing_exists"); listingExistsValue != nil {
 		if exists, ok := listingExistsValue.(bool); ok {
 			listingExists = exists
@@ -544,7 +543,6 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
             FROM marketplace_chats
             WHERE id = $1
         `, msg.ChatID).Scan(&buyerID, &sellerID)
-
 		if err != nil {
 			if err == pgx.ErrNoRows {
 				return fmt.Errorf("chat not found: %d", msg.ChatID)
@@ -560,7 +558,6 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
                 FROM marketplace_listings
                 WHERE id = $1
             `, msg.ListingID).Scan(&sellerID)
-
 			if err != nil {
 				if err == pgx.ErrNoRows {
 					return fmt.Errorf("listing not found: %d", msg.ListingID)
@@ -608,7 +605,6 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
             SET last_message_at = CURRENT_TIMESTAMP, is_archived = false
             WHERE id = $1
         `, msg.ChatID)
-
 		if err != nil {
 			return fmt.Errorf("error updating chat: %w", err)
 		}
@@ -631,7 +627,6 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 			&receiverInfo.name,
 			&receiverInfo.pictureURL,
 		)
-
 		if err != nil {
 			return fmt.Errorf("error getting user info: %w", err)
 		}
@@ -673,7 +668,6 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 			&receiverInfo.name,
 			&receiverInfo.pictureURL,
 		)
-
 		if err != nil {
 			return fmt.Errorf("error creating/getting chat: %w", err)
 		}
@@ -705,13 +699,13 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 		msg.Content,
 		msg.OriginalLanguage,
 	).Scan(&msg.ID, &msg.CreatedAt)
-
 	if err != nil {
 		return fmt.Errorf("error creating message: %w", err)
 	}
 
 	return tx.Commit(ctx)
 }
+
 func (s *Storage) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
 	_, err := s.pool.Exec(ctx, `
         UPDATE marketplace_messages

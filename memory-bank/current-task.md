@@ -1,31 +1,45 @@
-# Текущая задача: Исправление проблемы с переводом loadMore
+# Текущий статус - 02.07.2025 20:58
 
-## Статус: ЗАВЕРШЕНА
-## Дата начала: 2025-06-24
-## Последнее обновление: 2025-06-24
+## ПОЛНОСТЬЮ РЕШЕНО: Система заказов маркетплейса
 
-## Описание проблемы:
-В компоненте InfiniteScrollTrigger кнопка "Загрузить еще" отображалась как `common.loadMore` вместо правильного перевода.
+### История проблем и решений:
+1. ✅ 404 ошибка - исправлены Swagger аннотации
+2. ✅ OrderService не создавался - добавлен доступ через globalService  
+3. ✅ 500 ошибка - применена миграция для marketplace_orders
+4. ✅ Редирект без локали - исправлен на использование Next.js router
+5. ✅ Ошибка "Не удалось найти данные платежа" - исправлен PaymentService
+6. ✅ 404 на странице успеха - созданы страницы `/orders/[id]/success` и `/payment-failed`
 
-## Решение:
+### Финальные исправления:
+1. ✅ Все маршруты исправлены на `/api/v1/marketplace/orders/`
+2. ✅ Везде используется правильный `user_id` вместо `userID`
+3. ✅ Добавлен метод Orders() в globalService
+4. ✅ Применена миграция базы данных
+5. ✅ Редирект на страницу оплаты теперь учитывает локаль
+6. ✅ PaymentService генерирует URL с параметрами (session_id, amount, currency, order_id)
+7. ✅ Созданы страницы успеха и неудачи для заказов
 
-### 1. Изменен подход к передаче переводов:
-- Компонент InfiniteScrollTrigger теперь принимает `loadMoreText` как prop
-- Убрано использование `useTranslations` внутри компонента
-- Переводы передаются из родительских компонентов
+### ИТОГОВЫЙ РЕЗУЛЬТАТ:
+- ✅ Заказ успешно создается (status 200)
+- ✅ Пользователь перенаправляется на страницу оплаты с данными
+- ✅ Страница оплаты отображает корректную информацию
+- ✅ После успешной оплаты пользователь видит страницу успеха
+- ✅ При неудачной оплате показывается соответствующая страница
+- ✅ Вся система заказов работает end-to-end
 
-### 2. Обновлены файлы:
-- `/frontend/svetu/src/components/common/InfiniteScrollTrigger.tsx` - добавлен prop loadMoreText
-- `/frontend/svetu/src/components/products/ProductList.tsx` - передается перевод через prop
-- `/frontend/svetu/src/messages/ru.json` - добавлен перевод в storefronts.products.loadMore
-- `/frontend/svetu/src/messages/en.json` - добавлен перевод в storefronts.products.loadMore
-- Обновлены все другие компоненты, использующие InfiniteScrollTrigger
+## Важные изменения сессии:
+1. API URL конфигурация исправлена - теперь использует прямой URL http://localhost:3000
+2. Endpoint для заказов изменен на правильный путь
+3. Debug логи отключены для чистоты консоли
+4. Добавлены отсутствующие ключи локализации
 
-### 3. Результат:
-✅ Кнопка корректно отображает "Загрузить еще" на русском языке
-✅ Ошибки IntlError больше не появляются в консоли
-✅ Решение работает для всех компонентов с InfiniteScrollTrigger
+## Test Credentials
+- Email: test@user.rs  
+- Password: testuser
 
-## Связанные файлы:
-- Предыдущая задача (bulk operations): `/memory-bank/analysis/bulk-operations-troubleshooting.md`
-- Анализ bulk operations: `/memory-bank/analysis/bulk-operations-and-security-analysis.md`
+## Активные сервисы
+- Backend: 3000 (backend-3000)
+- Frontend: 3001 (frontend-3001)
+
+---
+Детальная информация сохранена в: `/data/hostel-booking-system/memory-bank/session-20250702-api-fixes.md`

@@ -11,18 +11,18 @@ import (
 )
 
 type CategoryTreeNode struct {
-	ID             int                        `json:"id"`
-	Name           string                     `json:"name"`
-	Slug           string                     `json:"slug"`
-	Icon           string                     `json:"icon"`
-	ParentID       *int                       `json:"parent_id"`
-	CreatedAt      string                     `json:"created_at"`
-	Level          int                        `json:"level"`
-	Path           string                     `json:"path"`
-	ListingCount   int                        `json:"listing_count"`
-	ChildrenCount  int                        `json:"children_count"`
-	Translations   map[string]string          `json:"translations"`
-	Children       []CategoryTreeNode         `json:"children"`
+	ID            int                `json:"id"`
+	Name          string             `json:"name"`
+	Slug          string             `json:"slug"`
+	Icon          string             `json:"icon"`
+	ParentID      *int               `json:"parent_id"`
+	CreatedAt     string             `json:"created_at"`
+	Level         int                `json:"level"`
+	Path          string             `json:"path"`
+	ListingCount  int                `json:"listing_count"`
+	ChildrenCount int                `json:"children_count"`
+	Translations  map[string]string  `json:"translations"`
+	Children      []CategoryTreeNode `json:"children"`
 }
 
 func testGetCategoryTree(pool *pgxpool.Pool) {
@@ -131,7 +131,7 @@ ORDER BY c1.name ASC;
 	defer rows.Close()
 
 	var rootCategories []CategoryTreeNode
-	
+
 	for rows.Next() {
 		var node CategoryTreeNode
 		var translationsJson, childrenJson []byte

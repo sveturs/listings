@@ -2,12 +2,13 @@
 package service
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"fmt"
 	"math"
 	"strconv"
 	"strings"
+
+	"backend/internal/domain/models"
 )
 
 // GetListingsInBounds возвращает маркеры объявлений в указанных границах

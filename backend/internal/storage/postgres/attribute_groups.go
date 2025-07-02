@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"backend/internal/domain/models"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -20,14 +21,14 @@ type AttributeGroupStorage interface {
 	ListAttributeGroups(ctx context.Context) ([]*models.AttributeGroup, error)
 	UpdateAttributeGroup(ctx context.Context, id int, updates map[string]interface{}) error
 	DeleteAttributeGroup(ctx context.Context, id int) error
-	
+
 	// Элементы групп
 	AddItemToGroup(ctx context.Context, groupID int, item *models.AttributeGroupItem) (int, error)
 	RemoveItemFromGroup(ctx context.Context, groupID, attributeID int) error
 	GetGroupItems(ctx context.Context, groupID int) ([]*models.AttributeGroupItem, error)
 	UpdateGroupItem(ctx context.Context, id int, updates map[string]interface{}) error
 	GetAttributeGroupWithItems(ctx context.Context, id int) (*models.AttributeGroupWithItems, error)
-	
+
 	// Привязка к категориям
 	AttachGroupToCategory(ctx context.Context, categoryID int, group *models.CategoryAttributeGroup) (int, error)
 	DetachGroupFromCategory(ctx context.Context, categoryID, groupID int) error
@@ -50,7 +51,7 @@ func (s *attributeGroupStorage) CreateAttributeGroup(ctx context.Context, group 
 		INSERT INTO attribute_groups (name, display_name, description, icon, sort_order, is_active, is_system)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`
-	
+
 	var id int
 	err := s.pool.QueryRow(ctx, query,
 		group.Name,
@@ -61,11 +62,10 @@ func (s *attributeGroupStorage) CreateAttributeGroup(ctx context.Context, group 
 		group.IsActive,
 		group.IsSystem,
 	).Scan(&id)
-	
 	if err != nil {
 		return 0, fmt.Errorf("ошибка создания группы атрибутов: %w", err)
 	}
-	
+
 	return id, nil
 }
 
@@ -75,7 +75,7 @@ func (s *attributeGroupStorage) GetAttributeGroup(ctx context.Context, id int) (
 		SELECT id, name, display_name, description, icon, sort_order, is_active, is_system, created_at, updated_at
 		FROM attribute_groups
 		WHERE id = $1`
-	
+
 	group := &models.AttributeGroup{}
 	err := s.pool.QueryRow(ctx, query, id).Scan(
 		&group.ID,
@@ -89,14 +89,14 @@ func (s *attributeGroupStorage) GetAttributeGroup(ctx context.Context, id int) (
 		&group.CreatedAt,
 		&group.UpdatedAt,
 	)
-	
+
 	if err == pgx.ErrNoRows {
 		return nil, fmt.Errorf("группа атрибутов не найдена")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения группы атрибутов: %w", err)
 	}
-	
+
 	return group, nil
 }
 
@@ -106,7 +106,7 @@ func (s *attributeGroupStorage) GetAttributeGroupByName(ctx context.Context, nam
 		SELECT id, name, display_name, description, icon, sort_order, is_active, is_system, created_at, updated_at
 		FROM attribute_groups
 		WHERE name = $1`
-	
+
 	group := &models.AttributeGroup{}
 	err := s.pool.QueryRow(ctx, query, name).Scan(
 		&group.ID,
@@ -120,14 +120,14 @@ func (s *attributeGroupStorage) GetAttributeGroupByName(ctx context.Context, nam
 		&group.CreatedAt,
 		&group.UpdatedAt,
 	)
-	
+
 	if err == pgx.ErrNoRows {
 		return nil, fmt.Errorf("группа атрибутов не найдена")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения группы атрибутов: %w", err)
 	}
-	
+
 	return group, nil
 }
 
@@ -137,13 +137,13 @@ func (s *attributeGroupStorage) ListAttributeGroups(ctx context.Context) ([]*mod
 		SELECT id, name, display_name, description, icon, sort_order, is_active, is_system, created_at, updated_at
 		FROM attribute_groups
 		ORDER BY sort_order, name`
-	
+
 	rows, err := s.pool.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения списка групп атрибутов: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var groups []*models.AttributeGroup
 	for rows.Next() {
 		group := &models.AttributeGroup{}
@@ -164,7 +164,7 @@ func (s *attributeGroupStorage) ListAttributeGroups(ctx context.Context) ([]*mod
 		}
 		groups = append(groups, group)
 	}
-	
+
 	return groups, nil
 }
 
@@ -173,11 +173,11 @@ func (s *attributeGroupStorage) UpdateAttributeGroup(ctx context.Context, id int
 	if len(updates) == 0 {
 		return nil
 	}
-	
+
 	setClause := ""
 	args := []interface{}{}
 	argPos := 1
-	
+
 	for key, value := range updates {
 		if setClause != "" {
 			setClause += ", "
@@ -186,15 +186,15 @@ func (s *attributeGroupStorage) UpdateAttributeGroup(ctx context.Context, id int
 		args = append(args, value)
 		argPos++
 	}
-	
+
 	args = append(args, id)
 	query := fmt.Sprintf(`UPDATE attribute_groups SET %s WHERE id = $%d`, setClause, argPos)
-	
+
 	_, err := s.pool.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("ошибка обновления группы атрибутов: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -206,22 +206,22 @@ func (s *attributeGroupStorage) DeleteAttributeGroup(ctx context.Context, id int
 	if err != nil {
 		return fmt.Errorf("ошибка проверки группы: %w", err)
 	}
-	
+
 	if isSystem {
 		return fmt.Errorf("нельзя удалить системную группу")
 	}
-	
+
 	query := `DELETE FROM attribute_groups WHERE id = $1`
-	
+
 	result, err := s.pool.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("ошибка удаления группы атрибутов: %w", err)
 	}
-	
+
 	if result.RowsAffected() == 0 {
 		return fmt.Errorf("группа атрибутов не найдена")
 	}
-	
+
 	return nil
 }
 
@@ -236,7 +236,7 @@ func (s *attributeGroupStorage) AddItemToGroup(ctx context.Context, groupID int,
 			custom_display_name = EXCLUDED.custom_display_name,
 			visibility_condition = EXCLUDED.visibility_condition
 		RETURNING id`
-	
+
 	var id int
 	err := s.pool.QueryRow(ctx, query,
 		groupID,
@@ -246,11 +246,10 @@ func (s *attributeGroupStorage) AddItemToGroup(ctx context.Context, groupID int,
 		item.CustomDisplayName,
 		item.VisibilityCondition,
 	).Scan(&id)
-	
 	if err != nil {
 		return 0, fmt.Errorf("ошибка добавления атрибута в группу: %w", err)
 	}
-	
+
 	return id, nil
 }
 
@@ -259,16 +258,16 @@ func (s *attributeGroupStorage) RemoveItemFromGroup(ctx context.Context, groupID
 	query := `
 		DELETE FROM attribute_group_items 
 		WHERE group_id = $1 AND attribute_id = $2`
-	
+
 	result, err := s.pool.Exec(ctx, query, groupID, attributeID)
 	if err != nil {
 		return fmt.Errorf("ошибка удаления атрибута из группы: %w", err)
 	}
-	
+
 	if result.RowsAffected() == 0 {
 		return fmt.Errorf("атрибут не найден в группе")
 	}
-	
+
 	return nil
 }
 
@@ -284,13 +283,13 @@ func (s *attributeGroupStorage) GetGroupItems(ctx context.Context, groupID int) 
 		LEFT JOIN category_attributes ca ON agi.attribute_id = ca.id
 		WHERE agi.group_id = $1
 		ORDER BY agi.sort_order, ca.display_name`
-	
+
 	rows, err := s.pool.Query(ctx, query, groupID)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения атрибутов группы: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var items []*models.AttributeGroupItem
 	for rows.Next() {
 		item := &models.AttributeGroupItem{
@@ -326,7 +325,7 @@ func (s *attributeGroupStorage) GetGroupItems(ctx context.Context, groupID int) 
 		}
 		items = append(items, item)
 	}
-	
+
 	return items, nil
 }
 
@@ -335,11 +334,11 @@ func (s *attributeGroupStorage) UpdateGroupItem(ctx context.Context, id int, upd
 	if len(updates) == 0 {
 		return nil
 	}
-	
+
 	setClause := ""
 	args := []interface{}{}
 	argPos := 1
-	
+
 	for key, value := range updates {
 		if setClause != "" {
 			setClause += ", "
@@ -348,15 +347,15 @@ func (s *attributeGroupStorage) UpdateGroupItem(ctx context.Context, id int, upd
 		args = append(args, value)
 		argPos++
 	}
-	
+
 	args = append(args, id)
 	query := fmt.Sprintf(`UPDATE attribute_group_items SET %s WHERE id = $%d`, setClause, argPos)
-	
+
 	_, err := s.pool.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("ошибка обновления атрибута в группе: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -366,12 +365,12 @@ func (s *attributeGroupStorage) GetAttributeGroupWithItems(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	items, err := s.GetGroupItems(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &models.AttributeGroupWithItems{
 		AttributeGroup: group,
 		Items:          items,
@@ -394,7 +393,7 @@ func (s *attributeGroupStorage) AttachGroupToCategory(ctx context.Context, categ
 			collapsed_by_default = EXCLUDED.collapsed_by_default,
 			configuration = EXCLUDED.configuration
 		RETURNING id`
-	
+
 	var id int
 	err := s.pool.QueryRow(ctx, query,
 		categoryID,
@@ -406,11 +405,10 @@ func (s *attributeGroupStorage) AttachGroupToCategory(ctx context.Context, categ
 		group.CollapsedByDefault,
 		group.Configuration,
 	).Scan(&id)
-	
 	if err != nil {
 		return 0, fmt.Errorf("ошибка привязки группы к категории: %w", err)
 	}
-	
+
 	return id, nil
 }
 
@@ -419,16 +417,16 @@ func (s *attributeGroupStorage) DetachGroupFromCategory(ctx context.Context, cat
 	query := `
 		DELETE FROM category_attribute_groups 
 		WHERE category_id = $1 AND group_id = $2`
-	
+
 	result, err := s.pool.Exec(ctx, query, categoryID, groupID)
 	if err != nil {
 		return fmt.Errorf("ошибка отвязки группы от категории: %w", err)
 	}
-	
+
 	if result.RowsAffected() == 0 {
 		return fmt.Errorf("связь группы с категорией не найдена")
 	}
-	
+
 	return nil
 }
 
@@ -443,13 +441,13 @@ func (s *attributeGroupStorage) GetCategoryGroups(ctx context.Context, categoryI
 		LEFT JOIN attribute_groups ag ON cag.group_id = ag.id
 		WHERE cag.category_id = $1
 		ORDER BY cag.sort_order, ag.sort_order`
-	
+
 	rows, err := s.pool.Query(ctx, query, categoryID)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения групп категории: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var groups []*models.CategoryAttributeGroup
 	for rows.Next() {
 		group := &models.CategoryAttributeGroup{
@@ -482,7 +480,7 @@ func (s *attributeGroupStorage) GetCategoryGroups(ctx context.Context, categoryI
 		}
 		groups = append(groups, group)
 	}
-	
+
 	return groups, nil
 }
 
@@ -491,11 +489,11 @@ func (s *attributeGroupStorage) UpdateCategoryGroup(ctx context.Context, id int,
 	if len(updates) == 0 {
 		return nil
 	}
-	
+
 	setClause := ""
 	args := []interface{}{}
 	argPos := 1
-	
+
 	for key, value := range updates {
 		if setClause != "" {
 			setClause += ", "
@@ -504,14 +502,14 @@ func (s *attributeGroupStorage) UpdateCategoryGroup(ctx context.Context, id int,
 		args = append(args, value)
 		argPos++
 	}
-	
+
 	args = append(args, id)
 	query := fmt.Sprintf(`UPDATE category_attribute_groups SET %s WHERE id = $%d`, setClause, argPos)
-	
+
 	_, err := s.pool.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("ошибка обновления связи группы с категорией: %w", err)
 	}
-	
+
 	return nil
 }

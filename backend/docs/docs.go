@@ -3729,6 +3729,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/balance/mock/complete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Completes a mock payment session for testing purposes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Complete mock payment",
+                "parameters": [
+                    {
+                        "description": "Payment session ID",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CompleteMockPaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment completed successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "balance.invalidRequest",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "balance.completeMockPaymentError",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/balance/payment-methods": {
             "get": {
                 "description": "Returns list of available payment methods",
@@ -7858,6 +7927,335 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/marketplace/orders/create": {
+            "post": {
+                "description": "Creates a new order for marketplace listing with payment preauthorization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Create marketplace order",
+                "parameters": [
+                    {
+                        "description": "Order details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CreateMarketplaceOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/orders/my/purchases": {
+            "get": {
+                "description": "Get list of orders where current user is buyer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get my purchases",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Orders list",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/orders/my/sales": {
+            "get": {
+                "description": "Get list of orders where current user is seller",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get my sales",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Orders list",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/orders/{id}": {
+            "get": {
+                "description": "Get detailed information about specific order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get order details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.MarketplaceOrder"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/orders/{id}/confirm-delivery": {
+            "post": {
+                "description": "Confirm order delivery by buyer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Confirm order delivery",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delivery confirmed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/orders/{id}/dispute": {
+            "post": {
+                "description": "Open dispute for order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Open order dispute",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dispute reason",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.OpenDisputeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dispute opened",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/orders/{id}/message": {
+            "post": {
+                "description": "Add message to order conversation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Add message to order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Message content",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.AddMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message added",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/orders/{id}/ship": {
+            "post": {
+                "description": "Mark order as shipped by seller",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Mark order as shipped",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Shipping details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.MarkAsShippedRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order marked as shipped",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/search": {
             "get": {
                 "description": "Performs advanced search with filters, facets, and suggestions",
@@ -8776,6 +9174,523 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "notifications.updateError",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets a list of orders for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get user orders",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by storefront",
+                        "name": "storefront_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User orders",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.StorefrontOrder"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new order from cart items or direct items",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Create new order",
+                "parameters": [
+                    {
+                        "description": "Order data",
+                        "name": "order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created order",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.StorefrontOrder"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "409": {
+                        "description": "Insufficient stock",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets detailed information about a specific order",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get order details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.StorefrontOrder"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Order not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/{id}/cancel": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancels an existing order if it's in a cancellable state",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Cancel order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cancellation reason",
+                        "name": "cancel",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CancelOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cancelled order",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.StorefrontOrder"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Order not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "409": {
+                        "description": "Order cannot be cancelled",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/{id}/payment": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создает новый платеж для заказа через платежную систему",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order-payments"
+                ],
+                "summary": "Create Order Payment",
+                "parameters": [
+                    {
+                        "description": "Order payment details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CreateOrderPaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment session created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.CreateOrderPaymentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Order not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/{id}/payment/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Отменяет платеж заказа",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order-payments"
+                ],
+                "summary": "Cancel Order Payment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment cancelled successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid order ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Order or payment not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/{id}/payment/status": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Получает текущий статус платежа заказа",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order-payments"
+                ],
+                "summary": "Get Order Payment Status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment status",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.PaymentSession"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid order ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Order or payment not found",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
@@ -12714,6 +13629,378 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/storefronts/{storefront_id}/cart": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets the current contents of the shopping cart for a storefront",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Get shopping cart",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cart contents",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.ShoppingCart"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes all items from the shopping cart",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Clear shopping cart",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cart cleared",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{storefront_id}/cart/items": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds a product to the shopping cart for a specific storefront",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Add item to cart",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Item to add",
+                        "name": "item",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AddToCartRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated cart",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.ShoppingCart"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{storefront_id}/cart/items/{item_id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the quantity of an item in the cart",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Update cart item quantity",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Cart item ID",
+                        "name": "item_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated quantity",
+                        "name": "update",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateCartItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated cart",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.ShoppingCart"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Item not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes an item from the shopping cart",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Remove item from cart",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Cart item ID",
+                        "name": "item_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated cart",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.ShoppingCart"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Item not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts/{storefront_id}/import/file": {
             "post": {
                 "security": [
@@ -13046,6 +14333,194 @@ const docTemplate = `{
                         "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{storefront_id}/orders": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets a list of orders for a specific storefront (owner only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get storefront orders",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Storefront orders",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.StorefrontOrder"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{storefront_id}/orders/{order_id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the status of an order (seller only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Update order status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "storefront_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "order_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status update",
+                        "name": "update",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateOrderStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated order",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.StorefrontOrder"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Order not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -13565,6 +15040,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/webhooks/orders/payment": {
+            "post": {
+                "description": "Обрабатывает webhook уведомления о статусе платежа заказа",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order-payments"
+                ],
+                "summary": "Handle Order Payment Webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Webhook signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Webhook payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Webhook processed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid webhook payload",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/google": {
             "get": {
                 "description": "Redirects user to Google OAuth2 authorization page",
@@ -13673,6 +15200,324 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/payments/create": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создает новый платеж через AllSecure",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Create Payment",
+                "parameters": [
+                    {
+                        "description": "Payment details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CreatePaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.CreatePaymentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/{id}/capture": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Захватывает авторизованный платеж",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Capture Payment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Transaction ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment captured successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid transaction ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Transaction not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/{id}/refund": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает средства по платежу",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Refund Payment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Transaction ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Refund details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.RefundPaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Refund processed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Transaction not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/{id}/status": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Получает текущий статус платежа",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Get Payment Status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Transaction ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment status",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.PaymentTransaction"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid transaction ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Transaction not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/webhooks/allsecure": {
+            "post": {
+                "description": "Обработка уведомлений от AllSecure о статусе платежей",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments",
+                    "webhooks"
+                ],
+                "summary": "AllSecure Webhook Handler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Webhook signature",
+                        "name": "X-Signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Webhook payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Webhook processed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid signature or payload",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -13726,6 +15571,18 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "Операция выполнена успешно"
+                }
+            }
+        },
+        "handler.AddMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "minLength": 1
                 }
             }
         },
@@ -13989,6 +15846,19 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.CompleteMockPaymentRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 2000
+                },
+                "session_id": {
+                    "type": "string",
+                    "example": "mock_session_7_1751361491"
+                }
+            }
+        },
         "handler.ContactRemoveResponse": {
             "description": "Ответ при удалении контакта из списка",
             "type": "object",
@@ -14045,6 +15915,124 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.CreateMarketplaceOrderRequest": {
+            "type": "object",
+            "required": [
+                "listing_id",
+                "payment_method"
+            ],
+            "properties": {
+                "listing_id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "enum": [
+                        "card",
+                        "bank_transfer"
+                    ]
+                }
+            }
+        },
+        "handler.CreateOrderPaymentRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "cancel_url",
+                "currency",
+                "order_id",
+                "return_url"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "cancel_url": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "return_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.CreateOrderPaymentResponse": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "payment_url": {
+                    "type": "string"
+                },
+                "requires_action": {
+                    "type": "boolean"
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.CreatePaymentRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "currency",
+                "listing_id",
+                "return_url"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "listing_id": {
+                    "type": "integer"
+                },
+                "return_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.CreatePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "gateway_uuid": {
+                    "type": "string"
+                },
+                "redirect_url": {
+                    "type": "string"
+                },
+                "requires_action": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "transaction_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "handler.DepositRequest": {
             "type": "object",
             "properties": {
@@ -14055,6 +16043,10 @@ const docTemplate = `{
                 "payment_method": {
                     "type": "string",
                     "example": "card"
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "http://localhost:3001/en/balance/deposit/success"
                 }
             }
         },
@@ -14424,6 +16416,21 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.MarkAsShippedRequest": {
+            "type": "object",
+            "required": [
+                "shipping_method",
+                "tracking_number"
+            ],
+            "properties": {
+                "shipping_method": {
+                    "type": "string"
+                },
+                "tracking_number": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.ModerationData": {
             "type": "object",
             "properties": {
@@ -14488,6 +16495,18 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.NotificationSettings"
                     }
+                }
+            }
+        },
+        "handler.OpenDisputeRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "minLength": 10
                 }
             }
         },
@@ -14609,6 +16628,20 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "handler.RefundPaymentRequest": {
+            "type": "object",
+            "required": [
+                "amount"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
                 }
             }
         },
@@ -15362,12 +17395,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "message": {
-                    "type": "string",
-                    "example": "payments.webhook.processed"
+                    "type": "string"
                 },
                 "status": {
-                    "type": "string",
-                    "example": "success"
+                    "type": "string"
                 }
             }
         },
@@ -15411,6 +17442,25 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "models.AddToCartRequest": {
+            "type": "object",
+            "required": [
+                "product_id",
+                "quantity"
+            ],
+            "properties": {
+                "product_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "variant_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -15822,6 +17872,14 @@ const docTemplate = `{
                 }
             }
         },
+        "models.CancelOrderRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "models.CategoryAttribute": {
             "type": "object",
             "properties": {
@@ -16200,6 +18258,46 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "receiver_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.CreateOrderRequest": {
+            "type": "object",
+            "required": [
+                "billing_address",
+                "payment_method",
+                "shipping_address",
+                "shipping_method",
+                "storefront_id"
+            ],
+            "properties": {
+                "billing_address": {
+                    "$ref": "#/definitions/models.ShippingAddress"
+                },
+                "cart_id": {
+                    "type": "integer"
+                },
+                "customer_notes": {
+                    "type": "string"
+                },
+                "items": {
+                    "description": "альтернатива cart_id",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OrderItemRequest"
+                    }
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "shipping_address": {
+                    "$ref": "#/definitions/models.ShippingAddress"
+                },
+                "shipping_method": {
+                    "type": "string"
+                },
+                "storefront_id": {
                     "type": "integer"
                 }
             }
@@ -17245,6 +19343,117 @@ const docTemplate = `{
                 }
             }
         },
+        "models.MarketplaceOrder": {
+            "type": "object",
+            "properties": {
+                "buyer": {
+                    "description": "Связанные данные (заполняются при необходимости)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    ]
+                },
+                "buyer_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "delivered_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "item_price": {
+                    "type": "number"
+                },
+                "listing": {
+                    "$ref": "#/definitions/models.MarketplaceListing"
+                },
+                "listing_id": {
+                    "type": "integer"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OrderMessage"
+                    }
+                },
+                "payment_transaction": {
+                    "$ref": "#/definitions/models.PaymentTransaction"
+                },
+                "payment_transaction_id": {
+                    "type": "integer"
+                },
+                "platform_fee_amount": {
+                    "type": "number"
+                },
+                "platform_fee_rate": {
+                    "type": "number"
+                },
+                "protection_expires_at": {
+                    "type": "string"
+                },
+                "protection_period_days": {
+                    "type": "integer"
+                },
+                "seller": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "seller_id": {
+                    "type": "integer"
+                },
+                "seller_payout_amount": {
+                    "type": "number"
+                },
+                "shipped_at": {
+                    "type": "string"
+                },
+                "shipping_method": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.MarketplaceOrderStatus"
+                },
+                "status_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OrderStatusHistory"
+                    }
+                },
+                "tracking_number": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.MarketplaceOrderStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "paid",
+                "shipped",
+                "delivered",
+                "completed",
+                "disputed",
+                "cancelled",
+                "refunded"
+            ],
+            "x-enum-varnames": [
+                "MarketplaceOrderStatusPending",
+                "MarketplaceOrderStatusPaid",
+                "MarketplaceOrderStatusShipped",
+                "MarketplaceOrderStatusDelivered",
+                "MarketplaceOrderStatusCompleted",
+                "MarketplaceOrderStatusDisputed",
+                "MarketplaceOrderStatusCancelled",
+                "MarketplaceOrderStatusRefunded"
+            ]
+        },
         "models.Notification": {
             "type": "object",
             "properties": {
@@ -17310,6 +19519,133 @@ const docTemplate = `{
                 }
             }
         },
+        "models.OrderItemRequest": {
+            "type": "object",
+            "required": [
+                "product_id",
+                "quantity"
+            ],
+            "properties": {
+                "product_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "variant_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.OrderMessage": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "message_type": {
+                    "$ref": "#/definitions/models.OrderMessageType"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "sender": {
+                    "description": "Связанные данные",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    ]
+                },
+                "sender_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.OrderMessageType": {
+            "type": "string",
+            "enum": [
+                "text",
+                "shipping_update",
+                "dispute_opened",
+                "dispute_message",
+                "system"
+            ],
+            "x-enum-varnames": [
+                "OrderMessageTypeText",
+                "OrderMessageTypeShippingUpdate",
+                "OrderMessageTypeDisputeOpened",
+                "OrderMessageTypeDisputeMessage",
+                "OrderMessageTypeSystem"
+            ]
+        },
+        "models.OrderStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "confirmed",
+                "processing",
+                "shipped",
+                "delivered",
+                "cancelled",
+                "refunded"
+            ],
+            "x-enum-comments": {
+                "OrderStatusCancelled": "отменен",
+                "OrderStatusConfirmed": "оплачен, подтвержден",
+                "OrderStatusDelivered": "доставлен",
+                "OrderStatusPending": "ожидает оплаты",
+                "OrderStatusProcessing": "в обработке",
+                "OrderStatusRefunded": "возвращен",
+                "OrderStatusShipped": "отправлен"
+            },
+            "x-enum-varnames": [
+                "OrderStatusPending",
+                "OrderStatusConfirmed",
+                "OrderStatusProcessing",
+                "OrderStatusShipped",
+                "OrderStatusDelivered",
+                "OrderStatusCancelled",
+                "OrderStatusRefunded"
+            ]
+        },
+        "models.OrderStatusHistory": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "new_status": {
+                    "type": "string"
+                },
+                "old_status": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "models.PaginatedResponse": {
             "type": "object",
             "properties": {
@@ -17325,6 +19661,30 @@ const docTemplate = `{
                 },
                 "total_pages": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.PaymentGateway": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -17425,6 +19785,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "description": "Изменено на string для поддержки external IDs",
+                    "type": "string"
+                },
+                "order_id": {
+                    "description": "Добавлено для поддержки заказов",
                     "type": "integer"
                 },
                 "payment_method": {
@@ -17435,6 +19800,138 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.PaymentSource": {
+            "type": "string",
+            "enum": [
+                "marketplace_listing",
+                "storefront_order"
+            ],
+            "x-enum-varnames": [
+                "PaymentSourceMarketplaceListing",
+                "PaymentSourceStorefrontOrder"
+            ]
+        },
+        "models.PaymentTransaction": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "authorized_at": {
+                    "type": "string"
+                },
+                "auto_capture_at": {
+                    "type": "string"
+                },
+                "capture_attempted_at": {
+                    "type": "string"
+                },
+                "capture_attempts": {
+                    "type": "integer"
+                },
+                "capture_deadline_at": {
+                    "type": "string"
+                },
+                "capture_mode": {
+                    "description": "Delayed capture fields",
+                    "type": "string"
+                },
+                "captured_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "customer_email": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "error_details": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "failed_at": {
+                    "type": "string"
+                },
+                "gateway": {
+                    "description": "Relations",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.PaymentGateway"
+                        }
+                    ]
+                },
+                "gateway_id": {
+                    "type": "integer"
+                },
+                "gateway_reference_id": {
+                    "type": "string"
+                },
+                "gateway_response": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "gateway_status": {
+                    "type": "string"
+                },
+                "gateway_transaction_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "listing": {
+                    "$ref": "#/definitions/models.MarketplaceListing"
+                },
+                "listing_id": {
+                    "description": "Legacy поле для обратной совместимости",
+                    "type": "integer"
+                },
+                "marketplace_commission": {
+                    "type": "number"
+                },
+                "order_reference": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "seller_amount": {
+                    "type": "number"
+                },
+                "source_id": {
+                    "type": "integer"
+                },
+                "source_type": {
+                    "description": "Новые поля для унифицированной системы",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.PaymentSource"
+                        }
+                    ]
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storefront_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
                 },
                 "user_id": {
                     "type": "integer"
@@ -17681,6 +20178,111 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "verified_reviews": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ShippingAddress": {
+            "type": "object",
+            "properties": {
+                "apartment": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ShoppingCart": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ShoppingCartItem"
+                    }
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "storefront": {
+                    "$ref": "#/definitions/models.Storefront"
+                },
+                "storefront_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ShoppingCartItem": {
+            "type": "object",
+            "properties": {
+                "cart_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price_per_unit": {
+                    "type": "number"
+                },
+                "product": {
+                    "$ref": "#/definitions/models.StorefrontProduct"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "total_price": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "variant": {
+                    "$ref": "#/definitions/models.StorefrontProductVariant"
+                },
+                "variant_id": {
                     "type": "integer"
                 }
             }
@@ -18157,6 +20759,219 @@ const docTemplate = `{
                 }
             }
         },
+        "models.StorefrontOrder": {
+            "type": "object",
+            "properties": {
+                "billing_address": {
+                    "$ref": "#/definitions/models.JSONB"
+                },
+                "cancelled_at": {
+                    "type": "string"
+                },
+                "commission_amount": {
+                    "type": "number"
+                },
+                "confirmed_at": {
+                    "description": "Временные метки",
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "customer": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "customer_id": {
+                    "description": "Реальное поле в БД",
+                    "type": "integer"
+                },
+                "customer_notes": {
+                    "type": "string"
+                },
+                "delivered_at": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "escrow_days": {
+                    "type": "integer"
+                },
+                "escrow_release_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "items": {
+                    "description": "Связанные данные",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.StorefrontOrderItem"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "notes": {
+                    "description": "Заметки и метаданные",
+                    "type": "string"
+                },
+                "order_number": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "description": "Платежные данные",
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "payment_transaction": {
+                    "$ref": "#/definitions/models.PaymentTransaction"
+                },
+                "payment_transaction_id": {
+                    "type": "string"
+                },
+                "seller_amount": {
+                    "type": "number"
+                },
+                "seller_notes": {
+                    "type": "string"
+                },
+                "shipped_at": {
+                    "type": "string"
+                },
+                "shipping": {
+                    "description": "Алиас для ShippingAmount",
+                    "type": "number"
+                },
+                "shipping_address": {
+                    "description": "Доставка и адреса",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.JSONB"
+                        }
+                    ]
+                },
+                "shipping_amount": {
+                    "type": "number"
+                },
+                "shipping_method": {
+                    "type": "string"
+                },
+                "shipping_provider": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Статус и escrow",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.OrderStatus"
+                        }
+                    ]
+                },
+                "storefront": {
+                    "$ref": "#/definitions/models.Storefront"
+                },
+                "storefront_id": {
+                    "type": "integer"
+                },
+                "subtotal": {
+                    "description": "Финансовые данные",
+                    "type": "number"
+                },
+                "subtotal_amount": {
+                    "type": "number"
+                },
+                "tax": {
+                    "description": "Алиас для TaxAmount",
+                    "type": "number"
+                },
+                "tax_amount": {
+                    "type": "number"
+                },
+                "total": {
+                    "description": "Алиас для TotalAmount",
+                    "type": "number"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "tracking_number": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "Для совместимости с API",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.StorefrontOrderItem": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "price_per_unit": {
+                    "type": "number"
+                },
+                "product": {
+                    "description": "Связанные данные",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.StorefrontProduct"
+                        }
+                    ]
+                },
+                "product_attributes": {
+                    "description": "Snapshot атрибутов",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.JSONB"
+                        }
+                    ]
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "product_name": {
+                    "description": "Snapshot данных на момент заказа",
+                    "type": "string"
+                },
+                "product_sku": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "total_price": {
+                    "type": "number"
+                },
+                "variant": {
+                    "$ref": "#/definitions/models.StorefrontProductVariant"
+                },
+                "variant_id": {
+                    "type": "integer"
+                },
+                "variant_name": {
+                    "type": "string"
+                }
+            }
+        },
         "models.StorefrontPaymentMethod": {
             "type": "object",
             "properties": {
@@ -18549,6 +21364,19 @@ const docTemplate = `{
                 }
             }
         },
+        "models.UpdateCartItemRequest": {
+            "type": "object",
+            "required": [
+                "quantity"
+            ],
+            "properties": {
+                "quantity": {
+                    "description": "0 = удалить из корзины",
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
         "models.UpdateContactRequest": {
             "type": "object",
             "required": [
@@ -18620,6 +21448,23 @@ const docTemplate = `{
                         "out",
                         "adjustment"
                     ]
+                }
+            }
+        },
+        "models.UpdateOrderStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "seller_notes": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.OrderStatus"
+                },
+                "tracking_number": {
+                    "type": "string"
                 }
             }
         },

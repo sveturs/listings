@@ -1,13 +1,6 @@
 package service
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/logger"
-	"backend/internal/proj/notifications/service"
-	"backend/internal/proj/storefronts/storage/opensearch"
-	"backend/internal/storage"
-	"backend/internal/storage/filestorage"
-	"backend/internal/storage/postgres"
 	"bytes"
 	"context"
 	"errors"
@@ -15,19 +8,27 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"backend/internal/domain/models"
+	"backend/internal/logger"
+	"backend/internal/proj/notifications/service"
+	"backend/internal/proj/storefronts/storage/opensearch"
+	"backend/internal/storage"
+	"backend/internal/storage/filestorage"
+	"backend/internal/storage/postgres"
 )
 
 // Ошибки
 var (
-	ErrUnauthorized           = errors.New("unauthorized")
-	ErrInsufficientPermissions = errors.New("insufficient permissions")
-	ErrStorefrontLimitReached = errors.New("storefront limit reached for current plan")
-	ErrSlugAlreadyExists      = errors.New("slug already exists")
-	ErrInvalidLocation        = errors.New("invalid location data")
-	ErrFeatureNotAvailable    = errors.New("feature not available in current plan")
+	ErrUnauthorized             = errors.New("unauthorized")
+	ErrInsufficientPermissions  = errors.New("insufficient permissions")
+	ErrStorefrontLimitReached   = errors.New("storefront limit reached for current plan")
+	ErrSlugAlreadyExists        = errors.New("slug already exists")
+	ErrInvalidLocation          = errors.New("invalid location data")
+	ErrFeatureNotAvailable      = errors.New("feature not available in current plan")
 	ErrRepositoryNotInitialized = errors.New("storefront repository not initialized")
-	ErrStaffLimitReached      = errors.New("staff limit reached for current plan")
-	ErrStorefrontNotFound     = errors.New("storefront not found")
+	ErrStaffLimitReached        = errors.New("staff limit reached for current plan")
+	ErrStorefrontNotFound       = errors.New("storefront not found")
 )
 
 // Лимиты по тарифным планам
@@ -87,36 +88,36 @@ type StorefrontService interface {
 	GetBySlug(ctx context.Context, slug string) (*models.Storefront, error)
 	Update(ctx context.Context, userID int, storefrontID int, dto *models.StorefrontUpdateDTO) error
 	Delete(ctx context.Context, userID int, storefrontID int) error
-	
+
 	// Листинг и поиск
 	ListUserStorefronts(ctx context.Context, userID int) ([]*models.Storefront, error)
 	Search(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error)
 	SearchOpenSearch(ctx context.Context, params *opensearch.StorefrontSearchParams) (*opensearch.StorefrontSearchResult, error)
-	
+
 	// Картографические функции
 	GetMapData(ctx context.Context, bounds postgres.GeoBounds, filter *models.StorefrontFilter) ([]*models.StorefrontMapData, error)
 	GetNearby(ctx context.Context, lat, lng, radiusKm float64, limit int) ([]*models.Storefront, error)
 	GetBusinessesInBuilding(ctx context.Context, lat, lng float64) ([]*models.StorefrontMapData, error)
-	
+
 	// Управление настройками
 	UpdateWorkingHours(ctx context.Context, userID int, storefrontID int, hours []*models.StorefrontHours) error
 	UpdatePaymentMethods(ctx context.Context, userID int, storefrontID int, methods []*models.StorefrontPaymentMethod) error
 	UpdateDeliveryOptions(ctx context.Context, userID int, storefrontID int, options []*models.StorefrontDeliveryOption) error
-	
+
 	// Управление персоналом
 	AddStaff(ctx context.Context, ownerID int, storefrontID int, userID int, role models.StaffRole) error
 	UpdateStaffPermissions(ctx context.Context, ownerID int, staffID int, permissions models.JSONB) error
 	RemoveStaff(ctx context.Context, ownerID int, storefrontID int, userID int) error
 	GetStaff(ctx context.Context, storefrontID int) ([]*models.StorefrontStaff, error)
-	
+
 	// Загрузка изображений
 	UploadLogo(ctx context.Context, userID int, storefrontID int, data []byte, filename string) (string, error)
 	UploadBanner(ctx context.Context, userID int, storefrontID int, data []byte, filename string) (string, error)
-	
+
 	// Аналитика
 	RecordView(ctx context.Context, storefrontID int) error
 	GetAnalytics(ctx context.Context, userID int, storefrontID int, from, to time.Time) ([]*models.StorefrontAnalytics, error)
-	
+
 	// Проверки
 	CanCreateStorefront(ctx context.Context, userID int) (bool, error)
 	CheckFeatureAvailability(ctx context.Context, storefrontID int, feature string) (bool, error)
@@ -177,7 +178,7 @@ func (s *StorefrontServiceImpl) CreateStorefront(ctx context.Context, userID int
 	dto.Slug = s.generateSlug(dto.Name)
 
 	// Создаем витрину
-	storefront, err := s.repo.Create(ctx, dto)
+	storefront, err := s.repo.Create(ctx, userID, dto)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка создания витрины: %w", err)
 	}
@@ -197,7 +198,7 @@ func (s *StorefrontServiceImpl) CreateStorefront(ctx context.Context, userID int
 		IsRead:    false,
 		CreatedAt: time.Now(),
 	}
-	
+
 	if err := s.services.Notification().CreateNotification(ctx, notification); err != nil {
 		// Не прерываем создание витрины из-за ошибки уведомления
 		logger.Error().Err(err).Msg("Ошибка создания уведомления о создании витрины")
@@ -276,7 +277,7 @@ func (s *StorefrontServiceImpl) ListUserStorefronts(ctx context.Context, userID 
 	if s.repo == nil {
 		return nil, ErrRepositoryNotInitialized
 	}
-	
+
 	filter := &models.StorefrontFilter{
 		UserID: &userID,
 		Limit:  100,
@@ -536,10 +537,10 @@ func (s *StorefrontServiceImpl) canCreateStorefront(ctx context.Context, userID 
 
 func (s *StorefrontServiceImpl) generateSlug(name string) string {
 	slug := strings.ToLower(name)
-	
+
 	// Заменяем пробелы на дефисы
 	slug = strings.ReplaceAll(slug, " ", "-")
-	
+
 	// Удаляем не-ASCII символы
 	var result []rune
 	for _, r := range slug {
@@ -547,7 +548,7 @@ func (s *StorefrontServiceImpl) generateSlug(name string) string {
 			result = append(result, r)
 		}
 	}
-	
+
 	return string(result)
 }
 
@@ -555,63 +556,63 @@ func (s *StorefrontServiceImpl) getDefaultPermissions(role models.StaffRole) mod
 	switch role {
 	case models.StaffRoleOwner:
 		return models.JSONB{
-			"can_add_products":    true,
-			"can_edit_products":   true,
-			"can_delete_products": true,
-			"can_view_orders":     true,
-			"can_process_orders":  true,
-			"can_refund_orders":   true,
-			"can_edit_storefront": true,
-			"can_manage_staff":    true,
-			"can_view_analytics":  true,
-			"can_manage_payments": true,
+			"can_add_products":     true,
+			"can_edit_products":    true,
+			"can_delete_products":  true,
+			"can_view_orders":      true,
+			"can_process_orders":   true,
+			"can_refund_orders":    true,
+			"can_edit_storefront":  true,
+			"can_manage_staff":     true,
+			"can_view_analytics":   true,
+			"can_manage_payments":  true,
 			"can_reply_to_reviews": true,
-			"can_send_messages":   true,
+			"can_send_messages":    true,
 		}
 	case models.StaffRoleManager:
 		return models.JSONB{
-			"can_add_products":    true,
-			"can_edit_products":   true,
-			"can_delete_products": true,
-			"can_view_orders":     true,
-			"can_process_orders":  true,
-			"can_refund_orders":   true,
-			"can_edit_storefront": false,
-			"can_manage_staff":    false,
-			"can_view_analytics":  true,
-			"can_manage_payments": false,
+			"can_add_products":     true,
+			"can_edit_products":    true,
+			"can_delete_products":  true,
+			"can_view_orders":      true,
+			"can_process_orders":   true,
+			"can_refund_orders":    true,
+			"can_edit_storefront":  false,
+			"can_manage_staff":     false,
+			"can_view_analytics":   true,
+			"can_manage_payments":  false,
 			"can_reply_to_reviews": true,
-			"can_send_messages":   true,
+			"can_send_messages":    true,
 		}
 	case models.StaffRoleCashier:
 		return models.JSONB{
-			"can_add_products":    false,
-			"can_edit_products":   false,
-			"can_delete_products": false,
-			"can_view_orders":     true,
-			"can_process_orders":  true,
-			"can_refund_orders":   false,
-			"can_edit_storefront": false,
-			"can_manage_staff":    false,
-			"can_view_analytics":  false,
-			"can_manage_payments": false,
+			"can_add_products":     false,
+			"can_edit_products":    false,
+			"can_delete_products":  false,
+			"can_view_orders":      true,
+			"can_process_orders":   true,
+			"can_refund_orders":    false,
+			"can_edit_storefront":  false,
+			"can_manage_staff":     false,
+			"can_view_analytics":   false,
+			"can_manage_payments":  false,
 			"can_reply_to_reviews": false,
-			"can_send_messages":   true,
+			"can_send_messages":    true,
 		}
 	case models.StaffRoleSupport:
 		return models.JSONB{
-			"can_add_products":    false,
-			"can_edit_products":   false,
-			"can_delete_products": false,
-			"can_view_orders":     true,
-			"can_process_orders":  false,
-			"can_refund_orders":   false,
-			"can_edit_storefront": false,
-			"can_manage_staff":    false,
-			"can_view_analytics":  false,
-			"can_manage_payments": false,
+			"can_add_products":     false,
+			"can_edit_products":    false,
+			"can_delete_products":  false,
+			"can_view_orders":      true,
+			"can_process_orders":   false,
+			"can_refund_orders":    false,
+			"can_edit_storefront":  false,
+			"can_manage_staff":     false,
+			"can_view_analytics":   false,
+			"can_manage_payments":  false,
 			"can_reply_to_reviews": true,
-			"can_send_messages":   true,
+			"can_send_messages":    true,
 		}
 	default:
 		return models.JSONB{}

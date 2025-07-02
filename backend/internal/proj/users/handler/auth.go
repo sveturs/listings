@@ -2,6 +2,9 @@
 package handler
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/logger"
@@ -114,6 +117,18 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 			Path:   "/",
 			MaxAge: -1,
 		})
+	}
+
+	// Добавляем access_token в URL для передачи на фронтенд
+	if accessToken != "" {
+		separator := "?"
+		if strings.Contains(returnTo, "?") {
+			separator = "&"
+		}
+		returnTo = fmt.Sprintf("%s%sauth_token=%s", returnTo, separator, accessToken)
+		logger.Info().Str("redirect_url", returnTo[:50]+"...").Msg("OAuth: Redirecting with access token in URL")
+	} else {
+		logger.Error().Msg("OAuth: No access token to add to redirect URL")
 	}
 
 	return c.Redirect(returnTo)

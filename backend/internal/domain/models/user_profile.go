@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-    
 )
 
 // UserProfile расширяет базовую модель User дополнительными полями профиля
@@ -18,9 +17,9 @@ type UserProfile struct {
 	LastSeen          *time.Time      `json:"last_seen,omitempty"`
 	AccountStatus     string          `json:"account_status"`
 	Settings          json.RawMessage `json:"settings,omitempty"`
-    City              string          `json:"city"` // Теперь используем обычные строки, а не указатели
-    Country           string          `json:"country"` 
-    IsAdmin           bool            `json:"is_admin"` // Флаг администратора
+	City              string          `json:"city"` // Теперь используем обычные строки, а не указатели
+	Country           string          `json:"country"`
+	IsAdmin           bool            `json:"is_admin"` // Флаг администратора
 }
 
 // UserProfileUpdate используется для частичного обновления профиля
@@ -30,8 +29,8 @@ type UserProfileUpdate struct {
 	NotificationEmail *bool           `json:"notification_email,omitempty"`
 	Timezone          *string         `json:"timezone,omitempty"`
 	Settings          json.RawMessage `json:"settings,omitempty"`
-    City              *string          `json:"city"`     // Указатель правильный для обновлений
-	Country           *string          `json:"country"` 
+	City              *string         `json:"city"` // Указатель правильный для обновлений
+	Country           *string         `json:"country"`
 }
 
 // Validate проверяет корректность данных профиля

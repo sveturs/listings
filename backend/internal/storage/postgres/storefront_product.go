@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lib/pq"
 	"backend/internal/domain/models"
+
+	"github.com/lib/pq"
 )
 
 // GetBySlug retrieves a storefront by slug
@@ -140,7 +141,7 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan product: %w", err)
 		}
-		
+
 		// Only set category if it exists
 		if categoryID.Valid {
 			c.ID = int(categoryID.Int64)
@@ -283,7 +284,6 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 		storefrontID, req.Name, req.Description, req.Price, req.Currency, req.CategoryID,
 		req.SKU, req.Barcode, req.StockQuantity, req.IsActive, attributesJSON,
 	).Scan(&product.ID, &product.StockStatus, &product.CreatedAt, &product.UpdatedAt)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create storefront product: %w", err)
 	}
@@ -396,7 +396,7 @@ func (s *Database) UpdateStorefrontProduct(ctx context.Context, storefrontID, pr
 // DeleteStorefrontProduct deletes a product
 func (s *Database) DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error {
 	query := `DELETE FROM storefront_products WHERE id = $1 AND storefront_id = $2`
-	
+
 	result, err := s.pool.Exec(ctx, query, productID, storefrontID)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront product: %w", err)
@@ -424,7 +424,7 @@ func (s *Database) UpdateProductInventory(ctx context.Context, storefrontID, pro
 	} else {
 		// Get current quantity
 		var currentQuantity int
-		err = tx.QueryRow(ctx, 
+		err = tx.QueryRow(ctx,
 			`SELECT stock_quantity FROM storefront_products WHERE id = $1 AND storefront_id = $2`,
 			productID, storefrontID,
 		).Scan(&currentQuantity)
@@ -487,7 +487,6 @@ func (s *Database) GetProductStats(ctx context.Context, storefrontID int) (*mode
 		&stats.TotalValue,
 		&stats.TotalSold,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product stats: %w", err)
 	}
@@ -594,7 +593,6 @@ func (s *Database) BulkCreateProducts(ctx context.Context, storefrontID int, pro
 			storefrontID, req.Name, req.Description, req.Price, req.Currency,
 			req.CategoryID, req.SKU, req.Barcode, req.StockQuantity, req.IsActive, attributesJSON,
 		).Scan(&productID)
-
 		if err != nil {
 			errors = append(errors, fmt.Errorf("product %d: %w", i, err))
 			continue
