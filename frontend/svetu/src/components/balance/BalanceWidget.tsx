@@ -122,7 +122,6 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
             </Link>
           </div>
         )}
-
       </div>
     </div>
   );

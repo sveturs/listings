@@ -22,7 +22,9 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageRef = useRef<HTMLDivElement>(null);
   const lightboxRef = useRef<HTMLDivElement>(null);
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const [imageNaturalDimensions, setImageNaturalDimensions] = useState({
     width: 0,
     height: 0,
@@ -74,7 +76,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
     const handleWheel = (e: WheelEvent) => {
       if (!showLightbox) return;
       e.preventDefault();
-      
+
       // Навигация колесом мыши
       if (e.deltaY > 0) {
         navigateImage(1); // Вниз - следующее фото
@@ -87,7 +89,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
     if (showLightbox) {
       window.addEventListener('wheel', handleWheel, { passive: false });
     }
-    
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('wheel', handleWheel);
@@ -106,7 +108,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
     const touch = e.changedTouches[0];
     const deltaX = touch.clientX - touchStart.x;
     const deltaY = touch.clientY - touchStart.y;
-    
+
     // Проверяем, что свайп был горизонтальным
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
       if (deltaX > 0) {
@@ -115,7 +117,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
         navigateImage(1); // Свайп влево - следующее фото
       }
     }
-    
+
     setTouchStart(null);
   };
 

@@ -22,7 +22,7 @@ func (s *Server) ProxyMinIO(c *fiber.Ctx) error {
 
 	// Формируем URL для MinIO
 	minioURL := fmt.Sprintf("http://%s/listings/%s", s.cfg.FileStorage.MinioEndpoint, path)
-	
+
 	log.Debug().
 		Str("path", path).
 		Str("minio_url", minioURL).
@@ -64,7 +64,7 @@ func (s *Server) ProxyMinIO(c *fiber.Ctx) error {
 	if contentType != "" {
 		c.Set("Content-Type", contentType)
 	}
-	
+
 	contentLength := resp.Header.Get("Content-Length")
 	if contentLength != "" {
 		c.Set("Content-Length", contentLength)
@@ -72,7 +72,7 @@ func (s *Server) ProxyMinIO(c *fiber.Ctx) error {
 
 	// Устанавливаем заголовки кеширования
 	c.Set("Cache-Control", "public, max-age=604800") // 7 дней
-	
+
 	// Определяем тип контента по расширению файла, если Content-Type не установлен
 	if contentType == "" {
 		ext := strings.ToLower(path[strings.LastIndex(path, ".")+1:])
@@ -116,7 +116,7 @@ func (s *Server) ProxyChatFiles(c *fiber.Ctx) error {
 
 	// Формируем URL для MinIO
 	minioURL := fmt.Sprintf("http://%s/chat-files/%s", s.cfg.FileStorage.MinioEndpoint, path)
-	
+
 	log.Debug().
 		Str("path", path).
 		Str("minio_url", minioURL).

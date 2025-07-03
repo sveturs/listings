@@ -245,7 +245,7 @@ func (s *Server) setupRoutes() {
 
 	// Регистрируем роуты через новую систему
 	s.registerProjectRoutes()
-	
+
 	// Проксирование статических файлов MinIO
 	// Эти маршруты должны быть после всех API маршрутов
 	s.app.Get("/listings/*", s.ProxyMinIO)

@@ -96,22 +96,24 @@ export const marketplaceOrdersService = {
 
   // Получить мои покупки
   async getMyPurchases(page = 1, limit = 20): Promise<OrderListResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
     const response = await apiClient.get(
-      '/api/v1/marketplace/orders/my/purchases',
-      {
-        params: { page, limit },
-      }
+      `/api/v1/marketplace/orders/my/purchases?${params.toString()}`
     );
     return response.data?.data || response.data;
   },
 
   // Получить мои продажи
   async getMySales(page = 1, limit = 20): Promise<OrderListResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
     const response = await apiClient.get(
-      '/api/v1/marketplace/orders/my/sales',
-      {
-        params: { page, limit },
-      }
+      `/api/v1/marketplace/orders/my/sales?${params.toString()}`
     );
     return response.data?.data || response.data;
   },
