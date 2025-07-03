@@ -1,36 +1,7 @@
 -- Migration: Create Storefront Orders System
 -- Description: Создает систему заказов для витрин с поддержкой корзины и checkout
 
--- Таблица корзин покупок
-CREATE TABLE IF NOT EXISTS shopping_carts (
-    id BIGSERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    storefront_id INTEGER REFERENCES storefronts(id) ON DELETE CASCADE,
-    session_id VARCHAR(128), -- для неавторизованных пользователей
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Индекс для быстрого поиска корзины пользователя
-    UNIQUE(user_id, storefront_id)
-);
-
--- Индекс для сессий неавторизованных пользователей
-CREATE INDEX IF NOT EXISTS idx_shopping_carts_session ON shopping_carts(session_id) WHERE session_id IS NOT NULL;
-
--- Позиции в корзине
-CREATE TABLE IF NOT EXISTS shopping_cart_items (
-    id BIGSERIAL PRIMARY KEY,
-    cart_id BIGINT REFERENCES shopping_carts(id) ON DELETE CASCADE,
-    product_id BIGINT REFERENCES storefront_products(id) ON DELETE CASCADE,
-    variant_id BIGINT REFERENCES storefront_product_variants(id) ON DELETE SET NULL,
-    quantity INTEGER NOT NULL CHECK (quantity > 0),
-    price_per_unit DECIMAL(12,2) NOT NULL, -- фиксируем цену на момент добавления
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Один товар не может быть дважды в одной корзине
-    UNIQUE(cart_id, product_id, COALESCE(variant_id, 0))
-);
+-- Таблицы корзин создаются в миграции 000065_create_shopping_carts.up.sql
 
 -- Таблица заказов
 CREATE TABLE IF NOT EXISTS storefront_orders (
@@ -152,8 +123,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_shopping_carts_updated_at BEFORE UPDATE ON shopping_carts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_shopping_cart_items_updated_at BEFORE UPDATE ON shopping_cart_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Триггеры для корзин создаются в миграции 000065_create_shopping_carts.up.sql
 CREATE TRIGGER update_storefront_orders_updated_at BEFORE UPDATE ON storefront_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Функция для генерации номеров заказов
@@ -217,8 +187,6 @@ CREATE TRIGGER calculate_escrow_release_date_trigger
     FOR EACH ROW EXECUTE FUNCTION calculate_escrow_release_date();
 
 -- Добавляем комментарии к таблицам
-COMMENT ON TABLE shopping_carts IS 'Корзины покупок пользователей для каждой витрины';
-COMMENT ON TABLE shopping_cart_items IS 'Позиции в корзинах покупок';
 COMMENT ON TABLE storefront_orders IS 'Заказы в витринах с полной информацией о покупке';
 COMMENT ON TABLE storefront_order_items IS 'Позиции заказов с фиксированной информацией о товарах';
 COMMENT ON TABLE inventory_reservations IS 'Резервирование товаров на время оформления заказа';

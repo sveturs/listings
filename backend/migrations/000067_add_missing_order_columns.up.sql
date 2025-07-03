@@ -11,6 +11,10 @@ ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}';
 ALTER TABLE storefront_orders
 ADD COLUMN IF NOT EXISTS discount DECIMAL(12,2) DEFAULT 0;
 
+-- Добавляем колонку billing_address, если она не существует
+ALTER TABLE storefront_orders
+ADD COLUMN IF NOT EXISTS billing_address JSONB;
+
 -- Создаем алиасы для совместимости с моделью
 -- Используем views для прозрачного маппинга
 CREATE OR REPLACE VIEW storefront_orders_view AS

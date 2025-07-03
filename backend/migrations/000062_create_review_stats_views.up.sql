@@ -86,11 +86,12 @@ LEFT JOIN (
 GROUP BY ml.id, ml.user_id;
 
 -- Create indexes for better performance
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_ratings_user_id ON user_ratings(user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_storefront_ratings_storefront_id ON storefront_ratings(storefront_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_storefront_ratings_owner_id ON storefront_ratings(owner_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_listing_ratings_listing_id ON listing_ratings(listing_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_listing_ratings_owner_id ON listing_ratings(owner_id);
+CREATE INDEX IF NOT EXISTS idx_user_ratings_user_id ON user_ratings(user_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_ratings_storefront_id ON storefront_ratings(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_listing_ratings_listing_id ON listing_ratings(listing_id);
+
+-- Drop the existing trigger function first (it was created with RETURNS TRIGGER in migration 000047)
+DROP FUNCTION IF EXISTS refresh_rating_views() CASCADE;
 
 -- Function to refresh all rating views
 CREATE OR REPLACE FUNCTION refresh_rating_views() RETURNS void AS $$
