@@ -4,7 +4,6 @@ run:
 
 linters-settings:
   gofumpt:
-    lang-version: "1.21"
     extra-rules: true
   
   goimports:
@@ -13,8 +12,8 @@ linters-settings:
   govet:
     enable-all: true
   
-  golint:
-    min-confidence: 0.8
+  revive:
+    confidence: 0.8
   
   misspell:
     locale: US
@@ -27,7 +26,7 @@ linters:
     - gofumpt      # Stricter gofmt
     - goimports    # Auto-manage imports
     - govet        # Go vet
-    - golint       # Go lint
+    - revive       # Go lint replacement
     - misspell     # Spelling mistakes
     - lll          # Line length limit
     - unused       # Unused code
@@ -36,6 +35,8 @@ linters:
     - gocritic     # Go code critic
     - gosec        # Security issues
     - errcheck     # Unchecked errors
+  
+  disable-all: false
   
   disable:
     - typecheck    # Disable if you have build tags issues
