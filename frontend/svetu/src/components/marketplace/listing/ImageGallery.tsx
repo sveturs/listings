@@ -21,6 +21,8 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageRef = useRef<HTMLDivElement>(null);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [imageNaturalDimensions, setImageNaturalDimensions] = useState({
     width: 0,
     height: 0,
@@ -55,7 +57,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
     img.src = config.buildImageUrl(currentImage.public_url);
   }, [selectedIndex, images]);
 
-  // Keyboard navigation
+  // Keyboard navigation and mouse wheel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!showLightbox) return;
@@ -69,9 +71,53 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
       }
     };
 
+    const handleWheel = (e: WheelEvent) => {
+      if (!showLightbox) return;
+      e.preventDefault();
+      
+      // Навигация колесом мыши
+      if (e.deltaY > 0) {
+        navigateImage(1); // Вниз - следующее фото
+      } else if (e.deltaY < 0) {
+        navigateImage(-1); // Вверх - предыдущее фото
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    if (showLightbox) {
+      window.addEventListener('wheel', handleWheel, { passive: false });
+    }
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('wheel', handleWheel);
+    };
   }, [showLightbox, navigateImage]);
+
+  // Touch handlers for swipe navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    setTouchStart({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+    
+    // Проверяем, что свайп был горизонтальным
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      if (deltaX > 0) {
+        navigateImage(-1); // Свайп вправо - предыдущее фото
+      } else {
+        navigateImage(1); // Свайп влево - следующее фото
+      }
+    }
+    
+    setTouchStart(null);
+  };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (
@@ -186,7 +232,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
         priority={isMain && selectedIndex === 0}
         sizes={
           isMain
-            ? '(max-width: 768px) 100vw, 66vw'
+            ? '(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 1200px'
             : '(max-width: 640px) 80px, 80px'
         }
       />
@@ -343,11 +389,14 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
       {/* Lightbox */}
       {showLightbox && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+          ref={lightboxRef}
+          className="fixed inset-0 z-[110] bg-black/50 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setShowLightbox(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           <button
-            className="absolute top-4 right-4 btn btn-circle btn-ghost text-white"
+            className="absolute top-4 right-4 btn btn-circle btn-ghost text-white hover:bg-white/10 z-10"
             onClick={() => setShowLightbox(false)}
           >
             <svg
@@ -365,11 +414,10 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
             </svg>
           </button>
 
-          <div
-            className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {renderImage(images[selectedIndex], true)}
+          <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative max-w-7xl max-h-[90vh] w-full h-full">
+              {renderImage(images[selectedIndex], true)}
+            </div>
           </div>
 
           {/* Lightbox navigation */}
@@ -380,7 +428,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
                   e.stopPropagation();
                   navigateImage(-1);
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 btn btn-circle btn-lg btn-ghost text-white"
+                className="absolute left-4 top-1/2 -translate-y-1/2 btn btn-circle btn-lg btn-ghost text-white hover:bg-white/10"
               >
                 <svg
                   className="w-8 h-8"
@@ -401,7 +449,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
                   e.stopPropagation();
                   navigateImage(1);
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 btn btn-circle btn-lg btn-ghost text-white"
+                className="absolute right-4 top-1/2 -translate-y-1/2 btn btn-circle btn-lg btn-ghost text-white hover:bg-white/10"
               >
                 <svg
                   className="w-8 h-8"
@@ -422,7 +470,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
 
           {/* Lightbox thumbnails */}
           {images.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 max-w-full overflow-x-auto p-2 bg-black/50 backdrop-blur-sm rounded-lg">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 max-w-full overflow-x-auto p-2 bg-black/60 backdrop-blur-md rounded-lg">
               {images.map((image, index) => (
                 <button
                   key={image.id}
