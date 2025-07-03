@@ -79,8 +79,16 @@ export default function ProductCard({
 
             <div className="card-actions">
               <AddToCartButton
-                product={product}
-                storefrontId={storefrontId}
+                product={{
+                  id: product.id || 0,
+                  name: product.name || '',
+                  price: product.price || 0,
+                  currency: product.currency,
+                  image: product.images?.[0]?.image_url,
+                  storefrontId: storefrontId,
+                  stockQuantity: product.stock_quantity,
+                  stockStatus: product.stock_status
+                }}
                 disabled={product.stock_status === 'out_of_stock' || !product.is_active}
                 size="md"
               />
@@ -154,8 +162,16 @@ export default function ProductCard({
         {/* Add to cart button */}
         <div className="card-actions justify-end mt-4">
           <AddToCartButton
-            product={product}
-            storefrontId={storefrontId}
+            product={{
+              id: product.id || 0,
+              name: product.name || '',
+              price: product.price || 0,
+              currency: product.currency,
+              image: product.images?.[0]?.image_url,
+              storefrontId: storefrontId,
+              stockQuantity: product.stock_quantity,
+              stockStatus: product.stock_status
+            }}
             disabled={product.stock_status === 'out_of_stock' || !product.is_active}
             size="md"
             className="w-full"

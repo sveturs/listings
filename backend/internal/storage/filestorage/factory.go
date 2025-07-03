@@ -29,6 +29,7 @@ func NewFileStorage(cfg config.FileStorageConfig) (FileStorageInterface, error) 
 			UseSSL:          cfg.MinioUseSSL,
 			BucketName:      cfg.MinioBucketName,
 			Location:        cfg.MinioLocation,
+			PublicURL:       cfg.PublicBaseURL,
 		})
 		if err != nil {
 			logger.Error().Err(err).Msg("ОШИБКА при создании клиента MinIO")

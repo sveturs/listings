@@ -44,7 +44,15 @@ export default function MarketplaceCard({
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+
     const date = new Date(dateString);
+
+    // Проверка на валидность даты
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
 

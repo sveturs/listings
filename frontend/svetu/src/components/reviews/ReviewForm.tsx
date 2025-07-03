@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { RatingInput } from './RatingInput';
+import { ImageGallery } from './ImageGallery';
 import {
   useCreateDraftReview,
   useUploadReviewPhotosToReview,
@@ -53,6 +54,9 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     'form' | 'uploading' | 'publishing'
   >('form');
   const [_createdReviewId, setCreatedReviewId] = useState<number | null>(null);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(
+    null
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Two-step process hooks
@@ -454,7 +458,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                     alt={`Preview ${index + 1}`}
                     width={80}
                     height={80}
-                    className="w-full h-20 object-cover rounded-md transition-all group-hover:brightness-90"
+                    className="w-full h-20 object-cover rounded-md transition-all group-hover:brightness-90 cursor-pointer"
+                    onClick={() => setSelectedPhotoIndex(index)}
                   />
                   <button
                     type="button"
@@ -588,6 +593,16 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           </button>
         </div>
       </form>
+
+      {/* Image Gallery Modal */}
+      {selectedPhotoIndex !== null && (
+        <ImageGallery
+          images={photos.map((photo) => URL.createObjectURL(photo))}
+          initialIndex={selectedPhotoIndex}
+          isOpen={true}
+          onClose={() => setSelectedPhotoIndex(null)}
+        />
+      )}
     </div>
   );
 };

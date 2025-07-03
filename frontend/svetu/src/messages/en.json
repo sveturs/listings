@@ -388,6 +388,9 @@
     "profile": "Profile",
     "myContacts": "My Contacts",
     "adminPanel": "Admin Panel",
+    "common": {
+      "close": "Close"
+    },
     "google_callback": {
       "error": {
         "authentication_failed": "Authentication failed. Please try again."

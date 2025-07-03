@@ -108,7 +108,7 @@ type OrderServiceInterface interface {
 	GetOrder(ctx context.Context, orderID int) (*models.MarketplaceOrder, error)
 	GetOrdersByUser(ctx context.Context, userID int, isPurchaser bool) ([]models.MarketplaceOrder, error)
 	UpdateOrderStatus(ctx context.Context, orderID int, status string) error
-	
+
 	// Методы для работы с handler
 	CreateOrderFromRequest(ctx context.Context, req CreateOrderRequest) (*models.MarketplaceOrder, *PaymentResult, error)
 	GetBuyerOrders(ctx context.Context, buyerID int64, page, limit int) ([]*models.MarketplaceOrder, int, error)
@@ -117,4 +117,5 @@ type OrderServiceInterface interface {
 	MarkAsShipped(ctx context.Context, orderID int64, sellerID int64, shippingMethod string, trackingNumber string) error
 	ConfirmDelivery(ctx context.Context, orderID int64, buyerID int64) error
 	OpenDispute(ctx context.Context, orderID int64, userID int64, reason string) error
+	ConfirmPayment(ctx context.Context, orderID int64) error
 }

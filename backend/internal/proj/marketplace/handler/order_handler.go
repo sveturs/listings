@@ -36,6 +36,7 @@ func (h *OrderHandler) RegisterRoutes(app fiber.Router) {
 
 	// Операции с конкретным заказом
 	app.Get("/:id", h.GetOrderDetails)
+	app.Post("/:id/confirm-payment", h.ConfirmPayment)
 	app.Post("/:id/ship", h.MarkAsShipped)
 	app.Post("/:id/confirm-delivery", h.ConfirmDelivery)
 	app.Post("/:id/dispute", h.OpenDispute)
@@ -63,7 +64,7 @@ type CreateMarketplaceOrderRequest struct {
 // @Router /api/v1/marketplace/orders/create [post]
 func (h *OrderHandler) CreateMarketplaceOrder(c *fiber.Ctx) error {
 	log.Printf("CreateMarketplaceOrder called")
-	
+
 	userID := c.Locals("user_id").(int)
 	log.Printf("UserID: %d", userID)
 
@@ -72,7 +73,7 @@ func (h *OrderHandler) CreateMarketplaceOrder(c *fiber.Ctx) error {
 		log.Printf("Error parsing request body: %v", err)
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidRequest")
 	}
-	
+
 	log.Printf("Request: ListingID=%d, PaymentMethod=%s", req.ListingID, req.PaymentMethod)
 
 	// TODO: Добавить валидацию структуры
@@ -91,7 +92,7 @@ func (h *OrderHandler) CreateMarketplaceOrder(c *fiber.Ctx) error {
 	if err != nil {
 		// Логируем ошибку для отладки
 		log.Printf("Error creating order: %v", err)
-		
+
 		// Обрабатываем специфичные ошибки
 		switch err.Error() {
 		case "listing is not active":
@@ -208,6 +209,55 @@ func (h *OrderHandler) GetOrderDetails(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, order)
+}
+
+// ConfirmPaymentRequest запрос на подтверждение оплаты
+type ConfirmPaymentRequest struct {
+	SessionID string `json:"session_id" validate:"required"`
+}
+
+// ConfirmPayment подтверждает оплату заказа
+// @Summary Confirm order payment
+// @Description Confirm order payment (for mock payment provider)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param id path int true "Order ID"
+// @Param request body ConfirmPaymentRequest true "Payment confirmation"
+// @Success 200 {object} utils.SuccessResponseSwag "Payment confirmed"
+// @Router /api/v1/marketplace/orders/{id}/confirm-payment [post]
+func (h *OrderHandler) ConfirmPayment(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+	orderID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidID")
+	}
+
+	var req ConfirmPaymentRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidRequest")
+	}
+
+	// Проверяем что пользователь - покупатель этого заказа
+	order, err := h.orderService.GetOrderDetails(c.Context(), orderID, int64(userID))
+	if err != nil {
+		if err.Error() == "unauthorized: not a party of this order" {
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.accessDenied")
+		}
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "orders.notFound")
+	}
+
+	if order.BuyerID != int64(userID) {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.notBuyer")
+	}
+
+	// Подтверждаем оплату
+	err = h.orderService.ConfirmPayment(c.Context(), orderID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "orders.confirmPaymentError")
+	}
+
+	return utils.SuccessResponse(c, fiber.Map{"message": "orders.paymentConfirmed"})
 }
 
 // MarkAsShippedRequest запрос на отметку отправки

@@ -93,7 +93,7 @@ export default function OrderCard({ order, onOrderUpdate }: OrderCardProps) {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="text-lg font-semibold">
-              {t('orderNumber', { number: order.order_number })}
+              {t('orderNumber', { number: order.order_number || '' })}
             </h3>
             <p className="text-sm text-base-content/70">
               {t('ordered')} {formatDate(order.created_at)}

@@ -310,9 +310,10 @@ const LoginModal: React.FC<LoginModalProps> = ({
   const handleSwitchMode = useCallback(
     (newMode: FormMode) => {
       setMode(newMode);
+      resetForm();
       clearSuccess();
     },
-    [setMode, clearSuccess]
+    [setMode, resetForm, clearSuccess]
   );
 
   // Reset form when modal closes

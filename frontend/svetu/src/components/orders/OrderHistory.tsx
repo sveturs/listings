@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { ordersService } from '@/services/orders';
 import { useAuthContext } from '@/contexts/AuthContext';
-import OrderCard from './OrderCard';
+import MarketplaceOrderCard from './MarketplaceOrderCard';
 import type { components } from '@/types/generated/api';
 
 type StorefrontOrder = components['schemas']['models.StorefrontOrder'];
@@ -48,7 +48,7 @@ export default function OrderHistory({
 
       // Проверяем что orders - это массив
       const ordersArray = Array.isArray(response.orders) ? response.orders : [];
-      
+
       if (page === 1) {
         setOrders(ordersArray);
       } else {
@@ -156,17 +156,15 @@ export default function OrderHistory({
 
       {/* Orders List */}
       <div className="space-y-4">
-        {Array.isArray(orders) && orders.length > 0 ? (
-          orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))
-        ) : (
-          !loading && (
-            <div className="text-center py-8 text-gray-500">
-              {t('noOrders')}
-            </div>
-          )
-        )}
+        {Array.isArray(orders) && orders.length > 0
+          ? orders.map((order: any) => (
+              <MarketplaceOrderCard key={order.id} order={order} />
+            ))
+          : !loading && (
+              <div className="text-center py-8 text-gray-500">
+                {t('noOrders')}
+              </div>
+            )}
       </div>
 
       {/* Load More */}

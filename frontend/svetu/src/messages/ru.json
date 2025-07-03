@@ -378,6 +378,9 @@
     "profile": "Профиль",
     "myContacts": "Мои контакты",
     "adminPanel": "Панель администратора",
+    "common": {
+      "close": "Закрыть"
+    },
     "google_callback": {
       "error": {
         "authentication_failed": "Ошибка аутентификации. Попробуйте еще раз."

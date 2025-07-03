@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import FormField from '@/components/FormField';
 import GoogleIcon from '@/components/GoogleIcon';
@@ -27,8 +27,17 @@ const LoginForm: React.FC<LoginFormProps> = ({
 }) => {
   const t = useTranslations('auth');
 
+  // Generate unique field names to prevent autofill
+  const fieldNames = useMemo(
+    () => ({
+      email: `email_${Date.now()}`,
+      password: `password_${Date.now()}`,
+    }),
+    []
+  );
+
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6" autoComplete="off">
       {/* Email Field */}
       <FormField
         label={t('loginForm.email')}
@@ -37,6 +46,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
       >
         <input
           type="email"
+          name={fieldNames.email}
+          id="login-email"
           className={`input input-bordered w-full ${
             errors.email ? 'input-error' : ''
           }`}
@@ -44,7 +55,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           value={formData.email}
           onChange={(e) => onFieldChange('email', e.target.value)}
           disabled={isLoading}
-          autoComplete="email"
+          autoComplete="off"
           required
         />
       </FormField>
@@ -57,6 +68,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
       >
         <input
           type="password"
+          name={fieldNames.password}
+          id="login-password"
           className={`input input-bordered w-full ${
             errors.password ? 'input-error' : ''
           }`}
@@ -64,7 +77,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           value={formData.password}
           onChange={(e) => onFieldChange('password', e.target.value)}
           disabled={isLoading}
-          autoComplete="current-password"
+          autoComplete="off"
           required
           minLength={6}
         />

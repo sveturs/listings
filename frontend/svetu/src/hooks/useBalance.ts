@@ -3,7 +3,7 @@ import { balanceService } from '@/services/balance';
 import { toast } from 'react-hot-toast';
 import type { components } from '@/types/generated/api';
 
-type UserBalance = components['schemas']['handler.UserBalanceResponse'];
+type UserBalance = components['schemas']['models.UserBalance'];
 type Transaction = components['schemas']['models.BalanceTransaction'];
 
 interface UseBalanceReturn {
@@ -78,8 +78,8 @@ export const useBalance = (): UseBalanceReturn => {
         });
 
         // Перенаправление на платёжный шлюз
-        if (response.redirect_url) {
-          window.location.href = response.redirect_url;
+        if ((response as any).redirect_url) {
+          window.location.href = (response as any).redirect_url;
         } else {
           toast.error('No redirect URL received from payment gateway');
         }

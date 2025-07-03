@@ -151,7 +151,29 @@ export default function MockPaymentPage() {
         }
 
         if (orderId) {
-          // Для заказов
+          // Для заказов - подтверждаем оплату через API
+          try {
+            const response = await fetch(
+              `${config.api.url}/marketplace/orders/${orderId}/confirm-payment`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${sessionStorage.getItem('svetu_access_token') || localStorage.getItem('access_token')}`,
+                },
+                body: JSON.stringify({
+                  session_id: sessionId,
+                }),
+              }
+            );
+
+            if (!response.ok) {
+              console.error('Failed to confirm order payment');
+            }
+          } catch (error) {
+            console.error('Error confirming order payment:', error);
+          }
+
           router.push(
             `/${locale}/orders/${orderId}/success?session_id=${sessionId}`
           );
@@ -313,6 +335,57 @@ export default function MockPaymentPage() {
                               error
                             );
                             setError('Ошибка при обработке платежа');
+                            setStep('card');
+                            return;
+                          }
+                        }
+
+                        // Для заказов - подтверждаем оплату через API
+                        if (orderId) {
+                          try {
+                            const token =
+                              sessionStorage.getItem('svetu_access_token') ||
+                              localStorage.getItem('access_token');
+
+                            const response = await fetch(
+                              `/api/v1/marketplace/orders/${orderId}/confirm-payment`,
+                              {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({
+                                  session_id: sessionId,
+                                }),
+                              }
+                            );
+
+                            if (!response.ok) {
+                              console.error(
+                                'Failed to confirm order payment:',
+                                response.status
+                              );
+                              setError(
+                                'Ошибка при подтверждении оплаты заказа'
+                              );
+                              setStep('card');
+                              return;
+                            }
+
+                            const result = await response.json();
+                            console.log(
+                              'Order payment confirmed successfully:',
+                              result
+                            );
+                          } catch (error) {
+                            console.error(
+                              'Error confirming order payment:',
+                              error
+                            );
+                            setError(
+                              'Ошибка при обработке подтверждения оплаты'
+                            );
                             setStep('card');
                             return;
                           }

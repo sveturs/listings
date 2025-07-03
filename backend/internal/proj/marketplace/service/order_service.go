@@ -18,6 +18,7 @@ import (
 type OrderService struct {
 	orderRepo       repository.OrderRepositoryInterface
 	listingRepo     repository.MarketplaceRepositoryInterface
+	userRepo        repository.UserRepositoryInterface
 	paymentService  *PaymentService
 	notificationSvc NotificationService // Интерфейс для уведомлений
 	platformFeeRate float64             // Комиссия платформы в процентах
@@ -37,6 +38,7 @@ type NotificationService interface {
 func NewOrderService(
 	orderRepo repository.OrderRepositoryInterface,
 	listingRepo repository.MarketplaceRepositoryInterface,
+	userRepo repository.UserRepositoryInterface,
 	paymentService *PaymentService,
 	notificationSvc NotificationService,
 	platformFeeRate float64,
@@ -44,6 +46,7 @@ func NewOrderService(
 	return &OrderService{
 		orderRepo:       orderRepo,
 		listingRepo:     listingRepo,
+		userRepo:        userRepo,
 		paymentService:  paymentService,
 		notificationSvc: notificationSvc,
 		platformFeeRate: platformFeeRate,
@@ -56,16 +59,18 @@ func NewSimpleOrderService(storage storage.Storage) OrderServiceInterface {
 	if marketplaceOrderRepo := storage.MarketplaceOrder(); marketplaceOrderRepo != nil {
 		orderRepoAdapter := repository.NewPostgresOrderAdapter(marketplaceOrderRepo)
 		listingRepoAdapter := repository.NewPostgresMarketplaceAdapter(storage)
-		
+		userRepoAdapter := &SimpleUserRepository{storage: storage}
+
 		return &OrderService{
 			orderRepo:       orderRepoAdapter,
 			listingRepo:     listingRepoAdapter,
+			userRepo:        userRepoAdapter,
 			paymentService:  NewPaymentService(), // Создаем платежный сервис
-			notificationSvc: nil, // Инициализируем позже если нужно
-			platformFeeRate: 0.05, // 5% комиссия по умолчанию
+			notificationSvc: nil,                 // Инициализируем позже если нужно
+			platformFeeRate: 0.05,                // 5% комиссия по умолчанию
 		}
 	}
-	
+
 	// Если репозиторий недоступен, возвращаем заглушку
 	return &EmptyOrderService{}
 }
@@ -117,6 +122,10 @@ func (e *EmptyOrderService) OpenDispute(ctx context.Context, orderID int64, user
 	return fmt.Errorf("order service not available")
 }
 
+func (e *EmptyOrderService) ConfirmPayment(ctx context.Context, orderID int64) error {
+	return fmt.Errorf("order service not available")
+}
+
 // Добавляем методы с правильными сигнатурами для интерфейса OrderServiceInterface
 
 // CreateOrder создает заказ из модели (для интерфейса)
@@ -126,7 +135,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, order *models.Marketplac
 		BuyerID:   int64(order.BuyerID),
 		ListingID: int64(order.ListingID),
 	}
-	
+
 	createdOrder, _, err := s.CreateOrderFromRequest(ctx, req)
 	return createdOrder, err
 }
@@ -139,25 +148,25 @@ func (s *OrderService) GetOrder(ctx context.Context, orderID int) (*models.Marke
 	return s.orderRepo.GetByID(ctx, int64(orderID))
 }
 
-// GetOrdersByUser получает заказы пользователя (для интерфейса)  
+// GetOrdersByUser получает заказы пользователя (для интерфейса)
 func (s *OrderService) GetOrdersByUser(ctx context.Context, userID int, isPurchaser bool) ([]models.MarketplaceOrder, error) {
 	if s.orderRepo == nil {
 		return nil, fmt.Errorf("order repository not available")
 	}
-	
+
 	var orders []*models.MarketplaceOrder
 	var err error
-	
+
 	if isPurchaser {
 		orders, _, err = s.orderRepo.GetBuyerOrders(ctx, int64(userID), 100, 0)
 	} else {
 		orders, _, err = s.orderRepo.GetSellerOrders(ctx, int64(userID), 100, 0)
 	}
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Преобразуем []*models.MarketplaceOrder в []models.MarketplaceOrder
 	result := make([]models.MarketplaceOrder, len(orders))
 	for i, order := range orders {
@@ -165,7 +174,7 @@ func (s *OrderService) GetOrdersByUser(ctx context.Context, userID int, isPurcha
 			result[i] = *order
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -174,7 +183,7 @@ func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int, statu
 	if s.orderRepo == nil {
 		return fmt.Errorf("order repository not available")
 	}
-	
+
 	// Преобразуем строку в enum статуса
 	orderStatus := models.MarketplaceOrderStatus(status)
 	return s.orderRepo.UpdateStatus(ctx, int64(orderID), orderStatus, "Updated via API", nil)
@@ -456,13 +465,77 @@ func (s *OrderService) ProcessAutoCaptureOrders(ctx context.Context) error {
 // GetBuyerOrders получает заказы покупателя
 func (s *OrderService) GetBuyerOrders(ctx context.Context, buyerID int64, page, limit int) ([]*models.MarketplaceOrder, int, error) {
 	offset := (page - 1) * limit
-	return s.orderRepo.GetBuyerOrders(ctx, buyerID, limit, offset)
+	orders, total, err := s.orderRepo.GetBuyerOrders(ctx, buyerID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Загружаем связанные данные для каждого заказа
+	for _, order := range orders {
+		// Загружаем информацию о листинге
+		if order.ListingID > 0 {
+			listing, err := s.listingRepo.GetListingByID(ctx, int(order.ListingID))
+			if err == nil && listing != nil {
+				order.Listing = listing
+			}
+		}
+
+		// Загружаем информацию о продавце
+		if order.SellerID > 0 {
+			seller, err := s.userRepo.GetByID(ctx, int(order.SellerID))
+			if err == nil && seller != nil {
+				order.Seller = seller
+			}
+		}
+
+		// Загружаем информацию о покупателе
+		if order.BuyerID > 0 {
+			buyer, err := s.userRepo.GetByID(ctx, int(order.BuyerID))
+			if err == nil && buyer != nil {
+				order.Buyer = buyer
+			}
+		}
+	}
+
+	return orders, total, nil
 }
 
 // GetSellerOrders получает заказы продавца
 func (s *OrderService) GetSellerOrders(ctx context.Context, sellerID int64, page, limit int) ([]*models.MarketplaceOrder, int, error) {
 	offset := (page - 1) * limit
-	return s.orderRepo.GetSellerOrders(ctx, sellerID, limit, offset)
+	orders, total, err := s.orderRepo.GetSellerOrders(ctx, sellerID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Загружаем связанные данные для каждого заказа
+	for _, order := range orders {
+		// Загружаем информацию о листинге
+		if order.ListingID > 0 {
+			listing, err := s.listingRepo.GetListingByID(ctx, int(order.ListingID))
+			if err == nil && listing != nil {
+				order.Listing = listing
+			}
+		}
+
+		// Загружаем информацию о продавце
+		if order.SellerID > 0 {
+			seller, err := s.userRepo.GetByID(ctx, int(order.SellerID))
+			if err == nil && seller != nil {
+				order.Seller = seller
+			}
+		}
+
+		// Загружаем информацию о покупателе
+		if order.BuyerID > 0 {
+			buyer, err := s.userRepo.GetByID(ctx, int(order.BuyerID))
+			if err == nil && buyer != nil {
+				order.Buyer = buyer
+			}
+		}
+	}
+
+	return orders, total, nil
 }
 
 // GetOrderDetails получает детали заказа с проверкой доступа
@@ -477,6 +550,30 @@ func (s *OrderService) GetOrderDetails(ctx context.Context, orderID int64, userI
 		return nil, errors.New("unauthorized: not a party of this order")
 	}
 
+	// Загружаем информацию о листинге
+	if order.ListingID > 0 {
+		listing, err := s.listingRepo.GetListingByID(ctx, int(order.ListingID))
+		if err == nil && listing != nil {
+			order.Listing = listing
+		}
+	}
+
+	// Загружаем информацию о продавце
+	if order.SellerID > 0 {
+		seller, err := s.userRepo.GetByID(ctx, int(order.SellerID))
+		if err == nil && seller != nil {
+			order.Seller = seller
+		}
+	}
+
+	// Загружаем информацию о покупателе
+	if order.BuyerID > 0 {
+		buyer, err := s.userRepo.GetByID(ctx, int(order.BuyerID))
+		if err == nil && buyer != nil {
+			order.Buyer = buyer
+		}
+	}
+
 	// Загружаем сообщения
 	messages, err := s.orderRepo.GetOrderMessages(ctx, orderID)
 	if err == nil {
@@ -484,4 +581,13 @@ func (s *OrderService) GetOrderDetails(ctx context.Context, orderID int64, userI
 	}
 
 	return order, nil
+}
+
+// SimpleUserRepository простая реализация UserRepositoryInterface
+type SimpleUserRepository struct {
+	storage storage.Storage
+}
+
+func (r *SimpleUserRepository) GetByID(ctx context.Context, userID int) (*models.User, error) {
+	return r.storage.GetUserByID(ctx, userID)
 }
