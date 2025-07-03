@@ -8,8 +8,8 @@ SELECT
     u.id AS user_id,
     COALESCE(AVG(r.rating), 0) AS average_rating,
     COUNT(r.id) AS total_reviews,
-    COUNT(CASE WHEN r.verified THEN 1 END) AS verified_reviews,
-    COUNT(CASE WHEN array_length(r.photo_urls, 1) > 0 THEN 1 END) AS photo_reviews,
+    COUNT(CASE WHEN r.is_verified_purchase THEN 1 END) AS verified_reviews,
+    COUNT(CASE WHEN array_length(r.photos, 1) > 0 THEN 1 END) AS photo_reviews,
     -- Rating distribution as JSON
     jsonb_object_agg(
         r.rating::text, 
@@ -36,8 +36,8 @@ SELECT
     s.user_id AS owner_id,  -- Added owner_id field that was missing
     COALESCE(AVG(r.rating), 0) AS average_rating,
     COUNT(r.id) AS total_reviews,
-    COUNT(CASE WHEN r.verified THEN 1 END) AS verified_reviews,
-    COUNT(CASE WHEN array_length(r.photo_urls, 1) > 0 THEN 1 END) AS photo_reviews,
+    COUNT(CASE WHEN r.is_verified_purchase THEN 1 END) AS verified_reviews,
+    COUNT(CASE WHEN array_length(r.photos, 1) > 0 THEN 1 END) AS photo_reviews,
     -- Rating distribution as JSON
     jsonb_object_agg(
         r.rating::text, 
@@ -64,8 +64,8 @@ SELECT
     ml.user_id AS owner_id,
     COALESCE(AVG(r.rating), 0) AS average_rating,
     COUNT(r.id) AS total_reviews,
-    COUNT(CASE WHEN r.verified THEN 1 END) AS verified_reviews,
-    COUNT(CASE WHEN array_length(r.photo_urls, 1) > 0 THEN 1 END) AS photo_reviews,
+    COUNT(CASE WHEN r.is_verified_purchase THEN 1 END) AS verified_reviews,
+    COUNT(CASE WHEN array_length(r.photos, 1) > 0 THEN 1 END) AS photo_reviews,
     -- Rating distribution as JSON
     jsonb_object_agg(
         r.rating::text, 
