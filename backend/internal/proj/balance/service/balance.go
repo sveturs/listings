@@ -3,11 +3,12 @@
 package balance
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/storage"
 	"context"
 	"fmt"
 	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/storage"
 )
 
 type BalanceService struct {
@@ -43,7 +44,6 @@ func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*models.Us
 		&balance.Currency,
 		&balance.UpdatedAt,
 	)
-
 	if err != nil {
 		return &models.UserBalance{
 			UserID:   userID,
@@ -151,6 +151,7 @@ func (s *BalanceService) CreateDeposit(ctx context.Context, userID int, amount f
 	transaction.ID = transactionID
 	return transaction, nil
 }
+
 func (s *BalanceService) ProcessDeposit(ctx context.Context, transactionID int) error {
 	tx, err := s.storage.BeginTx(ctx, nil)
 	if err != nil {
@@ -258,6 +259,7 @@ func (s *BalanceService) GetPaymentMethods(ctx context.Context) ([]models.Paymen
 
 	return methods, nil
 }
+
 func (s *BalanceService) validateDeposit(amount float64, method string) error {
 	if amount <= 0 {
 		return fmt.Errorf("amount must be greater than 0")
@@ -270,7 +272,6 @@ func (s *BalanceService) validateDeposit(amount float64, method string) error {
         FROM payment_methods
         WHERE code = $1 AND is_active = true
     `, method).Scan(&paymentMethod.MinimumAmount, &paymentMethod.MaximumAmount)
-
 	if err != nil {
 		return fmt.Errorf("invalid payment method")
 	}

@@ -138,6 +138,11 @@ class ApiClient {
     // Добавляем токен авторизации если нужно
     if (includeAuth && typeof window !== 'undefined') {
       const token = await tokenManager.getAccessToken();
+      // console.log('[ApiClient] Token check:', {
+      //   includeAuth,
+      //   hasToken: !!token,
+      //   endpoint,
+      // });
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }

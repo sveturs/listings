@@ -34,13 +34,13 @@ type BasicSanitizer struct {
 // NewBasicSanitizer создает санитайзер с базовым форматированием
 func NewBasicSanitizer() *BasicSanitizer {
 	p := bluemonday.NewPolicy()
-	
+
 	// Разрешаем базовое форматирование
 	p.AllowElements("b", "i", "u", "strong", "em", "code", "pre")
-	
+
 	// Разрешаем переносы строк
 	p.AllowElements("br", "p")
-	
+
 	// Разрешаем ссылки с безопасными протоколами
 	p.AllowElements("a")
 	p.AllowAttrs("href").OnElements("a")
@@ -48,7 +48,7 @@ func NewBasicSanitizer() *BasicSanitizer {
 	p.RequireParseableURLs(true)
 	p.RequireNoReferrerOnLinks(true)
 	p.AddTargetBlankToFullyQualifiedLinks(true)
-	
+
 	return &BasicSanitizer{policy: p}
 }
 

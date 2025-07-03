@@ -7,28 +7,28 @@ import (
 
 // SearchParams параметры поиска для OpenSearch
 type SearchParams struct {
-	Query              string            // Текст поиска
-	CategoryID         *int              // ID категории
-	PriceMin           *float64          // Минимальная цена
-	PriceMax           *float64          // Максимальная цена
-	Condition          string            // Состояние (новое, б/у)
-	City               string            // Город
-	Country            string            // Страна
-	StorefrontID       *int              // ID витрины
-	Sort               string            // Поле сортировки
-	SortDirection      string            // Направление сортировки (asc, desc)
-	Location           *GeoLocation      // Координаты для геопоиска
-	Distance           string            // Радиус поиска (5km, 10km, ...)
-	Page               int               // Номер страницы
-	Size               int               // Размер страницы
-	Aggregations       []string          // Запрашиваемые агрегации
-	Language           string            // Язык для поиска
-	MinimumShouldMatch string            // Минимальное количество совпадений (70%, 50% и т.д.)
-	Fuzziness          string            // Уровень нечеткости (AUTO, 1, 2, ...)
-	AttributeFilters   map[string]string //  поле для фильтров атрибутов
-	UseAllTranslations bool //
-	CustomQuery      map[string]interface{} //
-	Status           string //
+	Query              string                 // Текст поиска
+	CategoryID         *int                   // ID категории
+	PriceMin           *float64               // Минимальная цена
+	PriceMax           *float64               // Максимальная цена
+	Condition          string                 // Состояние (новое, б/у)
+	City               string                 // Город
+	Country            string                 // Страна
+	StorefrontID       *int                   // ID витрины
+	Sort               string                 // Поле сортировки
+	SortDirection      string                 // Направление сортировки (asc, desc)
+	Location           *GeoLocation           // Координаты для геопоиска
+	Distance           string                 // Радиус поиска (5km, 10km, ...)
+	Page               int                    // Номер страницы
+	Size               int                    // Размер страницы
+	Aggregations       []string               // Запрашиваемые агрегации
+	Language           string                 // Язык для поиска
+	MinimumShouldMatch string                 // Минимальное количество совпадений (70%, 50% и т.д.)
+	Fuzziness          string                 // Уровень нечеткости (AUTO, 1, 2, ...)
+	AttributeFilters   map[string]string      //  поле для фильтров атрибутов
+	UseAllTranslations bool                   //
+	CustomQuery        map[string]interface{} //
+	Status             string                 //
 }
 
 // SearchParams параметры поиска для OpenSearch
@@ -53,7 +53,7 @@ type ServiceParams struct {
 	MinimumShouldMatch string            // Минимальное количество совпадений (70%, 50% и т.д.)
 	Fuzziness          string            // Уровень нечеткости (AUTO, 1, 2, ...)
 	AttributeFilters   map[string]string //  поле для фильтров атрибутов
-	Status           string
+	Status             string
 }
 
 // GeoLocation координаты для геопоиска
@@ -88,5 +88,4 @@ type ServiceResult struct {
 	Facets             map[string][]Bucket          `json:"facets,omitempty"`
 	Suggestions        []string                     `json:"suggestions,omitempty"`
 	SpellingSuggestion string                       `json:"spelling_suggestion,omitempty"` // Добавленное поле
-
 }

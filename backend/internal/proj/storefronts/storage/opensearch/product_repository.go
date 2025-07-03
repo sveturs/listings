@@ -51,10 +51,10 @@ func (r *ProductRepository) PrepareIndex(ctx context.Context) error {
 func (r *ProductRepository) IndexProduct(ctx context.Context, product *models.StorefrontProduct) error {
 	doc := r.productToDoc(product)
 	docID := fmt.Sprintf("sp_%d", product.ID)
-	
-	logger.Info().Msgf("Индексация товара витрины: ID=%d, Name=%s, StorefrontID=%d", 
+
+	logger.Info().Msgf("Индексация товара витрины: ID=%d, Name=%s, StorefrontID=%d",
 		product.ID, product.Name, product.StorefrontID)
-	
+
 	return r.client.IndexDocument(r.indexName, docID, doc)
 }
 
@@ -89,21 +89,21 @@ func (r *ProductRepository) UpdateProduct(ctx context.Context, product *models.S
 // productToDoc преобразует модель товара витрины в документ для индексации
 func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[string]interface{} {
 	doc := map[string]interface{}{
-		"product_id":       product.ID,
-		"product_type":     "storefront",
-		"storefront_id":    product.StorefrontID,
-		"category_id":      product.CategoryID,
-		"name":             product.Name,
-		"name_lowercase":   strings.ToLower(product.Name),
-		"description":      product.Description,
-		"price":            product.Price,
-		"currency":         product.Currency,
-		"sku":              product.SKU,
-		"barcode":          product.Barcode,
-		"stock_status":     product.StockStatus,
-		"is_active":        product.IsActive,
-		"created_at":       product.CreatedAt.Format(time.RFC3339),
-		"updated_at":       product.UpdatedAt.Format(time.RFC3339),
+		"product_id":     product.ID,
+		"product_type":   "storefront",
+		"storefront_id":  product.StorefrontID,
+		"category_id":    product.CategoryID,
+		"name":           product.Name,
+		"name_lowercase": strings.ToLower(product.Name),
+		"description":    product.Description,
+		"price":          product.Price,
+		"currency":       product.Currency,
+		"sku":            product.SKU,
+		"barcode":        product.Barcode,
+		"stock_status":   product.StockStatus,
+		"is_active":      product.IsActive,
+		"created_at":     product.CreatedAt.Format(time.RFC3339),
+		"updated_at":     product.UpdatedAt.Format(time.RFC3339),
 	}
 
 	// Добавляем информацию о наличии товара
@@ -135,7 +135,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		if material, ok := product.Attributes["material"].(string); ok {
 			doc["material"] = material
 		}
-		
+
 		// Сохраняем все атрибуты для расширенного поиска
 		doc["attributes"] = product.Attributes
 	}
@@ -148,7 +148,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 	if barcode := product.Barcode; barcode != nil && *barcode != "" {
 		searchKeywords = append(searchKeywords, *barcode)
 	}
-	
+
 	// Добавляем значения атрибутов в поисковые ключевые слова
 	if product.Attributes != nil {
 		for _, value := range product.Attributes {
@@ -157,7 +157,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 			}
 		}
 	}
-	
+
 	doc["search_keywords"] = deduplicate(searchKeywords)
 
 	// Добавляем изображения
@@ -186,7 +186,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		variantsArray := make([]map[string]interface{}, 0, len(product.Variants))
 		minPrice := product.Price
 		maxPrice := product.Price
-		
+
 		for _, variant := range product.Variants {
 			varDoc := map[string]interface{}{
 				"id":         variant.ID,
@@ -195,7 +195,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 				"price":      variant.Price,
 				"attributes": variant.Attributes,
 			}
-			
+
 			// Отслеживаем диапазон цен
 			if variant.Price < minPrice {
 				minPrice = variant.Price
@@ -203,10 +203,10 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 			if variant.Price > maxPrice {
 				maxPrice = variant.Price
 			}
-			
+
 			variantsArray = append(variantsArray, varDoc)
 		}
-		
+
 		doc["variants"] = variantsArray
 		doc["has_variants"] = true
 		doc["variant_count"] = len(product.Variants)
@@ -230,7 +230,6 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 			"name": product.Category.Name,
 			"slug": product.Category.Slug,
 		}
-		
 	}
 
 	// Рассчитываем дополнительные поля для ранжирования
@@ -243,12 +242,12 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 // SearchProducts выполняет поиск товаров витрин
 func (r *ProductRepository) SearchProducts(ctx context.Context, params *ProductSearchParams) (*ProductSearchResult, error) {
 	query := r.buildSearchQuery(params)
-	
+
 	responseBytes, err := r.client.Search(r.indexName, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска товаров витрин: %w", err)
 	}
-	
+
 	return r.parseSearchResponse(responseBytes, params)
 }
 
@@ -265,11 +264,11 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 		"size": params.Limit,
 		"from": params.Offset,
 	}
-	
+
 	// Построение условий поиска
 	must := []map[string]interface{}{}
 	filter := []map[string]interface{}{}
-	
+
 	// Текстовый поиск
 	if params.Query != "" {
 		must = append(must, map[string]interface{}{
@@ -286,13 +285,13 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 					"sku",
 					"barcode",
 				},
-				"type":       "best_fields",
-				"fuzziness":  "AUTO",
+				"type":          "best_fields",
+				"fuzziness":     "AUTO",
 				"prefix_length": 2,
 			},
 		})
 	}
-	
+
 	// Фильтр по витрине
 	if params.StorefrontID > 0 {
 		filter = append(filter, map[string]interface{}{
@@ -301,7 +300,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Фильтр по категории
 	if params.CategoryID > 0 {
 		filter = append(filter, map[string]interface{}{
@@ -310,7 +309,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Фильтр по пути категории (для поиска в подкатегориях)
 	if params.CategoryPath != "" {
 		filter = append(filter, map[string]interface{}{
@@ -319,7 +318,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Фильтр по бренду
 	if params.Brand != "" {
 		filter = append(filter, map[string]interface{}{
@@ -328,7 +327,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Фильтр по цене
 	if params.PriceMin > 0 || params.PriceMax > 0 {
 		priceRange := map[string]interface{}{}
@@ -344,7 +343,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Фильтр по наличию
 	if params.InStock != nil {
 		filter = append(filter, map[string]interface{}{
@@ -353,7 +352,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Фильтр по атрибутам (nested query)
 	if len(params.Attributes) > 0 {
 		for attrName, attrValue := range params.Attributes {
@@ -380,7 +379,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			})
 		}
 	}
-	
+
 	// Фильтр по городу
 	if params.City != "" {
 		filter = append(filter, map[string]interface{}{
@@ -389,7 +388,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Геолокационный поиск
 	if params.Latitude != 0 && params.Longitude != 0 && params.RadiusKm > 0 {
 		filter = append(filter, map[string]interface{}{
@@ -402,7 +401,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Фильтр по верифицированным витринам
 	if params.OnlyVerified {
 		filter = append(filter, map[string]interface{}{
@@ -411,7 +410,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Фильтр по качеству карточки
 	if params.MinQualityScore > 0 {
 		filter = append(filter, map[string]interface{}{
@@ -422,14 +421,14 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		})
 	}
-	
+
 	// Только активные товары
 	filter = append(filter, map[string]interface{}{
 		"term": map[string]interface{}{
 			"is_active": true,
 		},
 	})
-	
+
 	// Построение bool запроса
 	boolQuery := map[string]interface{}{}
 	if len(must) > 0 {
@@ -438,7 +437,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 	if len(filter) > 0 {
 		boolQuery["filter"] = filter
 	}
-	
+
 	// Если нет условий поиска, используем match_all
 	if len(must) == 0 && len(filter) == 0 {
 		query["query"] = map[string]interface{}{
@@ -449,13 +448,13 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			"bool": boolQuery,
 		}
 	}
-	
+
 	// Сортировка
 	sort := r.buildSort(params)
 	if len(sort) > 0 {
 		query["sort"] = sort
 	}
-	
+
 	// Подсветка результатов
 	query["highlight"] = map[string]interface{}{
 		"fields": map[string]interface{}{
@@ -470,7 +469,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			},
 		},
 	}
-	
+
 	// Агрегации
 	if len(params.Aggregations) > 0 {
 		aggs := r.buildAggregations(params.Aggregations)
@@ -478,15 +477,22 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 			query["aggs"] = aggs
 		}
 	}
-	
+
 	return query
 }
 
 // buildSort строит параметры сортировки
 func (r *ProductRepository) buildSort(params *ProductSearchParams) []map[string]interface{} {
 	sort := []map[string]interface{}{}
-	
+
 	switch params.SortBy {
+	case "relevance":
+		// Для сортировки по релевантности используем _score
+		sort = append(sort, map[string]interface{}{
+			"_score": map[string]interface{}{
+				"order": "desc",
+			},
+		})
 	case "price":
 		sort = append(sort, map[string]interface{}{
 			"price": map[string]interface{}{
@@ -545,21 +551,21 @@ func (r *ProductRepository) buildSort(params *ProductSearchParams) []map[string]
 			},
 		})
 	}
-	
+
 	// Всегда добавляем ID для стабильной сортировки
 	sort = append(sort, map[string]interface{}{
 		"product_id": map[string]interface{}{
 			"order": "asc",
 		},
 	})
-	
+
 	return sort
 }
 
 // buildAggregations строит агрегации для фасетного поиска
 func (r *ProductRepository) buildAggregations(requested []string) map[string]interface{} {
 	aggs := map[string]interface{}{}
-	
+
 	for _, aggName := range requested {
 		switch aggName {
 		case "categories":
@@ -626,7 +632,7 @@ func (r *ProductRepository) buildAggregations(requested []string) map[string]int
 			}
 		}
 	}
-	
+
 	return aggs
 }
 
@@ -636,18 +642,18 @@ func (r *ProductRepository) parseSearchResponse(responseBytes []byte, params *Pr
 	if err := json.Unmarshal(responseBytes, &response); err != nil {
 		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
 	}
-	
+
 	result := &ProductSearchResult{
 		Products:     []*ProductSearchItem{},
 		Total:        0,
 		Aggregations: map[string]interface{}{},
 	}
-	
+
 	// Время выполнения
 	if took, ok := response["took"].(float64); ok {
 		result.TookMs = int64(took)
 	}
-	
+
 	// Извлекаем результаты
 	if hits, ok := response["hits"].(map[string]interface{}); ok {
 		// Общее количество
@@ -656,7 +662,7 @@ func (r *ProductRepository) parseSearchResponse(responseBytes []byte, params *Pr
 				result.Total = int(value)
 			}
 		}
-		
+
 		// Документы
 		if hitsArray, ok := hits["hits"].([]interface{}); ok {
 			for _, hit := range hitsArray {
@@ -667,12 +673,12 @@ func (r *ProductRepository) parseSearchResponse(responseBytes []byte, params *Pr
 			}
 		}
 	}
-	
+
 	// Извлекаем агрегации
 	if aggs, ok := response["aggregations"].(map[string]interface{}); ok {
 		result.Aggregations = aggs
 	}
-	
+
 	return result, nil
 }
 
@@ -684,7 +690,7 @@ func (r *ProductRepository) parseSearchHit(hit map[string]interface{}) *ProductS
 		Variants:   []ProductVariant{},
 		Highlights: map[string][]string{},
 	}
-	
+
 	// ID документа
 	if id, ok := hit["_id"].(string); ok {
 		item.ID = id
@@ -695,19 +701,19 @@ func (r *ProductRepository) parseSearchHit(hit map[string]interface{}) *ProductS
 			}
 		}
 	}
-	
+
 	// Score
 	if score, ok := hit["_score"].(float64); ok {
 		item.Score = score
 	}
-	
+
 	// Distance (из сортировки)
 	if sort, ok := hit["sort"].([]interface{}); ok && len(sort) > 0 {
 		if distance, ok := sort[0].(float64); ok {
 			item.Distance = &distance
 		}
 	}
-	
+
 	// Highlights
 	if highlight, ok := hit["highlight"].(map[string]interface{}); ok {
 		for field, values := range highlight {
@@ -722,12 +728,12 @@ func (r *ProductRepository) parseSearchHit(hit map[string]interface{}) *ProductS
 			}
 		}
 	}
-	
+
 	// Парсим _source
 	if source, ok := hit["_source"].(map[string]interface{}); ok {
 		r.parseProductSource(source, item)
 	}
-	
+
 	return item
 }
 
@@ -767,7 +773,7 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 	if v, ok := source["quality_score"].(float64); ok {
 		item.QualityScore = v
 	}
-	
+
 	// Инвентарь
 	if inventory, ok := source["inventory"].(map[string]interface{}); ok {
 		if v, ok := inventory["in_stock"].(bool); ok {
@@ -777,7 +783,7 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			item.AvailableQuantity = int(v)
 		}
 	}
-	
+
 	// Изображения
 	if images, ok := source["images"].([]interface{}); ok {
 		for _, img := range images {
@@ -802,7 +808,7 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			}
 		}
 	}
-	
+
 	// Витрина
 	if storefront, ok := source["storefront"].(map[string]interface{}); ok {
 		info := StorefrontInfo{}
@@ -829,7 +835,7 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 		}
 		item.Storefront = info
 	}
-	
+
 	// Категория
 	if category, ok := source["category"].(map[string]interface{}); ok {
 		info := CategoryInfo{}
@@ -844,7 +850,7 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 		}
 		item.Category = info
 	}
-	
+
 	// Атрибуты
 	if attributes, ok := source["attributes"].([]interface{}); ok {
 		for _, attr := range attributes {
@@ -869,7 +875,7 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			}
 		}
 	}
-	
+
 	// Варианты
 	if variants, ok := source["variants"].([]interface{}); ok {
 		for _, variant := range variants {
@@ -899,26 +905,26 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 // calculatePopularityScore рассчитывает оценку популярности товара
 func calculatePopularityScore(product *models.StorefrontProduct) float64 {
 	score := 0.0
-	
+
 	// Учитываем продажи
 	if product.SoldCount > 0 {
 		score += float64(product.SoldCount) * 0.5
 	}
-	
+
 	// Учитываем просмотры
 	if product.ViewCount > 0 {
 		score += float64(product.ViewCount) * 0.01
 	}
-	
+
 	// TODO: Добавить учет рейтинга витрины когда будет загружаться информация о витрине
-	
+
 	return score
 }
 
 // calculateQualityScore рассчитывает оценку качества карточки товара
 func calculateQualityScore(product *models.StorefrontProduct) float64 {
 	score := 0.0
-	
+
 	// Есть описание
 	if product.Description != "" {
 		score += 20
@@ -926,7 +932,7 @@ func calculateQualityScore(product *models.StorefrontProduct) float64 {
 			score += 10
 		}
 	}
-	
+
 	// Есть изображения
 	if product.Images != nil && len(product.Images) > 0 {
 		score += 20
@@ -934,7 +940,7 @@ func calculateQualityScore(product *models.StorefrontProduct) float64 {
 			score += 10
 		}
 	}
-	
+
 	// Есть атрибуты
 	if product.Attributes != nil && len(product.Attributes) > 0 {
 		score += 15
@@ -942,14 +948,14 @@ func calculateQualityScore(product *models.StorefrontProduct) float64 {
 			score += 10
 		}
 	}
-	
+
 	// Есть варианты
 	if product.Variants != nil && len(product.Variants) > 0 {
 		score += 15
 	}
-	
+
 	// TODO: Добавить бонус за верифицированную витрину когда будет загружаться информация о витрине
-	
+
 	return score
 }
 

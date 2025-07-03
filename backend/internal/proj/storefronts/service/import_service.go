@@ -84,7 +84,7 @@ func (s *ImportService) ImportFromURL(ctx context.Context, req models.ImportRequ
 
 	// Import products
 	successCount, importErrors := s.importProducts(ctx, products, req.StorefrontID, req.UpdateMode)
-	
+
 	job.ProcessedRecords = len(products)
 	job.SuccessfulRecords = successCount
 	job.FailedRecords += len(importErrors)
@@ -149,7 +149,7 @@ func (s *ImportService) ImportFromFile(ctx context.Context, fileData []byte, req
 
 	// Import products
 	successCount, importErrors := s.importProducts(ctx, products, req.StorefrontID, req.UpdateMode)
-	
+
 	job.ProcessedRecords = len(products)
 	job.SuccessfulRecords = successCount
 	job.FailedRecords += len(importErrors)
@@ -199,7 +199,7 @@ func (s *ImportService) downloadFile(ctx context.Context, url string) ([]byte, s
 // processXMLData processes XML data
 func (s *ImportService) processXMLData(data []byte, storefrontID int) ([]models.ImportProductRequest, []models.ImportValidationError, error) {
 	parser := parsers.NewXMLParser(storefrontID)
-	
+
 	// Try Digital Vision format first
 	products, errors, err := parser.ParseDigitalVisionXML(data)
 	if err != nil {
@@ -208,7 +208,7 @@ func (s *ImportService) processXMLData(data []byte, storefrontID int) ([]models.
 		// If Digital Vision format fails, try generic XML (but it's not implemented)
 		return nil, nil, fmt.Errorf("Digital Vision XML parsing failed: %v (generic XML parsing not implemented)", err)
 	}
-	
+
 	return products, errors, nil
 }
 
@@ -306,19 +306,19 @@ func (s *ImportService) importSingleProduct(ctx context.Context, importProduct m
 			return fmt.Errorf("product with SKU %s already exists", importProduct.SKU)
 		}
 		return s.createProduct(ctx, importProduct, storefrontID)
-	
+
 	case "update_only":
 		if existingProduct == nil {
 			return fmt.Errorf("product with SKU %s not found", importProduct.SKU)
 		}
 		return s.updateProduct(ctx, existingProduct.ID, importProduct, storefrontID)
-	
+
 	case "upsert":
 		if existingProduct != nil {
 			return s.updateProduct(ctx, existingProduct.ID, importProduct, storefrontID)
 		}
 		return s.createProduct(ctx, importProduct, storefrontID)
-	
+
 	default:
 		return s.createProduct(ctx, importProduct, storefrontID)
 	}

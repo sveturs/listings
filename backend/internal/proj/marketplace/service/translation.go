@@ -2,7 +2,6 @@
 package service
 
 import (
-	"backend/internal/storage"
 	"context"
 	"fmt"
 	"html"
@@ -10,6 +9,8 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+
+	"backend/internal/storage"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -259,6 +260,7 @@ func (s *TranslationService) TranslateEntityFields(ctx context.Context, sourceLa
 
 	return results, nil
 }
+
 func (s *TranslationService) TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error) {
 	// Проверяем кеш
 	cacheKey := fmt.Sprintf("%s:%s:%s:%s:%s", text, sourceLanguage, targetLanguage, context, fieldName)
@@ -389,6 +391,7 @@ IMPORTANT INSTRUCTIONS:
 
 	return translatedText, nil
 }
+
 func (s *TranslationService) Translate(ctx context.Context, text string, sourceLanguage string, targetLanguage string) (string, error) {
 	// Делегируем работу функции TranslateWithContext с пустым контекстом
 	return s.TranslateWithContext(ctx, text, sourceLanguage, targetLanguage, "", "")

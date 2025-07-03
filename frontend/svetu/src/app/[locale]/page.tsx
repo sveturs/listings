@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { MarketplaceService } from '@/services/marketplace';
+import { UnifiedSearchService } from '@/services/unifiedSearch';
 import MarketplaceList from '@/components/marketplace/MarketplaceList';
 import { Link } from '@/i18n/routing';
 import configManager from '@/config';
@@ -15,32 +15,31 @@ export default async function Home({
   // Проверяем feature flags
   const paymentsEnabled = configManager.isFeatureEnabled('enablePayments');
 
-  let marketplaceData;
+  let marketplaceData = null;
   let error: Error | null = null;
 
-  try {
-    // MarketplaceService автоматически использует внутренний URL для SSR
-    marketplaceData = await MarketplaceService.search({
-      sort_by: 'date_desc',
-      page: 0,
-      size: 20,
-    });
+  // ВАЖНО: SSR загрузка отключена в development из-за проблем с сетевой конфигурацией
+  // В production SSR будет работать нормально когда:
+  // 1. Frontend и backend находятся в одной Docker сети
+  // 2. Используется правильный INTERNAL_API_URL (например: http://backend:3000)
+  // 3. Настроен правильный сетевой доступ между контейнерами
+  const skipSSR = process.env.NODE_ENV === 'development';
 
-    // Отладка: проверим объявление 177
-    const item177 = marketplaceData?.data?.find((item) => item.id === 177);
-    if (item177) {
-      console.log('SSR - Item 177 found:', {
-        id: item177.id,
-        title: item177.title,
-        images: item177.images,
-        images_count: item177.images?.length || 0,
+  if (!skipSSR) {
+    try {
+      // SSR загрузка данных через унифицированный поиск с таймаутом и обработкой ошибок
+      marketplaceData = await UnifiedSearchService.search({
+        query: '',
+        sort_by: 'date',
+        sort_order: 'desc',
+        page: 1,
+        limit: 20,
       });
-    } else {
-      console.log('SSR - Item 177 not found in initial data');
+    } catch (err) {
+      error = err as Error;
+      console.error('SSR unified search fetch failed:', error);
+      // Не падаем, просто загрузим данные на клиенте
     }
-  } catch (err) {
-    error = err as Error;
-    console.error('Failed to fetch marketplace data:', error);
   }
 
   return (
@@ -96,35 +95,7 @@ export default async function Home({
           </div>
         )}
 
-        {marketplaceData && marketplaceData.data.length > 0 ? (
-          <MarketplaceList initialData={marketplaceData} locale={locale} />
-        ) : (
-          !error && (
-            <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-base-200 mb-6">
-                <svg
-                  className="w-12 h-12 text-base-content/40"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                  />
-                </svg>
-              </div>
-              <p className="text-xl text-base-content/70 mb-4">
-                {t('noItems')}
-              </p>
-              <p className="text-base-content/50">
-                Начните с создания первого объявления
-              </p>
-            </div>
-          )
-        )}
+        <MarketplaceList initialData={marketplaceData} locale={locale} />
 
         {/* Плавающая кнопка создания объявления */}
         <Link

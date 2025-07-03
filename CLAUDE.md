@@ -43,12 +43,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    2. Обновляй интерфейсы в `src/config/types.ts` (`EnvVariables` и `Config`)
    3. Добавляй обработку в `src/config/index.ts` в методе `loadConfig()`
 
-- **Проверка качества кода**
+- **Проверка качества кода и форматирование**
 
+    ### Frontend (в папке `frontend/svetu/`)
     Перед завершением любой задачи на Frontend **ОБЯЗАТЕЛЬНО** выполните:
 
     ```bash
     yarn format && yarn lint && yarn build
     ```
     
-    Задача считается выполненной только если все три команды выполнились успешно!
+    ### Backend (в папке `backend/`)
+    Перед завершением любой задачи на Backend **ОБЯЗАТЕЛЬНО** выполните:
+
+    ```bash
+    make format && make lint
+    ```
+    
+    Задача считается выполненной только если все команды выполнились успешно!
+
+- **Pre-commit hooks и автоформатирование**
+
+    В проекте настроена система автоматического форматирования кода:
+    
+    ### Установка pre-commit (один раз на машине)
+    ```bash
+    # macOS: brew install pre-commit
+    # Ubuntu: sudo apt install pre-commit
+    # или: pip install pre-commit
+    
+    # Активация в проекте
+    cd /path/to/project
+    pre-commit install
+    ```
+    
+    ### Команды форматирования
+    
+    **Backend (Go):**
+    - `make format` - автоформатирование с gofumpt + goimports
+    - `make format-check` - проверка форматирования без изменений
+    - `make lint` - запуск golangci-lint
+    - `make pre-commit` - все проверки перед коммитом
+    
+    **Frontend:**
+    - `yarn format` - форматирование с Prettier
+    - `yarn format:check` - проверка форматирования
+    - `yarn lint` - ESLint проверки
+    - `yarn lint:fix` - исправление ESLint ошибок
+    
+    ### Важно
+    - Pre-commit hooks автоматически запускаются при каждом коммите
+    - GitHub Actions проверяют форматирование в PR
+    - EditorConfig (.editorconfig) обеспечивает единые настройки IDE
+    - Больше НЕ БУДЕТ проблем с trailing spaces и line endings!

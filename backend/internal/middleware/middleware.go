@@ -41,6 +41,7 @@ func (m *Middleware) ErrorHandler(c *fiber.Ctx, err error) error {
 
 	return utils.ErrorResponse(c, code, message)
 }
+
 func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 	logger.Info().Str("path", c.Path()).Msg("AdminRequired middleware called")
 
@@ -150,4 +151,14 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 // RequireAdmin является алиасом для AdminRequired для удобства
 func (m *Middleware) RequireAdmin() fiber.Handler {
 	return m.AdminRequired
+}
+
+// RequireAuth требует обязательную аутентификацию
+func (m *Middleware) RequireAuth() fiber.Handler {
+	return m.AuthRequiredJWT
+}
+
+// OptionalAuth опциональная аутентификация
+func (m *Middleware) OptionalAuth() fiber.Handler {
+	return m.OptionalAuthJWT
 }

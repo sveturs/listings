@@ -2,12 +2,13 @@
 package service
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/storage"
 	"context"
 	"log"
 	"math"
 	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/storage"
 )
 
 // PriceHistoryServiceInterface определяет интерфейс для работы с историей цен

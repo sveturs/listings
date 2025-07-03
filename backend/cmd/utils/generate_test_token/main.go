@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
+
 	"backend/internal/config"
 	"backend/internal/proj/global/service"
 	"backend/internal/storage/postgres"
 	"backend/internal/types"
 	"backend/pkg/utils"
-	"context"
-	"fmt"
-	"log"
 )
 
 func main() {

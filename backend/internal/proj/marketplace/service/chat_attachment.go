@@ -1,12 +1,6 @@
 package service
 
 import (
-	"backend/internal/config"
-	"backend/internal/domain/models"
-	"backend/internal/logger"
-	"backend/internal/storage"
-	"backend/internal/storage/filestorage"
-	"backend/pkg/utils"
 	"context"
 	"fmt"
 	"io"
@@ -15,6 +9,13 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"backend/internal/config"
+	"backend/internal/domain/models"
+	"backend/internal/logger"
+	"backend/internal/storage"
+	"backend/internal/storage/filestorage"
+	"backend/pkg/utils"
 )
 
 // ChatAttachmentServiceInterface определяет методы для работы с вложениями чата

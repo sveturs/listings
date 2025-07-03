@@ -25,26 +25,26 @@ export default function WebSocketManager() {
         const hasToken = tokenManager.getAccessToken() !== null;
 
         if (hasToken && !isInitialized.current) {
-          console.log(
-            '[WebSocketManager] Initializing WebSocket for user:',
-            user.id,
-            'Token available:',
-            hasToken
-          );
+          // console.log(
+          //   '[WebSocketManager] Initializing WebSocket for user:',
+          //   user.id,
+          //   'Token available:',
+          //   hasToken
+          // );
           isInitialized.current = true;
           // Инициализируем WebSocket с функцией получения ID пользователя
           initWebSocket(() => user.id);
           // Загружаем чаты только если пользователь авторизован
           loadChats();
         } else {
-          console.log('[WebSocketManager] Waiting for token, will retry...');
+          // console.log('[WebSocketManager] Waiting for token, will retry...');
         }
       }, 500); // Задержка 500мс
     }
 
     // Отключаем WebSocket при выходе
     if (!isAuthenticated && isInitialized.current) {
-      console.log('[WebSocketManager] User logged out, cleaning up WebSocket');
+      // console.log('[WebSocketManager] User logged out, cleaning up WebSocket');
       isInitialized.current = false;
       closeWebSocket();
     }
@@ -56,9 +56,9 @@ export default function WebSocketManager() {
         initTimeoutRef.current = null;
       }
       if (isInitialized.current) {
-        console.log(
-          '[WebSocketManager] Component unmounting, cleaning up WebSocket'
-        );
+        // console.log(
+        //   '[WebSocketManager] Component unmounting, cleaning up WebSocket'
+        // );
         closeWebSocket();
       }
     };

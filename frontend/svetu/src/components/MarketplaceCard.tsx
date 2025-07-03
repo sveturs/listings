@@ -105,10 +105,38 @@ export default function MarketplaceCard({
     );
   };
 
+  const handleBuyClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      // Перенаправляем на авторизацию
+      router.push(
+        `/${locale}/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`
+      );
+      return;
+    }
+
+    // Проверяем, что это не собственное объявление
+    if (item.user_id === user?.id) {
+      return;
+    }
+
+    // Переходим на страницу оформления заказа
+    router.push(`/${locale}/marketplace/${item.id}/buy`);
+  };
+
+  // Определяем правильный URL в зависимости от типа товара
+  const getItemUrl = () => {
+    // Временно для всех товаров используем marketplace URL
+    // TODO: Создать страницу для storefront товаров
+    return `/${locale}/marketplace/${item.id}`;
+  };
+
   if (viewMode === 'list') {
     return (
       <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
-        <Link href={`/${locale}/marketplace/${item.id}`} className="block">
+        <Link href={getItemUrl()} className="block">
           <div className="card-body p-4">
             <div className="flex gap-4">
               {/* Изображение слева */}
@@ -200,27 +228,36 @@ export default function MarketplaceCard({
                     {mounted &&
                       isAuthenticated &&
                       item.user_id !== user?.id && (
-                        <button
-                          onClick={handleChatClick}
-                          className="btn btn-primary btn-sm"
-                          title={t('sendMessage')}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-4 h-4"
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleBuyClick}
+                            className="btn btn-primary btn-sm"
+                            title={t('buy')}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                            />
-                          </svg>
-                          {t('chat')}
-                        </button>
+                            💳 {t('buy')}
+                          </button>
+                          <button
+                            onClick={handleChatClick}
+                            className="btn btn-outline btn-sm"
+                            title={t('sendMessage')}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-4 h-4"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                              />
+                            </svg>
+                            {t('chat')}
+                          </button>
+                        </div>
                       )}
                   </div>
                 </div>
@@ -235,31 +272,40 @@ export default function MarketplaceCard({
   // Grid view (default)
   return (
     <div className="card card-compact bg-base-100 shadow-xl hover:shadow-2xl transition-shadow relative">
-      {/* Кнопка чата - показываем только после монтирования */}
+      {/* Кнопки действий - показываем только после монтирования */}
       {mounted && isAuthenticated && item.user_id !== user?.id && (
-        <button
-          onClick={handleChatClick}
-          className="btn btn-primary btn-circle btn-sm absolute top-3 right-3 shadow-lg z-10"
-          title={t('sendMessage')}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-4 h-4"
+        <div className="absolute top-3 right-3 flex gap-2 z-10">
+          <button
+            onClick={handleBuyClick}
+            className="btn btn-primary btn-sm shadow-lg"
+            title={t('buy')}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
-        </button>
+            💳 {t('buy')}
+          </button>
+          <button
+            onClick={handleChatClick}
+            className="btn btn-circle btn-sm btn-ghost bg-base-100 shadow-lg"
+            title={t('sendMessage')}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+          </button>
+        </div>
       )}
 
-      <Link href={`/${locale}/marketplace/${item.id}`} className="block">
+      <Link href={getItemUrl()} className="block">
         <figure className="relative h-48 bg-base-200">
           <SafeImage
             src={imageUrl}

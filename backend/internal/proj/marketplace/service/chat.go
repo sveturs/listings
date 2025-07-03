@@ -2,15 +2,16 @@
 package service
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/logger"
-	"backend/internal/storage"
-	"backend/pkg/utils"
 	"context"
 	"fmt"
 	"log"
 	"sync"
 	"time"
+
+	"backend/internal/domain/models"
+	"backend/internal/logger"
+	"backend/internal/storage"
+	"backend/pkg/utils"
 
 	"backend/internal/proj/notifications/service"
 )
@@ -49,7 +50,7 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 	}
 
 	var listing *models.MarketplaceListing
-	var listingExists = false
+	listingExists := false
 
 	// Если есть ListingID, пытаемся найти объявление
 	if msg.ListingID > 0 {
@@ -134,7 +135,6 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 				notificationText,
 				listingID,
 			)
-
 			if err != nil {
 				// Просто логируем ошибку, не возвращаем ее в основной поток
 				logger.Error().

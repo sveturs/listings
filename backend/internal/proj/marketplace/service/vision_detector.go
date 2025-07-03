@@ -2,10 +2,11 @@
 package service
 
 import (
-	"cloud.google.com/go/vision/apiv1"
 	"context"
 	"log"
 	"os"
+
+	vision "cloud.google.com/go/vision/apiv1"
 )
 
 func DetectFaceInImage(ctx context.Context, imagePath string) (bool, error) {

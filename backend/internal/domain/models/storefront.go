@@ -32,28 +32,28 @@ const (
 type PaymentMethodType string
 
 const (
-	PaymentMethodCash         PaymentMethodType = "cash"           // Наличные в магазине
-	PaymentMethodCOD          PaymentMethodType = "cod"            // Cash on Delivery - оплата курьеру
-	PaymentMethodCard         PaymentMethodType = "card"           // Банковская карта
-	PaymentMethodBankTransfer PaymentMethodType = "bank_transfer"  // Банковский перевод
+	PaymentMethodCash         PaymentMethodType = "cash"          // Наличные в магазине
+	PaymentMethodCOD          PaymentMethodType = "cod"           // Cash on Delivery - оплата курьеру
+	PaymentMethodCard         PaymentMethodType = "card"          // Банковская карта
+	PaymentMethodBankTransfer PaymentMethodType = "bank_transfer" // Банковский перевод
 	PaymentMethodPayPal       PaymentMethodType = "paypal"
 	PaymentMethodCrypto       PaymentMethodType = "crypto"
-	PaymentMethodPostanska    PaymentMethodType = "postanska"      // Poštanska štedionica
-	PaymentMethodKeks         PaymentMethodType = "keks_pay"       // Keks Pay (популярно в Сербии)
-	PaymentMethodIPS          PaymentMethodType = "ips"            // Instant Payment System
+	PaymentMethodPostanska    PaymentMethodType = "postanska" // Poštanska štedionica
+	PaymentMethodKeks         PaymentMethodType = "keks_pay"  // Keks Pay (популярно в Сербии)
+	PaymentMethodIPS          PaymentMethodType = "ips"       // Instant Payment System
 )
 
 // DeliveryProvider провайдеры доставки
 type DeliveryProvider string
 
 const (
-	DeliveryProviderPostaSrbije   DeliveryProvider = "posta_srbije"
-	DeliveryProviderAKS           DeliveryProvider = "aks"
-	DeliveryProviderBEX           DeliveryProvider = "bex"
-	DeliveryProviderDExpress      DeliveryProvider = "d_express"
-	DeliveryProviderCityExpress   DeliveryProvider = "city_express"
-	DeliveryProviderSelfPickup    DeliveryProvider = "self_pickup"
-	DeliveryProviderOwnDelivery   DeliveryProvider = "own_delivery"
+	DeliveryProviderPostaSrbije DeliveryProvider = "posta_srbije"
+	DeliveryProviderAKS         DeliveryProvider = "aks"
+	DeliveryProviderBEX         DeliveryProvider = "bex"
+	DeliveryProviderDExpress    DeliveryProvider = "d_express"
+	DeliveryProviderCityExpress DeliveryProvider = "city_express"
+	DeliveryProviderSelfPickup  DeliveryProvider = "self_pickup"
+	DeliveryProviderOwnDelivery DeliveryProvider = "own_delivery"
 )
 
 // JSONB тип для работы с JSONB полями PostgreSQL
@@ -390,7 +390,7 @@ type StorefrontFilter struct {
 	Search *string `json:"search,omitempty"`
 
 	// Сортировка
-	SortBy    string `json:"sort_by,omitempty"` // rating, created_at, products_count, distance
+	SortBy    string `json:"sort_by,omitempty"`    // rating, created_at, products_count, distance
 	SortOrder string `json:"sort_order,omitempty"` // asc, desc
 
 	// Пагинация
@@ -407,18 +407,18 @@ type StorefrontMapData struct {
 	Longitude float64 `json:"longitude"`
 	Rating    float64 `json:"rating"`
 	LogoURL   string  `json:"logo_url,omitempty"`
-	
+
 	// Краткая информация для попапа
 	Address       string `json:"address"`
 	Phone         string `json:"phone,omitempty"`
 	WorkingNow    bool   `json:"working_now"`
 	ProductsCount int    `json:"products_count"`
-	
+
 	// Ключевые фичи
-	SupportsCOD         bool `json:"supports_cod"`
-	HasDelivery         bool `json:"has_delivery"`
-	HasSelfPickup       bool `json:"has_self_pickup"`
-	AcceptsCards        bool `json:"accepts_cards"`
+	SupportsCOD   bool `json:"supports_cod"`
+	HasDelivery   bool `json:"has_delivery"`
+	HasSelfPickup bool `json:"has_self_pickup"`
+	AcceptsCards  bool `json:"accepts_cards"`
 }
 
 // StaffPermissions разрешения для сотрудников
@@ -427,18 +427,18 @@ type StaffPermissions struct {
 	CanAddProducts    bool `json:"can_add_products"`
 	CanEditProducts   bool `json:"can_edit_products"`
 	CanDeleteProducts bool `json:"can_delete_products"`
-	
+
 	// Управление заказами
-	CanViewOrders     bool `json:"can_view_orders"`
-	CanProcessOrders  bool `json:"can_process_orders"`
-	CanRefundOrders   bool `json:"can_refund_orders"`
-	
+	CanViewOrders    bool `json:"can_view_orders"`
+	CanProcessOrders bool `json:"can_process_orders"`
+	CanRefundOrders  bool `json:"can_refund_orders"`
+
 	// Управление витриной
 	CanEditStorefront bool `json:"can_edit_storefront"`
 	CanManageStaff    bool `json:"can_manage_staff"`
 	CanViewAnalytics  bool `json:"can_view_analytics"`
 	CanManagePayments bool `json:"can_manage_payments"`
-	
+
 	// Коммуникации
 	CanReplyToReviews bool `json:"can_reply_to_reviews"`
 	CanSendMessages   bool `json:"can_send_messages"`

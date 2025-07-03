@@ -31,7 +31,6 @@ func NewOpenSearchClient(config Config) (*OpenSearchClient, error) {
 		Username:  config.Username,
 		Password:  config.Password,
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("не удалось создать клиент OpenSearch: %w", err)
 	}
@@ -316,6 +315,7 @@ func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, er
 
 	return result, nil
 }
+
 func (c *OpenSearchClient) DeleteIndex(indexName string) error {
 	req := opensearchapi.IndicesDeleteRequest{
 		Index: []string{indexName},

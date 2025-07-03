@@ -32,13 +32,13 @@ type StorefrontProduct struct {
 
 // StorefrontProductImage represents an image of a storefront product
 type StorefrontProductImage struct {
-	ID               int       `json:"id" db:"id"`
-	StorefrontProductID int    `json:"storefront_product_id" db:"storefront_product_id"`
-	ImageURL         string    `json:"image_url" db:"image_url"`
-	ThumbnailURL     string    `json:"thumbnail_url" db:"thumbnail_url"`
-	DisplayOrder     int       `json:"display_order" db:"display_order"`
-	IsDefault        bool      `json:"is_default" db:"is_default"`
-	CreatedAt        time.Time `json:"created_at" db:"created_at"`
+	ID                  int       `json:"id" db:"id"`
+	StorefrontProductID int       `json:"storefront_product_id" db:"storefront_product_id"`
+	ImageURL            string    `json:"image_url" db:"image_url"`
+	ThumbnailURL        string    `json:"thumbnail_url" db:"thumbnail_url"`
+	DisplayOrder        int       `json:"display_order" db:"display_order"`
+	IsDefault           bool      `json:"is_default" db:"is_default"`
+	CreatedAt           time.Time `json:"created_at" db:"created_at"`
 }
 
 // StorefrontProductVariant represents a variant of a product (e.g., size, color)
@@ -71,19 +71,19 @@ type StorefrontInventoryMovement struct {
 
 // ProductFilter represents filter options for products
 type ProductFilter struct {
-	StorefrontID  int      `json:"storefront_id"`
-	CategoryID    *int     `json:"category_id,omitempty"`
-	Search        *string  `json:"search,omitempty"`
-	MinPrice      *float64 `json:"min_price,omitempty"`
-	MaxPrice      *float64 `json:"max_price,omitempty"`
-	StockStatus   *string  `json:"stock_status,omitempty"`
-	IsActive      *bool    `json:"is_active,omitempty"`
-	SKU           *string  `json:"sku,omitempty"`
-	Barcode       *string  `json:"barcode,omitempty"`
-	SortBy        string   `json:"sort_by,omitempty"` // name, price, created_at, stock_quantity
-	SortOrder     string   `json:"sort_order,omitempty"` // asc, desc
-	Limit         int      `json:"limit,omitempty"`
-	Offset        int      `json:"offset,omitempty"`
+	StorefrontID int      `json:"storefront_id"`
+	CategoryID   *int     `json:"category_id,omitempty"`
+	Search       *string  `json:"search,omitempty"`
+	MinPrice     *float64 `json:"min_price,omitempty"`
+	MaxPrice     *float64 `json:"max_price,omitempty"`
+	StockStatus  *string  `json:"stock_status,omitempty"`
+	IsActive     *bool    `json:"is_active,omitempty"`
+	SKU          *string  `json:"sku,omitempty"`
+	Barcode      *string  `json:"barcode,omitempty"`
+	SortBy       string   `json:"sort_by,omitempty"`    // name, price, created_at, stock_quantity
+	SortOrder    string   `json:"sort_order,omitempty"` // asc, desc
+	Limit        int      `json:"limit,omitempty"`
+	Offset       int      `json:"offset,omitempty"`
 }
 
 // CreateProductRequest represents a request to create a product
@@ -132,12 +132,12 @@ type BulkInventoryUpdate struct {
 
 // ProductStats represents product statistics
 type ProductStats struct {
-	TotalProducts   int     `json:"total_products"`
-	ActiveProducts  int     `json:"active_products"`
-	OutOfStock      int     `json:"out_of_stock"`
-	LowStock        int     `json:"low_stock"`
-	TotalValue      float64 `json:"total_value"`
-	TotalSold       int     `json:"total_sold"`
+	TotalProducts  int     `json:"total_products"`
+	ActiveProducts int     `json:"active_products"`
+	OutOfStock     int     `json:"out_of_stock"`
+	LowStock       int     `json:"low_stock"`
+	TotalValue     float64 `json:"total_value"`
+	TotalSold      int     `json:"total_sold"`
 }
 
 // GetStockStatus calculates the stock status based on quantity
@@ -172,8 +172,8 @@ type BulkCreateProductsRequest struct {
 
 // BulkCreateProductsResponse represents the response for bulk product creation
 type BulkCreateProductsResponse struct {
-	Created []int                `json:"created"`    // IDs of successfully created products
-	Failed  []BulkOperationError `json:"failed"`     // Errors for failed operations
+	Created []int                `json:"created"` // IDs of successfully created products
+	Failed  []BulkOperationError `json:"failed"`  // Errors for failed operations
 }
 
 // BulkUpdateProductsRequest represents a request to update multiple products
@@ -189,8 +189,8 @@ type BulkUpdateItem struct {
 
 // BulkUpdateProductsResponse represents the response for bulk product updates
 type BulkUpdateProductsResponse struct {
-	Updated []int                `json:"updated"`    // IDs of successfully updated products
-	Failed  []BulkOperationError `json:"failed"`     // Errors for failed operations
+	Updated []int                `json:"updated"` // IDs of successfully updated products
+	Failed  []BulkOperationError `json:"failed"`  // Errors for failed operations
 }
 
 // BulkDeleteProductsRequest represents a request to delete multiple products
@@ -200,8 +200,8 @@ type BulkDeleteProductsRequest struct {
 
 // BulkDeleteProductsResponse represents the response for bulk product deletion
 type BulkDeleteProductsResponse struct {
-	Deleted []int                `json:"deleted"`    // IDs of successfully deleted products
-	Failed  []BulkOperationError `json:"failed"`     // Errors for failed operations
+	Deleted []int                `json:"deleted"` // IDs of successfully deleted products
+	Failed  []BulkOperationError `json:"failed"`  // Errors for failed operations
 }
 
 // BulkUpdateStatusRequest represents a request to update status of multiple products
@@ -212,13 +212,13 @@ type BulkUpdateStatusRequest struct {
 
 // BulkUpdateStatusResponse represents the response for bulk status update
 type BulkUpdateStatusResponse struct {
-	Updated []int                `json:"updated"`    // IDs of successfully updated products
-	Failed  []BulkOperationError `json:"failed"`     // Errors for failed operations
+	Updated []int                `json:"updated"` // IDs of successfully updated products
+	Failed  []BulkOperationError `json:"failed"`  // Errors for failed operations
 }
 
 // BulkOperationError represents an error for a single item in bulk operation
 type BulkOperationError struct {
-	Index     int    `json:"index,omitempty"`     // Index in the request array
+	Index     int    `json:"index,omitempty"`      // Index in the request array
 	ProductID int    `json:"product_id,omitempty"` // Product ID if available
 	Error     string `json:"error"`                // Error message
 }

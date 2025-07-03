@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
+
 	"backend/internal/config"
 	"backend/internal/proj/global/service"
 	"backend/internal/storage/postgres"
 	"backend/internal/types"
 	"backend/pkg/utils"
-	"context"
-	"fmt"
-	"log"
 )
 
 func main() {
@@ -38,28 +39,28 @@ func main() {
 		log.Printf("Failed to get user: %v", err)
 		// Если пользователь не найден, попробуем создать его
 		fmt.Println("\nПользователь не найден. Создаем нового пользователя...")
-		
+
 		// Создаем нового пользователя
 		newUser := &types.User{
 			Name:       "Dmitry Voroshilov",
 			Email:      targetEmail,
-			GoogleID:   "google_" + utils.GenerateSessionToken()[:20], // Фиктивный Google ID
+			GoogleID:   "google_" + utils.GenerateSessionToken()[:20],            // Фиктивный Google ID
 			PictureURL: "https://lh3.googleusercontent.com/a/default-user=s96-c", // Дефолтное изображение
 			Provider:   "google",
 		}
-		
+
 		// Сохраняем пользователя в базе данных
 		userID, err := db.CreateUser(ctx, newUser)
 		if err != nil {
 			log.Fatal("Failed to create user:", err)
 		}
-		
+
 		// Получаем созданного пользователя
 		user, err = db.GetUserByID(ctx, userID)
 		if err != nil {
 			log.Fatal("Failed to get created user:", err)
 		}
-		
+
 		fmt.Printf("Создан новый пользователь: %s (ID: %d)\n", user.Email, user.ID)
 	}
 

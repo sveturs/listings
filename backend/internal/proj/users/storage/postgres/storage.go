@@ -4,6 +4,7 @@ package postgres
 import (
 	"backend/internal/proj/users/storage"
 	"backend/pkg/logger"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

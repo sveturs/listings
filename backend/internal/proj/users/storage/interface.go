@@ -2,8 +2,9 @@
 package storage
 
 import (
-	"backend/internal/domain/models"
 	"context"
+
+	"backend/internal/domain/models"
 )
 
 // UserRepository определяет интерфейс для работы с пользователями

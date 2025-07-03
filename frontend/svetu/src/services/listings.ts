@@ -1,5 +1,6 @@
 import { apiClient } from './api-client';
 import type { CreateListingState } from '@/contexts/CreateListingContext';
+import type { components } from '@/types/generated/api';
 
 export interface CreateListingRequest {
   category_id: number;
@@ -29,10 +30,11 @@ export interface CreateListingRequest {
   bundle_deals?: boolean;
 }
 
-export interface CreateListingResponse {
-  id: number;
-  message: string;
-}
+// Используем сгенерированный тип из backend с обёрткой SuccessResponse
+export type CreateListingResponse =
+  components['schemas']['utils.SuccessResponseSwag'] & {
+    data?: components['schemas']['handler.IDMessageResponse'];
+  };
 
 export interface UploadImagesRequest {
   listing_id: number;

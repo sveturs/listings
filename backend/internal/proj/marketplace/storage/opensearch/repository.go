@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"math"
 	"net/http"
 	"net/url"
@@ -13,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
@@ -576,7 +577,6 @@ func (r *Repository) getAttributeOptionTranslations(attrName, value string) (map
 	err := r.storage.QueryRow(ctx, query, attrName, value).Scan(
 		&optionValue, &enTranslation, &srTranslation,
 	)
-
 	if err != nil {
 		if err != pgx.ErrNoRows {
 			logger.Info().Msgf("Ошибка получения переводов для атрибута %s, значение %s: %v", attrName, value, err)
@@ -644,8 +644,8 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 }
 
 func processAttributesForIndex(doc map[string]interface{}, attributes []models.ListingAttributeValue,
-	importantAttrs, realEstateFields, carFields map[string]bool, listingID int, r *Repository) {
-
+	importantAttrs, realEstateFields, carFields map[string]bool, listingID int, r *Repository,
+) {
 	realEstateText := make([]string, 0)
 	makeValue, modelValue := "", ""
 	uniqueTextValues := make(map[string]bool)
@@ -2134,12 +2134,33 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		}
 
 		switch params.Sort {
+		case "relevance":
+			// Для сортировки по релевантности используем _score
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"_score": map[string]interface{}{
+						"order": "desc",
+					},
+				},
+				map[string]interface{}{
+					"created_at": map[string]interface{}{
+						"order": "desc",
+					},
+				},
+			}
+			return query
+		case "date":
+			sortField = "created_at"
+			// sortOrder уже установлен из params.SortDirection выше
 		case "date_desc":
 			sortField = "created_at"
 			sortOrder = "desc"
 		case "date_asc":
 			sortField = "created_at"
 			sortOrder = "asc"
+		case "price":
+			sortField = "price"
+			// sortOrder уже установлен из params.SortDirection выше
 		case "price_desc":
 			sortField = "price"
 			sortOrder = "desc"
@@ -2373,6 +2394,7 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 
 	return result, nil
 }
+
 func (r *Repository) docToListing(doc map[string]interface{}, language string) (*models.MarketplaceListing, error) {
 	listing := &models.MarketplaceListing{
 		User:     &models.User{},

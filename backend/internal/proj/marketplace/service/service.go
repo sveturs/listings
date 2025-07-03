@@ -2,15 +2,18 @@
 package service
 
 import (
+	"context"
+
+	"backend/internal/proj/marketplace/repository"
 	"backend/internal/proj/notifications/service"
 	"backend/internal/storage"
-	"context"
 )
 
 type Service struct {
 	Marketplace    MarketplaceServiceInterface
 	Chat           ChatServiceInterface
 	ChatAttachment ChatAttachmentServiceInterface
+	Order          *OrderService
 }
 
 func NewService(storage storage.Storage, notifService service.NotificationServiceInterface) *Service {
@@ -19,10 +22,27 @@ func NewService(storage storage.Storage, notifService service.NotificationServic
 	// This is a temporary service to satisfy the interface requirement
 	dummyTranslation := &dummyTranslationService{}
 
+	// Создаем OrderService если есть доступ к MarketplaceOrderRepository
+	var orderService *OrderService
+	if marketplaceOrderRepo := storage.MarketplaceOrder(); marketplaceOrderRepo != nil {
+		// Создаем адаптеры для репозиториев
+		orderRepoAdapter := repository.NewPostgresOrderAdapter(marketplaceOrderRepo)
+		listingRepoAdapter := repository.NewPostgresMarketplaceAdapter(storage) // storage сам реализует GetListingByID
+
+		orderService = NewOrderService(
+			orderRepoAdapter,         // orderRepo
+			listingRepoAdapter,       // listingRepo
+			NewPaymentService(),      // paymentService
+			NewNotificationAdapter(), // notificationService
+			5.0,                      // platformFeeRate (5%)
+		)
+	}
+
 	return &Service{
 		Marketplace:    NewMarketplaceService(storage, dummyTranslation),
 		Chat:           NewChatService(storage, notifService),
 		ChatAttachment: nil, // Will be set by global service
+		Order:          orderService,
 	}
 }
 

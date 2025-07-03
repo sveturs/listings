@@ -2,8 +2,9 @@
 package handler
 
 import (
-	"backend/pkg/utils"
 	"strconv"
+
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

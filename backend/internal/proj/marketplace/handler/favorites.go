@@ -2,14 +2,16 @@
 package handler
 
 import (
+	"strconv"
+	"strings"
+
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
+
 	"github.com/gofiber/fiber/v2"
-	"strconv"
-	"strings"
 )
 
 // FavoritesHandler обрабатывает запросы, связанные с избранными объявлениями

@@ -1,9 +1,10 @@
 package opensearch
 
 import (
+	"context"
+
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	"context"
 )
 
 // MarketplaceSearchRepository определяет интерфейс для поисковых операций

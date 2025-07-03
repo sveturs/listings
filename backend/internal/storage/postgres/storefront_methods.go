@@ -1,11 +1,12 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"backend/internal/domain/models"
 )
 
 // SetWorkingHours устанавливает часы работы витрины
@@ -34,7 +35,6 @@ func (r *storefrontRepo) SetWorkingHours(ctx context.Context, hours []*models.St
 				storefront_id, day_of_week, open_time, close_time, is_closed, special_date, special_note
 			) VALUES ($1, $2, $3, $4, $5, $6, $7)
 		`, h.StorefrontID, h.DayOfWeek, h.OpenTime, h.CloseTime, h.IsClosed, h.SpecialDate, h.SpecialNote)
-		
 		if err != nil {
 			return fmt.Errorf("failed to insert hours: %w", err)
 		}
@@ -51,7 +51,6 @@ func (r *storefrontRepo) GetWorkingHours(ctx context.Context, storefrontID int) 
 		WHERE storefront_id = $1
 		ORDER BY day_of_week, special_date
 	`, storefrontID)
-	
 	if err != nil {
 		return nil, fmt.Errorf("failed to get working hours: %w", err)
 	}
@@ -60,7 +59,7 @@ func (r *storefrontRepo) GetWorkingHours(ctx context.Context, storefrontID int) 
 	var hours []*models.StorefrontHours
 	for rows.Next() {
 		h := &models.StorefrontHours{}
-		err := rows.Scan(&h.ID, &h.StorefrontID, &h.DayOfWeek, &h.OpenTime, &h.CloseTime, 
+		err := rows.Scan(&h.ID, &h.StorefrontID, &h.DayOfWeek, &h.OpenTime, &h.CloseTime,
 			&h.IsClosed, &h.SpecialDate, &h.SpecialNote)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan hours: %w", err)
@@ -92,7 +91,7 @@ func (r *storefrontRepo) IsOpenNow(ctx context.Context, storefrontID int) (bool,
 			)
 		)
 	`, storefrontID).Scan(&isOpen)
-	
+
 	return isOpen, err
 }
 
@@ -109,11 +108,11 @@ func (r *storefrontRepo) SetPaymentMethods(ctx context.Context, methods []*model
 	defer tx.Rollback(ctx)
 
 	storefrontID := methods[0].StorefrontID
-	
+
 	// Обновляем существующие или вставляем новые
 	for _, m := range methods {
 		settingsJSON, _ := json.Marshal(m.Settings)
-		
+
 		_, err = tx.Exec(ctx, `
 			INSERT INTO storefront_payment_methods (
 				storefront_id, method_type, is_enabled, provider, settings,
@@ -129,7 +128,6 @@ func (r *storefrontRepo) SetPaymentMethods(ctx context.Context, methods []*model
 				max_amount = EXCLUDED.max_amount
 		`, storefrontID, m.MethodType, m.IsEnabled, m.Provider, settingsJSON,
 			m.TransactionFee, m.MinAmount, m.MaxAmount)
-		
 		if err != nil {
 			return fmt.Errorf("failed to upsert payment method: %w", err)
 		}
@@ -147,7 +145,6 @@ func (r *storefrontRepo) GetPaymentMethods(ctx context.Context, storefrontID int
 		WHERE storefront_id = $1
 		ORDER BY method_type
 	`, storefrontID)
-	
 	if err != nil {
 		return nil, fmt.Errorf("failed to get payment methods: %w", err)
 	}
@@ -157,17 +154,17 @@ func (r *storefrontRepo) GetPaymentMethods(ctx context.Context, storefrontID int
 	for rows.Next() {
 		m := &models.StorefrontPaymentMethod{}
 		var settings []byte
-		
+
 		err := rows.Scan(&m.ID, &m.StorefrontID, &m.MethodType, &m.IsEnabled,
 			&m.Provider, &settings, &m.TransactionFee, &m.MinAmount, &m.MaxAmount, &m.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan payment method: %w", err)
 		}
-		
+
 		if settings != nil {
 			json.Unmarshal(settings, &m.Settings)
 		}
-		
+
 		methods = append(methods, m)
 	}
 
@@ -191,7 +188,7 @@ func (r *storefrontRepo) SetDeliveryOptions(ctx context.Context, options []*mode
 		availableDaysJSON, _ := json.Marshal(opt.AvailableDays)
 		providerConfigJSON, _ := json.Marshal(opt.ProviderConfig)
 		supportedPaymentsJSON, _ := json.Marshal(opt.SupportedPaymentMethods)
-		
+
 		if opt.ID > 0 {
 			// Обновляем существующую
 			_, err = tx.Exec(ctx, `
@@ -232,7 +229,7 @@ func (r *storefrontRepo) SetDeliveryOptions(ctx context.Context, options []*mode
 				zonesJSON, availableDaysJSON, opt.CutoffTime,
 				supportedPaymentsJSON, providerConfigJSON, opt.IsEnabled)
 		}
-		
+
 		if err != nil {
 			return fmt.Errorf("failed to save delivery option: %w", err)
 		}
@@ -256,7 +253,6 @@ func (r *storefrontRepo) GetDeliveryOptions(ctx context.Context, storefrontID in
 		WHERE storefront_id = $1
 		ORDER BY name
 	`, storefrontID)
-	
 	if err != nil {
 		return nil, fmt.Errorf("failed to get delivery options: %w", err)
 	}
@@ -266,7 +262,7 @@ func (r *storefrontRepo) GetDeliveryOptions(ctx context.Context, storefrontID in
 	for rows.Next() {
 		opt := &models.StorefrontDeliveryOption{}
 		var zonesJSON, availableDaysJSON, providerConfigJSON, supportedPaymentsJSON []byte
-		
+
 		err := rows.Scan(
 			&opt.ID, &opt.StorefrontID, &opt.Name, &opt.Description, &opt.Provider,
 			&opt.BasePrice, &opt.PricePerKm, &opt.PricePerKg, &opt.FreeAboveAmount,
@@ -280,7 +276,7 @@ func (r *storefrontRepo) GetDeliveryOptions(ctx context.Context, storefrontID in
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan delivery option: %w", err)
 		}
-		
+
 		// Парсим JSON поля
 		if zonesJSON != nil {
 			json.Unmarshal(zonesJSON, &opt.Zones)
@@ -294,7 +290,7 @@ func (r *storefrontRepo) GetDeliveryOptions(ctx context.Context, storefrontID in
 		if supportedPaymentsJSON != nil {
 			json.Unmarshal(supportedPaymentsJSON, &opt.SupportedPaymentMethods)
 		}
-		
+
 		options = append(options, opt)
 	}
 
@@ -304,34 +300,33 @@ func (r *storefrontRepo) GetDeliveryOptions(ctx context.Context, storefrontID in
 // AddStaff добавляет сотрудника
 func (r *storefrontRepo) AddStaff(ctx context.Context, staff *models.StorefrontStaff) error {
 	permissionsJSON, _ := json.Marshal(staff.Permissions)
-	
+
 	_, err := r.db.pool.Exec(ctx, `
 		INSERT INTO storefront_staff (storefront_id, user_id, role, permissions)
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (storefront_id, user_id) 
 		DO UPDATE SET role = EXCLUDED.role, permissions = EXCLUDED.permissions, updated_at = CURRENT_TIMESTAMP
 	`, staff.StorefrontID, staff.UserID, staff.Role, permissionsJSON)
-	
+
 	return err
 }
 
 // UpdateStaff обновляет права сотрудника
 func (r *storefrontRepo) UpdateStaff(ctx context.Context, id int, permissions models.JSONB) error {
 	permissionsJSON, _ := json.Marshal(permissions)
-	
+
 	result, err := r.db.pool.Exec(ctx, `
 		UPDATE storefront_staff 
 		SET permissions = $2, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1
 	`, id, permissionsJSON)
-	
 	if err != nil {
 		return err
 	}
 	if result.RowsAffected() == 0 {
 		return ErrNotFound
 	}
-	
+
 	return nil
 }
 
@@ -341,14 +336,13 @@ func (r *storefrontRepo) RemoveStaff(ctx context.Context, storefrontID, userID i
 		DELETE FROM storefront_staff 
 		WHERE storefront_id = $1 AND user_id = $2 AND role != 'owner'
 	`, storefrontID, userID)
-	
 	if err != nil {
 		return err
 	}
 	if result.RowsAffected() == 0 {
 		return ErrNotFound
 	}
-	
+
 	return nil
 }
 
@@ -360,7 +354,6 @@ func (r *storefrontRepo) GetStaff(ctx context.Context, storefrontID int) ([]*mod
 		WHERE storefront_id = $1
 		ORDER BY role, created_at
 	`, storefrontID)
-	
 	if err != nil {
 		return nil, err
 	}
@@ -370,17 +363,17 @@ func (r *storefrontRepo) GetStaff(ctx context.Context, storefrontID int) ([]*mod
 	for rows.Next() {
 		s := &models.StorefrontStaff{}
 		var permissionsJSON []byte
-		
+
 		err := rows.Scan(&s.ID, &s.StorefrontID, &s.UserID, &s.Role, &permissionsJSON,
 			&s.LastActiveAt, &s.ActionsCount, &s.CreatedAt, &s.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		if permissionsJSON != nil {
 			json.Unmarshal(permissionsJSON, &s.Permissions)
 		}
-		
+
 		staff = append(staff, s)
 	}
 
@@ -394,7 +387,7 @@ func (r *storefrontRepo) RecordView(ctx context.Context, storefrontID int) error
 		SET views_count = views_count + 1
 		WHERE id = $1
 	`, storefrontID)
-	
+
 	return err
 }
 
@@ -405,7 +398,7 @@ func (r *storefrontRepo) RecordAnalytics(ctx context.Context, analytics *models.
 	topCategoriesJSON, _ := json.Marshal(analytics.TopCategories)
 	paymentMethodsJSON, _ := json.Marshal(analytics.PaymentMethodsUsage)
 	ordersByCityJSON, _ := json.Marshal(analytics.OrdersByCity)
-	
+
 	_, err := r.db.pool.Exec(ctx, `
 		INSERT INTO storefront_analytics (
 			storefront_id, date,
@@ -449,7 +442,7 @@ func (r *storefrontRepo) RecordAnalytics(ctx context.Context, analytics *models.
 		analytics.ProductViews, analytics.AddToCartCount, analytics.CheckoutCount,
 		trafficJSON, topProductsJSON, topCategoriesJSON, ordersByCityJSON,
 	)
-	
+
 	return err
 }
 
@@ -468,7 +461,6 @@ func (r *storefrontRepo) GetAnalytics(ctx context.Context, storefrontID int, fro
 		WHERE storefront_id = $1 AND date BETWEEN $2 AND $3
 		ORDER BY date DESC
 	`, storefrontID, from, to)
-	
 	if err != nil {
 		return nil, err
 	}
@@ -478,7 +470,7 @@ func (r *storefrontRepo) GetAnalytics(ctx context.Context, storefrontID int, fro
 	for rows.Next() {
 		a := &models.StorefrontAnalytics{}
 		var trafficJSON, topProductsJSON, topCategoriesJSON, paymentMethodsJSON, ordersByCityJSON []byte
-		
+
 		err := rows.Scan(
 			&a.ID, &a.StorefrontID, &a.Date,
 			&a.PageViews, &a.UniqueVisitors, &a.BounceRate, &a.AvgSessionTime,
@@ -491,7 +483,7 @@ func (r *storefrontRepo) GetAnalytics(ctx context.Context, storefrontID int, fro
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Парсим JSON поля
 		if trafficJSON != nil {
 			json.Unmarshal(trafficJSON, &a.TrafficSources)
@@ -508,7 +500,7 @@ func (r *storefrontRepo) GetAnalytics(ctx context.Context, storefrontID int, fro
 		if ordersByCityJSON != nil {
 			json.Unmarshal(ordersByCityJSON, &a.OrdersByCity)
 		}
-		
+
 		analytics = append(analytics, a)
 	}
 
@@ -523,7 +515,7 @@ func (r *storefrontRepo) GetClusters(ctx context.Context, bounds GeoBounds, zoom
 	case zoomLevel <= 10:
 		clusterSize = 1.0 // 1 градус
 	case zoomLevel <= 14:
-		clusterSize = 0.1 // 0.1 градуса  
+		clusterSize = 0.1 // 0.1 градуса
 	case zoomLevel <= 16:
 		clusterSize = 0.01 // 0.01 градуса
 	default:
@@ -542,7 +534,6 @@ func (r *storefrontRepo) GetClusters(ctx context.Context, bounds GeoBounds, zoom
 		GROUP BY cluster_lat, cluster_lng
 		HAVING COUNT(*) > 1
 	`, clusterSize, bounds.MinLat, bounds.MaxLat, bounds.MinLng, bounds.MaxLng)
-	
 	if err != nil {
 		return nil, err
 	}

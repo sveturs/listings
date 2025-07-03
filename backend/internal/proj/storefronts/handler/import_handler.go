@@ -5,9 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
 	"backend/internal/domain/models"
 	"backend/internal/proj/storefronts/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // ImportHandler handles product import endpoints
@@ -41,7 +42,7 @@ func (h *ImportHandler) ImportFromURL(c *fiber.Ctx) error {
 	// Try to get storefront ID from locals first (for slug-based routes)
 	var storefrontID int
 	var err error
-	
+
 	if id, ok := c.Locals("storefrontID").(int); ok {
 		storefrontID = id
 	} else {
@@ -121,7 +122,7 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 	// Try to get storefront ID from locals first (for slug-based routes)
 	var storefrontID int
 	var err error
-	
+
 	if id, ok := c.Locals("storefrontID").(int); ok {
 		storefrontID = id
 	} else {
@@ -165,9 +166,9 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 
 	// Parse form data
 	req := models.ImportRequest{
-		StorefrontID: storefrontID,
-		FileType:     c.FormValue("file_type"),
-		UpdateMode:   c.FormValue("update_mode"),
+		StorefrontID:        storefrontID,
+		FileType:            c.FormValue("file_type"),
+		UpdateMode:          c.FormValue("update_mode"),
 		CategoryMappingMode: c.FormValue("category_mapping_mode"),
 	}
 
@@ -222,7 +223,7 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 	// Try to get storefront ID from locals first (for slug-based routes)
 	var storefrontID int
 	var err error
-	
+
 	if id, ok := c.Locals("storefrontID").(int); ok {
 		storefrontID = id
 	} else {
@@ -292,7 +293,7 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/import/csv-template [get]
 func (h *ImportHandler) GetCSVTemplate(c *fiber.Ctx) error {
 	template := h.importService.GetCSVTemplate()
-	
+
 	// Convert to CSV format
 	var csvContent string
 	for _, row := range template {
@@ -311,7 +312,7 @@ func (h *ImportHandler) GetCSVTemplate(c *fiber.Ctx) error {
 
 	c.Set("Content-Type", "text/csv")
 	c.Set("Content-Disposition", `attachment; filename="product_import_template.csv"`)
-	
+
 	return c.SendString(csvContent)
 }
 
@@ -325,39 +326,43 @@ func (h *ImportHandler) GetCSVTemplate(c *fiber.Ctx) error {
 func (h *ImportHandler) GetImportFormats(c *fiber.Ctx) error {
 	formats := map[string]interface{}{
 		"xml": map[string]interface{}{
-			"description": "XML format supporting Digital Vision Serbian standard",
+			"description":     "XML format supporting Digital Vision Serbian standard",
 			"file_extensions": []string{".xml"},
 			"sample_structure": map[string]interface{}{
 				"root": "artikli",
 				"item": "artikal",
-				"fields": []string{"id", "sifra", "naziv", "kategorija1", "kategorija2", "kategorija3", 
-					"uvoznik", "godinaUvoza", "zemljaPorekla", "vpCena", "mpCena", "dostupan", 
-					"naAkciji", "opis", "barKod", "slike"},
+				"fields": []string{
+					"id", "sifra", "naziv", "kategorija1", "kategorija2", "kategorija3",
+					"uvoznik", "godinaUvoza", "zemljaPorekla", "vpCena", "mpCena", "dostupan",
+					"naAkciji", "opis", "barKod", "slike",
+				},
 			},
 		},
 		"csv": map[string]interface{}{
-			"description": "CSV format with customizable headers",
-			"file_extensions": []string{".csv"},
+			"description":      "CSV format with customizable headers",
+			"file_extensions":  []string{".csv"},
 			"required_headers": []string{"name", "price", "currency"},
-			"optional_headers": []string{"sku", "description", "wholesale_price", "category", 
-				"stock_quantity", "barcode", "image_url", "is_active", "on_sale", "sale_price", 
-				"brand", "model", "country_of_origin"},
-			"encoding": "UTF-8",
+			"optional_headers": []string{
+				"sku", "description", "wholesale_price", "category",
+				"stock_quantity", "barcode", "image_url", "is_active", "on_sale", "sale_price",
+				"brand", "model", "country_of_origin",
+			},
+			"encoding":  "UTF-8",
 			"delimiter": ",",
 		},
 		"zip": map[string]interface{}{
-			"description": "ZIP archive containing XML or CSV files",
-			"file_extensions": []string{".zip"},
+			"description":        "ZIP archive containing XML or CSV files",
+			"file_extensions":    []string{".zip"},
 			"supported_contents": []string{"xml", "csv"},
-			"note": "All supported files in the archive will be processed",
+			"note":               "All supported files in the archive will be processed",
 		},
 	}
 
 	return c.JSON(map[string]interface{}{
-		"supported_formats": formats,
-		"update_modes": []string{"create_only", "update_only", "upsert"},
-		"category_mapping_modes": []string{"auto", "manual", "skip"},
-		"max_file_size": "100MB",
+		"supported_formats":       formats,
+		"update_modes":            []string{"create_only", "update_only", "upsert"},
+		"category_mapping_modes":  []string{"auto", "manual", "skip"},
+		"max_file_size":           "100MB",
 		"max_products_per_import": 10000,
 	})
 }
@@ -383,7 +388,7 @@ func (h *ImportHandler) GetJobs(c *fiber.Ctx) error {
 	// Try to get storefront ID from locals first (for slug-based routes)
 	var storefrontID int
 	var err error
-	
+
 	if id, ok := c.Locals("storefrontID").(int); ok {
 		storefrontID = id
 	} else {
@@ -405,7 +410,7 @@ func (h *ImportHandler) GetJobs(c *fiber.Ctx) error {
 			limit = parsed
 		}
 	}
-	
+
 	offset := 0
 	if o := c.Query("offset"); o != "" {
 		if parsed, err := strconv.Atoi(o); err == nil && parsed >= 0 {

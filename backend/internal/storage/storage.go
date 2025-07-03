@@ -2,13 +2,14 @@
 package storage
 
 import (
+	"context"
+	"database/sql"
+
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage/filestorage"
 	"backend/internal/types"
-	"context"
-	"database/sql"
 )
 
 type Storage interface {
@@ -133,7 +134,7 @@ type Storage interface {
 	MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error
 	ArchiveChat(ctx context.Context, chatID int, userID int) error
 	GetUnreadMessagesCount(ctx context.Context, userID int) (int, error)
-	
+
 	// Chat attachments methods
 	CreateChatAttachment(ctx context.Context, attachment *models.ChatAttachment) error
 	GetChatAttachment(ctx context.Context, attachmentID int) (*models.ChatAttachment, error)
@@ -141,36 +142,47 @@ type Storage interface {
 	DeleteChatAttachment(ctx context.Context, attachmentID int) error
 	UpdateMessageAttachmentsCount(ctx context.Context, messageID int, count int) error
 	GetMessageByID(ctx context.Context, messageID int) (*models.MarketplaceMessage, error)
-	
+
 	// Chat verification methods
 	GetChatActivityStats(ctx context.Context, buyerID int, sellerID int, listingID int) (*models.ChatActivityStats, error)
-	
+
 	// Rating aggregation methods
 	GetUserAggregatedRating(ctx context.Context, userID int) (*models.UserAggregatedRating, error)
 	GetStorefrontAggregatedRating(ctx context.Context, storefrontID int) (*models.StorefrontAggregatedRating, error)
 	RefreshRatingViews(ctx context.Context) error
-	
+
 	// Review confirmation and dispute methods
 	CreateReviewConfirmation(ctx context.Context, confirmation *models.ReviewConfirmation) error
 	GetReviewConfirmation(ctx context.Context, reviewID int) (*models.ReviewConfirmation, error)
 	CreateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error
 	GetReviewDispute(ctx context.Context, reviewID int) (*models.ReviewDispute, error)
 	UpdateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error
-	
+
 	// Review permission check
 	CanUserReviewEntity(ctx context.Context, userID int, entityType string, entityID int) (*models.CanReviewResponse, error)
 
 	Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 
 	// Storefront methods
-	CreateStorefront(ctx context.Context, storefront *models.Storefront) (int, error)
+	CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error)
 	GetUserStorefronts(ctx context.Context, userID int) ([]models.Storefront, error)
 	GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error)
 	UpdateStorefront(ctx context.Context, storefront *models.Storefront) error
 	DeleteStorefront(ctx context.Context, id int) error
-	
+
 	// Storefront repository access
 	Storefront() interface{}
+
+	// Orders system repository access
+	Cart() interface{}
+	Order() interface{}
+	Inventory() interface{}
+
+	// Marketplace orders repository access
+	MarketplaceOrder() interface{}
+
+	// Storefront product search repository access
+	StorefrontProductSearch() interface{}
 
 	// OpenSearch методы
 	SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
@@ -181,7 +193,7 @@ type Storage interface {
 	IndexListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListingIndex(ctx context.Context, id string) error
 	PrepareIndex(ctx context.Context) error
-	
+
 	// Storefront OpenSearch методы
 	SearchStorefrontsOpenSearch(ctx context.Context, params *opensearch.StorefrontSearchParams) (*opensearch.StorefrontSearchResult, error)
 	IndexStorefront(ctx context.Context, storefront *models.Storefront) error

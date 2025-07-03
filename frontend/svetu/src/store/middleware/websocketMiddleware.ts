@@ -34,7 +34,9 @@ export const websocketMiddleware: Middleware =
       ws = chatService.connectWebSocket((event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('WebSocket message:', data);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('WebSocket message:', data);
+          }
 
           switch (data.type) {
             case 'new_message':
@@ -107,8 +109,19 @@ export const websocketMiddleware: Middleware =
               // Обрабатываем удаление вложений если нужно
               break;
 
+            case 'online_users_list':
+              // Обработка списка онлайн пользователей
+              if (data.payload && data.payload.users) {
+                data.payload.users.forEach((userId: number) => {
+                  store.dispatch(handleUserOnline({ user_id: userId }));
+                });
+              }
+              break;
+
             default:
-              console.log('Unknown WebSocket message type:', data.type);
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Unknown WebSocket message type:', data.type);
+              }
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -126,7 +139,9 @@ export const websocketMiddleware: Middleware =
 
       // Запрашиваем статус всех пользователей при подключении
       ws.addEventListener('open', () => {
-        console.log('WebSocket connected, requesting user statuses');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('WebSocket connected, requesting user statuses');
+        }
 
         // Получаем ID всех пользователей из чатов
         const state = store.getState() as RootState;

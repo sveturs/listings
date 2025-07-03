@@ -174,7 +174,7 @@ export default function StorefrontPage({ params }: Props) {
             </div>
 
             {/* Products Section */}
-            <StorefrontProducts storefrontId={storefront.id || 0} />
+            <StorefrontProducts storefrontSlug={slug} />
 
             {/* Location Map */}
             {storefront.location &&

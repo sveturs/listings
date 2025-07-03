@@ -204,9 +204,9 @@ class ConfigManager {
       return config.api.internalUrl;
     }
 
-    // В разработке на клиенте используем пустую строку для proxy
+    // В разработке на клиенте используем прямой URL к backend
     if (config.env.isDevelopment && !config.env.isServer) {
-      return '';
+      return config.api.url;
     }
 
     return config.api.url;

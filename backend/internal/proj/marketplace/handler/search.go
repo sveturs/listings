@@ -2,15 +2,17 @@
 package handler
 
 import (
+	"math"
+	"strconv"
+
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	"backend/pkg/utils"
+
 	"github.com/gofiber/fiber/v2"
-	"math"
-	"strconv"
 )
 
 // SearchHandler обрабатывает запросы, связанные с поиском

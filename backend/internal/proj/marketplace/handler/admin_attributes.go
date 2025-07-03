@@ -744,7 +744,6 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 		input.SortOrder,
 		input.CustomComponent,
 	)
-
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to update attribute category settings")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateAttributeCategoryError")
@@ -981,7 +980,6 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 			INSERT INTO category_attribute_mapping (category_id, attribute_id, is_enabled, is_required, sort_order, custom_component)
 			VALUES ($1, $2, $3, $4, $5, $6)
 		`, categoryID, mapping.AttributeID, mapping.IsEnabled, mapping.IsRequired, mapping.SortOrder, mapping.CustomComponent)
-
 		if err != nil {
 			errors = append(errors, "marketplace.addAttributeError")
 			continue

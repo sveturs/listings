@@ -1,11 +1,12 @@
 package service
 
 import (
+	"context"
+	"fmt"
+
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/storage"
-	"context"
-	"fmt"
 )
 
 type ContactsService struct {

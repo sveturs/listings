@@ -3,10 +3,11 @@
 package handler
 
 // WebhookResponse represents webhook processing response
-type WebhookResponse struct {
-	Status  string `json:"status" example:"success"`
-	Message string `json:"message" example:"payments.webhook.processed"`
-}
+// Commented out due to conflict with order_webhook_handler.go
+// type WebhookResponse struct {
+// 	Status  string `json:"status" example:"success"`
+// 	Message string `json:"message" example:"payments.webhook.processed"`
+// }
 
 // StripeWebhookRequest represents the expected structure from Stripe webhook
 // This is a simplified version - actual Stripe webhooks have more fields

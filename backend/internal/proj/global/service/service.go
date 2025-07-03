@@ -2,6 +2,8 @@
 package service
 
 import (
+	"log"
+
 	"backend/internal/config"
 	balance "backend/internal/proj/balance/service"
 	geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
@@ -14,7 +16,6 @@ import (
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
-	"log"
 )
 
 type Service struct {
@@ -40,17 +41,13 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	notificationSvc := notificationService.NewService(storage)
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
-	
+
 	// Создаем сервис витрин (временно без services, передадим позже)
 	var storefrontSvc storefrontService.StorefrontService
 
-	// Создаем сервис платежей с передачей сервиса баланса
-	stripeService := payment.NewStripeService(
-		cfg.StripeAPIKey,
-		cfg.StripeWebhookSecret,
-		cfg.FrontendURL,
-		balanceSvc,
-	)
+	// Создаем mock сервис платежей для разработки
+	// В продакшене здесь будет AllSecure сервис
+	paymentSvc := payment.NewMockPaymentService(cfg.FrontendURL)
 	// Create services
 	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification)
 	contactsSvc := marketplaceService.NewContactsService(storage)
@@ -93,24 +90,24 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 		notification:   notificationSvc,
 		translation:    translationSvc,
 		balance:        balanceSvc,
-		payment:        stripeService,
+		payment:        paymentSvc,
 		storefront:     storefrontSvc,
 		storage:        storage,
 		geocode:        geocodeSvc,
 		fileStorage:    fileStorageSvc,
 		chatAttachment: chatAttachmentSvc,
 	}
-	
+
 	// Теперь создаем сервис витрин с правильными зависимостями
 	storefrontSvc = storefrontService.NewStorefrontService(s)
 	if svc, ok := storefrontSvc.(*storefrontService.StorefrontServiceImpl); ok {
 		svc.SetServices(s)
 	}
 	s.storefront = storefrontSvc
-	
+
 	// Инициализация сервиса унифицированного поиска
 	s.unifiedSearch = NewUnifiedSearchService(s)
-	
+
 	return s
 }
 
@@ -186,4 +183,11 @@ func (s *Service) ChatAttachment() marketplaceService.ChatAttachmentServiceInter
 
 func (s *Service) UnifiedSearch() UnifiedSearchServiceInterface {
 	return s.unifiedSearch
+}
+
+func (s *Service) Orders() marketplaceService.OrderServiceInterface {
+	if s.marketplace.Order != nil {
+		return s.marketplace.Order
+	}
+	return nil
 }

@@ -1,15 +1,16 @@
 package handler
 
 import (
+	"strconv"
+	"strings"
+	"time"
+
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/proj/storefronts/service"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -134,7 +135,7 @@ func (h *StorefrontHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id} [put]
 func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -180,7 +181,7 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id} [delete]
 func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -235,29 +236,29 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 	if userID := c.QueryInt("user_id"); userID > 0 {
 		filter.UserID = &userID
 	}
-	
+
 	if isActive := c.Query("is_active"); isActive != "" {
 		active := isActive == "true"
 		filter.IsActive = &active
 	}
-	
+
 	if isVerified := c.Query("is_verified"); isVerified != "" {
 		verified := isVerified == "true"
 		filter.IsVerified = &verified
 	}
-	
+
 	if city := c.Query("city"); city != "" {
 		filter.City = &city
 	}
-	
+
 	if minRating, err := strconv.ParseFloat(c.Query("min_rating"), 64); err == nil {
 		filter.MinRating = &minRating
 	}
-	
+
 	if search := c.Query("search"); search != "" {
 		filter.Search = &search
 	}
-	
+
 	// Геофильтр
 	if lat, err := strconv.ParseFloat(c.Query("lat"), 64); err == nil {
 		filter.Latitude = &lat
@@ -268,11 +269,11 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 	if radius, err := strconv.ParseFloat(c.Query("radius_km"), 64); err == nil {
 		filter.RadiusKm = &radius
 	}
-	
+
 	// Сортировка
 	filter.SortBy = c.Query("sort_by", "created_at")
 	filter.SortOrder = c.Query("sort_order", "desc")
-	
+
 	// Пагинация
 	if limit := c.QueryInt("limit", 20); limit > 0 && limit <= 100 {
 		filter.Limit = limit
@@ -305,7 +306,7 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/my [get]
 func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
 	logger.Info().Msg("GetMyStorefronts called")
-	
+
 	userID := c.Locals("user_id").(int)
 	logger.Info().Int("userID", userID).Msg("Getting storefronts for user")
 
@@ -313,7 +314,7 @@ func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
 	if err != nil {
 		// Логируем конкретную ошибку
 		logger.Error().Err(err).Int("userID", userID).Msg("Failed to get user storefronts")
-		
+
 		// Обрабатываем специфичные ошибки
 		switch err {
 		case service.ErrRepositoryNotInitialized:
@@ -545,7 +546,7 @@ func (h *StorefrontHandler) GetBusinessesInBuilding(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id}/hours [put]
 func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -588,7 +589,7 @@ func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id}/payment-methods [put]
 func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -631,7 +632,7 @@ func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id}/delivery-options [put]
 func (h *StorefrontHandler) UpdateDeliveryOptions(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -702,7 +703,7 @@ func (h *StorefrontHandler) RecordView(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id}/analytics [get]
 func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -738,9 +739,9 @@ func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
 
 type StorefrontsListResponse struct {
 	Storefronts []*models.Storefront `json:"storefronts"`
-	Total       int                     `json:"total"`
-	Limit       int                     `json:"limit"`
-	Offset      int                     `json:"offset"`
+	Total       int                  `json:"total"`
+	Limit       int                  `json:"limit"`
+	Offset      int                  `json:"offset"`
 }
 
 // UploadLogo загружает логотип витрины
@@ -760,7 +761,7 @@ type StorefrontsListResponse struct {
 // @Router /api/v1/storefronts/{id}/logo [post]
 func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -816,7 +817,7 @@ func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id}/banner [post]
 func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -874,7 +875,7 @@ func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id}/analytics [get]
 func (h *StorefrontHandler) GetStorefrontAnalytics(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -883,10 +884,10 @@ func (h *StorefrontHandler) GetStorefrontAnalytics(c *fiber.Ctx) error {
 	// Парсим даты из query параметров
 	fromStr := c.Query("from")
 	toStr := c.Query("to")
-	
+
 	var from, to time.Time
 	now := time.Now()
-	
+
 	if fromStr != "" {
 		from, err = time.Parse(time.RFC3339, fromStr)
 		if err != nil {
@@ -896,7 +897,7 @@ func (h *StorefrontHandler) GetStorefrontAnalytics(c *fiber.Ctx) error {
 		// По умолчанию - последние 30 дней
 		from = now.AddDate(0, 0, -30)
 	}
-	
+
 	if toStr != "" {
 		to, err = time.Parse(time.RFC3339, toStr)
 		if err != nil {

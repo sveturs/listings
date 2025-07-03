@@ -7,29 +7,29 @@ import (
 
 // AttributeGroup представляет группу атрибутов
 type AttributeGroup struct {
-	ID           int       `json:"id" db:"id"`
-	Name         string    `json:"name" db:"name"`
-	DisplayName  string    `json:"display_name" db:"display_name"`
-	Description  *string   `json:"description" db:"description"`
-	Icon         *string   `json:"icon" db:"icon"`
-	SortOrder    int       `json:"sort_order" db:"sort_order"`
-	IsActive     bool      `json:"is_active" db:"is_active"`
-	IsSystem     bool      `json:"is_system" db:"is_system"`
-	CreatedAt    time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
+	ID          int       `json:"id" db:"id"`
+	Name        string    `json:"name" db:"name"`
+	DisplayName string    `json:"display_name" db:"display_name"`
+	Description *string   `json:"description" db:"description"`
+	Icon        *string   `json:"icon" db:"icon"`
+	SortOrder   int       `json:"sort_order" db:"sort_order"`
+	IsActive    bool      `json:"is_active" db:"is_active"`
+	IsSystem    bool      `json:"is_system" db:"is_system"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // AttributeGroupItem представляет атрибут в группе
 type AttributeGroupItem struct {
-	ID                 int             `json:"id" db:"id"`
-	GroupID            int             `json:"group_id" db:"group_id"`
-	AttributeID        int             `json:"attribute_id" db:"attribute_id"`
-	Icon               *string         `json:"icon" db:"icon"`
-	SortOrder          int             `json:"sort_order" db:"sort_order"`
-	CustomDisplayName  *string         `json:"custom_display_name" db:"custom_display_name"`
-	VisibilityCondition json.RawMessage `json:"visibility_condition" db:"visibility_condition"`
-	CreatedAt          time.Time       `json:"created_at" db:"created_at"`
-	Attribute          *CategoryAttribute `json:"attribute,omitempty"`
+	ID                  int                `json:"id" db:"id"`
+	GroupID             int                `json:"group_id" db:"group_id"`
+	AttributeID         int                `json:"attribute_id" db:"attribute_id"`
+	Icon                *string            `json:"icon" db:"icon"`
+	SortOrder           int                `json:"sort_order" db:"sort_order"`
+	CustomDisplayName   *string            `json:"custom_display_name" db:"custom_display_name"`
+	VisibilityCondition json.RawMessage    `json:"visibility_condition" db:"visibility_condition"`
+	CreatedAt           time.Time          `json:"created_at" db:"created_at"`
+	Attribute           *CategoryAttribute `json:"attribute,omitempty"`
 }
 
 // CategoryAttributeGroup представляет связь группы атрибутов с категорией
@@ -75,10 +75,10 @@ type UpdateAttributeGroupRequest struct {
 
 // AddItemToGroupRequest запрос на добавление атрибута в группу
 type AddItemToGroupRequest struct {
-	AttributeID        int             `json:"attribute_id" validate:"required"`
-	Icon               *string         `json:"icon"`
-	SortOrder          int             `json:"sort_order"`
-	CustomDisplayName  *string         `json:"custom_display_name"`
+	AttributeID         int             `json:"attribute_id" validate:"required"`
+	Icon                *string         `json:"icon"`
+	SortOrder           int             `json:"sort_order"`
+	CustomDisplayName   *string         `json:"custom_display_name"`
 	VisibilityCondition json.RawMessage `json:"visibility_condition"`
 }
 

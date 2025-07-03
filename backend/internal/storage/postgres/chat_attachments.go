@@ -1,10 +1,11 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"fmt"
+
+	"backend/internal/domain/models"
 )
 
 // CreateChatAttachment создает новую запись о вложении
@@ -17,7 +18,7 @@ func (db *Database) CreateChatAttachment(ctx context.Context, attachment *models
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id, created_at
 	`
-	
+
 	err := db.pool.QueryRow(ctx, query,
 		attachment.MessageID,
 		attachment.FileType,
@@ -31,18 +32,17 @@ func (db *Database) CreateChatAttachment(ctx context.Context, attachment *models
 		attachment.ThumbnailURL,
 		attachment.Metadata,
 	).Scan(&attachment.ID, &attachment.CreatedAt)
-	
 	if err != nil {
 		return fmt.Errorf("error creating chat attachment: %w", err)
 	}
-	
+
 	return nil
 }
 
 // GetChatAttachment получает информацию о вложении по ID
 func (db *Database) GetChatAttachment(ctx context.Context, attachmentID int) (*models.ChatAttachment, error) {
 	attachment := &models.ChatAttachment{}
-	
+
 	query := `
 		SELECT 
 			id, message_id, file_type, file_path, file_name,
@@ -51,7 +51,7 @@ func (db *Database) GetChatAttachment(ctx context.Context, attachmentID int) (*m
 		FROM chat_attachments
 		WHERE id = $1
 	`
-	
+
 	err := db.pool.QueryRow(ctx, query, attachmentID).Scan(
 		&attachment.ID,
 		&attachment.MessageID,
@@ -67,11 +67,10 @@ func (db *Database) GetChatAttachment(ctx context.Context, attachmentID int) (*m
 		&attachment.Metadata,
 		&attachment.CreatedAt,
 	)
-	
 	if err != nil {
 		return nil, fmt.Errorf("error getting chat attachment: %w", err)
 	}
-	
+
 	return attachment, nil
 }
 
@@ -86,15 +85,15 @@ func (db *Database) GetMessageAttachments(ctx context.Context, messageID int) ([
 		WHERE message_id = $1
 		ORDER BY created_at ASC
 	`
-	
+
 	rows, err := db.pool.Query(ctx, query, messageID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting message attachments: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var attachments []*models.ChatAttachment
-	
+
 	for rows.Next() {
 		attachment := &models.ChatAttachment{}
 		err := rows.Scan(
@@ -115,30 +114,30 @@ func (db *Database) GetMessageAttachments(ctx context.Context, messageID int) ([
 		if err != nil {
 			return nil, fmt.Errorf("error scanning attachment: %w", err)
 		}
-		
+
 		attachments = append(attachments, attachment)
 	}
-	
+
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating attachments: %w", err)
 	}
-	
+
 	return attachments, nil
 }
 
 // DeleteChatAttachment удаляет вложение по ID
 func (db *Database) DeleteChatAttachment(ctx context.Context, attachmentID int) error {
 	query := `DELETE FROM chat_attachments WHERE id = $1`
-	
+
 	result, err := db.pool.Exec(ctx, query, attachmentID)
 	if err != nil {
 		return fmt.Errorf("error deleting chat attachment: %w", err)
 	}
-	
+
 	if result.RowsAffected() == 0 {
 		return fmt.Errorf("attachment not found")
 	}
-	
+
 	return nil
 }
 
@@ -149,14 +148,13 @@ func (db *Database) UpdateMessageAttachmentsCount(ctx context.Context, messageID
 		SET has_attachments = $2, attachments_count = $3
 		WHERE id = $1
 	`
-	
+
 	hasAttachments := count > 0
 	_, err := db.pool.Exec(ctx, query, messageID, hasAttachments, count)
-	
 	if err != nil {
 		return fmt.Errorf("error updating message attachments count: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -164,7 +162,7 @@ func (db *Database) UpdateMessageAttachmentsCount(ctx context.Context, messageID
 func (db *Database) GetMessageByID(ctx context.Context, messageID int) (*models.MarketplaceMessage, error) {
 	message := &models.MarketplaceMessage{}
 	var listingID sql.NullInt64
-	
+
 	query := `
 		SELECT 
 			id, chat_id, listing_id, sender_id, receiver_id,
@@ -173,7 +171,7 @@ func (db *Database) GetMessageByID(ctx context.Context, messageID int) (*models.
 		FROM marketplace_messages
 		WHERE id = $1
 	`
-	
+
 	err := db.pool.QueryRow(ctx, query, messageID).Scan(
 		&message.ID,
 		&message.ChatID,
@@ -188,15 +186,14 @@ func (db *Database) GetMessageByID(ctx context.Context, messageID int) (*models.
 		&message.HasAttachments,
 		&message.AttachmentsCount,
 	)
-	
 	if err != nil {
 		return nil, fmt.Errorf("error getting message by id: %w", err)
 	}
-	
+
 	// Обрабатываем NULL значение для listing_id
 	if listingID.Valid {
 		message.ListingID = int(listingID.Int64)
 	}
-	
+
 	return message, nil
 }

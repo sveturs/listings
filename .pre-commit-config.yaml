@@ -1,0 +1,51 @@
+repos:
+  # Go formatting and linting
+  - repo: local
+    hooks:
+      - id: go-format
+        name: Go Format (gofumpt + goimports)
+        entry: bash -c 'cd backend && make format'
+        language: system
+        files: \.go$
+        pass_filenames: false
+        
+      - id: go-format-check
+        name: Go Format Check
+        entry: bash -c 'cd backend && make format-check'
+        language: system
+        files: \.go$
+        pass_filenames: false
+        
+      - id: go-lint
+        name: Go Lint
+        entry: bash -c 'cd backend && make lint'
+        language: system
+        files: \.go$
+        pass_filenames: false
+
+  # Frontend formatting
+  - repo: local
+    hooks:
+      - id: frontend-format
+        name: Frontend Format (Prettier)
+        entry: bash -c 'cd frontend/svetu && yarn format'
+        language: system
+        files: \.(js|jsx|ts|tsx|json|css|md)$
+        pass_filenames: false
+        
+      - id: frontend-lint
+        name: Frontend Lint (ESLint)
+        entry: bash -c 'cd frontend/svetu && yarn lint'
+        language: system
+        files: \.(js|jsx|ts|tsx)$
+        pass_filenames: false
+
+  # Trailing whitespace and line endings
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict

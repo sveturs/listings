@@ -38,17 +38,16 @@ func (r *storefrontRepo) RecordEvent(ctx context.Context, event *StorefrontEvent
 			ip_address, user_agent, referrer
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
-	
+
 	_, err := r.db.pool.Exec(ctx, query,
 		event.StorefrontID, event.EventType, event.EventData,
 		event.UserID, event.SessionID, event.IPAddress,
 		event.UserAgent, event.Referrer,
 	)
-	
 	if err != nil {
 		return fmt.Errorf("failed to record event: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -62,13 +61,13 @@ func (r *storefrontRepo) GetEventStats(ctx context.Context, storefrontID int, fr
 			AND created_at <= $3
 		GROUP BY event_type
 	`
-	
+
 	rows, err := r.db.pool.Query(ctx, query, storefrontID, from, to)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get event stats: %w", err)
 	}
 	defer rows.Close()
-	
+
 	stats := make(map[EventType]int)
 	for rows.Next() {
 		var eventType EventType
@@ -78,7 +77,7 @@ func (r *storefrontRepo) GetEventStats(ctx context.Context, storefrontID int, fr
 		}
 		stats[eventType] = count
 	}
-	
+
 	return stats, nil
 }
 
@@ -92,13 +91,13 @@ func (r *storefrontRepo) GetUniqueVisitors(ctx context.Context, storefrontID int
 			AND created_at <= $3
 			AND event_type = 'page_view'
 	`
-	
+
 	var count int
 	err := r.db.pool.QueryRow(ctx, query, storefrontID, from, to).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get unique visitors: %w", err)
 	}
-	
+
 	return count, nil
 }
 
@@ -122,13 +121,13 @@ func (r *storefrontRepo) GetTrafficSources(ctx context.Context, storefrontID int
 		GROUP BY source
 		ORDER BY count DESC
 	`
-	
+
 	rows, err := r.db.pool.Query(ctx, query, storefrontID, from, to)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get traffic sources: %w", err)
 	}
 	defer rows.Close()
-	
+
 	sources := make(map[string]int)
 	for rows.Next() {
 		var source string
@@ -138,6 +137,6 @@ func (r *storefrontRepo) GetTrafficSources(ctx context.Context, storefrontID int
 		}
 		sources[source] = count
 	}
-	
+
 	return sources, nil
 }

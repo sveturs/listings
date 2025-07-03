@@ -1,14 +1,14 @@
 package main
 
 import (
-	"backend/internal/config"
-	"backend/internal/proj/users/service"
-	"backend/internal/storage/postgres"
 	"context"
 	"fmt"
 	"log"
 	"strings"
-	"time"
+
+	"backend/internal/config"
+	"backend/internal/proj/users/service"
+	"backend/internal/storage/postgres"
 )
 
 func main() {
@@ -64,41 +64,41 @@ func main() {
 	fmt.Printf("\n👤 Пользователь: %s (ID: %d)\n", user.Email, user.ID)
 	fmt.Printf("📧 Имя: %s\n", user.Name)
 	fmt.Printf("🖼️  Фото: %s\n", user.PictureURL)
-	
+
 	fmt.Println("\n🔑 ACCESS TOKEN (JWT):")
 	fmt.Println(strings.Repeat("-", 80))
 	fmt.Printf("%s\n", jwtToken)
-	
+
 	fmt.Println("\n🔄 REFRESH TOKEN:")
 	fmt.Println(strings.Repeat("-", 80))
 	fmt.Printf("%s\n", refreshToken)
-	
+
 	fmt.Println("\n📝 СПОСОБЫ ИСПОЛЬЗОВАНИЯ:")
 	fmt.Println(strings.Repeat("-", 80))
-	
+
 	fmt.Println("\n1️⃣  Authorization header (рекомендуется):")
 	fmt.Printf("   curl -H \"Authorization: Bearer %s\" \\\n", jwtToken)
 	fmt.Println("        http://localhost:3000/api/v1/user/profile")
-	
+
 	fmt.Println("\n2️⃣  В JavaScript (axios):")
 	fmt.Printf("   axios.defaults.headers.common['Authorization'] = 'Bearer %s';\n", jwtToken)
-	
+
 	fmt.Println("\n3️⃣  В JavaScript (fetch):")
 	fmt.Println("   fetch('http://localhost:3000/api/v1/user/profile', {")
 	fmt.Println("     headers: {")
 	fmt.Printf("       'Authorization': 'Bearer %s'\n", jwtToken)
 	fmt.Println("     }")
 	fmt.Println("   })")
-	
+
 	fmt.Println("\n4️⃣  Проверка токена:")
 	fmt.Printf("   curl -H \"Authorization: Bearer %s\" \\\n", jwtToken)
 	fmt.Println("        http://localhost:3000/api/v1/auth/me")
-	
+
 	fmt.Println("\n5️⃣  Обновление токена (когда истечет):")
 	fmt.Println("   curl -X POST http://localhost:3000/api/v1/auth/refresh \\")
 	fmt.Println("        -H \"Content-Type: application/json\" \\")
 	fmt.Printf("        -d '{\"refresh_token\": \"%s\"}'\n", refreshToken)
-	
+
 	fmt.Println("\n" + strings.Repeat("=", 80))
 	fmt.Printf("⏰ Access токен действителен: %d часов\n", cfg.JWT.ExpirationHours)
 	fmt.Println("⏰ Refresh токен действителен: 30 дней")

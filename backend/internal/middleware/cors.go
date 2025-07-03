@@ -2,9 +2,10 @@
 package middleware
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"strings"
 )
 
 func (m *Middleware) CORS() fiber.Handler {

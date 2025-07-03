@@ -9,10 +9,13 @@ import (
 	"backend/internal/proj/storefronts/storage/opensearch"
 )
 
+// ProductSearchRepository is an alias for OpenSearch interface
+type ProductSearchRepository = opensearch.ProductSearchRepository
+
 // ProductService handles business logic for storefront products
 type ProductService struct {
-	storage      Storage
-	searchRepo   opensearch.ProductSearchRepository
+	storage    Storage
+	searchRepo opensearch.ProductSearchRepository
 }
 
 // Storage interface for product operations
@@ -24,13 +27,13 @@ type Storage interface {
 	DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
 	UpdateProductInventory(ctx context.Context, storefrontID, productID int, userID int, req *models.UpdateInventoryRequest) error
 	GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error)
-	
+
 	// Bulk operations
 	BulkCreateProducts(ctx context.Context, storefrontID int, products []models.CreateProductRequest) ([]int, []error)
 	BulkUpdateProducts(ctx context.Context, storefrontID int, updates []models.BulkUpdateItem) ([]int, []error)
 	BulkDeleteProducts(ctx context.Context, storefrontID int, productIDs []int) ([]int, []error)
 	BulkUpdateStatus(ctx context.Context, storefrontID int, productIDs []int, isActive bool) ([]int, []error)
-	
+
 	// Storefront operations
 	GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error)
 }
@@ -49,41 +52,41 @@ func (s *ProductService) ValidateStorefrontOwnership(ctx context.Context, storef
 	if err != nil {
 		return fmt.Errorf("failed to get storefront: %w", err)
 	}
-	
+
 	if storefront == nil {
 		return fmt.Errorf("storefront not found")
 	}
-	
+
 	if storefront.UserID != userID {
 		return fmt.Errorf("unauthorized: user %d does not own storefront %d (owner is %d)", userID, storefrontID, storefront.UserID)
 	}
-	
+
 	return nil
 }
 
 // GetProducts retrieves products for a storefront
 func (s *ProductService) GetProducts(ctx context.Context, filter models.ProductFilter) ([]*models.StorefrontProduct, error) {
 	logger.Info().Msgf("GetProducts called with filter: %+v", filter)
-	
+
 	// Validate storefront exists
 	storefront, err := s.storage.GetStorefrontByID(ctx, filter.StorefrontID)
 	if err != nil {
 		logger.Error().Err(err).Msgf("Failed to get storefront %d", filter.StorefrontID)
 		return nil, fmt.Errorf("failed to get storefront: %w", err)
 	}
-	
+
 	if storefront == nil {
 		logger.Error().Msgf("Storefront %d not found", filter.StorefrontID)
 		return nil, fmt.Errorf("storefront not found")
 	}
-	
+
 	// Get products
 	products, err := s.storage.GetStorefrontProducts(ctx, filter)
 	if err != nil {
 		logger.Error().Err(err).Msgf("Failed to get products for storefront %d", filter.StorefrontID)
 		return nil, fmt.Errorf("failed to get products: %w", err)
 	}
-	
+
 	logger.Info().Msgf("Found %d products for storefront %d", len(products), filter.StorefrontID)
 	return products, nil
 }
@@ -94,11 +97,11 @@ func (s *ProductService) GetProduct(ctx context.Context, storefrontID, productID
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product: %w", err)
 	}
-	
+
 	if product == nil {
 		return nil, fmt.Errorf("product not found")
 	}
-	
+
 	return product, nil
 }
 
@@ -108,18 +111,18 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
 		return nil, fmt.Errorf("ownership validation failed: %w", err)
 	}
-	
+
 	// Validate request
 	if err := s.validateCreateRequest(req); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
-	
+
 	// Create product
 	product, err := s.storage.CreateStorefrontProduct(ctx, storefrontID, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
-	
+
 	// Index product in OpenSearch
 	if s.searchRepo != nil {
 		if err := s.searchRepo.IndexProduct(ctx, product); err != nil {
@@ -129,7 +132,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 			logger.Info().Msgf("Successfully indexed product %d in OpenSearch", product.ID)
 		}
 	}
-	
+
 	return product, nil
 }
 
@@ -139,27 +142,27 @@ func (s *ProductService) UpdateProduct(ctx context.Context, storefrontID, produc
 	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
 		return err
 	}
-	
+
 	// Validate request
 	if err := s.validateUpdateRequest(req); err != nil {
 		return fmt.Errorf("invalid request: %w", err)
 	}
-	
+
 	// Check product exists
 	product, err := s.storage.GetStorefrontProduct(ctx, storefrontID, productID)
 	if err != nil {
 		return fmt.Errorf("failed to get product: %w", err)
 	}
-	
+
 	if product == nil {
 		return fmt.Errorf("product not found")
 	}
-	
+
 	// Update product
 	if err := s.storage.UpdateStorefrontProduct(ctx, storefrontID, productID, req); err != nil {
 		return fmt.Errorf("failed to update product: %w", err)
 	}
-	
+
 	// Re-index product in OpenSearch
 	if s.searchRepo != nil {
 		// Get updated product for indexing
@@ -173,7 +176,7 @@ func (s *ProductService) UpdateProduct(ctx context.Context, storefrontID, produc
 			logger.Info().Msgf("Successfully updated product %d in OpenSearch", productID)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -183,12 +186,12 @@ func (s *ProductService) DeleteProduct(ctx context.Context, storefrontID, produc
 	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
 		return err
 	}
-	
+
 	// Delete product
 	if err := s.storage.DeleteStorefrontProduct(ctx, storefrontID, productID); err != nil {
 		return fmt.Errorf("failed to delete product: %w", err)
 	}
-	
+
 	// Delete from OpenSearch
 	if s.searchRepo != nil {
 		if err := s.searchRepo.DeleteProduct(ctx, productID); err != nil {
@@ -198,7 +201,7 @@ func (s *ProductService) DeleteProduct(ctx context.Context, storefrontID, produc
 			logger.Info().Msgf("Successfully deleted product %d from OpenSearch", productID)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -208,17 +211,17 @@ func (s *ProductService) UpdateInventory(ctx context.Context, storefrontID, prod
 	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
 		return err
 	}
-	
+
 	// Validate request
 	if err := s.validateInventoryRequest(req); err != nil {
 		return fmt.Errorf("invalid request: %w", err)
 	}
-	
+
 	// Update inventory
 	if err := s.storage.UpdateProductInventory(ctx, storefrontID, productID, userID, req); err != nil {
 		return fmt.Errorf("failed to update inventory: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -228,13 +231,13 @@ func (s *ProductService) GetProductStats(ctx context.Context, storefrontID, user
 	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
 		return nil, err
 	}
-	
+
 	// Get stats
 	stats, err := s.storage.GetProductStats(ctx, storefrontID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product stats: %w", err)
 	}
-	
+
 	return stats, nil
 }
 
@@ -244,13 +247,13 @@ func (s *ProductService) CreateProductForImport(ctx context.Context, storefrontI
 	if err := s.validateCreateRequest(req); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
-	
+
 	// Create product without ownership check
 	product, err := s.storage.CreateStorefrontProduct(ctx, storefrontID, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
-	
+
 	// Index product in OpenSearch
 	if s.searchRepo != nil {
 		if err := s.searchRepo.IndexProduct(ctx, product); err != nil {
@@ -260,32 +263,32 @@ func (s *ProductService) CreateProductForImport(ctx context.Context, storefrontI
 			logger.Info().Msgf("Successfully indexed product %d in OpenSearch", product.ID)
 		}
 	}
-	
+
 	return product, nil
 }
 
-// UpdateProductForImport updates a product without ownership validation (for system imports) 
+// UpdateProductForImport updates a product without ownership validation (for system imports)
 func (s *ProductService) UpdateProductForImport(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error {
 	// Validate request
 	if err := s.validateUpdateRequest(req); err != nil {
 		return fmt.Errorf("invalid request: %w", err)
 	}
-	
+
 	// Check product exists
 	product, err := s.storage.GetStorefrontProduct(ctx, storefrontID, productID)
 	if err != nil {
 		return fmt.Errorf("failed to get product: %w", err)
 	}
-	
+
 	if product == nil {
 		return fmt.Errorf("product not found")
 	}
-	
+
 	// Update product without ownership check
 	if err := s.storage.UpdateStorefrontProduct(ctx, storefrontID, productID, req); err != nil {
 		return fmt.Errorf("failed to update product: %w", err)
 	}
-	
+
 	// Re-index product in OpenSearch
 	if s.searchRepo != nil {
 		// Get updated product for indexing
@@ -299,7 +302,7 @@ func (s *ProductService) UpdateProductForImport(ctx context.Context, storefrontI
 			logger.Info().Msgf("Successfully updated product %d in OpenSearch", productID)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -492,39 +495,39 @@ func (s *ProductService) validateCreateRequest(req *models.CreateProductRequest)
 	if req.Name == "" {
 		return fmt.Errorf("name is required")
 	}
-	
+
 	if len(req.Name) < 3 || len(req.Name) > 255 {
 		return fmt.Errorf("name must be between 3 and 255 characters")
 	}
-	
+
 	if req.Description == "" {
 		return fmt.Errorf("description is required")
 	}
-	
+
 	if len(req.Description) < 10 {
 		return fmt.Errorf("description must be at least 10 characters")
 	}
-	
+
 	if req.Price < 0 {
 		return fmt.Errorf("price cannot be negative")
 	}
-	
+
 	if req.Currency == "" {
 		return fmt.Errorf("currency is required")
 	}
-	
+
 	if len(req.Currency) != 3 {
 		return fmt.Errorf("currency must be 3 characters")
 	}
-	
+
 	if req.CategoryID <= 0 {
 		return fmt.Errorf("category is required")
 	}
-	
+
 	if req.StockQuantity < 0 {
 		return fmt.Errorf("stock quantity cannot be negative")
 	}
-	
+
 	return nil
 }
 
@@ -533,34 +536,34 @@ func (s *ProductService) validateUpdateRequest(req *models.UpdateProductRequest)
 		if *req.Name == "" {
 			return fmt.Errorf("name cannot be empty")
 		}
-		
+
 		if len(*req.Name) < 3 || len(*req.Name) > 255 {
 			return fmt.Errorf("name must be between 3 and 255 characters")
 		}
 	}
-	
+
 	if req.Description != nil {
 		if *req.Description == "" {
 			return fmt.Errorf("description cannot be empty")
 		}
-		
+
 		if len(*req.Description) < 10 {
 			return fmt.Errorf("description must be at least 10 characters")
 		}
 	}
-	
+
 	if req.Price != nil && *req.Price < 0 {
 		return fmt.Errorf("price cannot be negative")
 	}
-	
+
 	if req.CategoryID != nil && *req.CategoryID <= 0 {
 		return fmt.Errorf("invalid category")
 	}
-	
+
 	if req.StockQuantity != nil && *req.StockQuantity < 0 {
 		return fmt.Errorf("stock quantity cannot be negative")
 	}
-	
+
 	return nil
 }
 
@@ -568,14 +571,14 @@ func (s *ProductService) validateInventoryRequest(req *models.UpdateInventoryReq
 	if req.Type != "in" && req.Type != "out" && req.Type != "adjustment" {
 		return fmt.Errorf("invalid inventory type")
 	}
-	
+
 	if req.Quantity <= 0 {
 		return fmt.Errorf("quantity must be positive")
 	}
-	
+
 	if req.Reason == "" {
 		return fmt.Errorf("reason is required")
 	}
-	
+
 	return nil
 }

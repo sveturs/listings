@@ -1,13 +1,14 @@
 package service
 
 import (
-	"backend/internal/domain/models"
-	"backend/internal/storage"
 	"context"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
+
+	"backend/internal/domain/models"
+	"backend/internal/storage"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -238,6 +239,7 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int, 
 
 	return nil
 }
+
 func (s *NotificationService) sendTelegramNotification(ctx context.Context, userID int, message string, listingID int) error {
 	// Получаем Telegram подключение
 	conn, err := s.storage.GetTelegramConnection(ctx, userID)

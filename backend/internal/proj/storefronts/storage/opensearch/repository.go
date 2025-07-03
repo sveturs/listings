@@ -83,7 +83,7 @@ func (r *StorefrontRepository) Delete(ctx context.Context, storefrontID int) err
 // Search выполняет поиск витрин
 func (r *StorefrontRepository) Search(ctx context.Context, params *StorefrontSearchParams) (*StorefrontSearchResult, error) {
 	query := r.buildSearchQuery(params)
-	
+
 	responseBytes, err := r.client.Search(r.indexName, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска витрин: %w", err)
@@ -94,7 +94,7 @@ func (r *StorefrontRepository) Search(ctx context.Context, params *StorefrontSea
 
 // ReindexAll переиндексирует все активные витрины
 func (r *StorefrontRepository) ReindexAll(ctx context.Context) error {
-	// Для реиндексации нужно будет вызывать этот метод из Database уровня, 
+	// Для реиндексации нужно будет вызывать этот метод из Database уровня,
 	// где есть доступ к PostgreSQL репозиторию витрин
 	logger.Info().Msg("ReindexAll для витрин должен вызываться из Database уровня")
 	return nil
@@ -158,7 +158,7 @@ func (r *StorefrontRepository) storefrontToDoc(storefront *models.Storefront) ma
 	doc["search_keywords"] = searchKeywords
 
 	// Базовые поля для поиска без зависимостей
-	// Расширенная информация (часы работы, методы оплаты, доставка) 
+	// Расширенная информация (часы работы, методы оплаты, доставка)
 	// будет добавляться на уровне Database при вызове полной индексации
 
 	// Добавляем тематику витрины (из theme)
@@ -361,7 +361,7 @@ func (r *StorefrontRepository) buildSearchQuery(params *StorefrontSearchParams) 
 		})
 	default:
 		// По умолчанию сортировка по рейтингу и количеству товаров
-		sort = append(sort, 
+		sort = append(sort,
 			map[string]interface{}{
 				"rating": map[string]interface{}{
 					"order": "desc",
@@ -589,8 +589,8 @@ type StorefrontSearchItem struct {
 	PaymentMethods []string
 	HasDelivery    bool
 	HasSelfPickup  bool
-	Score          float64            // Релевантность
-	Distance       *float64           // Расстояние в км (если есть)
+	Score          float64             // Релевантность
+	Distance       *float64            // Расстояние в км (если есть)
 	Highlights     map[string][]string // Подсвеченные фрагменты
 }
 

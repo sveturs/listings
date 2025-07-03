@@ -53,7 +53,9 @@ class ChatService {
     options?: RequestInit
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    console.log('Chat API request:', url, options);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Chat API request:', url, options);
+    }
 
     // Получаем JWT токен
     const accessToken = tokenManager.getAccessToken();
@@ -81,7 +83,9 @@ class ChatService {
       credentials: 'include',
     });
 
-    console.log('Chat API response status:', response.status);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Chat API response status:', response.status);
+    }
 
     if (!response.ok) {
       let error: { message?: string; error?: string } = { message: '' };
@@ -121,7 +125,9 @@ class ChatService {
     }
 
     const data = await response.json();
-    console.log('Chat API response data:', data);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Chat API response data:', data);
+    }
     return data;
   }
 
@@ -422,27 +428,31 @@ class ChatService {
       return null;
     }
 
-    // В development используем относительный путь для прокси
-    // В production используем полный URL
+    // Всегда используем WebSocket URL из конфигурации
+    const config = configManager.getConfig();
     let wsUrl: string;
-    if (process.env.NODE_ENV === 'development') {
-      // Используем относительный путь, который будет проксироваться через Next.js
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      wsUrl = `${protocol}//${window.location.host}/ws/chat?token=${accessToken}`;
+
+    if (config.api.websocketUrl) {
+      // Используем WebSocket URL из конфигурации
+      wsUrl = `${config.api.websocketUrl}/ws/chat?token=${accessToken}`;
     } else {
-      // В production используем полный URL
+      // Фоллбэк на API URL если WebSocket URL не задан
       const apiUrl = configManager.getApiUrl().replace(/^http/, 'ws');
       wsUrl = `${apiUrl}/ws/chat?token=${accessToken}`;
     }
 
-    console.log(
-      '[ChatService] Connecting WebSocket:',
-      wsUrl.replace(/token=.*/, 'token=***')
-    );
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        '[ChatService] Connecting WebSocket:',
+        wsUrl.replace(/token=.*/, 'token=***')
+      );
+    }
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log('WebSocket connected');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('WebSocket connected');
+      }
       // Сбрасываем счетчик попыток при успешном подключении
       this.reconnectAttempts = 0;
     };

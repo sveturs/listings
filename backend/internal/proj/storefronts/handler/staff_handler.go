@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"strconv"
+
 	"backend/internal/domain/models"
 	"backend/internal/proj/storefronts/service"
 	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -27,7 +28,7 @@ import (
 // @Router /api/v1/storefronts/{id}/staff [post]
 func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
@@ -84,7 +85,7 @@ func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id}/staff/{staffId}/permissions [put]
 func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	staffID, err := strconv.Atoi(c.Params("staffId"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_staff_id")
@@ -130,7 +131,7 @@ func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{id}/staff/{userId} [delete]
 func (h *StorefrontHandler) RemoveStaff(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	
+
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")

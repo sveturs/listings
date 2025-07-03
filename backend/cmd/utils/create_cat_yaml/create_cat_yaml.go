@@ -1,17 +1,19 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"sort"
+
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
-	"context"
-	"fmt"
+
 	"gopkg.in/yaml.v3"
-	"log"
-	"os"
-	"sort"
 )
 
 // CategoriesFile представляет структуру YAML файла с категориями
@@ -80,7 +82,7 @@ func buildCategoryTree(categories []*SimplifiedCategory) []*SimplifiedCategory {
 // convertToSimplified преобразует MarketplaceCategory в SimplifiedCategory
 func convertToSimplified(cat models.MarketplaceCategory) *SimplifiedCategory {
 	simplified := &SimplifiedCategory{
-		//ID:           cat.ID * 10, // TODO: когда полностью перейдем на файл
+		// ID:           cat.ID * 10, // TODO: когда полностью перейдем на файл
 		ID:           cat.ID,
 		Name:         cat.Name,
 		Slug:         cat.Slug,
@@ -106,7 +108,7 @@ func writeCategoriesFile(filePath string, categories []*SimplifiedCategory) erro
 	}
 
 	// Записываем в файл
-	if err := os.WriteFile(filePath, yamlData, 0644); err != nil {
+	if err := os.WriteFile(filePath, yamlData, 0o644); err != nil {
 		return fmt.Errorf("ошибка записи файла: %w", err)
 	}
 

@@ -2,7 +2,6 @@
 package service
 
 import (
-	"backend/internal/storage"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"backend/internal/storage"
 )
 
 // min возвращает минимальное из двух целых чисел

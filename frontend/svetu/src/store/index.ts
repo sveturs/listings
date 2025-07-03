@@ -4,6 +4,8 @@ import reviewsReducer from './slices/reviewsSlice';
 import storefrontsReducer from './slices/storefrontSlice';
 import importReducer from './slices/importSlice';
 import productReducer from './slices/productSlice';
+import paymentReducer from './slices/paymentSlice';
+import cartReducer from './slices/cartSlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
 
 export const store = configureStore({
@@ -13,6 +15,8 @@ export const store = configureStore({
     storefronts: storefrontsReducer,
     import: importReducer,
     products: productReducer,
+    payment: paymentReducer,
+    cart: cartReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

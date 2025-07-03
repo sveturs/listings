@@ -167,7 +167,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	}
 
 	// Получаем общее количество сообщений, если есть chat_id
-	var total = -1 // По умолчанию -1 означает, что количество неизвестно
+	total := -1 // По умолчанию -1 означает, что количество неизвестно
 	if chatIDStr := c.Query("chat_id"); chatIDStr != "" {
 		if _, err := strconv.Atoi(chatIDStr); err == nil {
 			// TODO: добавить метод в сервис для получения общего количества

@@ -4,17 +4,17 @@ import "time"
 
 // AggregatedRating представляет агрегированный рейтинг сущности
 type AggregatedRating struct {
-	EntityType          string                 `json:"entity_type"`
-	EntityID            int                    `json:"entity_id"`
-	Average             float64                `json:"average"`
-	TotalReviews        int                    `json:"total_reviews"`
-	Distribution        map[int]int            `json:"distribution"`
-	Breakdown           RatingBreakdown        `json:"breakdown"`
-	VerifiedPercentage  int                    `json:"verified_percentage"`
-	RecentTrend         string                 `json:"recent_trend"` // up, down, stable
-	LastReviewAt        *time.Time             `json:"last_review_at,omitempty"`
-	RecentRating        *float64               `json:"recent_rating,omitempty"`
-	RecentReviews       int                    `json:"recent_reviews"`
+	EntityType         string          `json:"entity_type"`
+	EntityID           int             `json:"entity_id"`
+	Average            float64         `json:"average"`
+	TotalReviews       int             `json:"total_reviews"`
+	Distribution       map[int]int     `json:"distribution"`
+	Breakdown          RatingBreakdown `json:"breakdown"`
+	VerifiedPercentage int             `json:"verified_percentage"`
+	RecentTrend        string          `json:"recent_trend"` // up, down, stable
+	LastReviewAt       *time.Time      `json:"last_review_at,omitempty"`
+	RecentRating       *float64        `json:"recent_rating,omitempty"`
+	RecentReviews      int             `json:"recent_reviews"`
 }
 
 // RatingBreakdown разбивка рейтинга по источникам
@@ -70,10 +70,10 @@ type StorefrontAggregatedRating struct {
 
 // CanReviewResponse ответ на проверку возможности оставить отзыв
 type CanReviewResponse struct {
-	CanReview        bool   `json:"can_review"`
-	Reason           string `json:"reason,omitempty"`
-	HasExistingReview bool  `json:"has_existing_review"`
-	ExistingReviewID *int   `json:"existing_review_id,omitempty"`
+	CanReview         bool   `json:"can_review"`
+	Reason            string `json:"reason,omitempty"`
+	HasExistingReview bool   `json:"has_existing_review"`
+	ExistingReviewID  *int   `json:"existing_review_id,omitempty"`
 }
 
 // ReviewConfirmation подтверждение отзыва продавцом
@@ -88,17 +88,17 @@ type ReviewConfirmation struct {
 
 // ReviewDispute спор по отзыву
 type ReviewDispute struct {
-	ID                  int       `json:"id"`
-	ReviewID            int       `json:"review_id"`
-	DisputedBy          int       `json:"disputed_by"`
-	DisputeReason       string    `json:"dispute_reason"`
-	DisputeDescription  string    `json:"dispute_description"`
-	Status              string    `json:"status"`
-	AdminID             *int      `json:"admin_id,omitempty"`
-	AdminNotes          *string   `json:"admin_notes,omitempty"`
-	CreatedAt           time.Time `json:"created_at"`
-	UpdatedAt           time.Time `json:"updated_at"`
-	ResolvedAt          *time.Time `json:"resolved_at,omitempty"`
+	ID                 int        `json:"id"`
+	ReviewID           int        `json:"review_id"`
+	DisputedBy         int        `json:"disputed_by"`
+	DisputeReason      string     `json:"dispute_reason"`
+	DisputeDescription string     `json:"dispute_description"`
+	Status             string     `json:"status"`
+	AdminID            *int       `json:"admin_id,omitempty"`
+	AdminNotes         *string    `json:"admin_notes,omitempty"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
+	ResolvedAt         *time.Time `json:"resolved_at,omitempty"`
 }
 
 // CreateReviewConfirmationRequest запрос на подтверждение отзыва

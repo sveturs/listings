@@ -1,7 +1,6 @@
 package service
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,30 +8,32 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"backend/internal/domain/models"
 )
 
 // GeocodingService интерфейс сервиса геокодирования
 type GeocodingService interface {
 	// GeocodeAddress преобразует адрес в координаты
 	GeocodeAddress(ctx context.Context, address string) (*models.Location, error)
-	
+
 	// ReverseGeocode преобразует координаты в адрес
 	ReverseGeocode(ctx context.Context, lat, lng float64) (*models.Location, error)
-	
+
 	// SmartGeocode умный геокодинг с определением ближайшего здания
 	SmartGeocode(ctx context.Context, userLat, userLng float64) (*models.Location, error)
-	
+
 	// ValidateAddress проверяет корректность адреса
 	ValidateAddress(ctx context.Context, address string) (bool, error)
 }
 
 // nominatimResponse ответ от Nominatim API
 type nominatimResponse struct {
-	PlaceID     string  `json:"place_id"`
-	Lat         string  `json:"lat"`
-	Lon         string  `json:"lon"`
-	DisplayName string  `json:"display_name"`
-	Address     address `json:"address"`
+	PlaceID     string   `json:"place_id"`
+	Lat         string   `json:"lat"`
+	Lon         string   `json:"lon"`
+	DisplayName string   `json:"display_name"`
+	Address     address  `json:"address"`
 	BoundingBox []string `json:"boundingbox"`
 }
 
@@ -88,12 +89,12 @@ func (g *geocodingService) GeocodeAddress(ctx context.Context, address string) (
 	params.Set("accept-language", "sr,en") // Сербский приоритет
 
 	reqURL := fmt.Sprintf("https://nominatim.openstreetmap.org/search?%s", params.Encode())
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	req.Header.Set("User-Agent", g.userAgent)
 
 	resp, err := g.httpClient.Do(req)
@@ -116,7 +117,7 @@ func (g *geocodingService) GeocodeAddress(ctx context.Context, address string) (
 	}
 
 	location := g.parseNominatimResponse(&results[0])
-	
+
 	// Сохраняем в кеш
 	g.cache[cacheKey] = &cacheEntry{
 		data:      location,
@@ -146,12 +147,12 @@ func (g *geocodingService) ReverseGeocode(ctx context.Context, lat, lng float64)
 	params.Set("accept-language", "sr,en")
 
 	reqURL := fmt.Sprintf("https://nominatim.openstreetmap.org/reverse?%s", params.Encode())
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	req.Header.Set("User-Agent", g.userAgent)
 
 	resp, err := g.httpClient.Do(req)
@@ -172,7 +173,7 @@ func (g *geocodingService) ReverseGeocode(ctx context.Context, lat, lng float64)
 	location := g.parseNominatimResponse(&result)
 	location.UserLat = lat
 	location.UserLng = lng
-	
+
 	// Сохраняем в кеш
 	g.cache[cacheKey] = &cacheEntry{
 		data:      location,
@@ -195,9 +196,9 @@ func (g *geocodingService) SmartGeocode(ctx context.Context, userLat, userLng fl
 
 	// 2. Если есть номер дома, получаем точные координаты здания
 	if location.HouseNumber != "" && location.Street != "" {
-		buildingAddress := fmt.Sprintf("%s %s, %s, %s", 
+		buildingAddress := fmt.Sprintf("%s %s, %s, %s",
 			location.Street, location.HouseNumber, location.City, location.Country)
-		
+
 		buildingLocation, err := g.GeocodeAddress(ctx, buildingAddress)
 		if err == nil {
 			// Сохраняем оригинальные координаты клика
@@ -217,7 +218,7 @@ func (g *geocodingService) ValidateAddress(ctx context.Context, address string) 
 	if err != nil {
 		return false, nil
 	}
-	
+
 	// Проверяем что нашли хотя бы город
 	return location.City != "", nil
 }
@@ -243,7 +244,7 @@ func (g *geocodingService) parseNominatimResponse(resp *nominatimResponse) *mode
 			addressParts = append(addressParts, resp.Address.HouseNumber)
 		}
 	}
-	
+
 	fullAddress := strings.Join(addressParts, " ")
 	if city != "" {
 		if fullAddress != "" {
@@ -251,7 +252,7 @@ func (g *geocodingService) parseNominatimResponse(resp *nominatimResponse) *mode
 		}
 		fullAddress += city
 	}
-	
+
 	if resp.Address.Postcode != "" {
 		fullAddress += " " + resp.Address.Postcode
 	}
@@ -304,13 +305,13 @@ func (g *geocodingService) parseNominatimResponse(resp *nominatimResponse) *mode
 func normalizeAddress(address string) string {
 	// Заменяем распространенные сокращения
 	replacements := map[string]string{
-		"ул.":  "улица",
-		"бул.": "булевар",
+		"ул.":   "улица",
+		"бул.":  "булевар",
 		"тргпј": "трг",
-		"бр.":  "",
-		"br.":  "",
-		"ul.":  "ulica",
-		"bul.": "bulevar",
+		"бр.":   "",
+		"br.":   "",
+		"ul.":   "ulica",
+		"bul.":  "bulevar",
 	}
 
 	normalized := strings.ToLower(address)

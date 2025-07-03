@@ -2,9 +2,10 @@
 package handler
 
 import (
+	"time"
+
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	"time"
 )
 
 // ErrorResponse базовая структура ответа с ошибкой

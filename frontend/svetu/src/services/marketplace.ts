@@ -76,10 +76,29 @@ export class MarketplaceService {
     if (params.search) searchParams.append('search', params.search);
 
     const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/search?${searchParams.toString()}`;
+    console.log('MarketplaceService.search - URL:', url);
 
     try {
-      const response = await fetch(url);
+      // Добавляем таймаут для SSR запросов
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 секунд таймаут
 
+      console.log('MarketplaceService.search - Making fetch request...');
+      const response = await fetch(url, {
+        signal: controller.signal,
+        // Добавляем заголовки для лучшей производительности
+        headers: {
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log(
+        'MarketplaceService.search - Response status:',
+        response.status
+      );
       if (!response.ok) {
         throw new Error(
           `Failed to fetch marketplace items: ${response.status}`
@@ -87,8 +106,23 @@ export class MarketplaceService {
       }
 
       const data = await response.json();
+      console.log('MarketplaceService.search - Data received:', data);
       return data;
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('Marketplace search timeout after 5 seconds');
+        // Возвращаем пустой результат при таймауте
+        return {
+          data: [],
+          meta: {
+            total: 0,
+            page: 1,
+            size: 20,
+            has_more: false,
+            total_pages: 0,
+          },
+        };
+      }
       console.error('Error fetching marketplace items:', error);
       throw error;
     }

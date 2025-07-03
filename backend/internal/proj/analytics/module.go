@@ -6,7 +6,7 @@ import (
 	"backend/internal/proj/analytics/routes"
 	"backend/internal/proj/analytics/service"
 	"backend/internal/storage/postgres"
-	
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -20,7 +20,7 @@ func NewModule(db *postgres.Database) *Module {
 	storefrontRepo := postgres.NewStorefrontRepository(db)
 	analyticsService := service.NewAnalyticsService(storefrontRepo)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
-	
+
 	return &Module{
 		handler: analyticsHandler,
 	}

@@ -229,17 +229,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         for (let i = 0; i < retries; i++) {
           try {
             // Сначала пытаемся восстановить сессию через JWT
+            console.log(
+              '[AuthContext] Attempting to restore session via JWT...'
+            );
             const session = await AuthService.restoreSession();
             if (session && session.authenticated && session.user) {
+              console.log('[AuthContext] JWT session restored successfully');
               updateUser(session.user);
               setError(null);
             } else {
               // Если восстановление не удалось, пытаемся получить сессию обычным способом
+              console.log(
+                '[AuthContext] JWT restore failed, trying fallback session...'
+              );
               const fallbackSession = await AuthService.getSession();
               if (fallbackSession.authenticated && fallbackSession.user) {
+                console.log(
+                  '[AuthContext] Fallback session restored successfully'
+                );
                 updateUser(fallbackSession.user);
                 setError(null);
               } else {
+                console.log('[AuthContext] No valid session found');
                 updateUser(null);
               }
             }
@@ -274,6 +285,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Инициализируем TokenManager
     AuthService.initializeTokenManager();
+
+    // Проверяем наличие токена в URL (для OAuth callback)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const authToken = urlParams.get('auth_token');
+      if (authToken) {
+        console.log(
+          '[AuthContext] Found auth_token in URL, saving...',
+          authToken.substring(0, 20) + '...'
+        );
+        tokenManager.setAccessToken(authToken);
+        // Удаляем токен из URL для безопасности
+        urlParams.delete('auth_token');
+        const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+        window.history.replaceState({}, document.title, newUrl);
+        // console.log('[AuthContext] Token saved, URL cleaned');
+      } else {
+        // console.log('[AuthContext] No auth_token in URL');
+      }
+    }
 
     // Проверяем флаг logout
     const logoutFlag = sessionStorage.getItem('svetu_logout_flag');
@@ -313,17 +344,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const cachedUser = JSON.parse(cachedUserJson);
           if (cachedUser && cachedUser.accessToken) {
-            // Импортируем tokenManager для проверки
-            import('@/utils/tokenManager').then(({ tokenManager }) => {
-              if (tokenManager.isTokenExpired(cachedUser.accessToken)) {
-                // Токен истек, обновляем в фоне
-                setTimeout(() => refreshSession(3, true), 100);
-              } else {
-                console.log(
-                  '[AuthContext] Cached token is still valid, skipping refresh'
-                );
-              }
-            });
+            // Проверяем токен
+            if (tokenManager.isTokenExpired(cachedUser.accessToken)) {
+              // Токен истек, обновляем в фоне
+              setTimeout(() => refreshSession(3, true), 100);
+            } else {
+              console.log(
+                '[AuthContext] Cached token is still valid, skipping refresh'
+              );
+            }
           }
         } catch (error) {
           console.warn('Failed to parse cached user:', error);

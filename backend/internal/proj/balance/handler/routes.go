@@ -17,6 +17,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	balanceRoutes.Get("/payment-methods", h.Balance.GetPaymentMethods)
 	balanceRoutes.Post("/deposit", h.Balance.CreateDeposit)
 
+	// Mock payment completion endpoint (только для разработки)
+	balanceRoutes.Post("/mock/complete", h.Balance.CompleteMockPayment)
+
 	return nil
 }
 

@@ -1,9 +1,10 @@
 package service
 
 import (
-	"backend/internal/storage/postgres"
 	"context"
 	"encoding/json"
+
+	"backend/internal/storage/postgres"
 )
 
 // AnalyticsService интерфейс сервиса аналитики

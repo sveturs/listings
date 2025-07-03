@@ -2,8 +2,9 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
+
+	"backend/internal/domain/models"
 )
 
 // IsUserAdmin проверяет, является ли пользователь администратором по email

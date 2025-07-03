@@ -91,7 +91,6 @@ func (h *Handler) ConnectTelegramWebhook() {
 	if info.LastErrorDate != 0 {
 		logger.Error().Str("error_message", info.LastErrorMessage).Msg("Telegram callback failed")
 	}
-
 }
 
 // HandleTelegramWebhook обрабатывает webhook от Telegram бота
@@ -124,6 +123,7 @@ func (h *Handler) HandleTelegramWebhook(c *fiber.Ctx) error {
 	}
 	return c.JSON(TelegramWebhookResponse{Status: "OK"})
 }
+
 func (h *Handler) handleStartCommand(c *fiber.Ctx, message *tgbotapi.Message, args string) error {
 	if args == "" {
 		msg := tgbotapi.NewMessage(message.Chat.ID, "Пожалуйста, используйте ссылку для подключения из приложения")
@@ -554,7 +554,6 @@ func (h *Handler) GetTelegramStatus(c *fiber.Ctx) error {
 	}
 
 	connection, err := h.notificationService.GetTelegramConnection(c.Context(), userID)
-
 	if err != nil {
 		return utils.SuccessResponse(c, TelegramStatusResponse{
 			Connected: false,

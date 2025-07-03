@@ -89,7 +89,12 @@ export class UnifiedSearchService {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {
-          value.forEach((v) => url.searchParams.append(key, v));
+          // Для массивов используем запятую в качестве разделителя
+          if (key === 'product_types') {
+            url.searchParams.append(key, value.join(','));
+          } else {
+            value.forEach((v) => url.searchParams.append(key, v));
+          }
         } else {
           url.searchParams.append(key, value.toString());
         }

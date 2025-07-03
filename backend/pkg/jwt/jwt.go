@@ -17,7 +17,7 @@ type Claims struct {
 
 // RefreshClaims для refresh токенов
 type RefreshClaims struct {
-	UserID int    `json:"user_id"`
+	UserID  int    `json:"user_id"`
 	TokenID string `json:"token_id"` // Уникальный ID для отзыва
 	jwt.RegisteredClaims
 }
@@ -46,14 +46,13 @@ func GenerateTokenWithDuration(userID int, email string, secret string, duration
 
 func ValidateToken(tokenString string, secret string) (*Claims, error) {
 	claims := &Claims{}
-	
+
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(secret), nil
 	})
-
 	if err != nil {
 		// jwt.ParseWithClaims уже проверяет ExpiresAt автоматически
 		return nil, fmt.Errorf("token validation failed: %w", err)
@@ -112,14 +111,13 @@ func GenerateSecureTokenID() (string, error) {
 // ValidateRefreshToken валидирует refresh токен
 func ValidateRefreshToken(tokenString string, secret string) (*RefreshClaims, error) {
 	claims := &RefreshClaims{}
-	
+
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(secret), nil
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("refresh token validation failed: %w", err)
 	}

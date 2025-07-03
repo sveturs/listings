@@ -17,7 +17,7 @@ interface DraftsModalProps {
 }
 
 export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
-  const t = useTranslations('createListing.draft');
+  const t = useTranslations('create_listing.draft');
   const locale = useLocale();
   const router = useRouter();
   const { user } = useAuth();
