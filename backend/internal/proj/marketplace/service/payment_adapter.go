@@ -44,21 +44,21 @@ func (p *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentReq
 		if oid, ok := req.MetaData["order_id"].(int64); ok {
 			orderID = fmt.Sprintf("%d", oid)
 		}
-		
+
 		// Генерируем session_id для mock платежа
 		sessionID := fmt.Sprintf("mock_%d_%d", req.UserID, req.Amount.IntPart())
-		
+
 		// Формируем URL с параметрами для mock страницы
-		paymentURL := fmt.Sprintf("/payment/mock?session_id=%s&amount=%.2f&currency=%s", 
+		paymentURL := fmt.Sprintf("/payment/mock?session_id=%s&amount=%.2f&currency=%s",
 			sessionID, req.Amount.InexactFloat64(), req.Currency)
-		
+
 		if orderID != "" {
 			paymentURL += "&order_id=" + orderID
 		}
-		
+
 		return &PaymentResult{
-			TransactionID: 1,               // временный ID
-			PaymentURL:    paymentURL,      // URL с параметрами
+			TransactionID: 1,          // временный ID
+			PaymentURL:    paymentURL, // URL с параметрами
 			Status:        "pending",
 		}, nil
 	}

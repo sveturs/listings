@@ -20,6 +20,7 @@ type MinioConfig struct {
 	UseSSL          bool
 	BucketName      string
 	Location        string
+	PublicURL       string // URL для публичного доступа к файлам
 }
 
 // MinioClient представляет клиент MinIO для работы с файлами
@@ -116,11 +117,18 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 	}
 
 	// Формируем базовый URL для файлов
-	protocol := "http"
-	if config.UseSSL {
-		protocol = "https"
+	var baseURL string
+	if config.PublicURL != "" {
+		// Используем публичный URL если он задан (например, через proxy)
+		baseURL = config.PublicURL
+	} else {
+		// Иначе формируем URL напрямую к MinIO
+		protocol := "http"
+		if config.UseSSL {
+			protocol = "https"
+		}
+		baseURL = fmt.Sprintf("%s://%s", protocol, config.Endpoint)
 	}
-	baseURL := fmt.Sprintf("%s://%s", protocol, config.Endpoint)
 
 	return &MinioClient{
 		client:     client,
@@ -147,8 +155,9 @@ func (m *MinioClient) UploadFile(ctx context.Context, objectName string, reader 
 	}
 
 	// Return public URL for the file
-	// Format: http://minio-host/<bucket-name>/<object-path>
-	publicURL := fmt.Sprintf("%s/%s/%s", m.baseURL, m.bucketName, objectName)
+	// Если baseURL уже содержит путь к прокси (например, http://localhost:3000),
+	// то просто добавляем путь к файлу
+	publicURL := fmt.Sprintf("/%s/%s", m.bucketName, objectName)
 	return publicURL, nil
 }
 

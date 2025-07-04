@@ -122,43 +122,6 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
             </Link>
           </div>
         )}
-
-        {/* История последних транзакций */}
-        {!compact &&
-          balance.recent_transactions &&
-          balance.recent_transactions.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-primary-content/20">
-              <p className="text-sm opacity-80 mb-2">
-                {t('admin.balance.recentTransactions')}
-              </p>
-              <div className="space-y-1">
-                {balance.recent_transactions
-                  .slice(0, 3)
-                  .map((tx: any, index: number) => (
-                    <div key={index} className="flex justify-between text-xs">
-                      <span className="opacity-70">
-                        {tx.type === 'deposit' ? '➕' : '➖'}{' '}
-                        {t(`admin.balance.transaction.${tx.type}`)}
-                      </span>
-                      <span
-                        className={
-                          tx.amount > 0 ? 'text-success' : 'text-error'
-                        }
-                      >
-                        {tx.amount > 0 ? '+' : ''}
-                        {balanceService.formatAmount(tx.amount, tx.currency)}
-                      </span>
-                    </div>
-                  ))}
-              </div>
-              <Link
-                href={`/${locale}/balance/history`}
-                className="text-xs opacity-70 hover:opacity-100 mt-2 inline-block"
-              >
-                {t('admin.balance.viewAllTransactions')} →
-              </Link>
-            </div>
-          )}
       </div>
     </div>
   );

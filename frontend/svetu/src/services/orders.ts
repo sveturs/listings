@@ -20,40 +20,48 @@ export const ordersService = {
 
   // Получить заказ по ID
   async getOrder(orderId: number): Promise<StorefrontOrder> {
-    const response = await apiClient.get(`/api/v1/orders/${orderId}`);
-    return response.data.data;
+    const response = await apiClient.get(
+      `/api/v1/marketplace/orders/${orderId}`
+    );
+    if (response.data?.success && response.data?.data) {
+      return response.data.data;
+    }
+    throw new Error('Order not found');
   },
 
-  // Получить список заказов пользователя
+  // Получить список заказов пользователя (покупки)
   async getUserOrders(params?: {
     status?: string;
     limit?: number;
     offset?: number;
   }): Promise<{ orders: StorefrontOrder[]; total: number }> {
-    const searchParams = new URLSearchParams();
-    if (params?.status) searchParams.append('status', params.status);
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.offset) searchParams.append('offset', params.offset.toString());
+    // Используем marketplace endpoint для получения заказов где пользователь - покупатель
+    const page = params?.offset
+      ? Math.floor(params.offset / (params.limit || 20)) + 1
+      : 1;
+    const limit = params?.limit || 20;
 
-    const response = await apiClient.get(`/api/v1/orders?${searchParams}`);
+    const searchParams = new URLSearchParams();
+    searchParams.append('page', page.toString());
+    searchParams.append('limit', limit.toString());
+    if (params?.status) searchParams.append('status', params.status);
+
+    const response = await apiClient.get(
+      `/api/v1/marketplace/orders/my/purchases?${searchParams}`
+    );
     console.log('[ordersService] getUserOrders response:', response);
-    
-    // Backend возвращает объект с полями orders и total
-    if (response.data?.data && typeof response.data.data === 'object') {
+
+    if (response.data?.success && response.data?.data) {
       const { orders = [], total = 0 } = response.data.data;
       return {
         orders: Array.isArray(orders) ? orders : [],
         total: total || 0,
       };
     }
-    
-    // Fallback на случай если структура ответа другая
-    const orders = Array.isArray(response.data?.data) ? response.data.data : [];
-    const total = response.data?.meta?.total || response.data?.total || orders.length;
-    
+
     return {
-      orders,
-      total,
+      orders: [],
+      total: 0,
     };
   },
 

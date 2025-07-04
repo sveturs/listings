@@ -1,0 +1,352 @@
+'use client';
+
+import { use, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/services/api-client';
+import { balanceService } from '@/services/balance';
+import { ImageGallery } from '@/components/reviews/ImageGallery';
+
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export default function OrderDetailsPage({ params }: Props) {
+  const { id } = use(params);
+  const locale = useLocale();
+  const _t = useTranslations();
+  const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push(`/${locale}/auth/login`);
+      return;
+    }
+
+    const fetchOrder = async () => {
+      try {
+        const response = await apiClient.get(
+          `/api/v1/marketplace/orders/${id}`
+        );
+        console.log('Order details:', response);
+
+        if (response.data?.success && response.data?.data) {
+          setOrder(response.data.data);
+        } else {
+          setError('Заказ не найден');
+        }
+      } catch (error: any) {
+        console.error('Error fetching order:', error);
+        if (error.response?.status === 404) {
+          setError('Заказ не найден');
+        } else if (error.response?.status === 403) {
+          setError('У вас нет доступа к этому заказу');
+        } else {
+          setError('Ошибка загрузки заказа');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [id, isAuthenticated, locale, router]);
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'badge-warning';
+      case 'paid':
+        return 'badge-info';
+      case 'shipped':
+        return 'badge-primary';
+      case 'delivered':
+        return 'badge-success';
+      case 'completed':
+        return 'badge-success';
+      case 'cancelled':
+        return 'badge-error';
+      case 'disputed':
+        return 'badge-error';
+      case 'refunded':
+        return 'badge-ghost';
+      default:
+        return 'badge-ghost';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      pending: 'В ожидании',
+      paid: 'Оплачен',
+      shipped: 'Отправлен',
+      delivered: 'Доставлен',
+      completed: 'Завершен',
+      cancelled: 'Отменен',
+      disputed: 'Спор',
+      refunded: 'Возврат',
+    };
+    return statusMap[status] || status;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="alert alert-error">
+          <span>{error}</span>
+          <Link href={`/${locale}/profile/orders`} className="btn btn-sm">
+            Вернуться к заказам
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return null;
+  }
+
+  const isBuyer = user?.id === order.buyer_id;
+  const isSeller = user?.id === order.seller_id;
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Заказ #{order.id}</h1>
+        <div className={`badge badge-lg ${getStatusBadgeClass(order.status)}`}>
+          {getStatusLabel(order.status)}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Order Details */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Product Info */}
+          <div className="card bg-base-100 shadow">
+            <div className="card-body">
+              <h2 className="card-title">Информация о товаре</h2>
+
+              {order.listing && (
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    {order.listing.images &&
+                      order.listing.images.length > 0 && (
+                        <div
+                          className="w-32 h-32 flex-shrink-0 cursor-pointer relative overflow-hidden rounded-lg"
+                          onClick={() => {
+                            setSelectedImageIndex(0);
+                            setGalleryOpen(true);
+                          }}
+                        >
+                          <img
+                            src={order.listing.images[0].url}
+                            alt={order.listing.title}
+                            className="w-full h-full object-cover hover:scale-110 transition-transform duration-200"
+                          />
+                          {order.listing.images.length > 1 && (
+                            <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                              +{order.listing.images.length - 1}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold">
+                        {order.listing.title}
+                      </h3>
+                      {order.listing.description && (
+                        <p className="text-base-content/70 mt-2">
+                          {order.listing.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="divider"></div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-base-content/70">Цена товара:</span>
+                      <p className="font-semibold">
+                        {balanceService.formatAmount(order.item_price, 'RSD')}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-base-content/70">Дата заказа:</span>
+                      <p className="font-semibold">
+                        {formatDate(order.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Shipping Info */}
+          {(order.status === 'shipped' ||
+            order.status === 'delivered' ||
+            order.status === 'completed') && (
+            <div className="card bg-base-100 shadow">
+              <div className="card-body">
+                <h2 className="card-title">Информация о доставке</h2>
+
+                <div className="space-y-2 text-sm">
+                  {order.shipping_method && (
+                    <div>
+                      <span className="text-base-content/70">
+                        Способ доставки:
+                      </span>
+                      <p className="font-semibold">{order.shipping_method}</p>
+                    </div>
+                  )}
+
+                  {order.tracking_number && (
+                    <div>
+                      <span className="text-base-content/70">Трек-номер:</span>
+                      <p className="font-semibold">{order.tracking_number}</p>
+                    </div>
+                  )}
+
+                  {order.shipped_at && (
+                    <div>
+                      <span className="text-base-content/70">
+                        Дата отправки:
+                      </span>
+                      <p className="font-semibold">
+                        {formatDate(order.shipped_at)}
+                      </p>
+                    </div>
+                  )}
+
+                  {order.delivered_at && (
+                    <div>
+                      <span className="text-base-content/70">
+                        Дата доставки:
+                      </span>
+                      <p className="font-semibold">
+                        {formatDate(order.delivered_at)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          {isBuyer && order.status === 'shipped' && (
+            <div className="card bg-base-100 shadow">
+              <div className="card-body">
+                <h2 className="card-title">Действия</h2>
+                <p className="text-sm text-base-content/70">
+                  Если вы получили товар, подтвердите получение. Это поможет
+                  завершить сделку.
+                </p>
+                <div className="card-actions justify-end">
+                  <button className="btn btn-primary">
+                    Подтвердить получение
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Participants */}
+          <div className="card bg-base-100 shadow">
+            <div className="card-body">
+              <h2 className="card-title text-lg">Участники сделки</h2>
+
+              <div className="space-y-4">
+                {/* Seller */}
+                <div>
+                  <p className="text-sm text-base-content/70">Продавец:</p>
+                  <p className="font-semibold">
+                    {order.seller?.name || order.seller?.email || 'Неизвестно'}
+                    {isSeller && ' (Вы)'}
+                  </p>
+                </div>
+
+                {/* Buyer */}
+                <div>
+                  <p className="text-sm text-base-content/70">Покупатель:</p>
+                  <p className="font-semibold">
+                    {order.buyer?.name || order.buyer?.email || 'Неизвестно'}
+                    {isBuyer && ' (Вы)'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Protection Period */}
+          {order.protection_expires_at && (
+            <div className="card bg-base-100 shadow">
+              <div className="card-body">
+                <h2 className="card-title text-lg">Защитный период</h2>
+                <p className="text-sm text-base-content/70">
+                  Период защиты покупателя активен до:
+                </p>
+                <p className="font-semibold">
+                  {formatDate(order.protection_expires_at)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Back Button */}
+      <div className="mt-8">
+        <Link href={`/${locale}/profile/orders`} className="btn btn-outline">
+          ← Вернуться к заказам
+        </Link>
+      </div>
+
+      {/* Image Gallery Modal */}
+      {order?.listing?.images && order.listing.images.length > 0 && (
+        <ImageGallery
+          images={order.listing.images.map((img: any) => img.url)}
+          initialIndex={selectedImageIndex}
+          isOpen={galleryOpen}
+          onClose={() => setGalleryOpen(false)}
+        />
+      )}
+    </div>
+  );
+}

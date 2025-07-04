@@ -69,7 +69,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6" autoComplete="off">
       {/* Name Field */}
       <FormField
         label={t('registerForm.name')}
@@ -99,6 +99,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
       >
         <input
           type="email"
+          name="email"
+          id="register-email"
           className={`input input-bordered w-full ${
             errors.email ? 'input-error' : ''
           }`}
@@ -137,6 +139,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
       >
         <input
           type="password"
+          name="password"
+          id="register-password"
           className={`input input-bordered w-full ${
             errors.password ? 'input-error' : ''
           }`}
@@ -158,6 +162,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
       >
         <input
           type="password"
+          name="confirmPassword"
+          id="register-confirm-password"
           className={`input input-bordered w-full ${
             errors.confirmPassword ? 'input-error' : ''
           }`}

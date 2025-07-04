@@ -5410,6 +5410,33 @@ paths:
       summary: Confirm order delivery
       tags:
         - orders
+  "/api/v1/marketplace/orders/{id}/confirm-payment":
+    post:
+      description: Confirm order payment (for mock payment provider)
+      parameters:
+        - description: Order ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/handler.ConfirmPaymentRequest"
+        description: Payment confirmation
+        required: true
+      responses:
+        "200":
+          description: Payment confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+      summary: Confirm order payment
+      tags:
+        - orders
   "/api/v1/marketplace/orders/{id}/dispute":
     post:
       description: Open dispute for order
@@ -11014,6 +11041,13 @@ components:
         session_id:
           example: mock_session_7_1751361491
           type: string
+      type: object
+    handler.ConfirmPaymentRequest:
+      properties:
+        session_id:
+          type: string
+      required:
+        - session_id
       type: object
     handler.ContactRemoveResponse:
       description: Ответ при удалении контакта из списка

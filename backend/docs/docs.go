@@ -8133,6 +8133,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/marketplace/orders/{id}/confirm-payment": {
+            "post": {
+                "description": "Confirm order payment (for mock payment provider)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Confirm order payment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payment confirmation",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.ConfirmPaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment confirmed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/orders/{id}/dispute": {
             "post": {
                 "description": "Open dispute for order",
@@ -15856,6 +15897,17 @@ const docTemplate = `{
                 "session_id": {
                     "type": "string",
                     "example": "mock_session_7_1751361491"
+                }
+            }
+        },
+        "handler.ConfirmPaymentRequest": {
+            "type": "object",
+            "required": [
+                "session_id"
+            ],
+            "properties": {
+                "session_id": {
+                    "type": "string"
                 }
             }
         },

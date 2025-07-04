@@ -7800,6 +7800,53 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/orders/{id}/confirm-payment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirm order payment
+     * @description Confirm order payment (for mock payment provider)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Order ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Payment confirmation */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.ConfirmPaymentRequest'];
+        };
+      };
+      responses: {
+        /** @description Payment confirmed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/orders/{id}/dispute': {
     parameters: {
       query?: never;
@@ -15758,6 +15805,9 @@ export interface components {
       amount?: number;
       /** @example mock_session_7_1751361491 */
       session_id?: string;
+    };
+    'handler.ConfirmPaymentRequest': {
+      session_id: string;
     };
     /** @description Ответ при удалении контакта из списка */
     'handler.ContactRemoveResponse': {

@@ -9435,6 +9435,49 @@
                 }
             }
         },
+        "/api/v1/marketplace/orders/{id}/confirm-payment": {
+            "post": {
+                "description": "Confirm order payment (for mock payment provider)",
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Confirm order payment",
+                "parameters": [
+                    {
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.ConfirmPaymentRequest"
+                            }
+                        }
+                    },
+                    "description": "Payment confirmation",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment confirmed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/orders/{id}/dispute": {
             "post": {
                 "description": "Open dispute for order",
@@ -18621,6 +18664,17 @@
                     "session_id": {
                         "type": "string",
                         "example": "mock_session_7_1751361491"
+                    }
+                }
+            },
+            "handler.ConfirmPaymentRequest": {
+                "type": "object",
+                "required": [
+                    "session_id"
+                ],
+                "properties": {
+                    "session_id": {
+                        "type": "string"
                     }
                 }
             },

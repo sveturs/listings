@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { FaFile, FaVideo, FaDownload, FaTrash, FaExpand } from 'react-icons/fa';
 import configManager from '@/config';
 import { useTranslations } from 'next-intl';
+import { ImageGallery } from '@/components/reviews/ImageGallery';
 
 interface ChatAttachmentsProps {
   attachments: ChatAttachment[];
@@ -20,7 +21,9 @@ export function ChatAttachments({
   canDelete = false,
   hasTextBelow = false,
 }: ChatAttachmentsProps) {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
+    null
+  );
   const t = useTranslations('Chat');
 
   const getImageUrl = (url: string) => {
@@ -59,6 +62,11 @@ export function ChatAttachments({
     }
   };
 
+  // Получаем массив URL изображений для галереи
+  const imageUrls = attachments
+    .filter((attachment) => attachment.file_type === 'image')
+    .map((attachment) => getImageUrl(attachment.public_url));
+
   return (
     <>
       <div
@@ -80,18 +88,24 @@ export function ChatAttachments({
                   fill
                   sizes="(max-width: 640px) 100vw, 192px"
                   className="object-cover cursor-pointer"
-                  onClick={() =>
-                    setSelectedImage(getImageUrl(attachment.public_url))
-                  }
+                  onClick={() => {
+                    const imageIndex = imageUrls.indexOf(
+                      getImageUrl(attachment.public_url)
+                    );
+                    setSelectedImageIndex(imageIndex);
+                  }}
                   unoptimized={attachment.public_url.startsWith('/chat-files/')}
                 />
                 {/* Панель действий для десктопа */}
                 <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 hidden sm:block">
                   <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-lg px-2 py-1 flex items-center gap-1">
                     <button
-                      onClick={() =>
-                        setSelectedImage(getImageUrl(attachment.public_url))
-                      }
+                      onClick={() => {
+                        const imageIndex = imageUrls.indexOf(
+                          getImageUrl(attachment.public_url)
+                        );
+                        setSelectedImageIndex(imageIndex);
+                      }}
                       className="btn btn-ghost btn-xs btn-circle hover:bg-gray-200 dark:hover:bg-gray-700"
                       title={t('expand')}
                     >
@@ -121,9 +135,12 @@ export function ChatAttachments({
                 <div className="absolute bottom-2 right-2 opacity-0 active:opacity-100 transition-all duration-200 sm:hidden">
                   <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-lg px-2 py-1 flex items-center gap-1">
                     <button
-                      onClick={() =>
-                        setSelectedImage(getImageUrl(attachment.public_url))
-                      }
+                      onClick={() => {
+                        const imageIndex = imageUrls.indexOf(
+                          getImageUrl(attachment.public_url)
+                        );
+                        setSelectedImageIndex(imageIndex);
+                      }}
                       className="btn btn-ghost btn-xs btn-circle"
                     >
                       <FaExpand className="text-gray-700 dark:text-gray-300" />
@@ -178,30 +195,13 @@ export function ChatAttachments({
         ))}
       </div>
 
-      {/* Модальное окно для просмотра изображений */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div className="relative max-w-full max-h-full">
-            <Image
-              src={selectedImage}
-              alt="Full size"
-              width={1200}
-              height={800}
-              className="object-contain"
-              unoptimized={selectedImage.startsWith('/chat-files/')}
-            />
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 btn btn-circle btn-ghost text-white"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Используем общий компонент ImageGallery */}
+      <ImageGallery
+        images={imageUrls}
+        initialIndex={selectedImageIndex ?? 0}
+        isOpen={selectedImageIndex !== null}
+        onClose={() => setSelectedImageIndex(null)}
+      />
     </>
   );
 }

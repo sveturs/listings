@@ -1,9 +1,8 @@
 import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
-type UserBalance = components['schemas']['handler.UserBalanceResponse'];
-type TransactionHistory =
-  components['schemas']['handler.TransactionHistoryResponse'];
+type UserBalance = components['schemas']['models.UserBalance'];
+type TransactionHistory = any;
 type DepositResponse = components['schemas']['utils.SuccessResponseSwag'] & {
   data?: components['schemas']['models.PaymentSession'];
 };

@@ -41,7 +41,7 @@ export default function StorefrontProductsList({
       setIsLoading(true);
       setError(null);
       
-      const response = await storefrontProductsService.getProducts(storefrontId, {
+      const response = await storefrontProductsService.getProducts(String(storefrontId), {
         limit: ITEMS_PER_PAGE,
         offset: (currentPage - 1) * ITEMS_PER_PAGE,
         in_stock_only: false, // Показываем все товары, включая out_of_stock

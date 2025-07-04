@@ -29,9 +29,12 @@ func NewService(storage storage.Storage, notifService service.NotificationServic
 		orderRepoAdapter := repository.NewPostgresOrderAdapter(marketplaceOrderRepo)
 		listingRepoAdapter := repository.NewPostgresMarketplaceAdapter(storage) // storage сам реализует GetListingByID
 
+		userRepoAdapter := &SimpleUserRepository{storage: storage}
+
 		orderService = NewOrderService(
 			orderRepoAdapter,         // orderRepo
 			listingRepoAdapter,       // listingRepo
+			userRepoAdapter,          // userRepo
 			NewPaymentService(),      // paymentService
 			NewNotificationAdapter(), // notificationService
 			5.0,                      // platformFeeRate (5%)

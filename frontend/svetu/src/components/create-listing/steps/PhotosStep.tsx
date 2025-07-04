@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useCreateListing } from '@/contexts/CreateListingContext';
 import { toast } from '@/utils/toast';
+import { ImageGallery } from '@/components/reviews/ImageGallery';
 
 interface PhotosStepProps {
   onNext: () => void;
@@ -20,6 +21,8 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
   );
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (files: FileList | null) => {
@@ -108,6 +111,11 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
 
   const canProceed = photos.length > 0;
 
+  const openGallery = (index: number) => {
+    setGalleryIndex(index);
+    setGalleryOpen(true);
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="card bg-base-100 shadow-lg">
@@ -192,19 +200,43 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                       }
                     `}
                   >
-                    <Image
-                      src={photo}
-                      alt={`Photo ${index + 1}`}
-                      width={200}
-                      height={128}
-                      className="w-full h-24 sm:h-32 object-cover"
-                    />
+                    <div
+                      className="cursor-pointer relative"
+                      onClick={() => openGallery(index)}
+                    >
+                      <Image
+                        src={photo}
+                        alt={`Photo ${index + 1}`}
+                        width={200}
+                        height={128}
+                        className="w-full h-24 sm:h-32 object-cover"
+                      />
+                      {/* Zoom indicator on hover */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <svg
+                          className="w-8 h-8 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
 
                     {/* Overlay с действиями */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2 z-10 pointer-events-none group-hover:pointer-events-auto">
                       {index !== mainPhotoIndex && (
                         <button
-                          onClick={() => setAsMainPhoto(index)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAsMainPhoto(index);
+                          }}
                           className="btn btn-xs btn-primary"
                           title={t('create_listing.photos.set_main')}
                         >
@@ -212,7 +244,10 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                         </button>
                       )}
                       <button
-                        onClick={() => removePhoto(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removePhoto(index);
+                        }}
                         className="btn btn-xs btn-error"
                         title={t('create_listing.photos.remove')}
                       >
@@ -300,6 +335,14 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
           </div>
         </div>
       </div>
+
+      {/* Image Gallery Modal */}
+      <ImageGallery
+        images={photos}
+        initialIndex={galleryIndex}
+        isOpen={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+      />
     </div>
   );
 }
