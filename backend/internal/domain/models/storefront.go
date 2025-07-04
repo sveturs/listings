@@ -302,6 +302,7 @@ type Location struct {
 
 // StorefrontCreateDTO данные для создания витрины
 type StorefrontCreateDTO struct {
+	UserID      int    `json:"-"` // Заполняется из контекста
 	Name        string `json:"name" validate:"required,min=3,max=255"`
 	Slug        string `json:"slug,omitempty"` // Генерируется автоматически если пустой
 	Description string `json:"description,omitempty"`

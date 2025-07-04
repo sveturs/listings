@@ -109,8 +109,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 		)
 		RETURNING id, created_at, updated_at
 	`,
-		// Временно используем userID = 1, потом получим из контекста
-		1, generateSlug(dto.Name), dto.Name, dto.Description,
+		dto.UserID, generateSlug(dto.Name), dto.Name, dto.Description,
 		"", "", dto.Theme,
 		dto.Phone, dto.Email, dto.Website,
 		dto.Location.FullAddress, dto.Location.City, dto.Location.PostalCode, dto.Location.Country,
@@ -127,7 +126,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 	_, err = tx.Exec(ctx, `
 		INSERT INTO storefront_staff (storefront_id, user_id, role, permissions)
 		VALUES ($1, $2, $3, $4)
-	`, storefront.ID, 1, models.StaffRoleOwner, getOwnerPermissions())
+	`, storefront.ID, dto.UserID, models.StaffRoleOwner, getOwnerPermissions())
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to add owner to staff: %w", err)

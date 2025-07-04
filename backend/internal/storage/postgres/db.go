@@ -44,6 +44,11 @@ type Database struct {
 	attributeGroups   AttributeGroupStorage
 	fsStorage         filestorage.FileStorageInterface
 	storefrontRepo    StorefrontRepository // Репозиторий для витрин
+	cartRepo          CartRepositoryInterface // Репозиторий для корзин
+	orderRepo         OrderRepositoryInterface // Репозиторий для заказов
+	inventoryRepo     InventoryRepositoryInterface // Репозиторий для инвентаря
+	marketplaceOrderRepo *MarketplaceOrderRepository // Репозиторий для заказов маркетплейса
+	productSearchRepo storefrontOpenSearch.ProductSearchRepository // Репозиторий для поиска товаров витрин
 }
 
 func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface) (*Database, error) {
@@ -73,6 +78,18 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 
 	// Инициализируем репозиторий витрин
 	db.storefrontRepo = NewStorefrontRepository(db)
+	
+	// Инициализируем репозиторий корзин
+	db.cartRepo = NewCartRepository(pool)
+	
+	// Инициализируем репозиторий заказов
+	db.orderRepo = NewOrderRepository(pool)
+	
+	// Инициализируем репозиторий инвентаря
+	db.inventoryRepo = NewInventoryRepository(pool)
+	
+	// Инициализируем репозиторий заказов маркетплейса
+	db.marketplaceOrderRepo = NewMarketplaceOrderRepository(pool)
 
 	// Инициализируем репозиторий OpenSearch, если клиент передан
 	if osClient != nil {
@@ -87,6 +104,13 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 		// Подготавливаем индекс витрин
 		if err := db.osStorefrontRepo.PrepareIndex(context.Background()); err != nil {
 			log.Printf("Ошибка подготовки индекса витрин в OpenSearch: %v", err)
+		}
+		
+		// Инициализируем репозиторий товаров витрин в OpenSearch
+		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "storefront_products")
+		// Подготавливаем индекс товаров витрин
+		if err := db.productSearchRepo.PrepareIndex(context.Background()); err != nil {
+			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
 		}
 	}
 
@@ -1254,24 +1278,47 @@ func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityT
 }
 
 // Storefront methods
-func (db *Database) CreateStorefront(ctx context.Context, storefront *models.Storefront) (int, error) {
-	var id int
+func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
+	storefront := &models.Storefront{
+		UserID:      userID,
+		Slug:        dto.Slug,
+		Name:        dto.Name,
+		Description: dto.Description,
+		LogoURL:     "",  // Будет заполнено после загрузки
+		BannerURL:   "",  // Будет заполнено после загрузки
+		Theme:       dto.Theme,
+		Phone:       dto.Phone,
+		Email:       dto.Email,
+		Website:     dto.Website,
+		Address:     dto.Location.FullAddress,
+		City:        dto.Location.City,
+		PostalCode:  dto.Location.PostalCode,
+		Country:     dto.Location.Country,
+		Latitude:    &dto.Location.BuildingLat,
+		Longitude:   &dto.Location.BuildingLng,
+		Settings:    dto.Settings,
+		SEOMeta:     dto.SEOMeta,
+		IsActive:    true,
+		SubscriptionPlan: "basic",
+		CommissionRate:   0.05, // 5% по умолчанию
+	}
+	
 	err := db.pool.QueryRow(ctx, `
 		INSERT INTO storefronts (user_id, slug, name, description, logo_url, banner_url, theme,
 			phone, email, website, address, city, postal_code, country, latitude, longitude,
 			settings, seo_meta, is_active, subscription_plan, commission_rate)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
-		RETURNING id
+		RETURNING id, created_at, updated_at
 	`, storefront.UserID, storefront.Slug, storefront.Name, storefront.Description,
 		storefront.LogoURL, storefront.BannerURL, storefront.Theme, storefront.Phone,
 		storefront.Email, storefront.Website, storefront.Address, storefront.City,
 		storefront.PostalCode, storefront.Country, storefront.Latitude, storefront.Longitude,
 		storefront.Settings, storefront.SEOMeta, storefront.IsActive, storefront.SubscriptionPlan,
-		storefront.CommissionRate).Scan(&id)
+		storefront.CommissionRate).Scan(&storefront.ID, &storefront.CreatedAt, &storefront.UpdatedAt)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return id, nil
+	return storefront, nil
 }
 
 func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]models.Storefront, error) {
@@ -1388,4 +1435,52 @@ func (db *Database) Storefront() interface{} {
 	}
 	// Возвращаем новый репозиторий используя текущий экземпляр db
 	return NewStorefrontRepository(db)
+}
+
+// Cart возвращает репозиторий корзин
+func (db *Database) Cart() interface{} {
+	if db.cartRepo != nil {
+		return db.cartRepo
+	}
+	// Возвращаем новый репозиторий используя пул соединений
+	return NewCartRepository(db.pool)
+}
+
+// Order возвращает репозиторий заказов
+func (db *Database) Order() interface{} {
+	if db.orderRepo != nil {
+		return db.orderRepo
+	}
+	// Возвращаем новый репозиторий используя пул соединений
+	return NewOrderRepository(db.pool)
+}
+
+// Inventory возвращает репозиторий инвентаря
+func (db *Database) Inventory() interface{} {
+	if db.inventoryRepo != nil {
+		return db.inventoryRepo
+	}
+	// Возвращаем новый репозиторий используя пул соединений
+	return NewInventoryRepository(db.pool)
+}
+
+// MarketplaceOrder возвращает репозиторий заказов маркетплейса
+func (db *Database) MarketplaceOrder() interface{} {
+	if db.marketplaceOrderRepo != nil {
+		return db.marketplaceOrderRepo
+	}
+	// Возвращаем новый репозиторий используя пул соединений
+	return NewMarketplaceOrderRepository(db.pool)
+}
+
+// StorefrontProductSearch возвращает репозиторий для поиска товаров витрин
+func (db *Database) StorefrontProductSearch() interface{} {
+	if db.productSearchRepo != nil {
+		return db.productSearchRepo
+	}
+	// Возвращаем новый репозиторий если есть клиент OpenSearch
+	if db.osClient != nil {
+		return storefrontOpenSearch.NewProductRepository(db.osClient, "storefront_products")
+	}
+	return nil
 }
