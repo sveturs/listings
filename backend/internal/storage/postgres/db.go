@@ -2,21 +2,23 @@
 package postgres
 
 import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
 	"backend/internal/types"
-	"context"
-	"database/sql"
-	"encoding/json"
-	"fmt"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"log"
-	"os"
 
 	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
@@ -32,23 +34,23 @@ type Database struct {
 	pool          *pgxpool.Pool
 	marketplaceDB *marketplaceStorage.Storage
 
-	reviewDB          *reviewStorage.Storage
-	usersDB           *userStorage.Storage
-	notificationsDB   *notificationStorage.Storage
-	osMarketplaceRepo opensearch.MarketplaceSearchRepository
-	osStorefrontRepo  storefrontOpenSearch.StorefrontSearchRepository
-	osClient          *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
-	db                *sql.DB
-	marketplaceIndex  string
-	storefrontIndex   string
-	attributeGroups   AttributeGroupStorage
-	fsStorage         filestorage.FileStorageInterface
-	storefrontRepo    StorefrontRepository // Репозиторий для витрин
-	cartRepo          CartRepositoryInterface // Репозиторий для корзин
-	orderRepo         OrderRepositoryInterface // Репозиторий для заказов
-	inventoryRepo     InventoryRepositoryInterface // Репозиторий для инвентаря
-	marketplaceOrderRepo *MarketplaceOrderRepository // Репозиторий для заказов маркетплейса
-	productSearchRepo storefrontOpenSearch.ProductSearchRepository // Репозиторий для поиска товаров витрин
+	reviewDB             *reviewStorage.Storage
+	usersDB              *userStorage.Storage
+	notificationsDB      *notificationStorage.Storage
+	osMarketplaceRepo    opensearch.MarketplaceSearchRepository
+	osStorefrontRepo     storefrontOpenSearch.StorefrontSearchRepository
+	osClient             *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
+	db                   *sql.DB
+	marketplaceIndex     string
+	storefrontIndex      string
+	attributeGroups      AttributeGroupStorage
+	fsStorage            filestorage.FileStorageInterface
+	storefrontRepo       StorefrontRepository                         // Репозиторий для витрин
+	cartRepo             CartRepositoryInterface                      // Репозиторий для корзин
+	orderRepo            OrderRepositoryInterface                     // Репозиторий для заказов
+	inventoryRepo        InventoryRepositoryInterface                 // Репозиторий для инвентаря
+	marketplaceOrderRepo *MarketplaceOrderRepository                  // Репозиторий для заказов маркетплейса
+	productSearchRepo    storefrontOpenSearch.ProductSearchRepository // Репозиторий для поиска товаров витрин
 }
 
 func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface) (*Database, error) {
@@ -78,16 +80,16 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 
 	// Инициализируем репозиторий витрин
 	db.storefrontRepo = NewStorefrontRepository(db)
-	
+
 	// Инициализируем репозиторий корзин
 	db.cartRepo = NewCartRepository(pool)
-	
+
 	// Инициализируем репозиторий заказов
 	db.orderRepo = NewOrderRepository(pool)
-	
+
 	// Инициализируем репозиторий инвентаря
 	db.inventoryRepo = NewInventoryRepository(pool)
-	
+
 	// Инициализируем репозиторий заказов маркетплейса
 	db.marketplaceOrderRepo = NewMarketplaceOrderRepository(pool)
 
@@ -105,7 +107,7 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 		if err := db.osStorefrontRepo.PrepareIndex(context.Background()); err != nil {
 			log.Printf("Ошибка подготовки индекса витрин в OpenSearch: %v", err)
 		}
-		
+
 		// Инициализируем репозиторий товаров витрин в OpenSearch
 		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "storefront_products")
 		// Подготавливаем индекс товаров витрин
@@ -124,9 +126,11 @@ func (db *Database) Close() {
 		db.pool.Close()
 	}
 }
+
 func (db *Database) FileStorage() filestorage.FileStorageInterface {
 	return db.fsStorage
 }
+
 func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
 	if db.osMarketplaceRepo == nil {
 		return nil, fmt.Errorf("OpenSearch не настроен")
@@ -137,7 +141,8 @@ func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search
 // GetOpenSearchClient возвращает клиент OpenSearch для прямого выполнения запросов
 func (db *Database) GetOpenSearchClient() (interface {
 	Execute(method, path string, body []byte) ([]byte, error)
-}, error) {
+}, error,
+) {
 	if db.osClient == nil {
 		return nil, fmt.Errorf("OpenSearch клиент не настроен")
 	}
@@ -175,6 +180,7 @@ func (db *Database) ReindexAllStorefronts(ctx context.Context) error {
 	}
 	return db.osStorefrontRepo.ReindexAll(ctx)
 }
+
 func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
 	var image models.MarketplaceImage
 
@@ -188,7 +194,6 @@ func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*mode
 		&image.ContentType, &image.IsMain, &image.StorageType, &image.StorageBucket,
 		&image.PublicURL, &image.CreatedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("image not found")
@@ -215,6 +220,7 @@ func (db *Database) IndexListing(ctx context.Context, listing *models.Marketplac
 
 	return db.osMarketplaceRepo.IndexListing(ctx, listing)
 }
+
 func (db *Database) PrepareIndex(ctx context.Context) error {
 	if db.osMarketplaceRepo == nil {
 		// Если репозиторий OpenSearch не инициализирован, просто возвращаем nil
@@ -225,6 +231,7 @@ func (db *Database) PrepareIndex(ctx context.Context) error {
 	// Используем уже инициализированный репозиторий для проверки индекса
 	return db.osMarketplaceRepo.PrepareIndex(ctx)
 }
+
 func (db *Database) DeleteListingIndex(ctx context.Context, id string) error {
 	if db.osMarketplaceRepo == nil {
 		return fmt.Errorf("OpenSearch не настроен")
@@ -258,6 +265,7 @@ func (db *Database) GetCategoryAttributes(ctx context.Context, categoryID int) (
 func (db *Database) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
 	return db.marketplaceDB.SaveListingAttributes(ctx, listingID, attributes)
 }
+
 func (db *Database) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
 	return db.marketplaceDB.GetAttributeRanges(ctx, categoryID)
 }
@@ -266,6 +274,7 @@ func (db *Database) GetAttributeRanges(ctx context.Context, categoryID int) (map
 func (db *Database) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
 	return db.marketplaceDB.GetListingAttributes(ctx, listingID)
 }
+
 func (db *Database) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
 	var session types.SessionData
 	err := db.pool.QueryRow(ctx, `
@@ -395,9 +404,11 @@ func (r *RowsWrapper) Close() error {
 	r.rows.Close()
 	return nil
 }
+
 func (r *RowsWrapper) Err() error {
 	return r.rows.Err()
 }
+
 func (db *Database) Query(ctx context.Context, sql string, args ...interface{}) (storage.Rows, error) {
 	rows, err := db.pool.Query(ctx, sql, args...)
 	if err != nil {
@@ -583,6 +594,7 @@ func (db *Database) GetChat(ctx context.Context, chatID int, userID int) (*model
 func (db *Database) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
 	return db.marketplaceDB.MarkMessagesAsRead(ctx, messageIDs, userID)
 }
+
 func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int, error) {
 	var count int
 	err := db.pool.QueryRow(ctx, `
@@ -593,7 +605,6 @@ func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int
         AND NOT m.is_read
         AND NOT c.is_archived
     `, userID).Scan(&count)
-
 	if err != nil {
 		return 0, err
 	}
@@ -637,7 +648,6 @@ func (db *Database) GetAttributeOptionTranslations(ctx context.Context, attribut
 	err := db.pool.QueryRow(ctx, query, attributeName, optionValue).Scan(
 		&optValue, &enTrans, &srTrans,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, nil
@@ -917,7 +927,6 @@ func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {
                         SET metadata = $1
                         WHERE id = $2
                     `, updatedMetadataJSON, id)
-
 					if err != nil {
 						log.Printf("Error updating metadata for listing %d: %v", id, err)
 						continue
@@ -1213,7 +1222,6 @@ func (db *Database) UpdateReviewDispute(ctx context.Context, dispute *models.Rev
 		dispute.ID, dispute.Status, dispute.AdminID,
 		dispute.AdminNotes, dispute.ResolvedAt,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -1280,29 +1288,29 @@ func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityT
 // Storefront methods
 func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
 	storefront := &models.Storefront{
-		UserID:      userID,
-		Slug:        dto.Slug,
-		Name:        dto.Name,
-		Description: dto.Description,
-		LogoURL:     "",  // Будет заполнено после загрузки
-		BannerURL:   "",  // Будет заполнено после загрузки
-		Theme:       dto.Theme,
-		Phone:       dto.Phone,
-		Email:       dto.Email,
-		Website:     dto.Website,
-		Address:     dto.Location.FullAddress,
-		City:        dto.Location.City,
-		PostalCode:  dto.Location.PostalCode,
-		Country:     dto.Location.Country,
-		Latitude:    &dto.Location.BuildingLat,
-		Longitude:   &dto.Location.BuildingLng,
-		Settings:    dto.Settings,
-		SEOMeta:     dto.SEOMeta,
-		IsActive:    true,
+		UserID:           userID,
+		Slug:             dto.Slug,
+		Name:             dto.Name,
+		Description:      dto.Description,
+		LogoURL:          "", // Будет заполнено после загрузки
+		BannerURL:        "", // Будет заполнено после загрузки
+		Theme:            dto.Theme,
+		Phone:            dto.Phone,
+		Email:            dto.Email,
+		Website:          dto.Website,
+		Address:          dto.Location.FullAddress,
+		City:             dto.Location.City,
+		PostalCode:       dto.Location.PostalCode,
+		Country:          dto.Location.Country,
+		Latitude:         &dto.Location.BuildingLat,
+		Longitude:        &dto.Location.BuildingLng,
+		Settings:         dto.Settings,
+		SEOMeta:          dto.SEOMeta,
+		IsActive:         true,
 		SubscriptionPlan: "basic",
 		CommissionRate:   0.05, // 5% по умолчанию
 	}
-	
+
 	err := db.pool.QueryRow(ctx, `
 		INSERT INTO storefronts (user_id, slug, name, description, logo_url, banner_url, theme,
 			phone, email, website, address, city, postal_code, country, latitude, longitude,

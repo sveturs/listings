@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"backend/internal/domain/models"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -61,7 +62,6 @@ func (s *attributeGroupStorage) CreateAttributeGroup(ctx context.Context, group 
 		group.IsActive,
 		group.IsSystem,
 	).Scan(&id)
-
 	if err != nil {
 		return 0, fmt.Errorf("ошибка создания группы атрибутов: %w", err)
 	}
@@ -246,7 +246,6 @@ func (s *attributeGroupStorage) AddItemToGroup(ctx context.Context, groupID int,
 		item.CustomDisplayName,
 		item.VisibilityCondition,
 	).Scan(&id)
-
 	if err != nil {
 		return 0, fmt.Errorf("ошибка добавления атрибута в группу: %w", err)
 	}
@@ -406,7 +405,6 @@ func (s *attributeGroupStorage) AttachGroupToCategory(ctx context.Context, categ
 		group.CollapsedByDefault,
 		group.Configuration,
 	).Scan(&id)
-
 	if err != nil {
 		return 0, fmt.Errorf("ошибка привязки группы к категории: %w", err)
 	}

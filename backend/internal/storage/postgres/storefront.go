@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"backend/internal/domain/models"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -10,6 +9,8 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"backend/internal/domain/models"
 )
 
 // ErrNotFound ошибка когда запись не найдена
@@ -117,7 +118,6 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 		dto.Settings, dto.SEOMeta,
 		false, models.SubscriptionPlanStarter, 3.00,
 	).Scan(&storefront.ID, &storefront.CreatedAt, &storefront.UpdatedAt)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create storefront: %w", err)
 	}
@@ -127,7 +127,6 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 		INSERT INTO storefront_staff (storefront_id, user_id, role, permissions)
 		VALUES ($1, $2, $3, $4)
 	`, storefront.ID, dto.UserID, models.StaffRoleOwner, getOwnerPermissions())
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to add owner to staff: %w", err)
 	}

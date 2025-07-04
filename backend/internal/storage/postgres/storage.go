@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"backend/internal/proj/marketplace/service"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

@@ -230,7 +230,6 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 			"name": product.Category.Name,
 			"slug": product.Category.Slug,
 		}
-
 	}
 
 	// Рассчитываем дополнительные поля для ранжирования

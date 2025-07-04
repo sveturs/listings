@@ -44,7 +44,6 @@ func (r *storefrontRepo) RecordEvent(ctx context.Context, event *StorefrontEvent
 		event.UserID, event.SessionID, event.IPAddress,
 		event.UserAgent, event.Referrer,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to record event: %w", err)
 	}
