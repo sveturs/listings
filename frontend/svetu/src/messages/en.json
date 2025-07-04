@@ -255,7 +255,8 @@
     "loadMore": "Load more",
     "loading": "Loading...",
     "createListing": "Create Listing",
-    "paymentsNowAvailable": "Payments are now available!"
+    "paymentsNowAvailable": "Payments are now available!",
+    "description": "Find the best deals from individuals and stores"
   },
   "header": {
     "nav": {
