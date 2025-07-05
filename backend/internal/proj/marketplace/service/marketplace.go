@@ -146,64 +146,173 @@ func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID i
 		return nil, fmt.Errorf("ошибка получения объявления: %w", err)
 	}
 
-	// Формируем параметры поиска
-	params := &search.ServiceParams{
-		CategoryID: strconv.Itoa(listing.CategoryID),
-		Size:       limit,
-		Page:       1,
-		Sort:       "date_desc", // Сортировка по дате по умолчанию
-	}
+	// Создаем калькулятор похожести
+	calculator := NewSimilarityCalculator()
 
-	// Если есть атрибуты, можно использовать их для уточнения поиска
-	if len(listing.Attributes) > 0 {
-		attributeFilters := make(map[string]string)
-		// Добавляем наиболее важные атрибуты для поиска похожих объявлений
-		for _, attr := range listing.Attributes {
-			// Выбираем только ключевые атрибуты для повышения релевантности
-			if isKeyAttribute(attr.AttributeName) && attr.DisplayValue != "" {
-				attributeFilters[attr.AttributeName] = attr.DisplayValue
+	// Пытаемся найти похожие объявления с разными уровнями строгости
+	var similarListings []*models.MarketplaceListing
+	triesCount := 0
+	maxTries := 4
+
+	for triesCount < maxTries && len(similarListings) < limit {
+		// Формируем параметры поиска для получения кандидатов
+		params := s.buildAdvancedSearchParams(listing, limit*5, triesCount) // Получаем больше для фильтрации
+
+		// Выполняем поиск похожих объявлений
+		results, err := s.SearchListingsAdvanced(ctx, params)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка поиска похожих объявлений: %w", err)
+		}
+
+		// Фильтруем и сортируем результаты по похожести
+		for _, candidate := range results.Items {
+			if candidate.ID != listingID {
+				// Проверяем, что кандидат еще не добавлен
+				found := false
+				for _, existing := range similarListings {
+					if existing.ID == candidate.ID {
+						found = true
+						break
+					}
+				}
+				if found {
+					continue
+				}
+
+				// Вычисляем похожесть
+				score, _ := calculator.CalculateSimilarity(ctx, listing, candidate)
+
+				// Добавляем информацию о скоре в метаданные (для отладки)
+				if candidate.Metadata == nil {
+					candidate.Metadata = make(map[string]interface{})
+				}
+				candidate.Metadata["similarity_score"] = map[string]interface{}{
+					"total":      score.TotalScore,
+					"category":   score.CategoryScore,
+					"attributes": score.AttributeScore,
+					"price":      score.PriceScore,
+					"location":   score.LocationScore,
+					"text":       score.TextScore,
+					"search_try": triesCount,
+				}
+
+				similarListings = append(similarListings, candidate)
 			}
 		}
-		if len(attributeFilters) > 0 {
-			params.AttributeFilters = attributeFilters
-		}
-	}
 
-	// Выполняем поиск похожих объявлений
-	results, err := s.SearchListingsAdvanced(ctx, params)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка поиска похожих объявлений: %w", err)
-	}
+		triesCount++
+		log.Printf("Попытка %d: найдено %d похожих объявлений, всего собрано %d", triesCount, len(results.Items), len(similarListings))
 
-	// Фильтруем результаты, убирая исходное объявление и ограничивая количество
-	var similarListings []*models.MarketplaceListing
-	for _, item := range results.Items {
-		if item.ID != listingID {
-			similarListings = append(similarListings, item)
-		}
+		// Если найдено достаточно результатов, прекращаем поиск
 		if len(similarListings) >= limit {
 			break
 		}
 	}
 
+	// Сортируем по убыванию похожести
+	sort.Slice(similarListings, func(i, j int) bool {
+		scoreI := similarListings[i].Metadata["similarity_score"].(map[string]interface{})["total"].(float64)
+		scoreJ := similarListings[j].Metadata["similarity_score"].(map[string]interface{})["total"].(float64)
+		return scoreI > scoreJ
+	})
+
+	// Ограничиваем количество результатов
+	if len(similarListings) > limit {
+		similarListings = similarListings[:limit]
+	}
+
+	log.Printf("Найдено %d похожих объявлений для листинга %d после %d попыток", len(similarListings), listingID, triesCount)
+
 	return similarListings, nil
 }
 
-// Вспомогательная функция для определения ключевых атрибутов
-func isKeyAttribute(attrName string) bool {
-	// Список ключевых атрибутов для поиска похожих товаров
-	keyAttributes := map[string]bool{
-		"make":          true,
-		"model":         true,
-		"brand":         true,
-		"category":      true,
-		"type":          true,
-		"rooms":         true,
-		"property_type": true,
-		"body_type":     true,
+// buildAdvancedSearchParams формирует параметры для поиска похожих объявлений
+// tryNumber определяет уровень строгости поиска: 0 - самый строгий, 3 - самый широкий
+func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.MarketplaceListing, size int, tryNumber int) *search.ServiceParams {
+	params := &search.ServiceParams{
+		CategoryID: strconv.Itoa(listing.CategoryID),
+		Size:       size,
+		Page:       1,
+		Sort:       "date_desc",
 	}
 
-	return keyAttributes[attrName]
+	// Добавляем локацию в зависимости от попытки
+	if listing.City != "" && tryNumber < 2 {
+		// Первые 2 попытки - ищем в том же городе
+		params.City = listing.City
+		log.Printf("Попытка %d: поиск в городе %s", tryNumber, listing.City)
+	} else if listing.Country != "" && tryNumber == 2 {
+		// Третья попытка - ищем в той же стране
+		params.Country = listing.Country
+		log.Printf("Попытка %d: поиск в стране %s", tryNumber, listing.Country)
+	} else {
+		// Последняя попытка - без географических ограничений
+		log.Printf("Попытка %d: поиск без географических ограничений", tryNumber)
+	}
+
+	// Добавляем диапазон цен в зависимости от попытки
+	if listing.Price > 0 {
+		switch tryNumber {
+		case 0:
+			// Первая попытка: ±50%
+			params.PriceMin = listing.Price * 0.5
+			params.PriceMax = listing.Price * 1.5
+			log.Printf("Попытка %d: диапазон цен %.2f - %.2f (±50%%)", tryNumber, params.PriceMin, params.PriceMax)
+		case 1:
+			// Вторая попытка: ±100%
+			params.PriceMin = listing.Price * 0.3
+			params.PriceMax = listing.Price * 2.0
+			log.Printf("Попытка %d: диапазон цен %.2f - %.2f (±100%%)", tryNumber, params.PriceMin, params.PriceMax)
+		case 2:
+			// Третья попытка: ±200%
+			params.PriceMin = listing.Price * 0.1
+			params.PriceMax = listing.Price * 3.0
+			log.Printf("Попытка %d: диапазон цен %.2f - %.2f (±200%%)", tryNumber, params.PriceMin, params.PriceMax)
+		default:
+			// Последняя попытка: без ограничений по цене
+			log.Printf("Попытка %d: без ограничений по цене", tryNumber)
+		}
+	}
+
+	// Добавляем ключевые атрибуты для фильтрации в зависимости от попытки
+	if len(listing.Attributes) > 0 && tryNumber < 3 {
+		attributeFilters := make(map[string]string)
+
+		// Приоритетные атрибуты для разных категорий
+		priorityAttrs := []string{"make", "model", "brand", "type", "rooms", "property_type", "body_type"}
+
+		// В зависимости от попытки используем разное количество атрибутов
+		maxAttrs := 3
+		if tryNumber == 1 {
+			maxAttrs = 2 // Во второй попытке используем меньше атрибутов
+		} else if tryNumber == 2 {
+			maxAttrs = 1 // В третьей попытке используем только самые важные
+		}
+
+		attrCount := 0
+		for _, attr := range listing.Attributes {
+			if attrCount >= maxAttrs {
+				break
+			}
+			// Добавляем только приоритетные атрибуты
+			for _, priority := range priorityAttrs {
+				if attr.AttributeName == priority && attr.DisplayValue != "" {
+					attributeFilters[attr.AttributeName] = attr.DisplayValue
+					attrCount++
+					break
+				}
+			}
+		}
+
+		if len(attributeFilters) > 0 {
+			params.AttributeFilters = attributeFilters
+			log.Printf("Попытка %d: фильтр по атрибутам %v", tryNumber, attributeFilters)
+		}
+	} else {
+		log.Printf("Попытка %d: без фильтров по атрибутам", tryNumber)
+	}
+
+	return params
 }
 
 func (s *MarketplaceService) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
