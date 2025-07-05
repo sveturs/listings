@@ -2292,54 +2292,5 @@
     "viewAll": "Prikaži sve",
     "moreOptions": "Više opcija",
     "backToTop": "Vrati se na vrh"
-  },
-  "profile.listings": {
-    "title": "Moji oglasi",
-    "empty": "Još nemate nijedan oglas",
-    "createFirst": "Kreirajte svoj prvi oglas i počnite sa prodajom!",
-    "loading": "Učitavanje vaših oglasa...",
-    "error": "Neuspešno učitavanje oglasa",
-    "back": "Nazad na profil",
-    "edit": "Izmeni",
-    "delete": "Obriši",
-    "status": {
-      "active": "Aktivan",
-      "inactive": "Neaktivan",
-      "sold": "Prodat",
-      "pending": "Na čekanju"
-    },
-    "editListing": {
-      "title": "Izmeni oglas",
-      "description": "Ažurirajte informacije o vašem oglasu",
-      "back": "Nazad na moje oglase",
-      "saving": "Čuvanje...",
-      "saveChanges": "Sačuvaj izmene",
-      "cancel": "Otkaži",
-      "listingNotFound": "Oglas nije pronađen",
-      "permissionError": "Nemate dozvolu da menjate ovaj oglas",
-      "updateSuccess": "Oglas je uspešno ažuriran",
-      "updateError": "Neuspešno ažuriranje oglasa",
-      "fields": {
-        "title": "Naslov",
-        "description": "Opis",
-        "price": "Cena",
-        "condition": "Stanje",
-        "city": "Grad",
-        "country": "Država",
-        "category": "Kategorija",
-        "categoryHint": "Kategorija se ne može menjati nakon kreiranja",
-        "loadError": "Neuspešno učitavanje oglasa"
-      },
-      "condition": {
-        "new": "Novo",
-        "used": "Polovno",
-        "refurbished": "Obnovljeno"
-      },
-      "validation": {
-        "titleRequired": "Naslov je obavezan",
-        "descriptionRequired": "Opis je obavezan",
-        "priceRequired": "Cena je obavezna"
-      }
-    }
   }
 }

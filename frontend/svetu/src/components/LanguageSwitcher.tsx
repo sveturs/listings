@@ -3,6 +3,7 @@
 import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/routing';
 import { useTransition } from 'react';
+import { i18n } from '@/i18n/config';
 
 export default function LanguageSwitcher() {
   const locale = useLocale();
@@ -11,6 +12,9 @@ export default function LanguageSwitcher() {
   const [isPending, startTransition] = useTransition();
 
   const handleLocaleChange = (nextLocale: string) => {
+    // Сохраняем выбор пользователя в cookie
+    document.cookie = `${i18n.localeDetection.cookieName}=${nextLocale}; max-age=${i18n.localeDetection.cookieMaxAge}; path=/; samesite=lax`;
+
     startTransition(() => {
       router.push(pathname, { locale: nextLocale });
     });
