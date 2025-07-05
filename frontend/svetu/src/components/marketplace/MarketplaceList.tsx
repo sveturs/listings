@@ -51,6 +51,9 @@ function convertToMarketplaceItem(
     created_at: '',
     updated_at: '',
     user_id: 0,
+    // Добавляем поля для определения типа товара и витрины
+    product_type: unifiedItem.product_type,
+    storefront_id: unifiedItem.storefront?.id,
   };
 }
 

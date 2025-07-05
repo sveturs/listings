@@ -33,9 +33,30 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'metadata' });
 
+  // Определяем альтернативные языковые версии для SEO
+  const languages = {
+    sr: 'sr-RS',
+    ru: 'ru-RU',
+    en: 'en-US',
+  };
+
   return {
     title: t('title'),
     description: t('description'),
+    alternates: {
+      languages: Object.fromEntries(
+        routing.locales
+          .filter((l) => l !== locale)
+          .map((l) => [languages[l] || l, `/${l}`])
+      ),
+      canonical: `/${locale}`,
+    },
+    openGraph: {
+      locale: languages[locale as keyof typeof languages] || locale,
+      alternateLocale: routing.locales
+        .filter((l) => l !== locale)
+        .map((l) => languages[l as keyof typeof languages] || l),
+    },
   };
 }
 
@@ -49,7 +70,7 @@ export default async function RootLayout({
   const { locale } = await params;
 
   // Ensure that the incoming locale is valid
-  if (!routing.locales.includes(locale as 'en' | 'ru')) {
+  if (!routing.locales.includes(locale as 'en' | 'ru' | 'sr')) {
     notFound();
   }
 
