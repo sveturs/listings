@@ -176,9 +176,10 @@ func (s *StorefrontServiceImpl) CreateStorefront(ctx context.Context, userID int
 
 	// Дополняем DTO
 	dto.Slug = s.generateSlug(dto.Name)
+	dto.UserID = userID
 
 	// Создаем витрину
-	storefront, err := s.repo.Create(ctx, userID, dto)
+	storefront, err := s.repo.Create(ctx, dto)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка создания витрины: %w", err)
 	}

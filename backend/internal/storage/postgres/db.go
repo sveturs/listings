@@ -34,27 +34,23 @@ type Database struct {
 	pool          *pgxpool.Pool
 	marketplaceDB *marketplaceStorage.Storage
 
-	reviewDB          *reviewStorage.Storage
-	usersDB           *userStorage.Storage
-	notificationsDB   *notificationStorage.Storage
-	osMarketplaceRepo opensearch.MarketplaceSearchRepository
-	osStorefrontRepo  storefrontOpenSearch.StorefrontSearchRepository
-	osProductRepo     storefrontOpenSearch.ProductSearchRepository
-	osClient          *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
-	db                *sql.DB
-	marketplaceIndex  string
-	storefrontIndex   string
-	attributeGroups   AttributeGroupStorage
-	fsStorage         filestorage.FileStorageInterface
-	storefrontRepo    StorefrontRepository // Репозиторий для витрин
-
-	// Репозитории для системы заказов
-	cartRepo      CartRepositoryInterface
-	orderRepo     OrderRepositoryInterface
-	inventoryRepo InventoryRepositoryInterface
-
-	// Репозиторий для заказов маркетплейса
-	marketplaceOrderRepo *MarketplaceOrderRepository
+	reviewDB             *reviewStorage.Storage
+	usersDB              *userStorage.Storage
+	notificationsDB      *notificationStorage.Storage
+	osMarketplaceRepo    opensearch.MarketplaceSearchRepository
+	osStorefrontRepo     storefrontOpenSearch.StorefrontSearchRepository
+	osClient             *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
+	db                   *sql.DB
+	marketplaceIndex     string
+	storefrontIndex      string
+	attributeGroups      AttributeGroupStorage
+	fsStorage            filestorage.FileStorageInterface
+	storefrontRepo       StorefrontRepository                         // Репозиторий для витрин
+	cartRepo             CartRepositoryInterface                      // Репозиторий для корзин
+	orderRepo            OrderRepositoryInterface                     // Репозиторий для заказов
+	inventoryRepo        InventoryRepositoryInterface                 // Репозиторий для инвентаря
+	marketplaceOrderRepo *MarketplaceOrderRepository                  // Репозиторий для заказов маркетплейса
+	productSearchRepo    storefrontOpenSearch.ProductSearchRepository // Репозиторий для поиска товаров витрин
 }
 
 func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface) (*Database, error) {
@@ -85,12 +81,16 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 	// Инициализируем репозиторий витрин
 	db.storefrontRepo = NewStorefrontRepository(db)
 
-	// Инициализируем репозитории для системы заказов
+	// Инициализируем репозиторий корзин
 	db.cartRepo = NewCartRepository(pool)
+
+	// Инициализируем репозиторий заказов
 	db.orderRepo = NewOrderRepository(pool)
+
+	// Инициализируем репозиторий инвентаря
 	db.inventoryRepo = NewInventoryRepository(pool)
 
-	// Инициализируем репозиторий для заказов маркетплейса
+	// Инициализируем репозиторий заказов маркетплейса
 	db.marketplaceOrderRepo = NewMarketplaceOrderRepository(pool)
 
 	// Инициализируем репозиторий OpenSearch, если клиент передан
@@ -109,9 +109,9 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 		}
 
 		// Инициализируем репозиторий товаров витрин в OpenSearch
-		db.osProductRepo = storefrontOpenSearch.NewProductRepository(osClient, "storefront_products")
+		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "storefront_products")
 		// Подготавливаем индекс товаров витрин
-		if err := db.osProductRepo.PrepareIndex(context.Background()); err != nil {
+		if err := db.productSearchRepo.PrepareIndex(context.Background()); err != nil {
 			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
 		}
 	}
@@ -1287,9 +1287,46 @@ func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityT
 
 // Storefront methods
 func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
-	// Делегируем создание витрины в специализированный репозиторий
-	storefrontRepo := NewStorefrontRepository(db)
-	return storefrontRepo.Create(ctx, userID, dto)
+	storefront := &models.Storefront{
+		UserID:           userID,
+		Slug:             dto.Slug,
+		Name:             dto.Name,
+		Description:      dto.Description,
+		LogoURL:          "", // Будет заполнено после загрузки
+		BannerURL:        "", // Будет заполнено после загрузки
+		Theme:            dto.Theme,
+		Phone:            dto.Phone,
+		Email:            dto.Email,
+		Website:          dto.Website,
+		Address:          dto.Location.FullAddress,
+		City:             dto.Location.City,
+		PostalCode:       dto.Location.PostalCode,
+		Country:          dto.Location.Country,
+		Latitude:         &dto.Location.BuildingLat,
+		Longitude:        &dto.Location.BuildingLng,
+		Settings:         dto.Settings,
+		SEOMeta:          dto.SEOMeta,
+		IsActive:         true,
+		SubscriptionPlan: "basic",
+		CommissionRate:   0.05, // 5% по умолчанию
+	}
+
+	err := db.pool.QueryRow(ctx, `
+		INSERT INTO storefronts (user_id, slug, name, description, logo_url, banner_url, theme,
+			phone, email, website, address, city, postal_code, country, latitude, longitude,
+			settings, seo_meta, is_active, subscription_plan, commission_rate)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+		RETURNING id, created_at, updated_at
+	`, storefront.UserID, storefront.Slug, storefront.Name, storefront.Description,
+		storefront.LogoURL, storefront.BannerURL, storefront.Theme, storefront.Phone,
+		storefront.Email, storefront.Website, storefront.Address, storefront.City,
+		storefront.PostalCode, storefront.Country, storefront.Latitude, storefront.Longitude,
+		storefront.Settings, storefront.SEOMeta, storefront.IsActive, storefront.SubscriptionPlan,
+		storefront.CommissionRate).Scan(&storefront.ID, &storefront.CreatedAt, &storefront.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return storefront, nil
 }
 
 func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]models.Storefront, error) {
@@ -1410,25 +1447,48 @@ func (db *Database) Storefront() interface{} {
 
 // Cart возвращает репозиторий корзин
 func (db *Database) Cart() interface{} {
-	return db.cartRepo
+	if db.cartRepo != nil {
+		return db.cartRepo
+	}
+	// Возвращаем новый репозиторий используя пул соединений
+	return NewCartRepository(db.pool)
 }
 
 // Order возвращает репозиторий заказов
 func (db *Database) Order() interface{} {
-	return db.orderRepo
+	if db.orderRepo != nil {
+		return db.orderRepo
+	}
+	// Возвращаем новый репозиторий используя пул соединений
+	return NewOrderRepository(db.pool)
 }
 
 // Inventory возвращает репозиторий инвентаря
 func (db *Database) Inventory() interface{} {
-	return db.inventoryRepo
+	if db.inventoryRepo != nil {
+		return db.inventoryRepo
+	}
+	// Возвращаем новый репозиторий используя пул соединений
+	return NewInventoryRepository(db.pool)
 }
 
 // MarketplaceOrder возвращает репозиторий заказов маркетплейса
 func (db *Database) MarketplaceOrder() interface{} {
-	return db.marketplaceOrderRepo
+	if db.marketplaceOrderRepo != nil {
+		return db.marketplaceOrderRepo
+	}
+	// Возвращаем новый репозиторий используя пул соединений
+	return NewMarketplaceOrderRepository(db.pool)
 }
 
-// StorefrontProductSearch возвращает репозиторий поиска товаров витрин в OpenSearch
+// StorefrontProductSearch возвращает репозиторий для поиска товаров витрин
 func (db *Database) StorefrontProductSearch() interface{} {
-	return db.osProductRepo
+	if db.productSearchRepo != nil {
+		return db.productSearchRepo
+	}
+	// Возвращаем новый репозиторий если есть клиент OpenSearch
+	if db.osClient != nil {
+		return storefrontOpenSearch.NewProductRepository(db.osClient, "storefront_products")
+	}
+	return nil
 }

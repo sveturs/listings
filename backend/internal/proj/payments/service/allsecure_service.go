@@ -22,7 +22,6 @@ type AllSecureService struct {
 	repository     repository.PaymentRepositoryInterface
 	userRepo       UserRepositoryInterface
 	listingRepo    ListingRepositoryInterface
-	orderRepo      OrderRepositoryInterface
 	config         *AllSecureConfig
 	logger         logger.Logger
 	commissionRate decimal.Decimal
@@ -49,20 +48,12 @@ type ListingRepositoryInterface interface {
 	GetByID(ctx context.Context, id int) (*models.MarketplaceListing, error)
 }
 
-// OrderRepositoryInterface определяет интерфейс для работы с заказами
-type OrderRepositoryInterface interface {
-	GetByID(ctx context.Context, id int) (*models.StorefrontOrder, error)
-	UpdatePaymentStatus(ctx context.Context, id int, status string, transactionID string) error
-	UpdateOrderStatus(ctx context.Context, id int, status models.OrderStatus) error
-}
-
 // NewAllSecureService создает новый сервис AllSecure
 func NewAllSecureService(
 	client *allsecure.Client,
 	repository repository.PaymentRepositoryInterface,
 	userRepo UserRepositoryInterface,
 	listingRepo ListingRepositoryInterface,
-	orderRepo OrderRepositoryInterface,
 	config *AllSecureConfig,
 	logger logger.Logger,
 ) *AllSecureService {
@@ -71,7 +62,6 @@ func NewAllSecureService(
 		repository:     repository,
 		userRepo:       userRepo,
 		listingRepo:    listingRepo,
-		orderRepo:      orderRepo,
 		config:         config,
 		logger:         logger,
 		commissionRate: config.MarketplaceCommissionRate,
@@ -389,125 +379,4 @@ func (s *AllSecureService) releaseEscrowPayment(ctx context.Context, transaction
 func (s *AllSecureService) handleFailedPayment(ctx context.Context, transaction *models.PaymentTransaction) {
 	s.logger.Info("Payment failed, transactionID: %d", transaction.ID)
 	// Здесь может быть логика уведомлений, очистки данных и т.д.
-}
-
-// CreateOrderPayment создает платеж для заказа
-func (s *AllSecureService) CreateOrderPayment(ctx context.Context, orderID int, userID int, amount float64, currency, method string) (*models.PaymentSession, error) {
-	// Получаем заказ
-	order, err := s.orderRepo.GetByID(ctx, orderID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get order: %w", err)
-	}
-
-	// Проверяем, что пользователь является покупателем этого заказа
-	if order.CustomerID != userID {
-		return nil, fmt.Errorf("user %d is not the customer of order %d", userID, orderID)
-	}
-
-	// Проверяем статус заказа
-	if order.Status != models.OrderStatusPending {
-		return nil, fmt.Errorf("order %d is not in pending status, current status: %s", orderID, order.Status)
-	}
-
-	// Создаем уникальный session ID для заказа
-	sessionID := fmt.Sprintf("order_%d_%d_%d", orderID, userID, time.Now().Unix())
-
-	// Создаем платежную сессию
-	session := &models.PaymentSession{
-		// SessionID:   sessionID,
-		UserID:   userID,
-		Amount:   amount,
-		Currency: currency,
-		// Method:      method,
-		Status:     models.PaymentStatusPending,
-		CreatedAt:  time.Now(),
-		ExpiresAt:  time.Now().Add(30 * time.Minute), // Сессия истекает через 30 минут
-		PaymentURL: fmt.Sprintf("%s/payment/orders/%d?session=%s", s.config.BaseURL, orderID, sessionID),
-		// ReturnURL:   fmt.Sprintf("%s/orders/%d/payment/success", s.config.BaseURL, orderID),
-		// CancelURL:   fmt.Sprintf("%s/orders/%d/payment/cancel", s.config.BaseURL, orderID),
-		// Metadata: map[string]interface{}{
-		// 	"order_id":      orderID,
-		// 	"order_number":  order.OrderNumber,
-		// 	"storefront_id": order.StorefrontID,
-		// },
-	}
-
-	s.logger.Info("Order payment session created",
-		"sessionID", sessionID,
-		"orderID", orderID,
-		"userID", userID,
-		"amount", amount)
-
-	return session, nil
-}
-
-// HandleOrderPaymentWebhook обрабатывает webhook для платежа заказа
-func (s *AllSecureService) HandleOrderPaymentWebhook(ctx context.Context, payload []byte, signature string) error {
-	s.logger.Info("Processing order payment webhook", "payloadSize", len(payload))
-
-	// TODO: Валидация подписи webhook
-	if s.config.WebhookSecret != "" && signature == "" {
-		return fmt.Errorf("webhook signature is required")
-	}
-
-	// Парсим payload
-	var webhookData map[string]interface{}
-	if err := json.Unmarshal(payload, &webhookData); err != nil {
-		return fmt.Errorf("failed to parse webhook payload: %w", err)
-	}
-
-	// Извлекаем данные о платеже
-	orderIDStr, ok := webhookData["order_id"].(string)
-	if !ok {
-		return fmt.Errorf("order_id not found in webhook payload")
-	}
-
-	orderID, err := strconv.Atoi(orderIDStr)
-	if err != nil {
-		return fmt.Errorf("invalid order_id format: %w", err)
-	}
-
-	paymentStatus, ok := webhookData["status"].(string)
-	if !ok {
-		return fmt.Errorf("status not found in webhook payload")
-	}
-
-	transactionID, _ := webhookData["transaction_id"].(string)
-
-	s.logger.Info("Order payment webhook data",
-		"orderID", orderID,
-		"status", paymentStatus,
-		"transactionID", transactionID)
-
-	// Обновляем статус платежа заказа
-	err = s.orderRepo.UpdatePaymentStatus(ctx, orderID, paymentStatus, transactionID)
-	if err != nil {
-		return fmt.Errorf("failed to update order payment status: %w", err)
-	}
-
-	// Обновляем статус заказа в зависимости от статуса платежа
-	var orderStatus models.OrderStatus
-	switch strings.ToUpper(paymentStatus) {
-	case "SUCCESS", "PAID", "COMPLETED":
-		orderStatus = models.OrderStatusConfirmed
-	case "FAILED", "ERROR", "CANCELLED":
-		orderStatus = models.OrderStatusCancelled
-	default:
-		orderStatus = models.OrderStatusPending
-	}
-
-	if orderStatus != models.OrderStatusPending {
-		err = s.orderRepo.UpdateOrderStatus(ctx, orderID, orderStatus)
-		if err != nil {
-			s.logger.Error("Failed to update order status", "orderID", orderID, "status", orderStatus, "error", err)
-			// Не возвращаем ошибку, чтобы webhook считался обработанным
-		}
-	}
-
-	s.logger.Info("Order payment webhook processed successfully",
-		"orderID", orderID,
-		"paymentStatus", paymentStatus,
-		"orderStatus", orderStatus)
-
-	return nil
 }

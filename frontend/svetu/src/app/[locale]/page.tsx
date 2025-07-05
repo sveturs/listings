@@ -51,7 +51,7 @@ export default async function Home({
             {t('marketplace')}
           </h1>
           <p className="text-center text-base-content/70 text-lg max-w-2xl mx-auto">
-            Находите лучшие предложения от частных лиц и магазинов
+            {t('description')}
           </p>
         </div>
       </div>

@@ -219,7 +219,7 @@ func (s *Server) setupRoutes() {
 	}))
 
 	// WebSocket с проверкой аутентификации и rate limiting
-	s.app.Get("/ws/chat", s.middleware.AuthRequiredJWT, s.middleware.RateLimitByUser(5, time.Minute), func(c *fiber.Ctx) error {
+	s.app.Get("/ws/chat", s.middleware.AuthRequiredJWT, s.middleware.RateLimitByUser(30, time.Minute), func(c *fiber.Ctx) error {
 		// Проверяем, что это WebSocket запрос
 		if websocket.IsWebSocketUpgrade(c) {
 			// Сохраняем userID для использования в WebSocket handler

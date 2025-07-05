@@ -245,7 +245,8 @@
     "loadMore": "Загрузить еще",
     "loading": "Загрузка...",
     "createListing": "Подать объявление",
-    "paymentsNowAvailable": "Платежи теперь доступны!"
+    "paymentsNowAvailable": "Платежи теперь доступны!",
+    "description": "Находите лучшие предложения от частных лиц и магазинов"
   },
   "header": {
     "nav": {

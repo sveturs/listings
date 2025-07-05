@@ -83,6 +83,7 @@ export default function SafeImage({
         {...props}
         src={safeUrl}
         alt={alt}
+        sizes={props.sizes || (props.fill ? '100vw' : undefined)}
         onLoad={() => {
           if (src && src.includes('177')) {
             console.log('SafeImage - Item 177 onLoad fired');
