@@ -1,4 +1,5 @@
 import configManager from '@/config';
+import { tokenManager } from '@/utils/tokenManager';
 
 // Типы для унифицированного поиска
 export interface UnifiedSearchParams {
@@ -101,11 +102,20 @@ export class UnifiedSearchService {
       }
     });
 
+    // Получаем токен авторизации
+    const token = await tokenManager.getAccessToken();
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(url.toString(), {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -128,11 +138,20 @@ export class UnifiedSearchService {
       size: size.toString(),
     });
 
+    // Получаем токен авторизации
+    const token = await tokenManager.getAccessToken();
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${url}?${params}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
+      credentials: 'include',
     });
 
     if (!response.ok) {

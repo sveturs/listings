@@ -54,6 +54,14 @@ export default function LanguageSwitcher() {
             ENG
           </button>
         </li>
+        <li>
+          <button
+            onClick={() => handleLocaleChange('sr')}
+            className={locale === 'sr' ? 'active' : ''}
+          >
+            SRP
+          </button>
+        </li>
       </ul>
     </div>
   );
