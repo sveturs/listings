@@ -134,6 +134,11 @@ export default function MarketplaceCard({
     router.push(`/${locale}/marketplace/${item.id}/buy`);
   };
 
+  // Проверяем, доступна ли онлайн покупка (только для объявлений с витрин)
+  const isOnlinePurchaseAvailable = () => {
+    return item.product_type === 'storefront' && item.storefront_id;
+  };
+
   // Определяем правильный URL в зависимости от типа товара
   const getItemUrl = () => {
     // Временно для всех товаров используем marketplace URL
@@ -237,13 +242,15 @@ export default function MarketplaceCard({
                       isAuthenticated &&
                       item.user_id !== user?.id && (
                         <div className="flex gap-2">
-                          <button
-                            onClick={handleBuyClick}
-                            className="btn btn-primary btn-sm"
-                            title={t('buy')}
-                          >
-                            💳 {t('buy')}
-                          </button>
+                          {isOnlinePurchaseAvailable() && (
+                            <button
+                              onClick={handleBuyClick}
+                              className="btn btn-primary btn-sm"
+                              title={t('buy')}
+                            >
+                              💳 {t('buy')}
+                            </button>
+                          )}
                           <button
                             onClick={handleChatClick}
                             className="btn btn-outline btn-sm"
@@ -283,13 +290,15 @@ export default function MarketplaceCard({
       {/* Кнопки действий - показываем только после монтирования */}
       {mounted && isAuthenticated && item.user_id !== user?.id && (
         <div className="absolute top-3 right-3 flex gap-2 z-10">
-          <button
-            onClick={handleBuyClick}
-            className="btn btn-primary btn-sm shadow-lg"
-            title={t('buy')}
-          >
-            💳 {t('buy')}
-          </button>
+          {isOnlinePurchaseAvailable() && (
+            <button
+              onClick={handleBuyClick}
+              className="btn btn-primary btn-sm shadow-lg"
+              title={t('buy')}
+            >
+              💳 {t('buy')}
+            </button>
+          )}
           <button
             onClick={handleChatClick}
             className="btn btn-circle btn-sm btn-ghost bg-base-100 shadow-lg"

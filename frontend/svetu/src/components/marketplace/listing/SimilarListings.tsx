@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import SafeImage from '@/components/SafeImage';
 import { useLocale, useTranslations } from 'next-intl';
 import { apiClient } from '@/services/api-client';
@@ -10,6 +11,7 @@ import ViewToggle from '@/components/common/ViewToggle';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
+import { useAuth } from '@/contexts/AuthContext';
 import type { MarketplaceItem } from '@/types/marketplace';
 
 interface SimilarListingsProps {
@@ -19,6 +21,8 @@ interface SimilarListingsProps {
 export default function SimilarListings({ listingId }: SimilarListingsProps) {
   const locale = useLocale();
   const tCommon = useTranslations('common');
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
   const [allListings, setAllListings] = useState<MarketplaceItem[]>([]);
   const [displayedListings, setDisplayedListings] = useState<MarketplaceItem[]>(
     []
@@ -84,6 +88,45 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
     onLoadMore: loadMore,
   });
 
+  const handleChatClick = (e: React.MouseEvent, listing: MarketplaceItem) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      return;
+    }
+
+    if (listing.user_id === user?.id) {
+      return;
+    }
+
+    router.push(
+      `/${locale}/chat?listing_id=${listing.id}&seller_id=${listing.user_id}`
+    );
+  };
+
+  const handleBuyClick = (e: React.MouseEvent, listing: MarketplaceItem) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      router.push(
+        `/${locale}/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`
+      );
+      return;
+    }
+
+    if (listing.user_id === user?.id) {
+      return;
+    }
+
+    router.push(`/${locale}/marketplace/${listing.id}/buy`);
+  };
+
+  const isOnlinePurchaseAvailable = (listing: MarketplaceItem) => {
+    return listing.storefront_id != null && listing.storefront_id > 0;
+  };
+
   if (loading) {
     return (
       <div className="mt-12">
@@ -125,26 +168,59 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
       >
         {displayedListings.map((listing) =>
           viewMode === 'grid' ? (
-            <Link
+            <div
               key={listing.id}
-              href={`/${locale}/marketplace/${listing.id}`}
               className="group hover:shadow-lg transition-all duration-200"
             >
-              <div className="relative aspect-square rounded-lg overflow-hidden bg-base-200 mb-2">
-                <SafeImage
-                  src={
-                    listing.images && listing.images.length > 0
-                      ? config.buildImageUrl(listing.images[0].public_url)
-                      : null
-                  }
-                  alt={listing.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-200"
-                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
-                  fallback={
-                    <div className="w-full h-full flex items-center justify-center">
+              <Link
+                href={`/${locale}/marketplace/${listing.id}`}
+                className="block"
+              >
+                <div className="relative aspect-square rounded-lg overflow-hidden bg-base-200 mb-2">
+                  <SafeImage
+                    src={
+                      listing.images && listing.images.length > 0
+                        ? config.buildImageUrl(listing.images[0].public_url)
+                        : null
+                    }
+                    alt={listing.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-200"
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
+                    fallback={
+                      <div className="w-full h-full flex items-center justify-center">
+                        <svg
+                          className="w-12 h-12 text-base-content/20"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                    }
+                  />
+
+                  {/* Price badge */}
+                  <div className="absolute bottom-2 left-2 bg-base-100/90 backdrop-blur-sm px-2 py-1 rounded text-sm font-semibold">
+                    {listing.price} $
+                  </div>
+                </div>
+
+                <h3 className="font-medium text-sm line-clamp-2 mb-1 group-hover:text-primary transition-colors">
+                  {listing.title}
+                </h3>
+
+                <div className="flex items-center gap-2 text-xs text-base-content/70 mb-2">
+                  {listing.location && (
+                    <>
                       <svg
-                        className="w-12 h-12 text-base-content/20"
+                        className="w-3 h-3"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -153,60 +229,51 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                       </svg>
-                    </div>
-                  }
-                />
-
-                {/* Price badge */}
-                <div className="absolute bottom-2 left-2 bg-base-100/90 backdrop-blur-sm px-2 py-1 rounded text-sm font-semibold">
-                  {listing.price} $
+                      <span className="truncate">{listing.location}</span>
+                    </>
+                  )}
                 </div>
-              </div>
+              </Link>
 
-              <h3 className="font-medium text-sm line-clamp-2 mb-1 group-hover:text-primary transition-colors">
-                {listing.title}
-              </h3>
-
-              <div className="flex items-center gap-2 text-xs text-base-content/70">
-                {listing.location && (
-                  <>
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    <span className="truncate">{listing.location}</span>
-                  </>
+              {/* Action buttons */}
+              <div className="flex gap-1 mt-2">
+                {isOnlinePurchaseAvailable(listing) && (
+                  <button
+                    onClick={(e) => handleBuyClick(e, listing)}
+                    className="btn btn-primary btn-sm flex-1 text-xs"
+                  >
+                    💳 {locale === 'ru' ? 'Купить' : 'Buy'}
+                  </button>
                 )}
+                <button
+                  onClick={(e) => handleChatClick(e, listing)}
+                  className="btn btn-outline btn-sm flex-1 text-xs"
+                >
+                  💬 {locale === 'ru' ? 'Чат' : 'Chat'}
+                </button>
               </div>
-            </Link>
+            </div>
           ) : (
             // List view
-            <Link
+            <div
               key={listing.id}
-              href={`/${locale}/marketplace/${listing.id}`}
               className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow"
             >
               <div className="card-body p-4">
                 <div className="flex gap-4">
-                  <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-base-200">
+                  <Link
+                    href={`/${locale}/marketplace/${listing.id}`}
+                    className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-base-200"
+                  >
                     <SafeImage
                       src={
                         listing.images && listing.images.length > 0
@@ -235,16 +302,18 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                         </div>
                       }
                     />
-                  </div>
+                  </Link>
                   <div className="flex-grow min-w-0">
-                    <h3 className="font-semibold line-clamp-1 mb-1">
-                      {listing.title}
-                    </h3>
+                    <Link href={`/${locale}/marketplace/${listing.id}`}>
+                      <h3 className="font-semibold line-clamp-1 mb-1 hover:text-primary transition-colors">
+                        {listing.title}
+                      </h3>
+                    </Link>
                     <p className="text-lg font-bold text-primary mb-1">
                       {listing.price} $
                     </p>
                     {listing.location && (
-                      <p className="text-sm text-base-content/60 flex items-center gap-1">
+                      <p className="text-sm text-base-content/60 flex items-center gap-1 mb-2">
                         <svg
                           className="w-3 h-3 flex-shrink-0"
                           fill="none"
@@ -267,10 +336,27 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                         <span className="truncate">{listing.location}</span>
                       </p>
                     )}
+                    {/* Action buttons */}
+                    <div className="flex gap-2 mt-2">
+                      {isOnlinePurchaseAvailable(listing) && (
+                        <button
+                          onClick={(e) => handleBuyClick(e, listing)}
+                          className="btn btn-primary btn-sm"
+                        >
+                          💳 {locale === 'ru' ? 'Купить' : 'Buy'}
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => handleChatClick(e, listing)}
+                        className="btn btn-outline btn-sm"
+                      >
+                        💬 {locale === 'ru' ? 'Чат' : 'Chat'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           )
         )}
       </div>
