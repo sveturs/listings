@@ -2305,3 +2305,182 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 
 	return listing, nil
 }
+
+// GetPopularSearchQueries возвращает популярные поисковые запросы
+func (s *Storage) GetPopularSearchQueries(ctx context.Context, query string, limit int) ([]service.SearchQuery, error) {
+	normalizedQuery := strings.ToLower(strings.TrimSpace(query))
+
+	sqlQuery := `
+		SELECT 
+			id,
+			query,
+			normalized_query,
+			search_count,
+			to_char(last_searched, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as last_searched,
+			language,
+			results_count
+		FROM search_queries
+		WHERE normalized_query LIKE '%' || $1 || '%'
+		ORDER BY search_count DESC
+		LIMIT $2
+	`
+
+	rows, err := s.pool.Query(ctx, sqlQuery, normalizedQuery, limit)
+	if err != nil {
+		return nil, fmt.Errorf("error querying popular searches: %w", err)
+	}
+	defer rows.Close()
+
+	var queries []service.SearchQuery
+	for rows.Next() {
+		var q service.SearchQuery
+		if err := rows.Scan(
+			&q.ID,
+			&q.Query,
+			&q.NormalizedQuery,
+			&q.SearchCount,
+			&q.LastSearched,
+			&q.Language,
+			&q.ResultsCount,
+		); err != nil {
+			return nil, fmt.Errorf("error scanning search query: %w", err)
+		}
+		queries = append(queries, q)
+	}
+
+	return queries, nil
+}
+
+// SaveSearchQuery сохраняет или обновляет поисковый запрос
+func (s *Storage) SaveSearchQuery(ctx context.Context, query, normalizedQuery string, resultsCount int, language string) error {
+	if normalizedQuery == "" {
+		normalizedQuery = strings.ToLower(strings.TrimSpace(query))
+	}
+
+	if normalizedQuery == "" {
+		return nil // Не сохраняем пустые запросы
+	}
+
+	// Используем UPSERT для обновления существующих записей
+	sqlQuery := `
+		INSERT INTO search_queries (
+			query, normalized_query, search_count, last_searched, 
+			language, results_count
+		) VALUES ($1, $2, 1, NOW(), $3, $4)
+		ON CONFLICT (normalized_query, language) 
+		DO UPDATE SET
+			query = EXCLUDED.query,
+			search_count = search_queries.search_count + 1,
+			last_searched = NOW(),
+			results_count = EXCLUDED.results_count
+	`
+
+	_, err := s.pool.Exec(ctx, sqlQuery, query, normalizedQuery, language, resultsCount)
+	if err != nil {
+		return fmt.Errorf("error saving search query: %w", err)
+	}
+
+	return nil
+}
+
+// SearchCategories ищет категории по названию
+func (s *Storage) SearchCategories(ctx context.Context, query string, limit int) ([]models.MarketplaceCategory, error) {
+	searchPattern := "%" + strings.ToLower(strings.TrimSpace(query)) + "%"
+
+	sqlQuery := `
+		WITH category_counts AS (
+			SELECT 
+				category_id, 
+				COUNT(*) as listing_count
+			FROM marketplace_listings
+			WHERE status = 'active'
+			GROUP BY category_id
+		),
+		category_translations AS (
+			SELECT 
+				entity_id,
+				jsonb_object_agg(
+					language,
+					translated_text
+				) as translations
+			FROM translations
+			WHERE entity_type = 'category' 
+			AND field_name = 'name'
+			GROUP BY entity_id
+		)
+		SELECT 
+			c.id,
+			c.name,
+			c.slug,
+			c.parent_id,
+			c.icon,
+			c.created_at,
+			COALESCE(ct.translations, '{}'::jsonb) as translations,
+			COALESCE(cc.listing_count, 0) as listing_count
+		FROM marketplace_categories c
+		LEFT JOIN category_counts cc ON c.id = cc.category_id
+		LEFT JOIN category_translations ct ON c.id = ct.entity_id
+		WHERE LOWER(c.name) LIKE $1
+			OR EXISTS (
+				SELECT 1 
+				FROM translations t 
+				WHERE t.entity_type = 'category' 
+				AND t.entity_id = c.id 
+				AND t.field_name = 'name'
+				AND LOWER(t.translated_text) LIKE $1
+			)
+		ORDER BY 
+			CASE WHEN LOWER(c.name) = LOWER($2) THEN 0 ELSE 1 END,
+			cc.listing_count DESC NULLS LAST,
+			c.name
+		LIMIT $3
+	`
+
+	rows, err := s.pool.Query(ctx, sqlQuery, searchPattern, strings.TrimSpace(query), limit)
+	if err != nil {
+		return nil, fmt.Errorf("error searching categories: %w", err)
+	}
+	defer rows.Close()
+
+	var categories []models.MarketplaceCategory
+	for rows.Next() {
+		var cat models.MarketplaceCategory
+		var icon sql.NullString
+		var translationsJson []byte
+		var listingCount int
+
+		err := rows.Scan(
+			&cat.ID,
+			&cat.Name,
+			&cat.Slug,
+			&cat.ParentID,
+			&icon,
+			&cat.CreatedAt,
+			&translationsJson,
+			&listingCount,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning category: %w", err)
+		}
+
+		// Обработка NULL значения для icon
+		if icon.Valid {
+			cat.Icon = icon.String
+		}
+
+		// Парсим переводы
+		translations := make(map[string]string)
+		if err := json.Unmarshal(translationsJson, &translations); err != nil {
+			log.Printf("Error unmarshaling translations for category %d: %v", cat.ID, err)
+		} else {
+			cat.Translations = translations
+		}
+
+		// Добавляем количество объявлений
+		cat.ListingCount = listingCount
+
+		categories = append(categories, cat)
+	}
+
+	return categories, nil
+}

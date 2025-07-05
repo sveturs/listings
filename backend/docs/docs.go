@@ -17248,6 +17248,10 @@ const docTemplate = `{
                 "category": {
                     "$ref": "#/definitions/handler.UnifiedCategoryInfo"
                 },
+                "created_at": {
+                    "description": "Для расчета свежести",
+                    "type": "string"
+                },
                 "currency": {
                     "type": "string"
                 },
@@ -17299,6 +17303,10 @@ const docTemplate = `{
                             "$ref": "#/definitions/handler.UnifiedStorefrontInfo"
                         }
                     ]
+                },
+                "views_count": {
+                    "description": "Для расчета популярности",
+                    "type": "integer"
                 }
             }
         },
@@ -22009,6 +22017,49 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "service.SuggestionItem": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/service.SuggestionType"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.SuggestionType": {
+            "type": "string",
+            "enum": [
+                "query",
+                "category",
+                "product"
+            ],
+            "x-enum-varnames": [
+                "SuggestionTypeQuery",
+                "SuggestionTypeCategory",
+                "SuggestionTypeProduct"
+            ]
         },
         "tgbotapi.Animation": {
             "type": "object",

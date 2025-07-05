@@ -11980,6 +11980,9 @@ components:
       properties:
         category:
           $ref: "#/components/schemas/handler.UnifiedCategoryInfo"
+        created_at:
+          description: Для расчета свежести
+          type: string
         currency:
           type: string
         description:
@@ -12014,6 +12017,9 @@ components:
           allOf:
             - $ref: "#/components/schemas/handler.UnifiedStorefrontInfo"
           description: Только для storefront товаров
+        views_count:
+          description: Для расчета популярности
+          type: integer
       type: object
     handler.UnifiedSearchParams:
       properties:
@@ -15187,6 +15193,36 @@ components:
           description: ID витрины
           type: string
       type: object
+    service.SuggestionItem:
+      properties:
+        category_id:
+          type: integer
+        count:
+          type: integer
+        icon:
+          type: string
+        label:
+          type: string
+        metadata:
+          additionalProperties: true
+          type: object
+        product_id:
+          type: integer
+        type:
+          $ref: "#/components/schemas/service.SuggestionType"
+        value:
+          type: string
+      type: object
+    service.SuggestionType:
+      enum:
+        - query
+        - category
+        - product
+      type: string
+      x-enum-varnames:
+        - SuggestionTypeQuery
+        - SuggestionTypeCategory
+        - SuggestionTypeProduct
     tgbotapi.Animation:
       properties:
         file_id:

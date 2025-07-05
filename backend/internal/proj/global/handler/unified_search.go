@@ -4,8 +4,10 @@ package handler
 import (
 	"context"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -73,6 +75,8 @@ type UnifiedSearchItem struct {
 	Storefront  *UnifiedStorefrontInfo `json:"storefront,omitempty"` // Только для storefront товаров
 	Score       float64                `json:"score"`
 	Highlights  map[string][]string    `json:"highlights,omitempty"`
+	ViewsCount  int                    `json:"views_count,omitempty"` // Для расчета популярности
+	CreatedAt   *time.Time             `json:"created_at,omitempty"`  // Для расчета свежести
 }
 
 // UnifiedProductImage изображение товара
@@ -221,6 +225,14 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "search.searchError")
 	}
 
+	// Сохраняем поисковый запрос при успешном поиске
+	if params.Query != "" && result.Total > 0 {
+		if err := h.services.Marketplace().SaveSearchQuery(ctx, params.Query, result.Total, params.Language); err != nil {
+			logger.Error().Err(err).Msg("Failed to save search query")
+			// Не возвращаем ошибку пользователю, так как основной поиск прошел успешно
+		}
+	}
+
 	return c.JSON(result)
 }
 
@@ -254,21 +266,20 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 		}
 	}
 
-	// Сортируем результаты по релевантности (score)
-	if len(allItems) > 1 {
-		h.sortUnifiedResults(allItems, params.SortBy, params.SortOrder)
-	}
+	// Объединяем и ранжируем результаты
+	rankedItems := h.mergeAndRankResults(allItems, params)
 
 	// Применяем пагинацию к объединенным результатам
 	offset := (params.Page - 1) * params.Limit
 	end := offset + params.Limit
 
-	if offset >= len(allItems) {
-		allItems = []UnifiedSearchItem{}
-	} else if end > len(allItems) {
-		allItems = allItems[offset:]
+	var pagedItems []UnifiedSearchItem
+	if offset >= len(rankedItems) {
+		pagedItems = []UnifiedSearchItem{}
+	} else if end > len(rankedItems) {
+		pagedItems = rankedItems[offset:]
 	} else {
-		allItems = allItems[offset:end]
+		pagedItems = rankedItems[offset:end]
 	}
 
 	// Вычисляем метаданные
@@ -276,7 +287,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	hasMore := params.Page < totalPages
 
 	return &UnifiedSearchResult{
-		Items:      allItems,
+		Items:      pagedItems,
 		Total:      totalCount,
 		Page:       params.Page,
 		Limit:      params.Limit,
@@ -326,6 +337,8 @@ func (h *UnifiedSearchHandler) searchMarketplace(ctx context.Context, params *Un
 			Category:    h.convertMarketplaceCategory(listing.Category),
 			Location:    h.convertMarketplaceLocation(listing),
 			Score:       1.0, // TODO: получить реальный score из OpenSearch
+			ViewsCount:  listing.ViewsCount,
+			CreatedAt:   &listing.CreatedAt,
 		}
 
 		items = append(items, item)
@@ -454,9 +467,105 @@ func (h *UnifiedSearchHandler) containsProductType(types []string, target string
 	return false
 }
 
-func (h *UnifiedSearchHandler) sortUnifiedResults(items []UnifiedSearchItem, sortBy, sortOrder string) {
-	// TODO: Реализовать сортировку результатов
-	logger.Debug().Str("sortBy", sortBy).Str("sortOrder", sortOrder).Msg("Sorting not yet implemented")
+// mergeAndRankResults объединяет и ранжирует результаты поиска
+func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, params *UnifiedSearchParams) []UnifiedSearchItem {
+	// Если нет поискового запроса, просто сортируем по указанному критерию
+	if params.Query == "" {
+		h.sortScoredItems(items, params.SortBy, params.SortOrder)
+		return items
+	}
+
+	// Вычисляем оценку релевантности для каждого элемента
+	for i := range items {
+		items[i].Score = h.calculateRelevanceScore(&items[i], params.Query)
+	}
+
+	// Сортируем результаты
+	h.sortScoredItems(items, params.SortBy, params.SortOrder)
+
+	return items
+}
+
+// calculateRelevanceScore вычисляет оценку релевантности для элемента
+func (h *UnifiedSearchHandler) calculateRelevanceScore(item *UnifiedSearchItem, query string) float64 {
+	score := item.Score // Начинаем с базового score из OpenSearch
+
+	// Приводим к нижнему регистру для сравнения
+	queryLower := strings.ToLower(query)
+	titleLower := strings.ToLower(item.Name)
+	descLower := strings.ToLower(item.Description)
+
+	// Точное совпадение в заголовке (вес 5.0)
+	if titleLower == queryLower {
+		score += 5.0
+	} else if strings.Contains(titleLower, queryLower) {
+		// Частичное совпадение в заголовке (вес 3.0)
+		score += 3.0
+	}
+
+	// Совпадение в описании (вес 2.0)
+	if strings.Contains(descLower, queryLower) {
+		score += 2.0
+	}
+
+	// Учитываем популярность (до 1.0 балла)
+	if item.ViewsCount > 0 {
+		popularityScore := math.Log10(float64(item.ViewsCount+1)) / 3.0 // нормализуем до ~1.0
+		if popularityScore > 1.0 {
+			popularityScore = 1.0
+		}
+		score += popularityScore
+	}
+
+	// Учитываем свежесть объявления (до 0.5 балла)
+	if item.CreatedAt != nil {
+		daysSinceCreated := time.Since(*item.CreatedAt).Hours() / 24
+		if daysSinceCreated < 7 {
+			score += 0.5 // Новые объявления получают бонус
+		} else if daysSinceCreated < 30 {
+			score += 0.3
+		} else if daysSinceCreated < 90 {
+			score += 0.1
+		}
+	}
+
+	return score
+}
+
+// sortScoredItems сортирует элементы по указанному критерию
+func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy, sortOrder string) {
+	sort.Slice(items, func(i, j int) bool {
+		switch sortBy {
+		case "price":
+			if sortOrder == "asc" {
+				return items[i].Price < items[j].Price
+			}
+			return items[i].Price > items[j].Price
+
+		case "date":
+			if items[i].CreatedAt == nil || items[j].CreatedAt == nil {
+				return false
+			}
+			if sortOrder == "asc" {
+				return items[i].CreatedAt.Before(*items[j].CreatedAt)
+			}
+			return items[i].CreatedAt.After(*items[j].CreatedAt)
+
+		case "popularity":
+			if sortOrder == "asc" {
+				return items[i].ViewsCount < items[j].ViewsCount
+			}
+			return items[i].ViewsCount > items[j].ViewsCount
+
+		case "relevance", "":
+			// По умолчанию сортируем по релевантности (score) по убыванию
+			return items[i].Score > items[j].Score
+
+		default:
+			// Для неизвестных критериев сортируем по score
+			return items[i].Score > items[j].Score
+		}
+	})
 }
 
 func (h *UnifiedSearchHandler) convertMarketplaceImages(images []models.MarketplaceImage) []UnifiedProductImage {

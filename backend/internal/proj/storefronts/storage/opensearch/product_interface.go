@@ -28,6 +28,9 @@ type ProductSearchRepository interface {
 
 	// ReindexAll переиндексирует все товары витрин
 	ReindexAll(ctx context.Context) error
+
+	// SearchSimilarProducts выполняет поиск похожих товаров
+	SearchSimilarProducts(ctx context.Context, productID int, limit int) ([]*models.MarketplaceListing, error)
 }
 
 // ProductSearchParams параметры поиска товаров витрин

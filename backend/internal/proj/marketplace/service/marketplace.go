@@ -140,10 +140,33 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 }
 
 func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID int, limit int) ([]*models.MarketplaceListing, error) {
+	log.Printf("=== GetSimilarListings: начало поиска похожих объявлений для ID=%d, limit=%d ===", listingID, limit)
+
 	// Получаем исходное объявление
 	listing, err := s.GetListingByID(ctx, listingID)
 	if err != nil {
+		log.Printf("ERROR: не удалось получить объявление %d: %v", listingID, err)
 		return nil, fmt.Errorf("ошибка получения объявления: %w", err)
+	}
+
+	log.Printf("Исходное объявление: ID=%d, Title=%s, CategoryID=%d, Price=%.2f, City=%s, Country=%s, StorefrontID=%v",
+		listing.ID, listing.Title, listing.CategoryID, listing.Price, listing.City, listing.Country, listing.StorefrontID)
+
+	// Определяем источник объявления и выбираем соответствующую стратегию поиска
+	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+		log.Printf("Объявление %d принадлежит витрине %d - используем поиск по товарам витрин", listingID, *listing.StorefrontID)
+		return s.getSimilarStorefrontProducts(ctx, listingID, limit)
+	}
+
+	log.Printf("Объявление %d является обычным объявлением маркетплейса - используем стандартный поиск", listingID)
+
+	if len(listing.Attributes) > 0 {
+		log.Printf("Атрибуты объявления %d:", listing.ID)
+		for _, attr := range listing.Attributes {
+			log.Printf("  - %s: %s", attr.AttributeName, attr.DisplayValue)
+		}
+	} else {
+		log.Printf("У объявления %d нет атрибутов", listing.ID)
 	}
 
 	// Создаем калькулятор похожести
@@ -1568,4 +1591,134 @@ func (s *MarketplaceService) GetPriceHistory(ctx context.Context, listingID int)
 	}
 
 	return history, nil
+}
+
+// getSimilarStorefrontProducts находит похожие товары витрин для объявления принадлежащего витрине
+func (s *MarketplaceService) getSimilarStorefrontProducts(ctx context.Context, listingID int, limit int) ([]*models.MarketplaceListing, error) {
+	log.Printf("getSimilarStorefrontProducts: поиск похожих товаров витрин для объявления %d", listingID)
+
+	// Получаем репозиторий для поиска товаров витрин
+	productSearchInterface := s.storage.StorefrontProductSearch()
+	if productSearchInterface == nil {
+		log.Printf("Репозиторий поиска товаров витрин недоступен, используем запасной поиск")
+		return s.getFallbackSimilarListings(ctx, listingID, limit)
+	}
+
+	// Приводим к нужному типу
+	productSearchRepo, ok := productSearchInterface.(interface {
+		SearchSimilarProducts(ctx context.Context, productID int, limit int) ([]*models.MarketplaceListing, error)
+	})
+	if !ok {
+		log.Printf("Репозиторий не поддерживает метод SearchSimilarProducts, используем запасной поиск")
+		return s.getFallbackSimilarListings(ctx, listingID, limit)
+	}
+
+	// Выполняем поиск похожих товаров витрин
+	similarListings, err := productSearchRepo.SearchSimilarProducts(ctx, listingID, limit)
+	if err != nil {
+		log.Printf("Ошибка поиска похожих товаров витрин: %v, используем запасной поиск", err)
+		return s.getFallbackSimilarListings(ctx, listingID, limit)
+	}
+
+	log.Printf("Найдено %d похожих товаров витрин для объявления %d", len(similarListings), listingID)
+	return similarListings, nil
+}
+
+// getFallbackSimilarListings - запасной вариант поиска похожих объявлений через обычный marketplace поиск
+func (s *MarketplaceService) getFallbackSimilarListings(ctx context.Context, listingID int, limit int) ([]*models.MarketplaceListing, error) {
+	log.Printf("getFallbackSimilarListings: запасной поиск для объявления %d", listingID)
+
+	// Получаем исходное объявление
+	listing, err := s.GetListingByID(ctx, listingID)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения объявления: %w", err)
+	}
+
+	if len(listing.Attributes) > 0 {
+		log.Printf("Атрибуты объявления %d:", listing.ID)
+		for _, attr := range listing.Attributes {
+			log.Printf("  - %s: %s", attr.AttributeName, attr.DisplayValue)
+		}
+	} else {
+		log.Printf("У объявления %d нет атрибутов", listing.ID)
+	}
+
+	// Создаем калькулятор похожести
+	calculator := NewSimilarityCalculator()
+
+	// Пытаемся найти похожие объявления с разными уровнями строгости
+	var similarListings []*models.MarketplaceListing
+	triesCount := 0
+	maxTries := 4
+
+	for triesCount < maxTries && len(similarListings) < limit {
+		// Формируем параметры поиска для получения кандидатов
+		params := s.buildAdvancedSearchParams(listing, limit*5, triesCount) // Получаем больше для фильтрации
+
+		// Выполняем поиск похожих объявлений
+		results, err := s.SearchListingsAdvanced(ctx, params)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка поиска похожих объявлений: %w", err)
+		}
+
+		// Фильтруем и сортируем результаты по похожести
+		for _, candidate := range results.Items {
+			if candidate.ID != listingID {
+				// Проверяем, что кандидат еще не добавлен
+				found := false
+				for _, existing := range similarListings {
+					if existing.ID == candidate.ID {
+						found = true
+						break
+					}
+				}
+				if found {
+					continue
+				}
+
+				// Вычисляем похожесть
+				score, _ := calculator.CalculateSimilarity(ctx, listing, candidate)
+
+				// Добавляем информацию о скоре в метаданные (для отладки)
+				if candidate.Metadata == nil {
+					candidate.Metadata = make(map[string]interface{})
+				}
+				candidate.Metadata["similarity_score"] = map[string]interface{}{
+					"total":      score.TotalScore,
+					"category":   score.CategoryScore,
+					"attributes": score.AttributeScore,
+					"price":      score.PriceScore,
+					"location":   score.LocationScore,
+					"text":       score.TextScore,
+					"search_try": triesCount,
+				}
+
+				similarListings = append(similarListings, candidate)
+			}
+		}
+
+		triesCount++
+		log.Printf("Попытка %d: найдено %d похожих объявлений, всего собрано %d", triesCount, len(results.Items), len(similarListings))
+
+		// Если найдено достаточно результатов, прекращаем поиск
+		if len(similarListings) >= limit {
+			break
+		}
+	}
+
+	// Сортируем по убыванию похожести
+	sort.Slice(similarListings, func(i, j int) bool {
+		scoreI := similarListings[i].Metadata["similarity_score"].(map[string]interface{})["total"].(float64)
+		scoreJ := similarListings[j].Metadata["similarity_score"].(map[string]interface{})["total"].(float64)
+		return scoreI > scoreJ
+	})
+
+	// Ограничиваем количество результатов
+	if len(similarListings) > limit {
+		similarListings = similarListings[:limit]
+	}
+
+	log.Printf("Найдено %d похожих объявлений для листинга %d после %d попыток (запасной поиск)", len(similarListings), listingID, triesCount)
+
+	return similarListings, nil
 }

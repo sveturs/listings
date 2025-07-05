@@ -119,7 +119,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", h.Search.GetSimilarListings)
 	marketplace.Get("/categories/:id/attribute-ranges", h.Categories.GetAttributeRanges)
-	marketplace.Get("/enhanced-suggestions", h.Search.GetEnhancedSuggestions)
+	marketplace.Get("/enhanced-suggestions", h.GetEnhancedSuggestions)
 
 	// Карта - геопространственные маршруты
 	marketplace.Get("/map/bounds", h.GetListingsInBounds)
@@ -245,6 +245,47 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	chat.Get("/unread-count", h.Chat.GetUnreadCount)
 
 	return nil
+}
+
+// GetEnhancedSuggestions returns enhanced search suggestions
+// @Summary Get enhanced search suggestions
+// @Description Returns enhanced autocomplete suggestions including queries, categories, and products
+// @Tags marketplace-search
+// @Accept json
+// @Produce json
+// @Param query query string true "Search query"
+// @Param limit query int false "Number of suggestions" default(10)
+// @Param types query string false "Comma-separated types (queries,categories,products)" default(queries,categories,products)
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]service.SuggestionItem} "Enhanced suggestions list"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
+// @Router /api/v1/marketplace/enhanced-suggestions [get]
+func (h *Handler) GetEnhancedSuggestions(c *fiber.Ctx) error {
+	// Получаем параметры запроса
+	query := c.Query("query")
+	if query == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.queryRequired")
+	}
+
+	// Получаем лимит
+	limit := 10
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	// Получаем типы подсказок
+	types := c.Query("types", "queries,categories,products")
+
+	// Вызываем сервисный метод
+	suggestions, err := h.service.Marketplace().GetEnhancedSuggestions(c.Context(), query, limit, types)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.suggestionsError")
+	}
+
+	// Возвращаем результат
+	return utils.SuccessResponse(c, suggestions)
 }
 
 // GetListingsInBounds returns listings within specified map bounds

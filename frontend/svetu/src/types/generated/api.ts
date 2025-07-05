@@ -16399,6 +16399,8 @@ export interface components {
     };
     'handler.UnifiedSearchItem': {
       category?: components['schemas']['handler.UnifiedCategoryInfo'];
+      /** @description Для расчета свежести */
+      created_at?: string;
       currency?: string;
       description?: string;
       highlights?: {
@@ -16416,6 +16418,8 @@ export interface components {
       score?: number;
       /** @description Только для storefront товаров */
       storefront?: components['schemas']['handler.UnifiedStorefrontInfo'];
+      /** @description Для расчета популярности */
+      views_count?: number;
     };
     'handler.UnifiedSearchParams': {
       attribute_filters?: {
@@ -18049,6 +18053,20 @@ export interface components {
       /** @description ID витрины */
       storefrontID?: string;
     };
+    'service.SuggestionItem': {
+      category_id?: number;
+      count?: number;
+      icon?: string;
+      label?: string;
+      metadata?: {
+        [key: string]: unknown;
+      };
+      product_id?: number;
+      type?: components['schemas']['service.SuggestionType'];
+      value?: string;
+    };
+    /** @enum {string} */
+    'service.SuggestionType': 'query' | 'category' | 'product';
     'tgbotapi.Animation': {
       file_id?: string;
       file_name?: string;
