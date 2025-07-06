@@ -65,7 +65,7 @@ func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 
 	var req CreatePaymentRequest
 	if err := c.BodyParser(&req); err != nil {
-		h.logger.Error("Failed to parse request body: %v", err)
+		h.logger.Error("Failed to parse request body", "error", err)
 		return utils.ErrorResponse(c, 400, "invalid request body")
 	}
 
@@ -102,7 +102,7 @@ func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 	// Создаем платеж
 	result, err := h.service.CreatePayment(c.Context(), serviceReq)
 	if err != nil {
-		h.logger.Error("Failed to create payment: %v, userID: %d, listingID: %d", err, userID, req.ListingID)
+		h.logger.Error("Failed to create payment", "error", err, "userID", userID, "listingID", req.ListingID)
 		return utils.ErrorResponse(c, 500, "payment creation failed")
 	}
 
@@ -204,7 +204,7 @@ func (h *PaymentHandler) RefundPayment(c *fiber.Ctx) error {
 
 	var req RefundPaymentRequest
 	if err := c.BodyParser(&req); err != nil {
-		h.logger.Error("Failed to parse request body: %v", err)
+		h.logger.Error("Failed to parse request body", "error", err)
 		return utils.ErrorResponse(c, 400, "invalid request body")
 	}
 

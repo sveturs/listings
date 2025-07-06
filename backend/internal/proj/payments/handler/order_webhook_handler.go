@@ -55,7 +55,7 @@ func (h *OrderWebhookHandler) HandleOrderPaymentWebhook(c *fiber.Ctx) error {
 	// Обрабатываем webhook
 	err := h.service.HandleOrderPaymentWebhook(c.Context(), payload, signature)
 	if err != nil {
-		h.logger.Error("Failed to process order payment webhook: %v", err)
+		h.logger.Error("Failed to process order payment webhook", "error", err)
 		return utils.ErrorResponse(c, 500, "webhook processing failed")
 	}
 

@@ -74,7 +74,7 @@ func (h *OrderPaymentHandler) CreateOrderPayment(c *fiber.Ctx) error {
 
 	var req CreateOrderPaymentRequest
 	if err := c.BodyParser(&req); err != nil {
-		h.logger.Error("Failed to parse request body: %v", err)
+		h.logger.Error("Failed to parse request body", "error", err)
 		return utils.ErrorResponse(c, 400, "invalid request body")
 	}
 
@@ -99,7 +99,7 @@ func (h *OrderPaymentHandler) CreateOrderPayment(c *fiber.Ctx) error {
 	// Создаем платежную сессию для заказа
 	session, err := h.service.CreateOrderPayment(c.Context(), orderID, userID, amountFloat, req.Currency, "allsecure")
 	if err != nil {
-		h.logger.Error("Failed to create order payment: %v, userID: %d, orderID: %d", err, userID, orderID)
+		h.logger.Error("Failed to create order payment", "error", err, "userID", userID, "orderID", orderID)
 		return utils.ErrorResponse(c, 500, "order payment creation failed")
 	}
 
