@@ -77,19 +77,45 @@ func (sc *SimilarityCalculator) CalculateSimilarity(
 	}
 
 	// Итоговый скор
-	score.TotalScore = score.CategoryScore*0.3 +
-		score.AttributeScore*0.3 +
-		score.TextScore*0.2 +
-		score.PriceScore*0.15 +
-		score.LocationScore*0.05
+	// Адаптивные веса в зависимости от категории
+	var categoryWeight, priceWeight, textWeight, attrWeight, locationWeight float64
+
+	if score.CategoryScore >= 1.0 {
+		// Та же категория - стандартные веса
+		categoryWeight = 0.3
+		attrWeight = 0.3
+		textWeight = 0.2
+		priceWeight = 0.15
+		locationWeight = 0.05
+	} else if score.CategoryScore >= 0.6 {
+		// Категории из одной группы - больше веса цене и тексту
+		categoryWeight = 0.2
+		attrWeight = 0.2
+		textWeight = 0.25
+		priceWeight = 0.25
+		locationWeight = 0.1
+	} else {
+		// Разные категории - максимальный вес цене и местоположению
+		categoryWeight = 0.1
+		attrWeight = 0.15
+		textWeight = 0.2
+		priceWeight = 0.35
+		locationWeight = 0.2
+	}
+
+	score.TotalScore = score.CategoryScore*categoryWeight +
+		score.AttributeScore*attrWeight +
+		score.TextScore*textWeight +
+		score.PriceScore*priceWeight +
+		score.LocationScore*locationWeight
 
 	// Детализированная информация
 	score.ScoreBreakdown = map[string]interface{}{
-		"category_weight":  0.3,
-		"attribute_weight": 0.3,
-		"text_weight":      0.2,
-		"price_weight":     0.15,
-		"location_weight":  0.05,
+		"category_weight":  categoryWeight,
+		"attribute_weight": attrWeight,
+		"text_weight":      textWeight,
+		"price_weight":     priceWeight,
+		"location_weight":  locationWeight,
 		"category_raw":     score.CategoryScore,
 		"attribute_raw":    score.AttributeScore,
 		"text_raw":         score.TextScore,
@@ -107,9 +133,22 @@ func (sc *SimilarityCalculator) calculateCategoryScore(
 		return 1.0
 	}
 
-	// Проверяем родительские категории (если есть логика)
-	// В упрощенной версии возвращаем 0
-	return 0.0
+	// Для межкатегорийного поиска даем базовый балл
+	// чтобы не обнулять полностью скор похожести
+
+	// Проверяем, относятся ли категории к одной группе
+	// Например, недвижимость: квартиры (1100), дома (1300), комнаты (1200)
+	sourceGroup := source.CategoryID / 100
+	targetGroup := target.CategoryID / 100
+
+	if sourceGroup == targetGroup {
+		// Категории из одной группы (например, обе - недвижимость)
+		return 0.6
+	}
+
+	// Совсем разные категории - даем минимальный балл
+	// чтобы не исключать объявления полностью
+	return 0.1
 }
 
 func (sc *SimilarityCalculator) calculateAttributeScore(

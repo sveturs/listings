@@ -253,10 +253,19 @@ func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID i
 // tryNumber определяет уровень строгости поиска: 0 - самый строгий, 3 - самый широкий
 func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.MarketplaceListing, size int, tryNumber int) *search.ServiceParams {
 	params := &search.ServiceParams{
-		CategoryID: strconv.Itoa(listing.CategoryID),
-		Size:       size,
-		Page:       1,
-		Sort:       "date_desc",
+		Size: size,
+		Page: 1,
+		Sort: "date_desc",
+	}
+
+	// Категория - расширяем поиск на последней попытке
+	if tryNumber < 3 {
+		// Первые 3 попытки - ищем в той же категории
+		params.CategoryID = strconv.Itoa(listing.CategoryID)
+		log.Printf("Попытка %d: поиск в категории %d", tryNumber, listing.CategoryID)
+	} else {
+		// Последняя попытка - поиск во всех категориях
+		log.Printf("Попытка %d: поиск во всех категориях", tryNumber)
 	}
 
 	// Добавляем локацию в зависимости от попытки
@@ -1136,6 +1145,8 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		SortDirection:    params.SortDirection,
 		Distance:         params.Distance,
 		CustomQuery:      nil,
+		UseSynonyms:      params.UseSynonyms,
+		Fuzziness:        params.Fuzziness,
 	}
 	// Преобразуем числовые значения в указатели для SearchParams
 	if params.CategoryID != "" {
