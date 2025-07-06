@@ -194,7 +194,7 @@ export class UnifiedSearchService {
 
     const data = await response.json();
     const rawSuggestions = data.data || [];
-    
+
     // Преобразуем данные от backend в нужный формат для frontend
     return rawSuggestions.map((item: any): SearchSuggestion => {
       if (item.type === 'category') {
@@ -204,23 +204,23 @@ export class UnifiedSearchService {
           category: {
             id: item.category_id,
             name: item.label || item.value,
-            slug: item.value || item.category_id.toString()
-          }
+            slug: item.value || item.category_id.toString(),
+          },
         };
       }
-      
+
       if (item.type === 'product') {
         return {
           text: item.label || item.value,
           type: 'product',
-          product_id: item.product_id || item.id
+          product_id: item.product_id || item.id,
         };
       }
-      
+
       // Для text/query типов
       return {
         text: item.label || item.value || item.text,
-        type: 'text'
+        type: 'text',
       };
     });
   }
@@ -301,7 +301,7 @@ export class UnifiedSearchService {
 
       const data = await response.json();
       const rawSuggestions = data.data || [];
-      
+
       // Преобразуем данные от backend в нужный формат для frontend
       return rawSuggestions.map((item: any): EnhancedSuggestion => {
         if (item.type === 'category') {
@@ -312,11 +312,11 @@ export class UnifiedSearchService {
               id: item.category_id,
               name: item.label || item.value,
               slug: item.value || item.category_id.toString(),
-              count: item.metadata?.count
-            }
+              count: item.metadata?.count,
+            },
           };
         }
-        
+
         if (item.type === 'product') {
           return {
             text: item.label || item.value,
@@ -326,15 +326,15 @@ export class UnifiedSearchService {
               name: item.label || item.value,
               price: item.price || 0,
               currency: item.currency || 'RSD',
-              image_url: item.image_url
-            }
+              image_url: item.image_url,
+            },
           };
         }
-        
+
         // Для query/text типов
         return {
           text: item.label || item.value || item.text,
-          type: item.type === 'query' ? 'query' : 'query'
+          type: item.type === 'query' ? 'query' : 'query',
         };
       });
     } catch (error) {
