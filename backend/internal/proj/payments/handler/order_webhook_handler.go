@@ -48,14 +48,12 @@ func (h *OrderWebhookHandler) HandleOrderPaymentWebhook(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, 400, "empty payload")
 	}
 
-	h.logger.Info("Order payment webhook received",
-		"signature", signature,
-		"payloadSize", len(payload))
+	h.logger.Info("Order payment webhook received (signature: %s, payloadSize: %d)", signature, len(payload))
 
 	// Обрабатываем webhook
 	err := h.service.HandleOrderPaymentWebhook(c.Context(), payload, signature)
 	if err != nil {
-		h.logger.Error("Failed to process order payment webhook", "error", err)
+		h.logger.Error("Failed to process order payment webhook: %v", err)
 		return utils.ErrorResponse(c, 500, "webhook processing failed")
 	}
 

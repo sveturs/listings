@@ -74,7 +74,7 @@ func (h *OrderPaymentHandler) CreateOrderPayment(c *fiber.Ctx) error {
 
 	var req CreateOrderPaymentRequest
 	if err := c.BodyParser(&req); err != nil {
-		h.logger.Error("Failed to parse request body", "error", err)
+		h.logger.Error("Failed to parse request body: %v", err)
 		return utils.ErrorResponse(c, 400, "invalid request body")
 	}
 
@@ -99,7 +99,7 @@ func (h *OrderPaymentHandler) CreateOrderPayment(c *fiber.Ctx) error {
 	// Создаем платежную сессию для заказа
 	session, err := h.service.CreateOrderPayment(c.Context(), orderID, userID, amountFloat, req.Currency, "allsecure")
 	if err != nil {
-		h.logger.Error("Failed to create order payment", "error", err, "userID", userID, "orderID", orderID)
+		h.logger.Error("Failed to create order payment: %v (userID: %d, orderID: %d)", err, userID, orderID)
 		return utils.ErrorResponse(c, 500, "order payment creation failed")
 	}
 
@@ -111,10 +111,7 @@ func (h *OrderPaymentHandler) CreateOrderPayment(c *fiber.Ctx) error {
 		RequiresAction: session.PaymentURL != "",
 	}
 
-	h.logger.Info("Order payment session created successfully",
-		"sessionID", "", // session.SessionID,
-		"orderID", orderID,
-		"userID", userID)
+	h.logger.Info("Order payment session created successfully (orderID: %d, userID: %d)", orderID, userID)
 
 	return utils.SuccessResponse(c, response)
 }
@@ -145,9 +142,7 @@ func (h *OrderPaymentHandler) GetOrderPaymentStatus(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, 400, "invalid order ID")
 	}
 
-	h.logger.Info("Order payment status requested",
-		"orderID", orderID,
-		"userID", userID)
+	h.logger.Info("Order payment status requested (orderID: %d, userID: %v)", orderID, userID)
 
 	// TODO: Реализовать получение статуса платежа заказа из базы данных
 	return utils.SuccessResponse(c, map[string]interface{}{
@@ -183,9 +178,7 @@ func (h *OrderPaymentHandler) CancelOrderPayment(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, 400, "invalid order ID")
 	}
 
-	h.logger.Info("Order payment cancellation requested",
-		"orderID", orderID,
-		"userID", userID)
+	h.logger.Info("Order payment cancellation requested (orderID: %d, userID: %v)", orderID, userID)
 
 	// TODO: Реализовать отмену платежа заказа
 	return utils.SuccessResponse(c, "payment cancelled")

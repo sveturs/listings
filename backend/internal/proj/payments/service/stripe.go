@@ -206,7 +206,7 @@ func (s *StripeService) HandleWebhook(ctx context.Context, payload []byte, signa
 		}
 
 		if paymentIntent.LastPaymentError != nil {
-			logger.Info().Msgf("Payment failed: %s", paymentIntent.LastPaymentError.Error) // Исправлено на Error вместо Message
+			logger.Info().Msgf("Payment failed: %s", paymentIntent.LastPaymentError.Error())
 		} else {
 			logger.Info().Msgf("Payment failed without specific error message")
 		}

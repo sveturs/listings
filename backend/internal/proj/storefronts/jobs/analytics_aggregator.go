@@ -49,9 +49,7 @@ func (a *AnalyticsAggregator) Run(ctx context.Context) error {
 
 	for _, storefront := range storefronts {
 		if err := a.aggregateStorefrontAnalytics(ctx, storefront.ID, yesterday); err != nil {
-			a.logger.Error("Failed to aggregate analytics for storefront",
-				"storefront_id", storefront.ID,
-				"error", err)
+			a.logger.Error("Failed to aggregate analytics for storefront %d: %v", storefront.ID, err)
 			continue
 		}
 	}
