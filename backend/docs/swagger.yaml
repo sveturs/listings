@@ -495,6 +495,19 @@ definitions:
         example: 5
         type: integer
     type: object
+  handler.FuzzySearchTestResponse:
+    properties:
+      categories:
+        items:
+          $ref: '#/definitions/service.CategorySearchResult'
+        type: array
+      expanded_query:
+        type: string
+      language:
+        type: string
+      original_query:
+        type: string
+    type: object
   handler.IDMessageResponse:
     properties:
       id:
@@ -1169,6 +1182,9 @@ definitions:
     properties:
       category:
         $ref: '#/definitions/handler.UnifiedCategoryInfo'
+      created_at:
+        description: Для расчета свежести
+        type: string
       currency:
         type: string
       description:
@@ -1203,6 +1219,9 @@ definitions:
         allOf:
         - $ref: '#/definitions/handler.UnifiedStorefrontInfo'
         description: Только для storefront товаров
+      views_count:
+        description: Для расчета популярности
+        type: integer
     type: object
   handler.UnifiedSearchParams:
     properties:
@@ -4376,7 +4395,51 @@ definitions:
       storefrontID:
         description: ID витрины
         type: string
+      useSynonyms:
+        description: Использовать расширение запроса синонимами
+        type: boolean
     type: object
+  service.CategorySearchResult:
+    properties:
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      category_slug:
+        type: string
+      similarity_score:
+        type: number
+    type: object
+  service.SuggestionItem:
+    properties:
+      category_id:
+        type: integer
+      count:
+        type: integer
+      icon:
+        type: string
+      label:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      product_id:
+        type: integer
+      type:
+        $ref: '#/definitions/service.SuggestionType'
+      value:
+        type: string
+    type: object
+  service.SuggestionType:
+    enum:
+    - query
+    - category
+    - product
+    type: string
+    x-enum-varnames:
+    - SuggestionTypeQuery
+    - SuggestionTypeCategory
+    - SuggestionTypeProduct
   tgbotapi.Animation:
     properties:
       file_id:
@@ -9103,6 +9166,55 @@ paths:
       summary: Get favorites count
       tags:
       - marketplace-favorites
+  /api/v1/marketplace/fuzzy-search:
+    get:
+      consumes:
+      - application/json
+      description: Performs search with customizable fuzzy matching parameters
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        required: true
+        type: string
+      - default: AUTO
+        description: Fuzziness level (AUTO, 0, 1, 2)
+        in: query
+        name: fuzziness
+        type: string
+      - default: 30%
+        description: Minimum should match (e.g., 30%, 2)
+        in: query
+        name: minimum_should_match
+        type: string
+      - default: true
+        description: Use synonym expansion
+        in: query
+        name: use_synonyms
+        type: boolean
+      - description: Category ID
+        in: query
+        name: category_id
+        type: string
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results
+          schema:
+            $ref: '#/definitions/handler.SearchResponse'
+        "400":
+          description: marketplace.queryRequired
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Search with custom fuzzy parameters
+      tags:
+      - marketplace-search
   /api/v1/marketplace/images/{id}:
     delete:
       consumes:
@@ -10175,6 +10287,41 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
       summary: Get search suggestions
+      tags:
+      - marketplace-search
+  /api/v1/marketplace/test-fuzzy-search:
+    get:
+      consumes:
+      - application/json
+      description: Tests fuzzy search with synonyms expansion
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        required: true
+        type: string
+      - default: ru
+        description: Language
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Test results
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.FuzzySearchTestResponse'
+              type: object
+        "400":
+          description: marketplace.queryRequired
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test fuzzy search functionality
       tags:
       - marketplace-search
   /api/v1/marketplace/translations/{id}:

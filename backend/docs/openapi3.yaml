@@ -4465,6 +4465,61 @@ paths:
       summary: Get favorites count
       tags:
         - marketplace-favorites
+  /api/v1/marketplace/fuzzy-search:
+    get:
+      description: Performs search with customizable fuzzy matching parameters
+      parameters:
+        - description: Search query
+          in: query
+          name: query
+          required: true
+          schema:
+            type: string
+        - description: Fuzziness level (AUTO, 0, 1, 2)
+          in: query
+          name: fuzziness
+          schema:
+            type: string
+            default: AUTO
+        - description: Minimum should match (e.g., 30%, 2)
+          in: query
+          name: minimum_should_match
+          schema:
+            type: string
+            default: 30%
+        - description: Use synonym expansion
+          in: query
+          name: use_synonyms
+          schema:
+            type: boolean
+            default: true
+        - description: Category ID
+          in: query
+          name: category_id
+          schema:
+            type: string
+        - description: Limit
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handler.SearchResponse"
+        "400":
+          description: marketplace.queryRequired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Search with custom fuzzy parameters
+      tags:
+        - marketplace-search
   "/api/v1/marketplace/images/{id}":
     delete:
       description: Deletes an image from a marketplace listing
@@ -5677,6 +5732,43 @@ paths:
               schema:
                 $ref: "#/components/schemas/utils.ErrorResponseSwag"
       summary: Get search suggestions
+      tags:
+        - marketplace-search
+  /api/v1/marketplace/test-fuzzy-search:
+    get:
+      description: Tests fuzzy search with synonyms expansion
+      parameters:
+        - description: Search query
+          in: query
+          name: query
+          required: true
+          schema:
+            type: string
+        - description: Language
+          in: query
+          name: lang
+          schema:
+            type: string
+            default: ru
+      responses:
+        "200":
+          description: Test results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/handler.FuzzySearchTestResponse"
+                    type: object
+        "400":
+          description: marketplace.queryRequired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Test fuzzy search functionality
       tags:
         - marketplace-search
   "/api/v1/marketplace/translations/{id}":
@@ -11306,6 +11398,19 @@ components:
           example: 5
           type: integer
       type: object
+    handler.FuzzySearchTestResponse:
+      properties:
+        categories:
+          items:
+            $ref: "#/components/schemas/service.CategorySearchResult"
+          type: array
+        expanded_query:
+          type: string
+        language:
+          type: string
+        original_query:
+          type: string
+      type: object
     handler.IDMessageResponse:
       properties:
         id:
@@ -11980,6 +12085,9 @@ components:
       properties:
         category:
           $ref: "#/components/schemas/handler.UnifiedCategoryInfo"
+        created_at:
+          description: Для расчета свежести
+          type: string
         currency:
           type: string
         description:
@@ -12014,6 +12122,9 @@ components:
           allOf:
             - $ref: "#/components/schemas/handler.UnifiedStorefrontInfo"
           description: Только для storefront товаров
+        views_count:
+          description: Для расчета популярности
+          type: integer
       type: object
     handler.UnifiedSearchParams:
       properties:
@@ -15186,7 +15297,51 @@ components:
         storefrontID:
           description: ID витрины
           type: string
+        useSynonyms:
+          description: Использовать расширение запроса синонимами
+          type: boolean
       type: object
+    service.CategorySearchResult:
+      properties:
+        category_id:
+          type: integer
+        category_name:
+          type: string
+        category_slug:
+          type: string
+        similarity_score:
+          type: number
+      type: object
+    service.SuggestionItem:
+      properties:
+        category_id:
+          type: integer
+        count:
+          type: integer
+        icon:
+          type: string
+        label:
+          type: string
+        metadata:
+          additionalProperties: true
+          type: object
+        product_id:
+          type: integer
+        type:
+          $ref: "#/components/schemas/service.SuggestionType"
+        value:
+          type: string
+      type: object
+    service.SuggestionType:
+      enum:
+        - query
+        - category
+        - product
+      type: string
+      x-enum-varnames:
+        - SuggestionTypeQuery
+        - SuggestionTypeCategory
+        - SuggestionTypeProduct
     tgbotapi.Animation:
       properties:
         file_id:

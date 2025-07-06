@@ -6513,6 +6513,67 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/fuzzy-search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search with custom fuzzy parameters
+     * @description Performs search with customizable fuzzy matching parameters
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Search query */
+          query: string;
+          /** @description Fuzziness level (AUTO, 0, 1, 2) */
+          fuzziness?: string;
+          /** @description Minimum should match (e.g., 30%, 2) */
+          minimum_should_match?: string;
+          /** @description Use synonym expansion */
+          use_synonyms?: boolean;
+          /** @description Category ID */
+          category_id?: string;
+          /** @description Limit */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['handler.SearchResponse'];
+          };
+        };
+        /** @description marketplace.queryRequired */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/images/{id}': {
     parameters: {
       query?: never;
@@ -8247,6 +8308,61 @@ export interface paths {
         };
         /** @description marketplace.suggestionsError */
         500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/test-fuzzy-search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Test fuzzy search functionality
+     * @description Tests fuzzy search with synonyms expansion
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Search query */
+          query: string;
+          /** @description Language */
+          lang?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Test results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.FuzzySearchTestResponse'];
+            };
+          };
+        };
+        /** @description marketplace.queryRequired */
+        400: {
           headers: {
             [name: string]: unknown;
           };
@@ -15968,6 +16084,12 @@ export interface components {
       /** @example 5 */
       count?: number;
     };
+    'handler.FuzzySearchTestResponse': {
+      categories?: components['schemas']['service.CategorySearchResult'][];
+      expanded_query?: string;
+      language?: string;
+      original_query?: string;
+    };
     'handler.IDMessageResponse': {
       /** @example 123 */
       id?: number;
@@ -16399,6 +16521,8 @@ export interface components {
     };
     'handler.UnifiedSearchItem': {
       category?: components['schemas']['handler.UnifiedCategoryInfo'];
+      /** @description Для расчета свежести */
+      created_at?: string;
       currency?: string;
       description?: string;
       highlights?: {
@@ -16416,6 +16540,8 @@ export interface components {
       score?: number;
       /** @description Только для storefront товаров */
       storefront?: components['schemas']['handler.UnifiedStorefrontInfo'];
+      /** @description Для расчета популярности */
+      views_count?: number;
     };
     'handler.UnifiedSearchParams': {
       attribute_filters?: {
@@ -18048,7 +18174,29 @@ export interface components {
       status?: string;
       /** @description ID витрины */
       storefrontID?: string;
+      /** @description Использовать расширение запроса синонимами */
+      useSynonyms?: boolean;
     };
+    'service.CategorySearchResult': {
+      category_id?: number;
+      category_name?: string;
+      category_slug?: string;
+      similarity_score?: number;
+    };
+    'service.SuggestionItem': {
+      category_id?: number;
+      count?: number;
+      icon?: string;
+      label?: string;
+      metadata?: {
+        [key: string]: unknown;
+      };
+      product_id?: number;
+      type?: components['schemas']['service.SuggestionType'];
+      value?: string;
+    };
+    /** @enum {string} */
+    'service.SuggestionType': 'query' | 'category' | 'product';
     'tgbotapi.Animation': {
       file_id?: string;
       file_name?: string;

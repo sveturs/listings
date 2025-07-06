@@ -1093,3 +1093,252 @@ const storefrontProductMapping = `{
     }
   }
 }`
+
+// SearchSimilarProducts выполняет поиск похожих товаров витрин
+func (r *ProductRepository) SearchSimilarProducts(ctx context.Context, productID int, limit int) ([]*models.MarketplaceListing, error) {
+	logger.Info().Msgf("SearchSimilarProducts: поиск похожих товаров для продукта витрины ID=%d", productID)
+
+	// Выполняем базовый поиск для получения информации о исходном товаре
+	// Используем простой запрос для поиска товара по ID
+	getQuery := map[string]interface{}{
+		"query": map[string]interface{}{
+			"term": map[string]interface{}{
+				"product_id": productID,
+			},
+		},
+		"size": 1,
+	}
+
+	getResponseBytes, err := r.client.Search(r.indexName, getQuery)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения товара из индекса: %w", err)
+	}
+
+	// Парсим ответ для получения информации о товаре
+	var getResult map[string]interface{}
+	if err := json.Unmarshal(getResponseBytes, &getResult); err != nil {
+		return nil, fmt.Errorf("ошибка парсинга ответа получения товара: %w", err)
+	}
+
+	hits, ok := getResult["hits"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("товар с ID %d не найден в индексе", productID)
+	}
+
+	hitsArray, ok := hits["hits"].([]interface{})
+	if !ok || len(hitsArray) == 0 {
+		return nil, fmt.Errorf("товар с ID %d не найден в индексе", productID)
+	}
+
+	sourceHit, ok := hitsArray[0].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("неверный формат документа товара")
+	}
+
+	sourceProduct, ok := sourceHit["_source"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("не удается получить данные товара")
+	}
+
+	// Извлекаем данные исходного товара
+	sourceName, _ := sourceProduct["name"].(string)
+	sourcePrice, _ := sourceProduct["price"].(float64)
+	sourceCategoryID, _ := sourceProduct["category_id"].(float64)
+	sourceStorefrontID, _ := sourceProduct["storefront_id"].(float64)
+	sourceBrand, _ := sourceProduct["brand"].(string)
+	sourceModel, _ := sourceProduct["model"].(string)
+
+	logger.Info().Msgf("Исходный товар: Name=%s, CategoryID=%.0f, Price=%.2f, StorefrontID=%.0f, Brand=%s, Model=%s",
+		sourceName, sourceCategoryID, sourcePrice, sourceStorefrontID, sourceBrand, sourceModel)
+
+	// Создаем запрос для поиска похожих товаров
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must": []map[string]interface{}{
+					// Исключаем сам товар
+					{
+						"bool": map[string]interface{}{
+							"must_not": []map[string]interface{}{
+								{
+									"term": map[string]interface{}{
+										"product_id": productID,
+									},
+								},
+							},
+						},
+					},
+				},
+				"should": []map[string]interface{}{
+					// Точное совпадение категории (высокий приоритет)
+					{
+						"term": map[string]interface{}{
+							"category_id": map[string]interface{}{
+								"value": sourceCategoryID,
+								"boost": 3.0,
+							},
+						},
+					},
+					// Точное совпадение бренда
+					{
+						"term": map[string]interface{}{
+							"brand_lowercase": map[string]interface{}{
+								"value": strings.ToLower(sourceBrand),
+								"boost": 2.5,
+							},
+						},
+					},
+					// Точное совпадение модели
+					{
+						"term": map[string]interface{}{
+							"model_lowercase": map[string]interface{}{
+								"value": strings.ToLower(sourceModel),
+								"boost": 2.0,
+							},
+						},
+					},
+					// Частичное совпадение названия
+					{
+						"match": map[string]interface{}{
+							"name_lowercase": map[string]interface{}{
+								"query": strings.ToLower(sourceName),
+								"boost": 1.5,
+							},
+						},
+					},
+					// Похожий диапазон цен (±50%)
+					{
+						"range": map[string]interface{}{
+							"price": map[string]interface{}{
+								"gte":   sourcePrice * 0.5,
+								"lte":   sourcePrice * 1.5,
+								"boost": 1.0,
+							},
+						},
+					},
+				},
+				"minimum_should_match": 1, // Хотя бы один критерий должен совпадать
+			},
+		},
+		"size": limit * 2, // Берем больше для фильтрации
+		"sort": []map[string]interface{}{
+			{"_score": map[string]interface{}{"order": "desc"}},
+		},
+	}
+
+	// Выполняем поиск
+	responseBytes, err := r.client.Search(r.indexName, query)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения поиска похожих товаров: %w", err)
+	}
+
+	// Parse response
+	var response map[string]interface{}
+	if err := json.Unmarshal(responseBytes, &response); err != nil {
+		return nil, fmt.Errorf("ошибка парсинга ответа поиска: %w", err)
+	}
+
+	searchHits, ok := response["hits"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("неверный формат ответа OpenSearch")
+	}
+
+	searchHitsArray, ok := searchHits["hits"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("неверный формат массива hits в ответе OpenSearch")
+	}
+
+	logger.Info().Msgf("Найдено %d потенциально похожих товаров витрин", len(searchHitsArray))
+
+	// Преобразуем результаты в формат MarketplaceListing
+	var similarListings []*models.MarketplaceListing
+
+	for _, hitInterface := range searchHitsArray {
+		hit, ok := hitInterface.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		source, ok := hit["_source"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		score, _ := hit["_score"].(float64)
+
+		// Преобразуем документ товара витрины в MarketplaceListing
+		listing := &models.MarketplaceListing{
+			ID:          int(source["product_id"].(float64)),
+			Title:       source["name"].(string),
+			Description: source["description"].(string),
+			Price:       source["price"].(float64),
+			CategoryID:  int(source["category_id"].(float64)),
+			Status:      "active",   // Товары витрин всегда активны
+			CreatedAt:   time.Now(), // TODO: использовать реальную дату
+			UpdatedAt:   time.Now(),
+		}
+
+		// Добавляем StorefrontID
+		if storefrontID, ok := source["storefront_id"].(float64); ok {
+			storefrontIDInt := int(storefrontID)
+			listing.StorefrontID = &storefrontIDInt
+		}
+
+		// Добавляем атрибуты из товара витрины
+		if attributes, ok := source["attributes"].(map[string]interface{}); ok {
+			var listingAttrs []models.ListingAttributeValue
+
+			// Конвертируем атрибуты товара витрины в формат атрибутов объявления
+			for attrName, attrValue := range attributes {
+				attr := models.ListingAttributeValue{
+					ListingID:     listing.ID,
+					AttributeName: attrName,
+					DisplayValue:  fmt.Sprintf("%v", attrValue),
+				}
+
+				// Определяем тип значения
+				switch v := attrValue.(type) {
+				case string:
+					attr.TextValue = &v
+					attr.AttributeType = "text"
+				case float64:
+					attr.NumericValue = &v
+					attr.AttributeType = "number"
+				case bool:
+					boolVal := v
+					attr.BooleanValue = &boolVal
+					attr.AttributeType = "boolean"
+				default:
+					strVal := fmt.Sprintf("%v", v)
+					attr.TextValue = &strVal
+					attr.AttributeType = "text"
+				}
+
+				listingAttrs = append(listingAttrs, attr)
+			}
+
+			listing.Attributes = listingAttrs
+		}
+
+		// Добавляем метаданные о скоре похожести для отладки
+		if listing.Metadata == nil {
+			listing.Metadata = make(map[string]interface{})
+		}
+		listing.Metadata["similarity_score"] = map[string]interface{}{
+			"total":        score,
+			"search_type":  "storefront_product",
+			"source_index": r.indexName,
+		}
+
+		similarListings = append(similarListings, listing)
+
+		// Ограничиваем результат
+		if len(similarListings) >= limit {
+			break
+		}
+	}
+
+	logger.Info().Msgf("Найдено %d похожих товаров витрин для продукта %d", len(similarListings), productID)
+
+	return similarListings, nil
+}

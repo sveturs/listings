@@ -1526,6 +1526,32 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		boolMap := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
 		should := boolMap["should"].([]interface{})
 
+		// Расширяем запрос синонимами, если включен нечеткий поиск
+		if params.UseSynonyms {
+			// Попробуем расширить запрос синонимами через PostgreSQL
+			if r.storage != nil {
+				expandedQuery, err := r.storage.ExpandSearchQuery(context.Background(), params.Query, params.Language)
+				if err == nil && expandedQuery != params.Query {
+					logger.Info().Str("original", params.Query).Str("expanded", expandedQuery).Msg("Using expanded query with synonyms")
+					// Добавляем расширенный запрос как дополнительные условия поиска
+					expandedWords := strings.Fields(expandedQuery)
+					for _, word := range expandedWords {
+						if word != params.Query && !strings.Contains(params.Query, word) {
+							should = append(should, map[string]interface{}{
+								"multi_match": map[string]interface{}{
+									"query":  word,
+									"fields": searchFields,
+									"type":   "best_fields",
+									"boost":  0.5, // Меньший вес для синонимов
+								},
+							})
+						}
+					}
+				}
+			}
+		}
+
+		// Основной поиск по заголовку с высоким приоритетом
 		should = append(should, map[string]interface{}{
 			"match": map[string]interface{}{
 				"title": map[string]interface{}{
@@ -1535,6 +1561,18 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 				},
 			},
 		})
+
+		// Добавляем поиск по n-граммам для лучшего нечеткого соответствия
+		if params.UseSynonyms {
+			should = append(should, map[string]interface{}{
+				"match": map[string]interface{}{
+					"title.ngram": map[string]interface{}{
+						"query": params.Query,
+						"boost": 2.0,
+					},
+				},
+			})
+		}
 
 		should = append(should, map[string]interface{}{
 			"match": map[string]interface{}{

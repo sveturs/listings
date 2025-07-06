@@ -38,6 +38,10 @@ type MarketplaceServiceInterface interface {
 	Storage() storage.Storage
 	Service() *Service
 
+	// Fuzzy search методы
+	ExpandQueryWithSynonyms(ctx context.Context, query string, language string) (string, error)
+	SearchCategoriesFuzzy(ctx context.Context, searchTerm string, language string, similarityThreshold float64) ([]CategorySearchResult, error)
+
 	// атрибуты
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
 	SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
@@ -67,6 +71,10 @@ type MarketplaceServiceInterface interface {
 	UpdateAttributeCategory(ctx context.Context, categoryID int, attributeID int, isRequired bool, isEnabled bool) error
 	UpdateAttributeCategoryExtended(ctx context.Context, categoryID int, attributeID int, isRequired bool, isEnabled bool, sortOrder int, customComponent string) error
 	InvalidateAttributeCache(ctx context.Context, categoryID int) error
+
+	// Поиск и подсказки
+	GetEnhancedSuggestions(ctx context.Context, query string, limit int, types string) ([]SuggestionItem, error)
+	SaveSearchQuery(ctx context.Context, query string, resultsCount int, language string) error
 
 	// Карта - геопространственные методы
 	GetListingsInBounds(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapMarker, error)

@@ -118,6 +118,15 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	// Устанавливаем язык
 	params.Language = lang
 
+	// Проверяем, нужно ли использовать нечеткий поиск
+	useFuzzy := c.Query("fuzzy", "true") // По умолчанию включен
+	if useFuzzy == "true" || useFuzzy == "1" {
+		params.UseSynonyms = true
+		if params.Fuzziness == "" {
+			params.Fuzziness = "AUTO"
+		}
+	}
+
 	// Проверяем режим просмотра карты
 	viewMode := c.Query("view_mode")
 	if viewMode == "map" {

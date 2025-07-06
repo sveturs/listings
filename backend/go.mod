@@ -24,6 +24,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/sashabaranov/go-openai v1.36.1
 	github.com/shopspring/decimal v1.4.0
+	github.com/stretchr/testify v1.9.0
 	github.com/stripe/stripe-go/v72 v72.122.0
 	github.com/swaggo/swag v1.16.4
 	golang.org/x/crypto v0.36.0
@@ -47,6 +48,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/creasty/defaults v1.7.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fasthttp/websocket v1.5.3 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -83,6 +85,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/xid v1.6.0 // indirect
@@ -90,6 +93,7 @@ require (
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/swaggo/files/v2 v2.0.2 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/tinylib/msgp v1.2.5 // indirect

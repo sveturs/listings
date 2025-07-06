@@ -13,10 +13,12 @@ import { SearchIcon, CloseIcon, TrendingIcon } from './icons';
 interface SearchBarProps {
   placeholder?: string;
   initialQuery?: string;
-  onSearch?: (query: string) => void;
+  onSearch?: (query: string, fuzzy?: boolean) => void;
   className?: string;
   variant?: 'default' | 'hero' | 'minimal';
   showTrending?: boolean;
+  fuzzy?: boolean;
+  onFuzzyChange?: (fuzzy: boolean) => void;
 }
 
 export default function SearchBar({
@@ -26,11 +28,14 @@ export default function SearchBar({
   className = '',
   variant = 'default',
   showTrending = false,
+  fuzzy: initialFuzzy = true,
+  onFuzzyChange,
 }: SearchBarProps) {
   const t = useTranslations('search');
   const locale = useLocale();
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
+  const [fuzzy, setFuzzy] = useState(initialFuzzy);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -106,14 +111,14 @@ export default function SearchBar({
       UnifiedSearchService.saveToHistory(trimmedQuery);
 
       if (onSearch) {
-        onSearch(trimmedQuery);
+        onSearch(trimmedQuery, fuzzy);
       } else {
-        // Строим URL с правильной локалью
-        const searchUrl = `/${locale}/search?q=${encodeURIComponent(trimmedQuery)}`;
+        // Строим URL с правильной локалью и параметром fuzzy
+        const searchUrl = `/${locale}/search?q=${encodeURIComponent(trimmedQuery)}&fuzzy=${fuzzy}`;
         router.push(searchUrl);
       }
     },
-    [query, onSearch, router, locale]
+    [query, fuzzy, onSearch, router, locale]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -172,7 +177,7 @@ export default function SearchBar({
 
     // Если это товар, можно перейти на страницу товара (если есть id)
     if (suggestion.type === 'product' && suggestion.product_id) {
-      router.push(`/${locale}/listing/${suggestion.product_id}`);
+      router.push(`/${locale}/marketplace/${suggestion.product_id}`);
       return;
     }
 
@@ -251,6 +256,14 @@ export default function SearchBar({
     }
   };
 
+  const handleFuzzyToggle = () => {
+    const newFuzzy = !fuzzy;
+    setFuzzy(newFuzzy);
+    if (onFuzzyChange) {
+      onFuzzyChange(newFuzzy);
+    }
+  };
+
   return (
     <div className={getSearchBarClasses()}>
       <div className="form-control">
@@ -300,6 +313,50 @@ export default function SearchBar({
             </button>
           </div>
         </div>
+
+        {/* Fuzzy search toggle for hero and minimal variants */}
+        {(variant === 'hero' || variant === 'minimal') && (
+          <div
+            className={`flex items-center ${variant === 'hero' ? 'justify-center mt-3' : 'mt-2'} gap-2`}
+          >
+            <label className="label cursor-pointer flex items-center gap-2 p-0">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-xs checkbox-primary"
+                checked={fuzzy}
+                onChange={handleFuzzyToggle}
+              />
+              <span className="label-text text-xs">
+                {t('fuzzySearch')}
+                {variant === 'hero' && (
+                  <span className="text-xs text-base-content/60 ml-1">
+                    ({t('fuzzySearchHint')})
+                  </span>
+                )}
+              </span>
+              {variant === 'minimal' && (
+                <div
+                  className="tooltip tooltip-bottom"
+                  data-tip={t('fuzzySearchTooltip')}
+                >
+                  <svg
+                    className="w-4 h-4 text-base-content/60"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              )}
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Предложения автодополнения */}
