@@ -471,6 +471,14 @@ func (m *MockStorage) UpdateUserPrivacySettings(ctx context.Context, userID int,
 func (m *MockStorage) CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error) {
 	return false, nil
 }
+
+func (m *MockStorage) ExpandSearchQuery(ctx context.Context, query string, language string) (string, error) {
+	return query, nil
+}
+
+func (m *MockStorage) SearchCategoriesFuzzy(ctx context.Context, searchTerm string, language string, similarityThreshold float64) ([]interface{}, error) {
+	return []interface{}{}, nil
+}
 func (m *MockStorage) Close()                         {}
 func (m *MockStorage) Ping(ctx context.Context) error { return nil }
 

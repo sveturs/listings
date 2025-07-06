@@ -3,6 +3,7 @@ import { UnifiedSearchService } from '@/services/unifiedSearch';
 import MarketplaceList from '@/components/marketplace/MarketplaceList';
 import { Link } from '@/i18n/routing';
 import configManager from '@/config';
+import { SearchBar } from '@/components/SearchBar';
 
 export default async function Home({
   params,
@@ -50,9 +51,14 @@ export default async function Home({
           <h1 className="text-4xl lg:text-5xl font-bold text-center mb-4">
             {t('marketplace')}
           </h1>
-          <p className="text-center text-base-content/70 text-lg max-w-2xl mx-auto">
+          <p className="text-center text-base-content/70 text-lg max-w-2xl mx-auto mb-8">
             {t('description')}
           </p>
+
+          {/* Search Bar с поддержкой fuzzy search */}
+          <div className="max-w-3xl mx-auto">
+            <SearchBar variant="hero" showTrending={true} />
+          </div>
         </div>
       </div>
 

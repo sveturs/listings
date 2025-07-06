@@ -38,6 +38,10 @@ type MarketplaceServiceInterface interface {
 	Storage() storage.Storage
 	Service() *Service
 
+	// Fuzzy search методы
+	ExpandQueryWithSynonyms(ctx context.Context, query string, language string) (string, error)
+	SearchCategoriesFuzzy(ctx context.Context, searchTerm string, language string, similarityThreshold float64) ([]CategorySearchResult, error)
+
 	// атрибуты
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
 	SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error

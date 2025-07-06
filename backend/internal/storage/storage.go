@@ -208,6 +208,10 @@ type Storage interface {
 	SaveSearchQuery(ctx context.Context, query, normalizedQuery string, resultsCount int, language string) error
 	SearchCategories(ctx context.Context, query string, limit int) ([]models.MarketplaceCategory, error)
 
+	// Fuzzy search methods
+	ExpandSearchQuery(ctx context.Context, query string, language string) (string, error)
+	SearchCategoriesFuzzy(ctx context.Context, searchTerm string, language string, similarityThreshold float64) ([]interface{}, error)
+
 	// User Contacts methods
 	AddContact(ctx context.Context, contact *models.UserContact) error
 	UpdateContactStatus(ctx context.Context, userID, contactUserID int, status, notes string) error

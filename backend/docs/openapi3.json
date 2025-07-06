@@ -7701,6 +7701,92 @@
                 }
             }
         },
+        "/api/v1/marketplace/fuzzy-search": {
+            "get": {
+                "description": "Performs search with customizable fuzzy matching parameters",
+                "tags": [
+                    "marketplace-search"
+                ],
+                "summary": "Search with custom fuzzy parameters",
+                "parameters": [
+                    {
+                        "description": "Search query",
+                        "name": "query",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Fuzziness level (AUTO, 0, 1, 2)",
+                        "name": "fuzziness",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "AUTO"
+                        }
+                    },
+                    {
+                        "description": "Minimum should match (e.g., 30%, 2)",
+                        "name": "minimum_should_match",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "30%"
+                        }
+                    },
+                    {
+                        "description": "Use synonym expansion",
+                        "name": "use_synonyms",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    },
+                    {
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handler.SearchResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.queryRequired",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/images/{id}": {
             "delete": {
                 "security": [
@@ -9714,6 +9800,69 @@
                     },
                     "500": {
                         "description": "marketplace.suggestionsError",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/test-fuzzy-search": {
+            "get": {
+                "description": "Tests fuzzy search with synonyms expansion",
+                "tags": [
+                    "marketplace-search"
+                ],
+                "summary": "Test fuzzy search functionality",
+                "parameters": [
+                    {
+                        "description": "Search query",
+                        "name": "query",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Language",
+                        "name": "lang",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "ru"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Test results",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/handler.FuzzySearchTestResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.queryRequired",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -19045,6 +19194,26 @@
                     }
                 }
             },
+            "handler.FuzzySearchTestResponse": {
+                "type": "object",
+                "properties": {
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/service.CategorySearchResult"
+                        }
+                    },
+                    "expanded_query": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string"
+                    },
+                    "original_query": {
+                        "type": "string"
+                    }
+                }
+            },
             "handler.IDMessageResponse": {
                 "type": "object",
                 "properties": {
@@ -24782,6 +24951,27 @@
                     "storefrontID": {
                         "description": "ID витрины",
                         "type": "string"
+                    },
+                    "useSynonyms": {
+                        "description": "Использовать расширение запроса синонимами",
+                        "type": "boolean"
+                    }
+                }
+            },
+            "service.CategorySearchResult": {
+                "type": "object",
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "category_name": {
+                        "type": "string"
+                    },
+                    "category_slug": {
+                        "type": "string"
+                    },
+                    "similarity_score": {
+                        "type": "number"
                     }
                 }
             },

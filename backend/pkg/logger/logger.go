@@ -23,13 +23,20 @@ func New() *Logger {
 }
 
 func (l *Logger) Debug(format string, v ...interface{}) {
-	l.debug.Output(2, fmt.Sprintf(format, v...))
+	_ = l.debug.Output(2, fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Info(format string, v ...interface{}) {
-	l.info.Output(2, fmt.Sprintf(format, v...))
+	_ = l.info.Output(2, fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Error(format string, v ...interface{}) {
-	l.error.Output(2, fmt.Sprintf(format, v...))
+	_ = l.error.Output(2, fmt.Sprintf(format, v...))
+}
+
+var defaultLogger = New()
+
+// GetLogger возвращает глобальный экземпляр логгера
+func GetLogger() *Logger {
+	return defaultLogger
 }

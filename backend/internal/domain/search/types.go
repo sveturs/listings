@@ -26,9 +26,10 @@ type SearchParams struct {
 	MinimumShouldMatch string                 // Минимальное количество совпадений (70%, 50% и т.д.)
 	Fuzziness          string                 // Уровень нечеткости (AUTO, 1, 2, ...)
 	AttributeFilters   map[string]string      //  поле для фильтров атрибутов
-	UseAllTranslations bool                   //
-	CustomQuery        map[string]interface{} //
-	Status             string                 //
+	UseAllTranslations bool                   // Использовать все языки перевода
+	CustomQuery        map[string]interface{} // Кастомный запрос для OpenSearch
+	Status             string                 // Статус объявления (active, inactive и т.д.)
+	UseSynonyms        bool                   // Использовать расширение запроса синонимами
 }
 
 // SearchParams параметры поиска для OpenSearch
@@ -54,6 +55,7 @@ type ServiceParams struct {
 	Fuzziness          string            // Уровень нечеткости (AUTO, 1, 2, ...)
 	AttributeFilters   map[string]string //  поле для фильтров атрибутов
 	Status             string
+	UseSynonyms        bool // Использовать расширение запроса синонимами
 }
 
 // GeoLocation координаты для геопоиска

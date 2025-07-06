@@ -33,8 +33,10 @@ export default function SearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
+  const initialFuzzy = searchParams.get('fuzzy') !== 'false'; // По умолчанию true
 
   const [query, setQuery] = useState(initialQuery);
+  const [fuzzy, setFuzzy] = useState(initialFuzzy);
   const [results, setResults] = useState<UnifiedSearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export default function SearchPage() {
   // Initial search when component mounts with query
   useEffect(() => {
     if (initialQuery) {
-      performSearch(initialQuery, 1, filters);
+      performSearch(initialQuery, 1, filters, fuzzy);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - only run once on mount
@@ -71,11 +73,13 @@ export default function SearchPage() {
   // Handle URL query changes
   useEffect(() => {
     const searchQuery = searchParams.get('q');
+    const searchFuzzy = searchParams.get('fuzzy') !== 'false';
     if (searchQuery && searchQuery !== query) {
       setQuery(searchQuery);
+      setFuzzy(searchFuzzy);
       setPage(1);
       setAllItems([]);
-      performSearch(searchQuery, 1, filters);
+      performSearch(searchQuery, 1, filters, searchFuzzy);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -83,7 +87,7 @@ export default function SearchPage() {
   // Load more pages
   useEffect(() => {
     if (query && page > 1) {
-      performSearch(query, page, filters);
+      performSearch(query, page, filters, fuzzy);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
@@ -95,7 +99,7 @@ export default function SearchPage() {
     if (query && !isMount) {
       setPage(1);
       setAllItems([]);
-      performSearch(query, 1, filters);
+      performSearch(query, 1, filters, fuzzy);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
@@ -103,7 +107,8 @@ export default function SearchPage() {
   const performSearch = async (
     searchQuery: string,
     currentPage: number,
-    currentFilters: SearchFilters
+    currentFilters: SearchFilters,
+    useFuzzy: boolean = true
   ) => {
     if (!searchQuery.trim()) return;
 
@@ -125,6 +130,7 @@ export default function SearchPage() {
         price_min: currentFilters.price_min,
         price_max: currentFilters.price_max,
         city: currentFilters.city,
+        fuzzy: useFuzzy,
       };
 
       const data = await UnifiedSearchService.search(params);
@@ -159,15 +165,20 @@ export default function SearchPage() {
     }
   };
 
-  const handleSearch = (newQuery: string) => {
+  const handleSearch = (newQuery: string, newFuzzy?: boolean) => {
+    const searchFuzzy = newFuzzy !== undefined ? newFuzzy : fuzzy;
     setQuery(newQuery);
+    if (newFuzzy !== undefined) {
+      setFuzzy(newFuzzy);
+    }
     setPage(1);
     setAllItems([]);
-    performSearch(newQuery, 1, filters);
+    performSearch(newQuery, 1, filters, searchFuzzy);
 
     // Обновляем URL
     const url = new URL(window.location.href);
     url.searchParams.set('q', newQuery);
+    url.searchParams.set('fuzzy', searchFuzzy.toString());
     window.history.replaceState({}, '', url.toString());
   };
 
@@ -233,6 +244,8 @@ export default function SearchPage() {
               onSearch={handleSearch}
               variant="minimal"
               showTrending={false}
+              fuzzy={fuzzy}
+              onFuzzyChange={setFuzzy}
             />
 
             {/* Быстрые фильтры */}

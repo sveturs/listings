@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"backend/internal/domain/models"
-	"backend/internal/logger"
 	"backend/internal/storage/postgres"
+	"backend/pkg/logger"
 )
 
 // AnalyticsAggregator агрегирует аналитику витрин
 type AnalyticsAggregator struct {
 	db     *postgres.Database
-	logger logger.Logger
+	logger *logger.Logger
 }
 
 // NewAnalyticsAggregator создает новый агрегатор аналитики
@@ -23,6 +23,15 @@ func NewAnalyticsAggregator(db *postgres.Database) *AnalyticsAggregator {
 		db:     db,
 		logger: logger.GetLogger(),
 	}
+}
+
+// unmarshalToJSONB преобразует json.RawMessage в models.JSONB
+func unmarshalToJSONB(raw json.RawMessage) models.JSONB {
+	var result models.JSONB
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return models.JSONB{}
+	}
+	return result
 }
 
 // Run запускает агрегацию аналитики
@@ -115,9 +124,9 @@ func (a *AnalyticsAggregator) aggregateStorefrontAnalytics(ctx context.Context, 
 		ProductViews:   eventStats["product_view"],
 		AddToCartCount: eventStats["add_to_cart"],
 		CheckoutCount:  eventStats["checkout"],
-		TrafficSources: models.JSONB(trafficSources),
-		TopProducts:    models.JSONB(topProducts),
-		OrdersByCity:   models.JSONB(ordersByCity),
+		TrafficSources: unmarshalToJSONB(trafficSources),
+		TopProducts:    unmarshalToJSONB(topProducts),
+		OrdersByCity:   unmarshalToJSONB(ordersByCity),
 	}
 
 	// Сохраняем в базу

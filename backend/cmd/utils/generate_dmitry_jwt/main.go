@@ -8,18 +8,25 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/proj/users/service"
+	"backend/internal/storage/filestorage"
 	"backend/internal/storage/postgres"
 )
 
 func main() {
 	// Загружаем конфигурацию
-	cfg, err := config.Load()
+	cfg, err := config.NewConfig()
 	if err != nil {
 		log.Fatal("Failed to load config:", err)
 	}
 
+	// Создаем файловое хранилище
+	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	if err != nil {
+		log.Fatal("Failed to create file storage:", err)
+	}
+
 	// Подключаемся к базе данных
-	db, err := postgres.New(cfg.Database.ConnectionString)
+	db, err := postgres.NewDatabase(cfg.DatabaseURL, nil, "", fileStorage)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -27,12 +34,12 @@ func main() {
 
 	// Создаем сервис авторизации
 	authService := service.NewAuthService(
-		cfg.Auth.GoogleClientID,
-		cfg.Auth.GoogleClientSecret,
-		cfg.Auth.GoogleRedirectURL,
+		cfg.GoogleClientID,
+		cfg.GoogleClientSecret,
+		cfg.GoogleRedirectURL,
 		db,
-		cfg.JWT.Secret,
-		cfg.JWT.ExpirationHours,
+		cfg.JWTSecret,
+		cfg.JWTExpirationHours,
 	)
 
 	// Целевой email
@@ -52,7 +59,7 @@ func main() {
 	}
 
 	// Генерируем refresh токен
-	refreshToken, err := authService.GenerateTokensForOAuth(ctx, user.ID, user.Email, "127.0.0.1", "CLI Tool")
+	refreshToken, _, err := authService.GenerateTokensForOAuth(ctx, user.ID, user.Email, "127.0.0.1", "CLI Tool")
 	if err != nil {
 		log.Fatal("Failed to generate refresh token:", err)
 	}
@@ -100,7 +107,7 @@ func main() {
 	fmt.Printf("        -d '{\"refresh_token\": \"%s\"}'\n", refreshToken)
 
 	fmt.Println("\n" + strings.Repeat("=", 80))
-	fmt.Printf("⏰ Access токен действителен: %d часов\n", cfg.JWT.ExpirationHours)
+	fmt.Printf("⏰ Access токен действителен: %d часов\n", cfg.JWTExpirationHours)
 	fmt.Println("⏰ Refresh токен действителен: 30 дней")
 	fmt.Println("🔒 Тип авторизации: JWT Bearer")
 	fmt.Println(strings.Repeat("=", 80))

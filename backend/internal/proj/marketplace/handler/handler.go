@@ -121,6 +121,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/categories/:id/attribute-ranges", h.Categories.GetAttributeRanges)
 	marketplace.Get("/enhanced-suggestions", h.GetEnhancedSuggestions)
 
+	// Fuzzy search routes
+	marketplace.Get("/test-fuzzy-search", h.Search.TestFuzzySearch)
+	marketplace.Get("/fuzzy-search", h.Search.SearchWithFuzzyParams)
+
 	// Карта - геопространственные маршруты
 	marketplace.Get("/map/bounds", h.GetListingsInBounds)
 	marketplace.Get("/map/clusters", h.GetMapClusters)

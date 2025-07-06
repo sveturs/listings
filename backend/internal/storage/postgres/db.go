@@ -1492,3 +1492,18 @@ func (db *Database) StorefrontProductSearch() interface{} {
 	}
 	return nil
 }
+
+// QueryContext выполняет SQL запрос с контекстом и возвращает строки результата
+func (db *Database) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	return db.db.QueryContext(ctx, query, args...)
+}
+
+// QueryRowContext выполняет SQL запрос с контекстом и возвращает одну строку результата
+func (db *Database) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	return db.db.QueryRowContext(ctx, query, args...)
+}
+
+// ExecContext выполняет SQL запрос с контекстом без возврата результата
+func (db *Database) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return db.db.ExecContext(ctx, query, args...)
+}

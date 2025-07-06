@@ -15,6 +15,7 @@ export interface UnifiedSearchParams {
   storefront_id?: number;
   city?: string;
   language?: string;
+  fuzzy?: boolean; // Параметр для включения нечеткого поиска
 }
 
 export interface UnifiedSearchItem {
