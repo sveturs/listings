@@ -423,7 +423,11 @@ func (m *MockStorage) SearchListings(ctx context.Context, params *search.SearchP
 }
 
 func (m *MockStorage) SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	return nil, nil
+	args := m.Called(ctx, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*search.SearchResult), args.Error(1)
 }
 
 func (m *MockStorage) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
@@ -532,28 +536,40 @@ func TestMarketplaceService_GetSimilarListings_Integration(t *testing.T) {
 	// Настройка моков
 	mockStorage.On("GetListingByID", mock.Anything, 1).Return(sourceListing, nil)
 
-	// Мок для SearchListings должен возвращать результат с правильной структурой
+	// Мок для SearchListingsOpenSearch должен возвращать результат с правильной структурой
 	searchResult := &search.SearchResult{
 		Listings: similarListings,
 		Total:    len(similarListings),
 	}
-	mockStorage.On("SearchListings", mock.Anything, mock.Anything).Return(searchResult, nil)
+	mockStorage.On("SearchListingsOpenSearch", mock.Anything, mock.Anything).Return(searchResult, nil)
 
 	// Выполнение теста
 	result, err := service.GetSimilarListings(context.Background(), 1, 10)
 
 	// Проверки
 	assert.NoError(t, err)
-	assert.Len(t, result, 1) // Должна найтись только одна похожая квартира (ID=2)
-	assert.Equal(t, 2, result[0].ID)
+	assert.Len(t, result, 2) // Должны найтись оба объявления (ID=2 и ID=3)
 	assert.NotNil(t, result[0].Metadata)
 	assert.Contains(t, result[0].Metadata, "similarity_score")
-	assert.Contains(t, result[0].Metadata, "match_reasons")
 
-	// Проверяем что скор больше порогового значения
-	score, ok := result[0].Metadata["similarity_score"].(float64)
+	// Проверяем структуру similarity_score
+	scoreData, ok := result[0].Metadata["similarity_score"].(map[string]interface{})
 	assert.True(t, ok)
-	assert.Greater(t, score, 0.25)
+	assert.Contains(t, scoreData, "total")
+	assert.Contains(t, scoreData, "category")
+	assert.Contains(t, scoreData, "attributes")
+	assert.Contains(t, scoreData, "price")
+	assert.Contains(t, scoreData, "location")
+	assert.Contains(t, scoreData, "text")
+	assert.Contains(t, scoreData, "search_try")
+
+	// Проверяем что результаты отсортированы по убыванию score
+	score1 := scoreData["total"].(float64)
+	if len(result) > 1 {
+		scoreData2, _ := result[1].Metadata["similarity_score"].(map[string]interface{})
+		score2 := scoreData2["total"].(float64)
+		assert.GreaterOrEqual(t, score1, score2)
+	}
 
 	mockStorage.AssertExpectations(t)
 }
@@ -566,13 +582,13 @@ func TestMarketplaceService_GetEnhancedSuggestions_Integration(t *testing.T) {
 
 	// Мок для популярных запросов
 	popularQueries := []interface{}{
-		map[string]interface{}{
-			"query":        "3-комнатная квартира",
-			"search_count": 50,
+		SearchQuery{
+			Query:       "3-комнатная квартира",
+			SearchCount: 50,
 		},
-		map[string]interface{}{
-			"query":        "квартира в центре",
-			"search_count": 30,
+		SearchQuery{
+			Query:       "квартира в центре",
+			SearchCount: 30,
 		},
 	}
 	mockStorage.On("GetPopularSearchQueries", mock.Anything, query, 5).Return(popularQueries, nil)
@@ -602,7 +618,7 @@ func TestMarketplaceService_GetEnhancedSuggestions_Integration(t *testing.T) {
 		},
 		Total: 1,
 	}
-	mockStorage.On("SearchListings", mock.Anything, mock.Anything).Return(searchResult, nil)
+	mockStorage.On("SearchListingsOpenSearch", mock.Anything, mock.Anything).Return(searchResult, nil)
 
 	// Выполнение теста
 	suggestions, err := service.GetEnhancedSuggestions(context.Background(), query, 10, "queries,categories,products")

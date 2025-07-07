@@ -32,7 +32,7 @@ func NewInventoryManager(
 
 // ReserveStock резервирует товар для заказа
 func (im *InventoryManager) ReserveStock(ctx context.Context, productID int64, variantID *int64, quantity int, orderID int64) (*models.InventoryReservation, error) {
-	im.logger.Info("Reserving stock", "product_id", productID, "variant_id", variantID, "quantity", quantity, "order_id", orderID)
+	im.logger.Info("Reserving stock - product_id: %d, variant_id: %v, quantity: %d, order_id: %d", productID, variantID, quantity, orderID)
 
 	// Проверяем доступность товара
 	stock, err := im.inventoryRepo.GetStock(ctx, productID, variantID)
@@ -61,13 +61,13 @@ func (im *InventoryManager) ReserveStock(ctx context.Context, productID int64, v
 		return nil, fmt.Errorf("failed to create reservation: %w", err)
 	}
 
-	im.logger.Info("Stock reserved successfully", "product_id", productID, "quantity", quantity)
+	im.logger.Info("Stock reserved successfully - product_id: %d, quantity: %d", productID, quantity)
 	return reservation, nil
 }
 
 // CommitReservation подтверждает резервирование и списывает товар
 func (im *InventoryManager) CommitReservation(ctx context.Context, reservationID int64) error {
-	im.logger.Info("Committing reservation", "reservation_id", reservationID)
+	im.logger.Info("Committing reservation: %d", reservationID)
 
 	// Используем ConfirmReservation для подтверждения
 	err := im.inventoryRepo.ConfirmReservation(ctx, reservationID)
@@ -75,13 +75,13 @@ func (im *InventoryManager) CommitReservation(ctx context.Context, reservationID
 		return fmt.Errorf("failed to confirm reservation: %w", err)
 	}
 
-	im.logger.Info("Reservation committed successfully", "reservation_id", reservationID)
+	im.logger.Info("Reservation committed successfully: %d", reservationID)
 	return nil
 }
 
 // ReleaseReservation освобождает зарезервированный товар
 func (im *InventoryManager) ReleaseReservation(ctx context.Context, reservationID int64) error {
-	im.logger.Info("Releasing reservation", "reservation_id", reservationID)
+	im.logger.Info("Releasing reservation: %d", reservationID)
 
 	// Используем ReleaseReservation для освобождения
 	err := im.inventoryRepo.ReleaseReservation(ctx, reservationID)
@@ -89,7 +89,7 @@ func (im *InventoryManager) ReleaseReservation(ctx context.Context, reservationI
 		return fmt.Errorf("failed to release reservation: %w", err)
 	}
 
-	im.logger.Info("Reservation released successfully", "reservation_id", reservationID)
+	im.logger.Info("Reservation released successfully: %d", reservationID)
 	return nil
 }
 
@@ -106,18 +106,18 @@ func (im *InventoryManager) CleanupExpiredReservations(ctx context.Context) erro
 	// Освобождаем каждое резервирование
 	for _, reservation := range expiredReservations {
 		if err := im.ReleaseReservation(ctx, reservation.ID); err != nil {
-			im.logger.Error("Failed to release expired reservation", "reservation_id", reservation.ID, "error", err)
+			im.logger.Error("Failed to release expired reservation %d: %v", reservation.ID, err)
 			// Продолжаем с остальными
 		}
 	}
 
-	im.logger.Info("Cleanup completed", "released_count", len(expiredReservations))
+	im.logger.Info("Cleanup completed - released count: %d", len(expiredReservations))
 	return nil
 }
 
 // ReleaseOrderReservations освобождает все резервирования для заказа
 func (im *InventoryManager) ReleaseOrderReservations(ctx context.Context, orderID int64) error {
-	im.logger.Info("Releasing all reservations for order", "order_id", orderID)
+	im.logger.Info("Releasing all reservations for order: %d", orderID)
 
 	// Получаем все резервирования для заказа
 	reservations, err := im.inventoryRepo.GetReservationsByOrder(ctx, orderID)
@@ -129,19 +129,19 @@ func (im *InventoryManager) ReleaseOrderReservations(ctx context.Context, orderI
 	for _, reservation := range reservations {
 		if reservation.Status == models.ReservationStatusActive {
 			if err := im.ReleaseReservation(ctx, reservation.ID); err != nil {
-				im.logger.Error("Failed to release reservation", "reservation_id", reservation.ID, "error", err)
+				im.logger.Error("Failed to release reservation %d: %v", reservation.ID, err)
 				// Продолжаем с остальными
 			}
 		}
 	}
 
-	im.logger.Info("All reservations released for order", "order_id", orderID, "count", len(reservations))
+	im.logger.Info("All reservations released for order %d, count: %d", orderID, len(reservations))
 	return nil
 }
 
 // CommitOrderReservations подтверждает все резервирования для заказа
 func (im *InventoryManager) CommitOrderReservations(ctx context.Context, orderID int64) error {
-	im.logger.Info("Committing all reservations for order", "order_id", orderID)
+	im.logger.Info("Committing all reservations for order: %d", orderID)
 
 	// Получаем все резервирования для заказа
 	reservations, err := im.inventoryRepo.GetReservationsByOrder(ctx, orderID)
@@ -153,7 +153,7 @@ func (im *InventoryManager) CommitOrderReservations(ctx context.Context, orderID
 	for _, reservation := range reservations {
 		if reservation.Status == models.ReservationStatusActive {
 			if err := im.CommitReservation(ctx, reservation.ID); err != nil {
-				im.logger.Error("Failed to commit reservation", "reservation_id", reservation.ID, "error", err)
+				im.logger.Error("Failed to commit reservation %d: %v", reservation.ID, err)
 				// Откатываем предыдущие
 				im.ReleaseOrderReservations(ctx, orderID)
 				return fmt.Errorf("failed to commit reservation %d: %w", reservation.ID, err)
@@ -161,7 +161,7 @@ func (im *InventoryManager) CommitOrderReservations(ctx context.Context, orderID
 		}
 	}
 
-	im.logger.Info("All reservations committed for order", "order_id", orderID, "count", len(reservations))
+	im.logger.Info("All reservations committed for order %d, count: %d", orderID, len(reservations))
 	return nil
 }
 

@@ -102,7 +102,7 @@ func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 	// Создаем платеж
 	result, err := h.service.CreatePayment(c.Context(), serviceReq)
 	if err != nil {
-		h.logger.Error("Failed to create payment: %v, userID: %d, listingID: %d", err, userID, req.ListingID)
+		h.logger.Error("Failed to create payment: %v (userID: %d, listingID: %d)", err, userID, req.ListingID)
 		return utils.ErrorResponse(c, 500, "payment creation failed")
 	}
 
@@ -115,9 +115,7 @@ func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 		RequiresAction: result.RequiresAction,
 	}
 
-	h.logger.Info("Payment created successfully",
-		"transactionID", result.TransactionID,
-		"userID", userID)
+	h.logger.Info("Payment created successfully (transactionID: %d, userID: %d)", result.TransactionID, userID)
 
 	return utils.SuccessResponse(c, response)
 }
@@ -153,16 +151,11 @@ func (h *PaymentHandler) CapturePayment(c *fiber.Ctx) error {
 	// Захватываем платеж
 	err = h.service.CapturePayment(c.Context(), transactionID)
 	if err != nil {
-		h.logger.Error("Failed to capture payment",
-			"error", err,
-			"transactionID", transactionID,
-			"userID", userID)
+		h.logger.Error("Failed to capture payment: %v (transactionID: %d, userID: %v)", err, transactionID, userID)
 		return utils.ErrorResponse(c, 500, "payment capture failed")
 	}
 
-	h.logger.Info("Payment captured successfully",
-		"transactionID", transactionID,
-		"userID", userID)
+	h.logger.Info("Payment captured successfully (transactionID: %d, userID: %v)", transactionID, userID)
 
 	return utils.SuccessResponse(c, "payment captured")
 }
@@ -222,17 +215,11 @@ func (h *PaymentHandler) RefundPayment(c *fiber.Ctx) error {
 	// Возвращаем средства
 	err = h.service.RefundPayment(c.Context(), transactionID, amount)
 	if err != nil {
-		h.logger.Error("Failed to refund payment",
-			"error", err,
-			"transactionID", transactionID,
-			"userID", userID)
+		h.logger.Error("Failed to refund payment: %v (transactionID: %d, userID: %v)", err, transactionID, userID)
 		return utils.ErrorResponse(c, 500, "payment refund failed")
 	}
 
-	h.logger.Info("Payment refunded successfully",
-		"transactionID", transactionID,
-		"amount", amount,
-		"userID", userID)
+	h.logger.Info("Payment refunded successfully (transactionID: %d, amount: %s, userID: %v)", transactionID, amount.String(), userID)
 
 	return utils.SuccessResponse(c, "payment refunded")
 }
@@ -270,9 +257,7 @@ func (h *PaymentHandler) GetPaymentStatus(c *fiber.Ctx) error {
 	// }
 
 	// Временно возвращаем простой ответ
-	h.logger.Info("Payment status requested",
-		"transactionID", transactionID,
-		"userID", userID)
+	h.logger.Info("Payment status requested (transactionID: %d, userID: %v)", transactionID, userID)
 
 	return utils.SuccessResponse(c, map[string]interface{}{
 		"transaction_id": transactionID,

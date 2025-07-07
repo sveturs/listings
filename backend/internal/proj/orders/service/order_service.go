@@ -64,7 +64,7 @@ func NewOrderService(
 
 // CreateOrder создает новый заказ
 func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderRequest, userID int) (*models.StorefrontOrder, error) {
-	s.logger.Info("Creating order", "user_id", userID, "storefront_id", req.StorefrontID)
+	s.logger.Info("Creating order (user_id: %d, storefront_id: %d)", userID, req.StorefrontID)
 
 	// Проверяем существование витрины
 	storefront, err := s.storefrontRepo.GetByID(ctx, req.StorefrontID)
@@ -243,17 +243,17 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 	// Очищаем корзину если заказ был создан из неё
 	if req.CartID != nil {
 		if err := s.cartRepo.Clear(ctx, *req.CartID); err != nil {
-			s.logger.Error("Failed to clear cart after order creation", "error", err, "cart_id", *req.CartID)
+			s.logger.Error("Failed to clear cart after order creation: %v (cart_id: %d)", err, *req.CartID)
 		}
 	}
 
-	s.logger.Info("Order created successfully", "order_id", createdOrder.ID, "order_number", createdOrder.OrderNumber)
+	s.logger.Info("Order created successfully (order_id: %d, order_number: %s)", createdOrder.ID, createdOrder.OrderNumber)
 	return createdOrder, nil
 }
 
 // ConfirmOrder подтверждает заказ после успешной оплаты
 func (s *OrderService) ConfirmOrder(ctx context.Context, orderID int64) error {
-	s.logger.Info("Confirming order", "order_id", orderID)
+	s.logger.Info("Confirming order (order_id: %d)", orderID)
 
 	order, err := s.orderRepo.GetByID(ctx, orderID)
 	if err != nil {
@@ -278,13 +278,13 @@ func (s *OrderService) ConfirmOrder(ctx context.Context, orderID int64) error {
 		return fmt.Errorf("failed to update order status: %w", err)
 	}
 
-	s.logger.Info("Order confirmed successfully", "order_id", orderID)
+	s.logger.Info("Order confirmed successfully (order_id: %d)", orderID)
 	return nil
 }
 
 // CancelOrder отменяет заказ
 func (s *OrderService) CancelOrder(ctx context.Context, orderID int64, userID int, reason string) (*models.StorefrontOrder, error) {
-	s.logger.Info("Cancelling order", "order_id", orderID, "user_id", userID)
+	s.logger.Info("Cancelling order (order_id: %d, user_id: %d)", orderID, userID)
 
 	order, err := s.orderRepo.GetByID(ctx, orderID)
 	if err != nil {
@@ -302,7 +302,7 @@ func (s *OrderService) CancelOrder(ctx context.Context, orderID int64, userID in
 
 	// Освобождаем резервирования
 	if err := s.inventoryMgr.ReleaseOrderReservations(ctx, orderID); err != nil {
-		s.logger.Error("Failed to release reservations for cancellation", "error", err, "order_id", orderID)
+		s.logger.Error("Failed to release reservations for cancellation: %v (order_id: %d)", err, orderID)
 	}
 
 	// Обновляем статус заказа
@@ -317,7 +317,7 @@ func (s *OrderService) CancelOrder(ctx context.Context, orderID int64, userID in
 		return nil, fmt.Errorf("failed to update order status: %w", err)
 	}
 
-	s.logger.Info("Order cancelled successfully", "order_id", orderID)
+	s.logger.Info("Order cancelled successfully (order_id: %d)", orderID)
 	return order, nil
 }
 
@@ -352,7 +352,7 @@ func (s *OrderService) GetOrders(ctx context.Context, filter *models.OrderFilter
 
 // UpdateOrderStatus обновляет статус заказа (для продавца)
 func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int64, storefrontID int, userID int, status models.OrderStatus, trackingNumber *string, notes *string) (*models.StorefrontOrder, error) {
-	s.logger.Info("Updating order status", "order_id", orderID, "new_status", status)
+	s.logger.Info("Updating order status (order_id: %d, new_status: %s)", orderID, status)
 
 	order, err := s.orderRepo.GetByID(ctx, orderID)
 	if err != nil {
@@ -403,7 +403,7 @@ func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int64, sto
 		return nil, fmt.Errorf("failed to update order: %w", err)
 	}
 
-	s.logger.Info("Order status updated successfully", "order_id", orderID, "status", status)
+	s.logger.Info("Order status updated successfully (order_id: %d, status: %s)", orderID, status)
 	return order, nil
 }
 
@@ -505,7 +505,7 @@ func (s *OrderService) calculateOrderTotals(ctx context.Context, order *models.S
 
 // AddToCartWithDetails добавляет товар в корзину с указанием деталей корзины
 func (s *OrderService) AddToCartWithDetails(ctx context.Context, cartItem *models.ShoppingCartItem, storefrontID int, userID *int, sessionID *string) (*models.ShoppingCart, error) {
-	s.logger.Info("Adding item to cart", "product_id", cartItem.ProductID, "quantity", cartItem.Quantity)
+	s.logger.Info("Adding item to cart (product_id: %d, quantity: %d)", cartItem.ProductID, cartItem.Quantity)
 
 	// Получаем или создаем корзину
 	cart, err := s.getOrCreateCart(ctx, storefrontID, userID, sessionID)
@@ -518,7 +518,7 @@ func (s *OrderService) AddToCartWithDetails(ctx context.Context, cartItem *model
 
 // AddToCart добавляет товар в корзину (старый метод для совместимости)
 func (s *OrderService) AddToCart(ctx context.Context, cartItem *models.ShoppingCartItem) (*models.ShoppingCart, error) {
-	s.logger.Info("Adding item to cart", "product_id", cartItem.ProductID, "quantity", cartItem.Quantity)
+	s.logger.Info("Adding item to cart (product_id: %d, quantity: %d)", cartItem.ProductID, cartItem.Quantity)
 
 	// Получаем продукт для валидации
 	product, err := s.productRepo.GetByID(ctx, cartItem.ProductID)
@@ -558,7 +558,7 @@ func (s *OrderService) AddToCart(ctx context.Context, cartItem *models.ShoppingC
 
 // UpdateCartItemQuantity обновляет количество товара в корзине
 func (s *OrderService) UpdateCartItemQuantity(ctx context.Context, itemID int, storefrontID int, quantity int, userID *int, sessionID *string) (*models.ShoppingCart, error) {
-	s.logger.Info("Updating cart item quantity", "item_id", itemID, "quantity", quantity)
+	s.logger.Info("Updating cart item quantity (item_id: %d, quantity: %d)", itemID, quantity)
 
 	if quantity <= 0 {
 		return nil, fmt.Errorf("quantity must be positive")
@@ -609,7 +609,7 @@ func (s *OrderService) UpdateCartItemQuantity(ctx context.Context, itemID int, s
 
 // RemoveFromCart удаляет товар из корзины
 func (s *OrderService) RemoveFromCart(ctx context.Context, itemID int, storefrontID int, userID *int, sessionID *string) (*models.ShoppingCart, error) {
-	s.logger.Info("Removing item from cart", "item_id", itemID)
+	s.logger.Info("Removing item from cart (item_id: %d)", itemID)
 
 	// TODO: Implement cart item removal
 	// Пока что возвращаем ошибку, так как нужно доработать интерфейс репозитория
@@ -618,7 +618,7 @@ func (s *OrderService) RemoveFromCart(ctx context.Context, itemID int, storefron
 
 // GetCart получает корзину пользователя
 func (s *OrderService) GetCart(ctx context.Context, storefrontID int, userID *int, sessionID *string) (*models.ShoppingCart, error) {
-	s.logger.Info("Getting cart", "storefront_id", storefrontID)
+	s.logger.Info("Getting cart (storefront_id: %d)", storefrontID)
 
 	// Получаем корзину через репозиторий
 	if userID != nil {
@@ -642,7 +642,7 @@ func (s *OrderService) GetCart(ctx context.Context, storefrontID int, userID *in
 
 // ClearCart очищает корзину
 func (s *OrderService) ClearCart(ctx context.Context, storefrontID int, userID *int, sessionID *string) error {
-	s.logger.Info("Clearing cart", "storefront_id", storefrontID)
+	s.logger.Info("Clearing cart (storefront_id: %d)", storefrontID)
 
 	// Сначала получаем корзину
 	cart, err := s.GetCart(ctx, storefrontID, userID, sessionID)

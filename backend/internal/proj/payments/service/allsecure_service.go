@@ -160,7 +160,7 @@ func (s *AllSecureService) CreatePayment(ctx context.Context, req CreatePaymentR
 		GatewayResponse:      response,
 	})
 	if err != nil {
-		s.logger.Error("Failed to update transaction: %v, transactionID: %d", err, transaction.ID)
+		s.logger.Error("Failed to update transaction: %v (transactionID: %d)", err, transaction.ID)
 	}
 
 	return &PaymentResult{
@@ -207,7 +207,7 @@ func (s *AllSecureService) CapturePayment(ctx context.Context, transactionID int
 	if response.Success {
 		err = s.createEscrowPayment(ctx, transaction)
 		if err != nil {
-			s.logger.Error("Failed to create escrow payment: %v, transactionID: %d", err, transactionID)
+			s.logger.Error("Failed to create escrow payment: %v (transactionID: %d)", err, transactionID)
 		}
 	}
 
@@ -287,14 +287,14 @@ func (s *AllSecureService) ProcessWebhook(ctx context.Context, payload []byte) e
 		// Создаем escrow платеж
 		err = s.createEscrowPayment(ctx, transaction)
 		if err != nil {
-			s.logger.Error("Failed to create escrow payment: %v, transactionID: %d", err, transactionID)
+			s.logger.Error("Failed to create escrow payment: %v (transactionID: %d)", err, transactionID)
 		}
 
 	case models.PaymentStatusCaptured:
 		// Освобождаем escrow платеж
 		err = s.releaseEscrowPayment(ctx, transaction)
 		if err != nil {
-			s.logger.Error("Failed to release escrow payment: %v, transactionID: %d", err, transactionID)
+			s.logger.Error("Failed to release escrow payment: %v (transactionID: %d)", err, transactionID)
 		}
 
 	case models.PaymentStatusFailed:
@@ -371,12 +371,12 @@ func (s *AllSecureService) createEscrowPayment(ctx context.Context, transaction 
 func (s *AllSecureService) releaseEscrowPayment(ctx context.Context, transaction *models.PaymentTransaction) error {
 	// Здесь будет логика освобождения escrow платежа
 	// Возможно, с автоматической выплатой продавцу
-	s.logger.Info("Escrow payment released, transactionID: %d", transaction.ID)
+	s.logger.Info("Escrow payment released (transactionID: %d)", transaction.ID)
 	return nil
 }
 
 // handleFailedPayment обрабатывает неудачный платеж
 func (s *AllSecureService) handleFailedPayment(ctx context.Context, transaction *models.PaymentTransaction) {
-	s.logger.Info("Payment failed, transactionID: %d", transaction.ID)
+	s.logger.Info("Payment failed (transactionID: %d)", transaction.ID)
 	// Здесь может быть логика уведомлений, очистки данных и т.д.
 }
