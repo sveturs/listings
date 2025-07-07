@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"log"
+
 	"backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -53,7 +55,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	// Синонимы
 	adminRoutes.Get("/search/synonyms", h.GetSynonyms)
-	adminRoutes.Post("/search/synonyms", h.CreateSynonym)
+	adminRoutes.Post("/search/synonyms", func(c *fiber.Ctx) error {
+		log.Printf("POST /search/synonyms - middleware reached")
+		return h.CreateSynonym(c)
+	})
 	adminRoutes.Put("/search/synonyms/:id", h.UpdateSynonym)
 	adminRoutes.Delete("/search/synonyms/:id", h.DeleteSynonym)
 

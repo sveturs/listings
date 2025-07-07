@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"log"
 	"strconv"
 
 	"backend/internal/domain"
@@ -193,18 +194,25 @@ func (h *Handler) GetSynonyms(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/synonyms [post]
 func (h *Handler) CreateSynonym(c *fiber.Ctx) error {
+	c.Locals("logger_prefix", "CreateSynonym")
+	log.Printf("CreateSynonym: Starting handler")
+	
 	var synonym domain.SearchSynonym
 	if err := c.BodyParser(&synonym); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "errors.invalidInput")
+		log.Printf("CreateSynonym: Failed to parse body: %v", err)
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid input", "details": err.Error()})
 	}
+	
+	log.Printf("CreateSynonym: Parsed synonym: %+v", synonym)
 
 	err := h.service.CreateSynonym(c.Context(), &synonym)
 	if err != nil {
-		// h.log.Error("Failed to create synonym", "error", err)
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.internalServerError")
+		log.Printf("CreateSynonym: Service error: %v", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Service error", "details": err.Error()})
 	}
 
-	return utils.SuccessResponse(c, synonym)
+	log.Printf("CreateSynonym: Success")
+	return c.Status(201).JSON(fiber.Map{"success": true, "data": synonym})
 }
 
 // UpdateSynonym godoc
