@@ -36,12 +36,62 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
-  // БЕЗОПАСНАЯ инициализация - НЕ используем кеш для восстановления пользователя
-  // Пользователь должен быть восстановлен только через валидный JWT токен
-  const [user, setUser] = useState<User | null>(null);
+  // Безопасная инициализация с кешированным состоянием из sessionStorage
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('svetu_user');
+        if (cached) {
+          const parsedUser = JSON.parse(cached);
+          // Проверяем, что объект пользователя имеет минимально необходимые поля
+          if (
+            parsedUser &&
+            typeof parsedUser === 'object' &&
+            parsedUser.id &&
+            parsedUser.email
+          ) {
+            return parsedUser;
+          }
+        }
+      } catch (error) {
+        console.warn(
+          'Failed to parse cached user data, clearing cache:',
+          error
+        );
+        // Очищаем поврежденный кеш
+        try {
+          sessionStorage.removeItem('svetu_user');
+        } catch {
+          // Игнорируем ошибки очистки
+        }
+      }
+    }
+    return null;
+  });
 
-  // Всегда начинаем с загрузки, чтобы валидировать токены
-  const [isLoading, setIsLoading] = useState(true);
+  // Если есть валидный кешированный пользователь, начинаем с false, иначе с true
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('svetu_user');
+        if (cached) {
+          const parsedUser = JSON.parse(cached);
+          // Проверяем валидность кешированных данных
+          if (
+            parsedUser &&
+            typeof parsedUser === 'object' &&
+            parsedUser.id &&
+            parsedUser.email
+          ) {
+            return false; // Данные валидны, начинаем без загрузки
+          }
+        }
+      } catch {
+        // Если не можем прочитать/парсить - требуется загрузка
+      }
+    }
+    return true; // По умолчанию показываем загрузку
+  });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isRefreshingSession, setIsRefreshingSession] = useState(false);
