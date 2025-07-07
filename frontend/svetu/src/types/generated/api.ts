@@ -11182,6 +11182,961 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/search/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search configuration
+     * @description Get general search configuration settings
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search configuration */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchConfig'];
+            };
+          };
+        };
+        /** @description Configuration not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update search configuration
+     * @description Update general search configuration settings
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Search configuration */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.SearchConfig'];
+        };
+      };
+      responses: {
+        /** @description Updated configuration */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchConfig'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/config/synonyms': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search synonyms
+     * @description Get all synonyms for search terms
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Language code (default: ru) */
+          language?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of synonyms */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchSynonym'][];
+            };
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create search synonym
+     * @description Create synonym mapping for search terms
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Synonym configuration */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.SearchSynonym'];
+        };
+      };
+      responses: {
+        /** @description Created synonym */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchSynonym'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/config/synonyms/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update search synonym
+     * @description Update synonym mapping for search terms
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Synonym ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Updated synonym configuration */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.SearchSynonym'];
+        };
+      };
+      responses: {
+        /** @description Updated synonym */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchSynonym'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Synonym not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Delete search synonym
+     * @description Delete synonym mapping
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Synonym ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Synonym deleted successfully */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Synonym not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/config/transliteration': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get transliteration rules
+     * @description Get all transliteration rules for search
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of transliteration rules */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.TransliterationRule'][];
+            };
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create transliteration rule
+     * @description Create new transliteration rule for search
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Transliteration rule */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.TransliterationRule'];
+        };
+      };
+      responses: {
+        /** @description Created rule */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.TransliterationRule'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/config/transliteration/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update transliteration rule
+     * @description Update existing transliteration rule
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Rule ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Updated rule */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.TransliterationRule'];
+        };
+      };
+      responses: {
+        /** @description Updated rule */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.TransliterationRule'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Rule not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Delete transliteration rule
+     * @description Delete transliteration rule
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Rule ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Rule deleted successfully */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Rule not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/config/weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all search field weights
+     * @description Get weights for all searchable fields
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of search weights */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchWeight'][];
+            };
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create new search weight
+     * @description Create weight configuration for a search field
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Weight configuration */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.SearchWeight'];
+        };
+      };
+      responses: {
+        /** @description Created weight */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchWeight'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/config/weights/{field}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get weight for specific field
+     * @description Get weight configuration for a specific search field
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Field name */
+          field: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search weight details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchWeight'];
+            };
+          };
+        };
+        /** @description Weight not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/config/weights/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update search weight
+     * @description Update weight configuration for a search field
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Weight ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Updated weight configuration */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.SearchWeight'];
+        };
+      };
+      responses: {
+        /** @description Updated weight */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchWeight'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Weight not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Delete search weight
+     * @description Delete weight configuration for a search field
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Weight ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Weight deleted successfully */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Weight not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/statistics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search statistics
+     * @description Get recent search statistics
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit results (default: 100) */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['domain.SearchStatistics'][];
+            };
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/statistics/popular': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get popular searches
+     * @description Get most popular search queries from last 7 days
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit results (default: 10) */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Popular searches */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              }[];
+            };
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts': {
     parameters: {
       query?: never;
@@ -15808,6 +16763,52 @@ export interface components {
     'backend_internal_proj_users_handler.MessageResponse': {
       /** @example Операция выполнена успешно */
       message?: string;
+    };
+    'domain.SearchConfig': {
+      created_at?: string;
+      fuzzy_enabled?: boolean;
+      fuzzy_max_edits?: number;
+      id?: number;
+      max_suggestions?: number;
+      min_search_length?: number;
+      synonyms_enabled?: boolean;
+      transliteration_enabled?: boolean;
+      updated_at?: string;
+    };
+    'domain.SearchStatistics': {
+      created_at?: string;
+      id?: number;
+      query?: string;
+      results_count?: number;
+      search_duration_ms?: number;
+      search_filters?: string;
+      user_id?: number;
+    };
+    'domain.SearchSynonym': {
+      created_at?: string;
+      id?: number;
+      language?: string;
+      synonyms?: string[];
+      term?: string;
+      updated_at?: string;
+    };
+    'domain.SearchWeight': {
+      created_at?: string;
+      description?: string;
+      field_name?: string;
+      id?: number;
+      updated_at?: string;
+      weight?: number;
+    };
+    'domain.TransliterationRule': {
+      created_at?: string;
+      from_pattern?: string;
+      from_script?: string;
+      id?: number;
+      priority?: number;
+      to_pattern?: string;
+      to_script?: string;
+      updated_at?: string;
     };
     'handler.AddMessageRequest': {
       content: string;

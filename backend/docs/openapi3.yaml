@@ -7696,6 +7696,615 @@ paths:
       summary: Unified search across all product types
       tags:
         - search
+  /api/v1/search/config:
+    get:
+      description: Get general search configuration settings
+      responses:
+        "200":
+          description: Search configuration
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/domain.SearchConfig"
+                    type: object
+        "404":
+          description: Configuration not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get search configuration
+      tags:
+        - search-config
+    put:
+      description: Update general search configuration settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/domain.SearchConfig"
+        description: Search configuration
+        required: true
+      responses:
+        "200":
+          description: Updated configuration
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/domain.SearchConfig"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Update search configuration
+      tags:
+        - search-config
+  /api/v1/search/config/synonyms:
+    get:
+      description: Get all synonyms for search terms
+      parameters:
+        - description: "Language code (default: ru)"
+          in: query
+          name: language
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of synonyms
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/domain.SearchSynonym"
+                        type: array
+                    type: object
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get search synonyms
+      tags:
+        - search-config
+    post:
+      description: Create synonym mapping for search terms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/domain.SearchSynonym"
+        description: Synonym configuration
+        required: true
+      responses:
+        "201":
+          description: Created synonym
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/domain.SearchSynonym"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Create search synonym
+      tags:
+        - search-config
+  "/api/v1/search/config/synonyms/{id}":
+    delete:
+      description: Delete synonym mapping
+      parameters:
+        - description: Synonym ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Synonym deleted successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Synonym not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Delete search synonym
+      tags:
+        - search-config
+    put:
+      description: Update synonym mapping for search terms
+      parameters:
+        - description: Synonym ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/domain.SearchSynonym"
+        description: Updated synonym configuration
+        required: true
+      responses:
+        "200":
+          description: Updated synonym
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/domain.SearchSynonym"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Synonym not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Update search synonym
+      tags:
+        - search-config
+  /api/v1/search/config/transliteration:
+    get:
+      description: Get all transliteration rules for search
+      responses:
+        "200":
+          description: List of transliteration rules
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/domain.TransliterationRule"
+                        type: array
+                    type: object
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get transliteration rules
+      tags:
+        - search-config
+    post:
+      description: Create new transliteration rule for search
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/domain.TransliterationRule"
+        description: Transliteration rule
+        required: true
+      responses:
+        "201":
+          description: Created rule
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/domain.TransliterationRule"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Create transliteration rule
+      tags:
+        - search-config
+  "/api/v1/search/config/transliteration/{id}":
+    delete:
+      description: Delete transliteration rule
+      parameters:
+        - description: Rule ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Rule deleted successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Rule not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Delete transliteration rule
+      tags:
+        - search-config
+    put:
+      description: Update existing transliteration rule
+      parameters:
+        - description: Rule ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/domain.TransliterationRule"
+        description: Updated rule
+        required: true
+      responses:
+        "200":
+          description: Updated rule
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/domain.TransliterationRule"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Rule not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Update transliteration rule
+      tags:
+        - search-config
+  /api/v1/search/config/weights:
+    get:
+      description: Get weights for all searchable fields
+      responses:
+        "200":
+          description: List of search weights
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/domain.SearchWeight"
+                        type: array
+                    type: object
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get all search field weights
+      tags:
+        - search-config
+    post:
+      description: Create weight configuration for a search field
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/domain.SearchWeight"
+        description: Weight configuration
+        required: true
+      responses:
+        "201":
+          description: Created weight
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/domain.SearchWeight"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Create new search weight
+      tags:
+        - search-config
+  "/api/v1/search/config/weights/{field}":
+    get:
+      description: Get weight configuration for a specific search field
+      parameters:
+        - description: Field name
+          in: path
+          name: field
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search weight details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/domain.SearchWeight"
+                    type: object
+        "404":
+          description: Weight not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get weight for specific field
+      tags:
+        - search-config
+  "/api/v1/search/config/weights/{id}":
+    delete:
+      description: Delete weight configuration for a search field
+      parameters:
+        - description: Weight ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Weight deleted successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Weight not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Delete search weight
+      tags:
+        - search-config
+    put:
+      description: Update weight configuration for a search field
+      parameters:
+        - description: Weight ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/domain.SearchWeight"
+        description: Updated weight configuration
+        required: true
+      responses:
+        "200":
+          description: Updated weight
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/domain.SearchWeight"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Weight not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Update search weight
+      tags:
+        - search-config
+  /api/v1/search/statistics:
+    get:
+      description: Get recent search statistics
+      parameters:
+        - description: "Limit results (default: 100)"
+          in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Search statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/domain.SearchStatistics"
+                        type: array
+                    type: object
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get search statistics
+      tags:
+        - search-config
+  /api/v1/search/statistics/popular:
+    get:
+      description: Get most popular search queries from last 7 days
+      parameters:
+        - description: "Limit results (default: 10)"
+          in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Popular searches
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          additionalProperties: true
+                          type: object
+                        type: array
+                    type: object
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get popular searches
+      tags:
+        - search-config
   /api/v1/storefronts:
     get:
       description: Returns paginated list of storefronts with filters
@@ -10938,6 +11547,95 @@ components:
       properties:
         message:
           example: Операция выполнена успешно
+          type: string
+      type: object
+    domain.SearchConfig:
+      properties:
+        created_at:
+          type: string
+        fuzzy_enabled:
+          type: boolean
+        fuzzy_max_edits:
+          type: integer
+        id:
+          type: integer
+        max_suggestions:
+          type: integer
+        min_search_length:
+          type: integer
+        synonyms_enabled:
+          type: boolean
+        transliteration_enabled:
+          type: boolean
+        updated_at:
+          type: string
+      type: object
+    domain.SearchStatistics:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: integer
+        query:
+          type: string
+        results_count:
+          type: integer
+        search_duration_ms:
+          type: integer
+        search_filters:
+          type: string
+        user_id:
+          type: integer
+      type: object
+    domain.SearchSynonym:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: integer
+        language:
+          type: string
+        synonyms:
+          items:
+            type: string
+          type: array
+        term:
+          type: string
+        updated_at:
+          type: string
+      type: object
+    domain.SearchWeight:
+      properties:
+        created_at:
+          type: string
+        description:
+          type: string
+        field_name:
+          type: string
+        id:
+          type: integer
+        updated_at:
+          type: string
+        weight:
+          type: number
+      type: object
+    domain.TransliterationRule:
+      properties:
+        created_at:
+          type: string
+        from_pattern:
+          type: string
+        from_script:
+          type: string
+        id:
+          type: integer
+        priority:
+          type: integer
+        to_pattern:
+          type: string
+        to_script:
+          type: string
+        updated_at:
           type: string
       type: object
     handler.AddMessageRequest:

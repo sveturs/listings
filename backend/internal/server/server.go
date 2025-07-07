@@ -29,6 +29,7 @@ import (
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
 	reviewHandler "backend/internal/proj/reviews/handler"
+	"backend/internal/proj/search_admin"
 	"backend/internal/proj/storefronts"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/storage/filestorage"
@@ -53,6 +54,7 @@ type Server struct {
 	docs          *docsHandler.Handler
 	analytics     *analytics.Module
 	global        *globalHandler.Handler
+	searchAdmin   *search_admin.Module
 	fileStorage   filestorage.FileStorageInterface
 }
 
@@ -68,7 +70,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	} else {
 		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage)
+	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to initialize database")
 	}
@@ -95,8 +97,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
-	globalHandlerInstance := globalHandler.NewHandler(services)
+	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db)
+	searchAdminModule := search_admin.NewModule(db)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -141,6 +144,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		docs:          docsHandlerInstance,
 		analytics:     analyticsModule,
 		global:        globalHandlerInstance,
+		searchAdmin:   searchAdminModule,
 		fileStorage:   fileStorage,
 	}
 
@@ -260,7 +264,7 @@ func (s *Server) registerProjectRoutes() {
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.marketplace, s.balance, s.orders, s.storefront,
-		s.geocode, s.contacts, s.payments, s.docs, s.analytics)
+		s.geocode, s.contacts, s.payments, s.docs, s.analytics, s.searchAdmin)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {

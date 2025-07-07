@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/storage"
@@ -26,12 +27,14 @@ type MarketplaceService struct {
 	storage            storage.Storage
 	translationService TranslationServiceInterface
 	OrderService       OrderServiceInterface
+	searchWeights      *config.SearchWeights
 }
 
-func NewMarketplaceService(storage storage.Storage, translationService TranslationServiceInterface) MarketplaceServiceInterface {
+func NewMarketplaceService(storage storage.Storage, translationService TranslationServiceInterface, searchWeights *config.SearchWeights) MarketplaceServiceInterface {
 	ms := &MarketplaceService{
 		storage:            storage,
 		translationService: translationService,
+		searchWeights:      searchWeights,
 	}
 
 	// Создаем сервис заказов напрямую, избегая циклической зависимости
@@ -170,7 +173,7 @@ func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID i
 	}
 
 	// Создаем калькулятор похожести
-	calculator := NewSimilarityCalculator()
+	calculator := NewSimilarityCalculator(s.searchWeights)
 
 	// Пытаемся найти похожие объявления с разными уровнями строгости
 	var similarListings []*models.MarketplaceListing
@@ -1655,7 +1658,7 @@ func (s *MarketplaceService) getFallbackSimilarListings(ctx context.Context, lis
 	}
 
 	// Создаем калькулятор похожести
-	calculator := NewSimilarityCalculator()
+	calculator := NewSimilarityCalculator(s.searchWeights)
 
 	// Пытаемся найти похожие объявления с разными уровнями строгости
 	var similarListings []*models.MarketplaceListing

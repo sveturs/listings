@@ -349,7 +349,8 @@
       "productTypes": "Product Types",
       "byDate": "By Date",
       "filters": "Filters",
-      "resultsFor": "Search results for"
+      "resultsFor": "Search results for",
+      "popularSearches": "Popular Searches"
     }
   },
   "blog": {
@@ -645,9 +646,13 @@
       "content": "Content",
       "listings": "Listings",
       "users": "Users",
+      "system": "System",
+      "search": "Search",
       "usersDescription": "Manage user accounts and permissions",
       "listingsDescription": "Moderate and manage marketplace listings",
-      "categoriesDescription": "Configure categories and attributes"
+      "categoriesDescription": "Configure categories and attributes",
+      "attributesDescription": "Manage product attributes and their types",
+      "attributeGroupsDescription": "Organize attributes into logical groups"
     },
     "categories": {
       "title": "Categories",

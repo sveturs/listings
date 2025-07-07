@@ -3,6 +3,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"strings"
 
@@ -93,14 +94,37 @@ func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*models.Use
 
 func (s *Storage) GetUserByID(ctx context.Context, id int) (*models.User, error) {
 	user := &models.User{}
+
+	// Используем sql.NullString для полей, которые могут быть NULL
+	var googleID, pictureURL sql.NullString
+
 	err := s.pool.QueryRow(ctx, `
         SELECT id, name, email, google_id, picture_url, phone, password, provider, created_at
         FROM users WHERE id = $1
-    `, id).Scan(&user.ID, &user.Name, &user.Email, &user.GoogleID, &user.PictureURL, &user.Phone, &user.Password, &user.Provider, &user.CreatedAt)
+    `, id).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&googleID,
+		&pictureURL,
+		&user.Phone,    // phone уже *string в модели, может принимать nil
+		&user.Password, // password уже *string в модели, может принимать nil
+		&user.Provider,
+		&user.CreatedAt,
+	)
 	if err != nil {
 		s.logger.Error("GetUserByID failed for id=%d: %v", id, err)
 		return nil, err
 	}
+
+	// Конвертируем sql.NullString в обычные string
+	if googleID.Valid {
+		user.GoogleID = googleID.String
+	}
+	if pictureURL.Valid {
+		user.PictureURL = pictureURL.String
+	}
+
 	s.logger.Info("GetUserByID successful for id=%d, provider=%s", id, user.Provider)
 	return user, nil
 }

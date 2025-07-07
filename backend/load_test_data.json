@@ -1,0 +1,50 @@
+{
+  "test_queries": [
+    {
+      "name": "simple_search",
+      "query": "телефон",
+      "size": 20,
+      "sort": "relevance"
+    },
+    {
+      "name": "complex_search",
+      "query": "iphone 15",
+      "category_id": "1",
+      "min_price": 50000,
+      "max_price": 150000,
+      "size": 20,
+      "sort": "price_asc"
+    },
+    {
+      "name": "fuzzy_search",
+      "query": "телефон самсунг",
+      "fuzzy": true,
+      "size": 20
+    },
+    {
+      "name": "large_results",
+      "query": "автомобиль",
+      "size": 100
+    },
+    {
+      "name": "transliteration",
+      "query": "telefon",
+      "size": 20
+    },
+    {
+      "name": "suggestions",
+      "prefix": "теле",
+      "size": 10
+    },
+    {
+      "name": "category_suggestions",
+      "query": "авто",
+      "size": 10
+    },
+    {
+      "name": "similar_listings",
+      "listing_id": 1,
+      "limit": 5
+    }
+  ]
+}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
@@ -21,13 +22,46 @@ import (
 
 // UnifiedSearchHandler обрабатывает унифицированные поисковые запросы
 type UnifiedSearchHandler struct {
-	services globalService.ServicesInterface
+	services      globalService.ServicesInterface
+	searchWeights *config.UnifiedSearchWeights
 }
 
 // NewUnifiedSearchHandler создает новый обработчик унифицированного поиска
-func NewUnifiedSearchHandler(services globalService.ServicesInterface) *UnifiedSearchHandler {
+func NewUnifiedSearchHandler(services globalService.ServicesInterface, searchWeights *config.SearchWeights) *UnifiedSearchHandler {
+	var unifiedWeights *config.UnifiedSearchWeights
+	if searchWeights != nil {
+		unifiedWeights = &searchWeights.UnifiedSearchWeights
+	}
+
 	return &UnifiedSearchHandler{
-		services: services,
+		services:      services,
+		searchWeights: unifiedWeights,
+	}
+}
+
+// getSearchWeight возвращает вес из конфигурации или значение по умолчанию
+func (h *UnifiedSearchHandler) getSearchWeight(weightName string, defaultValue float64) float64 {
+	if h.searchWeights == nil {
+		return defaultValue
+	}
+
+	switch weightName {
+	case "ExactTitleMatch":
+		return h.searchWeights.ExactTitleMatch
+	case "PartialTitleMatch":
+		return h.searchWeights.PartialTitleMatch
+	case "DescriptionMatch":
+		return h.searchWeights.DescriptionMatch
+	case "PopularityMaxBoost":
+		return h.searchWeights.PopularityMaxBoost
+	case "FreshnessWeek":
+		return h.searchWeights.FreshnessWeek
+	case "FreshnessMonth":
+		return h.searchWeights.FreshnessMonth
+	case "FreshnessQuarter":
+		return h.searchWeights.FreshnessQuarter
+	default:
+		return defaultValue
 	}
 }
 
@@ -495,37 +529,38 @@ func (h *UnifiedSearchHandler) calculateRelevanceScore(item *UnifiedSearchItem, 
 	titleLower := strings.ToLower(item.Name)
 	descLower := strings.ToLower(item.Description)
 
-	// Точное совпадение в заголовке (вес 5.0)
+	// Точное совпадение в заголовке
 	if titleLower == queryLower {
-		score += 5.0
+		score += h.getSearchWeight("ExactTitleMatch", 5.0)
 	} else if strings.Contains(titleLower, queryLower) {
-		// Частичное совпадение в заголовке (вес 3.0)
-		score += 3.0
+		// Частичное совпадение в заголовке
+		score += h.getSearchWeight("PartialTitleMatch", 3.0)
 	}
 
-	// Совпадение в описании (вес 2.0)
+	// Совпадение в описании
 	if strings.Contains(descLower, queryLower) {
-		score += 2.0
+		score += h.getSearchWeight("DescriptionMatch", 2.0)
 	}
 
-	// Учитываем популярность (до 1.0 балла)
+	// Учитываем популярность
 	if item.ViewsCount > 0 {
+		maxBoost := h.getSearchWeight("PopularityMaxBoost", 1.0)
 		popularityScore := math.Log10(float64(item.ViewsCount+1)) / 3.0 // нормализуем до ~1.0
-		if popularityScore > 1.0 {
-			popularityScore = 1.0
+		if popularityScore > maxBoost {
+			popularityScore = maxBoost
 		}
 		score += popularityScore
 	}
 
-	// Учитываем свежесть объявления (до 0.5 балла)
+	// Учитываем свежесть объявления
 	if item.CreatedAt != nil {
 		daysSinceCreated := time.Since(*item.CreatedAt).Hours() / 24
 		if daysSinceCreated < 7 {
-			score += 0.5 // Новые объявления получают бонус
+			score += h.getSearchWeight("FreshnessWeek", 0.5) // Новые объявления получают бонус
 		} else if daysSinceCreated < 30 {
-			score += 0.3
+			score += h.getSearchWeight("FreshnessMonth", 0.3)
 		} else if daysSinceCreated < 90 {
-			score += 0.1
+			score += h.getSearchWeight("FreshnessQuarter", 0.1)
 		}
 	}
 

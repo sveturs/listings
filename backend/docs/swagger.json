@@ -11386,6 +11386,926 @@
                 }
             }
         },
+        "/api/v1/search/config": {
+            "get": {
+                "description": "Get general search configuration settings",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Get search configuration",
+                "responses": {
+                    "200": {
+                        "description": "Search configuration",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.SearchConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Configuration not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update general search configuration settings",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Update search configuration",
+                "parameters": [
+                    {
+                        "description": "Search configuration",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SearchConfig"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated configuration",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.SearchConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/search/config/synonyms": {
+            "get": {
+                "description": "Get all synonyms for search terms",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Get search synonyms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Language code (default: ru)",
+                        "name": "language",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of synonyms",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.SearchSynonym"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create synonym mapping for search terms",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Create search synonym",
+                "parameters": [
+                    {
+                        "description": "Synonym configuration",
+                        "name": "synonym",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SearchSynonym"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created synonym",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.SearchSynonym"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/search/config/synonyms/{id}": {
+            "put": {
+                "description": "Update synonym mapping for search terms",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Update search synonym",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Synonym ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated synonym configuration",
+                        "name": "synonym",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SearchSynonym"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated synonym",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.SearchSynonym"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Synonym not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete synonym mapping",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Delete search synonym",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Synonym ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Synonym deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Synonym not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/search/config/transliteration": {
+            "get": {
+                "description": "Get all transliteration rules for search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Get transliteration rules",
+                "responses": {
+                    "200": {
+                        "description": "List of transliteration rules",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.TransliterationRule"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create new transliteration rule for search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Create transliteration rule",
+                "parameters": [
+                    {
+                        "description": "Transliteration rule",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.TransliterationRule"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created rule",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.TransliterationRule"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/search/config/transliteration/{id}": {
+            "put": {
+                "description": "Update existing transliteration rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Update transliteration rule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated rule",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.TransliterationRule"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated rule",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.TransliterationRule"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Rule not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete transliteration rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Delete transliteration rule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Rule deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Rule not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/search/config/weights": {
+            "get": {
+                "description": "Get weights for all searchable fields",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Get all search field weights",
+                "responses": {
+                    "200": {
+                        "description": "List of search weights",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.SearchWeight"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create weight configuration for a search field",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Create new search weight",
+                "parameters": [
+                    {
+                        "description": "Weight configuration",
+                        "name": "weight",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SearchWeight"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created weight",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.SearchWeight"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/search/config/weights/{field}": {
+            "get": {
+                "description": "Get weight configuration for a specific search field",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Get weight for specific field",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Field name",
+                        "name": "field",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search weight details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.SearchWeight"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Weight not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/search/config/weights/{id}": {
+            "put": {
+                "description": "Update weight configuration for a search field",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Update search weight",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Weight ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated weight configuration",
+                        "name": "weight",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SearchWeight"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated weight",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.SearchWeight"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Weight not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete weight configuration for a search field",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Delete search weight",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Weight ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Weight deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Weight not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/search/statistics": {
+            "get": {
+                "description": "Get recent search statistics",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Get search statistics",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit results (default: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search statistics",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.SearchStatistics"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/search/statistics/popular": {
+            "get": {
+                "description": "Get most popular search queries from last 7 days",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search-config"
+                ],
+                "summary": "Get popular searches",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit results (default: 10)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Popular searches",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts": {
             "get": {
                 "description": "Returns paginated list of storefronts with filters",
@@ -15735,6 +16655,142 @@
                 "message": {
                     "type": "string",
                     "example": "Операция выполнена успешно"
+                }
+            }
+        },
+        "domain.SearchConfig": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "fuzzy_enabled": {
+                    "type": "boolean"
+                },
+                "fuzzy_max_edits": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "max_suggestions": {
+                    "type": "integer"
+                },
+                "min_search_length": {
+                    "type": "integer"
+                },
+                "synonyms_enabled": {
+                    "type": "boolean"
+                },
+                "transliteration_enabled": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.SearchStatistics": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "results_count": {
+                    "type": "integer"
+                },
+                "search_duration_ms": {
+                    "type": "integer"
+                },
+                "search_filters": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.SearchSynonym": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "synonyms": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "term": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.SearchWeight": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "field_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "domain.TransliterationRule": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "from_pattern": {
+                    "type": "string"
+                },
+                "from_script": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "to_pattern": {
+                    "type": "string"
+                },
+                "to_script": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
