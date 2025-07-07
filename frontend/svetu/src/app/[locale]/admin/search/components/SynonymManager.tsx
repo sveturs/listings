@@ -7,10 +7,9 @@ import { tokenManager } from '@/utils/tokenManager';
 
 interface Synonym {
   id: string;
-  word: string;
+  term: string;
   synonyms: string[];
   language: 'en' | 'ru' | 'sr';
-  active: boolean;
 }
 
 export default function SynonymManager() {
@@ -33,7 +32,7 @@ export default function SynonymManager() {
     try {
       const accessToken = await tokenManager.getAccessToken();
       const response = await fetch(
-        `/api/admin/search/config/synonyms?lang=${selectedLanguage}`,
+        `/api/v1/admin/search/synonyms?lang=${selectedLanguage}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -42,7 +41,7 @@ export default function SynonymManager() {
       );
       if (!response.ok) throw new Error('Failed to fetch synonyms');
       const data = await response.json();
-      setSynonyms(data.synonyms || []);
+      setSynonyms(data.data || []);
     } catch (error) {
       console.error('Error fetching synonyms:', error);
       toast.error(t('admin.search.synonyms.fetchError'));
@@ -59,20 +58,19 @@ export default function SynonymManager() {
 
     try {
       const accessToken = await tokenManager.getAccessToken();
-      const response = await fetch('/api/admin/search/synonyms', {
+      const response = await fetch('/api/v1/admin/search/synonyms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          word: newWord.trim(),
+          term: newWord.trim(),
           synonyms: newSynonyms
             .split(',')
             .map((s) => s.trim())
             .filter(Boolean),
           language: selectedLanguage,
-          active: true,
         }),
       });
 
@@ -91,14 +89,17 @@ export default function SynonymManager() {
   const handleUpdate = async (synonym: Synonym) => {
     try {
       const accessToken = await tokenManager.getAccessToken();
-      const response = await fetch(`/api/admin/search/synonyms/${synonym.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(synonym),
-      });
+      const response = await fetch(
+        `/api/v1/admin/search/synonyms/${synonym.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(synonym),
+        }
+      );
 
       if (!response.ok) throw new Error('Failed to update synonym');
 
@@ -116,7 +117,7 @@ export default function SynonymManager() {
 
     try {
       const accessToken = await tokenManager.getAccessToken();
-      const response = await fetch(`/api/admin/search/synonyms/${id}`, {
+      const response = await fetch(`/api/v1/admin/search/synonyms/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -133,13 +134,9 @@ export default function SynonymManager() {
     }
   };
 
-  const toggleActive = async (synonym: Synonym) => {
-    await handleUpdate({ ...synonym, active: !synonym.active });
-  };
-
   const filteredSynonyms = synonyms.filter(
     (s) =>
-      s.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.synonyms.some((syn) =>
         syn.toLowerCase().includes(searchTerm.toLowerCase())
       )
@@ -232,7 +229,6 @@ export default function SynonymManager() {
             <tr>
               <th>{t('admin.search.synonyms.word')}</th>
               <th>{t('admin.search.synonyms.synonymsList')}</th>
-              <th>{t('admin.search.synonyms.status')}</th>
               <th>{t('admin.search.synonyms.actions')}</th>
             </tr>
           </thead>
@@ -244,18 +240,18 @@ export default function SynonymManager() {
                     <input
                       type="text"
                       className="input input-bordered input-sm"
-                      value={synonym.word}
+                      value={synonym.term}
                       onChange={(e) => {
                         const updated = synonyms.map((s) =>
                           s.id === synonym.id
-                            ? { ...s, word: e.target.value }
+                            ? { ...s, term: e.target.value }
                             : s
                         );
                         setSynonyms(updated);
                       }}
                     />
                   ) : (
-                    <span className="font-mono">{synonym.word}</span>
+                    <span className="font-mono">{synonym.term}</span>
                   )}
                 </td>
                 <td>
@@ -288,15 +284,6 @@ export default function SynonymManager() {
                       ))}
                     </div>
                   )}
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    className="toggle toggle-success"
-                    checked={synonym.active}
-                    onChange={() => toggleActive(synonym)}
-                    disabled={editingId === synonym.id}
-                  />
                 </td>
                 <td>
                   <div className="flex gap-2">

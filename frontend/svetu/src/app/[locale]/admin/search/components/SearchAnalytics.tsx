@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
+import { tokenManager } from '@/utils/tokenManager';
 
 interface SearchQuery {
   query: string;
@@ -47,8 +48,14 @@ export default function SearchAnalytics() {
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
+      const accessToken = await tokenManager.getAccessToken();
       const response = await fetch(
-        `/api/admin/search/analytics?range=${timeRange}`
+        `/api/v1/admin/search/analytics?range=${timeRange}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch analytics');
       const data = await response.json();
@@ -74,8 +81,14 @@ export default function SearchAnalytics() {
 
   const exportData = async () => {
     try {
+      const accessToken = await tokenManager.getAccessToken();
       const response = await fetch(
-        `/api/admin/search/analytics/export?range=${timeRange}`
+        `/api/v1/admin/search/analytics/export?range=${timeRange}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to export data');
 
