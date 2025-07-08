@@ -7,13 +7,15 @@ import SearchWeights from './SearchWeights';
 import BehaviorAnalytics from './BehaviorAnalytics';
 import SynonymManager from './SynonymManager';
 import WeightOptimization from './WeightOptimization';
+import TransliterationConfig from './TransliterationConfig';
 
 type TabType =
   | 'analytics'
   | 'behavior'
   | 'weights'
   | 'synonyms'
-  | 'optimization';
+  | 'optimization'
+  | 'transliteration';
 
 export default function SearchDashboard() {
   const t = useTranslations('admin.search');
@@ -44,6 +46,11 @@ export default function SearchDashboard() {
       key: 'optimization',
       label: t('tabs.optimization'),
       icon: 'M13 10V3L4 14h7v7l9-11h-7z',
+    },
+    {
+      key: 'transliteration',
+      label: t('tabs.transliteration'),
+      icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21L6 12l4.26 6.781a1 1 0 01-.502 1.21L8.26 20.5a1 1 0 01-.948-.684L5.814 15.5H5a2 2 0 01-2-2V5z',
     },
   ];
 
@@ -93,6 +100,7 @@ export default function SearchDashboard() {
           {activeTab === 'weights' && <SearchWeights />}
           {activeTab === 'synonyms' && <SynonymManager />}
           {activeTab === 'optimization' && <WeightOptimization />}
+          {activeTab === 'transliteration' && <TransliterationConfig />}
         </div>
       </div>
     </div>
