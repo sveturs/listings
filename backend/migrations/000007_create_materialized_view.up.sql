@@ -112,7 +112,8 @@ BEGIN
         FROM pg_trigger 
         WHERE tgname = 'refresh_category_counts_insert'
     ) THEN
-        CREATE TRIGGER refresh_category_counts_insert
+        DROP TRIGGER IF EXISTS refresh_category_counts_insert ON refresh_category_counts_insert;
+CREATE TRIGGER refresh_category_counts_insert
             AFTER INSERT ON marketplace_listings
             FOR EACH ROW
             EXECUTE FUNCTION refresh_category_listing_counts();
@@ -124,7 +125,8 @@ BEGIN
         FROM pg_trigger 
         WHERE tgname = 'refresh_category_counts_update'
     ) THEN
-        CREATE TRIGGER refresh_category_counts_update
+        DROP TRIGGER IF EXISTS refresh_category_counts_update ON refresh_category_counts_update;
+CREATE TRIGGER refresh_category_counts_update
             AFTER UPDATE ON marketplace_listings
             FOR EACH ROW
             WHEN (OLD.status IS DISTINCT FROM NEW.status)
@@ -137,7 +139,8 @@ BEGIN
         FROM pg_trigger 
         WHERE tgname = 'refresh_category_counts_delete'
     ) THEN
-        CREATE TRIGGER refresh_category_counts_delete
+        DROP TRIGGER IF EXISTS refresh_category_counts_delete ON refresh_category_counts_delete;
+CREATE TRIGGER refresh_category_counts_delete
             AFTER DELETE ON marketplace_listings
             FOR EACH ROW
             EXECUTE FUNCTION refresh_category_listing_counts();

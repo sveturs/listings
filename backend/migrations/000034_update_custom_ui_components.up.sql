@@ -39,6 +39,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS set_custom_ui_component_usage_timestamp ON set_custom_ui_component_usage_timestamp;
 CREATE TRIGGER set_custom_ui_component_usage_timestamp
 BEFORE UPDATE ON custom_ui_component_usage
 FOR EACH ROW

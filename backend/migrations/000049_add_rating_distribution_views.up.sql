@@ -36,6 +36,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Триггер для обновления при изменении отзывов
+DROP TRIGGER IF EXISTS trigger_refresh_rating_distributions ON trigger_refresh_rating_distributions;
 CREATE TRIGGER trigger_refresh_rating_distributions
 AFTER INSERT OR UPDATE OR DELETE ON reviews
 FOR EACH STATEMENT

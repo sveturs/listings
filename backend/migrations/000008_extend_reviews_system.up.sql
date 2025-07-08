@@ -83,6 +83,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Создаем триггер для обновления представлений
+DROP TRIGGER IF EXISTS refresh_rating_summaries_trigger ON refresh_rating_summaries_trigger;
 CREATE TRIGGER refresh_rating_summaries_trigger
 AFTER INSERT OR UPDATE OR DELETE ON reviews
 FOR EACH STATEMENT
@@ -115,6 +116,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Создаем триггер для сохранения происхождения отзыва
+DROP TRIGGER IF EXISTS preserve_review_origin_trigger ON preserve_review_origin_trigger;
 CREATE TRIGGER preserve_review_origin_trigger
 BEFORE DELETE ON marketplace_listings
 FOR EACH ROW

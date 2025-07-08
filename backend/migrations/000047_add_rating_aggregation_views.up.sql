@@ -97,6 +97,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Создаем триггер для автоматического обновления представлений
+DROP TRIGGER IF EXISTS update_ratings_after_review_change ON update_ratings_after_review_change;
 CREATE TRIGGER update_ratings_after_review_change
 AFTER INSERT OR UPDATE OR DELETE ON reviews
 FOR EACH ROW

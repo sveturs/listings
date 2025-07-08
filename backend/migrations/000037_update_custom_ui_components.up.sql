@@ -81,6 +81,7 @@ $$ language 'plpgsql';
 
 -- Удаляем старый триггер если существует и создаём новый
 DROP TRIGGER IF EXISTS update_custom_ui_component_usage_updated_at ON custom_ui_component_usage;
+DROP TRIGGER IF EXISTS update_custom_ui_component_usage_updated_at ON update_custom_ui_component_usage_updated_at;
 CREATE TRIGGER update_custom_ui_component_usage_updated_at 
 BEFORE UPDATE ON custom_ui_component_usage 
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

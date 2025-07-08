@@ -29,6 +29,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_search_synonyms_updated_at ON trigger_update_search_synonyms_updated_at;
 CREATE TRIGGER trigger_update_search_synonyms_updated_at
     BEFORE UPDATE ON search_synonyms
     FOR EACH ROW

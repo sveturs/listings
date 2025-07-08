@@ -98,6 +98,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_search_weights_updated_at ON trigger_update_search_weights_updated_at;
 CREATE TRIGGER trigger_update_search_weights_updated_at
     BEFORE UPDATE ON search_weights
     FOR EACH ROW
@@ -128,6 +129,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_log_search_weight_changes ON trigger_log_search_weight_changes;
 CREATE TRIGGER trigger_log_search_weight_changes
     AFTER UPDATE ON search_weights
     FOR EACH ROW

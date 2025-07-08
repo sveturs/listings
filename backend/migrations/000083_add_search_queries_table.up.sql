@@ -25,6 +25,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_search_queries_updated_at_trigger ON update_search_queries_updated_at_trigger;
 CREATE TRIGGER update_search_queries_updated_at_trigger
     BEFORE UPDATE ON search_queries
     FOR EACH ROW

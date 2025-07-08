@@ -124,6 +124,7 @@ END;
 $$ language 'plpgsql';
 
 -- Триггеры для корзин создаются в миграции 000065_create_shopping_carts.up.sql
+DROP TRIGGER IF EXISTS update_storefront_orders_updated_at ON update_storefront_orders_updated_at;
 CREATE TRIGGER update_storefront_orders_updated_at BEFORE UPDATE ON storefront_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Функция для генерации номеров заказов
@@ -166,6 +167,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS set_order_number_trigger ON set_order_number_trigger;
 CREATE TRIGGER set_order_number_trigger 
     BEFORE INSERT ON storefront_orders 
     FOR EACH ROW EXECUTE FUNCTION set_order_number();
@@ -182,6 +184,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS calculate_escrow_release_date_trigger ON calculate_escrow_release_date_trigger;
 CREATE TRIGGER calculate_escrow_release_date_trigger 
     BEFORE INSERT OR UPDATE ON storefront_orders 
     FOR EACH ROW EXECUTE FUNCTION calculate_escrow_release_date();

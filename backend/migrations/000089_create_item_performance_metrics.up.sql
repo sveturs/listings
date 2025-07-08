@@ -54,6 +54,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_item_performance_metrics_updated_at ON trigger_update_item_performance_metrics_updated_at;
 CREATE TRIGGER trigger_update_item_performance_metrics_updated_at
     BEFORE UPDATE ON item_performance_metrics
     FOR EACH ROW

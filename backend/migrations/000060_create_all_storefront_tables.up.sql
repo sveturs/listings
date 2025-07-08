@@ -376,11 +376,13 @@ RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_import_jobs_updated_at ON trigger_import_jobs_updated_at;
 CREATE TRIGGER trigger_import_jobs_updated_at
   BEFORE UPDATE ON import_jobs
   FOR EACH ROW
   EXECUTE FUNCTION update_import_tables_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_category_mappings_updated_at ON trigger_category_mappings_updated_at;
 CREATE TRIGGER trigger_category_mappings_updated_at
   BEFORE UPDATE ON category_mappings
   FOR EACH ROW

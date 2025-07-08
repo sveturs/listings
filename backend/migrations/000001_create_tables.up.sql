@@ -284,36 +284,43 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers
+DROP TRIGGER IF EXISTS update_marketplace_chats_timestamp ON update_marketplace_chats_timestamp;
 CREATE TRIGGER update_marketplace_chats_timestamp
     BEFORE UPDATE ON marketplace_chats
     FOR EACH ROW
     EXECUTE FUNCTION update_marketplace_chats_updated_at();
 
+DROP TRIGGER IF EXISTS update_marketplace_messages_timestamp ON update_marketplace_messages_timestamp;
 CREATE TRIGGER update_marketplace_messages_timestamp
     BEFORE UPDATE ON marketplace_messages
     FOR EACH ROW
     EXECUTE FUNCTION update_marketplace_chats_updated_at();
 
+DROP TRIGGER IF EXISTS update_reviews_updated_at ON update_reviews_updated_at;
 CREATE TRIGGER update_reviews_updated_at
     BEFORE UPDATE ON reviews
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_review_responses_updated_at ON update_review_responses_updated_at;
 CREATE TRIGGER update_review_responses_updated_at
     BEFORE UPDATE ON review_responses
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_users_updated_at ON update_users_updated_at;
 CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW
     EXECUTE FUNCTION update_user_updated_at();
 
+DROP TRIGGER IF EXISTS update_notification_settings_timestamp ON update_notification_settings_timestamp;
 CREATE TRIGGER update_notification_settings_timestamp
     BEFORE UPDATE ON notification_settings
     FOR EACH ROW
     EXECUTE FUNCTION update_notification_settings_updated_at();
 
+DROP TRIGGER IF EXISTS update_translations_timestamp ON update_translations_timestamp;
 CREATE TRIGGER update_translations_timestamp
     BEFORE UPDATE ON translations
     FOR EACH ROW

@@ -373,17 +373,20 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Создаем триггеры
+DROP TRIGGER IF EXISTS trg_new_listing_price_history ON trg_new_listing_price_history;
 CREATE TRIGGER trg_new_listing_price_history
 AFTER INSERT ON marketplace_listings
 FOR EACH ROW
 EXECUTE FUNCTION update_price_history('create');
 
+DROP TRIGGER IF EXISTS trg_update_listing_price_history ON trg_update_listing_price_history;
 CREATE TRIGGER trg_update_listing_price_history
 AFTER UPDATE OF price ON marketplace_listings
 FOR EACH ROW
 WHEN (OLD.price IS DISTINCT FROM NEW.price)
 EXECUTE FUNCTION update_price_history('update');
 
+DROP TRIGGER IF EXISTS trig_update_metadata_after_price_change ON trig_update_metadata_after_price_change;
 CREATE TRIGGER trig_update_metadata_after_price_change
 AFTER INSERT ON price_history
 FOR EACH ROW

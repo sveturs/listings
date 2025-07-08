@@ -95,6 +95,7 @@ $$ LANGUAGE plpgsql;
 
 -- Create trigger
 DROP TRIGGER IF EXISTS trigger_update_listing_search_vector ON marketplace_listings;
+DROP TRIGGER IF EXISTS trigger_update_listing_search_vector ON trigger_update_listing_search_vector;
 CREATE TRIGGER trigger_update_listing_search_vector
     BEFORE INSERT OR UPDATE OF title, description ON marketplace_listings
     FOR EACH ROW
