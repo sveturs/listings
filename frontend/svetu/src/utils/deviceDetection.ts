@@ -161,7 +161,9 @@ export function getOSInfo(userAgent: string = navigator.userAgent): {
  * Получает полную информацию о пользовательском агенте
  */
 export function getUserAgentInfo(
-  userAgent: string = navigator.userAgent
+  userAgent: string = typeof navigator !== 'undefined'
+    ? navigator.userAgent
+    : ''
 ): UserAgentInfo {
   const browser = getBrowserInfo(userAgent);
   const { os, osVersion } = getOSInfo(userAgent);
@@ -178,7 +180,7 @@ export function getUserAgentInfo(
       isDesktop: deviceType === 'desktop',
     },
     userAgent,
-    platform: navigator.platform || 'Unknown',
+    platform: typeof navigator !== 'undefined' ? navigator.platform : 'Unknown',
   };
 }
 
@@ -186,7 +188,9 @@ export function getUserAgentInfo(
  * Проверяет, является ли устройство мобильным
  */
 export function isMobileDevice(
-  userAgent: string = navigator.userAgent
+  userAgent: string = typeof navigator !== 'undefined'
+    ? navigator.userAgent
+    : ''
 ): boolean {
   return getDeviceType(userAgent) === 'mobile';
 }

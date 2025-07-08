@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import WeightOptimization from './WeightOptimization';
+import { tokenManager } from '@/utils/tokenManager';
 
 interface SearchWeight {
   id: number;
@@ -41,7 +42,7 @@ export default function SearchWeights() {
         `/api/v1/admin/search/weights?item_type=${selectedItemType}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
           },
         }
       );
@@ -65,7 +66,7 @@ export default function SearchWeights() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },
         body: JSON.stringify({ weight: newWeight }),
       });
@@ -90,7 +91,7 @@ export default function SearchWeights() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },
         body: JSON.stringify({
           item_type: selectedItemType,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { tokenManager } from '@/utils/tokenManager';
 
 interface OptimizationParams {
   field_names?: string[];
@@ -76,7 +77,7 @@ export default function WeightOptimization() {
             `/api/v1/admin/search/optimization-status/${currentSession.id}`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+                Authorization: `Bearer ${tokenManager.getAccessToken()}`,
               },
             }
           );
@@ -110,7 +111,7 @@ export default function WeightOptimization() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },
         body: JSON.stringify(params),
       });
@@ -126,7 +127,7 @@ export default function WeightOptimization() {
         `/api/v1/admin/search/optimization-status/${data.data.session_id}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
           },
         }
       );
@@ -150,7 +151,7 @@ export default function WeightOptimization() {
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
           },
         }
       );
@@ -170,7 +171,7 @@ export default function WeightOptimization() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },
         body: JSON.stringify({
           session_id: currentSession.id,
@@ -200,7 +201,7 @@ export default function WeightOptimization() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },
         body: JSON.stringify({
           item_type: params.item_type,

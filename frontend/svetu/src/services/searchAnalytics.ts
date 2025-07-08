@@ -1,4 +1,5 @@
 import { config } from '@/config';
+import { tokenManager } from '@/utils/tokenManager';
 
 // Типы для аналитических данных
 export interface SearchMetrics {
@@ -48,6 +49,8 @@ export interface AnalyticsFilters {
   period?: 'day' | 'week' | 'month' | 'custom';
   start_date?: string;
   end_date?: string;
+  period_start?: string;
+  period_end?: string;
   query?: string;
   limit?: number;
   offset?: number;
@@ -64,12 +67,22 @@ class SearchAnalyticsService {
     url: string,
     options: RequestInit = {}
   ): Promise<T> {
+    // Получаем токен из tokenManager
+    const accessToken = tokenManager.getAccessToken();
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...((options.headers as Record<string, string>) || {}),
+    };
+
+    // Добавляем токен авторизации если он есть
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
     const response = await fetch(`${this.baseUrl}${url}`, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       credentials: 'include',
     });
 

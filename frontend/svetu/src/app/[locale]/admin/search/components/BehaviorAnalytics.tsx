@@ -71,7 +71,8 @@ export default function BehaviorAnalytics() {
       ]);
 
       setMetrics(metricsData);
-      setItemsPerformance(itemsData);
+      // Убедимся, что itemsData это массив
+      setItemsPerformance(Array.isArray(itemsData) ? itemsData : []);
     } catch (err) {
       console.error('Failed to load analytics data:', err);
       setError(t('loadError'));

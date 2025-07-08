@@ -814,58 +814,6 @@
       "supportMessage": "Ako imate problema sa uplatom, kontaktirajte podršku.",
       "contactSupport": "Kontaktirajte podršku"
     },
-    "search": {
-      "title": "Аналитика претраге",
-      "description": "Анализа перформанси претраге и метрика понашања корисника",
-      "tabs": {
-        "analytics": "Аналитика",
-        "behavior": "Понашање",
-        "weights": "Тежине претраге"
-      },
-      "analytics": {
-        "title": "Преглед аналитике претраге",
-        "description": "Опште метрике перформанси претраге и статистика",
-        "loadError": "Није могуће учитати податке аналитике",
-        "timeRange": "Временски распон",
-        "exportCSV": "Извоз CSV",
-        "ranges": {
-          "24h": "Последњих 24 сата",
-          "7d": "Последњих 7 дана",
-          "30d": "Последњих 30 дана",
-          "90d": "Последњих 90 дана"
-        },
-        "metrics": {
-          "totalSearches": "Укупне претраге",
-          "uniqueQueries": "Јединствени упити",
-          "avgResponseTime": "Просечно време одговора",
-          "zeroResults": "Нулти резултати",
-          "avgCTR": "Просечни CTR",
-          "conversionRate": "Стопа конверзије"
-        },
-        "charts": {
-          "searchTrends": "Трендови претраге",
-          "ctrTrends": "CTR трендови",
-          "topQueries": "Дистрибуција топ упита"
-        },
-        "topQueries": {
-          "title": "Топ упити претраге са анализом релевантности",
-          "query": "Упит",
-          "count": "Број",
-          "ctr": "CTR",
-          "avgPosition": "Просечна позиција",
-          "avgResults": "Просечни резултати",
-          "relevance": "Оцена релевантности"
-        }
-      },
-      "weights": {
-        "title": "Конфигурација тежина претраге",
-        "description": "Конфигуришите тежине и параметре алгоритма претраге"
-      },
-      "behavior": {
-        "title": "Аналитика понашања",
-        "loadError": "Грешка учитавања аналитичких података"
-      }
-    },
     "admins": {
       "error": {
         "unauthorized": "Potrebna je autorizacija",
