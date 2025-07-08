@@ -268,8 +268,9 @@ func (s *Server) registerProjectRoutes() {
 
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
-	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.marketplace, s.balance, s.orders, s.storefront,
-		s.geocode, s.contacts, s.payments, s.docs, s.analytics, s.behaviorTracking, s.searchOptimization)
+	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
+	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.marketplace, s.balance, s.orders, s.storefront,
+		s.geocode, s.contacts, s.payments, s.docs, s.analytics, s.behaviorTracking)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {
