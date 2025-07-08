@@ -88,6 +88,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 		Name:     "session_token",
 		Value:    sessionToken,
 		Path:     "/",
+		Domain:   h.services.Config().GetCookieDomain(),
 		MaxAge:   3600 * 24,
 		Secure:   h.services.Config().GetCookieSecure(),
 		HTTPOnly: true,
@@ -100,6 +101,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 			Name:     "refresh_token",
 			Value:    refreshToken,
 			Path:     "/",
+			Domain:   h.services.Config().GetCookieDomain(),
 			MaxAge:   30 * 24 * 3600, // 30 дней
 			Secure:   h.services.Config().GetCookieSecure(),
 			HTTPOnly: true,
@@ -311,6 +313,7 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 		Name:     "refresh_token",
 		Value:    "",
 		Path:     "/",
+		Domain:   h.services.Config().GetCookieDomain(),
 		MaxAge:   -1,
 		Secure:   h.services.Config().GetCookieSecure(),
 		HTTPOnly: true,
@@ -325,6 +328,7 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 			Name:     "session_token",
 			Value:    "",
 			Path:     "/",
+			Domain:   h.services.Config().GetCookieDomain(),
 			MaxAge:   -1,
 			Secure:   h.services.Config().GetCookieSecure(),
 			HTTPOnly: true,
@@ -337,6 +341,7 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 		Name:     "jwt_token",
 		Value:    "",
 		Path:     "/",
+		Domain:   h.services.Config().GetCookieDomain(),
 		MaxAge:   -1,
 		Secure:   h.services.Config().GetCookieSecure(),
 		HTTPOnly: true,
@@ -384,27 +389,21 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	}
 
 	// Устанавливаем refresh token в httpOnly cookie
-	cookie := &fiber.Cookie{
+	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
-		Path:     "/",            // Используем корневой путь для доступности на всех роутах
+		Path:     "/", // Используем корневой путь для доступности на всех роутах
+		Domain:   h.services.Config().GetCookieDomain(),
 		MaxAge:   30 * 24 * 3600, // 30 дней
 		Secure:   h.services.Config().GetCookieSecure(),
 		HTTPOnly: true,
 		SameSite: h.services.Config().GetCookieSameSite(),
-	}
-
-	// В development не устанавливаем Domain, чтобы cookie работала на localhost
-	if !h.services.Config().IsDevelopment() {
-		cookie.Domain = ".svetu.rs" // Для production
-	}
-
-	c.Cookie(cookie)
+	})
 	logger.Info().
 		Str("email", user.Email).
-		Str("path", cookie.Path).
-		Bool("secure", cookie.Secure).
-		Str("same_site", cookie.SameSite).
+		Str("domain", h.services.Config().GetCookieDomain()).
+		Bool("secure", h.services.Config().GetCookieSecure()).
+		Str("same_site", h.services.Config().GetCookieSameSite()).
 		Msg("Setting refresh_token cookie for user")
 
 	// Логируем успешную выдачу токенов
@@ -479,7 +478,8 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
-		Path:     "/",            // Используем корневой путь для доступности на всех роутах
+		Path:     "/", // Используем корневой путь для доступности на всех роутах
+		Domain:   h.services.Config().GetCookieDomain(),
 		MaxAge:   30 * 24 * 3600, // 30 дней
 		Secure:   h.services.Config().GetCookieSecure(),
 		HTTPOnly: true,
@@ -548,6 +548,7 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 			Name:     "refresh_token",
 			Value:    "",
 			Path:     "/",
+			Domain:   h.services.Config().GetCookieDomain(),
 			MaxAge:   -1,
 			Secure:   h.services.Config().GetCookieSecure(),
 			HTTPOnly: true,
@@ -563,6 +564,7 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		Name:     "refresh_token",
 		Value:    newRefreshToken,
 		Path:     "/",
+		Domain:   h.services.Config().GetCookieDomain(),
 		MaxAge:   30 * 24 * 3600, // 30 дней
 		Secure:   h.services.Config().GetCookieSecure(),
 		HTTPOnly: true,

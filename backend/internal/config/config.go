@@ -17,6 +17,7 @@ type Config struct {
 	GoogleRedirectURL     string
 	FrontendURL           string
 	Environment           string
+	LogLevel              string `yaml:"log_level"`
 	OpenAIAPIKey          string
 	GoogleTranslateAPIKey string
 	StripeAPIKey          string
@@ -29,6 +30,7 @@ type Config struct {
 	MinIOPublicURL        string
 	Docs                  DocsConfig      `yaml:"docs"`
 	AllSecure             AllSecureConfig `yaml:"allsecure"`
+	SearchWeights         *SearchWeights  `yaml:"search_weights"`
 }
 
 type FileStorageConfig struct {
@@ -115,6 +117,12 @@ func NewConfig() (*Config, error) {
 	environment := os.Getenv("APP_MODE")
 	if environment == "" {
 		environment = "development"
+	}
+
+	// Получаем уровень логирования
+	logLevel := os.Getenv("LOG_LEVEL")
+	if logLevel == "" {
+		logLevel = "info" // По умолчанию info
 	}
 	config.StripeAPIKey = os.Getenv("STRIPE_API_KEY")
 	config.StripeWebhookSecret = os.Getenv("STRIPE_WEBHOOK_SECRET")
@@ -278,6 +286,9 @@ func NewConfig() (*Config, error) {
 		}
 	}
 
+	// Загружаем веса поиска (используем дефолтные значения)
+	searchWeights := GetDefaultSearchWeights()
+
 	return &Config{
 		Port:                  port,
 		DatabaseURL:           dbURL,
@@ -286,6 +297,7 @@ func NewConfig() (*Config, error) {
 		GoogleRedirectURL:     googleRedirectURL,
 		FrontendURL:           frontendURL,
 		Environment:           environment,
+		LogLevel:              logLevel,
 		OpenAIAPIKey:          openAIAPIKey,
 		GoogleTranslateAPIKey: config.GoogleTranslateAPIKey,
 		StripeAPIKey:          config.StripeAPIKey,
@@ -298,6 +310,7 @@ func NewConfig() (*Config, error) {
 		FileUpload:            fileUploadConfig,
 		Docs:                  docsConfig,
 		AllSecure:             allSecureConfig,
+		SearchWeights:         searchWeights,
 	}, nil
 }
 
@@ -332,4 +345,14 @@ func (c *Config) GetCookieSameSite() string {
 		return "" // По умолчанию
 	}
 	return "Lax"
+}
+
+// GetCookieDomain возвращает домен для cookie в зависимости от окружения
+func (c *Config) GetCookieDomain() string {
+	// В development используем localhost для работы с разными портами
+	// В production используем домен сайта
+	if c.IsDevelopment() {
+		return "localhost" // Работает для localhost:3000 и localhost:3001
+	}
+	return "" // В production используем текущий домен
 }

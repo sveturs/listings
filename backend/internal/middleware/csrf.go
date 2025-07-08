@@ -75,6 +75,7 @@ func (m *Middleware) GetCSRFToken() fiber.Handler {
 			Name:     CSRFCookieName,
 			Value:    token,
 			Path:     "/",
+			Domain:   m.config.GetCookieDomain(),
 			HTTPOnly: true,
 			Secure:   m.config.Environment == "production",
 			SameSite: "Lax",

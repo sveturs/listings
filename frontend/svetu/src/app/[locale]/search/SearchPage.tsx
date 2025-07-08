@@ -74,24 +74,19 @@ export default function SearchPage() {
     onLoadMore: handleLoadMore,
   });
 
-  // Initial search when component mounts with query
-  useEffect(() => {
-    if (initialQuery) {
-      performSearch(initialQuery, 1, filters, fuzzy);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps - only run once on mount
-
-  // Handle URL query changes
+  // Handle URL query changes (this handles both initial load and subsequent changes)
   useEffect(() => {
     const searchQuery = searchParams.get('q');
     const searchFuzzy = searchParams.get('fuzzy') !== 'false';
-    if (searchQuery && searchQuery !== query) {
-      setQuery(searchQuery);
-      setFuzzy(searchFuzzy);
-      setPage(1);
-      setAllItems([]);
-      performSearch(searchQuery, 1, filters, searchFuzzy);
+    if (searchQuery) {
+      // Only perform search if query actually changed
+      if (searchQuery !== query || searchFuzzy !== fuzzy) {
+        setQuery(searchQuery);
+        setFuzzy(searchFuzzy);
+        setPage(1);
+        setAllItems([]);
+        performSearch(searchQuery, 1, filters, searchFuzzy);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);

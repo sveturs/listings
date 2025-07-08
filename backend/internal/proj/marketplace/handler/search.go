@@ -2,14 +2,18 @@
 package handler
 
 import (
+	"context"
 	"math"
 	"strconv"
+	"strings"
+	"time"
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
+	searchlogsTypes "backend/internal/proj/searchlogs/types"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -40,6 +44,8 @@ func NewSearchHandler(services globalService.ServicesInterface) *SearchHandler {
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.searchError"
 // @Router /api/v1/marketplace/search [get]
 func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
+	// Засекаем время начала для измерения производительности
+	startTime := time.Now()
 	// Парсим параметры поиска из запроса
 	var params search.ServiceParams
 	if err := c.BodyParser(&params); err != nil {
@@ -203,6 +209,84 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		},
 	}
 
+	// Асинхронное логирование поискового запроса
+	if searchLogsSvc := h.services.SearchLogs(); searchLogsSvc != nil {
+		logger.Info().Msg("SearchLogs service is available, logging search query")
+
+		// Извлекаем данные из контекста Fiber ДО запуска горутины
+		var userID *int
+		if uid, ok := c.Locals("user_id").(int); ok && uid > 0 {
+			userID = &uid
+		}
+
+		// Получаем session ID из cookie или заголовков
+		sessionID := c.Cookies("session_id")
+		if sessionID == "" {
+			sessionID = c.Get("X-Session-ID")
+		}
+
+		// Определяем тип устройства из User-Agent
+		userAgent := c.Get("User-Agent")
+		ipAddress := c.IP()
+
+		go func() {
+			// Вычисляем время ответа
+			responseTime := time.Since(startTime).Milliseconds()
+
+			// Определяем тип устройства из User-Agent
+			deviceType := detectDeviceTypeSearch(userAgent)
+
+			// Преобразуем filters из map[string]string в map[string]interface{}
+			filtersInterface := make(map[string]interface{})
+			for k, v := range params.AttributeFilters {
+				filtersInterface[k] = v
+			}
+
+			// Преобразуем CategoryID в *int
+			var categoryIDInt *int
+			if params.CategoryID != "" {
+				if catID, err := strconv.Atoi(params.CategoryID); err == nil {
+					categoryIDInt = &catID
+				}
+			}
+
+			// Создаем запись лога
+			logEntry := &searchlogsTypes.SearchLogEntry{
+				Query:           params.Query,
+				UserID:          userID,
+				SessionID:       sessionID, // Убрали указатель
+				ResultCount:     total,
+				ResponseTimeMS:  int64(responseTime),
+				Filters:         filtersInterface,
+				CategoryID:      categoryIDInt,
+				PriceMin:        &params.PriceMin,
+				PriceMax:        &params.PriceMax,
+				Location:        nil, // TODO: добавить поддержку локации
+				Language:        params.Language,
+				DeviceType:      deviceType,
+				UserAgent:       userAgent,
+				IP:              ipAddress,
+				SearchType:      "advanced",
+				HasSpellCorrect: results.SpellingSuggestion != "",
+				ClickedItems:    []int{}, // Будет заполняться позже при кликах
+				Timestamp:       time.Now(),
+			}
+
+			// Логируем асинхронно
+			logger.Info().
+				Str("query", logEntry.Query).
+				Int("results", logEntry.ResultCount).
+				Int64("response_ms", logEntry.ResponseTimeMS).
+				Msg("Logging search query")
+
+			if err := searchLogsSvc.LogSearch(context.Background(), logEntry); err != nil {
+				logger.Error().Err(err).Msg("Failed to log search query")
+			} else {
+				logger.Info().Msg("Search query logged successfully")
+			}
+		}()
+	}
+
 	// ИЗМЕНЕНИЕ: теперь прямой возврат response вместо utils.SuccessResponse
 	return c.JSON(response)
 }
@@ -234,6 +318,8 @@ func parseIntOrDefault(str string, defaultValue int) int {
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
 // @Router /api/v1/marketplace/suggestions [get]
 func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
+	// Засекаем время начала для измерения производительности
+	startTime := time.Now()
 	// Получаем префикс для автодополнения из параметров
 	prefix := c.Query("prefix")
 	if prefix == "" {
@@ -253,6 +339,60 @@ func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 	if err != nil {
 		logger.Error().Err(err).Str("prefix", prefix).Msg("Failed to get suggestions")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.suggestionsError")
+	}
+
+	// Асинхронное логирование запроса на автодополнение
+	if searchLogsSvc := h.services.SearchLogs(); searchLogsSvc != nil {
+		// Извлекаем данные из контекста Fiber ДО запуска горутины
+		var userID *int
+		if uid, ok := c.Locals("user_id").(int); ok && uid > 0 {
+			userID = &uid
+		}
+
+		// Получаем session ID из cookie или заголовков
+		sessionID := c.Cookies("session_id")
+		if sessionID == "" {
+			sessionID = c.Get("X-Session-ID")
+		}
+
+		// Определяем тип устройства из User-Agent
+		userAgent := c.Get("User-Agent")
+		ipAddress := c.IP()
+
+		go func() {
+			// Вычисляем время ответа
+			responseTime := time.Since(startTime).Milliseconds()
+
+			// Определяем тип устройства из User-Agent
+			deviceType := detectDeviceTypeSearch(userAgent)
+
+			// Создаем запись лога
+			logEntry := &searchlogsTypes.SearchLogEntry{
+				Query:           prefix,
+				UserID:          userID,
+				SessionID:       sessionID, // Убрали указатель
+				ResultCount:     len(suggestions),
+				ResponseTimeMS:  responseTime,
+				Filters:         nil,
+				CategoryID:      nil,
+				PriceMin:        nil,
+				PriceMax:        nil,
+				Location:        nil,
+				Language:        "ru", // TODO: получать из контекста
+				DeviceType:      deviceType,
+				UserAgent:       userAgent,
+				IP:              ipAddress,
+				SearchType:      "suggestions",
+				HasSpellCorrect: false,
+				ClickedItems:    []int{},
+				Timestamp:       time.Now(),
+			}
+
+			// Логируем асинхронно
+			if err := searchLogsSvc.LogSearch(context.Background(), logEntry); err != nil {
+				logger.Error().Err(err).Msg("Failed to log suggestions query")
+			}
+		}()
 	}
 
 	// Возвращаем предложения
@@ -435,4 +575,39 @@ func (h *SearchHandler) GetSimilarListings(c *fiber.Ctx) error {
 
 	// Возвращаем похожие объявления
 	return utils.SuccessResponse(c, listings)
+}
+
+// detectDeviceTypeSearch определяет тип устройства по User-Agent для поиска
+func detectDeviceTypeSearch(userAgent string) string {
+	ua := strings.ToLower(userAgent)
+
+	// Проверка на мобильные устройства
+	mobileKeywords := []string{
+		"mobile", "android", "iphone", "ipad", "ipod",
+		"blackberry", "windows phone", "opera mini", "iemobile",
+	}
+
+	for _, keyword := range mobileKeywords {
+		if strings.Contains(ua, keyword) {
+			// Планшеты
+			if strings.Contains(ua, "ipad") || strings.Contains(ua, "tablet") {
+				return "tablet"
+			}
+			return "mobile"
+		}
+	}
+
+	// Проверка на боты
+	botKeywords := []string{
+		"bot", "crawl", "spider", "scraper", "curl", "wget",
+	}
+
+	for _, keyword := range botKeywords {
+		if strings.Contains(ua, keyword) {
+			return "bot"
+		}
+	}
+
+	// По умолчанию - десктоп
+	return "desktop"
 }

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест AdminGuard - Обычный пользователь</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .user-data {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #c82333;
+        }
+        button.primary {
+            background: #007bff;
+        }
+        button.primary:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .instructions {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тест AdminGuard - Обычный пользователь</h1>
+        
+        <div class="info">
+            <h2>Описание теста</h2>
+            <p>Этот тест проверяет, что AdminGuard корректно блокирует доступ обычным пользователям (не администраторам) к админ-панели.</p>
+        </div>
+
+        <div class="user-info">
+            <h3>Данные пользователя в sessionStorage:</h3>
+            <div class="user-data" id="userData">Данные еще не установлены</div>
+        </div>
+
+        <div class="actions">
+            <button onclick="setNonAdminUser()">Установить обычного пользователя</button>
+            <button onclick="clearUser()">Очистить sessionStorage</button>
+            <button class="primary" onclick="goToAdminPanel()">Перейти в админ-панель</button>
+        </div>
+
+        <div id="status"></div>
+
+        <div class="instructions">
+            <h3>Инструкция по тестированию:</h3>
+            <ol>
+                <li>Нажмите "Установить обычного пользователя" - это создаст пользователя с is_admin: false</li>
+                <li>Нажмите "Перейти в админ-панель" - откроется новая вкладка с админ-панелью</li>
+                <li>AdminGuard должен заблокировать доступ и перенаправить на главную страницу</li>
+                <li>Проверьте консоль браузера (F12) для просмотра логов AdminGuard</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Показать текущие данные пользователя
+        function displayUserData() {
+            const userStr = sessionStorage.getItem('user');
+            const userData = document.getElementById('userData');
+            
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    userData.textContent = JSON.stringify(user, null, 2);
+                } catch (e) {
+                    userData.textContent = 'Ошибка парсинга данных: ' + e.message;
+                }
+            } else {
+                userData.textContent = 'Нет данных пользователя в sessionStorage';
+            }
+        }
+
+        // Установить обычного пользователя
+        function setNonAdminUser() {
+            const user = {
+                id: 12345,
+                email: "test.user@example.com",
+                name: "Тестовый Пользователь",
+                is_admin: false,  // Ключевое поле - пользователь НЕ администратор
+                created_at: new Date().toISOString()
+            };
+
+            sessionStorage.setItem('user', JSON.stringify(user));
+            displayUserData();
+            
+            const status = document.getElementById('status');
+            status.className = 'status success';
+            status.innerHTML = `
+                <strong>✓ Успешно!</strong><br>
+                Установлен обычный пользователь (is_admin: false)<br>
+                Email: ${user.email}
+            `;
+        }
+
+        // Очистить данные пользователя
+        function clearUser() {
+            sessionStorage.removeItem('user');
+            displayUserData();
+            
+            const status = document.getElementById('status');
+            status.className = 'status error';
+            status.innerHTML = '<strong>✓ Очищено!</strong><br>Данные пользователя удалены из sessionStorage';
+        }
+
+        // Перейти в админ-панель
+        function goToAdminPanel() {
+            const userStr = sessionStorage.getItem('user');
+            if (!userStr) {
+                alert('Сначала установите пользователя!');
+                return;
+            }
+
+            // Открываем в новой вкладке, чтобы сохранить sessionStorage
+            const adminUrl = 'http://localhost:3001/admin/search';
+            console.log('Переход в админ-панель:', adminUrl);
+            console.log('Текущий пользователь:', JSON.parse(userStr));
+            
+            // Открываем в той же вкладке для сохранения sessionStorage
+            window.location.href = adminUrl;
+        }
+
+        // При загрузке страницы показать текущие данные
+        window.onload = function() {
+            displayUserData();
+            
+            // Логируем информацию для отладки
+            console.log('=== Тест AdminGuard ===');
+            console.log('Страница теста загружена');
+            console.log('SessionStorage доступен:', typeof(Storage) !== "undefined");
+            
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                console.log('Найден пользователь в sessionStorage:', JSON.parse(userStr));
+            } else {
+                console.log('Пользователь не найден в sessionStorage');
+            }
+        };
+    </script>
+</body>
+</html>

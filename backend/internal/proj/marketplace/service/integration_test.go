@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/proj/storefronts/storage/opensearch"
@@ -641,7 +642,8 @@ func TestMarketplaceService_GetEnhancedSuggestions_Integration(t *testing.T) {
 }
 
 func TestSimilarityCalculator_Performance_Integration(t *testing.T) {
-	calculator := NewSimilarityCalculator()
+	searchWeights := config.GetDefaultSearchWeights()
+	calculator := NewSimilarityCalculator(searchWeights)
 
 	// Создаем большое количество объявлений для тестирования производительности
 	source := &models.MarketplaceListing{

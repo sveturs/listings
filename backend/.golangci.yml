@@ -42,6 +42,8 @@ linters:
     - typecheck    # Disable if you have build tags issues
 
 issues:
+  exclude-dirs:
+    - testing
   exclude-rules:
     # Exclude some linters from running on tests files
     - path: _test\.go

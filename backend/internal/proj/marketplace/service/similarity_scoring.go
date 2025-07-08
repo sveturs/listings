@@ -5,6 +5,7 @@ import (
 	"math"
 	"strings"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 )
 
@@ -23,15 +24,19 @@ type SimilarityScore struct {
 
 // SimilarityCalculator отвечает за расчет похожести
 type SimilarityCalculator struct {
-	weightManager *WeightManager
+	weightManager  *WeightManager
+	scoringWeights *config.SimilarityScoringWeights
 }
 
-func NewSimilarityCalculator() *SimilarityCalculator {
-	wm := NewWeightManager()
-	wm.InitializeDefaultWeights()
+func NewSimilarityCalculator(searchWeights *config.SearchWeights) *SimilarityCalculator {
+	wm := NewWeightManager(
+		searchWeights.CategoryAttributeWeights,
+		searchWeights.DefaultAttributeWeights,
+	)
 
 	return &SimilarityCalculator{
-		weightManager: wm,
+		weightManager:  wm,
+		scoringWeights: &searchWeights.SimilarityScoring,
 	}
 }
 
@@ -82,25 +87,25 @@ func (sc *SimilarityCalculator) CalculateSimilarity(
 
 	if score.CategoryScore >= 1.0 {
 		// Та же категория - стандартные веса
-		categoryWeight = 0.3
-		attrWeight = 0.3
-		textWeight = 0.2
-		priceWeight = 0.15
-		locationWeight = 0.05
+		categoryWeight = sc.scoringWeights.SameCategoryWeights.Category
+		attrWeight = sc.scoringWeights.SameCategoryWeights.Attributes
+		textWeight = sc.scoringWeights.SameCategoryWeights.Text
+		priceWeight = sc.scoringWeights.SameCategoryWeights.Price
+		locationWeight = sc.scoringWeights.SameCategoryWeights.Location
 	} else if score.CategoryScore >= 0.6 {
 		// Категории из одной группы - больше веса цене и тексту
-		categoryWeight = 0.2
-		attrWeight = 0.2
-		textWeight = 0.25
-		priceWeight = 0.25
-		locationWeight = 0.1
+		categoryWeight = sc.scoringWeights.SimilarCategoryWeights.Category
+		attrWeight = sc.scoringWeights.SimilarCategoryWeights.Attributes
+		textWeight = sc.scoringWeights.SimilarCategoryWeights.Text
+		priceWeight = sc.scoringWeights.SimilarCategoryWeights.Price
+		locationWeight = sc.scoringWeights.SimilarCategoryWeights.Location
 	} else {
 		// Разные категории - максимальный вес цене и местоположению
-		categoryWeight = 0.1
-		attrWeight = 0.15
-		textWeight = 0.2
-		priceWeight = 0.35
-		locationWeight = 0.2
+		categoryWeight = sc.scoringWeights.DifferentCategoryWeights.Category
+		attrWeight = sc.scoringWeights.DifferentCategoryWeights.Attributes
+		textWeight = sc.scoringWeights.DifferentCategoryWeights.Text
+		priceWeight = sc.scoringWeights.DifferentCategoryWeights.Price
+		locationWeight = sc.scoringWeights.DifferentCategoryWeights.Location
 	}
 
 	score.TotalScore = score.CategoryScore*categoryWeight +

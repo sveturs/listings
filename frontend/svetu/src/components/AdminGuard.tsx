@@ -10,38 +10,38 @@ interface AdminGuardProps {
 }
 
 export default function AdminGuard({ children, loading }: AdminGuardProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (!isLoading) {
+      if (!user) {
+        console.log('[AdminGuard] No user found, redirecting to login');
+        router.push('/auth/login');
+        return;
+      }
 
-  useEffect(() => {
-    if (isMounted && !isLoading && (!isAuthenticated || !user?.is_admin)) {
-      router.push('/');
+      // Проверяем является ли пользователь администратором
+      if (!user.is_admin) {
+        console.log('[AdminGuard] User is not admin, redirecting to home', { user_id: user.id, is_admin: user.is_admin });
+        router.push('/');
+        return;
+      }
+
+      console.log('[AdminGuard] Admin access granted', { user_id: user.id, is_admin: user.is_admin });
+      setIsChecking(false);
     }
-  }, [isAuthenticated, user?.is_admin, isLoading, router, isMounted]);
+  }, [user, isLoading, router]);
 
-  // Показываем loading до тех пор, пока компонент не смонтирован или пока загружается auth
-  if (!isMounted || isLoading) {
+  if (isLoading || isChecking) {
     return (
-      loading || (
-        <div className="min-h-screen flex items-center justify-center">
-          <span className="loading loading-spinner loading-lg"></span>
-        </div>
-      )
+      loading || <div className="loading loading-spinner loading-lg"></div>
     );
   }
 
-  if (!isAuthenticated || !user?.is_admin) {
-    // Показываем loading вместо null для предотвращения hydration mismatch
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
+  if (!user || !user.is_admin) {
+    return null;
   }
 
   return <>{children}</>;

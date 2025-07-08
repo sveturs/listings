@@ -13,6 +13,7 @@ import (
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
+	searchlogsTypes "backend/internal/proj/searchlogs/types"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -170,8 +171,13 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.listError"
 // @Router /api/v1/marketplace/listings [get]
 func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
+	// Засекаем время начала для измерения производительности
+	startTime := time.Now()
 	// Получаем параметры фильтрации из запроса
-	query := c.Query("query")
+	query := c.Query("q")
+	if query == "" {
+		query = c.Query("query") // fallback для обратной совместимости
+	}
 	category := c.Query("category_id")
 	condition := c.Query("condition")
 	minPrice := c.Query("min_price")
@@ -200,7 +206,7 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	// Формируем фильтры
 	filters := make(map[string]string)
 	if query != "" {
-		filters["query"] = query
+		filters["q"] = query
 	}
 	if category != "" {
 		filters["category_id"] = category
@@ -234,6 +240,87 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	// Проверяем, что listings не nil
 	if listings == nil {
 		listings = []models.MarketplaceListing{}
+	}
+
+	// Асинхронное логирование поискового запроса (если есть query)
+	if query != "" && h.services.SearchLogs() != nil {
+		// Извлекаем данные из контекста Fiber ДО запуска горутины
+		var userID *int
+		if uid, ok := c.Locals("user_id").(int); ok && uid > 0 {
+			userID = &uid
+		}
+
+		// Получаем session ID из cookie или заголовков
+		sessionID := c.Cookies("session_id")
+		if sessionID == "" {
+			sessionID = c.Get("X-Session-ID")
+		}
+
+		// Определяем тип устройства из User-Agent
+		userAgent := c.Get("User-Agent")
+		ipAddress := c.IP()
+
+		go func() {
+			// Вычисляем время ответа
+			responseTime := time.Since(startTime).Milliseconds()
+
+			// Определяем тип устройства из User-Agent
+			deviceType := detectDeviceType(userAgent)
+
+			// Парсим цены для логирования
+			var priceMin, priceMax *float64
+			if minPrice != "" {
+				if val, err := strconv.ParseFloat(minPrice, 64); err == nil {
+					priceMin = &val
+				}
+			}
+			if maxPrice != "" {
+				if val, err := strconv.ParseFloat(maxPrice, 64); err == nil {
+					priceMax = &val
+				}
+			}
+
+			// Преобразуем filters из map[string]string в map[string]interface{}
+			filtersInterface := make(map[string]interface{})
+			for k, v := range filters {
+				filtersInterface[k] = v
+			}
+
+			// Преобразуем category в *int
+			var categoryID *int
+			if category != "" {
+				if catID, err := strconv.Atoi(category); err == nil {
+					categoryID = &catID
+				}
+			}
+
+			// Создаем запись лога
+			logEntry := &searchlogsTypes.SearchLogEntry{
+				Query:           query,
+				UserID:          userID,
+				SessionID:       sessionID, // Убрали указатель, так как ожидается string
+				ResultCount:     int(total),
+				ResponseTimeMS:  int64(responseTime),
+				Filters:         filtersInterface, // Преобразуем map[string]string в map[string]interface{}
+				CategoryID:      categoryID,       // Преобразуем в *int
+				PriceMin:        priceMin,
+				PriceMax:        priceMax,
+				Location:        nil,  // TODO: добавить поддержку локации
+				Language:        "ru", // TODO: получать из контекста
+				DeviceType:      deviceType,
+				UserAgent:       userAgent,
+				IP:              ipAddress,
+				SearchType:      "listings",
+				HasSpellCorrect: false,
+				ClickedItems:    []int{},
+				Timestamp:       time.Now(),
+			}
+
+			// Логируем асинхронно
+			if err := h.services.SearchLogs().LogSearch(context.Background(), logEntry); err != nil {
+				logger.Error().Err(err).Msg("Failed to log search query")
+			}
+		}()
 	}
 
 	// Возвращаем список объявлений с пагинацией
@@ -596,4 +683,39 @@ func processAttributesFromRequest(requestBody map[string]interface{}, listing *m
 			listing.Attributes = attributes
 		}
 	}
+}
+
+// detectDeviceType определяет тип устройства по User-Agent
+func detectDeviceType(userAgent string) string {
+	ua := strings.ToLower(userAgent)
+
+	// Проверка на мобильные устройства
+	mobileKeywords := []string{
+		"mobile", "android", "iphone", "ipad", "ipod",
+		"blackberry", "windows phone", "opera mini", "iemobile",
+	}
+
+	for _, keyword := range mobileKeywords {
+		if strings.Contains(ua, keyword) {
+			// Планшеты
+			if strings.Contains(ua, "ipad") || strings.Contains(ua, "tablet") {
+				return "tablet"
+			}
+			return "mobile"
+		}
+	}
+
+	// Проверка на боты
+	botKeywords := []string{
+		"bot", "crawl", "spider", "scraper", "curl", "wget",
+	}
+
+	for _, keyword := range botKeywords {
+		if strings.Contains(ua, keyword) {
+			return "bot"
+		}
+	}
+
+	// По умолчанию - десктоп
+	return "desktop"
 }

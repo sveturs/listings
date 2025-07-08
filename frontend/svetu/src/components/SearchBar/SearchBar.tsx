@@ -574,7 +574,7 @@ export default function SearchBar({
               <div className="p-2">
                 <div className="px-3 py-2 text-xs font-semibold text-base-content/60 uppercase flex items-center gap-2">
                   <TrendingIcon className="w-4 h-4" />
-                  {t('search.popularSearches')}
+                  {t('popularSearches')}
                 </div>
                 {trendingSearches.map((trending, index) => (
                   <div
