@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -82,17 +83,27 @@ func (s *behaviorTrackingService) flushBuffer() error {
 	// Очищаем буфер
 	s.eventBuffer = s.eventBuffer[:0]
 
-	// Сохраняем события пакетом
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// Сохраняем события пакетом с коротким таймаутом
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := s.repo.SaveEventsBatch(ctx, events); err != nil {
-		// При ошибке возвращаем события обратно в буфер
+		// При ошибке conn busy просто логируем и не возвращаем события в буфер
+		// чтобы избежать накопления событий
+		if strings.Contains(err.Error(), "conn busy") {
+			logger.Warn().
+				Int("count", len(events)).
+				Err(err).
+				Msg("Dropping events due to connection busy")
+			return err
+		}
+
+		// Для других ошибок возвращаем события обратно в буфер
 		s.eventBuffer = append(s.eventBuffer, events...)
 		return fmt.Errorf("failed to save events batch: %w", err)
 	}
 
-	logger.Info().Int("count", len(events)).Msg("Flushed behavior events")
+	logger.Debug().Int("count", len(events)).Msg("Flushed behavior events")
 	return nil
 }
 
@@ -166,6 +177,13 @@ func (s *behaviorTrackingService) GetSearchMetrics(ctx context.Context, query *b
 		query.PeriodEnd = time.Now()
 	}
 
+	logger.Info().
+		Time("period_start", query.PeriodStart).
+		Time("period_end", query.PeriodEnd).
+		Int("limit", query.Limit).
+		Str("sort_by", query.SortBy).
+		Msg("GetSearchMetrics: query parameters")
+
 	return s.repo.GetSearchMetrics(ctx, query)
 }
 
@@ -232,6 +250,37 @@ func (s *behaviorTrackingService) GetSessionEvents(ctx context.Context, sessionI
 	}
 
 	return s.repo.GetEventsBySession(ctx, sessionID)
+}
+
+// GetAggregatedSearchMetrics возвращает агрегированные метрики поиска
+func (s *behaviorTrackingService) GetAggregatedSearchMetrics(ctx context.Context, query *behavior.SearchMetricsQuery) (*behavior.AggregatedSearchMetrics, error) {
+	// Устанавливаем значения по умолчанию
+	if query.PeriodStart.IsZero() {
+		query.PeriodStart = time.Now().AddDate(0, 0, -7)
+	}
+	if query.PeriodEnd.IsZero() {
+		query.PeriodEnd = time.Now()
+	}
+
+	// Получаем агрегированные метрики из репозитория
+	return s.repo.GetAggregatedSearchMetrics(ctx, query.PeriodStart, query.PeriodEnd)
+}
+
+// GetTopSearchQueries возвращает топ поисковых запросов с полной статистикой
+func (s *behaviorTrackingService) GetTopSearchQueries(ctx context.Context, query *behavior.SearchMetricsQuery) ([]behavior.TopSearchQuery, error) {
+	// Устанавливаем значения по умолчанию
+	if query.PeriodStart.IsZero() {
+		query.PeriodStart = time.Now().AddDate(0, 0, -7)
+	}
+	if query.PeriodEnd.IsZero() {
+		query.PeriodEnd = time.Now()
+	}
+	if query.Limit <= 0 {
+		query.Limit = 50
+	}
+
+	// Получаем топ запросы из репозитория
+	return s.repo.GetTopSearchQueries(ctx, query.PeriodStart, query.PeriodEnd, query.Limit)
 }
 
 // Close завершает работу сервиса

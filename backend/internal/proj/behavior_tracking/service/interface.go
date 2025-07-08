@@ -26,4 +26,10 @@ type BehaviorTrackingService interface {
 
 	// GetSessionEvents возвращает события сессии
 	GetSessionEvents(ctx context.Context, sessionID string) ([]*behavior.BehaviorEvent, error)
+
+	// GetAggregatedSearchMetrics возвращает агрегированные метрики поиска
+	GetAggregatedSearchMetrics(ctx context.Context, query *behavior.SearchMetricsQuery) (*behavior.AggregatedSearchMetrics, error)
+
+	// GetTopSearchQueries возвращает топ поисковых запросов с полной статистикой
+	GetTopSearchQueries(ctx context.Context, query *behavior.SearchMetricsQuery) ([]behavior.TopSearchQuery, error)
 }

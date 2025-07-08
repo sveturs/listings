@@ -3221,6 +3221,1102 @@
                 }
             }
         },
+        "/api/v1/admin/search/analyze-weights": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Анализирует эффективность текущих весов без запуска полной оптимизации",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "Анализ текущих весов поиска",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.AnalyzeWeightsRequest"
+                            }
+                        }
+                    },
+                    "description": "Параметры анализа",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Результаты анализа",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/storage.WeightOptimizationResult"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные параметры",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/apply-weights": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Применяет выбранные оптимизированные веса к системе поиска",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "Применение оптимизированных весов",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.ApplyWeightsRequest"
+                            }
+                        }
+                    },
+                    "description": "Параметры применения весов",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Веса применены",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные параметры",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/backup-weights": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Создает резервную копию текущих весов поиска для возможности отката",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "Создание резервной копии весов",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "description": "Параметры резервной копии",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Резервная копия создана",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные параметры",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/optimization-cancel/{session_id}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Отменяет запущенный процесс оптимизации весов",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "Отмена оптимизации",
+                "parameters": [
+                    {
+                        "description": "ID сессии оптимизации",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Оптимизация отменена",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный ID сессии",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/optimization-config": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает текущую конфигурацию параметров оптимизации весов",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "Конфигурация оптимизации",
+                "responses": {
+                    "200": {
+                        "description": "Конфигурация оптимизации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/service.OptimizationConfig"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Обновляет параметры оптимизации весов по умолчанию",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "Обновление конфигурации оптимизации",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/service.OptimizationConfig"
+                            }
+                        }
+                    },
+                    "description": "Новая конфигурация",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Конфигурация обновлена",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверная конфигурация",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/optimization-history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список последних сессий оптимизации весов",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "История оптимизаций",
+                "parameters": [
+                    {
+                        "description": "Максимальное количество записей",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "История оптимизаций",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/storage.OptimizationSession"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/optimization-status/{session_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает текущий статус и результаты процесса оптимизации весов",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "Получение статуса оптимизации",
+                "parameters": [
+                    {
+                        "description": "ID сессии оптимизации",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статус оптимизации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/storage.OptimizationSession"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный ID сессии",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Сессия не найдена",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/optimize-weights": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Запускает процесс машинного обучения для оптимизации весов полей поиска на основе поведенческих данных",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "Запуск оптимизации весов поиска",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.StartOptimizationRequest"
+                            }
+                        }
+                    },
+                    "description": "Параметры оптимизации",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Оптимизация запущена",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные параметры",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/rollback-weights": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Откатывает веса поиска к предыдущим значениям",
+                "tags": [
+                    "Search Optimization"
+                ],
+                "summary": "Откат весов",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "description": "ID весов для отката",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Откат выполнен",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные параметры",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/synonyms": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список синонимов для указанного языка с возможностью поиска",
+                "tags": [
+                    "Search Synonyms"
+                ],
+                "summary": "Получение списка синонимов",
+                "parameters": [
+                    {
+                        "description": "Язык синонимов (en, ru, sr)",
+                        "name": "language",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Поиск по термину",
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Номер страницы",
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "description": "Количество записей на странице",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список синонимов",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "additionalProperties": true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Создает новый синоним для улучшения поиска",
+                "tags": [
+                    "Search Synonyms"
+                ],
+                "summary": "Создание нового синонима",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.SynonymRequest"
+                            }
+                        }
+                    },
+                    "description": "Данные синонима",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Синоним создан",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные параметры",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Синоним уже существует",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/synonyms/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Обновляет существующий синоним",
+                "tags": [
+                    "Search Synonyms"
+                ],
+                "summary": "Обновление синонима",
+                "parameters": [
+                    {
+                        "description": "ID синонима",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.SynonymRequest"
+                            }
+                        }
+                    },
+                    "description": "Обновленные данные синонима",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Синоним обновлен",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные параметры",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Синоним не найден",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Удаляет синоним из системы",
+                "tags": [
+                    "Search Synonyms"
+                ],
+                "summary": "Удаление синонима",
+                "parameters": [
+                    {
+                        "description": "ID синонима",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Синоним удален",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный ID синонима",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Синоним не найден",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/sync-discounts": {
             "post": {
                 "security": [
@@ -4057,10 +5153,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/behavior.SearchMetrics"
-                                                    }
+                                                    "$ref": "#/components/schemas/handler.SearchMetricsResponse"
                                                 }
                                             }
                                         }
@@ -4262,25 +5355,25 @@
         },
         "/api/v1/analytics/track": {
             "post": {
-                "description": "Records a user behavior event for analytics",
+                "description": "Records user behavior events for analytics (supports both single event and batch)",
                 "tags": [
                     "analytics"
                 ],
-                "summary": "Track behavior event",
+                "summary": "Track behavior events",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/behavior.TrackEventRequest"
+                                "$ref": "#/components/schemas/behavior.TrackEventBatch"
                             }
                         }
                     },
-                    "description": "Event data",
+                    "description": "Event batch data",
                     "required": true
                 },
                 "responses": {
                     "200": {
-                        "description": "Event tracked successfully",
+                        "description": "Events tracked successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4293,9 +5386,7 @@
                                             "properties": {
                                                 "data": {
                                                     "type": "object",
-                                                    "additionalProperties": {
-                                                        "type": "string"
-                                                    }
+                                                    "additionalProperties": true
                                                 }
                                             }
                                         }
@@ -19214,44 +20305,25 @@
                     "ItemTypeStorefront"
                 ]
             },
-            "behavior.SearchMetrics": {
+            "behavior.TrackEventBatch": {
                 "type": "object",
+                "required": [
+                    "batch_id",
+                    "created_at",
+                    "events"
+                ],
                 "properties": {
-                    "avg_click_position": {
-                        "type": "number"
-                    },
-                    "conversion_rate": {
-                        "type": "number"
-                    },
-                    "conversions": {
-                        "type": "integer"
+                    "batch_id": {
+                        "type": "string"
                     },
                     "created_at": {
                         "type": "string"
                     },
-                    "ctr": {
-                        "type": "number"
-                    },
-                    "id": {
-                        "type": "integer"
-                    },
-                    "period_end": {
-                        "type": "string"
-                    },
-                    "period_start": {
-                        "type": "string"
-                    },
-                    "search_query": {
-                        "type": "string"
-                    },
-                    "total_clicks": {
-                        "type": "integer"
-                    },
-                    "total_searches": {
-                        "type": "integer"
-                    },
-                    "updated_at": {
-                        "type": "string"
+                    "events": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/behavior.TrackEventRequest"
+                        }
                     }
                 }
             },
@@ -19406,6 +20478,51 @@
                     "total": {
                         "type": "integer",
                         "example": 100
+                    }
+                }
+            },
+            "handler.AnalyzeWeightsRequest": {
+                "type": "object",
+                "required": [
+                    "from_date",
+                    "item_type",
+                    "to_date"
+                ],
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "from_date": {
+                        "type": "string"
+                    },
+                    "item_type": {
+                        "type": "string",
+                        "enum": [
+                            "marketplace",
+                            "storefront",
+                            "global"
+                        ]
+                    },
+                    "to_date": {
+                        "type": "string"
+                    }
+                }
+            },
+            "handler.ApplyWeightsRequest": {
+                "type": "object",
+                "required": [
+                    "selected_results",
+                    "session_id"
+                ],
+                "properties": {
+                    "selected_results": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "session_id": {
+                        "type": "integer"
                     }
                 }
             },
@@ -19575,6 +20692,23 @@
                         "type": "integer"
                     },
                     "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "handler.ClickMetricsResponse": {
+                "type": "object",
+                "properties": {
+                    "average_click_position": {
+                        "type": "number"
+                    },
+                    "conversion_rate": {
+                        "type": "number"
+                    },
+                    "ctr": {
+                        "type": "number"
+                    },
+                    "total_clicks": {
                         "type": "integer"
                     }
                 }
@@ -20566,6 +21700,35 @@
                     }
                 }
             },
+            "handler.SearchMetricsResponse": {
+                "type": "object",
+                "properties": {
+                    "average_search_duration_ms": {
+                        "type": "number"
+                    },
+                    "click_metrics": {
+                        "$ref": "#/components/schemas/handler.ClickMetricsResponse"
+                    },
+                    "search_trends": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/handler.SearchTrendResponse"
+                        }
+                    },
+                    "top_queries": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/handler.TopQueryResponse"
+                        }
+                    },
+                    "total_searches": {
+                        "type": "integer"
+                    },
+                    "unique_searches": {
+                        "type": "integer"
+                    }
+                }
+            },
             "handler.SearchResponse": {
                 "type": "object",
                 "properties": {
@@ -20577,6 +21740,23 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/handler.SearchMetadata"
+                    }
+                }
+            },
+            "handler.SearchTrendResponse": {
+                "type": "object",
+                "properties": {
+                    "clicks_count": {
+                        "type": "integer"
+                    },
+                    "ctr": {
+                        "type": "number"
+                    },
+                    "date": {
+                        "type": "string"
+                    },
+                    "searches_count": {
+                        "type": "integer"
                     }
                 }
             },
@@ -20672,6 +21852,59 @@
                     }
                 }
             },
+            "handler.StartOptimizationRequest": {
+                "type": "object",
+                "required": [
+                    "item_type"
+                ],
+                "properties": {
+                    "analysis_period_days": {
+                        "type": "integer",
+                        "maximum": 365,
+                        "minimum": 1
+                    },
+                    "auto_apply": {
+                        "type": "boolean"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "confidence_level": {
+                        "type": "number",
+                        "maximum": 0.99,
+                        "minimum": 0.5
+                    },
+                    "field_names": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "item_type": {
+                        "type": "string",
+                        "enum": [
+                            "marketplace",
+                            "storefront",
+                            "global"
+                        ]
+                    },
+                    "learning_rate": {
+                        "type": "number",
+                        "maximum": 1,
+                        "minimum": 0.001
+                    },
+                    "max_iterations": {
+                        "type": "integer",
+                        "maximum": 10000,
+                        "minimum": 10
+                    },
+                    "min_sample_size": {
+                        "type": "integer",
+                        "maximum": 10000,
+                        "minimum": 10
+                    }
+                }
+            },
             "handler.StorefrontsListResponse": {
                 "type": "object",
                 "properties": {
@@ -20730,6 +21963,37 @@
                     "type": {
                         "type": "string",
                         "example": "product"
+                    }
+                }
+            },
+            "handler.SynonymRequest": {
+                "type": "object",
+                "required": [
+                    "language",
+                    "synonym",
+                    "term"
+                ],
+                "properties": {
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "language": {
+                        "type": "string",
+                        "enum": [
+                            "en",
+                            "ru",
+                            "sr"
+                        ]
+                    },
+                    "synonym": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "minLength": 1
+                    },
+                    "term": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "minLength": 1
                     }
                 }
             },
@@ -20801,6 +22065,26 @@
                     "token_type": {
                         "type": "string",
                         "example": "Bearer"
+                    }
+                }
+            },
+            "handler.TopQueryResponse": {
+                "type": "object",
+                "properties": {
+                    "avg_position": {
+                        "type": "number"
+                    },
+                    "avg_results": {
+                        "type": "number"
+                    },
+                    "count": {
+                        "type": "integer"
+                    },
+                    "ctr": {
+                        "type": "number"
+                    },
+                    "query": {
+                        "type": "string"
                     }
                 }
             },
@@ -25751,6 +27035,38 @@
                     }
                 }
             },
+            "service.OptimizationConfig": {
+                "type": "object",
+                "properties": {
+                    "default_analysis_period_days": {
+                        "type": "integer"
+                    },
+                    "default_confidence_level": {
+                        "type": "number"
+                    },
+                    "default_learning_rate": {
+                        "type": "number"
+                    },
+                    "default_max_iterations": {
+                        "type": "integer"
+                    },
+                    "default_min_sample_size": {
+                        "type": "integer"
+                    },
+                    "max_weight": {
+                        "description": "Максимальное значение веса",
+                        "type": "number"
+                    },
+                    "max_weight_change": {
+                        "description": "Максимальное изменение веса за одну оптимизацию",
+                        "type": "number"
+                    },
+                    "min_weight": {
+                        "description": "Минимальное значение веса",
+                        "type": "number"
+                    }
+                }
+            },
             "service.SuggestionItem": {
                 "type": "object",
                 "properties": {
@@ -25793,6 +27109,77 @@
                     "SuggestionTypeCategory",
                     "SuggestionTypeProduct"
                 ]
+            },
+            "storage.OptimizationSession": {
+                "type": "object",
+                "properties": {
+                    "created_by": {
+                        "type": "integer"
+                    },
+                    "end_time": {
+                        "type": "string"
+                    },
+                    "error_message": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "processed_fields": {
+                        "type": "integer"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/storage.WeightOptimizationResult"
+                        }
+                    },
+                    "start_time": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "description": "running, completed, failed",
+                        "type": "string"
+                    },
+                    "total_fields": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "storage.WeightOptimizationResult": {
+                "type": "object",
+                "properties": {
+                    "confidence_level": {
+                        "description": "Уровень уверенности в рекомендации",
+                        "type": "number"
+                    },
+                    "current_ctr": {
+                        "type": "number"
+                    },
+                    "current_weight": {
+                        "type": "number"
+                    },
+                    "field_name": {
+                        "type": "string"
+                    },
+                    "improvement_score": {
+                        "description": "Ожидаемое улучшение CTR",
+                        "type": "number"
+                    },
+                    "optimized_weight": {
+                        "type": "number"
+                    },
+                    "predicted_ctr": {
+                        "type": "number"
+                    },
+                    "sample_size": {
+                        "description": "Количество данных для анализа",
+                        "type": "integer"
+                    },
+                    "statistical_significance_level": {
+                        "type": "number"
+                    }
+                }
             },
             "tgbotapi.Animation": {
                 "type": "object",

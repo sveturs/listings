@@ -2581,6 +2581,953 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/search/analyze-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Анализ текущих весов поиска
+     * @description Анализирует эффективность текущих весов без запуска полной оптимизации
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Параметры анализа */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.AnalyzeWeightsRequest'];
+        };
+      };
+      responses: {
+        /** @description Результаты анализа */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['storage.WeightOptimizationResult'][];
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/apply-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Применение оптимизированных весов
+     * @description Применяет выбранные оптимизированные веса к системе поиска
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Параметры применения весов */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.ApplyWeightsRequest'];
+        };
+      };
+      responses: {
+        /** @description Веса применены */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/backup-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Создание резервной копии весов
+     * @description Создает резервную копию текущих весов поиска для возможности отката
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Параметры резервной копии */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Резервная копия создана */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimization-cancel/{session_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Отмена оптимизации
+     * @description Отменяет запущенный процесс оптимизации весов
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID сессии оптимизации */
+          session_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Оптимизация отменена */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверный ID сессии */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimization-config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Конфигурация оптимизации
+     * @description Возвращает текущую конфигурацию параметров оптимизации весов
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Конфигурация оптимизации */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['service.OptimizationConfig'];
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Обновление конфигурации оптимизации
+     * @description Обновляет параметры оптимизации весов по умолчанию
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Новая конфигурация */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['service.OptimizationConfig'];
+        };
+      };
+      responses: {
+        /** @description Конфигурация обновлена */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверная конфигурация */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimization-history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * История оптимизаций
+     * @description Возвращает список последних сессий оптимизации весов
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Максимальное количество записей */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description История оптимизаций */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['storage.OptimizationSession'][];
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimization-status/{session_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получение статуса оптимизации
+     * @description Возвращает текущий статус и результаты процесса оптимизации весов
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID сессии оптимизации */
+          session_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Статус оптимизации */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['storage.OptimizationSession'];
+            };
+          };
+        };
+        /** @description Неверный ID сессии */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Сессия не найдена */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimize-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Запуск оптимизации весов поиска
+     * @description Запускает процесс машинного обучения для оптимизации весов полей поиска на основе поведенческих данных
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Параметры оптимизации */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.StartOptimizationRequest'];
+        };
+      };
+      responses: {
+        /** @description Оптимизация запущена */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/rollback-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Откат весов
+     * @description Откатывает веса поиска к предыдущим значениям
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description ID весов для отката */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Откат выполнен */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/synonyms': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получение списка синонимов
+     * @description Возвращает список синонимов для указанного языка с возможностью поиска
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Язык синонимов (en, ru, sr) */
+          language?: string;
+          /** @description Поиск по термину */
+          search?: string;
+          /** @description Номер страницы */
+          page?: number;
+          /** @description Количество записей на странице */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Список синонимов */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              }[];
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Создание нового синонима
+     * @description Создает новый синоним для улучшения поиска
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные синонима */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.SynonymRequest'];
+        };
+      };
+      responses: {
+        /** @description Синоним создан */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Синоним уже существует */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/synonyms/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Обновление синонима
+     * @description Обновляет существующий синоним
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID синонима */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Обновленные данные синонима */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.SynonymRequest'];
+        };
+      };
+      responses: {
+        /** @description Синоним обновлен */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Синоним не найден */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Удаление синонима
+     * @description Удаляет синоним из системы
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID синонима */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Синоним удален */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверный ID синонима */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Синоним не найден */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/sync-discounts': {
     parameters: {
       query?: never;
@@ -3237,7 +4184,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['behavior.SearchMetrics'][];
+              data?: components['schemas']['handler.SearchMetricsResponse'];
             };
           };
         };
@@ -3425,8 +4372,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Track behavior event
-     * @description Records a user behavior event for analytics
+     * Track behavior events
+     * @description Records user behavior events for analytics (supports both single event and batch)
      */
     post: {
       parameters: {
@@ -3435,14 +4382,14 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      /** @description Event data */
+      /** @description Event batch data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['behavior.TrackEventRequest'];
+          'application/json': components['schemas']['behavior.TrackEventBatch'];
         };
       };
       responses: {
-        /** @description Event tracked successfully */
+        /** @description Events tracked successfully */
         200: {
           headers: {
             [name: string]: unknown;
@@ -3450,7 +4397,7 @@ export interface paths {
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
               data?: {
-                [key: string]: string;
+                [key: string]: unknown;
               };
             };
           };
@@ -16300,19 +17247,10 @@ export interface components {
     };
     /** @enum {string} */
     'behavior.ItemType': 'marketplace' | 'storefront';
-    'behavior.SearchMetrics': {
-      avg_click_position?: number;
-      conversion_rate?: number;
-      conversions?: number;
-      created_at?: string;
-      ctr?: number;
-      id?: number;
-      period_end?: string;
-      period_start?: string;
-      search_query?: string;
-      total_clicks?: number;
-      total_searches?: number;
-      updated_at?: string;
+    'behavior.TrackEventBatch': {
+      batch_id: string;
+      created_at: string;
+      events: components['schemas']['behavior.TrackEventRequest'][];
     };
     'behavior.TrackEventRequest': {
       /** @enum {unknown} */
@@ -16373,6 +17311,17 @@ export interface components {
       pages?: number;
       /** @example 100 */
       total?: number;
+    };
+    'handler.AnalyzeWeightsRequest': {
+      category_id?: number;
+      from_date: string;
+      /** @enum {string} */
+      item_type: 'marketplace' | 'storefront' | 'global';
+      to_date: string;
+    };
+    'handler.ApplyWeightsRequest': {
+      selected_results: number[];
+      session_id: number;
     };
     'handler.AttributeCreateResponse': {
       /** @example 123 */
@@ -16441,6 +17390,12 @@ export interface components {
       messages?: components['schemas']['models.MarketplaceMessage'][];
       page?: number;
       total?: number;
+    };
+    'handler.ClickMetricsResponse': {
+      average_click_position?: number;
+      conversion_rate?: number;
+      ctr?: number;
+      total_clicks?: number;
     };
     'handler.CompleteMockPaymentRequest': {
       /** @example 2000 */
@@ -16860,9 +17815,23 @@ export interface components {
       /** @example 5 */
       total_pages?: number;
     };
+    'handler.SearchMetricsResponse': {
+      average_search_duration_ms?: number;
+      click_metrics?: components['schemas']['handler.ClickMetricsResponse'];
+      search_trends?: components['schemas']['handler.SearchTrendResponse'][];
+      top_queries?: components['schemas']['handler.TopQueryResponse'][];
+      total_searches?: number;
+      unique_searches?: number;
+    };
     'handler.SearchResponse': {
       data?: components['schemas']['models.MarketplaceListing'][];
       meta?: components['schemas']['handler.SearchMetadata'];
+    };
+    'handler.SearchTrendResponse': {
+      clicks_count?: number;
+      ctr?: number;
+      date?: string;
+      searches_count?: number;
     };
     'handler.SessionResponse': {
       /** @example true */
@@ -16904,6 +17873,18 @@ export interface components {
       staff?: components['schemas']['models.StorefrontStaff'][];
       total?: number;
     };
+    'handler.StartOptimizationRequest': {
+      analysis_period_days?: number;
+      auto_apply?: boolean;
+      category_id?: number;
+      confidence_level?: number;
+      field_names?: string[];
+      /** @enum {string} */
+      item_type: 'marketplace' | 'storefront' | 'global';
+      learning_rate?: number;
+      max_iterations?: number;
+      min_sample_size?: number;
+    };
     'handler.StorefrontsListResponse': {
       limit?: number;
       offset?: number;
@@ -16929,6 +17910,13 @@ export interface components {
       text?: string;
       /** @example product */
       type?: string;
+    };
+    'handler.SynonymRequest': {
+      is_active?: boolean;
+      /** @enum {string} */
+      language: 'en' | 'ru' | 'sr';
+      synonym: string;
+      term: string;
     };
     /** @description Ответ при успешном подключении Telegram */
     'handler.TelegramConnectResponse': {
@@ -16979,6 +17967,13 @@ export interface components {
       expires_in?: number;
       /** @example Bearer */
       token_type?: string;
+    };
+    'handler.TopQueryResponse': {
+      avg_position?: number;
+      avg_results?: number;
+      count?: number;
+      ctr?: number;
+      query?: string;
     };
     'handler.TranslateTextRequest': {
       /** @example google */
@@ -18709,6 +19704,19 @@ export interface components {
       category_slug?: string;
       similarity_score?: number;
     };
+    'service.OptimizationConfig': {
+      default_analysis_period_days?: number;
+      default_confidence_level?: number;
+      default_learning_rate?: number;
+      default_max_iterations?: number;
+      default_min_sample_size?: number;
+      /** @description Максимальное значение веса */
+      max_weight?: number;
+      /** @description Максимальное изменение веса за одну оптимизацию */
+      max_weight_change?: number;
+      /** @description Минимальное значение веса */
+      min_weight?: number;
+    };
     'service.SuggestionItem': {
       category_id?: number;
       count?: number;
@@ -18723,6 +19731,32 @@ export interface components {
     };
     /** @enum {string} */
     'service.SuggestionType': 'query' | 'category' | 'product';
+    'storage.OptimizationSession': {
+      created_by?: number;
+      end_time?: string;
+      error_message?: string;
+      id?: number;
+      processed_fields?: number;
+      results?: components['schemas']['storage.WeightOptimizationResult'][];
+      start_time?: string;
+      /** @description running, completed, failed */
+      status?: string;
+      total_fields?: number;
+    };
+    'storage.WeightOptimizationResult': {
+      /** @description Уровень уверенности в рекомендации */
+      confidence_level?: number;
+      current_ctr?: number;
+      current_weight?: number;
+      field_name?: string;
+      /** @description Ожидаемое улучшение CTR */
+      improvement_score?: number;
+      optimized_weight?: number;
+      predicted_ctr?: number;
+      /** @description Количество данных для анализа */
+      sample_size?: number;
+      statistical_significance_level?: number;
+    };
     'tgbotapi.Animation': {
       file_id?: string;
       file_name?: string;

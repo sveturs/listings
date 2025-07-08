@@ -67,14 +67,26 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 		return nil
 	}
 
+	// Используем отдельное соединение для batch операций
+	conn, err := r.pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to acquire connection: %w", err)
+	}
+	defer conn.Release()
+
 	// Начинаем транзакцию
-	tx, err := r.pool.Begin(ctx)
+	tx, err := conn.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
+	// Флаг для отслеживания успешности операции
+	committed := false
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil && err != pgx.ErrTxClosed {
-			logger.Error().Err(err).Msg("Failed to rollback transaction")
+		if !committed {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != pgx.ErrTxClosed {
+				logger.Error().Err(rollbackErr).Msg("Failed to rollback transaction")
+			}
 		}
 	}()
 
@@ -89,6 +101,7 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 	`
 
 	// Добавляем события в batch
+	validEvents := 0
 	for _, event := range events {
 		var metadataJSON []byte
 		if event.Metadata != nil {
@@ -106,6 +119,12 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 			event.EventType, event.UserID, event.SessionID, event.SearchQuery,
 			event.ItemID, event.ItemType, event.Position, metadataJSON,
 		)
+		validEvents++
+	}
+
+	// Если нет валидных событий, откатываем транзакцию
+	if validEvents == 0 {
+		return fmt.Errorf("no valid events to save")
 	}
 
 	// Выполняем batch
@@ -113,11 +132,18 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 	defer br.Close()
 
 	// Проверяем результаты
+	var hasErrors bool
 	for i := 0; i < batch.Len(); i++ {
 		_, err := br.Exec()
 		if err != nil {
 			logger.Error().Err(err).Int("index", i).Msg("Failed to insert event in batch")
+			hasErrors = true
 		}
+	}
+
+	// Если были ошибки, откатываем
+	if hasErrors {
+		return fmt.Errorf("some events failed to insert")
 	}
 
 	// Коммитим транзакцию
@@ -125,6 +151,7 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	committed = true
 	return nil
 }
 
@@ -147,15 +174,25 @@ func (r *behaviorTrackingRepository) GetSearchMetrics(ctx context.Context, query
 		args = append(args, "%"+query.Query+"%")
 	}
 
-	if !query.PeriodStart.IsZero() {
+	// Проверка пересечения периодов
+	// Метрика пересекается с запрашиваемым периодом если:
+	// - period_start метрики <= period_end запроса
+	// - period_end метрики >= period_start запроса
+	if !query.PeriodStart.IsZero() && !query.PeriodEnd.IsZero() {
 		argCount++
-		conditions = append(conditions, fmt.Sprintf("period_start >= $%d", argCount))
-		args = append(args, query.PeriodStart)
-	}
+		conditions = append(conditions, fmt.Sprintf("period_start <= $%d", argCount))
+		args = append(args, query.PeriodEnd)
 
-	if !query.PeriodEnd.IsZero() {
 		argCount++
-		conditions = append(conditions, fmt.Sprintf("period_end <= $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("period_end >= $%d", argCount))
+		args = append(args, query.PeriodStart)
+	} else if !query.PeriodStart.IsZero() {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("period_end >= $%d", argCount))
+		args = append(args, query.PeriodStart)
+	} else if !query.PeriodEnd.IsZero() {
+		argCount++
+		conditions = append(conditions, fmt.Sprintf("period_start <= $%d", argCount))
 		args = append(args, query.PeriodEnd)
 	}
 
@@ -171,10 +208,20 @@ func (r *behaviorTrackingRepository) GetSearchMetrics(ctx context.Context, query
 	// Считаем общее количество
 	countQuery := "SELECT COUNT(*) " + baseQuery + whereClause
 	var total int
+
+	logger.Info().
+		Str("count_query", countQuery).
+		Interface("args", args).
+		Msg("GetSearchMetrics: executing count query")
+
 	err := r.pool.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count metrics: %w", err)
 	}
+
+	logger.Info().
+		Int("total", total).
+		Msg("GetSearchMetrics: count result")
 
 	// Определяем сортировку
 	orderBy := "ctr DESC" // по умолчанию
@@ -552,4 +599,202 @@ func (r *behaviorTrackingRepository) GetEventsByUser(ctx context.Context, userID
 	}
 
 	return events, total, nil
+}
+
+// GetAggregatedSearchMetrics возвращает агрегированные метрики поиска
+func (r *behaviorTrackingRepository) GetAggregatedSearchMetrics(ctx context.Context, periodStart, periodEnd time.Time) (*behavior.AggregatedSearchMetrics, error) {
+	metrics := &behavior.AggregatedSearchMetrics{
+		SearchTrends: []behavior.SearchTrend{},
+		ClickMetrics: behavior.AggregatedClickMetrics{},
+	}
+
+	// 1. Получаем общие метрики из search_logs
+	err := r.pool.QueryRow(ctx, `
+		SELECT 
+			COUNT(*) as total_searches,
+			COUNT(DISTINCT query_text) as unique_searches,
+			COALESCE(AVG(response_time_ms), 0) as avg_duration_ms
+		FROM search_logs
+		WHERE created_at BETWEEN $1 AND $2
+	`, periodStart, periodEnd).Scan(
+		&metrics.TotalSearches,
+		&metrics.UniqueSearches,
+		&metrics.AverageSearchDurationMs,
+	)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("failed to get general metrics: %w", err)
+	}
+
+	// 2. Получаем тренды по дням
+	rows, err := r.pool.Query(ctx, `
+		WITH daily_searches AS (
+			SELECT 
+				DATE(created_at) as search_date,
+				COUNT(*) as searches_count
+			FROM search_logs
+			WHERE created_at BETWEEN $1 AND $2
+			GROUP BY DATE(created_at)
+		),
+		daily_clicks AS (
+			SELECT 
+				DATE(created_at) as click_date,
+				COUNT(*) as clicks_count
+			FROM user_behavior_events
+			WHERE event_type = 'result_clicked'
+				AND created_at BETWEEN $1 AND $2
+			GROUP BY DATE(created_at)
+		)
+		SELECT 
+			ds.search_date,
+			ds.searches_count,
+			COALESCE(dc.clicks_count, 0) as clicks_count,
+			CASE 
+				WHEN ds.searches_count > 0 
+				THEN COALESCE(dc.clicks_count, 0)::float / ds.searches_count::float
+				ELSE 0 
+			END as ctr
+		FROM daily_searches ds
+		LEFT JOIN daily_clicks dc ON ds.search_date = dc.click_date
+		ORDER BY ds.search_date
+	`, periodStart, periodEnd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get search trends: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var trend behavior.SearchTrend
+		var date time.Time
+		err := rows.Scan(
+			&date,
+			&trend.SearchesCount,
+			&trend.ClicksCount,
+			&trend.CTR,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan trend: %w", err)
+		}
+		trend.Date = date.Format("2006-01-02")
+		metrics.SearchTrends = append(metrics.SearchTrends, trend)
+	}
+
+	// 3. Получаем общие метрики кликов
+	var totalClicks int
+	var avgPosition float64
+	var conversions int
+
+	err = r.pool.QueryRow(ctx, `
+		WITH click_data AS (
+			SELECT 
+				COUNT(*) as total_clicks,
+				COALESCE(AVG(position), 0) as avg_position
+			FROM user_behavior_events
+			WHERE event_type = 'result_clicked'
+				AND created_at BETWEEN $1 AND $2
+		),
+		conversion_data AS (
+			SELECT COUNT(*) as conversions
+			FROM user_behavior_events
+			WHERE event_type = 'item_purchased'
+				AND created_at BETWEEN $1 AND $2
+				AND session_id IN (
+					SELECT DISTINCT session_id
+					FROM user_behavior_events
+					WHERE event_type = 'search_performed'
+						AND created_at BETWEEN $1 AND $2
+				)
+		)
+		SELECT 
+			COALESCE(cd.total_clicks, 0),
+			COALESCE(cd.avg_position, 0),
+			COALESCE(conv.conversions, 0)
+		FROM click_data cd
+		CROSS JOIN conversion_data conv
+	`, periodStart, periodEnd).Scan(
+		&totalClicks,
+		&avgPosition,
+		&conversions,
+	)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("failed to get click metrics: %w", err)
+	}
+
+	// Вычисляем CTR и conversion rate
+	metrics.ClickMetrics.TotalClicks = totalClicks
+	metrics.ClickMetrics.AverageClickPosition = avgPosition
+
+	if metrics.TotalSearches > 0 {
+		metrics.ClickMetrics.CTR = float64(totalClicks) / float64(metrics.TotalSearches)
+		metrics.ClickMetrics.ConversionRate = float64(conversions) / float64(metrics.TotalSearches)
+	}
+
+	return metrics, nil
+}
+
+// GetTopSearchQueries возвращает топ поисковых запросов с полной статистикой
+func (r *behaviorTrackingRepository) GetTopSearchQueries(ctx context.Context, periodStart, periodEnd time.Time, limit int) ([]behavior.TopSearchQuery, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+
+	query := `
+		WITH search_stats AS (
+			SELECT 
+				sl.query_text,
+				COUNT(*) as search_count,
+				AVG(sl.results_count) as avg_results
+			FROM search_logs sl
+			WHERE sl.created_at BETWEEN $1 AND $2
+			GROUP BY sl.query_text
+		),
+		click_stats AS (
+			SELECT 
+				be.search_query,
+				COUNT(*) as click_count,
+				AVG(be.position) as avg_position
+			FROM user_behavior_events be
+			WHERE be.event_type = 'result_clicked'
+				AND be.created_at BETWEEN $1 AND $2
+				AND be.search_query IS NOT NULL
+			GROUP BY be.search_query
+		)
+		SELECT 
+			ss.query_text,
+			ss.search_count,
+			COALESCE(cs.avg_position, 0) as avg_position,
+			ss.avg_results,
+			CASE 
+				WHEN ss.search_count > 0 
+				THEN COALESCE(cs.click_count, 0)::float / ss.search_count::float
+				ELSE 0 
+			END as ctr
+		FROM search_stats ss
+		LEFT JOIN click_stats cs ON ss.query_text = cs.search_query
+		ORDER BY ss.search_count DESC
+		LIMIT $3
+	`
+
+	rows, err := r.pool.Query(ctx, query, periodStart, periodEnd, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get top queries: %w", err)
+	}
+	defer rows.Close()
+
+	var queries []behavior.TopSearchQuery
+	for rows.Next() {
+		var q behavior.TopSearchQuery
+		err := rows.Scan(
+			&q.Query,
+			&q.Count,
+			&q.AvgPosition,
+			&q.AvgResults,
+			&q.CTR,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan top query: %w", err)
+		}
+		queries = append(queries, q)
+	}
+
+	return queries, nil
 }

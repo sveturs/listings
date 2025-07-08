@@ -101,3 +101,44 @@ type ItemMetricsQuery struct {
 	SortBy      string    `query:"sort_by" validate:"omitempty,oneof=views clicks purchases ctr conversion_rate"`
 	OrderBy     string    `query:"order_by" validate:"omitempty,oneof=asc desc"`
 }
+
+// TrackEventBatch представляет пакет событий для отслеживания
+type TrackEventBatch struct {
+	Events    []TrackEventRequest `json:"events" validate:"required,dive"`
+	BatchID   string              `json:"batch_id" validate:"required"`
+	CreatedAt string              `json:"created_at" validate:"required"`
+}
+
+// AggregatedSearchMetrics представляет агрегированные метрики поиска
+type AggregatedSearchMetrics struct {
+	TotalSearches           int64                  `json:"total_searches"`
+	UniqueSearches          int64                  `json:"unique_searches"`
+	AverageSearchDurationMs float64                `json:"average_search_duration_ms"`
+	SearchTrends            []SearchTrend          `json:"search_trends"`
+	ClickMetrics            AggregatedClickMetrics `json:"click_metrics"`
+}
+
+// SearchTrend представляет тренд поиска по дням
+type SearchTrend struct {
+	Date          string  `json:"date"`
+	SearchesCount int     `json:"searches_count"`
+	ClicksCount   int     `json:"clicks_count"`
+	CTR           float64 `json:"ctr"`
+}
+
+// AggregatedClickMetrics представляет агрегированные метрики кликов
+type AggregatedClickMetrics struct {
+	TotalClicks          int     `json:"total_clicks"`
+	AverageClickPosition float64 `json:"average_click_position"`
+	CTR                  float64 `json:"ctr"`
+	ConversionRate       float64 `json:"conversion_rate"`
+}
+
+// TopSearchQuery представляет топ поисковый запрос с полной статистикой
+type TopSearchQuery struct {
+	Query       string  `json:"query"`
+	Count       int     `json:"count"`
+	CTR         float64 `json:"ctr"`
+	AvgPosition float64 `json:"avg_position"`
+	AvgResults  float64 `json:"avg_results"`
+}

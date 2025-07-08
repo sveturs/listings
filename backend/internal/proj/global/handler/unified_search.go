@@ -149,7 +149,10 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	}
 
 	// Получаем параметры из query string (перезаписывают JSON если есть)
-	if query := c.Query("query"); query != "" {
+	// Поддерживаем оба варианта: "q" и "query"
+	if query := c.Query("q"); query != "" {
+		params.Query = query
+	} else if query := c.Query("query"); query != "" {
 		params.Query = query
 	}
 	if page := c.Query("page"); page != "" {
@@ -626,7 +629,12 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 		}
 	}()
 
-	// Проверяем валидность контекста
+	// Проверяем валидность всех параметров
+	if h == nil || h.services == nil {
+		logger.Error().Msg("Handler or services is nil in trackSearchEvent")
+		return
+	}
+
 	if c == nil || params == nil || result == nil {
 		logger.Error().Msg("Invalid parameters in trackSearchEvent")
 		return
@@ -637,8 +645,8 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 
 	// Получаем информацию о пользователе (если авторизован)
 	var userID *int
-	if c != nil && c.Locals("userID") != nil {
-		if uid, ok := c.Locals("userID").(int); ok {
+	if c.Locals("userID") != nil {
+		if uid, ok := c.Locals("userID").(int); ok && uid > 0 {
 			userID = &uid
 		}
 	}
@@ -697,13 +705,26 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 	}
 
 	// Отправляем событие в behavior tracking сервис (если доступен)
-	if behaviorSvc := h.services.BehaviorTracking(); behaviorSvc != nil {
+	behaviorSvc := h.services.BehaviorTracking()
+	logger.Debug().
+		Bool("behavior_svc_nil", behaviorSvc == nil).
+		Str("query", params.Query).
+		Msg("Checking behavior tracking service")
+
+	if behaviorSvc != nil {
 		if err := behaviorSvc.TrackEvent(ctx, userID, trackingReq); err != nil {
 			logger.Error().Err(err).
 				Str("session_id", sessionID).
 				Str("query", params.Query).
 				Msg("Failed to track search event")
+		} else {
+			logger.Debug().
+				Str("session_id", sessionID).
+				Str("query", params.Query).
+				Msg("Successfully sent event to behavior tracking")
 		}
+	} else {
+		logger.Warn().Msg("Behavior tracking service is not available")
 	}
 }
 

@@ -29,4 +29,10 @@ type BehaviorTrackingRepository interface {
 
 	// GetEventsByUser возвращает события по user_id
 	GetEventsByUser(ctx context.Context, userID int, limit, offset int) ([]*behavior.BehaviorEvent, int, error)
+
+	// GetAggregatedSearchMetrics возвращает агрегированные метрики поиска
+	GetAggregatedSearchMetrics(ctx context.Context, periodStart, periodEnd time.Time) (*behavior.AggregatedSearchMetrics, error)
+
+	// GetTopSearchQueries возвращает топ поисковых запросов с полной статистикой
+	GetTopSearchQueries(ctx context.Context, periodStart, periodEnd time.Time, limit int) ([]behavior.TopSearchQuery, error)
 }

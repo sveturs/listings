@@ -22,9 +22,11 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	path := c.Path()
 
 	// Пропускаем маршруты аналитики для записи событий и публичных метрик
-	if strings.HasPrefix(path, "/api/v1/analytics/event") ||
+	if strings.HasPrefix(path, "/api/v1/analytics/track") ||
+		strings.HasPrefix(path, "/api/v1/analytics/event") ||
 		strings.HasPrefix(path, "/api/v1/analytics/metrics/search") ||
-		strings.HasPrefix(path, "/api/v1/analytics/metrics/items") {
+		strings.HasPrefix(path, "/api/v1/analytics/metrics/items") ||
+		strings.HasPrefix(path, "/api/v1/analytics/sessions/") {
 		logger.Info().Str("path", path).Msg("Skipping auth for public analytics routes")
 		return c.Next()
 	}

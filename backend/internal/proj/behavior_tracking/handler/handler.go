@@ -30,14 +30,14 @@ func NewBehaviorTrackingHandler(service service.BehaviorTrackingService) *Behavi
 	}
 }
 
-// TrackEvent обрабатывает запрос на отслеживание события
-// @Summary Track behavior event
-// @Description Records a user behavior event for analytics
+// TrackEvent обрабатывает запрос на отслеживание события или пакета событий
+// @Summary Track behavior events
+// @Description Records user behavior events for analytics (supports both single event and batch)
 // @Tags analytics
 // @Accept json
 // @Produce json
-// @Param event body behavior.TrackEventRequest true "Event data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]string} "Event tracked successfully"
+// @Param event body behavior.TrackEventBatch true "Event batch data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Events tracked successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
 // @Failure 429 {object} utils.ErrorResponseSwag "Too many requests"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -48,6 +48,76 @@ func (h *BehaviorTrackingHandler) TrackEvent(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "analytics.error.rate_limit_exceeded")
 	}
 
+	// Получаем user_id из контекста (если пользователь авторизован)
+	var userID *int
+	if uid, ok := c.Locals("user_id").(int); ok {
+		userID = &uid
+	}
+
+	// Получаем метаданные из контекста запроса
+	contextMetadata := map[string]interface{}{
+		"ip":         c.IP(),
+		"user_agent": c.Get("User-Agent"),
+		"referer":    c.Get("Referer"),
+		"timestamp":  time.Now().Unix(),
+	}
+
+	// Пробуем распарсить как batch
+	var batch behavior.TrackEventBatch
+	if err := c.BodyParser(&batch); err == nil && len(batch.Events) > 0 {
+		// Это batch событий
+		logger.Info().
+			Str("batch_id", batch.BatchID).
+			Int("events_count", len(batch.Events)).
+			Msg("Processing event batch")
+
+		// Валидация batch
+		if err := h.validator.Struct(&batch); err != nil {
+			logger.Error().Err(err).Msg("Validation failed for event batch")
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "analytics.error.validation_failed")
+		}
+
+		// Обрабатываем каждое событие
+		processedCount := 0
+		var lastSessionID string
+
+		for _, event := range batch.Events {
+			// Добавляем метаданные к каждому событию
+			if event.Metadata == nil {
+				event.Metadata = make(map[string]interface{})
+			}
+			for k, v := range contextMetadata {
+				event.Metadata[k] = v
+			}
+
+			// Генерируем session_id если не передан
+			if event.SessionID == "" && lastSessionID != "" {
+				event.SessionID = lastSessionID
+			} else if event.SessionID != "" {
+				lastSessionID = event.SessionID
+			}
+
+			// Отслеживаем событие
+			if err := h.service.TrackEvent(c.Context(), userID, &event); err != nil {
+				logger.Error().
+					Err(err).
+					Str("event_type", string(event.EventType)).
+					Msg("Failed to track event in batch")
+				// Продолжаем обработку остальных событий
+				continue
+			}
+			processedCount++
+		}
+
+		return utils.SuccessResponse(c, fiber.Map{
+			"message":         "Events batch processed",
+			"batch_id":        batch.BatchID,
+			"processed_count": processedCount,
+			"failed_count":    len(batch.Events) - processedCount,
+		})
+	}
+
+	// Если не удалось распарсить как batch, пробуем как одиночное событие
 	var req behavior.TrackEventRequest
 	if err := c.BodyParser(&req); err != nil {
 		logger.Error().Err(err).Msg("Failed to parse track event request")
@@ -60,20 +130,13 @@ func (h *BehaviorTrackingHandler) TrackEvent(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "analytics.error.validation_failed")
 	}
 
-	// Получаем user_id из контекста (если пользователь авторизован)
-	var userID *int
-	if uid, ok := c.Locals("user_id").(int); ok {
-		userID = &uid
-	}
-
-	// Добавляем метаданные из контекста запроса
+	// Добавляем метаданные
 	if req.Metadata == nil {
 		req.Metadata = make(map[string]interface{})
 	}
-	req.Metadata["ip"] = c.IP()
-	req.Metadata["user_agent"] = c.Get("User-Agent")
-	req.Metadata["referer"] = c.Get("Referer")
-	req.Metadata["timestamp"] = time.Now().Unix()
+	for k, v := range contextMetadata {
+		req.Metadata[k] = v
+	}
 
 	// Отслеживаем событие
 	if err := h.service.TrackEvent(c.Context(), userID, &req); err != nil {
@@ -85,6 +148,38 @@ func (h *BehaviorTrackingHandler) TrackEvent(c *fiber.Ctx) error {
 		"message":    "Event tracked successfully",
 		"session_id": req.SessionID,
 	})
+}
+
+// SearchMetricsResponse представляет ответ с агрегированными метриками поиска
+type SearchMetricsResponse struct {
+	TotalSearches           int64                 `json:"total_searches"`
+	UniqueSearches          int64                 `json:"unique_searches"`
+	AverageSearchDurationMs float64               `json:"average_search_duration_ms"`
+	TopQueries              []TopQueryResponse    `json:"top_queries"`
+	SearchTrends            []SearchTrendResponse `json:"search_trends"`
+	ClickMetrics            ClickMetricsResponse  `json:"click_metrics"`
+}
+
+type TopQueryResponse struct {
+	Query       string  `json:"query"`
+	Count       int     `json:"count"`
+	CTR         float64 `json:"ctr"`
+	AvgPosition float64 `json:"avg_position"`
+	AvgResults  float64 `json:"avg_results"`
+}
+
+type SearchTrendResponse struct {
+	Date          string  `json:"date"`
+	SearchesCount int     `json:"searches_count"`
+	ClicksCount   int     `json:"clicks_count"`
+	CTR           float64 `json:"ctr"`
+}
+
+type ClickMetricsResponse struct {
+	TotalClicks          int     `json:"total_clicks"`
+	AverageClickPosition float64 `json:"average_click_position"`
+	CTR                  float64 `json:"ctr"`
+	ConversionRate       float64 `json:"conversion_rate"`
 }
 
 // GetSearchMetrics возвращает метрики поиска
@@ -100,7 +195,7 @@ func (h *BehaviorTrackingHandler) TrackEvent(c *fiber.Ctx) error {
 // @Param offset query int false "Offset for pagination"
 // @Param sort_by query string false "Sort by field (ctr, conversions, total_searches)"
 // @Param order_by query string false "Order direction (asc, desc)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]behavior.SearchMetrics} "Search metrics"
+// @Success 200 {object} utils.SuccessResponseSwag{data=SearchMetricsResponse} "Search metrics"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/metrics/search [get]
@@ -123,7 +218,26 @@ func (h *BehaviorTrackingHandler) GetSearchMetrics(c *fiber.Ctx) error {
 		}
 	}
 
-	// Парсим даты
+	// Обработка сокращенного параметра period
+	if period := c.Query("period"); period != "" {
+		now := time.Now()
+		switch period {
+		case "day":
+			query.PeriodStart = now.AddDate(0, 0, -1)
+			query.PeriodEnd = now
+		case "week":
+			query.PeriodStart = now.AddDate(0, 0, -7)
+			query.PeriodEnd = now
+		case "month":
+			query.PeriodStart = now.AddDate(0, -1, 0)
+			query.PeriodEnd = now
+		case "year":
+			query.PeriodStart = now.AddDate(-1, 0, 0)
+			query.PeriodEnd = now
+		}
+	}
+
+	// Парсим даты (переопределяют period если указаны)
 	if periodStart := c.Query("period_start"); periodStart != "" {
 		if t, err := time.Parse(time.RFC3339, periodStart); err == nil {
 			query.PeriodStart = t
@@ -139,19 +253,57 @@ func (h *BehaviorTrackingHandler) GetSearchMetrics(c *fiber.Ctx) error {
 		}
 	}
 
-	// Получаем метрики
-	metrics, total, err := h.service.GetSearchMetrics(c.Context(), query)
+	// Получаем агрегированные метрики
+	aggregatedMetrics, err := h.service.GetAggregatedSearchMetrics(c.Context(), query)
 	if err != nil {
-		logger.Error().Err(err).Msg("Failed to get search metrics")
+		logger.Error().Err(err).Msg("Failed to get aggregated search metrics")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "analytics.error.failed_to_get_metrics")
 	}
 
-	return utils.SuccessResponse(c, fiber.Map{
-		"metrics": metrics,
-		"total":   total,
-		"limit":   query.Limit,
-		"offset":  query.Offset,
-	})
+	// Получаем топ запросы
+	topQueries, err := h.service.GetTopSearchQueries(c.Context(), query)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get top search queries")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "analytics.error.failed_to_get_metrics")
+	}
+
+	// Формируем ответ в нужном формате для frontend
+	response := SearchMetricsResponse{
+		TotalSearches:           aggregatedMetrics.TotalSearches,
+		UniqueSearches:          aggregatedMetrics.UniqueSearches,
+		AverageSearchDurationMs: aggregatedMetrics.AverageSearchDurationMs,
+		TopQueries:              make([]TopQueryResponse, 0, len(topQueries)),
+		SearchTrends:            make([]SearchTrendResponse, 0, len(aggregatedMetrics.SearchTrends)),
+		ClickMetrics: ClickMetricsResponse{
+			TotalClicks:          aggregatedMetrics.ClickMetrics.TotalClicks,
+			AverageClickPosition: aggregatedMetrics.ClickMetrics.AverageClickPosition,
+			CTR:                  aggregatedMetrics.ClickMetrics.CTR,
+			ConversionRate:       aggregatedMetrics.ClickMetrics.ConversionRate,
+		},
+	}
+
+	// Преобразуем тренды поиска
+	for _, trend := range aggregatedMetrics.SearchTrends {
+		response.SearchTrends = append(response.SearchTrends, SearchTrendResponse{
+			Date:          trend.Date,
+			SearchesCount: trend.SearchesCount,
+			ClicksCount:   trend.ClicksCount,
+			CTR:           trend.CTR,
+		})
+	}
+
+	// Преобразуем топ запросы в формат для frontend
+	for _, q := range topQueries {
+		response.TopQueries = append(response.TopQueries, TopQueryResponse{
+			Query:       q.Query,
+			Count:       q.Count,
+			CTR:         q.CTR,
+			AvgPosition: q.AvgPosition,
+			AvgResults:  q.AvgResults,
+		})
+	}
+
+	return utils.SuccessResponse(c, response)
 }
 
 // GetItemMetrics возвращает метрики товаров
@@ -194,7 +346,26 @@ func (h *BehaviorTrackingHandler) GetItemMetrics(c *fiber.Ctx) error {
 		}
 	}
 
-	// Парсим даты
+	// Обработка сокращенного параметра period
+	if period := c.Query("period"); period != "" {
+		now := time.Now()
+		switch period {
+		case "day":
+			query.PeriodStart = now.AddDate(0, 0, -1)
+			query.PeriodEnd = now
+		case "week":
+			query.PeriodStart = now.AddDate(0, 0, -7)
+			query.PeriodEnd = now
+		case "month":
+			query.PeriodStart = now.AddDate(0, -1, 0)
+			query.PeriodEnd = now
+		case "year":
+			query.PeriodStart = now.AddDate(-1, 0, 0)
+			query.PeriodEnd = now
+		}
+	}
+
+	// Парсим даты (переопределяют period если указаны)
 	if periodStart := c.Query("period_start"); periodStart != "" {
 		if t, err := time.Parse(time.RFC3339, periodStart); err == nil {
 			query.PeriodStart = t

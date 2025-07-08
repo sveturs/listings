@@ -4,9 +4,12 @@ package service
 import (
 	"log"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"backend/internal/config"
 	balance "backend/internal/proj/balance/service"
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
+	behaviorTrackingPostgres "backend/internal/proj/behavior_tracking/storage/postgres"
 	geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
 	marketplaceService "backend/internal/proj/marketplace/service"
 	translationService "backend/internal/proj/marketplace/service"
@@ -43,9 +46,22 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	notificationSvc := notificationService.NewService(storage)
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
-	// TODO: behaviorTrackingSvc should be injected from outside since it uses its own repository
-	// For now, we'll skip behavior tracking in global service
+
+	// Initialize behavior tracking service
 	var behaviorTrackingSvc behaviorTrackingService.BehaviorTrackingService
+	// Get pool from storage if it's a postgres.Database
+	if poolAccessor, ok := storage.(interface{ GetPool() *pgxpool.Pool }); ok && poolAccessor != nil {
+		if pool := poolAccessor.GetPool(); pool != nil {
+			// Create behavior tracking repository and service
+			behaviorRepo := behaviorTrackingPostgres.NewBehaviorTrackingRepository(pool)
+			behaviorTrackingSvc = behaviorTrackingService.NewBehaviorTrackingService(behaviorRepo)
+			log.Println("Behavior tracking service initialized successfully")
+		} else {
+			log.Println("Warning: PostgreSQL pool not available for behavior tracking")
+		}
+	} else {
+		log.Println("Warning: Storage does not support GetPool() method for behavior tracking")
+	}
 
 	// Создаем сервис витрин (временно без services, передадим позже)
 	var storefrontSvc storefrontService.StorefrontService

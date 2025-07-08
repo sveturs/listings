@@ -1867,6 +1867,638 @@ paths:
       summary: Reindex listing ratings
       tags:
         - marketplace-admin-indexing
+  /api/v1/admin/search/analyze-weights:
+    post:
+      description: Анализирует эффективность текущих весов без запуска полной оптимизации
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/handler.AnalyzeWeightsRequest"
+        description: Параметры анализа
+        required: true
+      responses:
+        "200":
+          description: Результаты анализа
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/storage.WeightOptimizationResult"
+                        type: array
+                    type: object
+        "400":
+          description: Неверные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Анализ текущих весов поиска
+      tags:
+        - Search Optimization
+  /api/v1/admin/search/apply-weights:
+    post:
+      description: Применяет выбранные оптимизированные веса к системе поиска
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/handler.ApplyWeightsRequest"
+        description: Параметры применения весов
+        required: true
+      responses:
+        "200":
+          description: Веса применены
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: Неверные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Применение оптимизированных весов
+      tags:
+        - Search Optimization
+  /api/v1/admin/search/backup-weights:
+    post:
+      description: Создает резервную копию текущих весов поиска для возможности отката
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: true
+              type: object
+        description: Параметры резервной копии
+        required: true
+      responses:
+        "200":
+          description: Резервная копия создана
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: Неверные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Создание резервной копии весов
+      tags:
+        - Search Optimization
+  "/api/v1/admin/search/optimization-cancel/{session_id}":
+    post:
+      description: Отменяет запущенный процесс оптимизации весов
+      parameters:
+        - description: ID сессии оптимизации
+          in: path
+          name: session_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Оптимизация отменена
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: Неверный ID сессии
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Отмена оптимизации
+      tags:
+        - Search Optimization
+  /api/v1/admin/search/optimization-config:
+    get:
+      description: Возвращает текущую конфигурацию параметров оптимизации весов
+      responses:
+        "200":
+          description: Конфигурация оптимизации
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/service.OptimizationConfig"
+                    type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Конфигурация оптимизации
+      tags:
+        - Search Optimization
+    put:
+      description: Обновляет параметры оптимизации весов по умолчанию
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/service.OptimizationConfig"
+        description: Новая конфигурация
+        required: true
+      responses:
+        "200":
+          description: Конфигурация обновлена
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: Неверная конфигурация
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Обновление конфигурации оптимизации
+      tags:
+        - Search Optimization
+  /api/v1/admin/search/optimization-history:
+    get:
+      description: Возвращает список последних сессий оптимизации весов
+      parameters:
+        - description: Максимальное количество записей
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: История оптимизаций
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/storage.OptimizationSession"
+                        type: array
+                    type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: История оптимизаций
+      tags:
+        - Search Optimization
+  "/api/v1/admin/search/optimization-status/{session_id}":
+    get:
+      description: Возвращает текущий статус и результаты процесса оптимизации весов
+      parameters:
+        - description: ID сессии оптимизации
+          in: path
+          name: session_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Статус оптимизации
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/storage.OptimizationSession"
+                    type: object
+        "400":
+          description: Неверный ID сессии
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Сессия не найдена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Получение статуса оптимизации
+      tags:
+        - Search Optimization
+  /api/v1/admin/search/optimize-weights:
+    post:
+      description: Запускает процесс машинного обучения для оптимизации весов полей
+        поиска на основе поведенческих данных
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/handler.StartOptimizationRequest"
+        description: Параметры оптимизации
+        required: true
+      responses:
+        "200":
+          description: Оптимизация запущена
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: Неверные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Запуск оптимизации весов поиска
+      tags:
+        - Search Optimization
+  /api/v1/admin/search/rollback-weights:
+    post:
+      description: Откатывает веса поиска к предыдущим значениям
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: true
+              type: object
+        description: ID весов для отката
+        required: true
+      responses:
+        "200":
+          description: Откат выполнен
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: Неверные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Откат весов
+      tags:
+        - Search Optimization
+  /api/v1/admin/search/synonyms:
+    get:
+      description: Возвращает список синонимов для указанного языка с возможностью поиска
+      parameters:
+        - description: Язык синонимов (en, ru, sr)
+          in: query
+          name: language
+          schema:
+            type: string
+        - description: Поиск по термину
+          in: query
+          name: search
+          schema:
+            type: string
+        - description: Номер страницы
+          in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - description: Количество записей на странице
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Список синонимов
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          additionalProperties: true
+                          type: object
+                        type: array
+                    type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Получение списка синонимов
+      tags:
+        - Search Synonyms
+    post:
+      description: Создает новый синоним для улучшения поиска
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/handler.SynonymRequest"
+        description: Данные синонима
+        required: true
+      responses:
+        "201":
+          description: Синоним создан
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: Неверные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "409":
+          description: Синоним уже существует
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Создание нового синонима
+      tags:
+        - Search Synonyms
+  "/api/v1/admin/search/synonyms/{id}":
+    delete:
+      description: Удаляет синоним из системы
+      parameters:
+        - description: ID синонима
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Синоним удален
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: Неверный ID синонима
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Синоним не найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Удаление синонима
+      tags:
+        - Search Synonyms
+    put:
+      description: Обновляет существующий синоним
+      parameters:
+        - description: ID синонима
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/handler.SynonymRequest"
+        description: Обновленные данные синонима
+        required: true
+      responses:
+        "200":
+          description: Синоним обновлен
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: Неверные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Синоним не найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Обновление синонима
+      tags:
+        - Search Synonyms
   /api/v1/admin/sync-discounts:
     post:
       description: Synchronizes discount data for all listings (Admin only)
@@ -2359,9 +2991,7 @@ paths:
                   - $ref: "#/components/schemas/utils.SuccessResponseSwag"
                   - properties:
                       data:
-                        items:
-                          $ref: "#/components/schemas/behavior.SearchMetrics"
-                        type: array
+                        $ref: "#/components/schemas/handler.SearchMetricsResponse"
                     type: object
         "400":
           description: Invalid request
@@ -2478,17 +3108,18 @@ paths:
         - analytics
   /api/v1/analytics/track:
     post:
-      description: Records a user behavior event for analytics
+      description: Records user behavior events for analytics (supports both single
+        event and batch)
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/behavior.TrackEventRequest"
-        description: Event data
+              $ref: "#/components/schemas/behavior.TrackEventBatch"
+        description: Event batch data
         required: true
       responses:
         "200":
-          description: Event tracked successfully
+          description: Events tracked successfully
           content:
             application/json:
               schema:
@@ -2496,8 +3127,7 @@ paths:
                   - $ref: "#/components/schemas/utils.SuccessResponseSwag"
                   - properties:
                       data:
-                        additionalProperties:
-                          type: string
+                        additionalProperties: true
                         type: object
                     type: object
         "400":
@@ -2518,7 +3148,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Track behavior event
+      summary: Track behavior events
       tags:
         - analytics
   "/api/v1/analytics/users/{user_id}/events":
@@ -11356,32 +11986,20 @@ components:
       x-enum-varnames:
         - ItemTypeMarketplace
         - ItemTypeStorefront
-    behavior.SearchMetrics:
+    behavior.TrackEventBatch:
       properties:
-        avg_click_position:
-          type: number
-        conversion_rate:
-          type: number
-        conversions:
-          type: integer
+        batch_id:
+          type: string
         created_at:
           type: string
-        ctr:
-          type: number
-        id:
-          type: integer
-        period_end:
-          type: string
-        period_start:
-          type: string
-        search_query:
-          type: string
-        total_clicks:
-          type: integer
-        total_searches:
-          type: integer
-        updated_at:
-          type: string
+        events:
+          items:
+            $ref: "#/components/schemas/behavior.TrackEventRequest"
+          type: array
+      required:
+        - batch_id
+        - created_at
+        - events
       type: object
     behavior.TrackEventRequest:
       properties:
@@ -11486,6 +12104,37 @@ components:
         total:
           example: 100
           type: integer
+      type: object
+    handler.AnalyzeWeightsRequest:
+      properties:
+        category_id:
+          type: integer
+        from_date:
+          type: string
+        item_type:
+          enum:
+            - marketplace
+            - storefront
+            - global
+          type: string
+        to_date:
+          type: string
+      required:
+        - from_date
+        - item_type
+        - to_date
+      type: object
+    handler.ApplyWeightsRequest:
+      properties:
+        selected_results:
+          items:
+            type: integer
+          type: array
+        session_id:
+          type: integer
+      required:
+        - selected_results
+        - session_id
       type: object
     handler.AttributeCreateResponse:
       properties:
@@ -11600,6 +12249,17 @@ components:
         page:
           type: integer
         total:
+          type: integer
+      type: object
+    handler.ClickMetricsResponse:
+      properties:
+        average_click_position:
+          type: number
+        conversion_rate:
+          type: number
+        ctr:
+          type: number
+        total_clicks:
           type: integer
       type: object
     handler.CompleteMockPaymentRequest:
@@ -12288,6 +12948,25 @@ components:
           example: 5
           type: integer
       type: object
+    handler.SearchMetricsResponse:
+      properties:
+        average_search_duration_ms:
+          type: number
+        click_metrics:
+          $ref: "#/components/schemas/handler.ClickMetricsResponse"
+        search_trends:
+          items:
+            $ref: "#/components/schemas/handler.SearchTrendResponse"
+          type: array
+        top_queries:
+          items:
+            $ref: "#/components/schemas/handler.TopQueryResponse"
+          type: array
+        total_searches:
+          type: integer
+        unique_searches:
+          type: integer
+      type: object
     handler.SearchResponse:
       properties:
         data:
@@ -12296,6 +12975,17 @@ components:
           type: array
         meta:
           $ref: "#/components/schemas/handler.SearchMetadata"
+      type: object
+    handler.SearchTrendResponse:
+      properties:
+        clicks_count:
+          type: integer
+        ctr:
+          type: number
+        date:
+          type: string
+        searches_count:
+          type: integer
       type: object
     handler.SessionResponse:
       properties:
@@ -12361,6 +13051,45 @@ components:
         total:
           type: integer
       type: object
+    handler.StartOptimizationRequest:
+      properties:
+        analysis_period_days:
+          maximum: 365
+          minimum: 1
+          type: integer
+        auto_apply:
+          type: boolean
+        category_id:
+          type: integer
+        confidence_level:
+          maximum: 0.99
+          minimum: 0.5
+          type: number
+        field_names:
+          items:
+            type: string
+          type: array
+        item_type:
+          enum:
+            - marketplace
+            - storefront
+            - global
+          type: string
+        learning_rate:
+          maximum: 1
+          minimum: 0.001
+          type: number
+        max_iterations:
+          maximum: 10000
+          minimum: 10
+          type: integer
+        min_sample_size:
+          maximum: 10000
+          minimum: 10
+          type: integer
+      required:
+        - item_type
+      type: object
     handler.StorefrontsListResponse:
       properties:
         limit:
@@ -12402,6 +13131,29 @@ components:
         type:
           example: product
           type: string
+      type: object
+    handler.SynonymRequest:
+      properties:
+        is_active:
+          type: boolean
+        language:
+          enum:
+            - en
+            - ru
+            - sr
+          type: string
+        synonym:
+          maxLength: 255
+          minLength: 1
+          type: string
+        term:
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+        - language
+        - synonym
+        - term
       type: object
     handler.TelegramConnectResponse:
       description: Ответ при успешном подключении Telegram
@@ -12453,6 +13205,19 @@ components:
           type: integer
         token_type:
           example: Bearer
+          type: string
+      type: object
+    handler.TopQueryResponse:
+      properties:
+        avg_position:
+          type: number
+        avg_results:
+          type: number
+        count:
+          type: integer
+        ctr:
+          type: number
+        query:
           type: string
       type: object
     handler.TranslateTextRequest:
@@ -15789,6 +16554,28 @@ components:
         similarity_score:
           type: number
       type: object
+    service.OptimizationConfig:
+      properties:
+        default_analysis_period_days:
+          type: integer
+        default_confidence_level:
+          type: number
+        default_learning_rate:
+          type: number
+        default_max_iterations:
+          type: integer
+        default_min_sample_size:
+          type: integer
+        max_weight:
+          description: Максимальное значение веса
+          type: number
+        max_weight_change:
+          description: Максимальное изменение веса за одну оптимизацию
+          type: number
+        min_weight:
+          description: Минимальное значение веса
+          type: number
+      type: object
     service.SuggestionItem:
       properties:
         category_id:
@@ -15819,6 +16606,54 @@ components:
         - SuggestionTypeQuery
         - SuggestionTypeCategory
         - SuggestionTypeProduct
+    storage.OptimizationSession:
+      properties:
+        created_by:
+          type: integer
+        end_time:
+          type: string
+        error_message:
+          type: string
+        id:
+          type: integer
+        processed_fields:
+          type: integer
+        results:
+          items:
+            $ref: "#/components/schemas/storage.WeightOptimizationResult"
+          type: array
+        start_time:
+          type: string
+        status:
+          description: running, completed, failed
+          type: string
+        total_fields:
+          type: integer
+      type: object
+    storage.WeightOptimizationResult:
+      properties:
+        confidence_level:
+          description: Уровень уверенности в рекомендации
+          type: number
+        current_ctr:
+          type: number
+        current_weight:
+          type: number
+        field_name:
+          type: string
+        improvement_score:
+          description: Ожидаемое улучшение CTR
+          type: number
+        optimized_weight:
+          type: number
+        predicted_ctr:
+          type: number
+        sample_size:
+          description: Количество данных для анализа
+          type: integer
+        statistical_significance_level:
+          type: number
+      type: object
     tgbotapi.Animation:
       properties:
         file_id:
