@@ -53,7 +53,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER IF NOT EXISTS trigger_update_search_behavior_metrics_updated_at
+DROP TRIGGER IF EXISTS trigger_update_search_behavior_metrics_updated_at ON search_behavior_metrics;
+CREATE TRIGGER trigger_update_search_behavior_metrics_updated_at
     BEFORE UPDATE ON search_behavior_metrics
     FOR EACH ROW
     EXECUTE FUNCTION update_search_behavior_metrics_updated_at();
