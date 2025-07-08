@@ -15,6 +15,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
+	"backend/internal/pkg/contextkeys"
 	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 )
@@ -140,7 +141,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	if chatID != "" {
 		// Преобразуем строку в int для контекста
 		if chatIDInt, err := strconv.Atoi(chatID); err == nil {
-			ctx = context.WithValue(ctx, "chat_id", chatIDInt)
+			ctx = context.WithValue(ctx, contextkeys.ChatIDKey, chatIDInt)
 		}
 	}
 

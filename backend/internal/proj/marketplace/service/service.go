@@ -4,6 +4,7 @@ package service
 import (
 	"context"
 
+	"backend/internal/config"
 	"backend/internal/proj/marketplace/repository"
 	"backend/internal/proj/notifications/service"
 	"backend/internal/storage"
@@ -16,7 +17,7 @@ type Service struct {
 	Order          *OrderService
 }
 
-func NewService(storage storage.Storage, notifService service.NotificationServiceInterface) *Service {
+func NewService(storage storage.Storage, notifService service.NotificationServiceInterface, searchWeights *config.SearchWeights) *Service {
 	// Create a minimal translation service for internal use
 	// Note: The actual translation service will be injected later by the global service
 	// This is a temporary service to satisfy the interface requirement
@@ -42,7 +43,7 @@ func NewService(storage storage.Storage, notifService service.NotificationServic
 	}
 
 	return &Service{
-		Marketplace:    NewMarketplaceService(storage, dummyTranslation),
+		Marketplace:    NewMarketplaceService(storage, dummyTranslation, searchWeights),
 		Chat:           NewChatService(storage, notifService),
 		ChatAttachment: nil, // Will be set by global service
 		Order:          orderService,

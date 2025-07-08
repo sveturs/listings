@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	marketplaceService "backend/internal/proj/marketplace/service"
@@ -19,6 +20,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
 
 	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
@@ -41,6 +44,7 @@ type Database struct {
 	osStorefrontRepo     storefrontOpenSearch.StorefrontSearchRepository
 	osClient             *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
 	db                   *sql.DB
+	sqlxDB               *sqlx.DB // sqlx.DB для работы с sqlx библиотекой
 	marketplaceIndex     string
 	storefrontIndex      string
 	attributeGroups      AttributeGroupStorage
@@ -48,16 +52,21 @@ type Database struct {
 	storefrontRepo       StorefrontRepository                         // Репозиторий для витрин
 	cartRepo             CartRepositoryInterface                      // Репозиторий для корзин
 	orderRepo            OrderRepositoryInterface                     // Репозиторий для заказов
+	searchWeights        *config.SearchWeights                        // Веса для поиска
 	inventoryRepo        InventoryRepositoryInterface                 // Репозиторий для инвентаря
 	marketplaceOrderRepo *MarketplaceOrderRepository                  // Репозиторий для заказов маркетплейса
 	productSearchRepo    storefrontOpenSearch.ProductSearchRepository // Репозиторий для поиска товаров витрин
 }
 
-func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface) (*Database, error) {
+func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights) (*Database, error) {
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
 		return nil, fmt.Errorf("error creating connection pool: %w", err)
 	}
+
+	// Создаем sql.DB из pgxpool для совместимости с sqlx
+	stdDB := stdlib.OpenDBFromPool(pool)
+	sqlxDB := sqlx.NewDb(stdDB, "pgx")
 
 	// Создаем сервис переводов
 	translationService, err := marketplaceService.NewTranslationService(os.Getenv("OPENAI_API_KEY"))
@@ -67,6 +76,8 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 
 	db := &Database{
 		pool:             pool,
+		db:               stdDB,
+		sqlxDB:           sqlxDB,
 		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService),
 		reviewDB:         reviewStorage.NewStorage(pool, translationService),
 		usersDB:          userStorage.NewStorage(pool),
@@ -95,7 +106,7 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 
 	// Инициализируем репозиторий OpenSearch, если клиент передан
 	if osClient != nil {
-		db.osMarketplaceRepo = opensearch.NewRepository(osClient, indexName, db)
+		db.osMarketplaceRepo = opensearch.NewRepository(osClient, indexName, db, searchWeights)
 		// Подготавливаем индекс
 		if err := db.osMarketplaceRepo.PrepareIndex(context.Background()); err != nil {
 			log.Printf("Ошибка подготовки индекса OpenSearch: %v", err)
@@ -116,6 +127,9 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 		}
 	}
 
+	// Сохраняем search weights
+	db.searchWeights = searchWeights
+
 	return db, nil
 }
 
@@ -125,6 +139,24 @@ func (db *Database) Close() {
 	if db.pool != nil {
 		db.pool.Close()
 	}
+	if db.db != nil {
+		db.db.Close()
+	}
+}
+
+func (db *Database) GetSearchWeights() *config.SearchWeights {
+	return db.searchWeights
+}
+
+// GetSQLXDB возвращает sqlx.DB для использования в модулях, которые требуют sqlx
+func (db *Database) GetSQLXDB() *sqlx.DB {
+	// Если sqlxDB уже инициализирован, возвращаем его
+	if db.sqlxDB != nil {
+		return db.sqlxDB
+	}
+	// Иначе создаем новый из пула
+	stdDB := stdlib.OpenDBFromPool(db.pool)
+	return sqlx.NewDb(stdDB, "pgx")
 }
 
 func (db *Database) FileStorage() filestorage.FileStorageInterface {

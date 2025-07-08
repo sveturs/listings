@@ -15,26 +15,93 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	"backend/internal/storage"
 	osClient "backend/internal/storage/opensearch"
+	"backend/pkg/transliteration"
 )
 
 // Repository реализует интерфейс MarketplaceSearchRepository
 type Repository struct {
-	client    *osClient.OpenSearchClient
-	indexName string
-	storage   storage.Storage
+	client         *osClient.OpenSearchClient
+	indexName      string
+	storage        storage.Storage
+	transliterator *transliteration.SerbianTransliterator
+	boostWeights   *config.OpenSearchBoostWeights
 }
 
 // NewRepository создает новый репозиторий
-func NewRepository(client *osClient.OpenSearchClient, indexName string, storage storage.Storage) *Repository {
+func NewRepository(client *osClient.OpenSearchClient, indexName string, storage storage.Storage, searchWeights *config.SearchWeights) *Repository {
+	var boostWeights *config.OpenSearchBoostWeights
+	if searchWeights != nil {
+		boostWeights = &searchWeights.OpenSearchBoosts
+	}
+
 	return &Repository{
-		client:    client,
-		indexName: indexName,
-		storage:   storage,
+		client:         client,
+		indexName:      indexName,
+		storage:        storage,
+		transliterator: transliteration.NewSerbianTransliterator(),
+		boostWeights:   boostWeights,
+	}
+}
+
+// getBoostWeight возвращает вес boost из конфигурации или значение по умолчанию
+func (r *Repository) getBoostWeight(weightName string, defaultValue float64) float64 {
+	if r.boostWeights == nil {
+		return defaultValue
+	}
+
+	switch weightName {
+	case "Title":
+		return r.boostWeights.Title
+	case "TitleNgram":
+		return r.boostWeights.TitleNgram
+	case "Description":
+		return r.boostWeights.Description
+	case "TranslationTitle":
+		return r.boostWeights.TranslationTitle
+	case "TranslationDesc":
+		return r.boostWeights.TranslationDesc
+	case "AttributeTextValue":
+		return r.boostWeights.AttributeTextValue
+	case "AttributeDisplayValue":
+		return r.boostWeights.AttributeDisplayValue
+	case "AttributeTextValueKeyword":
+		return r.boostWeights.AttributeTextValueKeyword
+	case "AttributeGeneralBoost":
+		return r.boostWeights.AttributeGeneralBoost
+	case "RealEstateAttributesCombined":
+		return r.boostWeights.RealEstateAttributesCombined
+	case "PropertyType":
+		return r.boostWeights.PropertyType
+	case "RoomsText":
+		return r.boostWeights.RoomsText
+	case "CarMake":
+		return r.boostWeights.CarMake
+	case "CarModel":
+		return r.boostWeights.CarModel
+	case "CarKeywords":
+		return r.boostWeights.CarKeywords
+	case "PerWordTitle":
+		return r.boostWeights.PerWordTitle
+	case "PerWordDescription":
+		return r.boostWeights.PerWordDescription
+	case "PerWordAllAttributes":
+		return r.boostWeights.PerWordAllAttributes
+	case "PerWordRealEstateAttributes":
+		return r.boostWeights.PerWordRealEstateAttributes
+	case "PerWordRoomsText":
+		return r.boostWeights.PerWordRoomsText
+	case "AutomotiveAttributePriority":
+		return r.boostWeights.AutomotiveAttributePriority
+	case "SynonymBoost":
+		return r.boostWeights.SynonymBoost
+	default:
+		return defaultValue
 	}
 }
 
@@ -172,73 +239,94 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 
 	logger.Info().Msgf("Запрос автодополнения для: '%s', размер: %d", prefix, size)
 
+	// Получаем варианты транслитерации для префикса
+	prefixVariants := r.transliterator.TransliterateForSearch(prefix)
+	logger.Info().
+		Str("original_prefix", prefix).
+		Strs("transliterated_variants", prefixVariants).
+		Msg("Generated transliteration variants for suggestions")
+
 	// Создаем комплексный запрос, который ищет как по обычным полям, так и по атрибутам
-	query := map[string]interface{}{
-		"size":    0, // Не нужны сами документы, только агрегации
-		"_source": false,
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"should": []map[string]interface{}{
-					// Поиск по заголовку
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"title": map[string]interface{}{
-								"query":          prefix,
-								"max_expansions": 10,
-							},
-						},
-					},
-					// Поиск по полю model_lowercase (для автомобилей)
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"model_lowercase": map[string]interface{}{
-								"query":          strings.ToLower(prefix),
-								"max_expansions": 10,
-							},
-						},
-					},
-					// Поиск по полю make_lowercase (для автомобилей)
-					{
-						"match_phrase_prefix": map[string]interface{}{
-							"make_lowercase": map[string]interface{}{
-								"query":          strings.ToLower(prefix),
-								"max_expansions": 10,
-							},
-						},
-					},
-					// Поиск по атрибутам (nested query)
-					{
-						"nested": map[string]interface{}{
-							"path": "attributes",
-							"query": map[string]interface{}{
-								"bool": map[string]interface{}{
-									"should": []map[string]interface{}{
-										// Поиск по текстовым значениям атрибутов
-										{
-											"match_phrase_prefix": map[string]interface{}{
-												"attributes.text_value": map[string]interface{}{
-													"query":          prefix,
-													"max_expansions": 10,
-												},
-											},
-										},
-										// Поиск по отображаемым значениям атрибутов
-										{
-											"match_phrase_prefix": map[string]interface{}{
-												"attributes.display_value": map[string]interface{}{
-													"query":          prefix,
-													"max_expansions": 10,
-												},
-											},
-										},
+	shouldQueries := []map[string]interface{}{}
+
+	// Добавляем запросы для всех вариантов транслитерации
+	for _, prefixVariant := range prefixVariants {
+		// Поиск по заголовку
+		shouldQueries = append(shouldQueries, map[string]interface{}{
+			"match_phrase_prefix": map[string]interface{}{
+				"title": map[string]interface{}{
+					"query":          prefixVariant,
+					"max_expansions": 10,
+				},
+			},
+		})
+
+		// Поиск по полю model_lowercase (для автомобилей)
+		shouldQueries = append(shouldQueries, map[string]interface{}{
+			"match_phrase_prefix": map[string]interface{}{
+				"model_lowercase": map[string]interface{}{
+					"query":          strings.ToLower(prefixVariant),
+					"max_expansions": 10,
+				},
+			},
+		})
+
+		// Поиск по полю make_lowercase (для автомобилей)
+		shouldQueries = append(shouldQueries, map[string]interface{}{
+			"match_phrase_prefix": map[string]interface{}{
+				"make_lowercase": map[string]interface{}{
+					"query":          strings.ToLower(prefixVariant),
+					"max_expansions": 10,
+				},
+			},
+		})
+
+		// Поиск по атрибутам (nested query)
+		shouldQueries = append(shouldQueries, map[string]interface{}{
+			"nested": map[string]interface{}{
+				"path": "attributes",
+				"query": map[string]interface{}{
+					"bool": map[string]interface{}{
+						"should": []map[string]interface{}{
+							// Поиск по текстовым значениям атрибутов
+							{
+								"match_phrase_prefix": map[string]interface{}{
+									"attributes.text_value": map[string]interface{}{
+										"query":          prefixVariant,
+										"max_expansions": 10,
 									},
-									// Приоритет для автомобильных атрибутов
-									"boost": 2.0,
+								},
+							},
+							// Поиск по отображаемым значениям атрибутов
+							{
+								"match_phrase_prefix": map[string]interface{}{
+									"attributes.display_value": map[string]interface{}{
+										"query":          prefixVariant,
+										"max_expansions": 10,
+									},
 								},
 							},
 						},
+						// Приоритет для автомобильных атрибутов
+						"boost": r.getBoostWeight("AutomotiveAttributePriority", 2.0),
 					},
 				},
+			},
+		})
+	}
+
+	// Создаем регулярное выражение для всех вариантов транслитерации
+	regexPatterns := make([]string, len(prefixVariants))
+	for i, variant := range prefixVariants {
+		regexPatterns[i] = regexp.QuoteMeta(variant)
+	}
+	regexPattern := fmt.Sprintf(".*(%s).*", strings.Join(regexPatterns, "|"))
+
+	// Создаем структуру запроса
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"should":               shouldQueries,
 				"minimum_should_match": 1,
 			},
 		},
@@ -249,7 +337,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 					"field":         "title.keyword",
 					"size":          size,
 					"min_doc_count": 1,
-					"include":       fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+					"include":       regexPattern,
 					"order":         map[string]string{"_count": "desc"},
 				},
 			},
@@ -258,7 +346,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 					"field":         "make.keyword",
 					"size":          size,
 					"min_doc_count": 1,
-					"include":       fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+					"include":       regexPattern,
 					"order":         map[string]string{"_count": "desc"},
 				},
 			},
@@ -267,7 +355,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 					"field":         "model.keyword",
 					"size":          size,
 					"min_doc_count": 1,
-					"include":       fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+					"include":       regexPattern,
 					"order":         map[string]string{"_count": "desc"},
 				},
 			},
@@ -281,7 +369,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 							"field":         "attributes.text_value.keyword",
 							"size":          size,
 							"min_doc_count": 1,
-							"include":       fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+							"include":       regexPattern,
 							"order":         map[string]string{"_count": "desc"},
 						},
 					},
@@ -290,7 +378,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 							"field":         "attributes.display_value.keyword",
 							"size":          size,
 							"min_doc_count": 1,
-							"include":       fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+							"include":       regexPattern,
 							"order":         map[string]string{"_count": "desc"},
 						},
 					},
@@ -307,7 +395,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 									"field":         "attributes.text_value.keyword",
 									"size":          size,
 									"min_doc_count": 1,
-									"include":       fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+									"include":       regexPattern,
 									"order":         map[string]string{"_count": "desc"},
 								},
 							},
@@ -326,7 +414,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 									"field":         "attributes.text_value.keyword",
 									"size":          size,
 									"min_doc_count": 1,
-									"include":       fmt.Sprintf(".*%s.*", regexp.QuoteMeta(prefix)),
+									"include":       regexPattern,
 									"order":         map[string]string{"_count": "desc"},
 								},
 							},
@@ -1526,6 +1614,13 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		boolMap := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
 		should := boolMap["should"].([]interface{})
 
+		// Получаем варианты транслитерации для поискового запроса
+		queryVariants := r.transliterator.TransliterateForSearch(params.Query)
+		logger.Info().
+			Str("original_query", params.Query).
+			Strs("transliterated_variants", queryVariants).
+			Msg("Generated transliteration variants for search")
+
 		// Расширяем запрос синонимами, если включен нечеткий поиск
 		if params.UseSynonyms {
 			// Попробуем расширить запрос синонимами через PostgreSQL
@@ -1542,7 +1637,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 									"query":  word,
 									"fields": searchFields,
 									"type":   "best_fields",
-									"boost":  0.5, // Меньший вес для синонимов
+									"boost":  r.getBoostWeight("SynonymBoost", 0.5), // Меньший вес для синонимов
 								},
 							})
 						}
@@ -1551,163 +1646,179 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			}
 		}
 
-		// Основной поиск по заголовку с высоким приоритетом
-		should = append(should, map[string]interface{}{
-			"match": map[string]interface{}{
-				"title": map[string]interface{}{
-					"query":     params.Query,
-					"boost":     5.0,
-					"fuzziness": fuzziness,
-				},
-			},
-		})
-
-		// Добавляем поиск по n-граммам для лучшего нечеткого соответствия
-		if params.UseSynonyms {
+		// Основной поиск по заголовку с высоким приоритетом для всех вариантов транслитерации
+		for _, queryVariant := range queryVariants {
 			should = append(should, map[string]interface{}{
 				"match": map[string]interface{}{
-					"title.ngram": map[string]interface{}{
-						"query": params.Query,
-						"boost": 2.0,
+					"title": map[string]interface{}{
+						"query":     queryVariant,
+						"boost":     r.getBoostWeight("Title", 5.0),
+						"fuzziness": fuzziness,
 					},
 				},
 			})
 		}
 
-		should = append(should, map[string]interface{}{
-			"match": map[string]interface{}{
-				"description": map[string]interface{}{
-					"query":     params.Query,
-					"boost":     2.0,
-					"fuzziness": fuzziness,
-				},
-			},
-		})
+		// Добавляем поиск по n-граммам для лучшего нечеткого соответствия
+		if params.UseSynonyms {
+			for _, queryVariant := range queryVariants {
+				should = append(should, map[string]interface{}{
+					"match": map[string]interface{}{
+						"title.ngram": map[string]interface{}{
+							"query": queryVariant,
+							"boost": r.getBoostWeight("TitleNgram", 2.0),
+						},
+					},
+				})
+			}
+		}
 
-		should = append(should, map[string]interface{}{
-			"match": map[string]interface{}{
-				"translations.sr.title": map[string]interface{}{
-					"query":     params.Query,
-					"boost":     4.0,
-					"fuzziness": fuzziness,
+		// Поиск по описанию для всех вариантов транслитерации
+		for _, queryVariant := range queryVariants {
+			should = append(should, map[string]interface{}{
+				"match": map[string]interface{}{
+					"description": map[string]interface{}{
+						"query":     queryVariant,
+						"boost":     r.getBoostWeight("Description", 2.0),
+						"fuzziness": fuzziness,
+					},
 				},
-			},
-		})
+			})
+		}
 
-		should = append(should, map[string]interface{}{
-			"match": map[string]interface{}{
-				"translations.sr.description": map[string]interface{}{
-					"query":     params.Query,
-					"boost":     1.5,
-					"fuzziness": fuzziness,
+		// Поиск по сербским переводам для всех вариантов транслитерации
+		for _, queryVariant := range queryVariants {
+			should = append(should, map[string]interface{}{
+				"match": map[string]interface{}{
+					"translations.sr.title": map[string]interface{}{
+						"query":     queryVariant,
+						"boost":     r.getBoostWeight("TranslationTitle", 4.0),
+						"fuzziness": fuzziness,
+					},
 				},
-			},
-		})
+			})
 
-		// Добавляем специальную обработку для атрибутов в nested формате
-		attrQuery := map[string]interface{}{
-			"nested": map[string]interface{}{
-				"path": "attributes",
-				"query": map[string]interface{}{
-					"bool": map[string]interface{}{
-						"should": []map[string]interface{}{
-							{
-								"match": map[string]interface{}{
-									"attributes.text_value": map[string]interface{}{
-										"query":     params.Query,
-										"boost":     4.0,
-										"fuzziness": "AUTO",
+			should = append(should, map[string]interface{}{
+				"match": map[string]interface{}{
+					"translations.sr.description": map[string]interface{}{
+						"query":     queryVariant,
+						"boost":     r.getBoostWeight("TranslationDesc", 1.5),
+						"fuzziness": fuzziness,
+					},
+				},
+			})
+		}
+
+		// Добавляем специальную обработку для атрибутов в nested формате для всех вариантов транслитерации
+		for _, queryVariant := range queryVariants {
+			attrQuery := map[string]interface{}{
+				"nested": map[string]interface{}{
+					"path": "attributes",
+					"query": map[string]interface{}{
+						"bool": map[string]interface{}{
+							"should": []map[string]interface{}{
+								{
+									"match": map[string]interface{}{
+										"attributes.text_value": map[string]interface{}{
+											"query":     queryVariant,
+											"boost":     r.getBoostWeight("AttributeDisplayValue", 4.0),
+											"fuzziness": "AUTO",
+										},
 									},
 								},
-							},
-							{
-								"match": map[string]interface{}{
-									"attributes.display_value": map[string]interface{}{
-										"query":     params.Query,
-										"boost":     4.0,
-										"fuzziness": "AUTO",
+								{
+									"match": map[string]interface{}{
+										"attributes.display_value": map[string]interface{}{
+											"query":     queryVariant,
+											"boost":     r.getBoostWeight("AttributeDisplayValue", 4.0),
+											"fuzziness": "AUTO",
+										},
 									},
 								},
-							},
-							{
-								"term": map[string]interface{}{
-									"attributes.text_value.keyword": map[string]interface{}{
-										"value": params.Query,
-										"boost": 5.0,
+								{
+									"term": map[string]interface{}{
+										"attributes.text_value.keyword": map[string]interface{}{
+											"value": queryVariant,
+											"boost": r.getBoostWeight("AttributeTextValueKeyword", 5.0),
+										},
 									},
 								},
 							},
 						},
 					},
+					"score_mode": "max",
+					"boost":      r.getBoostWeight("PerWordAllAttributes", 3.0),
 				},
-				"score_mode": "max",
-				"boost":      3.0,
-			},
+			}
+
+			should = append(should, attrQuery)
 		}
 
-		should = append(should, attrQuery)
-
-		// Специальный запрос для модели автомобиля
-		modelQuery := map[string]interface{}{
-			"nested": map[string]interface{}{
-				"path": "attributes",
-				"query": map[string]interface{}{
-					"bool": map[string]interface{}{
-						"must": []map[string]interface{}{
-							{
-								"term": map[string]interface{}{
-									"attributes.attribute_name": "model",
+		// Специальный запрос для модели автомобиля для всех вариантов транслитерации
+		for _, queryVariant := range queryVariants {
+			modelQuery := map[string]interface{}{
+				"nested": map[string]interface{}{
+					"path": "attributes",
+					"query": map[string]interface{}{
+						"bool": map[string]interface{}{
+							"must": []map[string]interface{}{
+								{
+									"term": map[string]interface{}{
+										"attributes.attribute_name": "model",
+									},
 								},
-							},
-							{
-								"match": map[string]interface{}{
-									"attributes.text_value": map[string]interface{}{
-										"query":     params.Query,
-										"boost":     6.0,
-										"fuzziness": "AUTO",
+								{
+									"match": map[string]interface{}{
+										"attributes.text_value": map[string]interface{}{
+											"query":     queryVariant,
+											"boost":     r.getBoostWeight("RealEstateAttributesCombined", 6.0),
+											"fuzziness": "AUTO",
+										},
 									},
 								},
 							},
 						},
 					},
+					"score_mode": "max",
+					"boost":      r.getBoostWeight("RealEstateAttributesCombined", 6.0),
 				},
-				"score_mode": "max",
-				"boost":      6.0,
-			},
+			}
+
+			should = append(should, modelQuery)
 		}
 
-		should = append(should, modelQuery)
-
-		// Аналогичный запрос для марки автомобиля
-		makeQuery := map[string]interface{}{
-			"nested": map[string]interface{}{
-				"path": "attributes",
-				"query": map[string]interface{}{
-					"bool": map[string]interface{}{
-						"must": []map[string]interface{}{
-							{
-								"term": map[string]interface{}{
-									"attributes.attribute_name": "make",
+		// Аналогичный запрос для марки автомобиля для всех вариантов транслитерации
+		for _, queryVariant := range queryVariants {
+			makeQuery := map[string]interface{}{
+				"nested": map[string]interface{}{
+					"path": "attributes",
+					"query": map[string]interface{}{
+						"bool": map[string]interface{}{
+							"must": []map[string]interface{}{
+								{
+									"term": map[string]interface{}{
+										"attributes.attribute_name": "make",
+									},
 								},
-							},
-							{
-								"match": map[string]interface{}{
-									"attributes.text_value": map[string]interface{}{
-										"query":     params.Query,
-										"boost":     6.0,
-										"fuzziness": "AUTO",
+								{
+									"match": map[string]interface{}{
+										"attributes.text_value": map[string]interface{}{
+											"query":     queryVariant,
+											"boost":     r.getBoostWeight("RealEstateAttributesCombined", 6.0),
+											"fuzziness": "AUTO",
+										},
 									},
 								},
 							},
 						},
 					},
+					"score_mode": "max",
+					"boost":      r.getBoostWeight("RealEstateAttributesCombined", 6.0),
 				},
-				"score_mode": "max",
-				"boost":      6.0,
-			},
-		}
+			}
 
-		should = append(should, makeQuery)
+			should = append(should, makeQuery)
+		}
 
 		realEstateKeywords := []string{
 			"квартира", "комната", "комнат", "дом", "этаж",
@@ -1719,10 +1830,16 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"аренда", "съем", "снять", "купить", "продажа",
 		}
 
+		// Проверяем все варианты транслитерации на наличие ключевых слов недвижимости
 		isRealEstateQuery := false
-		for _, keyword := range realEstateKeywords {
-			if strings.Contains(strings.ToLower(params.Query), keyword) {
-				isRealEstateQuery = true
+		for _, queryVariant := range queryVariants {
+			for _, keyword := range realEstateKeywords {
+				if strings.Contains(strings.ToLower(queryVariant), keyword) {
+					isRealEstateQuery = true
+					break
+				}
+			}
+			if isRealEstateQuery {
 				break
 			}
 		}
@@ -1730,102 +1847,91 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		if isRealEstateQuery {
 			logger.Info().Msgf("Обнаружен запрос о недвижимости: '%s'", params.Query)
 
-			realEstateBoost := []map[string]interface{}{
-				{
-					"match": map[string]interface{}{
-						"real_estate_attributes_combined": map[string]interface{}{
-							"query":     params.Query,
-							"boost":     5.0,
-							"fuzziness": fuzziness,
+			// Добавляем поиск по недвижимости для всех вариантов транслитерации
+			for _, queryVariant := range queryVariants {
+				realEstateBoost := []map[string]interface{}{
+					{
+						"match": map[string]interface{}{
+							"real_estate_attributes_combined": map[string]interface{}{
+								"query":     queryVariant,
+								"boost":     r.getBoostWeight("RealEstateAttributesCombined", 5.0),
+								"fuzziness": fuzziness,
+							},
 						},
 					},
-				},
-				{
-					"match": map[string]interface{}{
-						"property_type": map[string]interface{}{
-							"query":     params.Query,
-							"boost":     4.0,
-							"fuzziness": fuzziness,
+					{
+						"match": map[string]interface{}{
+							"property_type": map[string]interface{}{
+								"query":     queryVariant,
+								"boost":     r.getBoostWeight("PropertyType", 4.0),
+								"fuzziness": fuzziness,
+							},
 						},
 					},
-				},
-				{
-					"match": map[string]interface{}{
-						"rooms_text": map[string]interface{}{
-							"query":     params.Query,
-							"boost":     4.0,
-							"fuzziness": fuzziness,
+					{
+						"match": map[string]interface{}{
+							"rooms_text": map[string]interface{}{
+								"query":     queryVariant,
+								"boost":     r.getBoostWeight("RoomsText", 4.0),
+								"fuzziness": fuzziness,
+							},
 						},
 					},
-				},
-			}
+				}
 
-			for _, q := range realEstateBoost {
-				should = append(should, q)
+				for _, q := range realEstateBoost {
+					should = append(should, q)
+				}
 			}
 		}
 
 		boolMap["should"] = should
 		boolMap["minimum_should_match"] = 1
 
-		multiMatch := map[string]interface{}{
-			"multi_match": map[string]interface{}{
-				"query":                params.Query,
-				"fields":               searchFields,
-				"type":                 "best_fields",
-				"operator":             "OR",
-				"minimum_should_match": minimumShouldMatch,
-				"fuzziness":            "AUTO",
-			},
+		// Добавляем multi_match для всех вариантов транслитерации
+		must := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{})
+
+		multiMatchShould := []map[string]interface{}{}
+		for _, queryVariant := range queryVariants {
+			multiMatchShould = append(multiMatchShould, map[string]interface{}{
+				"multi_match": map[string]interface{}{
+					"query":                queryVariant,
+					"fields":               searchFields,
+					"type":                 "best_fields",
+					"operator":             "OR",
+					"minimum_should_match": minimumShouldMatch,
+					"fuzziness":            "AUTO",
+				},
+			})
 		}
 
-		must := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{})
-		must = append(must, multiMatch)
+		if len(multiMatchShould) > 0 {
+			must = append(must, map[string]interface{}{
+				"bool": map[string]interface{}{
+					"should":               multiMatchShould,
+					"minimum_should_match": 1,
+				},
+			})
+		}
+
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = must
 
-		words := strings.Fields(params.Query)
-		if len(words) > 1 {
-			for _, word := range words {
-				if len(word) < 2 {
-					continue
-				}
+		// Обрабатываем слова для всех вариантов транслитерации
+		processedWords := make(map[string]bool)
+		for _, queryVariant := range queryVariants {
+			words := strings.Fields(queryVariant)
+			if len(words) > 1 {
+				for _, word := range words {
+					if len(word) < 2 || processedWords[word] {
+						continue
+					}
+					processedWords[word] = true
 
-				should = append(should, map[string]interface{}{
-					"match": map[string]interface{}{
-						"title": map[string]interface{}{
-							"query":     word,
-							"boost":     2.0,
-							"fuzziness": fuzziness,
-						},
-					},
-				})
-
-				should = append(should, map[string]interface{}{
-					"match": map[string]interface{}{
-						"description": map[string]interface{}{
-							"query":     word,
-							"boost":     1.0,
-							"fuzziness": fuzziness,
-						},
-					},
-				})
-
-				should = append(should, map[string]interface{}{
-					"match": map[string]interface{}{
-						"all_attributes_text": map[string]interface{}{
-							"query":     word,
-							"boost":     2.0,
-							"fuzziness": fuzziness,
-						},
-					},
-				})
-
-				if isRealEstateQuery {
 					should = append(should, map[string]interface{}{
 						"match": map[string]interface{}{
-							"real_estate_attributes_combined": map[string]interface{}{
+							"title": map[string]interface{}{
 								"query":     word,
-								"boost":     3.0,
+								"boost":     r.getBoostWeight("PerWordTitle", 2.0),
 								"fuzziness": fuzziness,
 							},
 						},
@@ -1833,74 +1939,114 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 
 					should = append(should, map[string]interface{}{
 						"match": map[string]interface{}{
-							"rooms_text": map[string]interface{}{
+							"description": map[string]interface{}{
 								"query":     word,
-								"boost":     2.5,
+								"boost":     r.getBoostWeight("PerWordDescription", 1.0),
 								"fuzziness": fuzziness,
 							},
 						},
 					})
+
+					should = append(should, map[string]interface{}{
+						"match": map[string]interface{}{
+							"all_attributes_text": map[string]interface{}{
+								"query":     word,
+								"boost":     r.getBoostWeight("Description", 2.0),
+								"fuzziness": fuzziness,
+							},
+						},
+					})
+
+					if isRealEstateQuery {
+						should = append(should, map[string]interface{}{
+							"match": map[string]interface{}{
+								"real_estate_attributes_combined": map[string]interface{}{
+									"query":     word,
+									"boost":     r.getBoostWeight("PerWordRealEstateAttributes", 3.0),
+									"fuzziness": fuzziness,
+								},
+							},
+						})
+
+						should = append(should, map[string]interface{}{
+							"match": map[string]interface{}{
+								"rooms_text": map[string]interface{}{
+									"query":     word,
+									"boost":     r.getBoostWeight("PerWordRoomsText", 2.5),
+									"fuzziness": fuzziness,
+								},
+							},
+						})
+					}
 				}
 			}
-
-			boolMap["should"] = should
 		}
 
-		shouldQueries := []map[string]interface{}{
-			{
-				"match": map[string]interface{}{
-					"make": map[string]interface{}{
-						"query":     params.Query,
-						"boost":     5.0,
-						"fuzziness": "AUTO",
+		boolMap["should"] = should
+
+		// Добавляем дополнительные запросы для марки и модели для всех вариантов транслитерации
+		shouldQueries := []map[string]interface{}{}
+		for _, queryVariant := range queryVariants {
+			shouldQueries = append(shouldQueries,
+				map[string]interface{}{
+					"match": map[string]interface{}{
+						"make": map[string]interface{}{
+							"query":     queryVariant,
+							"boost":     r.getBoostWeight("Title", 5.0),
+							"fuzziness": "AUTO",
+						},
 					},
 				},
-			},
-			{
-				"match": map[string]interface{}{
-					"make_lowercase": map[string]interface{}{
-						"query":     strings.ToLower(params.Query),
-						"boost":     5.0,
-						"fuzziness": "AUTO",
+				map[string]interface{}{
+					"match": map[string]interface{}{
+						"make_lowercase": map[string]interface{}{
+							"query":     strings.ToLower(queryVariant),
+							"boost":     r.getBoostWeight("RealEstateAttributesCombined", 5.0),
+							"fuzziness": "AUTO",
+						},
 					},
 				},
-			},
-			{
-				"match": map[string]interface{}{
-					"model": map[string]interface{}{
-						"query":     params.Query,
-						"boost":     4.0,
-						"fuzziness": "AUTO",
+				map[string]interface{}{
+					"match": map[string]interface{}{
+						"model": map[string]interface{}{
+							"query":     queryVariant,
+							"boost":     r.getBoostWeight("RoomsText", 4.0),
+							"fuzziness": "AUTO",
+						},
 					},
 				},
-			},
-			{
-				"match": map[string]interface{}{
-					"model_lowercase": map[string]interface{}{
-						"query":     strings.ToLower(params.Query),
-						"boost":     4.0,
-						"fuzziness": "AUTO",
+				map[string]interface{}{
+					"match": map[string]interface{}{
+						"model_lowercase": map[string]interface{}{
+							"query":     strings.ToLower(queryVariant),
+							"boost":     r.getBoostWeight("CarModel", 4.0),
+							"fuzziness": "AUTO",
+						},
+					},
+				})
+		}
+
+		// Добавляем остальные поля
+		for _, queryVariant := range queryVariants {
+			shouldQueries = append(shouldQueries,
+				map[string]interface{}{
+					"match": map[string]interface{}{
+						"select_values": map[string]interface{}{
+							"query":     queryVariant,
+							"boost":     r.getBoostWeight("PerWordAllAttributes", 3.0),
+							"fuzziness": "AUTO",
+						},
 					},
 				},
-			},
-			{
-				"match": map[string]interface{}{
-					"select_values": map[string]interface{}{
-						"query":     params.Query,
-						"boost":     3.0,
-						"fuzziness": "AUTO",
+				map[string]interface{}{
+					"match": map[string]interface{}{
+						"car_keywords": map[string]interface{}{
+							"query":     queryVariant,
+							"boost":     r.getBoostWeight("CarMake", 5.0),
+							"fuzziness": "AUTO",
+						},
 					},
-				},
-			},
-			{
-				"match": map[string]interface{}{
-					"car_keywords": map[string]interface{}{
-						"query":     params.Query,
-						"boost":     5.0,
-						"fuzziness": "AUTO",
-					},
-				},
-			},
+				})
 		}
 
 		should = boolMap["should"].([]interface{})

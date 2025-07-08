@@ -1,0 +1,755 @@
+{
+	"info": {
+		"_postman_id": "search-api-testing-collection",
+		"name": "Sve Tu Search API Testing",
+		"description": "Comprehensive testing collection for all search-related endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Global Search Endpoints",
+			"item": [
+				{
+					"name": "Unified Search",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/search?query=квартира&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "квартира"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Marketplace Search Endpoints",
+			"item": [
+				{
+					"name": "Advanced Search",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/search?query=дом&page=1&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "дом"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search with Filters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/search?min_price=10000&max_price=500000&category_id=1100",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "search"],
+							"query": [
+								{
+									"key": "min_price",
+									"value": "10000"
+								},
+								{
+									"key": "max_price",
+									"value": "500000"
+								},
+								{
+									"key": "category_id",
+									"value": "1100"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Suggestions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/suggestions?prefix=дом&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "suggestions"],
+							"query": [
+								{
+									"key": "prefix",
+									"value": "дом"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Enhanced Suggestions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/enhanced-suggestions?query=квартира&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "enhanced-suggestions"],
+							"query": [
+								{
+									"key": "query",
+									"value": "квартира"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Category Suggestions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/category-suggestions?query=недвижимость&size=5",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "category-suggestions"],
+							"query": [
+								{
+									"key": "query",
+									"value": "недвижимость"
+								},
+								{
+									"key": "size",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Similar Listings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/listings/17/similar?limit=5",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "listings", "17", "similar"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Search Admin Endpoints",
+			"item": [
+				{
+					"name": "Search Configuration",
+					"item": [
+						{
+							"name": "Get Search Config",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Search Config",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fuzzy_threshold\": 0.3,\n  \"max_suggestions\": 10,\n  \"enable_synonyms\": true,\n  \"enable_transliteration\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Search Weights",
+					"item": [
+						{
+							"name": "Get All Weights",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/weights",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "weights"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Weight by Field",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/weights/title",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "weights", "title"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Weight",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"field_name\": \"test_field\",\n  \"weight\": 2.5,\n  \"description\": \"Test field weight\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/weights",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "weights"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Weight",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"field_name\": \"test_field\",\n  \"weight\": 3.0,\n  \"description\": \"Updated test field weight\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/weights/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "weights", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Weight",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/weights/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "weights", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Search Synonyms",
+					"item": [
+						{
+							"name": "Get Synonyms",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/synonyms?language=ru",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "synonyms"],
+									"query": [
+										{
+											"key": "language",
+											"value": "ru"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Synonym",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"word\": \"квартира\",\n  \"synonyms\": [\"апартамент\", \"жилье\", \"недвижимость\"],\n  \"language\": \"ru\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/synonyms",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "synonyms"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Synonym",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"word\": \"квартира\",\n  \"synonyms\": [\"апартамент\", \"жилье\", \"недвижимость\", \"жилплощадь\"],\n  \"language\": \"ru\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/synonyms/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "synonyms", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Synonym",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/synonyms/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "synonyms", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Transliteration Rules",
+					"item": [
+						{
+							"name": "Get Transliteration Rules",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/transliteration",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "transliteration"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Transliteration Rule",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"from_char\": \"ч\",\n  \"to_char\": \"ch\",\n  \"language\": \"ru\",\n  \"priority\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/transliteration",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "transliteration"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Transliteration Rule",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"from_char\": \"ч\",\n  \"to_char\": \"ch\",\n  \"language\": \"ru\",\n  \"priority\": 2\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/transliteration/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "transliteration", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Transliteration Rule",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/config/transliteration/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "config", "transliteration", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Search Statistics",
+					"item": [
+						{
+							"name": "Get Search Statistics",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/statistics?limit=100",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "statistics"],
+									"query": [
+										{
+											"key": "limit",
+											"value": "100"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Popular Searches",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/search/statistics/popular?limit=10",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "search", "statistics", "popular"],
+									"query": [
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Map Endpoints",
+			"item": [
+				{
+					"name": "Get Listings in Bounds",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/map/bounds?ne_lat=45.0&ne_lng=21.0&sw_lat=44.0&sw_lng=20.0&zoom=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "map", "bounds"],
+							"query": [
+								{
+									"key": "ne_lat",
+									"value": "45.0"
+								},
+								{
+									"key": "ne_lng",
+									"value": "21.0"
+								},
+								{
+									"key": "sw_lat",
+									"value": "44.0"
+								},
+								{
+									"key": "sw_lng",
+									"value": "20.0"
+								},
+								{
+									"key": "zoom",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Map Clusters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/map/clusters?ne_lat=45.0&ne_lng=21.0&sw_lat=44.0&sw_lng=20.0&zoom=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "map", "clusters"],
+							"query": [
+								{
+									"key": "ne_lat",
+									"value": "45.0"
+								},
+								{
+									"key": "ne_lng",
+									"value": "21.0"
+								},
+								{
+									"key": "sw_lat",
+									"value": "44.0"
+								},
+								{
+									"key": "sw_lng",
+									"value": "20.0"
+								},
+								{
+									"key": "zoom",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Additional Endpoints",
+			"item": [
+				{
+					"name": "Get Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "categories"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category Tree",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketplace/category-tree",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "marketplace", "category-tree"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

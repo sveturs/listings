@@ -261,6 +261,7 @@ func (h *UserHandler) LoginOld(c *fiber.Ctx) error {
 		Name:     "session_token",
 		Value:    sessionToken,
 		Path:     "/",
+		Domain:   h.services.Config().GetCookieDomain(),
 		MaxAge:   3600 * 24, // 24 часа
 		Secure:   h.services.Config().GetCookieSecure(),
 		HTTPOnly: true,

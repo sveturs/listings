@@ -59,8 +59,9 @@ func main() {
 	storage, err := postgresStorage.NewDatabase(
 		cfg.DatabaseURL,
 		osClient,
-		"",  // minioEndpoint - not needed for this task
-		nil, // fileStorage - not needed for this task
+		"",                // minioEndpoint - not needed for this task
+		nil,               // fileStorage - not needed for this task
+		cfg.SearchWeights, // searchWeights from config
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize storage")

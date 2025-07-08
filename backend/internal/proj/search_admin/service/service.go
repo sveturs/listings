@@ -1,0 +1,283 @@
+package service
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"backend/internal/domain"
+	"backend/internal/storage/postgres"
+
+	"github.com/jmoiron/sqlx"
+)
+
+type Service struct {
+	repo          *postgres.SearchConfigRepository
+	analyticsRepo *postgres.SearchAnalyticsRepository
+}
+
+func NewService(db *sqlx.DB) *Service {
+	return &Service{
+		repo:          postgres.NewSearchConfigRepository(db),
+		analyticsRepo: postgres.NewSearchAnalyticsRepository(db),
+	}
+}
+
+// Weight management
+func (s *Service) GetWeights(ctx context.Context) ([]domain.SearchWeight, error) {
+	return s.repo.GetWeights(ctx)
+}
+
+func (s *Service) GetWeightByField(ctx context.Context, fieldName string) (*domain.SearchWeight, error) {
+	return s.repo.GetWeightByField(ctx, fieldName)
+}
+
+func (s *Service) CreateWeight(ctx context.Context, weight *domain.SearchWeight) error {
+	// Validation
+	if weight.FieldName == "" {
+		return fmt.Errorf("field name is required")
+	}
+	if weight.Weight <= 0 || weight.Weight > 10 {
+		return fmt.Errorf("weight must be between 0 and 10")
+	}
+
+	// Check if field already exists
+	existing, err := s.repo.GetWeightByField(ctx, weight.FieldName)
+	if err != nil {
+		return err
+	}
+	if existing != nil {
+		return fmt.Errorf("weight for field %s already exists", weight.FieldName)
+	}
+
+	return s.repo.CreateWeight(ctx, weight)
+}
+
+func (s *Service) UpdateWeight(ctx context.Context, id int64, weight *domain.SearchWeight) error {
+	// Validation
+	if weight.FieldName == "" {
+		return fmt.Errorf("field name is required")
+	}
+	if weight.Weight <= 0 || weight.Weight > 10 {
+		return fmt.Errorf("weight must be between 0 and 10")
+	}
+
+	return s.repo.UpdateWeight(ctx, id, weight)
+}
+
+func (s *Service) DeleteWeight(ctx context.Context, id int64) error {
+	return s.repo.DeleteWeight(ctx, id)
+}
+
+// Synonym management
+func (s *Service) GetSynonyms(ctx context.Context, language string) ([]domain.SearchSynonym, error) {
+	if language == "" {
+		language = "ru"
+	}
+	return s.repo.GetSynonyms(ctx, language)
+}
+
+func (s *Service) CreateSynonym(ctx context.Context, synonym *domain.SearchSynonym) error {
+	// Validation
+	if synonym.Term == "" {
+		return fmt.Errorf("term is required")
+	}
+	if len(synonym.Synonyms) == 0 {
+		return fmt.Errorf("at least one synonym is required")
+	}
+	if synonym.Language == "" {
+		synonym.Language = "ru"
+	}
+
+	return s.repo.CreateSynonym(ctx, synonym)
+}
+
+func (s *Service) UpdateSynonym(ctx context.Context, id int64, synonym *domain.SearchSynonym) error {
+	// Validation
+	if synonym.Term == "" {
+		return fmt.Errorf("term is required")
+	}
+	if len(synonym.Synonyms) == 0 {
+		return fmt.Errorf("at least one synonym is required")
+	}
+
+	return s.repo.UpdateSynonym(ctx, id, synonym)
+}
+
+func (s *Service) DeleteSynonym(ctx context.Context, id int64) error {
+	return s.repo.DeleteSynonym(ctx, id)
+}
+
+// Transliteration management
+func (s *Service) GetTransliterationRules(ctx context.Context) ([]domain.TransliterationRule, error) {
+	return s.repo.GetTransliterationRules(ctx)
+}
+
+func (s *Service) CreateTransliterationRule(ctx context.Context, rule *domain.TransliterationRule) error {
+	// Validation
+	if rule.FromScript == "" || rule.ToScript == "" {
+		return fmt.Errorf("from_script and to_script are required")
+	}
+	if rule.FromPattern == "" || rule.ToPattern == "" {
+		return fmt.Errorf("from_pattern and to_pattern are required")
+	}
+
+	return s.repo.CreateTransliterationRule(ctx, rule)
+}
+
+func (s *Service) UpdateTransliterationRule(ctx context.Context, id int64, rule *domain.TransliterationRule) error {
+	// Validation
+	if rule.FromScript == "" || rule.ToScript == "" {
+		return fmt.Errorf("from_script and to_script are required")
+	}
+	if rule.FromPattern == "" || rule.ToPattern == "" {
+		return fmt.Errorf("from_pattern and to_pattern are required")
+	}
+
+	return s.repo.UpdateTransliterationRule(ctx, id, rule)
+}
+
+func (s *Service) DeleteTransliterationRule(ctx context.Context, id int64) error {
+	return s.repo.DeleteTransliterationRule(ctx, id)
+}
+
+// Statistics
+func (s *Service) RecordSearch(ctx context.Context, stats *domain.SearchStatistics) error {
+	return s.repo.CreateSearchStatistics(ctx, stats)
+}
+
+func (s *Service) GetSearchStatistics(ctx context.Context, limit int) ([]domain.SearchStatistics, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+
+	// Пробуем получить данные из search_logs через analytics repo
+	if s.analyticsRepo != nil {
+		logsData, err := s.analyticsRepo.GetSearchStatisticsFromLogs(ctx, limit)
+		if err == nil && len(logsData) > 0 {
+			// Конвертируем в domain.SearchStatistics для совместимости
+			var stats []domain.SearchStatistics
+			for _, data := range logsData {
+				stat := domain.SearchStatistics{
+					Query:          data["query"].(string),
+					ResultsCount:   data["results_count"].(int),
+					SearchDuration: data["search_duration_ms"].(int64),
+				}
+				if id, ok := data["id"].(int64); ok {
+					stat.ID = id
+				}
+				if userID, ok := data["user_id"].(int64); ok {
+					stat.UserID = &userID
+				}
+				if createdAt, ok := data["created_at"].(string); ok {
+					if t, err := time.Parse(time.RFC3339, createdAt); err == nil {
+						stat.CreatedAt = t
+					}
+				}
+				stats = append(stats, stat)
+			}
+			return stats, nil
+		}
+	}
+
+	// Fallback на старый метод
+	return s.repo.GetSearchStatistics(ctx, limit)
+}
+
+func (s *Service) GetPopularSearches(ctx context.Context, limit int) ([]map[string]interface{}, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+
+	// Пробуем получить данные из search_logs через analytics repo
+	if s.analyticsRepo != nil {
+		logsData, err := s.analyticsRepo.GetPopularSearchesFromLogs(ctx, limit)
+		if err == nil && len(logsData) > 0 {
+			return logsData, nil
+		}
+	}
+
+	// Fallback на старый метод
+	return s.repo.GetPopularSearches(ctx, limit)
+}
+
+// Configuration
+func (s *Service) GetConfig(ctx context.Context) (*domain.SearchConfig, error) {
+	return s.repo.GetConfig(ctx)
+}
+
+func (s *Service) UpdateConfig(ctx context.Context, config *domain.SearchConfig) error {
+	// Validation
+	if config.MinSearchLength < 1 {
+		return fmt.Errorf("min_search_length must be at least 1")
+	}
+	if config.MaxSuggestions < 1 {
+		return fmt.Errorf("max_suggestions must be at least 1")
+	}
+	if config.FuzzyMaxEdits < 0 || config.FuzzyMaxEdits > 2 {
+		return fmt.Errorf("fuzzy_max_edits must be between 0 and 2")
+	}
+
+	return s.repo.UpdateConfig(ctx, config)
+}
+
+// GetSearchAnalytics возвращает аналитику поиска за определенный период
+func (s *Service) GetSearchAnalytics(ctx context.Context, timeRange string) (map[string]interface{}, error) {
+	// Используем новый репозиторий для получения аналитики из search_logs
+	if s.analyticsRepo != nil {
+		return s.analyticsRepo.GetSearchAnalytics(ctx, timeRange)
+	}
+
+	// Fallback на старую логику если новый репозиторий не доступен
+	analytics := make(map[string]interface{})
+
+	// Получаем статистику поиска
+	stats, err := s.repo.GetSearchStatistics(ctx, 1000) // Больше данных для аналитики
+	if err != nil {
+		return nil, fmt.Errorf("failed to get search statistics: %w", err)
+	}
+
+	// Получаем популярные поисковые запросы
+	popular, err := s.repo.GetPopularSearches(ctx, 20)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get popular searches: %w", err)
+	}
+
+	// Формируем ответ
+	analytics["timeRange"] = timeRange
+	analytics["totalSearches"] = len(stats)
+	analytics["popularSearches"] = popular
+	analytics["recentSearches"] = stats
+
+	// Добавляем простую аналитику
+	if len(stats) > 0 {
+		analytics["avgResultsCount"] = calculateAverageResults(stats)
+	}
+
+	return analytics, nil
+}
+
+// calculateAverageResults вычисляет средний результат поиска
+func calculateAverageResults(stats []domain.SearchStatistics) float64 {
+	if len(stats) == 0 {
+		return 0
+	}
+
+	total := 0
+	for _, stat := range stats {
+		total += stat.ResultsCount
+	}
+
+	return float64(total) / float64(len(stats))
+}
+
+// GetSearchAnalyticsWithPagination возвращает аналитику поиска с поддержкой пагинации
+func (s *Service) GetSearchAnalyticsWithPagination(ctx context.Context, timeRange string, offsetTop, offsetZero, limit int) (map[string]interface{}, error) {
+	// Используем новый репозиторий для получения аналитики из search_logs
+	if s.analyticsRepo != nil {
+		return s.analyticsRepo.GetSearchAnalyticsWithPagination(ctx, timeRange, offsetTop, offsetZero, limit)
+	}
+
+	// Fallback на старую логику без пагинации
+	return s.GetSearchAnalytics(ctx, timeRange)
+}

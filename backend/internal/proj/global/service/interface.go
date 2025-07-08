@@ -12,6 +12,7 @@ import (
 	notificationService "backend/internal/proj/notifications/service"
 	paymentService "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
+	searchlogsService "backend/internal/proj/searchlogs/service"
 	storefrontService "backend/internal/proj/storefronts/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage"
@@ -45,4 +46,7 @@ type ServicesInterface interface {
 
 	// Orders возвращает сервис для работы с заказами маркетплейса
 	Orders() marketplaceService.OrderServiceInterface
+
+	// SearchLogs возвращает сервис для логирования поисковых запросов
+	SearchLogs() searchlogsService.ServiceInterface
 }

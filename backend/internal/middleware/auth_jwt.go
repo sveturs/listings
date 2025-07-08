@@ -13,6 +13,14 @@ import (
 	"backend/pkg/utils"
 )
 
+// min helper function
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 // AuthRequiredJWT - основной метод аутентификации через JWT
 // Поддерживает как Bearer токены в заголовке, так и fallback на session cookies
 func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
@@ -140,6 +148,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 				Name:     "jwt_token",
 				Value:    "",
 				Path:     "/",
+				Domain:   m.config.GetCookieDomain(),
 				MaxAge:   -1,
 				Secure:   m.config.GetCookieSecure(),
 				HTTPOnly: true,
@@ -196,6 +205,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 				Name:     "jwt_token",
 				Value:    newJWT,
 				Path:     "/",
+				Domain:   m.config.GetCookieDomain(),
 				MaxAge:   m.config.JWTExpirationHours * 3600,
 				Secure:   m.config.GetCookieSecure(),
 				HTTPOnly: true,
@@ -309,6 +319,7 @@ func (m *Middleware) RefreshJWT(c *fiber.Ctx) error {
 		Name:     "jwt_token",
 		Value:    newToken,
 		Path:     "/",
+		Domain:   m.config.GetCookieDomain(),
 		MaxAge:   m.config.JWTExpirationHours * 3600,
 		Secure:   m.config.GetCookieSecure(),
 		HTTPOnly: true,

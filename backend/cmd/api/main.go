@@ -50,15 +50,15 @@ func main() {
 	if err := godotenv.Load(envFile); err != nil {
 		logger.Info().Str("envFile", envFile).Msgf("Warning: Could not load .env file: %s", envFile)
 	}
-	// Initialize logger
-	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL")); err != nil {
-		logger.Fatal().Err(err).Msg("Failed to initialize logger")
-	}
-
 	// Инициализация конфигурации
 	cfg, err := config.NewConfig()
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("Failed to load config: %v", err)
+	}
+
+	// Initialize logger с конфигурацией
+	if err := logger.Init(cfg.Environment, cfg.LogLevel); err != nil {
+		logger.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
 	logger.Info().
 		Str("gitCommit", gitCommit).

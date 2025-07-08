@@ -11,23 +11,58 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
+	searchlogsTypes "backend/internal/proj/searchlogs/types"
 	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
 	"backend/pkg/utils"
 )
 
 // UnifiedSearchHandler обрабатывает унифицированные поисковые запросы
 type UnifiedSearchHandler struct {
-	services globalService.ServicesInterface
+	services      globalService.ServicesInterface
+	searchWeights *config.UnifiedSearchWeights
 }
 
 // NewUnifiedSearchHandler создает новый обработчик унифицированного поиска
-func NewUnifiedSearchHandler(services globalService.ServicesInterface) *UnifiedSearchHandler {
+func NewUnifiedSearchHandler(services globalService.ServicesInterface, searchWeights *config.SearchWeights) *UnifiedSearchHandler {
+	var unifiedWeights *config.UnifiedSearchWeights
+	if searchWeights != nil {
+		unifiedWeights = &searchWeights.UnifiedSearchWeights
+	}
+
 	return &UnifiedSearchHandler{
-		services: services,
+		services:      services,
+		searchWeights: unifiedWeights,
+	}
+}
+
+// getSearchWeight возвращает вес из конфигурации или значение по умолчанию
+func (h *UnifiedSearchHandler) getSearchWeight(weightName string, defaultValue float64) float64 {
+	if h.searchWeights == nil {
+		return defaultValue
+	}
+
+	switch weightName {
+	case "ExactTitleMatch":
+		return h.searchWeights.ExactTitleMatch
+	case "PartialTitleMatch":
+		return h.searchWeights.PartialTitleMatch
+	case "DescriptionMatch":
+		return h.searchWeights.DescriptionMatch
+	case "PopularityMaxBoost":
+		return h.searchWeights.PopularityMaxBoost
+	case "FreshnessWeek":
+		return h.searchWeights.FreshnessWeek
+	case "FreshnessMonth":
+		return h.searchWeights.FreshnessMonth
+	case "FreshnessQuarter":
+		return h.searchWeights.FreshnessQuarter
+	default:
+		return defaultValue
 	}
 }
 
@@ -134,6 +169,8 @@ type UnifiedStorefrontInfo struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "search.searchError"
 // @Router /api/v1/search [get]
 func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
+	// Засекаем время начала для измерения производительности
+	startTime := time.Now()
 	ctx := c.Context()
 
 	// Парсим параметры поиска
@@ -231,6 +268,81 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 			logger.Error().Err(err).Msg("Failed to save search query")
 			// Не возвращаем ошибку пользователю, так как основной поиск прошел успешно
 		}
+	}
+
+	// Асинхронное логирование поискового запроса через SearchLogs сервис
+	if searchLogsSvc := h.services.SearchLogs(); searchLogsSvc != nil {
+		logger.Info().Msg("SearchLogs service is available, logging unified search query")
+
+		// Извлекаем данные из контекста Fiber ДО запуска горутины
+		var userID *int
+		if uid, ok := c.Locals("user_id").(int); ok && uid > 0 {
+			userID = &uid
+		}
+
+		// Получаем session ID из cookie или заголовков
+		sessionID := c.Cookies("session_id")
+		if sessionID == "" {
+			sessionID = c.Get("X-Session-ID")
+		}
+
+		// Определяем тип устройства из User-Agent
+		userAgent := c.Get("User-Agent")
+		ipAddress := c.IP()
+
+		go func() {
+			// Вычисляем время ответа
+			responseTime := time.Since(startTime).Milliseconds()
+
+			// Определяем тип устройства из User-Agent
+			deviceType := detectDeviceType(userAgent)
+
+			// Преобразуем filters из map[string]interface{} (они уже в правильном формате)
+			filters := params.AttributeFilters
+
+			// Преобразуем CategoryID в *int
+			var categoryIDInt *int
+			if params.CategoryID != "" {
+				if catID, err := strconv.Atoi(params.CategoryID); err == nil {
+					categoryIDInt = &catID
+				}
+			}
+
+			// Создаем запись лога
+			logEntry := &searchlogsTypes.SearchLogEntry{
+				Query:           params.Query,
+				UserID:          userID,
+				SessionID:       sessionID,
+				ResultCount:     result.Total,
+				ResponseTimeMS:  int64(responseTime),
+				Filters:         filters,
+				CategoryID:      categoryIDInt,
+				PriceMin:        &params.PriceMin,
+				PriceMax:        &params.PriceMax,
+				Location:        nil, // TODO: добавить поддержку локации
+				Language:        params.Language,
+				DeviceType:      deviceType,
+				UserAgent:       userAgent,
+				IP:              ipAddress,
+				SearchType:      "unified",
+				HasSpellCorrect: false,   // TODO: добавить поддержку spell correction
+				ClickedItems:    []int{}, // Будет заполняться позже при кликах
+				Timestamp:       time.Now(),
+			}
+
+			// Логируем асинхронно
+			logger.Info().
+				Str("query", logEntry.Query).
+				Int("results", logEntry.ResultCount).
+				Int64("response_ms", logEntry.ResponseTimeMS).
+				Msg("Logging unified search query")
+
+			if err := searchLogsSvc.LogSearch(context.Background(), logEntry); err != nil {
+				logger.Error().Err(err).Msg("Failed to log unified search query")
+			} else {
+				logger.Info().Msg("Unified search query logged successfully")
+			}
+		}()
 	}
 
 	return c.JSON(result)
@@ -495,37 +607,38 @@ func (h *UnifiedSearchHandler) calculateRelevanceScore(item *UnifiedSearchItem, 
 	titleLower := strings.ToLower(item.Name)
 	descLower := strings.ToLower(item.Description)
 
-	// Точное совпадение в заголовке (вес 5.0)
+	// Точное совпадение в заголовке
 	if titleLower == queryLower {
-		score += 5.0
+		score += h.getSearchWeight("ExactTitleMatch", 5.0)
 	} else if strings.Contains(titleLower, queryLower) {
-		// Частичное совпадение в заголовке (вес 3.0)
-		score += 3.0
+		// Частичное совпадение в заголовке
+		score += h.getSearchWeight("PartialTitleMatch", 3.0)
 	}
 
-	// Совпадение в описании (вес 2.0)
+	// Совпадение в описании
 	if strings.Contains(descLower, queryLower) {
-		score += 2.0
+		score += h.getSearchWeight("DescriptionMatch", 2.0)
 	}
 
-	// Учитываем популярность (до 1.0 балла)
+	// Учитываем популярность
 	if item.ViewsCount > 0 {
+		maxBoost := h.getSearchWeight("PopularityMaxBoost", 1.0)
 		popularityScore := math.Log10(float64(item.ViewsCount+1)) / 3.0 // нормализуем до ~1.0
-		if popularityScore > 1.0 {
-			popularityScore = 1.0
+		if popularityScore > maxBoost {
+			popularityScore = maxBoost
 		}
 		score += popularityScore
 	}
 
-	// Учитываем свежесть объявления (до 0.5 балла)
+	// Учитываем свежесть объявления
 	if item.CreatedAt != nil {
 		daysSinceCreated := time.Since(*item.CreatedAt).Hours() / 24
 		if daysSinceCreated < 7 {
-			score += 0.5 // Новые объявления получают бонус
+			score += h.getSearchWeight("FreshnessWeek", 0.5) // Новые объявления получают бонус
 		} else if daysSinceCreated < 30 {
-			score += 0.3
+			score += h.getSearchWeight("FreshnessMonth", 0.3)
 		} else if daysSinceCreated < 90 {
-			score += 0.1
+			score += h.getSearchWeight("FreshnessQuarter", 0.1)
 		}
 	}
 
@@ -609,4 +722,39 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	}
 
 	return location
+}
+
+// detectDeviceType определяет тип устройства по User-Agent
+func detectDeviceType(userAgent string) string {
+	ua := strings.ToLower(userAgent)
+
+	// Проверка на мобильные устройства
+	mobileKeywords := []string{
+		"mobile", "android", "iphone", "ipad", "ipod",
+		"blackberry", "windows phone", "opera mini", "iemobile",
+	}
+
+	for _, keyword := range mobileKeywords {
+		if strings.Contains(ua, keyword) {
+			// Планшеты
+			if strings.Contains(ua, "ipad") || strings.Contains(ua, "tablet") {
+				return "tablet"
+			}
+			return "mobile"
+		}
+	}
+
+	// Проверка на боты
+	botKeywords := []string{
+		"bot", "crawl", "spider", "scraper", "curl", "wget",
+	}
+
+	for _, keyword := range botKeywords {
+		if strings.Contains(ua, keyword) {
+			return "bot"
+		}
+	}
+
+	// По умолчанию - десктоп
+	return "desktop"
 }

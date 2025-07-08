@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Admin Analytics</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Testing Admin Search Analytics</h1>
+    <div id="status">Loading...</div>
+    <pre id="result"></pre>
+
+    <script>
+        // JWT токен для админа
+        const adminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo5LCJlbWFpbCI6ImFkbWluQHRlc3QuY29tIiwiaXNzIjoic3ZldHUtYmFja2VuZCIsInN1YiI6InVzZXI6OSIsImV4cCI6MTc1NDUxODY0OSwibmJmIjoxNzUxOTI2NjQ5LCJpYXQiOjE3NTE5MjY2NDl9.Dh13B3RTPIYGR6-cIVznnpOX_w3vnN4MOMmgBWuMYxQ';
+        
+        // Сохраняем токен в localStorage
+        localStorage.setItem('accessToken', adminToken);
+        
+        // Тестируем API
+        async function testAnalyticsAPI() {
+            const statusDiv = document.getElementById('status');
+            const resultPre = document.getElementById('result');
+            
+            try {
+                statusDiv.textContent = 'Calling API...';
+                
+                const response = await fetch('/api/v1/admin/search/analytics?range=7d', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.textContent = 'Success! API returned data:';
+                    resultPre.textContent = JSON.stringify(data, null, 2);
+                    
+                    // Проверяем что есть данные
+                    if (data.data && data.data.totalSearches > 0) {
+                        statusDiv.innerHTML += '<br><span style="color: green;">✓ Analytics data is working! Total searches: ' + data.data.totalSearches + '</span>';
+                    } else {
+                        statusDiv.innerHTML += '<br><span style="color: orange;">⚠ API works but no search data found</span>';
+                    }
+                } else {
+                    statusDiv.textContent = 'Error: ' + response.status;
+                    resultPre.textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Error: ' + error.message;
+                resultPre.textContent = error.stack;
+            }
+        }
+        
+        // Запускаем тест
+        testAnalyticsAPI();
+    </script>
+</body>
+</html>

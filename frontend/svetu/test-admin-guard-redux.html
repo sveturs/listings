@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест AdminGuard через Redux</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre;
+        }
+        .step {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тест AdminGuard через Redux Store</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Важно:</strong> Этот тест нужно выполнять непосредственно на странице React приложения, а не в отдельном HTML файле.
+        </div>
+
+        <div class="step">
+            <h2>Шаг 1: Откройте приложение</h2>
+            <p>Перейдите на <a href="http://localhost:3001" target="_blank">http://localhost:3001</a></p>
+        </div>
+
+        <div class="step">
+            <h2>Шаг 2: Откройте консоль разработчика (F12)</h2>
+            <p>Нажмите F12 или Ctrl+Shift+I для открытия DevTools</p>
+        </div>
+
+        <div class="step">
+            <h2>Шаг 3: Скопируйте и выполните этот код в консоли</h2>
+            <p>Код для модификации пользователя через Redux:</p>
+            <div class="code-block">// Получаем Redux store через window.__REDUX_STORE__
+// (это доступно благодаря StoreProvider)
+const store = window.__REDUX_STORE__;
+
+if (!store) {
+    console.error('Redux store не найден! Убедитесь, что вы на странице React приложения');
+} else {
+    // Получаем текущее состояние
+    const state = store.getState();
+    console.log('Текущий пользователь из Redux:', state.auth.user);
+    
+    // Создаем action для обновления пользователя
+    const nonAdminUser = {
+        id: 99999,
+        email: "test.nonadmin@example.com",
+        name: "Тестовый НЕ администратор",
+        is_admin: false,  // Ключевой момент - НЕ админ!
+        created_at: new Date().toISOString()
+    };
+    
+    // Диспатчим action для установки пользователя
+    store.dispatch({
+        type: 'auth/setUser',
+        payload: nonAdminUser
+    });
+    
+    // Также обновляем sessionStorage для консистентности
+    sessionStorage.setItem('user', JSON.stringify(nonAdminUser));
+    
+    console.log('✓ Установлен пользователь БЕЗ прав админа:', nonAdminUser);
+    console.log('Теперь попробуйте перейти на /admin/search');
+}</div>
+        </div>
+
+        <div class="step">
+            <h2>Шаг 4: Альтернативный метод через sessionStorage</h2>
+            <p>Если Redux store недоступен, используйте этот код:</p>
+            <div class="code-block">// Устанавливаем пользователя через sessionStorage
+const testUser = {
+    id: 99999,
+    email: "test.nonadmin@example.com",
+    name: "Тестовый НЕ администратор", 
+    is_admin: false,  // НЕ администратор
+    created_at: new Date().toISOString()
+};
+
+sessionStorage.setItem('user', JSON.stringify(testUser));
+console.log('✓ Пользователь установлен в sessionStorage:', testUser);
+
+// Перезагружаем страницу для применения изменений
+console.log('Перезагрузка через 2 секунды...');
+setTimeout(() => {
+    window.location.reload();
+}, 2000);</div>
+        </div>
+
+        <div class="step">
+            <h2>Шаг 5: Проверка AdminGuard</h2>
+            <p>После установки пользователя выполните в консоли:</p>
+            <div class="code-block">// Попытка перейти в админ-панель
+window.location.href = '/admin/search';</div>
+            <p><strong>Ожидаемый результат:</strong></p>
+            <ul>
+                <li>AdminGuard должен проверить <span class="highlight">is_admin: false</span></li>
+                <li>Доступ должен быть заблокирован</li>
+                <li>Должен произойти редирект на главную страницу</li>
+                <li>В консоли появится сообщение об отказе в доступе</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h2>Дополнительные команды для отладки</h2>
+            <div class="code-block">// Проверить текущего пользователя из Redux
+if (window.__REDUX_STORE__) {
+    const user = window.__REDUX_STORE__.getState().auth.user;
+    console.log('Redux user:', user);
+    console.log('is_admin:', user?.is_admin);
+}
+
+// Проверить пользователя из sessionStorage
+const sessionUser = JSON.parse(sessionStorage.getItem('user') || '{}');
+console.log('SessionStorage user:', sessionUser);
+console.log('is_admin:', sessionUser.is_admin);
+
+// Очистить все данные пользователя
+sessionStorage.removeItem('user');
+if (window.__REDUX_STORE__) {
+    window.__REDUX_STORE__.dispatch({ type: 'auth/logout' });
+}
+console.log('✓ Пользователь удален');</div>
+        </div>
+
+        <button onclick="window.open('http://localhost:3001', '_blank')">
+            Открыть приложение
+        </button>
+    </div>
+</body>
+</html>

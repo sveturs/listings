@@ -4,6 +4,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/config"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
 )
@@ -12,13 +13,15 @@ import (
 type Handler struct {
 	UnifiedSearch *UnifiedSearchHandler
 	service       globalService.ServicesInterface
+	searchWeights *config.SearchWeights
 }
 
 // NewHandler создает новый глобальный обработчик
-func NewHandler(services globalService.ServicesInterface) *Handler {
+func NewHandler(services globalService.ServicesInterface, searchWeights *config.SearchWeights) *Handler {
 	return &Handler{
-		UnifiedSearch: NewUnifiedSearchHandler(services),
+		UnifiedSearch: NewUnifiedSearchHandler(services, searchWeights),
 		service:       services,
+		searchWeights: searchWeights,
 	}
 }
 

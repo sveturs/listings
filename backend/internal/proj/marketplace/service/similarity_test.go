@@ -4,13 +4,15 @@ import (
 	"context"
 	"testing"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSimilarityCalculator_CalculateSimilarity(t *testing.T) {
-	calculator := NewSimilarityCalculator()
+	searchWeights := config.GetDefaultSearchWeights()
+	calculator := NewSimilarityCalculator(searchWeights)
 	ctx := context.Background()
 
 	// Исходное объявление
@@ -65,7 +67,8 @@ func TestSimilarityCalculator_CalculateSimilarity(t *testing.T) {
 }
 
 func TestSimilarityCalculator_BasicFunctionality(t *testing.T) {
-	calculator := NewSimilarityCalculator()
+	searchWeights := config.GetDefaultSearchWeights()
+	calculator := NewSimilarityCalculator(searchWeights)
 	assert.NotNil(t, calculator)
 
 	// Тест что конструктор создает валидный объект

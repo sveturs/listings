@@ -1,0 +1,144 @@
+# Конфигурация весов для поисковой системы
+search_weights:
+  # Веса boost для OpenSearch запросов
+  opensearch_boosts:
+    # Основные поля
+    title: 5.0
+    title_ngram: 2.0
+    description: 2.0
+    translation_title: 4.0
+    translation_description: 1.5
+    
+    # Атрибуты
+    attribute_text_value: 5.0
+    attribute_display_value: 4.0
+    attribute_text_value_keyword: 5.0
+    attribute_general_boost: 4.0
+    
+    # Специализированные поля
+    real_estate_attributes_combined: 5.0
+    property_type: 4.0
+    rooms_text: 4.0
+    car_make: 5.0
+    car_model: 4.0
+    car_keywords: 5.0
+    
+    # Веса для поиска по словам
+    per_word_title: 2.0
+    per_word_description: 1.0
+    per_word_all_attributes: 2.0
+    per_word_real_estate_attributes: 3.0
+    per_word_rooms_text: 2.5
+    
+    # Прочие
+    automotive_attribute_priority: 2.0
+    synonym_boost: 0.5
+
+  # Веса атрибутов для разных категорий
+  category_attribute_weights:
+    # Недвижимость - Квартиры (ID: 1100)
+    1100:
+      rooms: 0.9
+      area: 0.85
+      floor: 0.7
+      property_type: 0.8
+      location: 0.75
+      condition: 0.6
+      heating: 0.5
+      parking: 0.4
+      balcony: 0.3
+      elevator: 0.25
+    
+    # Автомобили (ID: 2000)
+    2000:
+      make: 0.9
+      model: 0.85
+      year: 0.8
+      body_type: 0.75
+      fuel_type: 0.7
+      transmission: 0.65
+      engine: 0.6
+      mileage: 0.7
+      condition: 0.6
+      color: 0.3
+    
+    # Электроника (ID: 3000)
+    3000:
+      brand: 0.9
+      model: 0.85
+      type: 0.8
+      condition: 0.7
+      warranty: 0.5
+      storage: 0.6
+      display_size: 0.5
+      color: 0.3
+    
+    # Мебель (ID: 4000)
+    4000:
+      type: 0.9
+      material: 0.8
+      style: 0.7
+      size: 0.75
+      condition: 0.65
+      color: 0.6
+      brand: 0.5
+    
+    # Одежда (ID: 5000)
+    5000:
+      type: 0.9
+      size: 0.85
+      brand: 0.8
+      gender: 0.8
+      material: 0.7
+      season: 0.65
+      color: 0.6
+      condition: 0.6
+
+  # Веса атрибутов по умолчанию
+  default_attribute_weights:
+    type: 0.8
+    brand: 0.7
+    model: 0.65
+    condition: 0.6
+    size: 0.5
+    material: 0.5
+    color: 0.4
+
+  # Веса для расчета общей похожести объявлений
+  similarity_scoring:
+    # Когда категории совпадают (CategoryScore = 1.0)
+    same_category:
+      category: 0.3
+      attributes: 0.3
+      text: 0.2
+      price: 0.15
+      location: 0.05
+    
+    # Когда категории из одной группы (CategoryScore >= 0.6)
+    similar_category:
+      category: 0.2
+      attributes: 0.2
+      text: 0.25
+      price: 0.25
+      location: 0.1
+    
+    # Когда категории разные (CategoryScore < 0.6)
+    different_category:
+      category: 0.1
+      attributes: 0.15
+      text: 0.2
+      price: 0.35
+      location: 0.2
+
+  # Веса для unified search
+  unified_search_weights:
+    exact_title_match: 5.0
+    partial_title_match: 3.0
+    description_match: 2.0
+    popularity_max_boost: 1.0
+    freshness_week: 0.5
+    freshness_month: 0.3
+    freshness_quarter: 0.1
+
+  # Порог похожести для fuzzy search
+  fuzzy_search_threshold: 0.3
