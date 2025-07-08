@@ -655,9 +655,12 @@
       "content": "Content",
       "listings": "oglasa",
       "users": "Users",
+      "analytics": "Analitika",
+      "search": "Analitika pretrage",
       "usersDescription": "Manage user accounts and permissions",
       "listingsDescription": "Moderate and manage marketplace listings",
-      "categoriesDescription": "Configure categories and attributes"
+      "categoriesDescription": "Configure categories and attributes",
+      "searchDescription": "Analiza performansi pretrage i ponašanja korisnika"
     },
     "categories": {
       "title": "Categories",
@@ -2295,5 +2298,66 @@
     "viewAll": "Prikaži sve",
     "moreOptions": "Više opcija",
     "backToTop": "Vrati se na vrh"
+  },
+  "analytics": {
+    "error": {
+      "rate_limit_exceeded": "Previše zahteva. Pokušajte ponovo kasnije.",
+      "invalid_request": "Neispravan format zahteva",
+      "validation_failed": "Greška validacije zahteva",
+      "failed_to_track": "Nije moguće pratiti događaj",
+      "failed_to_get_metrics": "Nije moguće dobiti metrike",
+      "invalid_period_start": "Neispravan format početnog datuma",
+      "invalid_period_end": "Neispravan format završnog datuma",
+      "failed_to_get_events": "Nije moguće dobiti događaje",
+      "invalid_user_id": "Neispravan ID korisnika",
+      "invalid_session_id": "Neispravan ID sesije",
+      "period_required": "Potrebni su datumi početka i kraja perioda",
+      "failed_to_update_metrics": "Nije moguće ažurirati metrike"
+    }
+  },
+  "behaviorTracking": {
+    "error": {
+      "initialization_failed": "Nije moguće inicijalizovati praćenje ponašanja",
+      "session_generation_failed": "Nije moguće kreirati sesiju praćenja",
+      "event_send_failed": "Nije moguće poslati događaj praćenja",
+      "batch_send_failed": "Nije moguće poslati paket događaja",
+      "retry_limit_exceeded": "Prekoračen je maksimalni broj pokušaja",
+      "invalid_event_data": "Neispravan format podataka događaja",
+      "network_error": "Greška mreže tokom praćenja",
+      "api_error": "Greška API-ja tokom praćenja",
+      "storage_error": "Greška lokalnog skladišta",
+      "context_update_failed": "Nije moguće ažurirati kontekst praćenja",
+      "flush_failed": "Nije moguće poslati događaje na čekanju",
+      "disabled": "Praćenje ponašanja je onemogućeno",
+      "not_initialized": "Praćenje ponašanja nije inicijalizovano",
+      "invalid_batch_data": "Neispravan format podataka paketa",
+      "timeout": "Vreme zahteva je isteklo",
+      "server_error": "Greška servera"
+    },
+    "success": {
+      "initialized": "Praćenje ponašanja je uspešno inicijalizovano",
+      "event_sent": "Događaj je uspešno poslat",
+      "batch_sent": "Paket događaja je uspešno poslat",
+      "context_updated": "Kontekst praćenja je ažuriran",
+      "events_flushed": "Događaji na čekanju su uspešno poslati",
+      "session_created": "Kreirana je nova sesija praćenja"
+    },
+    "events": {
+      "search_performed": "Izvršena pretraga",
+      "result_clicked": "Klik na rezultat pretrage",
+      "item_viewed": "Pregled proizvoda",
+      "item_purchased": "Kupovina proizvoda",
+      "search_filter_applied": "Primenjen filter pretrage",
+      "search_sort_changed": "Promenjen način sortiranja pretrage"
+    },
+    "states": {
+      "enabled": "Omogućeno",
+      "disabled": "Onemogućeno",
+      "initializing": "Inicijalizacija...",
+      "sending": "Slanje događaja...",
+      "retrying": "Novi pokušaj...",
+      "failed": "Neuspešno",
+      "ready": "Spreman"
+    }
   }
 }

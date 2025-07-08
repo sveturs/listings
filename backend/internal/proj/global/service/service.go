@@ -6,6 +6,7 @@ import (
 
 	"backend/internal/config"
 	balance "backend/internal/proj/balance/service"
+	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
 	geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
 	marketplaceService "backend/internal/proj/marketplace/service"
 	translationService "backend/internal/proj/marketplace/service"
@@ -19,28 +20,32 @@ import (
 )
 
 type Service struct {
-	users          *userService.Service
-	marketplace    *marketplaceService.Service
-	review         *reviewService.Service
-	chat           *marketplaceService.Service
-	contacts       *marketplaceService.ContactsService
-	config         *config.Config
-	notification   *notificationService.Service
-	translation    translationService.TranslationServiceInterface
-	balance        *balance.BalanceService
-	payment        payment.PaymentServiceInterface
-	storefront     storefrontService.StorefrontService
-	storage        storage.Storage
-	geocode        geocodeService.GeocodeServiceInterface
-	fileStorage    filestorage.FileStorageInterface
-	chatAttachment *marketplaceService.ChatAttachmentService
-	unifiedSearch  UnifiedSearchServiceInterface
+	users            *userService.Service
+	marketplace      *marketplaceService.Service
+	review           *reviewService.Service
+	chat             *marketplaceService.Service
+	contacts         *marketplaceService.ContactsService
+	config           *config.Config
+	notification     *notificationService.Service
+	translation      translationService.TranslationServiceInterface
+	balance          *balance.BalanceService
+	payment          payment.PaymentServiceInterface
+	storefront       storefrontService.StorefrontService
+	storage          storage.Storage
+	geocode          geocodeService.GeocodeServiceInterface
+	fileStorage      filestorage.FileStorageInterface
+	chatAttachment   *marketplaceService.ChatAttachmentService
+	unifiedSearch    UnifiedSearchServiceInterface
+	behaviorTracking behaviorTrackingService.BehaviorTrackingService
 }
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
 	notificationSvc := notificationService.NewService(storage)
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
+	// TODO: behaviorTrackingSvc should be injected from outside since it uses its own repository
+	// For now, we'll skip behavior tracking in global service
+	var behaviorTrackingSvc behaviorTrackingService.BehaviorTrackingService
 
 	// Создаем сервис витрин (временно без services, передадим позже)
 	var storefrontSvc storefrontService.StorefrontService
@@ -81,21 +86,22 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 
 	// Создаем экземпляр Service
 	s := &Service{
-		users:          userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.JWTSecret, cfg.JWTExpirationHours),
-		marketplace:    marketplaceSvc,
-		review:         reviewService.NewService(storage),
-		chat:           marketplaceSvc, // Reuse the same service for chat
-		contacts:       contactsSvc,
-		config:         cfg,
-		notification:   notificationSvc,
-		translation:    translationSvc,
-		balance:        balanceSvc,
-		payment:        paymentSvc,
-		storefront:     storefrontSvc,
-		storage:        storage,
-		geocode:        geocodeSvc,
-		fileStorage:    fileStorageSvc,
-		chatAttachment: chatAttachmentSvc,
+		users:            userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.JWTSecret, cfg.JWTExpirationHours),
+		marketplace:      marketplaceSvc,
+		review:           reviewService.NewService(storage),
+		chat:             marketplaceSvc, // Reuse the same service for chat
+		contacts:         contactsSvc,
+		config:           cfg,
+		notification:     notificationSvc,
+		translation:      translationSvc,
+		balance:          balanceSvc,
+		payment:          paymentSvc,
+		storefront:       storefrontSvc,
+		storage:          storage,
+		geocode:          geocodeSvc,
+		fileStorage:      fileStorageSvc,
+		chatAttachment:   chatAttachmentSvc,
+		behaviorTracking: behaviorTrackingSvc,
 	}
 
 	// Теперь создаем сервис витрин с правильными зависимостями
@@ -190,4 +196,8 @@ func (s *Service) Orders() marketplaceService.OrderServiceInterface {
 		return s.marketplace.Order
 	}
 	return nil
+}
+
+func (s *Service) BehaviorTracking() behaviorTrackingService.BehaviorTrackingService {
+	return s.behaviorTracking
 }

@@ -3121,6 +3121,460 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/analytics/metrics/items': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get item metrics
+     * @description Returns aggregated metrics for items (products/listings)
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Item type filter (marketplace, storefront) */
+          item_type?: string;
+          /** @description Period start date (RFC3339) */
+          period_start?: string;
+          /** @description Period end date (RFC3339) */
+          period_end?: string;
+          /** @description Limit results (default: 20, max: 100) */
+          limit?: number;
+          /** @description Offset for pagination */
+          offset?: number;
+          /** @description Sort by field (views, clicks, purchases, ctr, conversion_rate) */
+          sort_by?: string;
+          /** @description Order direction (asc, desc) */
+          order_by?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Item metrics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['behavior.ItemMetrics'][];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/metrics/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search metrics
+     * @description Returns aggregated search metrics for analysis
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Search query filter */
+          query?: string;
+          /** @description Period start date (RFC3339) */
+          period_start?: string;
+          /** @description Period end date (RFC3339) */
+          period_end?: string;
+          /** @description Limit results (default: 20, max: 100) */
+          limit?: number;
+          /** @description Offset for pagination */
+          offset?: number;
+          /** @description Sort by field (ctr, conversions, total_searches) */
+          sort_by?: string;
+          /** @description Order direction (asc, desc) */
+          order_by?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search metrics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['behavior.SearchMetrics'][];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/metrics/update': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Update aggregated metrics
+     * @description Forces update of aggregated search metrics for a specific period
+     */
+    post: {
+      parameters: {
+        query: {
+          /** @description Period start date (RFC3339) */
+          period_start: string;
+          /** @description Period end date (RFC3339) */
+          period_end: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Metrics updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: string;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Admin access required */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/sessions/{session_id}/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get session events
+     * @description Returns behavior events for a specific session
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Session ID */
+          session_id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Session events */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['behavior.BehaviorEvent'][];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/track': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Track behavior event
+     * @description Records a user behavior event for analytics
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Event data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['behavior.TrackEventRequest'];
+        };
+      };
+      responses: {
+        /** @description Event tracked successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: string;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Too many requests */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/users/{user_id}/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user events
+     * @description Returns behavior events for a specific user
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit results (default: 20, max: 100) */
+          limit?: number;
+          /** @description Offset for pagination */
+          offset?: number;
+        };
+        header?: never;
+        path: {
+          /** @description User ID */
+          user_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description User events */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['behavior.BehaviorEvent'][];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/auth/login': {
     parameters: {
       query?: never;
@@ -15808,6 +16262,78 @@ export interface components {
     'backend_internal_proj_users_handler.MessageResponse': {
       /** @example Операция выполнена успешно */
       message?: string;
+    };
+    'behavior.BehaviorEvent': {
+      created_at?: string;
+      event_type: components['schemas']['behavior.EventType'];
+      id?: number;
+      item_id?: string;
+      item_type?: components['schemas']['behavior.ItemType'];
+      metadata?: {
+        [key: string]: unknown;
+      };
+      position?: number;
+      search_query?: string;
+      session_id: string;
+      user_id?: number;
+    };
+    /** @enum {string} */
+    'behavior.EventType':
+      | 'search_performed'
+      | 'result_clicked'
+      | 'item_viewed'
+      | 'item_purchased'
+      | 'search_filter_applied'
+      | 'search_sort_changed'
+      | 'item_added_to_cart';
+    'behavior.ItemMetrics': {
+      avg_position?: number;
+      clicks?: number;
+      conversion_rate?: number;
+      ctr?: number;
+      item_id?: string;
+      item_type?: components['schemas']['behavior.ItemType'];
+      period_end?: string;
+      period_start?: string;
+      purchases?: number;
+      views?: number;
+    };
+    /** @enum {string} */
+    'behavior.ItemType': 'marketplace' | 'storefront';
+    'behavior.SearchMetrics': {
+      avg_click_position?: number;
+      conversion_rate?: number;
+      conversions?: number;
+      created_at?: string;
+      ctr?: number;
+      id?: number;
+      period_end?: string;
+      period_start?: string;
+      search_query?: string;
+      total_clicks?: number;
+      total_searches?: number;
+      updated_at?: string;
+    };
+    'behavior.TrackEventRequest': {
+      /** @enum {unknown} */
+      event_type:
+        | 'search_performed'
+        | 'result_clicked'
+        | 'item_viewed'
+        | 'item_purchased'
+        | 'search_filter_applied'
+        | 'search_sort_changed'
+        | 'item_added_to_cart';
+      item_id?: string;
+      /** @enum {unknown} */
+      item_type?: 'marketplace' | 'storefront';
+      metadata?: {
+        [key: string]: unknown;
+      };
+      position?: number;
+      search_query?: string;
+      /** @description Если не передан, будет сгенерирован */
+      session_id?: string;
     };
     'handler.AddMessageRequest': {
       content: string;

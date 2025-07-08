@@ -1,0 +1,71 @@
+package behavior_tracking
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"backend/internal/interfaces"
+	"backend/internal/middleware"
+	"backend/internal/proj/behavior_tracking/handler"
+	"backend/internal/proj/behavior_tracking/service"
+	"backend/internal/proj/behavior_tracking/storage/postgres"
+)
+
+// Module представляет модуль поведенческой аналитики
+type Module struct {
+	handler *handler.BehaviorTrackingHandler
+}
+
+// NewModule создает новый модуль поведенческой аналитики
+func NewModule(pool *pgxpool.Pool) *Module {
+	// Создаем репозиторий
+	repo := postgres.NewBehaviorTrackingRepository(pool)
+
+	// Создаем сервис
+	svc := service.NewBehaviorTrackingService(repo)
+
+	// Создаем обработчик
+	h := handler.NewBehaviorTrackingHandler(svc)
+
+	return &Module{
+		handler: h,
+	}
+}
+
+// RegisterRoutes регистрирует маршруты модуля
+func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middleware) error {
+	// Публичный API для трекинга событий
+	api := app.Group("/api/v1/analytics")
+
+	// Endpoint для отслеживания событий (может использоваться без авторизации)
+	api.Post("/track", m.handler.TrackEvent)
+
+	// Публичные метрики (без персональных данных)
+	api.Get("/metrics/search", m.handler.GetSearchMetrics)
+	api.Get("/metrics/items", m.handler.GetItemMetrics)
+
+	// Endpoint для получения событий сессии (публичный)
+	api.Get("/sessions/:session_id/events", m.handler.GetSessionEvents)
+
+	// Защищенные endpoints (требуют авторизации)
+	protected := api.Group("/", middleware.AuthRequiredJWT)
+
+	// События пользователя (доступны самому пользователю и админам)
+	protected.Get("/users/:user_id/events", m.handler.GetUserEvents)
+
+	// Админские endpoints
+	admin := api.Group("/", middleware.AuthRequiredJWT, middleware.AdminRequired)
+
+	// Обновление агрегированных метрик
+	admin.Post("/metrics/update", m.handler.UpdateMetrics)
+
+	return nil
+}
+
+// GetPrefix возвращает префикс модуля для логирования
+func (m *Module) GetPrefix() string {
+	return "behavior_tracking"
+}
+
+// Ensure Module implements RouteRegistrar interface
+var _ interfaces.RouteRegistrar = (*Module)(nil)

@@ -645,9 +645,12 @@
       "content": "Content",
       "listings": "Listings",
       "users": "Users",
+      "analytics": "Analytics",
+      "search": "Search Analytics",
       "usersDescription": "Manage user accounts and permissions",
       "listingsDescription": "Moderate and manage marketplace listings",
-      "categoriesDescription": "Configure categories and attributes"
+      "categoriesDescription": "Configure categories and attributes",
+      "searchDescription": "Analyze search performance and user behavior"
     },
     "categories": {
       "title": "Categories",
@@ -813,6 +816,71 @@
       },
       "success": {
         "removed": "Administrator removed successfully"
+      }
+    },
+    "search": {
+      "title": "Search Analytics",
+      "description": "Analyze search performance and user behavior metrics",
+      "tabs": {
+        "analytics": "Analytics",
+        "behavior": "Behavior",
+        "weights": "Search Weights"
+      },
+      "analytics": {
+        "title": "Search Analytics Overview",
+        "description": "General search performance metrics and statistics"
+      },
+      "weights": {
+        "title": "Search Weights Configuration",
+        "description": "Configure search algorithm weights and parameters"
+      },
+      "behavior": {
+        "title": "Behavioral Analytics",
+        "loadError": "Failed to load analytics data",
+        "filters": {
+          "title": "Filters",
+          "period": "Period",
+          "periods": {
+            "day": "Last Day",
+            "week": "Last Week",
+            "month": "Last Month"
+          },
+          "limit": "Results Limit"
+        },
+        "metrics": {
+          "totalClicks": "Total Clicks",
+          "avgCTR": "Average CTR",
+          "avgPosition": "Avg Click Position",
+          "conversionRate": "Conversion Rate"
+        },
+        "ctr": {
+          "title": "Click-Through Rate Over Time",
+          "label": "CTR %",
+          "chartTitle": "CTR Trend Analysis"
+        },
+        "searchClicks": {
+          "title": "Searches vs Clicks",
+          "chartTitle": "Search Volume and Click Activity"
+        },
+        "searches": "Searches",
+        "clicks": "Clicks",
+        "topQueries": {
+          "title": "Top Performing Search Queries",
+          "query": "Query",
+          "searches": "Searches",
+          "ctr": "CTR",
+          "avgPosition": "Avg Position",
+          "avgResults": "Avg Results"
+        },
+        "itemPerformance": {
+          "title": "Item Performance Analytics",
+          "item": "Item",
+          "impressions": "Impressions",
+          "clicks": "Clicks",
+          "ctr": "CTR",
+          "avgPosition": "Avg Position",
+          "conversions": "Conversions"
+        }
       }
     }
   },
@@ -2366,5 +2434,66 @@
     "codFee": "Cash on Delivery Fee",
     "agreeToTerms": "I agree to the terms and conditions",
     "securePayment": "Secure Payment"
+  },
+  "analytics": {
+    "error": {
+      "rate_limit_exceeded": "Too many requests. Please try again later.",
+      "invalid_request": "Invalid request format",
+      "validation_failed": "Request validation failed",
+      "failed_to_track": "Failed to track event",
+      "failed_to_get_metrics": "Failed to retrieve metrics",
+      "invalid_period_start": "Invalid start date format",
+      "invalid_period_end": "Invalid end date format",
+      "failed_to_get_events": "Failed to retrieve events",
+      "invalid_user_id": "Invalid user ID",
+      "invalid_session_id": "Invalid session ID",
+      "period_required": "Period start and end dates are required",
+      "failed_to_update_metrics": "Failed to update metrics"
+    }
+  },
+  "behaviorTracking": {
+    "error": {
+      "initialization_failed": "Failed to initialize behavior tracking",
+      "session_generation_failed": "Failed to generate tracking session",
+      "event_send_failed": "Failed to send tracking event",
+      "batch_send_failed": "Failed to send event batch",
+      "retry_limit_exceeded": "Maximum retry attempts exceeded",
+      "invalid_event_data": "Invalid event data format",
+      "network_error": "Network error occurred during tracking",
+      "api_error": "API error occurred during tracking",
+      "storage_error": "Local storage error occurred",
+      "context_update_failed": "Failed to update tracking context",
+      "flush_failed": "Failed to flush pending events",
+      "disabled": "Behavior tracking is disabled",
+      "not_initialized": "Behavior tracking not initialized",
+      "invalid_batch_data": "Invalid batch data format",
+      "timeout": "Request timed out",
+      "server_error": "Server error occurred"
+    },
+    "success": {
+      "initialized": "Behavior tracking initialized successfully",
+      "event_sent": "Event sent successfully",
+      "batch_sent": "Event batch sent successfully",
+      "context_updated": "Tracking context updated",
+      "events_flushed": "Pending events flushed successfully",
+      "session_created": "New tracking session created"
+    },
+    "events": {
+      "search_performed": "Search performed",
+      "result_clicked": "Search result clicked",
+      "item_viewed": "Item viewed",
+      "item_purchased": "Item purchased",
+      "search_filter_applied": "Search filter applied",
+      "search_sort_changed": "Search sort changed"
+    },
+    "states": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "initializing": "Initializing...",
+      "sending": "Sending events...",
+      "retrying": "Retrying...",
+      "failed": "Failed",
+      "ready": "Ready"
+    }
   }
 }

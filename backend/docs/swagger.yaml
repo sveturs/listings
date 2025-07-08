@@ -37,6 +37,143 @@ definitions:
         example: Операция выполнена успешно
         type: string
     type: object
+  behavior.BehaviorEvent:
+    properties:
+      created_at:
+        type: string
+      event_type:
+        $ref: '#/definitions/behavior.EventType'
+      id:
+        type: integer
+      item_id:
+        type: string
+      item_type:
+        $ref: '#/definitions/behavior.ItemType'
+      metadata:
+        additionalProperties: true
+        type: object
+      position:
+        type: integer
+      search_query:
+        type: string
+      session_id:
+        type: string
+      user_id:
+        type: integer
+    required:
+    - event_type
+    - session_id
+    type: object
+  behavior.EventType:
+    enum:
+    - search_performed
+    - result_clicked
+    - item_viewed
+    - item_purchased
+    - search_filter_applied
+    - search_sort_changed
+    - item_added_to_cart
+    type: string
+    x-enum-varnames:
+    - EventTypeSearchPerformed
+    - EventTypeResultClicked
+    - EventTypeItemViewed
+    - EventTypeItemPurchased
+    - EventTypeSearchFilterApplied
+    - EventTypeSearchSortChanged
+    - EventTypeItemAddedToCart
+  behavior.ItemMetrics:
+    properties:
+      avg_position:
+        type: number
+      clicks:
+        type: integer
+      conversion_rate:
+        type: number
+      ctr:
+        type: number
+      item_id:
+        type: string
+      item_type:
+        $ref: '#/definitions/behavior.ItemType'
+      period_end:
+        type: string
+      period_start:
+        type: string
+      purchases:
+        type: integer
+      views:
+        type: integer
+    type: object
+  behavior.ItemType:
+    enum:
+    - marketplace
+    - storefront
+    type: string
+    x-enum-varnames:
+    - ItemTypeMarketplace
+    - ItemTypeStorefront
+  behavior.SearchMetrics:
+    properties:
+      avg_click_position:
+        type: number
+      conversion_rate:
+        type: number
+      conversions:
+        type: integer
+      created_at:
+        type: string
+      ctr:
+        type: number
+      id:
+        type: integer
+      period_end:
+        type: string
+      period_start:
+        type: string
+      search_query:
+        type: string
+      total_clicks:
+        type: integer
+      total_searches:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  behavior.TrackEventRequest:
+    properties:
+      event_type:
+        allOf:
+        - $ref: '#/definitions/behavior.EventType'
+        enum:
+        - search_performed
+        - result_clicked
+        - item_viewed
+        - item_purchased
+        - search_filter_applied
+        - search_sort_changed
+        - item_added_to_cart
+      item_id:
+        type: string
+      item_type:
+        allOf:
+        - $ref: '#/definitions/behavior.ItemType'
+        enum:
+        - marketplace
+        - storefront
+      metadata:
+        additionalProperties: true
+        type: object
+      position:
+        type: integer
+      search_query:
+        type: string
+      session_id:
+        description: Если не передан, будет сгенерирован
+        type: string
+    required:
+    - event_type
+    type: object
   handler.AddMessageRequest:
     properties:
       content:
@@ -7172,6 +7309,304 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
       summary: Record analytics event
+      tags:
+      - analytics
+  /api/v1/analytics/metrics/items:
+    get:
+      consumes:
+      - application/json
+      description: Returns aggregated metrics for items (products/listings)
+      parameters:
+      - description: Item type filter (marketplace, storefront)
+        in: query
+        name: item_type
+        type: string
+      - description: Period start date (RFC3339)
+        in: query
+        name: period_start
+        type: string
+      - description: Period end date (RFC3339)
+        in: query
+        name: period_end
+        type: string
+      - description: 'Limit results (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      - description: Sort by field (views, clicks, purchases, ctr, conversion_rate)
+        in: query
+        name: sort_by
+        type: string
+      - description: Order direction (asc, desc)
+        in: query
+        name: order_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item metrics
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/behavior.ItemMetrics'
+                  type: array
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Get item metrics
+      tags:
+      - analytics
+  /api/v1/analytics/metrics/search:
+    get:
+      consumes:
+      - application/json
+      description: Returns aggregated search metrics for analysis
+      parameters:
+      - description: Search query filter
+        in: query
+        name: query
+        type: string
+      - description: Period start date (RFC3339)
+        in: query
+        name: period_start
+        type: string
+      - description: Period end date (RFC3339)
+        in: query
+        name: period_end
+        type: string
+      - description: 'Limit results (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      - description: Sort by field (ctr, conversions, total_searches)
+        in: query
+        name: sort_by
+        type: string
+      - description: Order direction (asc, desc)
+        in: query
+        name: order_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search metrics
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/behavior.SearchMetrics'
+                  type: array
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Get search metrics
+      tags:
+      - analytics
+  /api/v1/analytics/metrics/update:
+    post:
+      consumes:
+      - application/json
+      description: Forces update of aggregated search metrics for a specific period
+      parameters:
+      - description: Period start date (RFC3339)
+        in: query
+        name: period_start
+        required: true
+        type: string
+      - description: Period end date (RFC3339)
+        in: query
+        name: period_end
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Metrics updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Admin access required
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update aggregated metrics
+      tags:
+      - analytics
+  /api/v1/analytics/sessions/{session_id}/events:
+    get:
+      consumes:
+      - application/json
+      description: Returns behavior events for a specific session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session events
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/behavior.BehaviorEvent'
+                  type: array
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Get session events
+      tags:
+      - analytics
+  /api/v1/analytics/track:
+    post:
+      consumes:
+      - application/json
+      description: Records a user behavior event for analytics
+      parameters:
+      - description: Event data
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/behavior.TrackEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event tracked successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "429":
+          description: Too many requests
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Track behavior event
+      tags:
+      - analytics
+  /api/v1/analytics/users/{user_id}/events:
+    get:
+      consumes:
+      - application/json
+      description: Returns behavior events for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: 'Limit results (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User events
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/behavior.BehaviorEvent'
+                  type: array
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Get user events
       tags:
       - analytics
   /api/v1/auth/login:

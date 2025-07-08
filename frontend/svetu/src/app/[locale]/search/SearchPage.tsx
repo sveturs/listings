@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SearchBar } from '@/components/SearchBar';
 import MarketplaceCard from '@/components/MarketplaceCard';
 import ViewToggle from '@/components/common/ViewToggle';
+import { SearchResultCard } from '@/components/search';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
 import {
   UnifiedSearchService,
@@ -49,6 +51,16 @@ export default function SearchPage() {
   const [allItems, setAllItems] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useViewPreference('grid');
+
+  // Для трекинга времени поиска
+  const searchStartTimeRef = useRef<number>(0);
+
+  // Behavior tracking
+  const {
+    trackSearchPerformed,
+    trackSearchFilterApplied,
+    trackSearchSortChanged,
+  } = useBehaviorTracking();
 
   const handleLoadMore = () => {
     if (results && results.has_more) {
@@ -112,6 +124,11 @@ export default function SearchPage() {
   ) => {
     if (!searchQuery.trim()) return;
 
+    // Запоминаем время начала поиска для трекинга
+    if (currentPage === 1) {
+      searchStartTimeRef.current = Date.now();
+    }
+
     setLoading(true);
     setError(null);
 
@@ -138,6 +155,22 @@ export default function SearchPage() {
 
       if (currentPage === 1) {
         setAllItems(data.items);
+
+        // Трекинг выполненного поиска (только для первой страницы)
+        try {
+          await trackSearchPerformed({
+            search_query: searchQuery,
+            search_filters: {
+              ...currentFilters,
+              fuzzy: useFuzzy,
+            },
+            search_sort: currentFilters.sort_by,
+            results_count: data.total,
+            search_duration_ms: Date.now() - searchStartTimeRef.current,
+          });
+        } catch (trackingError) {
+          console.error('Failed to track search:', trackingError);
+        }
       } else {
         setAllItems((prev) => [...prev, ...data.items]);
       }
@@ -157,6 +190,22 @@ export default function SearchPage() {
 
       if (currentPage === 1) {
         setAllItems([]);
+
+        // Трекинг неудачного поиска
+        try {
+          await trackSearchPerformed({
+            search_query: searchQuery,
+            search_filters: {
+              ...currentFilters,
+              fuzzy: useFuzzy,
+            },
+            search_sort: currentFilters.sort_by,
+            results_count: 0,
+            search_duration_ms: Date.now() - searchStartTimeRef.current,
+          });
+        } catch (trackingError) {
+          console.error('Failed to track failed search:', trackingError);
+        }
       }
 
       setError(null); // Не показываем ошибку пользователю
@@ -182,8 +231,29 @@ export default function SearchPage() {
     window.history.replaceState({}, '', url.toString());
   };
 
-  const handleFilterChange = (newFilters: Partial<SearchFilters>) => {
+  const handleFilterChange = async (newFilters: Partial<SearchFilters>) => {
+    const prevFilters = filters;
     setFilters((prev) => ({ ...prev, ...newFilters }));
+
+    // Трекинг изменения фильтров
+    if (query) {
+      try {
+        // Проверяем какие фильтры изменились
+        for (const [key, value] of Object.entries(newFilters)) {
+          if (prevFilters[key as keyof SearchFilters] !== value) {
+            await trackSearchFilterApplied({
+              search_query: query,
+              filter_type: key,
+              filter_value: JSON.stringify(value),
+              results_count_before: results?.total || 0,
+              results_count_after: 0, // Будет обновлено после выполнения поиска
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to track filter change:', error);
+      }
+    }
   };
 
   const convertToMarketplaceItem = (item: any): MarketplaceItem => {
@@ -286,12 +356,29 @@ export default function SearchPage() {
               </button>
               <button
                 className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'price' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
-                onClick={() =>
+                onClick={async () => {
+                  const newSortBy =
+                    filters.sort_by === 'price' ? 'relevance' : 'price';
+                  const previousSort = filters.sort_by;
+
+                  // Трекинг изменения сортировки
+                  if (query) {
+                    try {
+                      await trackSearchSortChanged({
+                        search_query: query,
+                        sort_type: newSortBy,
+                        previous_sort: previousSort,
+                        results_count: results?.total || 0,
+                      });
+                    } catch (error) {
+                      console.error('Failed to track sort change:', error);
+                    }
+                  }
+
                   handleFilterChange({
-                    sort_by:
-                      filters.sort_by === 'price' ? 'relevance' : 'price',
-                  })
-                }
+                    sort_by: newSortBy,
+                  });
+                }}
               >
                 <svg
                   className="w-4 h-4 mr-1"
@@ -310,11 +397,29 @@ export default function SearchPage() {
               </button>
               <button
                 className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'date' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
-                onClick={() =>
+                onClick={async () => {
+                  const newSortBy =
+                    filters.sort_by === 'date' ? 'relevance' : 'date';
+                  const previousSort = filters.sort_by;
+
+                  // Трекинг изменения сортировки
+                  if (query) {
+                    try {
+                      await trackSearchSortChanged({
+                        search_query: query,
+                        sort_type: newSortBy,
+                        previous_sort: previousSort,
+                        results_count: results?.total || 0,
+                      });
+                    } catch (error) {
+                      console.error('Failed to track sort change:', error);
+                    }
+                  }
+
                   handleFilterChange({
-                    sort_by: filters.sort_by === 'date' ? 'relevance' : 'date',
-                  })
-                }
+                    sort_by: newSortBy,
+                  });
+                }}
               >
                 <svg
                   className="w-4 h-4 mr-1"
@@ -711,9 +816,29 @@ export default function SearchPage() {
                       <select
                         className="select select-bordered w-full bg-base-100"
                         value={filters.sort_by}
-                        onChange={(e) =>
-                          handleFilterChange({ sort_by: e.target.value })
-                        }
+                        onChange={async (e) => {
+                          const newSortBy = e.target.value;
+                          const previousSort = filters.sort_by;
+
+                          // Трекинг изменения сортировки
+                          if (query) {
+                            try {
+                              await trackSearchSortChanged({
+                                search_query: query,
+                                sort_type: newSortBy,
+                                previous_sort: previousSort,
+                                results_count: results?.total || 0,
+                              });
+                            } catch (error) {
+                              console.error(
+                                'Failed to track sort change:',
+                                error
+                              );
+                            }
+                          }
+
+                          handleFilterChange({ sort_by: newSortBy });
+                        }}
                       >
                         <option value="relevance">{t('relevance')}</option>
                         <option value="price">{t('price')}</option>
@@ -869,12 +994,20 @@ export default function SearchPage() {
                   }
                 >
                   {allItems.map((item, index) => (
-                    <MarketplaceCard
+                    <SearchResultCard
                       key={`${item.id}-${index}`}
-                      item={convertToMarketplaceItem(item)}
-                      locale={locale}
-                      viewMode={viewMode}
-                    />
+                      searchQuery={query}
+                      itemId={item.product_id?.toString() || item.id}
+                      position={index + 1}
+                      totalResults={allItems.length}
+                      searchStartTime={searchStartTimeRef.current}
+                    >
+                      <MarketplaceCard
+                        item={convertToMarketplaceItem(item)}
+                        locale={locale}
+                        viewMode={viewMode}
+                      />
+                    </SearchResultCard>
                   ))}
                 </div>
 

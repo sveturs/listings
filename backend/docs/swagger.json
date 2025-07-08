@@ -3393,6 +3393,486 @@
                 }
             }
         },
+        "/api/v1/analytics/metrics/items": {
+            "get": {
+                "description": "Returns aggregated metrics for items (products/listings)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get item metrics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Item type filter (marketplace, storefront)",
+                        "name": "item_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Period start date (RFC3339)",
+                        "name": "period_start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Period end date (RFC3339)",
+                        "name": "period_end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results (default: 20, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field (views, clicks, purchases, ctr, conversion_rate)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Order direction (asc, desc)",
+                        "name": "order_by",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Item metrics",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/behavior.ItemMetrics"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/analytics/metrics/search": {
+            "get": {
+                "description": "Returns aggregated search metrics for analysis",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get search metrics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query filter",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Period start date (RFC3339)",
+                        "name": "period_start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Period end date (RFC3339)",
+                        "name": "period_end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results (default: 20, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field (ctr, conversions, total_searches)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Order direction (asc, desc)",
+                        "name": "order_by",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search metrics",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/behavior.SearchMetrics"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/analytics/metrics/update": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Forces update of aggregated search metrics for a specific period",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Update aggregated metrics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Period start date (RFC3339)",
+                        "name": "period_start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Period end date (RFC3339)",
+                        "name": "period_end",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Metrics updated successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Admin access required",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/analytics/sessions/{session_id}/events": {
+            "get": {
+                "description": "Returns behavior events for a specific session",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get session events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session events",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/behavior.BehaviorEvent"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/analytics/track": {
+            "post": {
+                "description": "Records a user behavior event for analytics",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Track behavior event",
+                "parameters": [
+                    {
+                        "description": "Event data",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/behavior.TrackEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event tracked successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/analytics/users/{user_id}/events": {
+            "get": {
+                "description": "Returns behavior events for a specific user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get user events",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results (default: 20, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User events",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/behavior.BehaviorEvent"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "description": "Authenticates user and returns JWT access token",
@@ -15735,6 +16215,206 @@
                 "message": {
                     "type": "string",
                     "example": "Операция выполнена успешно"
+                }
+            }
+        },
+        "behavior.BehaviorEvent": {
+            "type": "object",
+            "required": [
+                "event_type",
+                "session_id"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "$ref": "#/definitions/behavior.EventType"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "item_id": {
+                    "type": "string"
+                },
+                "item_type": {
+                    "$ref": "#/definitions/behavior.ItemType"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "search_query": {
+                    "type": "string"
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "behavior.EventType": {
+            "type": "string",
+            "enum": [
+                "search_performed",
+                "result_clicked",
+                "item_viewed",
+                "item_purchased",
+                "search_filter_applied",
+                "search_sort_changed",
+                "item_added_to_cart"
+            ],
+            "x-enum-varnames": [
+                "EventTypeSearchPerformed",
+                "EventTypeResultClicked",
+                "EventTypeItemViewed",
+                "EventTypeItemPurchased",
+                "EventTypeSearchFilterApplied",
+                "EventTypeSearchSortChanged",
+                "EventTypeItemAddedToCart"
+            ]
+        },
+        "behavior.ItemMetrics": {
+            "type": "object",
+            "properties": {
+                "avg_position": {
+                    "type": "number"
+                },
+                "clicks": {
+                    "type": "integer"
+                },
+                "conversion_rate": {
+                    "type": "number"
+                },
+                "ctr": {
+                    "type": "number"
+                },
+                "item_id": {
+                    "type": "string"
+                },
+                "item_type": {
+                    "$ref": "#/definitions/behavior.ItemType"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "purchases": {
+                    "type": "integer"
+                },
+                "views": {
+                    "type": "integer"
+                }
+            }
+        },
+        "behavior.ItemType": {
+            "type": "string",
+            "enum": [
+                "marketplace",
+                "storefront"
+            ],
+            "x-enum-varnames": [
+                "ItemTypeMarketplace",
+                "ItemTypeStorefront"
+            ]
+        },
+        "behavior.SearchMetrics": {
+            "type": "object",
+            "properties": {
+                "avg_click_position": {
+                    "type": "number"
+                },
+                "conversion_rate": {
+                    "type": "number"
+                },
+                "conversions": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "ctr": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "search_query": {
+                    "type": "string"
+                },
+                "total_clicks": {
+                    "type": "integer"
+                },
+                "total_searches": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "behavior.TrackEventRequest": {
+            "type": "object",
+            "required": [
+                "event_type"
+            ],
+            "properties": {
+                "event_type": {
+                    "enum": [
+                        "search_performed",
+                        "result_clicked",
+                        "item_viewed",
+                        "item_purchased",
+                        "search_filter_applied",
+                        "search_sort_changed",
+                        "item_added_to_cart"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/behavior.EventType"
+                        }
+                    ]
+                },
+                "item_id": {
+                    "type": "string"
+                },
+                "item_type": {
+                    "enum": [
+                        "marketplace",
+                        "storefront"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/behavior.ItemType"
+                        }
+                    ]
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "search_query": {
+                    "type": "string"
+                },
+                "session_id": {
+                    "description": "Если не передан, будет сгенерирован",
+                    "type": "string"
                 }
             }
         },

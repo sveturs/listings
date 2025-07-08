@@ -4,6 +4,7 @@ package service
 import (
 	"backend/internal/config"
 	balanceService "backend/internal/proj/balance/service"
+	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
 	geocodeService "backend/internal/proj/geocode/service"
 	chatService "backend/internal/proj/marketplace/service"
 	contactsService "backend/internal/proj/marketplace/service"
@@ -45,4 +46,7 @@ type ServicesInterface interface {
 
 	// Orders возвращает сервис для работы с заказами маркетплейса
 	Orders() marketplaceService.OrderServiceInterface
+
+	// BehaviorTracking возвращает сервис для трекинга поведения пользователей
+	BehaviorTracking() behaviorTrackingService.BehaviorTrackingService
 }

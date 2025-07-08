@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/domain/behavior"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
@@ -135,6 +136,7 @@ type UnifiedStorefrontInfo struct {
 // @Router /api/v1/search [get]
 func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	ctx := c.Context()
+	startTime := time.Now()
 
 	// Парсим параметры поиска
 	var params UnifiedSearchParams
@@ -231,6 +233,11 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 			logger.Error().Err(err).Msg("Failed to save search query")
 			// Не возвращаем ошибку пользователю, так как основной поиск прошел успешно
 		}
+	}
+
+	// Трекинг поискового события (только для первой страницы)
+	if params.Query != "" && params.Page == 1 {
+		go h.trackSearchEvent(c, &params, result, time.Since(startTime))
 	}
 
 	return c.JSON(result)
@@ -609,4 +616,105 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	}
 
 	return location
+}
+
+// trackSearchEvent отправляет событие поиска в behavior tracking
+func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSearchParams, result *UnifiedSearchResult, duration time.Duration) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error().Interface("panic", r).Msg("Panic in trackSearchEvent")
+		}
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Получаем информацию о пользователе (если авторизован)
+	var userID *int
+	if c.Locals("userID") != nil {
+		if uid, ok := c.Locals("userID").(int); ok {
+			userID = &uid
+		}
+	}
+
+	// Получаем session_id из заголовков или query параметров
+	sessionID := c.Get("X-Session-ID")
+	if sessionID == "" {
+		sessionID = c.Query("session_id")
+	}
+	if sessionID == "" {
+		// Генерируем временный session_id если не предоставлен
+		sessionID = "backend_" + strconv.FormatInt(time.Now().UnixNano(), 36)
+	}
+
+	// Подготавливаем фильтры для трекинга
+	searchFilters := make(map[string]interface{})
+	if len(params.ProductTypes) > 0 {
+		searchFilters["product_types"] = params.ProductTypes
+	}
+	if params.CategoryID != "" {
+		searchFilters["category_id"] = params.CategoryID
+	}
+	if params.PriceMin > 0 {
+		searchFilters["price_min"] = params.PriceMin
+	}
+	if params.PriceMax > 0 {
+		searchFilters["price_max"] = params.PriceMax
+	}
+	if params.City != "" {
+		searchFilters["city"] = params.City
+	}
+	if params.StorefrontID > 0 {
+		searchFilters["storefront_id"] = params.StorefrontID
+	}
+
+	// Создаем запрос для трекинга
+	trackingReq := &behavior.TrackEventRequest{
+		SessionID:   sessionID,
+		EventType:   behavior.EventTypeSearchPerformed,
+		SearchQuery: params.Query,
+		Metadata: map[string]interface{}{
+			"search_query":       params.Query,
+			"search_filters":     searchFilters,
+			"search_sort":        params.SortBy,
+			"results_count":      result.Total,
+			"search_duration_ms": duration.Milliseconds(),
+			"page":               params.Page,
+			"limit":              params.Limit,
+			"language":           params.Language,
+			"device_type":        getDeviceTypeFromUserAgent(c.Get("User-Agent")),
+			"browser":            c.Get("User-Agent"),
+			"referer":            c.Get("Referer"),
+			"user_agent":         c.Get("User-Agent"),
+			"ip_address":         c.IP(),
+		},
+	}
+
+	// Отправляем событие в behavior tracking сервис (если доступен)
+	if behaviorSvc := h.services.BehaviorTracking(); behaviorSvc != nil {
+		if err := behaviorSvc.TrackEvent(ctx, userID, trackingReq); err != nil {
+			logger.Error().Err(err).
+				Str("session_id", sessionID).
+				Str("query", params.Query).
+				Msg("Failed to track search event")
+		}
+	}
+}
+
+// getDeviceTypeFromUserAgent определяет тип устройства по User-Agent
+func getDeviceTypeFromUserAgent(userAgent string) string {
+	userAgent = strings.ToLower(userAgent)
+
+	if strings.Contains(userAgent, "mobile") ||
+		strings.Contains(userAgent, "android") ||
+		strings.Contains(userAgent, "iphone") {
+		return "mobile"
+	}
+
+	if strings.Contains(userAgent, "tablet") ||
+		strings.Contains(userAgent, "ipad") {
+		return "tablet"
+	}
+
+	return "desktop"
 }
