@@ -4,35 +4,58 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
 import { tokenManager } from '@/utils/tokenManager';
+import Pagination from '@/components/admin/Pagination';
 
 interface DashboardStats {
   totalSearches: number;
-  averageResponseTime: number;
+  avgResponseTime: number;
   topQueries: Array<{
     query: string;
     count: number;
-    averageRelevance: number;
+    avgResultsCount: number;
+    avgClickPosition: number;
+    lastSearched: string;
   }>;
-  categoryDistribution: Array<{
+  categoryDistribution?: Array<{
     category: string;
     count: number;
   }>;
+  metrics?: {
+    totalSearches: number;
+    uniqueQueries: number;
+    avgSearchTime: number;
+    zeroResultsRate: number;
+    clickThroughRate: number;
+  };
+  popularSearches?: Array<{
+    query: string;
+    count: number;
+    avgResults: number;
+    lastSearched: string;
+  }>;
+  deviceStats?: {
+    [key: string]: number;
+  };
+  totalTopQueries?: number;
 }
 
 export default function SearchDashboard() {
   const t = useTranslations();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   useEffect(() => {
     fetchDashboardStats();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   const fetchDashboardStats = async () => {
     try {
       setLoading(true);
       const accessToken = await tokenManager.getAccessToken();
-      const response = await fetch('/api/admin/search/analytics', {
+      const offset = (currentPage - 1) * itemsPerPage;
+      const response = await fetch(`/api/admin/search/analytics?offset=${offset}&limit=${itemsPerPage}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -40,7 +63,9 @@ export default function SearchDashboard() {
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard stats');
       }
-      const data = await response.json();
+      const result = await response.json();
+      // Извлекаем данные из обертки
+      const data = result.data || result;
       setStats(data);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -99,7 +124,7 @@ export default function SearchDashboard() {
             {t('admin.search.dashboard.avgResponseTime')}
           </div>
           <div className="stat-value">
-            {(stats.averageResponseTime || 0).toFixed(0)}ms
+            {(stats.avgResponseTime || 0).toFixed(0)}ms
           </div>
           <div className="stat-desc">
             {t('admin.search.dashboard.searchPerformance')}
@@ -139,7 +164,7 @@ export default function SearchDashboard() {
                       <td>{query.count}</td>
                       <td>
                         <div className="badge badge-primary">
-                          {(query.averageRelevance || 0).toFixed(1)}
+                          {(query.avgResultsCount || 0).toFixed(1)}
                         </div>
                       </td>
                     </tr>
@@ -147,34 +172,57 @@ export default function SearchDashboard() {
                 </tbody>
               </table>
             </div>
+            {stats.totalTopQueries && stats.totalTopQueries > itemsPerPage && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(stats.totalTopQueries / itemsPerPage)}
+                totalItems={stats.totalTopQueries}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => {
+                  setCurrentPage(page);
+                }}
+                onItemsPerPageChange={(items) => {
+                  setItemsPerPage(items);
+                  setCurrentPage(1);
+                }}
+              />
+            )}
           </div>
         </div>
 
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body">
             <h2 className="card-title">
-              {t('admin.search.dashboard.categoryDistribution')}
+              {t('admin.search.dashboard.deviceDistribution')}
             </h2>
-            <div className="space-y-2">
-              {(stats.categoryDistribution || []).map((category, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <span className="text-sm">{category.category}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-32 bg-base-300 rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full"
-                        style={{
-                          width: `${Math.min(100, (category.count / Math.max(...(stats.categoryDistribution || []).map((c) => c.count || 0), 1)) * 100)}%`,
-                        }}
-                      ></div>
+            {stats.deviceStats && Object.keys(stats.deviceStats).length > 0 ? (
+              <div className="space-y-2">
+                {Object.entries(stats.deviceStats).map(([device, count], index) => {
+                  const total = Object.values(stats.deviceStats || {}).reduce((sum, val) => sum + val, 0);
+                  const percentage = (count / total) * 100;
+                  return (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm capitalize">{device || 'Unknown'}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-base-300 rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full"
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-base-content/70">
+                          {count}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-xs text-base-content/70">
-                      {category.count}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-base-content/70">
+                {t('admin.search.dashboard.noDeviceData')}
+              </p>
+            )}
           </div>
         </div>
       </div>

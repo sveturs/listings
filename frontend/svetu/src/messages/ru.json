@@ -635,6 +635,11 @@
     "common": {
       "loading": "Загрузка..."
     },
+    "pagination": {
+      "showing": "Показаны",
+      "of": "из",
+      "itemsPerPage": "Элементов на странице"
+    },
     "sections": {
       "dashboard": "Панель управления",
       "catalog": "Каталог",
@@ -832,6 +837,8 @@
         "count": "Количество",
         "relevance": "Релевантность",
         "categoryDistribution": "Распределение по категориям",
+        "deviceDistribution": "Устройства",
+        "noDeviceData": "Нет данных по устройствам",
         "error": "Ошибка загрузки данных",
         "noData": "Нет данных для отображения"
       },

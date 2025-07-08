@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"backend/internal/domain"
 	"backend/internal/storage/postgres"
@@ -11,12 +12,14 @@ import (
 )
 
 type Service struct {
-	repo *postgres.SearchConfigRepository
+	repo          *postgres.SearchConfigRepository
+	analyticsRepo *postgres.SearchAnalyticsRepository
 }
 
 func NewService(db *sqlx.DB) *Service {
 	return &Service{
-		repo: postgres.NewSearchConfigRepository(db),
+		repo:          postgres.NewSearchConfigRepository(db),
+		analyticsRepo: postgres.NewSearchAnalyticsRepository(db),
 	}
 }
 
@@ -147,6 +150,37 @@ func (s *Service) GetSearchStatistics(ctx context.Context, limit int) ([]domain.
 	if limit <= 0 {
 		limit = 100
 	}
+
+	// Пробуем получить данные из search_logs через analytics repo
+	if s.analyticsRepo != nil {
+		logsData, err := s.analyticsRepo.GetSearchStatisticsFromLogs(ctx, limit)
+		if err == nil && len(logsData) > 0 {
+			// Конвертируем в domain.SearchStatistics для совместимости
+			var stats []domain.SearchStatistics
+			for _, data := range logsData {
+				stat := domain.SearchStatistics{
+					Query:          data["query"].(string),
+					ResultsCount:   data["results_count"].(int),
+					SearchDuration: data["search_duration_ms"].(int64),
+				}
+				if id, ok := data["id"].(int64); ok {
+					stat.ID = id
+				}
+				if userID, ok := data["user_id"].(int64); ok {
+					stat.UserID = &userID
+				}
+				if createdAt, ok := data["created_at"].(string); ok {
+					if t, err := time.Parse(time.RFC3339, createdAt); err == nil {
+						stat.CreatedAt = t
+					}
+				}
+				stats = append(stats, stat)
+			}
+			return stats, nil
+		}
+	}
+
+	// Fallback на старый метод
 	return s.repo.GetSearchStatistics(ctx, limit)
 }
 
@@ -154,6 +188,16 @@ func (s *Service) GetPopularSearches(ctx context.Context, limit int) ([]map[stri
 	if limit <= 0 {
 		limit = 10
 	}
+
+	// Пробуем получить данные из search_logs через analytics repo
+	if s.analyticsRepo != nil {
+		logsData, err := s.analyticsRepo.GetPopularSearchesFromLogs(ctx, limit)
+		if err == nil && len(logsData) > 0 {
+			return logsData, nil
+		}
+	}
+
+	// Fallback на старый метод
 	return s.repo.GetPopularSearches(ctx, limit)
 }
 
@@ -179,7 +223,12 @@ func (s *Service) UpdateConfig(ctx context.Context, config *domain.SearchConfig)
 
 // GetSearchAnalytics возвращает аналитику поиска за определенный период
 func (s *Service) GetSearchAnalytics(ctx context.Context, timeRange string) (map[string]interface{}, error) {
-	// Базовая структура аналитики
+	// Используем новый репозиторий для получения аналитики из search_logs
+	if s.analyticsRepo != nil {
+		return s.analyticsRepo.GetSearchAnalytics(ctx, timeRange)
+	}
+
+	// Fallback на старую логику если новый репозиторий не доступен
 	analytics := make(map[string]interface{})
 
 	// Получаем статистику поиска
@@ -220,4 +269,15 @@ func calculateAverageResults(stats []domain.SearchStatistics) float64 {
 	}
 
 	return float64(total) / float64(len(stats))
+}
+
+// GetSearchAnalyticsWithPagination возвращает аналитику поиска с поддержкой пагинации
+func (s *Service) GetSearchAnalyticsWithPagination(ctx context.Context, timeRange string, offsetTop, offsetZero, limit int) (map[string]interface{}, error) {
+	// Используем новый репозиторий для получения аналитики из search_logs
+	if s.analyticsRepo != nil {
+		return s.analyticsRepo.GetSearchAnalyticsWithPagination(ctx, timeRange, offsetTop, offsetZero, limit)
+	}
+
+	// Fallback на старую логику без пагинации
+	return s.GetSearchAnalytics(ctx, timeRange)
 }

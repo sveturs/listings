@@ -39,10 +39,14 @@ func (s *Service) LogSearch(ctx context.Context, entry *types.SearchLogEntry) er
 	if entry.CreatedAt.IsZero() {
 		entry.CreatedAt = time.Now()
 	}
+	
+	// Добавляем небольшую задержку на основе наносекунд для уникальности временных меток
+	entry.CreatedAt = entry.CreatedAt.Add(time.Duration(time.Now().Nanosecond() % 1000) * time.Nanosecond)
 
 	logger.Info().
 		Str("query", entry.Query).
 		Int("results", entry.ResultCount).
+		Time("created_at", entry.CreatedAt).
 		Msg("LogSearch called")
 
 	// Отправляем в канал неблокирующим способом
@@ -74,7 +78,40 @@ func (s *Service) processLogs() {
 				Int("batch_size", len(batch)+1).
 				Msg("Received log entry from channel")
 
-			batch = append(batch, entry)
+			// Создаем копию записи для предотвращения гонки данных
+			entryCopy := &types.SearchLogEntry{
+				ID:              entry.ID,
+				UserID:          entry.UserID,
+				SessionID:       entry.SessionID,
+				Query:           entry.Query,
+				QueryText:       entry.QueryText,
+				Filters:         entry.Filters,
+				CategoryID:      entry.CategoryID,
+				Location:        entry.Location,
+				ResultCount:     entry.ResultCount,
+				ResultsCount:    entry.ResultsCount,
+				ResponseTime:    entry.ResponseTime,
+				ResponseTimeMS:  entry.ResponseTimeMS,
+				Page:            entry.Page,
+				ItemsPerPage:    entry.ItemsPerPage,
+				SortBy:          entry.SortBy,
+				SearchType:      entry.SearchType,
+				ClickedItems:    entry.ClickedItems,
+				PurchasedItem:   entry.PurchasedItem,
+				UserAgent:       entry.UserAgent,
+				ClientIP:        entry.ClientIP,
+				IP:              entry.IP,
+				Referrer:        entry.Referrer,
+				DeviceType:      entry.DeviceType,
+				Language:        entry.Language,
+				PriceMin:        entry.PriceMin,
+				PriceMax:        entry.PriceMax,
+				HasSpellCorrect: entry.HasSpellCorrect,
+				CreatedAt:       entry.CreatedAt,
+				Timestamp:       entry.Timestamp,
+			}
+
+			batch = append(batch, entryCopy)
 
 			// Если накопилось достаточно записей, сохраняем
 			if len(batch) >= 100 {
@@ -98,10 +135,20 @@ func (s *Service) saveBatch(batch []*types.SearchLogEntry) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	// Логируем содержимое батча перед сохранением
+	for i, entry := range batch {
+		logger.Info().
+			Int("index", i).
+			Str("query", entry.Query).
+			Int("results", entry.ResultCount).
+			Time("created_at", entry.CreatedAt).
+			Msg("Batch entry before save")
+	}
+
 	if err := s.storage.SaveBatch(ctx, batch); err != nil {
 		logger.Error().Err(err).Int("batch_size", len(batch)).Msg("Failed to save search log batch")
 	} else {
-		logger.Debug().Int("batch_size", len(batch)).Msg("Search log batch saved successfully")
+		logger.Info().Int("batch_size", len(batch)).Msg("Search log batch saved successfully")
 	}
 }
 

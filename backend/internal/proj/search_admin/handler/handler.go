@@ -196,13 +196,13 @@ func (h *Handler) GetSynonyms(c *fiber.Ctx) error {
 func (h *Handler) CreateSynonym(c *fiber.Ctx) error {
 	c.Locals("logger_prefix", "CreateSynonym")
 	log.Printf("CreateSynonym: Starting handler")
-	
+
 	var synonym domain.SearchSynonym
 	if err := c.BodyParser(&synonym); err != nil {
 		log.Printf("CreateSynonym: Failed to parse body: %v", err)
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input", "details": err.Error()})
 	}
-	
+
 	log.Printf("CreateSynonym: Parsed synonym: %+v", synonym)
 
 	err := h.service.CreateSynonym(c.Context(), &synonym)
@@ -495,13 +495,19 @@ func (h *Handler) UpdateConfig(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param range query string false "Time range (7d, 30d, 90d)" default(7d)
+// @Param offsetTop query int false "Offset for top queries pagination" default(0)
+// @Param offsetZero query int false "Offset for zero result queries pagination" default(0)
+// @Param limit query int false "Limit for pagination" default(25)
 // @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Search analytics data"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/search/analytics [get]
 func (h *Handler) GetSearchAnalytics(c *fiber.Ctx) error {
 	timeRange := c.Query("range", "7d")
+	offsetTop := c.QueryInt("offsetTop", 0)
+	offsetZero := c.QueryInt("offsetZero", 0)
+	limit := c.QueryInt("limit", 25)
 
-	analytics, err := h.service.GetSearchAnalytics(c.Context(), timeRange)
+	analytics, err := h.service.GetSearchAnalyticsWithPagination(c.Context(), timeRange, offsetTop, offsetZero, limit)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.internalServerError")
 	}

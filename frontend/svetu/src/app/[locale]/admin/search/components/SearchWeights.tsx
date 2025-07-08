@@ -43,21 +43,37 @@ export default function SearchWeights() {
       if (!response.ok) throw new Error('Failed to fetch weights');
       const data = await response.json();
 
-      setGlobalWeights(
-        data.globalWeights || [
-          {
-            field: 'title',
-            weight: 10,
-            description: 'Вес заголовка объявления',
+      // Конвертируем веса из диапазона 0-10 в 0-100 для UI
+      const convertedGlobalWeights = (data.globalWeights || [
+        {
+          field: 'title',
+          weight: 10,
+          description: 'Вес заголовка объявления',
+        },
+        { field: 'description', weight: 5, description: 'Вес описания' },
+        { field: 'attributes', weight: 3, description: 'Вес атрибутов' },
+        { field: 'category', weight: 8, description: 'Вес категории' },
+        { field: 'tags', weight: 4, description: 'Вес тегов' },
+      ]).map((w: SearchWeight) => ({
+        ...w,
+        weight: w.weight * 10, // Умножаем на 10 для отображения
+      }));
+
+      setGlobalWeights(convertedGlobalWeights);
+
+      // Конвертируем веса категорий из диапазона 0-10 в 0-100
+      const convertedCategoryWeights = (data.categoryWeights || []).map(
+        (cat: CategoryWeight) => ({
+          ...cat,
+          weights: {
+            title: (cat.weights.title || 0) * 10,
+            description: (cat.weights.description || 0) * 10,
+            attributes: (cat.weights.attributes || 0) * 10,
           },
-          { field: 'description', weight: 5, description: 'Вес описания' },
-          { field: 'attributes', weight: 3, description: 'Вес атрибутов' },
-          { field: 'category', weight: 8, description: 'Вес категории' },
-          { field: 'tags', weight: 4, description: 'Вес тегов' },
-        ]
+        })
       );
 
-      setCategoryWeights(data.categoryWeights || []);
+      setCategoryWeights(convertedCategoryWeights);
     } catch (error) {
       console.error('Error fetching weights:', error);
       toast.error(t('admin.search.weights.fetchError'));
@@ -92,13 +108,32 @@ export default function SearchWeights() {
     setSaving(true);
     try {
       const accessToken = await tokenManager.getAccessToken();
+      
+      // Конвертируем веса обратно в диапазон 0-10 для backend
+      const convertedGlobalWeights = globalWeights.map(w => ({
+        ...w,
+        weight: w.weight / 10, // Делим на 10 для backend
+      }));
+
+      const convertedCategoryWeights = categoryWeights.map(cat => ({
+        ...cat,
+        weights: {
+          title: cat.weights.title / 10,
+          description: cat.weights.description / 10,
+          attributes: cat.weights.attributes / 10,
+        },
+      }));
+
       const response = await fetch('/api/admin/search/weights', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ globalWeights, categoryWeights }),
+        body: JSON.stringify({ 
+          globalWeights: convertedGlobalWeights, 
+          categoryWeights: convertedCategoryWeights 
+        }),
       });
 
       if (!response.ok) throw new Error('Failed to save weights');

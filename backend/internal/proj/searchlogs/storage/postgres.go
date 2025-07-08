@@ -32,17 +32,27 @@ func (s *PostgresStorage) SaveBatch(ctx context.Context, entries []*types.Search
 	}
 
 	// Используем COPY для эффективной вставки
+	// ВАЖНО: порядок колонок должен точно соответствовать таблице (кроме id и created_at)
 	_, err := s.pool.CopyFrom(
 		ctx,
 		pgx.Identifier{"search_logs"},
 		[]string{
-			"query_text", "user_id", "session_id", "results_count", "response_time_ms",
-			"filters", "category_id", "price_min", "price_max", "location",
-			"language", "device_type", "user_agent", "ip_address", "search_type",
-			"has_spell_correct", "clicked_items",
+			"user_id", "session_id", "query_text", "filters", "category_id",
+			"location", "results_count", "response_time_ms", "page", "per_page",
+			"sort_by", "user_agent", "ip_address", "referer", "device_type",
+			"language", "search_type", "has_spell_correct", "clicked_items",
+			"price_min", "price_max",
 		},
 		pgx.CopyFromSlice(len(entries), func(i int) ([]any, error) {
 			e := entries[i]
+			
+			logger.Info().
+				Int("copy_index", i).
+				Str("query", e.Query).
+				Str("queryText", e.QueryText).
+				Int("resultCount", e.ResultCount).
+				Int("resultsCount", e.ResultsCount).
+				Msg("Processing entry in CopyFrom")
 
 			// Конвертируем фильтры в JSON
 			var filtersJSON []byte
@@ -74,24 +84,68 @@ func (s *PostgresStorage) SaveBatch(ctx context.Context, entries []*types.Search
 				}
 			}
 
+			// Используем Query если QueryText пустой (для обратной совместимости)
+			queryText := e.QueryText
+			if queryText == "" && e.Query != "" {
+				queryText = e.Query
+			}
+			
+			// Используем ResultsCount если ResultCount равен 0 (для обратной совместимости)
+			resultsCount := e.ResultsCount
+			if resultsCount == 0 && e.ResultCount > 0 {
+				resultsCount = e.ResultCount
+			}
+			
+			// Используем ResponseTime если ResponseTimeMS равен 0
+			responseTimeMS := e.ResponseTimeMS
+			if responseTimeMS == 0 && e.ResponseTime > 0 {
+				responseTimeMS = int64(e.ResponseTime)
+			}
+			
+			// Используем ClientIP если IP пустой
+			ipAddress := e.IP
+			if ipAddress == "" && e.ClientIP != "" {
+				ipAddress = e.ClientIP
+			}
+
+			// Значения по умолчанию для недостающих полей
+			page := e.Page
+			if page == 0 {
+				page = 1
+			}
+			
+			itemsPerPage := e.ItemsPerPage
+			if itemsPerPage == 0 {
+				itemsPerPage = 20
+			}
+			
+			sortBy := e.SortBy
+			if sortBy == "" {
+				sortBy = "relevance"
+			}
+
 			return []any{
-				e.Query,
-				e.UserID,
-				e.SessionID,
-				e.ResultCount,
-				e.ResponseTimeMS,
-				filtersJSON,
-				e.CategoryID,
-				e.PriceMin,
-				e.PriceMax,
-				locationJSON,
-				e.Language,
-				e.DeviceType,
-				e.UserAgent,
-				e.IP,
-				e.SearchType,
-				e.HasSpellCorrect,
-				clickedItemsJSON,
+				e.UserID,          // user_id
+				e.SessionID,       // session_id
+				queryText,         // query_text
+				filtersJSON,       // filters
+				e.CategoryID,      // category_id
+				locationJSON,      // location
+				resultsCount,      // results_count
+				responseTimeMS,    // response_time_ms
+				page,              // page
+				itemsPerPage,      // per_page
+				sortBy,            // sort_by
+				e.UserAgent,       // user_agent
+				ipAddress,         // ip_address
+				e.Referrer,        // referer
+				e.DeviceType,      // device_type
+				e.Language,        // language
+				e.SearchType,      // search_type
+				e.HasSpellCorrect, // has_spell_correct
+				clickedItemsJSON,  // clicked_items
+				e.PriceMin,        // price_min
+				e.PriceMax,        // price_max
 			}, nil
 		}),
 	)

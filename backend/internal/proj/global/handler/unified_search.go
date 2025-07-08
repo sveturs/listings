@@ -16,6 +16,7 @@ import (
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
+	searchlogsTypes "backend/internal/proj/searchlogs/types"
 	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
 	"backend/pkg/utils"
 )
@@ -168,6 +169,8 @@ type UnifiedStorefrontInfo struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "search.searchError"
 // @Router /api/v1/search [get]
 func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
+	// Засекаем время начала для измерения производительности
+	startTime := time.Now()
 	ctx := c.Context()
 
 	// Парсим параметры поиска
@@ -265,6 +268,81 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 			logger.Error().Err(err).Msg("Failed to save search query")
 			// Не возвращаем ошибку пользователю, так как основной поиск прошел успешно
 		}
+	}
+
+	// Асинхронное логирование поискового запроса через SearchLogs сервис
+	if searchLogsSvc := h.services.SearchLogs(); searchLogsSvc != nil {
+		logger.Info().Msg("SearchLogs service is available, logging unified search query")
+
+		// Извлекаем данные из контекста Fiber ДО запуска горутины
+		var userID *int
+		if uid, ok := c.Locals("user_id").(int); ok && uid > 0 {
+			userID = &uid
+		}
+
+		// Получаем session ID из cookie или заголовков
+		sessionID := c.Cookies("session_id")
+		if sessionID == "" {
+			sessionID = c.Get("X-Session-ID")
+		}
+
+		// Определяем тип устройства из User-Agent
+		userAgent := c.Get("User-Agent")
+		ipAddress := c.IP()
+
+		go func() {
+			// Вычисляем время ответа
+			responseTime := time.Since(startTime).Milliseconds()
+
+			// Определяем тип устройства из User-Agent
+			deviceType := detectDeviceType(userAgent)
+
+			// Преобразуем filters из map[string]interface{} (они уже в правильном формате)
+			filters := params.AttributeFilters
+
+			// Преобразуем CategoryID в *int
+			var categoryIDInt *int
+			if params.CategoryID != "" {
+				if catID, err := strconv.Atoi(params.CategoryID); err == nil {
+					categoryIDInt = &catID
+				}
+			}
+
+			// Создаем запись лога
+			logEntry := &searchlogsTypes.SearchLogEntry{
+				Query:           params.Query,
+				UserID:          userID,
+				SessionID:       sessionID,
+				ResultCount:     result.Total,
+				ResponseTimeMS:  int64(responseTime),
+				Filters:         filters,
+				CategoryID:      categoryIDInt,
+				PriceMin:        &params.PriceMin,
+				PriceMax:        &params.PriceMax,
+				Location:        nil, // TODO: добавить поддержку локации
+				Language:        params.Language,
+				DeviceType:      deviceType,
+				UserAgent:       userAgent,
+				IP:              ipAddress,
+				SearchType:      "unified",
+				HasSpellCorrect: false,   // TODO: добавить поддержку spell correction
+				ClickedItems:    []int{}, // Будет заполняться позже при кликах
+				Timestamp:       time.Now(),
+			}
+
+			// Логируем асинхронно
+			logger.Info().
+				Str("query", logEntry.Query).
+				Int("results", logEntry.ResultCount).
+				Int64("response_ms", logEntry.ResponseTimeMS).
+				Msg("Logging unified search query")
+
+			if err := searchLogsSvc.LogSearch(context.Background(), logEntry); err != nil {
+				logger.Error().Err(err).Msg("Failed to log unified search query")
+			} else {
+				logger.Info().Msg("Unified search query logged successfully")
+			}
+		}()
 	}
 
 	return c.JSON(result)
@@ -644,4 +722,39 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	}
 
 	return location
+}
+
+// detectDeviceType определяет тип устройства по User-Agent
+func detectDeviceType(userAgent string) string {
+	ua := strings.ToLower(userAgent)
+
+	// Проверка на мобильные устройства
+	mobileKeywords := []string{
+		"mobile", "android", "iphone", "ipad", "ipod",
+		"blackberry", "windows phone", "opera mini", "iemobile",
+	}
+
+	for _, keyword := range mobileKeywords {
+		if strings.Contains(ua, keyword) {
+			// Планшеты
+			if strings.Contains(ua, "ipad") || strings.Contains(ua, "tablet") {
+				return "tablet"
+			}
+			return "mobile"
+		}
+	}
+
+	// Проверка на боты
+	botKeywords := []string{
+		"bot", "crawl", "spider", "scraper", "curl", "wget",
+	}
+
+	for _, keyword := range botKeywords {
+		if strings.Contains(ua, keyword) {
+			return "bot"
+		}
+	}
+
+	// По умолчанию - десктоп
+	return "desktop"
 }

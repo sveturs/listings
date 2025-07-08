@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
 import { tokenManager } from '@/utils/tokenManager';
+import Pagination from '@/components/admin/Pagination';
 
 interface SearchQuery {
   query: string;
@@ -33,6 +34,11 @@ export default function SearchAnalytics() {
   const [zeroResultQueries, setZeroResultQueries] = useState<SearchQuery[]>([]);
   const [timeRange, setTimeRange] = useState<TimeRange['value']>('7d');
   const [loading, setLoading] = useState(true);
+  const [currentPageTop, setCurrentPageTop] = useState(1);
+  const [currentPageZero, setCurrentPageZero] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [totalTopQueries, setTotalTopQueries] = useState(0);
+  const [totalZeroQueries, setTotalZeroQueries] = useState(0);
 
   const timeRanges: TimeRange[] = [
     { label: t('admin.search.analytics.last24h'), value: '24h' },
@@ -43,14 +49,16 @@ export default function SearchAnalytics() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [timeRange]);
+  }, [timeRange, currentPageTop, currentPageZero, itemsPerPage]);
 
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
       const accessToken = await tokenManager.getAccessToken();
+      const offsetTop = (currentPageTop - 1) * itemsPerPage;
+      const offsetZero = (currentPageZero - 1) * itemsPerPage;
       const response = await fetch(
-        `/api/v1/admin/search/analytics?range=${timeRange}`,
+        `/api/v1/admin/search/analytics?range=${timeRange}&offsetTop=${offsetTop}&offsetZero=${offsetZero}&limit=${itemsPerPage}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -58,7 +66,8 @@ export default function SearchAnalytics() {
         }
       );
       if (!response.ok) throw new Error('Failed to fetch analytics');
-      const data = await response.json();
+      const result = await response.json();
+      const data = result.data || {};
 
       setMetrics(
         data.metrics || {
@@ -71,6 +80,8 @@ export default function SearchAnalytics() {
       );
       setTopQueries(data.topQueries || []);
       setZeroResultQueries(data.zeroResultQueries || []);
+      setTotalTopQueries(data.totalTopQueries || data.topQueries?.length || 0);
+      setTotalZeroQueries(data.totalZeroQueries || data.zeroResultQueries?.length || 0);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast.error(t('admin.search.analytics.fetchError'));
@@ -205,6 +216,22 @@ export default function SearchAnalytics() {
                 </tbody>
               </table>
             </div>
+            {totalTopQueries > itemsPerPage && (
+              <Pagination
+                currentPage={currentPageTop}
+                totalPages={Math.ceil(totalTopQueries / itemsPerPage)}
+                totalItems={totalTopQueries}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => {
+                  setCurrentPageTop(page);
+                }}
+                onItemsPerPageChange={(items) => {
+                  setItemsPerPage(items);
+                  setCurrentPageTop(1);
+                  setCurrentPageZero(1);
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -235,6 +262,22 @@ export default function SearchAnalytics() {
                 </tbody>
               </table>
             </div>
+            {totalZeroQueries > itemsPerPage && (
+              <Pagination
+                currentPage={currentPageZero}
+                totalPages={Math.ceil(totalZeroQueries / itemsPerPage)}
+                totalItems={totalZeroQueries}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => {
+                  setCurrentPageZero(page);
+                }}
+                onItemsPerPageChange={(items) => {
+                  setItemsPerPage(items);
+                  setCurrentPageTop(1);
+                  setCurrentPageZero(1);
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
