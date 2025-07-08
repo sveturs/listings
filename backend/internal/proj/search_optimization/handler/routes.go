@@ -24,4 +24,10 @@ func RegisterSearchOptimizationRoutes(api fiber.Router, h *SearchOptimizationHan
 	// Конфигурация
 	searchOptimization.Get("/optimization-config", h.GetOptimizationConfig)
 	searchOptimization.Put("/optimization-config", h.UpdateOptimizationConfig)
+
+	// Управление синонимами
+	searchOptimization.Get("/synonyms", h.GetSynonyms)
+	searchOptimization.Post("/synonyms", h.CreateSynonym)
+	searchOptimization.Put("/synonyms/:id", h.UpdateSynonym)
+	searchOptimization.Delete("/synonyms/:id", h.DeleteSynonym)
 }

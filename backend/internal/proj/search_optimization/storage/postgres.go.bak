@@ -1,0 +1,706 @@
+package storage
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pkg/errors"
+)
+
+type PostgresSearchOptimizationRepository struct {
+	pool *pgxpool.Pool
+}
+
+func NewPostgresSearchOptimizationRepository(pool *pgxpool.Pool) *PostgresSearchOptimizationRepository {
+	return &PostgresSearchOptimizationRepository{pool: pool}
+}
+
+// Управление весами
+func (r *PostgresSearchOptimizationRepository) GetSearchWeights(ctx context.Context, itemType string, categoryID *int) ([]*SearchWeight, error) {
+	query := `
+		SELECT id, field_name, weight, search_type, item_type, category_id, 
+		       description, is_active, version, created_at, updated_at, created_by, updated_by
+		FROM search_weights 
+		WHERE item_type = $1 AND is_active = true
+	`
+	args := []interface{}{itemType}
+
+	if categoryID != nil {
+		query += " AND category_id = $2"
+		args = append(args, *categoryID)
+	} else {
+		query += " AND category_id IS NULL"
+	}
+
+	query += " ORDER BY field_name, search_type"
+
+	rows, err := r.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get search weights")
+	}
+	defer rows.Close()
+
+	var weights []*SearchWeight
+	for rows.Next() {
+		var weight SearchWeight
+		err := rows.Scan(
+			&weight.ID, &weight.FieldName, &weight.Weight, &weight.SearchType, &weight.ItemType, &weight.CategoryID,
+			&weight.Description, &weight.IsActive, &weight.Version, &weight.CreatedAt, &weight.UpdatedAt, &weight.CreatedBy, &weight.UpdatedBy,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan search weight")
+		}
+		weights = append(weights, &weight)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "failed to iterate search weights")
+	}
+
+	return weights, nil
+}
+
+func (r *PostgresSearchOptimizationRepository) GetSearchWeightByField(ctx context.Context, fieldName, searchType, itemType string, categoryID *int) (*SearchWeight, error) {
+	query := `
+		SELECT id, field_name, weight, search_type, item_type, category_id, 
+		       description, is_active, version, created_at, updated_at, created_by, updated_by
+		FROM search_weights 
+		WHERE field_name = $1 AND search_type = $2 AND item_type = $3 AND is_active = true
+	`
+	args := []interface{}{fieldName, searchType, itemType}
+
+	if categoryID != nil {
+		query += " AND category_id = $4"
+		args = append(args, *categoryID)
+	} else {
+		query += " AND category_id IS NULL"
+	}
+
+	var weight SearchWeight
+	err := r.pool.QueryRow(ctx, query, args...).Scan(
+		&weight.ID, &weight.FieldName, &weight.Weight, &weight.SearchType, &weight.ItemType, &weight.CategoryID,
+		&weight.Description, &weight.IsActive, &weight.Version, &weight.CreatedAt, &weight.UpdatedAt, &weight.CreatedBy, &weight.UpdatedBy,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "failed to get search weight by field")
+	}
+
+	return &weight, nil
+}
+
+func (r *PostgresSearchOptimizationRepository) UpdateSearchWeight(ctx context.Context, id int64, weight float64, updatedBy int) error {
+	_, err := r.pool.Exec(ctx, `
+		UPDATE search_weights 
+		SET weight = $1, updated_by = $2, updated_at = NOW()
+		WHERE id = $3
+	`, weight, updatedBy, id)
+	if err != nil {
+		return errors.Wrap(err, "failed to update search weight")
+	}
+
+	return nil
+}
+
+func (r *PostgresSearchOptimizationRepository) CreateSearchWeight(ctx context.Context, weight *SearchWeight) error {
+	query := `
+		INSERT INTO search_weights (field_name, weight, search_type, item_type, category_id, 
+		                           description, is_active, version, created_by, updated_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		RETURNING id, created_at, updated_at
+	`
+
+	err := r.pool.QueryRow(ctx, query,
+		weight.FieldName, weight.Weight, weight.SearchType, weight.ItemType, weight.CategoryID,
+		weight.Description, weight.IsActive, weight.Version, weight.CreatedBy, weight.UpdatedBy,
+	).Scan(&weight.ID, &weight.CreatedAt, &weight.UpdatedAt)
+	if err != nil {
+		return errors.Wrap(err, "failed to create search weight")
+	}
+
+	return nil
+}
+
+func (r *PostgresSearchOptimizationRepository) BulkUpdateSearchWeights(ctx context.Context, weights []*SearchWeight, updatedBy int) error {
+	if len(weights) == 0 {
+		return nil
+	}
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to begin transaction")
+	}
+	defer tx.Rollback()
+
+	for _, weight := range weights {
+		_, err = tx.Exec(ctx, `
+			UPDATE search_weights 
+			SET weight = $1, updated_by = $2, updated_at = NOW()
+			WHERE id = $3
+		`, weight.Weight, updatedBy, weight.ID)
+		if err != nil {
+			return errors.Wrapf(err, "failed to update search weight id=%d", weight.ID)
+		}
+	}
+
+	return tx.Commit()
+}
+
+// История изменений
+func (r *PostgresSearchOptimizationRepository) GetWeightHistory(ctx context.Context, weightID int64, limit int) ([]*SearchWeightHistory, error) {
+	var history []*SearchWeightHistory
+	rows, err := r.pool.Query(ctx, `
+		SELECT id, weight_id, old_weight, new_weight, change_reason, 
+		       change_metadata, changed_by, changed_at
+		FROM search_weights_history 
+		WHERE weight_id = $1 
+		ORDER BY changed_at DESC 
+		LIMIT $2
+	`, weightID, limit)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get weight history")
+	}
+	defer rows.Close()
+
+	var history []*SearchWeightHistory
+	for rows.Next() {
+		var item SearchWeightHistory
+		err := rows.Scan(
+			&item.ID, &item.WeightID, &item.OldWeight, &item.NewWeight, &item.ChangeReason,
+			&item.ChangeMetadata, &item.ChangedBy, &item.ChangedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan weight history")
+		}
+		history = append(history, &item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "failed to iterate weight history")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get weight history")
+	}
+
+	return history, nil
+}
+
+func (r *PostgresSearchOptimizationRepository) CreateWeightHistoryEntry(ctx context.Context, entry *SearchWeightHistory) error {
+	_, err := r.pool.Exec(ctx, `
+		INSERT INTO search_weights_history (weight_id, old_weight, new_weight, change_reason, 
+		                                   change_metadata, changed_by)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`, entry.WeightID, entry.OldWeight, entry.NewWeight, entry.ChangeReason,
+		entry.ChangeMetadata, entry.ChangedBy)
+	if err != nil {
+		return errors.Wrap(err, "failed to create weight history entry")
+	}
+
+	return nil
+}
+
+// Анализ поведенческих данных
+func (r *PostgresSearchOptimizationRepository) GetBehaviorAnalysisData(ctx context.Context, fromDate, toDate time.Time, fieldNames []string) ([]*BehaviorAnalysisData, error) {
+	// Комплексный запрос для получения данных о поведении пользователей
+	// с агрегацией по поисковым запросам и полям
+	query := `
+		WITH search_metrics AS (
+			SELECT 
+				search_query,
+				COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END) as total_searches,
+				COUNT(CASE WHEN event_type = 'result_clicked' THEN 1 END) as total_clicks,
+				AVG(CASE WHEN event_type = 'result_clicked' AND position IS NOT NULL THEN position END) as avg_position,
+				COUNT(CASE WHEN event_type = 'item_purchased' THEN 1 END) as conversions
+			FROM user_behavior_events 
+			WHERE created_at >= $1 AND created_at <= $2
+			  AND search_query IS NOT NULL
+			GROUP BY search_query
+		)
+		SELECT 
+			search_query,
+			'' as field_name,  -- Будет заполнено отдельно
+			total_searches,
+			total_clicks,
+			CASE WHEN total_searches > 0 THEN (total_clicks::float / total_searches) ELSE 0 END as ctr,
+			COALESCE(avg_position, 0) as avg_position,
+			conversions,
+			CASE WHEN total_searches > 0 THEN (conversions::float / total_searches) ELSE 0 END as conversion_rate
+		FROM search_metrics
+		WHERE total_searches > 0
+		ORDER BY total_searches DESC
+		LIMIT 100
+	`
+
+	var results []*BehaviorAnalysisData
+	rows, err := r.pool.Query(ctx, query, fromDate, toDate)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get behavior analysis data")
+	}
+	defer rows.Close()
+
+	var results []*BehaviorAnalysisData
+	for rows.Next() {
+		var item BehaviorAnalysisData
+		err := rows.Scan(
+			&item.SearchQuery, &item.FieldName, &item.TotalSearches, &item.TotalClicks,
+			&item.CTR, &item.AvgPosition, &item.Conversions, &item.ConversionRate,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan behavior analysis data")
+		}
+		results = append(results, &item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "failed to iterate behavior analysis data")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get behavior analysis data")
+	}
+
+	return results, nil
+}
+
+func (r *PostgresSearchOptimizationRepository) GetSearchQueryMetrics(ctx context.Context, query string, fromDate, toDate time.Time) (*BehaviorAnalysisData, error) {
+	var result BehaviorAnalysisData
+	err := r.pool.GetContext(ctx, &result, `
+		SELECT 
+			$1 as search_query,
+			'' as field_name,
+			COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END) as total_searches,
+			COUNT(CASE WHEN event_type = 'result_clicked' THEN 1 END) as total_clicks,
+			CASE 
+				WHEN COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END) > 0 
+				THEN (COUNT(CASE WHEN event_type = 'result_clicked' THEN 1 END)::float / 
+				      COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END)) 
+				ELSE 0 
+			END as ctr,
+			AVG(CASE WHEN event_type = 'result_clicked' AND position IS NOT NULL THEN position END) as avg_position,
+			COUNT(CASE WHEN event_type = 'item_purchased' THEN 1 END) as conversions,
+			CASE 
+				WHEN COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END) > 0 
+				THEN (COUNT(CASE WHEN event_type = 'item_purchased' THEN 1 END)::float / 
+				      COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END)) 
+				ELSE 0 
+			END as conversion_rate
+		FROM user_behavior_events 
+		WHERE search_query = $1 AND created_at >= $2 AND created_at <= $3
+	`, query, fromDate, toDate)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &BehaviorAnalysisData{SearchQuery: query}, nil
+		}
+		return nil, errors.Wrap(err, "failed to get search query metrics")
+	}
+
+	return &result, nil
+}
+
+func (r *PostgresSearchOptimizationRepository) GetFieldPerformanceMetrics(ctx context.Context, fieldName string, fromDate, toDate time.Time) ([]*BehaviorAnalysisData, error) {
+	// Анализ производительности конкретного поля в различных поисковых запросах
+	query := `
+		SELECT 
+			search_query,
+			$1 as field_name,
+			COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END) as total_searches,
+			COUNT(CASE WHEN event_type = 'result_clicked' THEN 1 END) as total_clicks,
+			CASE 
+				WHEN COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END) > 0 
+				THEN (COUNT(CASE WHEN event_type = 'result_clicked' THEN 1 END)::float / 
+				      COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END)) 
+				ELSE 0 
+			END as ctr,
+			AVG(CASE WHEN event_type = 'result_clicked' AND position IS NOT NULL THEN position END) as avg_position,
+			COUNT(CASE WHEN event_type = 'item_purchased' THEN 1 END) as conversions,
+			CASE 
+				WHEN COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END) > 0 
+				THEN (COUNT(CASE WHEN event_type = 'item_purchased' THEN 1 END)::float / 
+				      COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END)) 
+				ELSE 0 
+			END as conversion_rate
+		FROM user_behavior_events 
+		WHERE created_at >= $2 AND created_at <= $3
+		  AND search_query IS NOT NULL
+		  AND (metadata->>'search_fields' LIKE $4 OR metadata->>'matched_fields' LIKE $4)
+		GROUP BY search_query
+		HAVING COUNT(CASE WHEN event_type = 'search_performed' THEN 1 END) > 0
+		ORDER BY total_searches DESC
+		LIMIT 50
+	`
+
+	var results []*BehaviorAnalysisData
+	fieldPattern := fmt.Sprintf("%%%s%%", fieldName)
+	err := r.pool.SelectContext(ctx, &results, query, fieldName, fromDate, toDate, fieldPattern)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get field performance metrics")
+	}
+
+	return results, nil
+}
+
+// Корреляционный анализ
+func (r *PostgresSearchOptimizationRepository) GetCTRByPosition(ctx context.Context, fieldName string, fromDate, toDate time.Time) (map[int]float64, error) {
+	rows, err := r.pool.QueryxContext(ctx, `
+		SELECT 
+			position,
+			COUNT(*) as clicks,
+			COUNT(*) * 1.0 / (
+				SELECT COUNT(*) 
+				FROM user_behavior_events 
+				WHERE event_type = 'search_performed' 
+				  AND created_at >= $2 AND created_at <= $3
+				  AND (metadata->>'search_fields' LIKE $4 OR metadata->>'matched_fields' LIKE $4)
+			) as ctr
+		FROM user_behavior_events 
+		WHERE event_type = 'result_clicked' 
+		  AND position IS NOT NULL
+		  AND created_at >= $2 AND created_at <= $3
+		  AND (metadata->>'search_fields' LIKE $1 OR metadata->>'matched_fields' LIKE $1)
+		GROUP BY position
+		ORDER BY position
+	`, fmt.Sprintf("%%%s%%", fieldName), fromDate, toDate, fmt.Sprintf("%%%s%%", fieldName))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get CTR by position")
+	}
+	defer rows.Close()
+
+	result := make(map[int]float64)
+	for rows.Next() {
+		var position int
+		var clicks int
+		var ctr float64
+
+		err = rows.Scan(&position, &clicks, &ctr)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan CTR by position row")
+		}
+
+		result[position] = ctr
+	}
+
+	return result, nil
+}
+
+func (r *PostgresSearchOptimizationRepository) GetWeightVsCTRCorrelation(ctx context.Context, fieldName string, fromDate, toDate time.Time) ([]struct {
+	Weight float64 `json:"weight"`
+	CTR    float64 `json:"ctr"`
+	Count  int     `json:"count"`
+}, error,
+) {
+	// Этот запрос требует дополнительной логики для корреляции весов и CTR
+	// Упрощенная версия - группировка по весам и расчет средних CTR
+	rows, err := r.pool.QueryxContext(ctx, `
+		WITH weight_periods AS (
+			SELECT 
+				sw.weight,
+				date_trunc('day', swh.changed_at) as period_start,
+				LEAD(date_trunc('day', swh.changed_at), 1, NOW()) OVER (ORDER BY swh.changed_at) as period_end
+			FROM search_weights sw
+			JOIN search_weights_history swh ON sw.id = swh.weight_id
+			WHERE sw.field_name = $1
+			ORDER BY swh.changed_at
+		),
+		ctr_by_period AS (
+			SELECT 
+				wp.weight,
+				COUNT(CASE WHEN ube.event_type = 'search_performed' THEN 1 END) as searches,
+				COUNT(CASE WHEN ube.event_type = 'result_clicked' THEN 1 END) as clicks
+			FROM weight_periods wp
+			LEFT JOIN user_behavior_events ube ON 
+				ube.created_at >= wp.period_start AND ube.created_at < wp.period_end
+				AND ube.created_at >= $2 AND ube.created_at <= $3
+				AND (ube.metadata->>'search_fields' LIKE $4 OR ube.metadata->>'matched_fields' LIKE $4)
+			GROUP BY wp.weight
+		)
+		SELECT 
+			weight,
+			CASE WHEN searches > 0 THEN (clicks::float / searches) ELSE 0 END as ctr,
+			searches as count
+		FROM ctr_by_period
+		WHERE searches > 0
+		ORDER BY weight
+	`, fieldName, fromDate, toDate, fmt.Sprintf("%%%s%%", fieldName))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get weight vs CTR correlation")
+	}
+	defer rows.Close()
+
+	var results []struct {
+		Weight float64 `json:"weight"`
+		CTR    float64 `json:"ctr"`
+		Count  int     `json:"count"`
+	}
+
+	for rows.Next() {
+		var item struct {
+			Weight float64 `json:"weight"`
+			CTR    float64 `json:"ctr"`
+			Count  int     `json:"count"`
+		}
+
+		err = rows.Scan(&item.Weight, &item.CTR, &item.Count)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan weight vs CTR correlation row")
+		}
+
+		results = append(results, item)
+	}
+
+	return results, nil
+}
+
+// Сессии оптимизации
+func (r *PostgresSearchOptimizationRepository) CreateOptimizationSession(ctx context.Context, session *OptimizationSession) error {
+	err := r.pool.QueryRowxContext(ctx, `
+		INSERT INTO search_optimization_sessions (status, start_time, total_fields, processed_fields, created_by)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id
+	`, session.Status, session.StartTime, session.TotalFields, session.ProcessedFields, session.CreatedBy).Scan(&session.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to create optimization session")
+	}
+
+	return nil
+}
+
+func (r *PostgresSearchOptimizationRepository) UpdateOptimizationSession(ctx context.Context, sessionID int64, status string, results []*WeightOptimizationResult, errorMsg *string) error {
+	var resultsJSON []byte
+	var err error
+
+	if results != nil {
+		resultsJSON, err = json.Marshal(results)
+		if err != nil {
+			return errors.Wrap(err, "failed to marshal optimization results")
+		}
+	}
+
+	endTime := time.Now()
+	_, err = r.pool.ExecContext(ctx, `
+		UPDATE search_optimization_sessions 
+		SET status = $1, end_time = $2, results = $3, error_message = $4, updated_at = NOW()
+		WHERE id = $5
+	`, status, endTime, resultsJSON, errorMsg, sessionID)
+	if err != nil {
+		return errors.Wrap(err, "failed to update optimization session")
+	}
+
+	return nil
+}
+
+func (r *PostgresSearchOptimizationRepository) GetOptimizationSession(ctx context.Context, sessionID int64) (*OptimizationSession, error) {
+	var session OptimizationSession
+	var resultsJSON sql.NullString
+
+	err := r.pool.QueryRowxContext(ctx, `
+		SELECT id, status, start_time, end_time, total_fields, processed_fields, 
+		       results, error_message, created_by
+		FROM search_optimization_sessions 
+		WHERE id = $1
+	`, sessionID).Scan(&session.ID, &session.Status, &session.StartTime, &session.EndTime,
+		&session.TotalFields, &session.ProcessedFields, &resultsJSON, &session.ErrorMessage, &session.CreatedBy)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "failed to get optimization session")
+	}
+
+	if resultsJSON.Valid && resultsJSON.String != "" {
+		err = json.Unmarshal([]byte(resultsJSON.String), &session.Results)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to unmarshal optimization results")
+		}
+	}
+
+	return &session, nil
+}
+
+func (r *PostgresSearchOptimizationRepository) GetRecentOptimizationSessions(ctx context.Context, limit int) ([]*OptimizationSession, error) {
+	rows, err := r.pool.QueryxContext(ctx, `
+		SELECT id, status, start_time, end_time, total_fields, processed_fields, 
+		       results, error_message, created_by
+		FROM search_optimization_sessions 
+		ORDER BY start_time DESC 
+		LIMIT $1
+	`, limit)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get recent optimization sessions")
+	}
+	defer rows.Close()
+
+	var sessions []*OptimizationSession
+	for rows.Next() {
+		var session OptimizationSession
+		var resultsJSON sql.NullString
+
+		err = rows.Scan(&session.ID, &session.Status, &session.StartTime, &session.EndTime,
+			&session.TotalFields, &session.ProcessedFields, &resultsJSON, &session.ErrorMessage, &session.CreatedBy)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan optimization session row")
+		}
+
+		if resultsJSON.Valid && resultsJSON.String != "" {
+			err = json.Unmarshal([]byte(resultsJSON.String), &session.Results)
+			if err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+				continue
+			}
+		}
+
+		sessions = append(sessions, &session)
+	}
+
+	return sessions, nil
+}
+
+// Управление синонимами
+
+// GetSynonyms получает список синонимов с пагинацией и поиском
+func (r *PostgresSearchOptimizationRepository) GetSynonyms(ctx context.Context, language, search string, offset, limit int) ([]*SynonymData, int, error) {
+	// Подготовка базового запроса
+	baseQuery := `FROM search_synonyms WHERE 1=1`
+	args := []interface{}{}
+	argCount := 0
+
+	// Фильтр по языку
+	if language != "" {
+		argCount++
+		baseQuery += fmt.Sprintf(" AND language = $%d", argCount)
+		args = append(args, language)
+	}
+
+	// Поиск по термину или синониму
+	if search != "" {
+		argCount++
+		baseQuery += fmt.Sprintf(" AND (term ILIKE $%d OR synonym ILIKE $%d)", argCount, argCount)
+		args = append(args, "%"+search+"%")
+	}
+
+	// Получение общего количества
+	countQuery := "SELECT COUNT(*) " + baseQuery
+	var total int
+	err := r.pool.GetContext(ctx, &total, countQuery, args...)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "failed to count synonyms")
+	}
+
+	// Получение данных с пагинацией
+	argCount++
+	dataQuery := "SELECT id, term, synonym, language, is_active, created_at, updated_at " + 
+		baseQuery + 
+		" ORDER BY created_at DESC, term, synonym" +
+		fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount, argCount+1)
+	
+	args = append(args, limit, offset)
+
+	var synonyms []*SynonymData
+	err = r.pool.SelectContext(ctx, &synonyms, dataQuery, args...)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "failed to get synonyms")
+	}
+
+	return synonyms, total, nil
+}
+
+// CreateSynonym создает новый синоним
+func (r *PostgresSearchOptimizationRepository) CreateSynonym(ctx context.Context, synonym *SynonymData) (int64, error) {
+	query := `
+		INSERT INTO search_synonyms (term, synonym, language, is_active, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, NOW(), NOW())
+		RETURNING id
+	`
+	
+	var synonymID int64
+	err := r.pool.GetContext(ctx, &synonymID, query, 
+		synonym.Term, synonym.Synonym, synonym.Language, synonym.IsActive)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to create synonym")
+	}
+
+	return synonymID, nil
+}
+
+// UpdateSynonym обновляет существующий синоним
+func (r *PostgresSearchOptimizationRepository) UpdateSynonym(ctx context.Context, synonymID int64, synonym *SynonymData) error {
+	query := `
+		UPDATE search_synonyms 
+		SET term = $2, synonym = $3, language = $4, is_active = $5, updated_at = NOW()
+		WHERE id = $1
+	`
+	
+	result, err := r.pool.ExecContext(ctx, query, 
+		synonymID, synonym.Term, synonym.Synonym, synonym.Language, synonym.IsActive)
+	if err != nil {
+		return errors.Wrap(err, "failed to update synonym")
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return errors.Wrap(err, "failed to get rows affected")
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("synonym not found")
+	}
+
+	return nil
+}
+
+// DeleteSynonym удаляет синоним
+func (r *PostgresSearchOptimizationRepository) DeleteSynonym(ctx context.Context, synonymID int64) error {
+	query := `DELETE FROM search_synonyms WHERE id = $1`
+	
+	result, err := r.pool.ExecContext(ctx, query, synonymID)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete synonym")
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return errors.Wrap(err, "failed to get rows affected")
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("synonym not found")
+	}
+
+	return nil
+}
+
+// CheckSynonymExists проверяет существование синонима
+func (r *PostgresSearchOptimizationRepository) CheckSynonymExists(ctx context.Context, term, synonym, language string) (bool, error) {
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM search_synonyms 
+			WHERE term = $1 AND synonym = $2 AND language = $3 AND is_active = true
+		)
+	`
+	
+	var exists bool
+	err := r.pool.GetContext(ctx, &exists, query, term, synonym, language)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check synonym existence")
+	}
+
+	return exists, nil
+}
+
+// CheckSynonymExistsByID проверяет существование синонима по ID
+func (r *PostgresSearchOptimizationRepository) CheckSynonymExistsByID(ctx context.Context, synonymID int64) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM search_synonyms WHERE id = $1)`
+	
+	var exists bool
+	err := r.pool.GetContext(ctx, &exists, query, synonymID)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check synonym existence by ID")
+	}
+
+	return exists, nil
+}

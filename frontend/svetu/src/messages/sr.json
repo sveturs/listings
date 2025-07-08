@@ -820,7 +820,9 @@
       "tabs": {
         "analytics": "Аналитика",
         "behavior": "Понашање",
-        "weights": "Тежине претраге"
+        "weights": "Тежине претраге",
+        "synonyms": "Синоними",
+        "optimization": "Оптимизација"
       },
       "analytics": {
         "title": "Преглед аналитике претраге",
@@ -864,6 +866,59 @@
       "behavior": {
         "title": "Аналитика понашања",
         "loadError": "Грешка учитавања аналитичких података"
+      },
+      "optimization": {
+        "title": "Аутоматска оптимизација тежина",
+        "description": "Машинско учење за оптимизацију тежина претраге на основу података о понашању",
+        "startOptimization": "Покрени оптимизацију",
+        "optimizing": "Оптимизација...",
+        "quickAnalysis": "Брза анализа",
+        "analyzing": "Анализа...",
+        "cancel": "Откажи",
+        "contentType": "Тип садржаја",
+        "analysisPeriod": "Период анализе (дани)",
+        "minSampleSize": "Минимална величина узорка",
+        "confidenceLevel": "Ниво поверења",
+        "advancedParams": "Напредни параметри машинског учења",
+        "learningRate": "Брзина учења",
+        "maxIterations": "Максимум итерација",
+        "autoApply": "Аутоматски примени оптимизоване тежине",
+        "autoApplyWarning": "УПОЗОРЕЊЕ: Препоручује се прво анализирање резултата",
+        "contentTypes": {
+          "global": "Глобалне тежине",
+          "marketplace": "Маркетплејс",
+          "storefront": "Продавнице"
+        },
+        "progress": {
+          "title": "Напредак оптимизације",
+          "processed": "Обрађена поља",
+          "status": "Статус",
+          "started": "Започето"
+        },
+        "results": {
+          "optimizationTitle": "Резултати оптимизације",
+          "analysisTitle": "Резултати анализе",
+          "applySelected": "Примени изабране",
+          "field": "Поље",
+          "currentWeight": "Тренутна тежина",
+          "optimizedWeight": "Оптимизована тежина",
+          "improvement": "Побољшање CTR",
+          "confidence": "Поверење",
+          "sample": "Узорак",
+          "currentCTR": "Тренутни CTR",
+          "predictedCTR": "Предвиђени CTR"
+        },
+        "safety": {
+          "title": "Важне безбедносне напомене:",
+          "checkResults": "Проверите резултате пре примене",
+          "testSmall": "Препоручује се тестирање на малом узорку",
+          "backup": "Направите резервну копију пре примене",
+          "monitor": "Пратите метрике након промена"
+        },
+        "messages": {
+          "weightsApplied": "Изабране тежине успешно примењене!",
+          "weightsApplyError": "Грешка при примени тежина"
+        }
       }
     },
     "admins": {
@@ -878,6 +933,37 @@
       },
       "success": {
         "removed": "Administrator uspešno uklonjen"
+      }
+    },
+    "search": {
+      "tabs": {
+        "synonyms": "Синоними"
+      },
+      "synonyms": {
+        "title": "Управљање синонимима",
+        "description": "Управљање синонимима претраге за побољшање резултата",
+        "addSynonym": "Додај синоним",
+        "search": "Претрага",
+        "searchPlaceholder": "Претражи синониме...",
+        "language": "Језик",
+        "term": "Термин",
+        "synonym": "Синоним",
+        "termPlaceholder": "Унесите главни термин",
+        "synonymPlaceholder": "Унесите синоним",
+        "active": "Активан",
+        "inactive": "Неактиван",
+        "status": "Статус",
+        "created": "Креирано",
+        "actions": "Акције",
+        "edit": "Уреди",
+        "delete": "Обриши",
+        "save": "Сачувај",
+        "cancel": "Откажи",
+        "create": "Креирај",
+        "synonymsList": "Листа синонима",
+        "total": "Укупно",
+        "noSynonyms": "Синоними нису пронађени",
+        "confirmDelete": "Да ли сте сигурни да желите да обришете овај синоним?"
       }
     }
   },

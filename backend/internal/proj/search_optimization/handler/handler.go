@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"backend/internal/proj/search_optimization/service"
-	"backend/pkg/utils"
 	"net/http"
 	"strconv"
 	"time"
+
+	"backend/internal/proj/search_optimization/service"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -420,5 +421,194 @@ func (h *SearchOptimizationHandler) RollbackWeights(c *fiber.Ctx) error {
 		"weight_ids":     req.WeightIDs,
 		"rollback_count": len(req.WeightIDs),
 		"message":        "Weights rolled back successfully",
+	})
+}
+
+// Synonym Management
+
+// SynonymRequest запрос для создания/обновления синонима
+type SynonymRequest struct {
+	Term     string `json:"term" validate:"required,min=1,max=255"`
+	Synonym  string `json:"synonym" validate:"required,min=1,max=255"`
+	Language string `json:"language" validate:"required,oneof=en ru sr"`
+	IsActive bool   `json:"is_active"`
+}
+
+// GetSynonyms получает список синонимов
+// @Summary Получение списка синонимов
+// @Description Возвращает список синонимов для указанного языка с возможностью поиска
+// @Tags Search Synonyms
+// @Produce json
+// @Param language query string false "Язык синонимов (en, ru, sr)"
+// @Param search query string false "Поиск по термину"
+// @Param page query int false "Номер страницы" default(1)
+// @Param limit query int false "Количество записей на странице" default(20)
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]map[string]interface{}} "Список синонимов"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Router /api/v1/admin/search/synonyms [get]
+// @Security BearerAuth
+func (h *SearchOptimizationHandler) GetSynonyms(c *fiber.Ctx) error {
+	language := c.Query("language", "")
+	search := c.Query("search", "")
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "20"))
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	synonyms, total, err := h.service.GetSynonyms(c.Context(), language, search, page, limit)
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "get_synonyms_failed")
+	}
+
+	return utils.SuccessResponse(c, map[string]interface{}{
+		"data":        synonyms,
+		"total":       total,
+		"page":        page,
+		"limit":       limit,
+		"total_pages": (total + limit - 1) / limit,
+	})
+}
+
+// CreateSynonym создает новый синоним
+// @Summary Создание нового синонима
+// @Description Создает новый синоним для улучшения поиска
+// @Tags Search Synonyms
+// @Accept json
+// @Produce json
+// @Param request body SynonymRequest true "Данные синонима"
+// @Success 201 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Синоним создан"
+// @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
+// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
+// @Failure 409 {object} utils.ErrorResponseSwag "Синоним уже существует"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Router /api/v1/admin/search/synonyms [post]
+// @Security BearerAuth
+func (h *SearchOptimizationHandler) CreateSynonym(c *fiber.Ctx) error {
+	var req SynonymRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_request_body")
+	}
+
+	// TODO: Добавить валидацию, когда будет реализована функция ValidateStruct
+
+	adminID, ok := c.Locals("admin_id").(int)
+	if !ok {
+		return utils.ErrorResponse(c, http.StatusUnauthorized, "admin_required")
+	}
+
+	synonymID, err := h.service.CreateSynonym(c.Context(), req.Term, req.Synonym, req.Language, req.IsActive, adminID)
+	if err != nil {
+		if err.Error() == "synonym already exists" {
+			return utils.ErrorResponse(c, http.StatusConflict, "synonym_already_exists")
+		}
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "create_synonym_failed")
+	}
+
+	return c.Status(http.StatusCreated).JSON(utils.SuccessResponseSwag{
+		Success: true,
+		Data: map[string]interface{}{
+			"message":   "Synonym created successfully",
+			"id":        synonymID,
+			"term":      req.Term,
+			"synonym":   req.Synonym,
+			"language":  req.Language,
+			"is_active": req.IsActive,
+		},
+	})
+}
+
+// UpdateSynonym обновляет существующий синоним
+// @Summary Обновление синонима
+// @Description Обновляет существующий синоним
+// @Tags Search Synonyms
+// @Accept json
+// @Produce json
+// @Param id path int true "ID синонима"
+// @Param request body SynonymRequest true "Обновленные данные синонима"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Синоним обновлен"
+// @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
+// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
+// @Failure 404 {object} utils.ErrorResponseSwag "Синоним не найден"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Router /api/v1/admin/search/synonyms/{id} [put]
+// @Security BearerAuth
+func (h *SearchOptimizationHandler) UpdateSynonym(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	synonymID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_synonym_id")
+	}
+
+	var req SynonymRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_request_body")
+	}
+
+	// TODO: Добавить валидацию, когда будет реализована функция ValidateStruct
+
+	adminID, ok := c.Locals("admin_id").(int)
+	if !ok {
+		return utils.ErrorResponse(c, http.StatusUnauthorized, "admin_required")
+	}
+
+	err = h.service.UpdateSynonym(c.Context(), synonymID, req.Term, req.Synonym, req.Language, req.IsActive, adminID)
+	if err != nil {
+		if err.Error() == "synonym not found" {
+			return utils.ErrorResponse(c, http.StatusNotFound, "synonym_not_found")
+		}
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "update_synonym_failed")
+	}
+
+	return utils.SuccessResponse(c, map[string]interface{}{
+		"id":        synonymID,
+		"term":      req.Term,
+		"synonym":   req.Synonym,
+		"language":  req.Language,
+		"is_active": req.IsActive,
+		"message":   "Synonym updated successfully",
+	})
+}
+
+// DeleteSynonym удаляет синоним
+// @Summary Удаление синонима
+// @Description Удаляет синоним из системы
+// @Tags Search Synonyms
+// @Produce json
+// @Param id path int true "ID синонима"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Синоним удален"
+// @Failure 400 {object} utils.ErrorResponseSwag "Неверный ID синонима"
+// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
+// @Failure 404 {object} utils.ErrorResponseSwag "Синоним не найден"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Router /api/v1/admin/search/synonyms/{id} [delete]
+// @Security BearerAuth
+func (h *SearchOptimizationHandler) DeleteSynonym(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	synonymID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_synonym_id")
+	}
+
+	adminID, ok := c.Locals("admin_id").(int)
+	if !ok {
+		return utils.ErrorResponse(c, http.StatusUnauthorized, "admin_required")
+	}
+
+	err = h.service.DeleteSynonym(c.Context(), synonymID, adminID)
+	if err != nil {
+		if err.Error() == "synonym not found" {
+			return utils.ErrorResponse(c, http.StatusNotFound, "synonym_not_found")
+		}
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "delete_synonym_failed")
+	}
+
+	return utils.SuccessResponse(c, map[string]interface{}{
+		"id":      synonymID,
+		"message": "Synonym deleted successfully",
 	})
 }

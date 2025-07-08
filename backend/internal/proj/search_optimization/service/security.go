@@ -3,9 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
-	"backend/internal/proj/search_optimization/storage"
 	"math"
 	"time"
+
+	"backend/internal/proj/search_optimization/storage"
 )
 
 // SecurityCheck функция проверки безопасности перед применением изменений
@@ -398,7 +399,7 @@ func (sc *SecurityCheck) CreateSecurityCheckpoint(ctx context.Context, changes [
 	// В реальной реализации сохранили бы это в отдельную таблицу
 	// TODO: Реализовать сохранение checkpoint в БД
 	_ = checkpointData // Используем переменную для избежания warning
-	
+
 	sc.service.logger.Info(fmt.Sprintf("Security checkpoint created for %d changes by admin %d",
 		len(changes), adminID))
 

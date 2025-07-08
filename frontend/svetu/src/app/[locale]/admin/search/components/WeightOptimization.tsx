@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { tokenManager } from '@/utils/tokenManager';
 
 interface OptimizationParams {
@@ -40,6 +41,7 @@ interface OptimizationSession {
 }
 
 export default function WeightOptimization() {
+  const t = useTranslations('admin.search.optimization');
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [currentSession, setCurrentSession] =
     useState<OptimizationSession | null>(null);
@@ -183,11 +185,11 @@ export default function WeightOptimization() {
         throw new Error('Failed to apply weights');
       }
 
-      alert('Выбранные веса успешно применены!');
+      alert(t('messages.weightsApplied'));
       setSelectedResults([]);
     } catch (error) {
       console.error('Failed to apply weights:', error);
-      alert('Ошибка при применении весов');
+      alert(t('messages.weightsApplyError'));
     }
   };
 
@@ -262,20 +264,16 @@ export default function WeightOptimization() {
                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
-            Автоматическая оптимизация весов поиска
+            {t('title')}
           </h3>
 
-          <p className="text-base-content/60 mb-4">
-            Используйте машинное обучение для автоматической оптимизации весов
-            полей поиска на основе поведенческих данных пользователей (CTR,
-            конверсии, позиции кликов).
-          </p>
+          <p className="text-base-content/60 mb-4">{t('description')}</p>
 
           {/* Параметры оптимизации */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Тип контента</span>
+                <span className="label-text">{t('contentType')}</span>
               </label>
               <select
                 className="select select-bordered"
@@ -285,15 +283,19 @@ export default function WeightOptimization() {
                 }
                 disabled={isOptimizing}
               >
-                <option value="global">Глобальные веса</option>
-                <option value="marketplace">Маркетплейс</option>
-                <option value="storefront">Магазины</option>
+                <option value="global">{t('contentTypes.global')}</option>
+                <option value="marketplace">
+                  {t('contentTypes.marketplace')}
+                </option>
+                <option value="storefront">
+                  {t('contentTypes.storefront')}
+                </option>
               </select>
             </div>
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Период анализа (дни)</span>
+                <span className="label-text">{t('analysisPeriod')}</span>
               </label>
               <input
                 type="number"
@@ -313,7 +315,7 @@ export default function WeightOptimization() {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Минимальный размер выборки</span>
+                <span className="label-text">{t('minSampleSize')}</span>
               </label>
               <input
                 type="number"
@@ -333,7 +335,7 @@ export default function WeightOptimization() {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Уровень уверенности</span>
+                <span className="label-text">{t('confidenceLevel')}</span>
               </label>
               <input
                 type="number"
@@ -361,13 +363,13 @@ export default function WeightOptimization() {
               onChange={(e) => setShowAdvanced(e.target.checked)}
             />
             <div className="collapse-title text-sm font-medium">
-              Расширенные параметры машинного обучения
+              {t('advancedParams')}
             </div>
             <div className="collapse-content">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Скорость обучения</span>
+                    <span className="label-text">{t('learningRate')}</span>
                   </label>
                   <input
                     type="number"
@@ -388,7 +390,7 @@ export default function WeightOptimization() {
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Максимум итераций</span>
+                    <span className="label-text">{t('maxIterations')}</span>
                   </label>
                   <input
                     type="number"
@@ -413,10 +415,9 @@ export default function WeightOptimization() {
           <div className="form-control">
             <label className="cursor-pointer label">
               <span className="label-text">
-                <span className="text-warning">⚠️</span> Автоматически применить
-                оптимизированные веса
+                <span className="text-warning">⚠️</span> {t('autoApply')}
                 <span className="text-xs text-base-content/60 block">
-                  ВНИМАНИЕ: Рекомендуется сначала проанализировать результаты
+                  {t('autoApplyWarning')}
                 </span>
               </span>
               <input
@@ -438,7 +439,7 @@ export default function WeightOptimization() {
               onClick={startOptimization}
               disabled={isOptimizing}
             >
-              {isOptimizing ? 'Оптимизация...' : 'Запустить оптимизацию'}
+              {isOptimizing ? t('optimizing') : t('startOptimization')}
             </button>
 
             <button
@@ -446,7 +447,7 @@ export default function WeightOptimization() {
               onClick={analyzeCurrentWeights}
               disabled={isOptimizing || isAnalyzing}
             >
-              {isAnalyzing ? 'Анализ...' : 'Быстрый анализ'}
+              {isAnalyzing ? t('analyzing') : t('quickAnalysis')}
             </button>
 
             {isOptimizing && (
@@ -454,7 +455,7 @@ export default function WeightOptimization() {
                 className="btn btn-error btn-outline"
                 onClick={cancelOptimization}
               >
-                Отменить
+                {t('cancel')}
               </button>
             )}
           </div>
@@ -465,14 +466,14 @@ export default function WeightOptimization() {
       {currentSession && isOptimizing && (
         <div className="card bg-base-100 shadow-md">
           <div className="card-body">
-            <h4 className="card-title text-lg">Прогресс оптимизации</h4>
+            <h4 className="card-title text-lg">{t('progress.title')}</h4>
 
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <div className="flex justify-between text-sm mb-1">
                   <span>
-                    Обработано полей: {currentSession.processed_fields} /{' '}
-                    {currentSession.total_fields}
+                    {t('progress.processed')}: {currentSession.processed_fields}{' '}
+                    / {currentSession.total_fields}
                   </span>
                   <span>
                     {Math.round(
@@ -494,9 +495,12 @@ export default function WeightOptimization() {
             </div>
 
             <div className="text-sm text-base-content/60">
-              <p>Статус: {currentSession.status}</p>
               <p>
-                Начало: {new Date(currentSession.start_time).toLocaleString()}
+                {t('progress.status')}: {currentSession.status}
+              </p>
+              <p>
+                {t('progress.started')}:{' '}
+                {new Date(currentSession.start_time).toLocaleString()}
               </p>
             </div>
           </div>
@@ -510,8 +514,8 @@ export default function WeightOptimization() {
             <div className="flex justify-between items-center">
               <h4 className="card-title text-lg">
                 {optimizationResults.length > 0
-                  ? 'Результаты оптимизации'
-                  : 'Результаты анализа'}
+                  ? t('results.optimizationTitle')
+                  : t('results.analysisTitle')}
               </h4>
 
               {optimizationResults.length > 0 && selectedResults.length > 0 && (
@@ -519,7 +523,7 @@ export default function WeightOptimization() {
                   className="btn btn-success btn-sm"
                   onClick={applySelectedWeights}
                 >
-                  Применить выбранные ({selectedResults.length})
+                  {t('results.applySelected')} ({selectedResults.length})
                 </button>
               )}
             </div>
@@ -545,14 +549,14 @@ export default function WeightOptimization() {
                         />
                       </th>
                     )}
-                    <th>Поле</th>
-                    <th>Текущий вес</th>
-                    <th>Оптимальный вес</th>
-                    <th>Улучшение CTR</th>
-                    <th>Уверенность</th>
-                    <th>Выборка</th>
-                    <th>Текущий CTR</th>
-                    <th>Предсказанный CTR</th>
+                    <th>{t('results.field')}</th>
+                    <th>{t('results.currentWeight')}</th>
+                    <th>{t('results.optimizedWeight')}</th>
+                    <th>{t('results.improvement')}</th>
+                    <th>{t('results.confidence')}</th>
+                    <th>{t('results.sample')}</th>
+                    <th>{t('results.currentCTR')}</th>
+                    <th>{t('results.predictedCTR')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -621,12 +625,12 @@ export default function WeightOptimization() {
                   />
                 </svg>
                 <div>
-                  <p className="font-bold">Важные соображения безопасности:</p>
+                  <p className="font-bold">{t('safety.title')}</p>
                   <ul className="text-sm mt-1">
-                    <li>• Проверьте результаты перед применением</li>
-                    <li>• Рекомендуется тестировать на небольшой выборке</li>
-                    <li>• Создайте резервную копию перед применением</li>
-                    <li>• Мониторьте метрики после изменений</li>
+                    <li>• {t('safety.checkResults')}</li>
+                    <li>• {t('safety.testSmall')}</li>
+                    <li>• {t('safety.backup')}</li>
+                    <li>• {t('safety.monitor')}</li>
                   </ul>
                 </div>
               </div>

@@ -834,7 +834,9 @@
       "tabs": {
         "analytics": "Analytics",
         "behavior": "Behavior",
-        "weights": "Search Weights"
+        "weights": "Search Weights",
+        "synonyms": "Synonyms",
+        "optimization": "Optimization"
       },
       "analytics": {
         "title": "Search Analytics Overview",
@@ -921,6 +923,85 @@
           "ctr": "CTR",
           "avgPosition": "Avg Position",
           "conversions": "Conversions"
+        }
+      },
+      "synonyms": {
+        "title": "Synonym Management",
+        "description": "Manage search synonyms to improve search results",
+        "addSynonym": "Add Synonym",
+        "search": "Search",
+        "searchPlaceholder": "Search synonyms...",
+        "language": "Language",
+        "term": "Term",
+        "synonym": "Synonym",
+        "termPlaceholder": "Enter main term",
+        "synonymPlaceholder": "Enter synonym",
+        "active": "Active",
+        "inactive": "Inactive",
+        "status": "Status",
+        "created": "Created",
+        "actions": "Actions",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "cancel": "Cancel",
+        "create": "Create",
+        "synonymsList": "Synonyms List",
+        "total": "Total",
+        "noSynonyms": "No synonyms found",
+        "confirmDelete": "Are you sure you want to delete this synonym?"
+      },
+      "optimization": {
+        "title": "Automatic Weight Optimization",
+        "description": "Machine learning for optimizing search weights based on behavioral data",
+        "startOptimization": "Start Optimization",
+        "optimizing": "Optimizing...",
+        "quickAnalysis": "Quick Analysis",
+        "analyzing": "Analyzing...",
+        "cancel": "Cancel",
+        "contentType": "Content Type",
+        "analysisPeriod": "Analysis Period (days)",
+        "minSampleSize": "Minimum Sample Size",
+        "confidenceLevel": "Confidence Level",
+        "advancedParams": "Advanced Machine Learning Parameters",
+        "learningRate": "Learning Rate",
+        "maxIterations": "Maximum Iterations",
+        "autoApply": "Automatically apply optimized weights",
+        "autoApplyWarning": "WARNING: Recommended to analyze results first",
+        "contentTypes": {
+          "global": "Global Weights",
+          "marketplace": "Marketplace",
+          "storefront": "Storefront"
+        },
+        "progress": {
+          "title": "Optimization Progress",
+          "processed": "Processed Fields",
+          "status": "Status",
+          "started": "Started"
+        },
+        "results": {
+          "optimizationTitle": "Optimization Results",
+          "analysisTitle": "Analysis Results",
+          "applySelected": "Apply Selected",
+          "field": "Field",
+          "currentWeight": "Current Weight",
+          "optimizedWeight": "Optimized Weight",
+          "improvement": "CTR Improvement",
+          "confidence": "Confidence",
+          "sample": "Sample",
+          "currentCTR": "Current CTR",
+          "predictedCTR": "Predicted CTR"
+        },
+        "safety": {
+          "title": "Important Safety Considerations:",
+          "checkResults": "Check results before applying",
+          "testSmall": "Recommended to test on small sample",
+          "backup": "Create backup before applying",
+          "monitor": "Monitor metrics after changes"
+        },
+        "messages": {
+          "weightsApplied": "Selected weights successfully applied!",
+          "weightsApplyError": "Error applying weights"
         }
       }
     }

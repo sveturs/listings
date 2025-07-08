@@ -626,12 +626,18 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 		}
 	}()
 
+	// Проверяем валидность контекста
+	if c == nil || params == nil || result == nil {
+		logger.Error().Msg("Invalid parameters in trackSearchEvent")
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// Получаем информацию о пользователе (если авторизован)
 	var userID *int
-	if c.Locals("userID") != nil {
+	if c != nil && c.Locals("userID") != nil {
 		if uid, ok := c.Locals("userID").(int); ok {
 			userID = &uid
 		}

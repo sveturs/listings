@@ -5,8 +5,15 @@ import { useTranslations } from 'next-intl';
 import SearchAnalytics from './SearchAnalytics';
 import SearchWeights from './SearchWeights';
 import BehaviorAnalytics from './BehaviorAnalytics';
+import SynonymManager from './SynonymManager';
+import WeightOptimization from './WeightOptimization';
 
-type TabType = 'analytics' | 'behavior' | 'weights';
+type TabType =
+  | 'analytics'
+  | 'behavior'
+  | 'weights'
+  | 'synonyms'
+  | 'optimization';
 
 export default function SearchDashboard() {
   const t = useTranslations('admin.search');
@@ -27,6 +34,16 @@ export default function SearchDashboard() {
       key: 'weights',
       label: t('tabs.weights'),
       icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4',
+    },
+    {
+      key: 'synonyms',
+      label: t('tabs.synonyms'),
+      icon: 'M7 7h.01M7 3h5c1.1 0 2 .9 2 2v1M7 7l2-2M7 7l2 2m5-4v1m-2 0v1m-2 0v1m4-1l-2-2m2 2l2 2m-2-2v2m0-4v2',
+    },
+    {
+      key: 'optimization',
+      label: t('tabs.optimization'),
+      icon: 'M13 10V3L4 14h7v7l9-11h-7z',
     },
   ];
 
@@ -74,6 +91,8 @@ export default function SearchDashboard() {
           {activeTab === 'analytics' && <SearchAnalytics />}
           {activeTab === 'behavior' && <BehaviorAnalytics />}
           {activeTab === 'weights' && <SearchWeights />}
+          {activeTab === 'synonyms' && <SynonymManager />}
+          {activeTab === 'optimization' && <WeightOptimization />}
         </div>
       </div>
     </div>

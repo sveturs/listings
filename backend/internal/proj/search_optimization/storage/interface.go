@@ -72,6 +72,17 @@ type BehaviorAnalysisData struct {
 	ConversionRate float64 `json:"conversion_rate"`
 }
 
+// SynonymData представляет синоним для поиска
+type SynonymData struct {
+	ID        int64     `json:"id" db:"id"`
+	Term      string    `json:"term" db:"term"`
+	Synonym   string    `json:"synonym" db:"synonym"`
+	Language  string    `json:"language" db:"language"`
+	IsActive  bool      `json:"is_active" db:"is_active"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+}
+
 // SearchOptimizationRepository интерфейс для работы с оптимизацией поиска
 type SearchOptimizationRepository interface {
 	// Управление весами
@@ -103,4 +114,12 @@ type SearchOptimizationRepository interface {
 	UpdateOptimizationSession(ctx context.Context, sessionID int64, status string, results []*WeightOptimizationResult, errorMsg *string) error
 	GetOptimizationSession(ctx context.Context, sessionID int64) (*OptimizationSession, error)
 	GetRecentOptimizationSessions(ctx context.Context, limit int) ([]*OptimizationSession, error)
+
+	// Управление синонимами
+	GetSynonyms(ctx context.Context, language, search string, offset, limit int) ([]*SynonymData, int, error)
+	CreateSynonym(ctx context.Context, synonym *SynonymData) (int64, error)
+	UpdateSynonym(ctx context.Context, synonymID int64, synonym *SynonymData) error
+	DeleteSynonym(ctx context.Context, synonymID int64) error
+	CheckSynonymExists(ctx context.Context, term, synonym, language string) (bool, error)
+	CheckSynonymExistsByID(ctx context.Context, synonymID int64) (bool, error)
 }

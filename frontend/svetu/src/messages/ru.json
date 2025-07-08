@@ -819,7 +819,9 @@
       "tabs": {
         "analytics": "Аналитика",
         "behavior": "Поведение",
-        "weights": "Веса поиска"
+        "weights": "Веса поиска",
+        "synonyms": "Синонимы",
+        "optimization": "Оптимизация"
       },
       "analytics": {
         "title": "Обзор аналитики поиска",
@@ -906,6 +908,85 @@
           "ctr": "CTR",
           "avgPosition": "Средняя позиция",
           "conversions": "Конверсии"
+        }
+      },
+      "synonyms": {
+        "title": "Управление синонимами",
+        "description": "Управление синонимами поиска для улучшения результатов",
+        "addSynonym": "Добавить синоним",
+        "search": "Поиск",
+        "searchPlaceholder": "Поиск синонимов...",
+        "language": "Язык",
+        "term": "Термин",
+        "synonym": "Синоним",
+        "termPlaceholder": "Введите основной термин",
+        "synonymPlaceholder": "Введите синоним",
+        "active": "Активен",
+        "inactive": "Неактивен",
+        "status": "Статус",
+        "created": "Создан",
+        "actions": "Действия",
+        "edit": "Редактировать",
+        "delete": "Удалить",
+        "save": "Сохранить",
+        "cancel": "Отмена",
+        "create": "Создать",
+        "synonymsList": "Список синонимов",
+        "total": "Всего",
+        "noSynonyms": "Синонимы не найдены",
+        "confirmDelete": "Вы уверены, что хотите удалить этот синоним?"
+      },
+      "optimization": {
+        "title": "Автоматическая оптимизация весов",
+        "description": "Машинное обучение для оптимизации весов поиска на основе поведенческих данных",
+        "startOptimization": "Запустить оптимизацию",
+        "optimizing": "Оптимизация...",
+        "quickAnalysis": "Быстрый анализ",
+        "analyzing": "Анализ...",
+        "cancel": "Отменить",
+        "contentType": "Тип контента",
+        "analysisPeriod": "Период анализа (дни)",
+        "minSampleSize": "Минимальный размер выборки",
+        "confidenceLevel": "Уровень уверенности",
+        "advancedParams": "Расширенные параметры машинного обучения",
+        "learningRate": "Скорость обучения",
+        "maxIterations": "Максимум итераций",
+        "autoApply": "Автоматически применить оптимизированные веса",
+        "autoApplyWarning": "ВНИМАНИЕ: Рекомендуется сначала проанализировать результаты",
+        "contentTypes": {
+          "global": "Глобальные веса",
+          "marketplace": "Маркетплейс",
+          "storefront": "Магазины"
+        },
+        "progress": {
+          "title": "Прогресс оптимизации",
+          "processed": "Обработано полей",
+          "status": "Статус",
+          "started": "Начало"
+        },
+        "results": {
+          "optimizationTitle": "Результаты оптимизации",
+          "analysisTitle": "Результаты анализа",
+          "applySelected": "Применить выбранные",
+          "field": "Поле",
+          "currentWeight": "Текущий вес",
+          "optimizedWeight": "Оптимальный вес",
+          "improvement": "Улучшение CTR",
+          "confidence": "Уверенность",
+          "sample": "Выборка",
+          "currentCTR": "Текущий CTR",
+          "predictedCTR": "Предсказанный CTR"
+        },
+        "safety": {
+          "title": "Важные соображения безопасности:",
+          "checkResults": "Проверьте результаты перед применением",
+          "testSmall": "Рекомендуется тестировать на небольшой выборке",
+          "backup": "Создайте резервную копию перед применением",
+          "monitor": "Мониторьте метрики после изменений"
+        },
+        "messages": {
+          "weightsApplied": "Выбранные веса успешно применены!",
+          "weightsApplyError": "Ошибка при применении весов"
         }
       }
     }

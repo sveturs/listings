@@ -2,8 +2,9 @@ package service
 
 import (
 	"context"
-	"backend/internal/proj/search_optimization/storage"
 	"time"
+
+	"backend/internal/proj/search_optimization/storage"
 )
 
 // OptimizationParams параметры для оптимизации весов
@@ -83,6 +84,12 @@ type SearchOptimizationService interface {
 	// Конфигурация
 	GetOptimizationConfig(ctx context.Context) (*OptimizationConfig, error)
 	UpdateOptimizationConfig(ctx context.Context, config *OptimizationConfig, adminID int) error
+
+	// Управление синонимами
+	GetSynonyms(ctx context.Context, language, search string, page, limit int) ([]map[string]interface{}, int, error)
+	CreateSynonym(ctx context.Context, term, synonym, language string, isActive bool, adminID int) (int64, error)
+	UpdateSynonym(ctx context.Context, synonymID int64, term, synonym, language string, isActive bool, adminID int) error
+	DeleteSynonym(ctx context.Context, synonymID int64, adminID int) error
 }
 
 // ABTestResult результаты A/B тестирования

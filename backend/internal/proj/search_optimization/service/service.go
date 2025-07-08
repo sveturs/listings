@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"backend/internal/proj/search_optimization/storage"
-	"backend/pkg/logger"
 	"math"
 	"sort"
 	"time"
+
+	"backend/internal/proj/search_optimization/storage"
+	"backend/pkg/logger"
 
 	"github.com/pkg/errors"
 )
@@ -765,5 +766,145 @@ func (s *searchOptimizationService) UpdateOptimizationConfig(ctx context.Context
 	}
 
 	s.config = config
+	return nil
+}
+
+// Управление синонимами
+
+// GetSynonyms получает список синонимов с пагинацией и поиском
+func (s *searchOptimizationService) GetSynonyms(ctx context.Context, language, search string, page, limit int) ([]map[string]interface{}, int, error) {
+	// Валидация параметров
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	// Вычисление offset
+	offset := (page - 1) * limit
+
+	// Получение синонимов из репозитория
+	synonyms, total, err := s.repo.GetSynonyms(ctx, language, search, offset, limit)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "failed to get synonyms")
+	}
+
+	// Преобразование в формат для frontend
+	result := make([]map[string]interface{}, len(synonyms))
+	for i, synonym := range synonyms {
+		result[i] = map[string]interface{}{
+			"id":         synonym.ID,
+			"term":       synonym.Term,
+			"synonym":    synonym.Synonym,
+			"language":   synonym.Language,
+			"is_active":  synonym.IsActive,
+			"created_at": synonym.CreatedAt,
+			"updated_at": synonym.UpdatedAt,
+		}
+	}
+
+	return result, total, nil
+}
+
+// CreateSynonym создает новый синоним
+func (s *searchOptimizationService) CreateSynonym(ctx context.Context, term, synonym, language string, isActive bool, adminID int) (int64, error) {
+	// Валидация входных данных
+	if len(term) == 0 || len(term) > 255 {
+		return 0, errors.New("term length must be between 1 and 255 characters")
+	}
+	if len(synonym) == 0 || len(synonym) > 255 {
+		return 0, errors.New("synonym length must be between 1 and 255 characters")
+	}
+	if language != "en" && language != "ru" && language != "sr" {
+		return 0, errors.New("language must be one of: en, ru, sr")
+	}
+
+	// Проверка на существование дубликата
+	existing, err := s.repo.CheckSynonymExists(ctx, term, synonym, language)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to check synonym existence")
+	}
+	if existing {
+		return 0, errors.New("synonym already exists")
+	}
+
+	// Создание синонима
+	synonymData := &storage.SynonymData{
+		Term:     term,
+		Synonym:  synonym,
+		Language: language,
+		IsActive: isActive,
+	}
+
+	synonymID, err := s.repo.CreateSynonym(ctx, synonymData)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to create synonym")
+	}
+
+	s.logger.Info(fmt.Sprintf("Synonym created: %s -> %s (%s) by admin %d", term, synonym, language, adminID))
+
+	return synonymID, nil
+}
+
+// UpdateSynonym обновляет существующий синоним
+func (s *searchOptimizationService) UpdateSynonym(ctx context.Context, synonymID int64, term, synonym, language string, isActive bool, adminID int) error {
+	// Валидация входных данных
+	if len(term) == 0 || len(term) > 255 {
+		return errors.New("term length must be between 1 and 255 characters")
+	}
+	if len(synonym) == 0 || len(synonym) > 255 {
+		return errors.New("synonym length must be between 1 and 255 characters")
+	}
+	if language != "en" && language != "ru" && language != "sr" {
+		return errors.New("language must be one of: en, ru, sr")
+	}
+
+	// Проверка существования синонима
+	exists, err := s.repo.CheckSynonymExistsByID(ctx, synonymID)
+	if err != nil {
+		return errors.Wrap(err, "failed to check synonym existence")
+	}
+	if !exists {
+		return errors.New("synonym not found")
+	}
+
+	// Обновление синонима
+	synonymData := &storage.SynonymData{
+		Term:     term,
+		Synonym:  synonym,
+		Language: language,
+		IsActive: isActive,
+	}
+
+	err = s.repo.UpdateSynonym(ctx, synonymID, synonymData)
+	if err != nil {
+		return errors.Wrap(err, "failed to update synonym")
+	}
+
+	s.logger.Info(fmt.Sprintf("Synonym updated (ID: %d): %s -> %s (%s) by admin %d", synonymID, term, synonym, language, adminID))
+
+	return nil
+}
+
+// DeleteSynonym удаляет синоним
+func (s *searchOptimizationService) DeleteSynonym(ctx context.Context, synonymID int64, adminID int) error {
+	// Проверка существования синонима
+	exists, err := s.repo.CheckSynonymExistsByID(ctx, synonymID)
+	if err != nil {
+		return errors.Wrap(err, "failed to check synonym existence")
+	}
+	if !exists {
+		return errors.New("synonym not found")
+	}
+
+	// Удаление синонима
+	err = s.repo.DeleteSynonym(ctx, synonymID)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete synonym")
+	}
+
+	s.logger.Info(fmt.Sprintf("Synonym deleted (ID: %d) by admin %d", synonymID, adminID))
+
 	return nil
 }
