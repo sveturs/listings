@@ -1,0 +1,228 @@
+{
+  "model_name": "MarketplaceListing",
+  "file_path": "/data/hostel-booking-system/backend/internal/domain/models/models.go",
+  "package": "models",
+  "lines": "39-79",
+  "user_id_field": {
+    "field_name": "UserID",
+    "json_tag": "user_id",
+    "type": "int",
+    "note": "Использует CamelCase в Go и snake_case в JSON"
+  },
+  "fields": [
+    {
+      "name": "ID",
+      "type": "int",
+      "json_tag": "id"
+    },
+    {
+      "name": "UserID",
+      "type": "int",
+      "json_tag": "user_id"
+    },
+    {
+      "name": "CategoryID",
+      "type": "int",
+      "json_tag": "category_id"
+    },
+    {
+      "name": "Title",
+      "type": "string",
+      "json_tag": "title"
+    },
+    {
+      "name": "Description",
+      "type": "string",
+      "json_tag": "description"
+    },
+    {
+      "name": "Price",
+      "type": "float64",
+      "json_tag": "price"
+    },
+    {
+      "name": "Condition",
+      "type": "string",
+      "json_tag": "condition"
+    },
+    {
+      "name": "Status",
+      "type": "string",
+      "json_tag": "status"
+    },
+    {
+      "name": "Location",
+      "type": "string",
+      "json_tag": "location"
+    },
+    {
+      "name": "Latitude",
+      "type": "*float64",
+      "json_tag": "latitude,omitempty"
+    },
+    {
+      "name": "Longitude",
+      "type": "*float64",
+      "json_tag": "longitude,omitempty"
+    },
+    {
+      "name": "City",
+      "type": "string",
+      "json_tag": "city"
+    },
+    {
+      "name": "Country",
+      "type": "string",
+      "json_tag": "country"
+    },
+    {
+      "name": "ViewsCount",
+      "type": "int",
+      "json_tag": "views_count"
+    },
+    {
+      "name": "CreatedAt",
+      "type": "time.Time",
+      "json_tag": "created_at"
+    },
+    {
+      "name": "UpdatedAt",
+      "type": "time.Time",
+      "json_tag": "updated_at"
+    },
+    {
+      "name": "Images",
+      "type": "[]MarketplaceImage",
+      "json_tag": "images,omitempty"
+    },
+    {
+      "name": "User",
+      "type": "*User",
+      "json_tag": "user,omitempty"
+    },
+    {
+      "name": "Category",
+      "type": "*MarketplaceCategory",
+      "json_tag": "category,omitempty"
+    },
+    {
+      "name": "HelpfulVotes",
+      "type": "int",
+      "json_tag": "helpful_votes"
+    },
+    {
+      "name": "NotHelpfulVotes",
+      "type": "int",
+      "json_tag": "not_helpful_votes"
+    },
+    {
+      "name": "IsFavorite",
+      "type": "bool",
+      "json_tag": "is_favorite"
+    },
+    {
+      "name": "ShowOnMap",
+      "type": "bool",
+      "json_tag": "show_on_map"
+    },
+    {
+      "name": "OriginalLanguage",
+      "type": "string",
+      "json_tag": "original_language,omitempty"
+    },
+    {
+      "name": "RawTranslations",
+      "type": "interface{}",
+      "json_tag": "-",
+      "note": "Скрыто из JSON"
+    },
+    {
+      "name": "Translations",
+      "type": "TranslationMap",
+      "json_tag": "translations,omitempty"
+    },
+    {
+      "name": "CategoryPathNames",
+      "type": "[]string",
+      "json_tag": "category_path_names,omitempty"
+    },
+    {
+      "name": "CategoryPathIds",
+      "type": "[]int",
+      "json_tag": "category_path_ids,omitempty"
+    },
+    {
+      "name": "CategoryPathSlugs",
+      "type": "[]string",
+      "json_tag": "category_path_slugs,omitempty"
+    },
+    {
+      "name": "CategoryPath",
+      "type": "[]string",
+      "json_tag": "category_path,omitempty"
+    },
+    {
+      "name": "StorefrontID",
+      "type": "*int",
+      "json_tag": "storefront_id,omitempty"
+    },
+    {
+      "name": "ExternalID",
+      "type": "string",
+      "json_tag": "external_id,omitempty"
+    },
+    {
+      "name": "Attributes",
+      "type": "[]ListingAttributeValue",
+      "json_tag": "attributes,omitempty"
+    },
+    {
+      "name": "OldPrice",
+      "type": "float64",
+      "json_tag": "old_price,omitempty"
+    },
+    {
+      "name": "HasDiscount",
+      "type": "bool",
+      "json_tag": "has_discount"
+    },
+    {
+      "name": "Metadata",
+      "type": "map[string]interface{}",
+      "json_tag": "metadata,omitempty"
+    },
+    {
+      "name": "AverageRating",
+      "type": "float64",
+      "json_tag": "average_rating,omitempty"
+    },
+    {
+      "name": "ReviewCount",
+      "type": "int",
+      "json_tag": "review_count,omitempty"
+    }
+  ],
+  "related_types": {
+    "User": {
+      "file": "models.go",
+      "lines": "26-36"
+    },
+    "MarketplaceCategory": {
+      "file": "models.go",
+      "lines": "82-97"
+    },
+    "MarketplaceImage": {
+      "file": "models.go",
+      "lines": "99-111"
+    },
+    "TranslationMap": {
+      "file": "models.go",
+      "line": "38",
+      "definition": "map[string]map[string]string"
+    },
+    "ListingAttributeValue": {
+      "file": "category_attributes.go",
+      "lines": "39-59"
+    }
+  }
+}
