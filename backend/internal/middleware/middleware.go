@@ -62,6 +62,8 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 		logger.Info().
 			Int("user_id", userID).
 			Msg("AdminRequired: Access granted for hardcoded user ID")
+		// Устанавливаем admin_id для использования в handlers
+		c.Locals("admin_id", userID)
 		return c.Next()
 	}
 
@@ -114,6 +116,8 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 			Str("email", user.Email).
 			Str("source", "database").
 			Msg("AdminRequired: Access granted for admin")
+		// Устанавливаем admin_id для использования в handlers
+		c.Locals("admin_id", userID)
 		return c.Next()
 	}
 
@@ -137,6 +141,8 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 				Str("email", user.Email).
 				Str("source", "hardcoded").
 				Msg("AdminRequired: Access granted for admin")
+			// Устанавливаем admin_id для использования в handlers
+			c.Locals("admin_id", userID)
 			return c.Next()
 		}
 	}
