@@ -16,6 +16,7 @@
 Screenshot.png
 testreports
 backend/debug-scripts/
+backup/
 /install-gnome-extension.sh
 frontend/svetu/.next.backup/
 *.next.backup/
