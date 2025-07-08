@@ -24,13 +24,13 @@ CREATE TABLE IF NOT EXISTS transliteration_rules (
 );
 
 -- Создание индексов для быстрого поиска
-CREATE INDEX idx_transliteration_rules_language ON transliteration_rules(language);
-CREATE INDEX idx_transliteration_rules_enabled ON transliteration_rules(enabled);
-CREATE INDEX idx_transliteration_rules_priority ON transliteration_rules(priority DESC);
-CREATE INDEX idx_transliteration_rules_type ON transliteration_rules(rule_type);
+CREATE INDEX IF NOT EXISTS idx_transliteration_rules_language ON transliteration_rules(language);
+CREATE INDEX IF NOT EXISTS idx_transliteration_rules_enabled ON transliteration_rules(enabled);
+CREATE INDEX IF NOT EXISTS idx_transliteration_rules_priority ON transliteration_rules(priority DESC);
+CREATE INDEX IF NOT EXISTS idx_transliteration_rules_type ON transliteration_rules(rule_type);
 
 -- Создание составного индекса для быстрого поиска активных правил по языку
-CREATE INDEX idx_transliteration_rules_active ON transliteration_rules(language, enabled, priority DESC);
+CREATE INDEX IF NOT EXISTS idx_transliteration_rules_active ON transliteration_rules(language, enabled, priority DESC);
 
 -- Триггер для автоматического обновления updated_at
 CREATE OR REPLACE FUNCTION update_transliteration_rules_updated_at()

@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS search_queries (
 );
 
 -- Add indexes for better performance
-CREATE INDEX idx_search_queries_normalized_query ON search_queries(normalized_query);
-CREATE INDEX idx_search_queries_search_count ON search_queries(search_count DESC);
-CREATE INDEX idx_search_queries_language ON search_queries(language);
+CREATE INDEX IF NOT EXISTS idx_search_queries_normalized_query ON search_queries(normalized_query);
+CREATE INDEX IF NOT EXISTS idx_search_queries_search_count ON search_queries(search_count DESC);
+CREATE INDEX IF NOT EXISTS idx_search_queries_language ON search_queries(language);
 
 -- Create trigger for automatic updated_at timestamp
 CREATE OR REPLACE FUNCTION update_search_queries_updated_at()

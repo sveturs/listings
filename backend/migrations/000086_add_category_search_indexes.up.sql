@@ -42,8 +42,7 @@ BEGIN
         AND t.entity_type = 'category' 
         AND t.field_name = 'name'
         AND t.language = lang_code
-    WHERE c.is_active = true
-        AND (
+    WHERE (
             -- Exact match (case-insensitive)
             lower(f_unaccent(t.translated_text)) = lower(f_unaccent(search_term))
             -- Fuzzy match using trigrams
@@ -61,54 +60,50 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create function to get category path with names
+-- Create function to get category path with names (simplified version without path column)
 CREATE OR REPLACE FUNCTION get_category_path_names(
     category_id INTEGER,
     lang_code VARCHAR(10) DEFAULT 'ru'
 ) RETURNS TEXT[] AS $$
 DECLARE
-    path_ids INTEGER[];
     path_names TEXT[] := '{}';
-    cat_id INTEGER;
+    current_id INTEGER := category_id;
     cat_name TEXT;
 BEGIN
-    -- Get category path
-    SELECT string_to_array(path, '.')::INTEGER[] INTO path_ids
-    FROM marketplace_categories
-    WHERE id = category_id;
-    
-    -- Get names for each category in path
-    FOREACH cat_id IN ARRAY path_ids
-    LOOP
-        SELECT t.translated_text INTO cat_name
-        FROM translations t
-        WHERE t.entity_id = cat_id
+    -- Build path by traversing parent_id
+    WHILE current_id IS NOT NULL LOOP
+        SELECT t.translated_text, c.parent_id INTO cat_name, current_id
+        FROM marketplace_categories c
+        LEFT JOIN translations t ON t.entity_id = c.id
             AND t.entity_type = 'category'
             AND t.field_name = 'name'
-            AND t.language = lang_code;
+            AND t.language = lang_code
+        WHERE c.id = current_id;
         
-        path_names := array_append(path_names, COALESCE(cat_name, ''));
+        IF cat_name IS NOT NULL THEN
+            path_names := array_prepend(cat_name, path_names);
+        END IF;
     END LOOP;
     
     RETURN path_names;
 END;
 $$ LANGUAGE plpgsql;
 
--- Add indexes for attribute values in marketplace_listing_attributes
-CREATE INDEX IF NOT EXISTS idx_listing_attributes_value_text_trgm 
-    ON marketplace_listing_attributes USING gin (value_text gin_trgm_ops)
-    WHERE value_text IS NOT NULL;
+-- Add indexes for attribute values in listing_attribute_values (corrected table name)
+CREATE INDEX IF NOT EXISTS idx_listing_attribute_values_text_value_trgm 
+    ON listing_attribute_values USING gin (text_value gin_trgm_ops)
+    WHERE text_value IS NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_listing_attributes_value_text_unaccent_trgm 
-    ON marketplace_listing_attributes USING gin (f_unaccent(value_text) gin_trgm_ops)
-    WHERE value_text IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_listing_attribute_values_text_value_unaccent_trgm 
+    ON listing_attribute_values USING gin (f_unaccent(text_value) gin_trgm_ops)
+    WHERE text_value IS NOT NULL;
 
 -- Create materialized view for category statistics (for search relevance)
 CREATE MATERIALIZED VIEW IF NOT EXISTS category_listing_stats AS
 SELECT 
     c.id as category_id,
     c.slug as category_slug,
-    c.path as category_path,
+    c.parent_id as parent_id,
     COUNT(DISTINCT l.id) as listing_count,
     COUNT(DISTINCT l.user_id) as seller_count,
     AVG(l.price) as avg_price,
@@ -116,8 +111,7 @@ SELECT
     MAX(l.price) as max_price
 FROM marketplace_categories c
 LEFT JOIN marketplace_listings l ON l.category_id = c.id AND l.status = 'active'
-WHERE c.is_active = true
-GROUP BY c.id, c.slug, c.path;
+GROUP BY c.id, c.slug, c.parent_id;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_category_listing_stats_id 
     ON category_listing_stats(category_id);

@@ -31,9 +31,9 @@ CREATE TABLE IF NOT EXISTS search_optimization_sessions (
 );
 
 -- Индексы для быстрого поиска
-CREATE INDEX idx_search_optimization_sessions_status ON search_optimization_sessions(status);
-CREATE INDEX idx_search_optimization_sessions_start_time ON search_optimization_sessions(start_time);
-CREATE INDEX idx_search_optimization_sessions_created_by ON search_optimization_sessions(created_by);
+CREATE INDEX IF NOT EXISTS idx_search_optimization_sessions_status ON search_optimization_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_search_optimization_sessions_start_time ON search_optimization_sessions(start_time);
+CREATE INDEX IF NOT EXISTS idx_search_optimization_sessions_created_by ON search_optimization_sessions(created_by);
 
 -- Триггер для автоматического обновления updated_at
 CREATE OR REPLACE FUNCTION update_search_optimization_sessions_updated_at()

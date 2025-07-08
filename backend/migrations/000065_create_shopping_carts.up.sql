@@ -37,11 +37,11 @@ CREATE TABLE shopping_cart_items (
 );
 
 -- Индексы для оптимизации запросов
-CREATE INDEX idx_shopping_carts_user_id ON shopping_carts(user_id);
-CREATE INDEX idx_shopping_carts_session_id ON shopping_carts(session_id);
-CREATE INDEX idx_shopping_carts_storefront_id ON shopping_carts(storefront_id);
-CREATE INDEX idx_shopping_cart_items_cart_id ON shopping_cart_items(cart_id);
-CREATE INDEX idx_shopping_cart_items_product_id ON shopping_cart_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_carts_user_id ON shopping_carts(user_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_carts_session_id ON shopping_carts(session_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_carts_storefront_id ON shopping_carts(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_cart_items_cart_id ON shopping_cart_items(cart_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_cart_items_product_id ON shopping_cart_items(product_id);
 
 -- Функция обновления updated_at
 CREATE OR REPLACE FUNCTION update_shopping_cart_updated_at()

@@ -35,17 +35,17 @@ CREATE TABLE IF NOT EXISTS user_behavior_events (
 );
 
 -- Индексы для быстрого поиска и аналитики
-CREATE INDEX idx_user_behavior_events_event_type ON user_behavior_events(event_type);
-CREATE INDEX idx_user_behavior_events_user_id ON user_behavior_events(user_id) WHERE user_id IS NOT NULL;
-CREATE INDEX idx_user_behavior_events_session_id ON user_behavior_events(session_id);
-CREATE INDEX idx_user_behavior_events_created_at ON user_behavior_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_user_behavior_events_event_type ON user_behavior_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_user_behavior_events_user_id ON user_behavior_events(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_user_behavior_events_session_id ON user_behavior_events(session_id);
+CREATE INDEX IF NOT EXISTS idx_user_behavior_events_created_at ON user_behavior_events(created_at);
 
 -- Составной индекс для поиска событий по запросу и типу
-CREATE INDEX idx_user_behavior_events_search_query_type ON user_behavior_events(search_query, event_type) 
+CREATE INDEX IF NOT EXISTS idx_user_behavior_events_search_query_type ON user_behavior_events(search_query, event_type) 
     WHERE search_query IS NOT NULL;
 
 -- Индекс для быстрого поиска событий по элементам
-CREATE INDEX idx_user_behavior_events_item ON user_behavior_events(item_id, item_type) 
+CREATE INDEX IF NOT EXISTS idx_user_behavior_events_item ON user_behavior_events(item_id, item_type) 
     WHERE item_id IS NOT NULL;
 
 -- Комментарии к таблице и колонкам

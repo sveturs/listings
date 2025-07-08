@@ -36,13 +36,13 @@ CREATE TABLE IF NOT EXISTS search_behavior_metrics (
 );
 
 -- Уникальный индекс для предотвращения дублирования метрик за один период
-CREATE UNIQUE INDEX idx_search_behavior_metrics_unique ON search_behavior_metrics(search_query, period_start);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_search_behavior_metrics_unique ON search_behavior_metrics(search_query, period_start);
 
 -- Индексы для быстрого поиска
-CREATE INDEX idx_search_behavior_metrics_query ON search_behavior_metrics(search_query);
-CREATE INDEX idx_search_behavior_metrics_period ON search_behavior_metrics(period_start, period_end);
-CREATE INDEX idx_search_behavior_metrics_ctr ON search_behavior_metrics(ctr DESC);
-CREATE INDEX idx_search_behavior_metrics_conversions ON search_behavior_metrics(conversions DESC);
+CREATE INDEX IF NOT EXISTS idx_search_behavior_metrics_query ON search_behavior_metrics(search_query);
+CREATE INDEX IF NOT EXISTS idx_search_behavior_metrics_period ON search_behavior_metrics(period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_search_behavior_metrics_ctr ON search_behavior_metrics(ctr DESC);
+CREATE INDEX IF NOT EXISTS idx_search_behavior_metrics_conversions ON search_behavior_metrics(conversions DESC);
 
 -- Триггер для автоматического обновления updated_at
 CREATE OR REPLACE FUNCTION update_search_behavior_metrics_updated_at()

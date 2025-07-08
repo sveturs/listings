@@ -119,21 +119,21 @@ CREATE TABLE merchant_payouts (
 );
 
 -- Индексы для производительности
-CREATE INDEX idx_payment_transactions_user_id ON payment_transactions(user_id);
-CREATE INDEX idx_payment_transactions_listing_id ON payment_transactions(listing_id);
-CREATE INDEX idx_payment_transactions_status ON payment_transactions(status);
-CREATE INDEX idx_payment_transactions_gateway_transaction_id ON payment_transactions(gateway_transaction_id);
-CREATE INDEX idx_payment_transactions_order_reference ON payment_transactions(order_reference);
-CREATE INDEX idx_payment_transactions_created_at ON payment_transactions(created_at);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON payment_transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_listing_id ON payment_transactions(listing_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_status ON payment_transactions(status);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_gateway_transaction_id ON payment_transactions(gateway_transaction_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_order_reference ON payment_transactions(order_reference);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_created_at ON payment_transactions(created_at);
 
-CREATE INDEX idx_escrow_payments_seller_id ON escrow_payments(seller_id);
-CREATE INDEX idx_escrow_payments_buyer_id ON escrow_payments(buyer_id);
-CREATE INDEX idx_escrow_payments_status ON escrow_payments(status);
-CREATE INDEX idx_escrow_payments_payment_transaction_id ON escrow_payments(payment_transaction_id);
+CREATE INDEX IF NOT EXISTS idx_escrow_payments_seller_id ON escrow_payments(seller_id);
+CREATE INDEX IF NOT EXISTS idx_escrow_payments_buyer_id ON escrow_payments(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_escrow_payments_status ON escrow_payments(status);
+CREATE INDEX IF NOT EXISTS idx_escrow_payments_payment_transaction_id ON escrow_payments(payment_transaction_id);
 
-CREATE INDEX idx_merchant_payouts_seller_id ON merchant_payouts(seller_id);
-CREATE INDEX idx_merchant_payouts_status ON merchant_payouts(status);
-CREATE INDEX idx_merchant_payouts_gateway_payout_id ON merchant_payouts(gateway_payout_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_payouts_seller_id ON merchant_payouts(seller_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_payouts_status ON merchant_payouts(status);
+CREATE INDEX IF NOT EXISTS idx_merchant_payouts_gateway_payout_id ON merchant_payouts(gateway_payout_id);
 
 -- Проверяем существование таблицы user_transactions и добавляем поддержку AllSecure если она существует
 DO $$

@@ -17,9 +17,9 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 );
 
 -- Индексы для быстрого поиска
-CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id) WHERE NOT is_revoked;
-CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token) WHERE NOT is_revoked;
-CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at) WHERE NOT is_revoked;
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id) WHERE NOT is_revoked;
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token) WHERE NOT is_revoked;
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens(expires_at) WHERE NOT is_revoked;
 
 -- Функция для автоматической очистки истекших токенов
 CREATE OR REPLACE FUNCTION cleanup_expired_refresh_tokens()

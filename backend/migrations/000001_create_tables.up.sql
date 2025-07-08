@@ -201,31 +201,31 @@ CREATE TABLE schema_migrations (
 );
 
 -- Create indexes
-CREATE INDEX idx_users_phone ON users(phone);
-CREATE INDEX idx_users_status ON users(account_status);
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(account_status);
 
-CREATE INDEX idx_marketplace_messages_chat ON marketplace_messages(chat_id);
-CREATE INDEX idx_marketplace_messages_listing ON marketplace_messages(listing_id);
-CREATE INDEX idx_marketplace_messages_sender ON marketplace_messages(sender_id);
-CREATE INDEX idx_marketplace_messages_receiver ON marketplace_messages(receiver_id);
-CREATE INDEX idx_marketplace_messages_created ON marketplace_messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_chat ON marketplace_messages(chat_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_listing ON marketplace_messages(listing_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_sender ON marketplace_messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_receiver ON marketplace_messages(receiver_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_created ON marketplace_messages(created_at);
 
-CREATE INDEX idx_marketplace_chats_buyer ON marketplace_chats(buyer_id);
-CREATE INDEX idx_marketplace_chats_seller ON marketplace_chats(seller_id);
-CREATE INDEX idx_marketplace_chats_updated ON marketplace_chats(updated_at);
+CREATE INDEX IF NOT EXISTS idx_marketplace_chats_buyer ON marketplace_chats(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_chats_seller ON marketplace_chats(seller_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_chats_updated ON marketplace_chats(updated_at);
 
-CREATE INDEX idx_marketplace_listings_status ON marketplace_listings(status);
+CREATE INDEX IF NOT EXISTS idx_marketplace_listings_status ON marketplace_listings(status);
 
-CREATE INDEX idx_translations_lookup ON translations(entity_type, entity_id, language);
+CREATE INDEX IF NOT EXISTS idx_translations_lookup ON translations(entity_type, entity_id, language);
 
-CREATE INDEX idx_reviews_entity ON reviews(entity_type, entity_id);
-CREATE INDEX idx_reviews_user ON reviews(user_id);
-CREATE INDEX idx_reviews_rating ON reviews(rating);
-CREATE INDEX idx_reviews_status ON reviews(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_entity ON reviews(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status);
 
-CREATE INDEX idx_notifications_user ON notifications(user_id);
-CREATE INDEX idx_notifications_type ON notifications(type);
-CREATE INDEX idx_notifications_created ON notifications(created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at);
 
 -- Create trigger functions
 CREATE OR REPLACE FUNCTION update_marketplace_chats_updated_at()

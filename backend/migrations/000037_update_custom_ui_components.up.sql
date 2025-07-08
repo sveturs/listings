@@ -49,10 +49,10 @@ CREATE TABLE custom_ui_component_usage (
 );
 
 -- Индексы для usage
-CREATE INDEX idx_ui_comp_usage_component ON custom_ui_component_usage(component_id);
-CREATE INDEX idx_ui_comp_usage_category ON custom_ui_component_usage(category_id);
-CREATE INDEX idx_ui_comp_usage_context ON custom_ui_component_usage(usage_context);
-CREATE INDEX idx_ui_comp_usage_active ON custom_ui_component_usage(is_active);
+CREATE INDEX IF NOT EXISTS idx_ui_comp_usage_component ON custom_ui_component_usage(component_id);
+CREATE INDEX IF NOT EXISTS idx_ui_comp_usage_category ON custom_ui_component_usage(category_id);
+CREATE INDEX IF NOT EXISTS idx_ui_comp_usage_context ON custom_ui_component_usage(usage_context);
+CREATE INDEX IF NOT EXISTS idx_ui_comp_usage_active ON custom_ui_component_usage(is_active);
 
 -- Создание таблицы для шаблонов компонентов
 CREATE TABLE IF NOT EXISTS component_templates (

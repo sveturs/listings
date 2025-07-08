@@ -52,14 +52,14 @@ WHERE entity_origin_type = 'storefront'
 GROUP BY entity_origin_id;
 
 -- Пересоздаем индексы для user_ratings
-CREATE UNIQUE INDEX idx_user_ratings_user_id ON user_ratings(user_id);
-CREATE INDEX idx_user_ratings_average ON user_ratings(average_rating DESC);
-CREATE INDEX idx_user_ratings_total ON user_ratings(total_reviews DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_ratings_user_id ON user_ratings(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_ratings_average ON user_ratings(average_rating DESC);
+CREATE INDEX IF NOT EXISTS idx_user_ratings_total ON user_ratings(total_reviews DESC);
 
 -- Пересоздаем индексы для storefront_ratings
-CREATE UNIQUE INDEX idx_storefront_ratings_storefront_id ON storefront_ratings(storefront_id);
-CREATE INDEX idx_storefront_ratings_average ON storefront_ratings(average_rating DESC);
-CREATE INDEX idx_storefront_ratings_total ON storefront_ratings(total_reviews DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_storefront_ratings_storefront_id ON storefront_ratings(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_ratings_average ON storefront_ratings(average_rating DESC);
+CREATE INDEX IF NOT EXISTS idx_storefront_ratings_total ON storefront_ratings(total_reviews DESC);
 
 -- Пересоздаем представления для распределения рейтингов
 CREATE MATERIALIZED VIEW user_rating_distribution AS
@@ -83,11 +83,11 @@ WHERE entity_origin_type = 'storefront'
 GROUP BY entity_origin_id, rating;
 
 -- Пересоздаем индексы для распределений
-CREATE INDEX idx_user_rating_distribution_user_id ON user_rating_distribution(user_id);
-CREATE UNIQUE INDEX idx_user_rating_distribution_unique ON user_rating_distribution(user_id, rating);
+CREATE INDEX IF NOT EXISTS idx_user_rating_distribution_user_id ON user_rating_distribution(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_rating_distribution_unique ON user_rating_distribution(user_id, rating);
 
-CREATE INDEX idx_storefront_rating_distribution_storefront_id ON storefront_rating_distribution(storefront_id);
-CREATE UNIQUE INDEX idx_storefront_rating_distribution_unique ON storefront_rating_distribution(storefront_id, rating);
+CREATE INDEX IF NOT EXISTS idx_storefront_rating_distribution_storefront_id ON storefront_rating_distribution(storefront_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_storefront_rating_distribution_unique ON storefront_rating_distribution(storefront_id, rating);
 
 -- Удаляем старый триггер если существует
 DROP TRIGGER IF EXISTS trigger_refresh_rating_distributions ON reviews;

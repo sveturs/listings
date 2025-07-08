@@ -19,13 +19,13 @@ CREATE TABLE IF NOT EXISTS search_logs (
 );
 
 -- Индексы для search_logs
-CREATE INDEX idx_search_logs_created_at ON search_logs(created_at DESC);
-CREATE INDEX idx_search_logs_user_id ON search_logs(user_id) WHERE user_id IS NOT NULL;
-CREATE INDEX idx_search_logs_session_id ON search_logs(session_id);
-CREATE INDEX idx_search_logs_category_id ON search_logs(category_id) WHERE category_id IS NOT NULL;
-CREATE INDEX idx_search_logs_query_text_gin ON search_logs USING gin(to_tsvector('russian', query_text));
-CREATE INDEX idx_search_logs_filters ON search_logs USING gin(filters);
-CREATE INDEX idx_search_logs_location ON search_logs USING gin(location);
+CREATE INDEX IF NOT EXISTS idx_search_logs_created_at ON search_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_search_logs_user_id ON search_logs(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_search_logs_session_id ON search_logs(session_id);
+CREATE INDEX IF NOT EXISTS idx_search_logs_category_id ON search_logs(category_id) WHERE category_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_search_logs_query_text_gin ON search_logs USING gin(to_tsvector('russian', query_text));
+CREATE INDEX IF NOT EXISTS idx_search_logs_filters ON search_logs USING gin(filters);
+CREATE INDEX IF NOT EXISTS idx_search_logs_location ON search_logs USING gin(location);
 
 -- Таблица для агрегированной аналитики поисковых запросов
 CREATE TABLE IF NOT EXISTS search_analytics (
@@ -51,12 +51,12 @@ CREATE TABLE IF NOT EXISTS search_analytics (
 );
 
 -- Индексы для search_analytics
-CREATE INDEX idx_search_analytics_date ON search_analytics(date DESC);
-CREATE INDEX idx_search_analytics_date_hour ON search_analytics(date DESC, hour);
-CREATE INDEX idx_search_analytics_query_text ON search_analytics(query_text);
-CREATE INDEX idx_search_analytics_category_id ON search_analytics(category_id) WHERE category_id IS NOT NULL;
-CREATE INDEX idx_search_analytics_location ON search_analytics(location_country, location_region, location_city);
-CREATE INDEX idx_search_analytics_search_count ON search_analytics(search_count DESC);
+CREATE INDEX IF NOT EXISTS idx_search_analytics_date ON search_analytics(date DESC);
+CREATE INDEX IF NOT EXISTS idx_search_analytics_date_hour ON search_analytics(date DESC, hour);
+CREATE INDEX IF NOT EXISTS idx_search_analytics_query_text ON search_analytics(query_text);
+CREATE INDEX IF NOT EXISTS idx_search_analytics_category_id ON search_analytics(category_id) WHERE category_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_search_analytics_location ON search_analytics(location_country, location_region, location_city);
+CREATE INDEX IF NOT EXISTS idx_search_analytics_search_count ON search_analytics(search_count DESC);
 
 -- Таблица для отслеживания кликов по результатам поиска
 CREATE TABLE IF NOT EXISTS search_result_clicks (
@@ -68,9 +68,9 @@ CREATE TABLE IF NOT EXISTS search_result_clicks (
 );
 
 -- Индексы для search_result_clicks
-CREATE INDEX idx_search_result_clicks_search_log_id ON search_result_clicks(search_log_id);
-CREATE INDEX idx_search_result_clicks_listing_id ON search_result_clicks(listing_id);
-CREATE INDEX idx_search_result_clicks_clicked_at ON search_result_clicks(clicked_at DESC);
+CREATE INDEX IF NOT EXISTS idx_search_result_clicks_search_log_id ON search_result_clicks(search_log_id);
+CREATE INDEX IF NOT EXISTS idx_search_result_clicks_listing_id ON search_result_clicks(listing_id);
+CREATE INDEX IF NOT EXISTS idx_search_result_clicks_clicked_at ON search_result_clicks(clicked_at DESC);
 
 -- Таблица для популярных поисковых запросов
 CREATE TABLE IF NOT EXISTS search_trending_queries (
@@ -89,10 +89,10 @@ CREATE TABLE IF NOT EXISTS search_trending_queries (
 );
 
 -- Индексы для search_trending_queries
-CREATE INDEX idx_search_trending_queries_trend_score ON search_trending_queries(trend_score DESC);
-CREATE INDEX idx_search_trending_queries_category_id ON search_trending_queries(category_id) WHERE category_id IS NOT NULL;
-CREATE INDEX idx_search_trending_queries_location_country ON search_trending_queries(location_country);
-CREATE INDEX idx_search_trending_queries_updated_at ON search_trending_queries(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_search_trending_queries_trend_score ON search_trending_queries(trend_score DESC);
+CREATE INDEX IF NOT EXISTS idx_search_trending_queries_category_id ON search_trending_queries(category_id) WHERE category_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_search_trending_queries_location_country ON search_trending_queries(location_country);
+CREATE INDEX IF NOT EXISTS idx_search_trending_queries_updated_at ON search_trending_queries(updated_at DESC);
 
 -- Функция для обновления updated_at
 CREATE OR REPLACE FUNCTION update_search_analytics_updated_at()

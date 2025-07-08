@@ -57,11 +57,11 @@ CREATE TABLE IF NOT EXISTS search_config (
 );
 
 -- Индексы для оптимизации
-CREATE INDEX idx_search_statistics_query ON search_statistics(query);
-CREATE INDEX idx_search_statistics_created_at ON search_statistics(created_at);
-CREATE INDEX idx_search_statistics_user_id ON search_statistics(user_id);
-CREATE INDEX idx_search_synonyms_config_term ON search_synonyms_config(term);
-CREATE INDEX idx_transliteration_rules_scripts ON transliteration_rules(from_script, to_script);
+CREATE INDEX IF NOT EXISTS idx_search_statistics_query ON search_statistics(query);
+CREATE INDEX IF NOT EXISTS idx_search_statistics_created_at ON search_statistics(created_at);
+CREATE INDEX IF NOT EXISTS idx_search_statistics_user_id ON search_statistics(user_id);
+CREATE INDEX IF NOT EXISTS idx_search_synonyms_config_term ON search_synonyms_config(term);
+CREATE INDEX IF NOT EXISTS idx_transliteration_rules_scripts ON transliteration_rules(from_script, to_script);
 
 -- Вставка начальных данных
 INSERT INTO search_config (min_search_length, max_suggestions, fuzzy_enabled, fuzzy_max_edits, synonyms_enabled, transliteration_enabled)

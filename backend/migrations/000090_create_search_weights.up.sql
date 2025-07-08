@@ -41,20 +41,20 @@ CREATE TABLE IF NOT EXISTS search_weights (
 );
 
 -- Уникальные индексы для предотвращения дублирования
-CREATE UNIQUE INDEX idx_search_weights_unique_global 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_search_weights_unique_global 
     ON search_weights(field_name, item_type, search_type) 
     WHERE category_id IS NULL;
 
-CREATE UNIQUE INDEX idx_search_weights_unique_category 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_search_weights_unique_category 
     ON search_weights(field_name, item_type, search_type, category_id) 
     WHERE category_id IS NOT NULL;
 
 -- Индексы для быстрого поиска
-CREATE INDEX idx_search_weights_field_name ON search_weights(field_name);
-CREATE INDEX idx_search_weights_item_type ON search_weights(item_type);
-CREATE INDEX idx_search_weights_category_id ON search_weights(category_id) WHERE category_id IS NOT NULL;
-CREATE INDEX idx_search_weights_is_active ON search_weights(is_active) WHERE is_active = true;
-CREATE INDEX idx_search_weights_version ON search_weights(version);
+CREATE INDEX IF NOT EXISTS idx_search_weights_field_name ON search_weights(field_name);
+CREATE INDEX IF NOT EXISTS idx_search_weights_item_type ON search_weights(item_type);
+CREATE INDEX IF NOT EXISTS idx_search_weights_category_id ON search_weights(category_id) WHERE category_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_search_weights_is_active ON search_weights(is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_search_weights_version ON search_weights(version);
 
 -- Таблица для истории изменений весов (для аудита и rollback)
 CREATE TABLE IF NOT EXISTS search_weights_history (
@@ -84,10 +84,10 @@ CREATE TABLE IF NOT EXISTS search_weights_history (
 );
 
 -- Индексы для истории изменений
-CREATE INDEX idx_search_weights_history_weight_id ON search_weights_history(weight_id);
-CREATE INDEX idx_search_weights_history_changed_at ON search_weights_history(changed_at);
-CREATE INDEX idx_search_weights_history_changed_by ON search_weights_history(changed_by);
-CREATE INDEX idx_search_weights_history_reason ON search_weights_history(change_reason);
+CREATE INDEX IF NOT EXISTS idx_search_weights_history_weight_id ON search_weights_history(weight_id);
+CREATE INDEX IF NOT EXISTS idx_search_weights_history_changed_at ON search_weights_history(changed_at);
+CREATE INDEX IF NOT EXISTS idx_search_weights_history_changed_by ON search_weights_history(changed_by);
+CREATE INDEX IF NOT EXISTS idx_search_weights_history_reason ON search_weights_history(change_reason);
 
 -- Триггер для автоматического обновления updated_at
 CREATE OR REPLACE FUNCTION update_search_weights_updated_at()

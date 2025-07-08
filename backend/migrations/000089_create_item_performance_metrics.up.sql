@@ -36,14 +36,14 @@ CREATE TABLE IF NOT EXISTS item_performance_metrics (
 );
 
 -- Уникальный индекс для предотвращения дублирования метрик за один период
-CREATE UNIQUE INDEX idx_item_performance_metrics_unique ON item_performance_metrics(item_id, period_start);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_item_performance_metrics_unique ON item_performance_metrics(item_id, period_start);
 
 -- Индексы для быстрого поиска
-CREATE INDEX idx_item_performance_metrics_item ON item_performance_metrics(item_id, item_type);
-CREATE INDEX idx_item_performance_metrics_period ON item_performance_metrics(period_start, period_end);
-CREATE INDEX idx_item_performance_metrics_ctr ON item_performance_metrics(ctr DESC);
-CREATE INDEX idx_item_performance_metrics_impressions ON item_performance_metrics(impressions DESC);
-CREATE INDEX idx_item_performance_metrics_conversions ON item_performance_metrics(conversions DESC);
+CREATE INDEX IF NOT EXISTS idx_item_performance_metrics_item ON item_performance_metrics(item_id, item_type);
+CREATE INDEX IF NOT EXISTS idx_item_performance_metrics_period ON item_performance_metrics(period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_item_performance_metrics_ctr ON item_performance_metrics(ctr DESC);
+CREATE INDEX IF NOT EXISTS idx_item_performance_metrics_impressions ON item_performance_metrics(impressions DESC);
+CREATE INDEX IF NOT EXISTS idx_item_performance_metrics_conversions ON item_performance_metrics(conversions DESC);
 
 -- Триггер для автоматического обновления updated_at
 CREATE OR REPLACE FUNCTION update_item_performance_metrics_updated_at()

@@ -66,7 +66,7 @@ BEGIN
         GROUP BY ct.id, ct.direct_count, ct.category_path;
 
         -- Создаем уникальный индекс для возможности CONCURRENT обновления
-        CREATE UNIQUE INDEX category_listing_counts_idx ON category_listing_counts(category_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS category_listing_counts_idx ON category_listing_counts(category_id);
     ELSE
         -- Если представление уже существует, обновляем его
         REFRESH MATERIALIZED VIEW category_listing_counts;
