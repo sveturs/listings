@@ -30,6 +30,7 @@ import (
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
 	reviewHandler "backend/internal/proj/reviews/handler"
+	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
 	"backend/internal/proj/storefronts"
 	userHandler "backend/internal/proj/users/handler"
@@ -56,6 +57,7 @@ type Server struct {
 	docs               *docsHandler.Handler
 	analytics          *analytics.Module
 	behaviorTracking   *behavior_tracking.Module
+	searchAdmin        *search_admin.Module
 	searchOptimization *search_optimization.Module
 	global             *globalHandler.Handler
 	fileStorage        filestorage.FileStorageInterface
@@ -103,6 +105,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db)
 	behaviorTrackingModule := behavior_tracking.NewModule(db.GetPool())
+	searchAdminModule := search_admin.NewModule(db)
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 
 	app := fiber.New(fiber.Config{
@@ -148,6 +151,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		docs:               docsHandlerInstance,
 		analytics:          analyticsModule,
 		behaviorTracking:   behaviorTrackingModule,
+		searchAdmin:        searchAdminModule,
 		searchOptimization: searchOptimizationModule,
 		global:             globalHandlerInstance,
 		fileStorage:        fileStorage,
@@ -269,7 +273,7 @@ func (s *Server) registerProjectRoutes() {
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
-	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.marketplace, s.balance, s.orders, s.storefront,
+	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.marketplace, s.balance, s.orders, s.storefront,
 		s.geocode, s.contacts, s.payments, s.docs, s.analytics, s.behaviorTracking)
 
 	// Регистрируем роуты каждого проекта

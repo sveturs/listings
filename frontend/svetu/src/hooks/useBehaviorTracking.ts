@@ -359,9 +359,10 @@ export function useBehaviorTracking(
         searchSort: data.search_sort,
       });
 
-      debouncedAddEvent(event);
+      // Используем прямой addEvent вместо debounced для важных событий поиска
+      addEvent(event);
     },
-    [createBaseEvent, updateContext, debouncedAddEvent]
+    [createBaseEvent, updateContext, addEvent]
   );
 
   const trackResultClicked = useCallback(

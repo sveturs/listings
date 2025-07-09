@@ -83,9 +83,13 @@ func (s *behaviorTrackingService) flushBuffer() error {
 	// Очищаем буфер
 	s.eventBuffer = s.eventBuffer[:0]
 
-	// Сохраняем события пакетом с коротким таймаутом
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Сохраняем события пакетом с увеличенным таймаутом
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+
+	logger.Info().
+		Int("events_to_save", len(events)).
+		Msg("flushBuffer: attempting to save behavior events to database")
 
 	if err := s.repo.SaveEventsBatch(ctx, events); err != nil {
 		// При ошибке conn busy просто логируем и не возвращаем события в буфер
@@ -100,10 +104,14 @@ func (s *behaviorTrackingService) flushBuffer() error {
 
 		// Для других ошибок возвращаем события обратно в буфер
 		s.eventBuffer = append(s.eventBuffer, events...)
+		logger.Error().
+			Int("count", len(events)).
+			Err(err).
+			Msg("Failed to save events batch, returned to buffer")
 		return fmt.Errorf("failed to save events batch: %w", err)
 	}
 
-	logger.Debug().Int("count", len(events)).Msg("Flushed behavior events")
+	logger.Info().Int("count", len(events)).Msg("Successfully flushed behavior events to database")
 	return nil
 }
 
@@ -135,11 +143,20 @@ func (s *behaviorTrackingService) TrackEvent(ctx context.Context, userID *int, r
 	// Добавляем в буфер
 	s.bufferMutex.Lock()
 	s.eventBuffer = append(s.eventBuffer, event)
-	shouldFlush := len(s.eventBuffer) >= s.bufferSize
+	currentBufferSize := len(s.eventBuffer)
+	shouldFlush := currentBufferSize >= s.bufferSize
 	s.bufferMutex.Unlock()
+
+	logger.Debug().
+		Str("event_type", string(event.EventType)).
+		Int("buffer_size", currentBufferSize).
+		Int("max_buffer_size", s.bufferSize).
+		Bool("should_flush", shouldFlush).
+		Msg("Added behavior event to buffer")
 
 	// Если буфер заполнен, сохраняем
 	if shouldFlush {
+		logger.Info().Msg("Buffer is full, triggering flush")
 		go func() {
 			if err := s.flushBuffer(); err != nil {
 				logger.Error().Err(err).Msg("Failed to flush full buffer")

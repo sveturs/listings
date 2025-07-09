@@ -67,10 +67,28 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 		return nil
 	}
 
-	// Используем отдельное соединение для batch операций
-	conn, err := r.pool.Acquire(ctx)
+	logger.Info().
+		Int("batch_size", len(events)).
+		Msg("SaveEventsBatch: starting to save behavior events")
+
+	// Используем отдельное соединение для batch операций с retry логикой
+	var conn *pgxpool.Conn
+	var err error
+	
+	// Пробуем получить соединение с несколькими попытками
+	for i := 0; i < 3; i++ {
+		conn, err = r.pool.Acquire(ctx)
+		if err == nil {
+			break
+		}
+		if i < 2 {
+			// Ждем немного перед следующей попыткой
+			time.Sleep(time.Millisecond * 100 * time.Duration(i+1))
+		}
+	}
+	
 	if err != nil {
-		return fmt.Errorf("failed to acquire connection: %w", err)
+		return fmt.Errorf("failed to acquire connection after retries: %w", err)
 	}
 	defer conn.Release()
 
@@ -90,9 +108,7 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 		}
 	}()
 
-	// Подготавливаем batch
-	batch := &pgx.Batch{}
-
+	// Используем простой INSERT без batch для устранения проблемы conn busy
 	query := `
 		INSERT INTO user_behavior_events (
 			event_type, user_id, session_id, search_query, 
@@ -100,7 +116,7 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
-	// Добавляем события в batch
+	// Сохраняем события по одному в рамках транзакции
 	validEvents := 0
 	for _, event := range events {
 		var metadataJSON []byte
@@ -114,11 +130,17 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 			metadataJSON = []byte("{}")
 		}
 
-		batch.Queue(
-			query,
+		// Выполняем INSERT
+		_, err = tx.Exec(ctx, query,
 			event.EventType, event.UserID, event.SessionID, event.SearchQuery,
 			event.ItemID, event.ItemType, event.Position, metadataJSON,
 		)
+		
+		if err != nil {
+			logger.Error().Err(err).Int("index", validEvents).Msg("Failed to insert event")
+			return fmt.Errorf("failed to insert event: %w", err)
+		}
+		
 		validEvents++
 	}
 
@@ -127,24 +149,9 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 		return fmt.Errorf("no valid events to save")
 	}
 
-	// Выполняем batch
-	br := tx.SendBatch(ctx, batch)
-	defer br.Close()
-
-	// Проверяем результаты
-	var hasErrors bool
-	for i := 0; i < batch.Len(); i++ {
-		_, err := br.Exec()
-		if err != nil {
-			logger.Error().Err(err).Int("index", i).Msg("Failed to insert event in batch")
-			hasErrors = true
-		}
-	}
-
-	// Если были ошибки, откатываем
-	if hasErrors {
-		return fmt.Errorf("some events failed to insert")
-	}
+	logger.Info().
+		Int("valid_events", validEvents).
+		Msg("SaveEventsBatch: successfully prepared events for insert")
 
 	// Коммитим транзакцию
 	if err = tx.Commit(ctx); err != nil {
@@ -152,6 +159,11 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 	}
 
 	committed = true
+	
+	logger.Info().
+		Int("saved_events", validEvents).
+		Msg("SaveEventsBatch: successfully saved behavior events")
+		
 	return nil
 }
 

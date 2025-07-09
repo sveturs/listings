@@ -54,12 +54,13 @@ func (r *SearchAnalyticsRepository) GetSearchAnalytics(ctx context.Context, time
 	statsQuery := `
 		SELECT 
 			COUNT(*) as total_searches,
-			COUNT(DISTINCT query_text) as unique_queries,
+			COUNT(DISTINCT search_query) as unique_queries,
 			COUNT(DISTINCT user_id) as unique_users,
-			AVG(response_time_ms) as avg_response_time,
+			AVG(search_duration_ms) as avg_response_time,
 			COUNT(CASE WHEN results_count = 0 THEN 1 END) as zero_result_searches
-		FROM search_logs
-		WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+		FROM user_behavior_events
+		WHERE event_type = 'search_performed'
+			AND created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
 	`
 
 	err := r.db.GetContext(ctx, &stats, fmt.Sprintf(statsQuery, interval))
@@ -76,14 +77,15 @@ func (r *SearchAnalyticsRepository) GetSearchAnalytics(ctx context.Context, time
 	// Получаем популярные запросы
 	popularQuery := `
 		SELECT 
-			query_text,
+			search_query as query_text,
 			COUNT(*) as search_count,
 			AVG(results_count) as avg_results,
 			MAX(created_at) as last_searched
-		FROM search_logs
-		WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
-		AND query_text != ''
-		GROUP BY query_text
+		FROM user_behavior_events
+		WHERE event_type = 'search_performed'
+			AND created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+			AND search_query != ''
+		GROUP BY search_query
 		ORDER BY search_count DESC
 		LIMIT 20
 	`
@@ -203,21 +205,52 @@ func (r *SearchAnalyticsRepository) GetSearchAnalytics(ctx context.Context, time
 	}
 
 	metricsQuery := `
+		WITH search_stats AS (
+			SELECT 
+				COUNT(*) as total_searches,
+				COUNT(DISTINCT search_query) as unique_queries,
+				AVG(search_duration_ms) as avg_search_time,
+				CASE 
+					WHEN COUNT(*) > 0 THEN 
+						(COUNT(CASE WHEN results_count = 0 THEN 1 END)::float / COUNT(*)::float) * 100
+					ELSE 0 
+				END as zero_results_rate
+			FROM user_behavior_events
+			WHERE event_type = 'search_performed'
+				AND created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+		),
+		click_stats AS (
+			SELECT 
+				COUNT(DISTINCT se.session_id) as searches_with_clicks,
+				COUNT(*) as total_clicks
+			FROM user_behavior_events se
+			WHERE se.event_type = 'search_performed'
+				AND se.created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+				AND EXISTS (
+					SELECT 1
+					FROM user_behavior_events ce
+					WHERE ce.session_id = se.session_id
+						AND ce.event_type = 'result_clicked'
+						AND ce.search_query = se.search_query
+						AND ce.created_at >= se.created_at
+						AND ce.created_at <= se.created_at + INTERVAL '30 minutes'
+				)
+		)
 		SELECT 
-			COUNT(*) as total_searches,
-			COUNT(DISTINCT query_text) as unique_queries,
-			AVG(response_time_ms) as avg_search_time,
+			ss.total_searches,
+			ss.unique_queries,
+			ss.avg_search_time,
+			ss.zero_results_rate,
 			CASE 
-				WHEN COUNT(*) > 0 THEN 
-					(COUNT(CASE WHEN results_count = 0 THEN 1 END)::float / COUNT(*)::float) * 100
+				WHEN ss.total_searches > 0 THEN 
+					(cs.searches_with_clicks::float / ss.total_searches::float) * 100
 				ELSE 0 
-			END as zero_results_rate,
-			0 as click_through_rate -- TODO: вычислять на основе search_result_clicks
-		FROM search_logs
-		WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+			END as click_through_rate
+		FROM search_stats ss
+		CROSS JOIN click_stats cs
 	`
 
-	err = r.db.GetContext(ctx, &metrics, fmt.Sprintf(metricsQuery, interval))
+	err = r.db.GetContext(ctx, &metrics, fmt.Sprintf(metricsQuery, interval, interval))
 	if err != nil {
 		// Если ошибка, устанавливаем значения по умолчанию
 		metrics.TotalSearches = stats.TotalSearches
@@ -433,12 +466,13 @@ func (r *SearchAnalyticsRepository) GetSearchAnalyticsWithPagination(ctx context
 	statsQuery := `
 		SELECT 
 			COUNT(*) as total_searches,
-			COUNT(DISTINCT query_text) as unique_queries,
+			COUNT(DISTINCT search_query) as unique_queries,
 			COUNT(DISTINCT user_id) as unique_users,
-			AVG(response_time_ms) as avg_response_time,
+			AVG(search_duration_ms) as avg_response_time,
 			COUNT(CASE WHEN results_count = 0 THEN 1 END) as zero_result_searches
-		FROM search_logs
-		WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+		FROM user_behavior_events
+		WHERE event_type = 'search_performed'
+			AND created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
 	`
 
 	err := r.db.GetContext(ctx, &stats, fmt.Sprintf(statsQuery, interval))
@@ -469,14 +503,15 @@ func (r *SearchAnalyticsRepository) GetSearchAnalyticsWithPagination(ctx context
 	// Получаем популярные запросы с пагинацией
 	popularQuery := `
 		SELECT 
-			query_text,
+			search_query as query_text,
 			COUNT(*) as search_count,
 			AVG(results_count) as avg_results,
 			MAX(created_at) as last_searched
-		FROM search_logs
-		WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
-		AND query_text != ''
-		GROUP BY query_text
+		FROM user_behavior_events
+		WHERE event_type = 'search_performed'
+			AND created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+			AND search_query != ''
+		GROUP BY search_query
 		ORDER BY search_count DESC
 		LIMIT %d OFFSET %d
 	`
@@ -572,21 +607,51 @@ func (r *SearchAnalyticsRepository) GetSearchAnalyticsWithPagination(ctx context
 	}
 
 	metricsQuery := `
+		WITH search_stats AS (
+			SELECT 
+				COUNT(*) as total_searches,
+				COUNT(DISTINCT query_text) as unique_queries,
+				AVG(response_time_ms) as avg_search_time,
+				CASE 
+					WHEN COUNT(*) > 0 THEN 
+						(COUNT(CASE WHEN results_count = 0 THEN 1 END)::float / COUNT(*)::float)
+					ELSE 0 
+				END as zero_results_rate
+			FROM search_logs
+			WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+		),
+		click_stats AS (
+			SELECT 
+				COUNT(DISTINCT se.session_id) as searches_with_clicks,
+				COUNT(*) as total_clicks
+			FROM user_behavior_events se
+			WHERE se.event_type = 'search_performed'
+				AND se.created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+				AND EXISTS (
+					SELECT 1
+					FROM user_behavior_events ce
+					WHERE ce.session_id = se.session_id
+						AND ce.event_type = 'result_clicked'
+						AND ce.search_query = se.search_query
+						AND ce.created_at >= se.created_at
+						AND ce.created_at <= se.created_at + INTERVAL '30 minutes'
+				)
+		)
 		SELECT 
-			COUNT(*) as total_searches,
-			COUNT(DISTINCT query_text) as unique_queries,
-			AVG(response_time_ms) as avg_search_time,
+			ss.total_searches,
+			ss.unique_queries,
+			ss.avg_search_time,
+			ss.zero_results_rate,
 			CASE 
-				WHEN COUNT(*) > 0 THEN 
-					(COUNT(CASE WHEN results_count = 0 THEN 1 END)::float / COUNT(*)::float)
+				WHEN ss.total_searches > 0 THEN 
+					(cs.searches_with_clicks::float / ss.total_searches::float) * 100
 				ELSE 0 
-			END as zero_results_rate,
-			0 as click_through_rate -- TODO: вычислять на основе search_result_clicks
-		FROM search_logs
-		WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '%s'
+			END as click_through_rate
+		FROM search_stats ss
+		CROSS JOIN click_stats cs
 	`
 
-	err = r.db.GetContext(ctx, &metrics, fmt.Sprintf(metricsQuery, interval))
+	err = r.db.GetContext(ctx, &metrics, fmt.Sprintf(metricsQuery, interval, interval))
 	if err != nil {
 		// Если ошибка, устанавливаем значения по умолчанию
 		metrics.TotalSearches = stats.TotalSearches

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Tracking</title>
+</head>
+<body>
+    <h1>Тест трекинга</h1>
+    <button id="testBtn">Отправить тестовое событие клика</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const event = {
+                events: [{
+                    session_id: 'test-session-123',
+                    event_type: 'result_clicked',
+                    timestamp: new Date().toISOString(),
+                    user_id: null,
+                    device_type: 'desktop',
+                    browser: 'Chrome',
+                    search_query: 'test',
+                    clicked_item_id: 'item-123',
+                    click_position: 1,
+                    total_results: 10,
+                    click_time_from_search_ms: 1000
+                }],
+                batch_id: 'test-batch-' + Date.now(),
+                created_at: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/analytics/track', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(event)
+                });
+
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <p>Status: ${response.status}</p>
+                    <p>Response: ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
