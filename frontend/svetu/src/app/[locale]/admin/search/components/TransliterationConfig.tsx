@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 
 // Временные типы (до создания API)
-interface TransliterationRule {
+interface _TransliterationRule {
   id: number;
   source_char: string;
   target_char: string;
@@ -85,15 +85,15 @@ export default function TransliterationConfig() {
   const testTransliteration = (text: string, lang: 'ru' | 'sr') => {
     let result = text.toLowerCase();
     const rules = BUILTIN_RULES[lang];
-    
-    rules.forEach(rule => {
+
+    rules.forEach((rule) => {
       if (rule.target_char) {
         result = result.replaceAll(rule.source_char, rule.target_char);
       } else {
         result = result.replaceAll(rule.source_char, '');
       }
     });
-    
+
     return result;
   };
 
@@ -108,7 +108,7 @@ export default function TransliterationConfig() {
 
   const handleAddRule = async () => {
     if (!newRule.source_char || !newRule.target_char) return;
-    
+
     setLoading(true);
     try {
       // TODO: API вызов для добавления правила
@@ -166,12 +166,18 @@ export default function TransliterationConfig() {
             <div className="form-control">
               <label className="label">
                 <span className="label-text">
-                  {t('inputText', { defaultValue: 'Введите текст для тестирования' })}
+                  {t('inputText', {
+                    defaultValue: 'Введите текст для тестирования',
+                  })}
                 </span>
               </label>
               <textarea
                 className="textarea textarea-bordered h-20"
-                placeholder={selectedLanguage === 'ru' ? 'Введите русский текст...' : 'Унесите српски текст...'}
+                placeholder={
+                  selectedLanguage === 'ru'
+                    ? 'Введите русский текст...'
+                    : 'Унесите српски текст...'
+                }
                 value={testText}
                 onChange={(e) => setTestText(e.target.value)}
               />
@@ -186,7 +192,9 @@ export default function TransliterationConfig() {
                 className="textarea textarea-bordered h-20 bg-base-200"
                 value={transliteratedText}
                 readOnly
-                placeholder={t('resultPlaceholder', { defaultValue: 'Результат появится здесь...' })}
+                placeholder={t('resultPlaceholder', {
+                  defaultValue: 'Результат появится здесь...',
+                })}
               />
             </div>
           </div>
@@ -197,9 +205,10 @@ export default function TransliterationConfig() {
       <div className="card bg-base-100 shadow-md">
         <div className="card-body">
           <h3 className="card-title">
-            {t('rules', { defaultValue: 'Правила транслитерации' })} ({selectedLanguage.toUpperCase()})
+            {t('rules', { defaultValue: 'Правила транслитерации' })} (
+            {selectedLanguage.toUpperCase()})
           </h3>
-          
+
           {/* Добавление нового правила */}
           <div className="flex gap-2 mb-4">
             <input
@@ -207,15 +216,21 @@ export default function TransliterationConfig() {
               className="input input-bordered input-sm flex-1"
               placeholder={t('sourceChar', { defaultValue: 'Исходный символ' })}
               value={newRule.source_char}
-              onChange={(e) => setNewRule({ ...newRule, source_char: e.target.value })}
+              onChange={(e) =>
+                setNewRule({ ...newRule, source_char: e.target.value })
+              }
               maxLength={2}
             />
             <input
               type="text"
               className="input input-bordered input-sm flex-1"
-              placeholder={t('targetChar', { defaultValue: 'Целевой символ(ы)' })}
+              placeholder={t('targetChar', {
+                defaultValue: 'Целевой символ(ы)',
+              })}
               value={newRule.target_char}
-              onChange={(e) => setNewRule({ ...newRule, target_char: e.target.value })}
+              onChange={(e) =>
+                setNewRule({ ...newRule, target_char: e.target.value })
+              }
               maxLength={5}
             />
             <button
@@ -232,8 +247,12 @@ export default function TransliterationConfig() {
             <table className="table table-compact w-full">
               <thead>
                 <tr>
-                  <th>{t('sourceChar', { defaultValue: 'Исходный символ' })}</th>
-                  <th>{t('targetChar', { defaultValue: 'Целевой символ(ы)' })}</th>
+                  <th>
+                    {t('sourceChar', { defaultValue: 'Исходный символ' })}
+                  </th>
+                  <th>
+                    {t('targetChar', { defaultValue: 'Целевой символ(ы)' })}
+                  </th>
                   <th>{t('type', { defaultValue: 'Тип' })}</th>
                   <th>{t('actions', { defaultValue: 'Действия' })}</th>
                 </tr>
@@ -257,10 +276,13 @@ export default function TransliterationConfig() {
                       </div>
                     </td>
                     <td>
-                      <button 
-                        className="btn btn-ghost btn-xs" 
+                      <button
+                        className="btn btn-ghost btn-xs"
                         disabled
-                        title={t('builtinNotEditable', { defaultValue: 'Встроенные правила нельзя редактировать' })}
+                        title={t('builtinNotEditable', {
+                          defaultValue:
+                            'Встроенные правила нельзя редактировать',
+                        })}
                       >
                         {t('edit', { defaultValue: 'Редактировать' })}
                       </button>
@@ -288,8 +310,9 @@ export default function TransliterationConfig() {
           ></path>
         </svg>
         <span>
-          {t('info', { 
-            defaultValue: 'Транслитерация используется для создания URL-friendly slug\'ов из названий на кириллице. Встроенные правила нельзя изменить, но можно добавить дополнительные.' 
+          {t('info', {
+            defaultValue:
+              "Транслитерация используется для создания URL-friendly slug'ов из названий на кириллице. Встроенные правила нельзя изменить, но можно добавить дополнительные.",
           })}
         </span>
       </div>

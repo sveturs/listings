@@ -338,7 +338,12 @@ export function useBehaviorTracking(
   }, []);
 
   // Дебаунсированные методы трекинга
-  const debouncedAddEvent = useCallback(debounce(addEvent, 100), [addEvent]);
+  const debouncedAddEvent = useCallback(
+    (event: BehaviorEvent) => {
+      debounce(addEvent, 100)(event);
+    },
+    [addEvent]
+  );
 
   /**
    * Методы трекинга конкретных событий
