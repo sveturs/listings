@@ -20,7 +20,8 @@ CREATE INDEX IF NOT EXISTS idx_search_synonyms_active ON search_synonyms(is_acti
 CREATE UNIQUE INDEX IF NOT EXISTS idx_search_synonyms_unique 
     ON search_synonyms(term, synonym, language) WHERE is_active = true;
 
--- Create trigger to update updated_at timestamp
+-- DROP TRIGGER IF EXISTS to ON update_search_synonyms_updated_at;
+CREATE TRIGGER to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_search_synonyms_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -29,7 +30,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trigger_update_search_synonyms_updated_at ON trigger_update_search_synonyms_updated_at;
+DROP TRIGGER IF EXISTS trigger_update_search_synonyms_updated_at ON search_synonyms;
 CREATE TRIGGER trigger_update_search_synonyms_updated_at
     BEFORE UPDATE ON search_synonyms
     FOR EACH ROW

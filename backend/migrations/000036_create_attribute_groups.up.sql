@@ -60,7 +60,7 @@ $$ language 'plpgsql';
 
 -- Создаем триггер для автоматического обновления updated_at
 DROP TRIGGER IF EXISTS update_attribute_groups_updated_at ON attribute_groups;
-DROP TRIGGER IF EXISTS update_attribute_groups_updated_at ON update_attribute_groups_updated_at;
+DROP TRIGGER IF EXISTS update_attribute_groups_updated_at ON attribute_groups;
 CREATE TRIGGER update_attribute_groups_updated_at BEFORE UPDATE ON attribute_groups
     FOR EACH ROW EXECUTE FUNCTION update_attribute_groups_updated_at();
 

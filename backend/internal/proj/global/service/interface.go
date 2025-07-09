@@ -2,6 +2,8 @@
 package service
 
 import (
+	"context"
+	
 	"backend/internal/config"
 	balanceService "backend/internal/proj/balance/service"
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
@@ -18,6 +20,11 @@ import (
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
 )
+
+// SearchLogsServiceInterface интерфейс для логирования поисковых запросов
+type SearchLogsServiceInterface interface {
+	LogSearch(ctx context.Context, entry interface{}) error
+}
 
 type ServicesInterface interface {
 	Auth() userService.AuthServiceInterface
@@ -49,4 +56,7 @@ type ServicesInterface interface {
 
 	// BehaviorTracking возвращает сервис для трекинга поведения пользователей
 	BehaviorTracking() behaviorTrackingService.BehaviorTrackingService
+
+	// SearchLogs возвращает сервис для логирования поисковых запросов
+	SearchLogs() SearchLogsServiceInterface
 }

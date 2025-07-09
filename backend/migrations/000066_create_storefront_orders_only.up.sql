@@ -124,7 +124,7 @@ $$ language 'plpgsql';
 
 -- Удаляем триггер если он существует перед созданием
 DROP TRIGGER IF EXISTS update_storefront_orders_updated_at ON storefront_orders;
-DROP TRIGGER IF EXISTS update_storefront_orders_updated_at ON update_storefront_orders_updated_at;
+DROP TRIGGER IF EXISTS update_storefront_orders_updated_at ON storefront_orders;
 CREATE TRIGGER update_storefront_orders_updated_at BEFORE UPDATE ON storefront_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Функция для генерации номеров заказов
@@ -169,7 +169,7 @@ $$ LANGUAGE plpgsql;
 
 -- Удаляем триггер если он существует перед созданием
 DROP TRIGGER IF EXISTS set_order_number_trigger ON storefront_orders;
-DROP TRIGGER IF EXISTS set_order_number_trigger ON set_order_number_trigger;
+DROP TRIGGER IF EXISTS set_order_number_trigger ON storefront_orders;
 CREATE TRIGGER set_order_number_trigger 
     BEFORE INSERT ON storefront_orders 
     FOR EACH ROW EXECUTE FUNCTION set_order_number();
@@ -188,7 +188,7 @@ $$ LANGUAGE plpgsql;
 
 -- Удаляем триггер если он существует перед созданием
 DROP TRIGGER IF EXISTS calculate_escrow_release_date_trigger ON storefront_orders;
-DROP TRIGGER IF EXISTS calculate_escrow_release_date_trigger ON calculate_escrow_release_date_trigger;
+DROP TRIGGER IF EXISTS calculate_escrow_release_date_trigger ON storefront_orders;
 CREATE TRIGGER calculate_escrow_release_date_trigger 
     BEFORE INSERT OR UPDATE ON storefront_orders 
     FOR EACH ROW EXECUTE FUNCTION calculate_escrow_release_date();

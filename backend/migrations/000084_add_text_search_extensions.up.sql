@@ -80,7 +80,8 @@ CREATE INDEX IF NOT EXISTS idx_marketplace_listings_description_fts_en
 ALTER TABLE marketplace_listings 
     ADD COLUMN IF NOT EXISTS search_vector tsvector;
 
--- Create trigger to update search vector automatically
+-- DROP TRIGGER IF EXISTS to ON update_listing_search_vector;
+CREATE TRIGGER to update search vector automatically
 CREATE OR REPLACE FUNCTION update_listing_search_vector() 
 RETURNS trigger AS $$
 BEGIN
@@ -95,7 +96,7 @@ $$ LANGUAGE plpgsql;
 
 -- Create trigger
 DROP TRIGGER IF EXISTS trigger_update_listing_search_vector ON marketplace_listings;
-DROP TRIGGER IF EXISTS trigger_update_listing_search_vector ON trigger_update_listing_search_vector;
+DROP TRIGGER IF EXISTS trigger_update_listing_search_vector ON ON;
 CREATE TRIGGER trigger_update_listing_search_vector
     BEFORE INSERT OR UPDATE OF title, description ON marketplace_listings
     FOR EACH ROW

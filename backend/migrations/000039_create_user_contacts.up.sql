@@ -32,7 +32,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-DROP TRIGGER IF EXISTS update_user_contacts_updated_at ON update_user_contacts_updated_at;
+DROP TRIGGER IF EXISTS update_user_contacts_updated_at ON user_contacts;
 CREATE TRIGGER update_user_contacts_updated_at
     BEFORE UPDATE ON user_contacts
     FOR EACH ROW EXECUTE FUNCTION update_user_contacts_updated_at();

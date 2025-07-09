@@ -73,7 +73,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	} else {
 		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage)
+	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to initialize database")
 	}
@@ -100,7 +100,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
-	globalHandlerInstance := globalHandler.NewHandler(services)
+	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db)
 	behaviorTrackingModule := behavior_tracking.NewModule(db.GetPool())
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())

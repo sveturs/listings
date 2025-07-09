@@ -105,6 +105,6 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-DROP TRIGGER IF EXISTS update_marketplace_orders_updated_at ON update_marketplace_orders_updated_at;
+DROP TRIGGER IF EXISTS update_marketplace_orders_updated_at ON marketplace_orders;
 CREATE TRIGGER update_marketplace_orders_updated_at BEFORE UPDATE
 ON marketplace_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

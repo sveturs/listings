@@ -367,7 +367,8 @@ COMMENT ON COLUMN storefront_products.stock_status IS 'Calculated based on stock
 COMMENT ON COLUMN storefront_inventory_movements.type IS 'Type of movement: in, out, adjustment';
 COMMENT ON COLUMN storefront_inventory_movements.reason IS 'Reason: sale, return, damage, restock, adjustment';
 
--- Create trigger to update updated_at timestamp
+-- DROP TRIGGER IF EXISTS to ON update_import_tables_updated_at;
+CREATE TRIGGER to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_import_tables_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -376,13 +377,13 @@ RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trigger_import_jobs_updated_at ON trigger_import_jobs_updated_at;
+DROP TRIGGER IF EXISTS trigger_import_jobs_updated_at ON import_jobs;
 CREATE TRIGGER trigger_import_jobs_updated_at
   BEFORE UPDATE ON import_jobs
   FOR EACH ROW
   EXECUTE FUNCTION update_import_tables_updated_at();
 
-DROP TRIGGER IF EXISTS trigger_category_mappings_updated_at ON trigger_category_mappings_updated_at;
+DROP TRIGGER IF EXISTS trigger_category_mappings_updated_at ON category_mappings;
 CREATE TRIGGER trigger_category_mappings_updated_at
   BEFORE UPDATE ON category_mappings
   FOR EACH ROW

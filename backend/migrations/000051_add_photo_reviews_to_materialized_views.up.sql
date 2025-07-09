@@ -106,7 +106,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Пересоздаем триггер
-DROP TRIGGER IF EXISTS trigger_refresh_rating_distributions ON trigger_refresh_rating_distributions;
+DROP TRIGGER IF EXISTS trigger_refresh_rating_distributions ON reviews;
 CREATE TRIGGER trigger_refresh_rating_distributions
 AFTER INSERT OR UPDATE OR DELETE ON reviews
 FOR EACH STATEMENT

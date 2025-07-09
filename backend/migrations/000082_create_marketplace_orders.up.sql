@@ -90,7 +90,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS marketplace_orders_updated_at_trigger ON marketplace_orders_updated_at_trigger;
+DROP TRIGGER IF EXISTS marketplace_orders_updated_at_trigger ON marketplace_orders;
 CREATE TRIGGER marketplace_orders_updated_at_trigger
     BEFORE UPDATE ON marketplace_orders
     FOR EACH ROW

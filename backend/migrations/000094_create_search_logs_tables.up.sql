@@ -104,14 +104,14 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Триггер для search_analytics
-DROP TRIGGER IF EXISTS update_search_analytics_updated_at_trigger ON update_search_analytics_updated_at_trigger;
+DROP TRIGGER IF EXISTS update_search_analytics_updated_at_trigger ON search_analytics;
 CREATE TRIGGER update_search_analytics_updated_at_trigger
     BEFORE UPDATE ON search_analytics
     FOR EACH ROW
     EXECUTE FUNCTION update_search_analytics_updated_at();
 
 -- Триггер для search_trending_queries
-DROP TRIGGER IF EXISTS update_search_trending_queries_updated_at_trigger ON update_search_trending_queries_updated_at_trigger;
+DROP TRIGGER IF EXISTS update_search_trending_queries_updated_at_trigger ON search_trending_queries;
 CREATE TRIGGER update_search_trending_queries_updated_at_trigger
     BEFORE UPDATE ON search_trending_queries
     FOR EACH ROW

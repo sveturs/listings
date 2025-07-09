@@ -70,7 +70,7 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	// В продакшене здесь будет AllSecure сервис
 	paymentSvc := payment.NewMockPaymentService(cfg.FrontendURL)
 	// Create services
-	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification)
+	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification, cfg.SearchWeights)
 	contactsSvc := marketplaceService.NewContactsService(storage)
 
 	// Here we need to set the real translation service to the marketplace service
@@ -216,4 +216,9 @@ func (s *Service) Orders() marketplaceService.OrderServiceInterface {
 
 func (s *Service) BehaviorTracking() behaviorTrackingService.BehaviorTrackingService {
 	return s.behaviorTracking
+}
+
+func (s *Service) SearchLogs() SearchLogsServiceInterface {
+	// Временно возвращаем nil, пока не реализован сервис логирования поиска
+	return nil
 }

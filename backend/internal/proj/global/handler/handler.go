@@ -19,7 +19,7 @@ type Handler struct {
 // NewHandler создает новый глобальный обработчик
 func NewHandler(services globalService.ServicesInterface, searchWeights *config.SearchWeights) *Handler {
 	return &Handler{
-		UnifiedSearch: NewUnifiedSearchHandler(services, searchWeights),
+		UnifiedSearch: NewUnifiedSearchHandler(services),
 		service:       services,
 		searchWeights: searchWeights,
 	}

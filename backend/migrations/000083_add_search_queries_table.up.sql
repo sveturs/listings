@@ -16,7 +16,8 @@ CREATE INDEX IF NOT EXISTS idx_search_queries_normalized_query ON search_queries
 CREATE INDEX IF NOT EXISTS idx_search_queries_search_count ON search_queries(search_count DESC);
 CREATE INDEX IF NOT EXISTS idx_search_queries_language ON search_queries(language);
 
--- Create trigger for automatic updated_at timestamp
+-- DROP TRIGGER IF EXISTS for ON update_search_queries_updated_at;
+CREATE TRIGGER for automatic updated_at timestamp
 CREATE OR REPLACE FUNCTION update_search_queries_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -25,7 +26,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS update_search_queries_updated_at_trigger ON update_search_queries_updated_at_trigger;
+DROP TRIGGER IF EXISTS update_search_queries_updated_at_trigger ON search_queries;
 CREATE TRIGGER update_search_queries_updated_at_trigger
     BEFORE UPDATE ON search_queries
     FOR EACH ROW

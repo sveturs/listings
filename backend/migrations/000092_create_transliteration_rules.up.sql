@@ -41,7 +41,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trigger_update_transliteration_rules_updated_at ON trigger_update_transliteration_rules_updated_at;
+DROP TRIGGER IF EXISTS trigger_update_transliteration_rules_updated_at ON transliteration_rules;
 CREATE TRIGGER trigger_update_transliteration_rules_updated_at
     BEFORE UPDATE ON transliteration_rules
     FOR EACH ROW

@@ -53,13 +53,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Триггеры для автоматического обновления updated_at
-DROP TRIGGER IF EXISTS trigger_shopping_carts_updated_at ON trigger_shopping_carts_updated_at;
+DROP TRIGGER IF EXISTS trigger_shopping_carts_updated_at ON shopping_carts;
 CREATE TRIGGER trigger_shopping_carts_updated_at
     BEFORE UPDATE ON shopping_carts
     FOR EACH ROW
     EXECUTE FUNCTION update_shopping_cart_updated_at();
 
-DROP TRIGGER IF EXISTS trigger_shopping_cart_items_updated_at ON trigger_shopping_cart_items_updated_at;
+DROP TRIGGER IF EXISTS trigger_shopping_cart_items_updated_at ON shopping_cart_items;
 CREATE TRIGGER trigger_shopping_cart_items_updated_at
     BEFORE UPDATE ON shopping_cart_items
     FOR EACH ROW
