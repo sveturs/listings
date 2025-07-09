@@ -45,6 +45,7 @@ export const ExampleBehaviorTrackingComponent: React.FC<
       search_sort: 'price-asc',
       results_count: 25,
       search_duration_ms: 120,
+      item_type: 'marketplace',
     });
   };
 
@@ -55,6 +56,7 @@ export const ExampleBehaviorTrackingComponent: React.FC<
       click_position: 3,
       total_results: 25,
       click_time_from_search_ms: 5000,
+      item_type: 'marketplace',
     });
   };
 

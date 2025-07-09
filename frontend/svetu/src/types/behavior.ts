@@ -43,6 +43,7 @@ export interface SearchPerformedEvent extends BaseBehaviorEvent {
   search_sort?: string;
   results_count: number;
   search_duration_ms?: number;
+  item_type?: 'marketplace' | 'storefront';
 }
 
 /**
@@ -55,6 +56,7 @@ export interface ResultClickedEvent extends BaseBehaviorEvent {
   click_position: number;
   total_results: number;
   click_time_from_search_ms: number;
+  item_type: 'marketplace' | 'storefront';
 }
 
 /**

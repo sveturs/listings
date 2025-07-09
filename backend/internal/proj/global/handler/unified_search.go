@@ -682,11 +682,42 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 		searchFilters["storefront_id"] = params.StorefrontID
 	}
 
+	// Определяем тип элемента на основе типов товаров в поиске
+	var itemType behavior.ItemType
+	if len(params.ProductTypes) == 1 {
+		// Если ищем только один тип, устанавливаем его
+		switch params.ProductTypes[0] {
+		case "marketplace":
+			itemType = behavior.ItemTypeMarketplace
+		case "storefront":
+			itemType = behavior.ItemTypeStorefront
+		}
+	} else {
+		// Если ищем несколько типов или все типы, выбираем тип с большим количеством результатов
+		marketplaceCount := 0
+		storefrontCount := 0
+		
+		for _, item := range result.Items {
+			if item.ProductType == "marketplace" {
+				marketplaceCount++
+			} else if item.ProductType == "storefront" {
+				storefrontCount++
+			}
+		}
+		
+		if marketplaceCount >= storefrontCount {
+			itemType = behavior.ItemTypeMarketplace
+		} else {
+			itemType = behavior.ItemTypeStorefront
+		}
+	}
+
 	// Создаем запрос для трекинга
 	trackingReq := &behavior.TrackEventRequest{
 		SessionID:   sessionID,
 		EventType:   behavior.EventTypeSearchPerformed,
 		SearchQuery: params.Query,
+		ItemType:    itemType,
 		Metadata: map[string]interface{}{
 			"search_query":       params.Query,
 			"search_filters":     searchFilters,
@@ -701,6 +732,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 			"referer":            c.Get("Referer"),
 			"user_agent":         c.Get("User-Agent"),
 			"ip_address":         c.IP(),
+			"product_types":      params.ProductTypes,
 		},
 	}
 

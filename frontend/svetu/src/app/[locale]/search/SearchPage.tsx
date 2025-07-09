@@ -153,6 +153,13 @@ export default function SearchPage() {
 
         // Трекинг выполненного поиска (только для первой страницы)
         try {
+          // Определяем тип элемента для трекинга на основе фильтров
+          const itemType = currentFilters.product_types?.length === 1 
+            ? (currentFilters.product_types[0] as 'marketplace' | 'storefront')
+            : (data.items.length > 0 
+              ? (data.items[0].product_type as 'marketplace' | 'storefront')
+              : 'marketplace');
+
           await trackSearchPerformed({
             search_query: searchQuery,
             search_filters: {
@@ -162,6 +169,7 @@ export default function SearchPage() {
             search_sort: currentFilters.sort_by,
             results_count: data.total,
             search_duration_ms: Date.now() - searchStartTimeRef.current,
+            item_type: itemType,
           });
         } catch (trackingError) {
           console.error('Failed to track search:', trackingError);
@@ -188,6 +196,11 @@ export default function SearchPage() {
 
         // Трекинг неудачного поиска
         try {
+          // Определяем тип элемента для трекинга на основе фильтров
+          const itemType = currentFilters.product_types?.length === 1 
+            ? (currentFilters.product_types[0] as 'marketplace' | 'storefront')
+            : 'marketplace';
+
           await trackSearchPerformed({
             search_query: searchQuery,
             search_filters: {
@@ -197,6 +210,7 @@ export default function SearchPage() {
             search_sort: currentFilters.sort_by,
             results_count: 0,
             search_duration_ms: Date.now() - searchStartTimeRef.current,
+            item_type: itemType,
           });
         } catch (trackingError) {
           console.error('Failed to track failed search:', trackingError);
@@ -996,6 +1010,7 @@ export default function SearchPage() {
                       position={index + 1}
                       totalResults={allItems.length}
                       searchStartTime={searchStartTimeRef.current}
+                      productType={item.product_type as 'marketplace' | 'storefront'}
                     >
                       <MarketplaceCard
                         item={convertToMarketplaceItem(item)}

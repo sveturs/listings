@@ -10,6 +10,7 @@ interface SearchResultCardProps {
   position: number;
   totalResults: number;
   searchStartTime: number;
+  productType: 'marketplace' | 'storefront';
   className?: string;
   onClick?: () => void;
 }
@@ -25,6 +26,7 @@ export default function SearchResultCard({
   position,
   totalResults,
   searchStartTime,
+  productType,
   className = '',
   onClick,
 }: SearchResultCardProps) {
@@ -40,6 +42,7 @@ export default function SearchResultCard({
           click_position: position,
           total_results: totalResults,
           click_time_from_search_ms: Date.now() - searchStartTime,
+          item_type: productType,
         });
       } catch (error) {
         console.error('Failed to track result click:', error);
