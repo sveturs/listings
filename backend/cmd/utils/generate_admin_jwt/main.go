@@ -27,7 +27,7 @@ func main() {
 	}
 
 	// Подключаемся к базе данных
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, nil, "", fileStorage)
+	db, err := postgres.NewDatabase(cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}

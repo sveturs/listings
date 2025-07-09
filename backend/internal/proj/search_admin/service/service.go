@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"backend/internal/domain"
 	"backend/internal/storage/postgres"
