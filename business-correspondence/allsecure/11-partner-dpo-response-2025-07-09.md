@@ -27,11 +27,12 @@ TEHNIČKO LICE:
 - Funkcija: Tehnički koordinator za integraciju
 
 LICE ZA ZAŠTITU PODATAKA (DPO):
-Poslali smo zahteve za ponude za outsourcing DPO usluga u dve kompanije:
+Razumemo da je imenovanje DPO-a kritično za finalizaciju ugovora i usklađenost sa zakonom. Prema srpskom zakonu, kao direktor ne mogu da budem DPO zbog konflikta interesa, tako da smo već poslali zahteve za ponude za outsourcing DPO usluga u dve specijalizovane kompanije:
+
 1. Coming Computer Engineering (office@coming.rs) - IT bezbednost specijalizovana
 2. Advokatska Kancelarija Milić (office@milic.rs) - IT pravo specijalizovana
 
-Očekujemo odgovore do 15. jula. Da li imate preporuke za kvalitetne DPO provajdere u Srbiji koje biste mogli da predložite?
+Očekujemo odgovore do 15. jula. Svesni smo hitnosti situacije i radimo na tome da što pre obezbedimo kvalitetnog DPO-a. Da li imate preporuke za kvalitetne DPO provajdere u Srbiji koje biste mogli da predložite? Vaše preporuke bi nam pomogle da brže donesemo odluku.
 
 DATUM POČETKA UGOVORA:
 Što se tiče datuma, nama odgovara bilo koji termin (1. ili 15. u mesecu). Međutim, želimo da razjasnimo strukturu obaveza:
@@ -76,11 +77,12 @@ Email: docs@svetu.rs
 - Функция: Технический координатор интеграции
 
 ЛИЦО ПО ЗАЩИТЕ ДАННЫХ (DPO):
-Мы отправили запросы предложений на аутсорсинг DPO услуг в две компании:
+Понимаем, что назначение DPO критически важно для финализации договора и соответствия закону. Согласно сербскому законодательству, как директор я не могу быть DPO из-за конфликта интересов, поэтому мы уже отправили запросы предложений на аутсорсинг DPO услуг в две специализированные компании:
+
 1. Coming Computer Engineering (office@coming.rs) - специализируется на IT-безопасности
 2. Advokatska Kancelarija Milić (office@milic.rs) - специализируется на IT-праве
 
-Ожидаем ответы до 15 июля. Есть ли у вас рекомендации качественных DPO провайдеров в Сербии, которых вы могли бы предложить?
+Ожидаем ответы до 15 июля. Мы осознаем срочность ситуации и работаем над тем, чтобы как можно скорее обеспечить квалифицированного DPO. Есть ли у вас рекомендации качественных DPO провайдеров в Сербии, которых вы могли бы предложить? Ваши рекомендации помогли бы нам быстрее принять решение.
 
 ДАТА НАЧАЛА ДОГОВОРА:
 Что касается даты, нам подходит любой срок (1-е или 15-е число месяца). Однако мы хотели бы прояснить структуру обязательств:

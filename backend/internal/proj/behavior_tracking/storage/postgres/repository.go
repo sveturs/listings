@@ -620,14 +620,15 @@ func (r *behaviorTrackingRepository) GetAggregatedSearchMetrics(ctx context.Cont
 		ClickMetrics: behavior.AggregatedClickMetrics{},
 	}
 
-	// 1. Получаем общие метрики из search_logs
+	// 1. Получаем общие метрики из user_behavior_events
 	err := r.pool.QueryRow(ctx, `
 		SELECT 
 			COUNT(*) as total_searches,
-			COUNT(DISTINCT query_text) as unique_searches,
-			COALESCE(AVG(response_time_ms), 0) as avg_duration_ms
-		FROM search_logs
-		WHERE created_at BETWEEN $1 AND $2
+			COUNT(DISTINCT search_query) as unique_searches,
+			COALESCE(AVG((metadata->>'duration_ms')::float), 0) as avg_duration_ms
+		FROM user_behavior_events
+		WHERE event_type = 'search_performed'
+			AND created_at BETWEEN $1 AND $2
 	`, periodStart, periodEnd).Scan(
 		&metrics.TotalSearches,
 		&metrics.UniqueSearches,
@@ -643,8 +644,9 @@ func (r *behaviorTrackingRepository) GetAggregatedSearchMetrics(ctx context.Cont
 			SELECT 
 				DATE(created_at) as search_date,
 				COUNT(*) as searches_count
-			FROM search_logs
-			WHERE created_at BETWEEN $1 AND $2
+			FROM user_behavior_events
+			WHERE event_type = 'search_performed'
+				AND created_at BETWEEN $1 AND $2
 			GROUP BY DATE(created_at)
 		),
 		daily_clicks AS (
@@ -752,26 +754,28 @@ func (r *behaviorTrackingRepository) GetTopSearchQueries(ctx context.Context, pe
 	query := `
 		WITH search_stats AS (
 			SELECT 
-				sl.query_text,
+				search_query,
 				COUNT(*) as search_count,
-				AVG(sl.results_count) as avg_results
-			FROM search_logs sl
-			WHERE sl.created_at BETWEEN $1 AND $2
-			GROUP BY sl.query_text
+				COALESCE(AVG((metadata->>'results_count')::int), 0) as avg_results
+			FROM user_behavior_events
+			WHERE event_type = 'search_performed'
+				AND search_query IS NOT NULL
+				AND created_at BETWEEN $1 AND $2
+			GROUP BY search_query
 		),
 		click_stats AS (
 			SELECT 
-				be.search_query,
+				search_query,
 				COUNT(*) as click_count,
-				AVG(be.position) as avg_position
-			FROM user_behavior_events be
-			WHERE be.event_type = 'result_clicked'
-				AND be.created_at BETWEEN $1 AND $2
-				AND be.search_query IS NOT NULL
-			GROUP BY be.search_query
+				AVG(position) as avg_position
+			FROM user_behavior_events
+			WHERE event_type = 'result_clicked'
+				AND created_at BETWEEN $1 AND $2
+				AND search_query IS NOT NULL
+			GROUP BY search_query
 		)
 		SELECT 
-			ss.query_text,
+			ss.search_query,
 			ss.search_count,
 			COALESCE(cs.avg_position, 0) as avg_position,
 			ss.avg_results,
@@ -781,7 +785,7 @@ func (r *behaviorTrackingRepository) GetTopSearchQueries(ctx context.Context, pe
 				ELSE 0 
 			END as ctr
 		FROM search_stats ss
-		LEFT JOIN click_stats cs ON ss.query_text = cs.search_query
+		LEFT JOIN click_stats cs ON ss.search_query = cs.search_query
 		ORDER BY ss.search_count DESC
 		LIMIT $3
 	`
