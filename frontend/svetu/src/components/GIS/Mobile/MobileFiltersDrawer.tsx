@@ -58,7 +58,7 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
   searchQuery,
   onSearchChange,
   onSearch,
-  isSearching,
+  isSearching: _isSearching,
   markersCount,
   translations: t,
 }) => {
@@ -110,14 +110,15 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9998] md:hidden"
           onClick={onClose}
+          aria-label="Закрыть фильтры"
         />
       )}
 
       {/* Drawer */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-full max-w-sm bg-white shadow-xl transform transition-transform duration-300 md:hidden ${
+        className={`fixed inset-y-0 left-0 z-[9999] w-full max-w-sm bg-white shadow-xl transform transition-transform duration-300 md:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -129,10 +130,11 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-200 rounded-full transition-all duration-200 flex-shrink-0 -mr-1 active:scale-95"
+              aria-label="Закрыть фильтры"
             >
               <svg
-                className="w-5 h-5"
+                className="w-6 h-6 text-gray-700"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -140,7 +142,7 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
@@ -148,7 +150,7 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
           </div>
 
           {/* Содержимое */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto overscroll-contain">
             {/* Поиск по адресу */}
             <div className="p-4 border-b border-base-300">
               <label className="block text-sm font-medium text-base-content mb-2">
@@ -252,17 +254,19 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
           </div>
 
           {/* Нижняя панель с кнопками */}
-          <div className="p-4 border-t border-base-300 bg-gray-50">
+          <div className="p-4 border-t border-base-300 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex-shrink-0">
             {/* Статистика */}
-            <div className="text-sm text-base-content-secondary mb-4 text-center">
-              {t.results.showing}: {markersCount} {t.results.listings}
+            <div className="text-sm text-base-content-secondary mb-4 text-center font-medium">
+              {t.results.showing}:{' '}
+              <span className="text-base-content">{markersCount}</span>{' '}
+              {t.results.listings}
             </div>
 
             {/* Кнопки */}
-            <div className="flex space-x-3">
+            <div className="flex gap-3">
               <button
                 onClick={handleResetFilters}
-                className={`flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                className={`flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 active:scale-95 ${
                   hasActiveFilters
                     ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -273,7 +277,7 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
               </button>
               <button
                 onClick={handleApplyFilters}
-                className="flex-1 px-4 py-3 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                className="flex-1 px-4 py-3 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 active:scale-95 shadow-sm"
               >
                 {t.actions.apply}
               </button>

@@ -378,13 +378,14 @@ const MapPage: React.FC = () => {
         </div>
 
         {/* Мобильная кнопка фильтров */}
-        <div className="absolute top-4 left-4 z-20 md:hidden">
+        <div className="absolute top-4 left-4 z-[1000] md:hidden">
           <button
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="bg-white rounded-lg shadow-lg p-3 flex items-center space-x-2"
+            className="bg-white rounded-lg shadow-lg p-3 flex items-center space-x-2 hover:bg-gray-50 transition-all duration-200 active:scale-95"
+            aria-label="Открыть фильтры"
           >
             <svg
-              className="w-5 h-5"
+              className="w-5 h-5 text-gray-700"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -396,19 +397,25 @@ const MapPage: React.FC = () => {
                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
               />
             </svg>
-            <span className="text-sm font-medium">{t('filters.title')}</span>
+            <span className="text-sm font-medium text-gray-700">
+              {t('filters.title')}
+            </span>
             {(filters.category ||
               filters.priceFrom > 0 ||
               filters.priceTo > 0) && (
-              <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">
-                !
+              <span className="bg-primary text-white text-xs px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
+                {[
+                  filters.category ? 1 : 0,
+                  filters.priceFrom > 0 ? 1 : 0,
+                  filters.priceTo > 0 ? 1 : 0,
+                ].reduce((a, b) => a + b, 0)}
               </span>
             )}
           </button>
         </div>
 
         {/* Мобильный поиск */}
-        <div className="absolute top-4 right-4 left-20 z-20 md:hidden">
+        <div className="absolute top-4 right-4 left-20 z-[1000] md:hidden">
           <SearchBar
             initialQuery={searchQuery}
             onSearch={handleAddressSearch}
