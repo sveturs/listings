@@ -49,6 +49,7 @@ export default function SearchPage() {
   });
   const [page, setPage] = useState(1);
   const [allItems, setAllItems] = useState<any[]>([]);
+  const [hasInitialSearchRun, setHasInitialSearchRun] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useViewPreference('grid');
 
@@ -79,13 +80,20 @@ export default function SearchPage() {
     const searchQuery = searchParams.get('q');
     const searchFuzzy = searchParams.get('fuzzy') !== 'false';
     if (searchQuery) {
-      // Only perform search if query actually changed
-      if (searchQuery !== query || searchFuzzy !== fuzzy) {
+      // Perform search if:
+      // 1. This is the initial load (!hasInitialSearchRun)
+      // 2. Or the query/fuzzy params have changed
+      if (
+        !hasInitialSearchRun ||
+        searchQuery !== query ||
+        searchFuzzy !== fuzzy
+      ) {
         setQuery(searchQuery);
         setFuzzy(searchFuzzy);
         setPage(1);
         setAllItems([]);
         performSearch(searchQuery, 1, filters, searchFuzzy);
+        setHasInitialSearchRun(true);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -154,11 +162,14 @@ export default function SearchPage() {
         // Трекинг выполненного поиска (только для первой страницы)
         try {
           // Определяем тип элемента для трекинга на основе фильтров
-          const itemType = currentFilters.product_types?.length === 1 
-            ? (currentFilters.product_types[0] as 'marketplace' | 'storefront')
-            : (data.items.length > 0 
-              ? (data.items[0].product_type as 'marketplace' | 'storefront')
-              : 'marketplace');
+          const itemType =
+            currentFilters.product_types?.length === 1
+              ? (currentFilters.product_types[0] as
+                  | 'marketplace'
+                  | 'storefront')
+              : data.items.length > 0
+                ? (data.items[0].product_type as 'marketplace' | 'storefront')
+                : 'marketplace';
 
           await trackSearchPerformed({
             search_query: searchQuery,
@@ -197,9 +208,12 @@ export default function SearchPage() {
         // Трекинг неудачного поиска
         try {
           // Определяем тип элемента для трекинга на основе фильтров
-          const itemType = currentFilters.product_types?.length === 1 
-            ? (currentFilters.product_types[0] as 'marketplace' | 'storefront')
-            : 'marketplace';
+          const itemType =
+            currentFilters.product_types?.length === 1
+              ? (currentFilters.product_types[0] as
+                  | 'marketplace'
+                  | 'storefront')
+              : 'marketplace';
 
           await trackSearchPerformed({
             search_query: searchQuery,
@@ -1010,7 +1024,9 @@ export default function SearchPage() {
                       position={index + 1}
                       totalResults={allItems.length}
                       searchStartTime={searchStartTimeRef.current}
-                      productType={item.product_type as 'marketplace' | 'storefront'}
+                      productType={
+                        item.product_type as 'marketplace' | 'storefront'
+                      }
                     >
                       <MarketplaceCard
                         item={convertToMarketplaceItem(item)}

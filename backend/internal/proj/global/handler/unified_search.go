@@ -4,6 +4,7 @@ package handler
 import (
 	"context"
 	"math"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -240,7 +241,28 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 
 	// Трекинг поискового события (только для первой страницы)
 	if params.Query != "" && params.Page == 1 {
-		go h.trackSearchEvent(c, &params, result, time.Since(startTime))
+		// Извлекаем все необходимые данные из fiber.Ctx перед запуском горутины
+		trackCtx := &trackingContext{
+			userAgent: c.Get("User-Agent"),
+			referer:   c.Get("Referer"),
+			ipAddress: c.IP(),
+		}
+
+		// Получаем userID если пользователь авторизован
+		if c.Locals("userID") != nil {
+			if uid, ok := c.Locals("userID").(int); ok && uid > 0 {
+				trackCtx.userID = &uid
+			}
+		}
+
+		// Получаем session_id из заголовков или query параметров
+		sessionID := c.Get("X-Session-ID")
+		if sessionID == "" {
+			sessionID = c.Query("session_id")
+		}
+		trackCtx.sessionID = sessionID
+
+		go h.trackSearchEvent(trackCtx, &params, result, time.Since(startTime))
 	}
 
 	return c.JSON(result)
@@ -479,6 +501,11 @@ func (h *UnifiedSearchHandler) containsProductType(types []string, target string
 
 // mergeAndRankResults объединяет и ранжирует результаты поиска
 func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, params *UnifiedSearchParams) []UnifiedSearchItem {
+	// Проверяем входные параметры
+	if items == nil || params == nil {
+		return []UnifiedSearchItem{}
+	}
+
 	// Если нет поискового запроса, просто сортируем по указанному критерию
 	if params.Query == "" {
 		h.sortScoredItems(items, params.SortBy, params.SortOrder)
@@ -498,6 +525,11 @@ func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, pa
 
 // calculateRelevanceScore вычисляет оценку релевантности для элемента
 func (h *UnifiedSearchHandler) calculateRelevanceScore(item *UnifiedSearchItem, query string) float64 {
+	// Проверяем валидность входных параметров
+	if item == nil || query == "" {
+		return 0.0
+	}
+
 	score := item.Score // Начинаем с базового score из OpenSearch
 
 	// Приводим к нижнему регистру для сравнения
@@ -621,11 +653,23 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	return location
 }
 
+// trackingContext содержит все данные из fiber.Ctx для безопасной передачи в горутину
+type trackingContext struct {
+	userID    *int
+	sessionID string
+	userAgent string
+	referer   string
+	ipAddress string
+}
+
 // trackSearchEvent отправляет событие поиска в behavior tracking
-func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSearchParams, result *UnifiedSearchResult, duration time.Duration) {
+func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, params *UnifiedSearchParams, result *UnifiedSearchResult, duration time.Duration) {
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error().Interface("panic", r).Msg("Panic in trackSearchEvent")
+			logger.Error().
+				Interface("panic", r).
+				Interface("stack", string(debug.Stack())).
+				Msg("Panic in trackSearchEvent")
 		}
 	}()
 
@@ -635,27 +679,21 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 		return
 	}
 
-	if c == nil || params == nil || result == nil {
-		logger.Error().Msg("Invalid parameters in trackSearchEvent")
+	if trackCtx == nil || params == nil || result == nil {
+		logger.Error().
+			Bool("trackCtx_nil", trackCtx == nil).
+			Bool("params_nil", params == nil).
+			Bool("result_nil", result == nil).
+			Msg("Invalid parameters in trackSearchEvent")
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Получаем информацию о пользователе (если авторизован)
-	var userID *int
-	if c.Locals("userID") != nil {
-		if uid, ok := c.Locals("userID").(int); ok && uid > 0 {
-			userID = &uid
-		}
-	}
-
-	// Получаем session_id из заголовков или query параметров
-	sessionID := c.Get("X-Session-ID")
-	if sessionID == "" {
-		sessionID = c.Query("session_id")
-	}
+	// Используем данные из trackingContext
+	userID := trackCtx.userID
+	sessionID := trackCtx.sessionID
 	if sessionID == "" {
 		// Генерируем временный session_id если не предоставлен
 		sessionID = "backend_" + strconv.FormatInt(time.Now().UnixNano(), 36)
@@ -663,7 +701,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 
 	// Подготавливаем фильтры для трекинга
 	searchFilters := make(map[string]interface{})
-	if len(params.ProductTypes) > 0 {
+	if params.ProductTypes != nil && len(params.ProductTypes) > 0 {
 		searchFilters["product_types"] = params.ProductTypes
 	}
 	if params.CategoryID != "" {
@@ -684,32 +722,66 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 
 	// Определяем тип элемента на основе типов товаров в поиске
 	var itemType behavior.ItemType
-	if len(params.ProductTypes) == 1 {
+
+	// Проверяем, что у нас есть типы товаров
+	if params.ProductTypes == nil || len(params.ProductTypes) == 0 {
+		// По умолчанию используем marketplace
+		itemType = behavior.ItemTypeMarketplace
+	} else if len(params.ProductTypes) == 1 {
 		// Если ищем только один тип, устанавливаем его
 		switch params.ProductTypes[0] {
 		case "marketplace":
 			itemType = behavior.ItemTypeMarketplace
 		case "storefront":
 			itemType = behavior.ItemTypeStorefront
+		default:
+			// Если неизвестный тип, используем marketplace по умолчанию
+			itemType = behavior.ItemTypeMarketplace
 		}
 	} else {
 		// Если ищем несколько типов или все типы, выбираем тип с большим количеством результатов
 		marketplaceCount := 0
 		storefrontCount := 0
-		
-		for _, item := range result.Items {
-			if item.ProductType == "marketplace" {
-				marketplaceCount++
-			} else if item.ProductType == "storefront" {
-				storefrontCount++
+
+		// Проверяем, что Items не nil перед итерацией
+		if result.Items != nil {
+			for _, item := range result.Items {
+				switch item.ProductType {
+				case "marketplace":
+					marketplaceCount++
+				case "storefront":
+					storefrontCount++
+				}
 			}
 		}
-		
+
 		if marketplaceCount >= storefrontCount {
 			itemType = behavior.ItemTypeMarketplace
 		} else {
 			itemType = behavior.ItemTypeStorefront
 		}
+	}
+
+	// Создаем метаданные для трекинга
+	metadata := map[string]interface{}{
+		"search_query":       params.Query,
+		"search_filters":     searchFilters,
+		"search_sort":        params.SortBy,
+		"results_count":      result.Total,
+		"search_duration_ms": duration.Milliseconds(),
+		"page":               params.Page,
+		"limit":              params.Limit,
+		"language":           params.Language,
+		"device_type":        getDeviceTypeFromUserAgent(trackCtx.userAgent),
+		"browser":            trackCtx.userAgent,
+		"referer":            trackCtx.referer,
+		"user_agent":         trackCtx.userAgent,
+		"ip_address":         trackCtx.ipAddress,
+	}
+
+	// Добавляем product_types только если они не nil
+	if params.ProductTypes != nil {
+		metadata["product_types"] = params.ProductTypes
 	}
 
 	// Создаем запрос для трекинга
@@ -718,22 +790,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(c *fiber.Ctx, params *UnifiedSea
 		EventType:   behavior.EventTypeSearchPerformed,
 		SearchQuery: params.Query,
 		ItemType:    itemType,
-		Metadata: map[string]interface{}{
-			"search_query":       params.Query,
-			"search_filters":     searchFilters,
-			"search_sort":        params.SortBy,
-			"results_count":      result.Total,
-			"search_duration_ms": duration.Milliseconds(),
-			"page":               params.Page,
-			"limit":              params.Limit,
-			"language":           params.Language,
-			"device_type":        getDeviceTypeFromUserAgent(c.Get("User-Agent")),
-			"browser":            c.Get("User-Agent"),
-			"referer":            c.Get("Referer"),
-			"user_agent":         c.Get("User-Agent"),
-			"ip_address":         c.IP(),
-			"product_types":      params.ProductTypes,
-		},
+		Metadata:    metadata,
 	}
 
 	// Отправляем событие в behavior tracking сервис (если доступен)
