@@ -2,8 +2,11 @@
 package service
 
 import (
+	"context"
+	
 	"backend/internal/config"
 	balanceService "backend/internal/proj/balance/service"
+	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
 	geocodeService "backend/internal/proj/geocode/service"
 	chatService "backend/internal/proj/marketplace/service"
 	contactsService "backend/internal/proj/marketplace/service"
@@ -12,12 +15,16 @@ import (
 	notificationService "backend/internal/proj/notifications/service"
 	paymentService "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
-	searchlogsService "backend/internal/proj/searchlogs/service"
 	storefrontService "backend/internal/proj/storefronts/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
 )
+
+// SearchLogsServiceInterface интерфейс для логирования поисковых запросов
+type SearchLogsServiceInterface interface {
+	LogSearch(ctx context.Context, entry interface{}) error
+}
 
 type ServicesInterface interface {
 	Auth() userService.AuthServiceInterface
@@ -47,6 +54,9 @@ type ServicesInterface interface {
 	// Orders возвращает сервис для работы с заказами маркетплейса
 	Orders() marketplaceService.OrderServiceInterface
 
+	// BehaviorTracking возвращает сервис для трекинга поведения пользователей
+	BehaviorTracking() behaviorTrackingService.BehaviorTrackingService
+
 	// SearchLogs возвращает сервис для логирования поисковых запросов
-	SearchLogs() searchlogsService.ServiceInterface
+	SearchLogs() SearchLogsServiceInterface
 }

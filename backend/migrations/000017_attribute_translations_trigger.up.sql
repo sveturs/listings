@@ -18,6 +18,7 @@ $$ LANGUAGE plpgsql;
 
 -- Создаем триггер для таблицы attribute_option_translations
 DROP TRIGGER IF EXISTS update_listings_on_attribute_translation_change ON attribute_option_translations;
+DROP TRIGGER IF EXISTS update_listings_on_attribute_translation_change ON attribute_option_translations;
 CREATE TRIGGER update_listings_on_attribute_translation_change
 AFTER INSERT OR UPDATE ON attribute_option_translations
 FOR EACH ROW

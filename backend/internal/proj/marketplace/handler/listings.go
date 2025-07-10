@@ -124,12 +124,12 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 	}
 
 	// Делаем запрос на увеличение счетчика просмотров в горутине, чтобы не задерживать ответ
-	go func(ctx context.Context, listingID int) {
+	go func(listingID int) {
 		err := h.services.Storage().IncrementViewsCount(context.Background(), listingID)
 		if err != nil {
 			logger.Error().Err(err).Int("listingId", listingID).Msg("Failed to increment views count")
 		}
-	}(c.Context(), id)
+	}(id)
 
 	// Получаем ID пользователя из контекста для проверки избранного
 	userID, ok := c.Locals("user_id").(int)

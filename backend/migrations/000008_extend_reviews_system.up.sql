@@ -36,7 +36,7 @@ FROM users u
 LEFT JOIN review_stats rs ON u.id = rs.user_id;
 
 -- Создаем уникальный индекс для обновления
-CREATE UNIQUE INDEX user_rating_summary_idx ON user_rating_summary(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS user_rating_summary_idx ON user_rating_summary(user_id);
 
 -- Создаем представление для агрегации рейтингов витрин
 CREATE MATERIALIZED VIEW storefront_rating_summary AS
@@ -70,7 +70,7 @@ FROM user_storefronts s
 LEFT JOIN review_stats rs ON s.id = rs.storefront_id;
 
 -- Создаем уникальный индекс для обновления
-CREATE UNIQUE INDEX storefront_rating_summary_idx ON storefront_rating_summary(storefront_id);
+CREATE UNIQUE INDEX IF NOT EXISTS storefront_rating_summary_idx ON storefront_rating_summary(storefront_id);
 
 -- Создаем функцию для обновления представлений
 CREATE OR REPLACE FUNCTION refresh_rating_summaries()
@@ -83,6 +83,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Создаем триггер для обновления представлений
+DROP TRIGGER IF EXISTS refresh_rating_summaries_trigger ON reviews;
 CREATE TRIGGER refresh_rating_summaries_trigger
 AFTER INSERT OR UPDATE OR DELETE ON reviews
 FOR EACH STATEMENT
@@ -115,6 +116,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Создаем триггер для сохранения происхождения отзыва
+DROP TRIGGER IF EXISTS preserve_review_origin_trigger ON marketplace_listings;
 CREATE TRIGGER preserve_review_origin_trigger
 BEFORE DELETE ON marketplace_listings
 FOR EACH ROW

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
 import {
   UnifiedSearchService,
   SearchSuggestion,
@@ -45,6 +46,14 @@ export default function SearchBar({
   const debouncedQuery = useDebounce(query, 300);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionRef = useRef<HTMLDivElement>(null);
+
+  // Behavior tracking
+  const {
+    trackSearchPerformed,
+    trackSearchFilterApplied,
+    trackResultClicked,
+    startSearch,
+  } = useBehaviorTracking();
 
   // Загрузка истории и трендов при монтировании
   useEffect(() => {
@@ -103,22 +112,68 @@ export default function SearchBar({
   };
 
   const handleSearch = useCallback(
-    (searchQuery: string = query) => {
+    async (searchQuery: string = query) => {
       const trimmedQuery = searchQuery.trim();
       if (!trimmedQuery) return;
 
+      const searchStartTime = Date.now();
       setShowSuggestions(false);
       UnifiedSearchService.saveToHistory(trimmedQuery);
 
-      if (onSearch) {
-        onSearch(trimmedQuery, fuzzy);
-      } else {
-        // Строим URL с правильной локалью и параметром fuzzy
-        const searchUrl = `/${locale}/search?q=${encodeURIComponent(trimmedQuery)}&fuzzy=${fuzzy}`;
-        router.push(searchUrl);
+      // Подготавливаем фильтры для трекинга
+      const searchFilters = {
+        fuzzy,
+        product_types: ['marketplace', 'storefront'], // дефолтные типы
+      };
+
+      // Запускаем трекинг поиска
+      startSearch(trimmedQuery, searchFilters);
+
+      try {
+        // Выполняем поиск для получения количества результатов (если доступно)
+        let resultsCount = 0;
+        if (!onSearch) {
+          // Если это прямой поиск (не через callback), пытаемся получить предварительные результаты
+          try {
+            const searchResults = await UnifiedSearchService.search({
+              query: trimmedQuery,
+              fuzzy,
+              page: 1,
+              limit: 1, // Минимальный запрос для получения total
+            });
+            resultsCount = searchResults.total;
+          } catch (error) {
+            console.warn('Failed to get results count for tracking:', error);
+          }
+        }
+
+        // Трекинг выполненного поиска
+        await trackSearchPerformed({
+          search_query: trimmedQuery,
+          search_filters: searchFilters,
+          results_count: resultsCount,
+          search_duration_ms: Date.now() - searchStartTime,
+        });
+
+        if (onSearch) {
+          onSearch(trimmedQuery, fuzzy);
+        } else {
+          // Строим URL с правильной локалью и параметром fuzzy
+          const searchUrl = `/${locale}/search?q=${encodeURIComponent(trimmedQuery)}&fuzzy=${fuzzy}`;
+          router.push(searchUrl);
+        }
+      } catch (error) {
+        console.error('Search tracking error:', error);
+        // Продолжаем выполнение поиска даже при ошибке трекинга
+        if (onSearch) {
+          onSearch(trimmedQuery, fuzzy);
+        } else {
+          const searchUrl = `/${locale}/search?q=${encodeURIComponent(trimmedQuery)}&fuzzy=${fuzzy}`;
+          router.push(searchUrl);
+        }
       }
     },
-    [query, fuzzy, onSearch, router, locale]
+    [query, fuzzy, onSearch, router, locale, trackSearchPerformed, startSearch]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -164,8 +219,28 @@ export default function SearchBar({
     }
   };
 
-  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
+  const handleSuggestionClick = async (suggestion: SearchSuggestion) => {
     setShowSuggestions(false);
+
+    // Трекинг клика по результату поиска (предложению)
+    try {
+      if (query) {
+        // Определяем позицию предложения в списке
+        const position =
+          suggestions.findIndex((s) => s.text === suggestion.text) + 1;
+
+        await trackResultClicked({
+          search_query: query,
+          clicked_item_id: suggestion.product_id?.toString() || suggestion.text,
+          click_position: position,
+          total_results: suggestions.length,
+          click_time_from_search_ms: Date.now() - Date.now(), // приблизительное время
+          item_type: suggestion.type === 'product' ? 'marketplace' : 'marketplace', // По умолчанию marketplace для всех предложений
+        });
+      }
+    } catch (error) {
+      console.error('Failed to track suggestion click:', error);
+    }
 
     // Если это категория, переходим на страницу категории
     if (suggestion.type === 'category' && suggestion.category) {
@@ -256,9 +331,25 @@ export default function SearchBar({
     }
   };
 
-  const handleFuzzyToggle = () => {
+  const handleFuzzyToggle = async () => {
     const newFuzzy = !fuzzy;
     setFuzzy(newFuzzy);
+
+    // Трекинг изменения фильтра fuzzy поиска
+    if (query) {
+      try {
+        await trackSearchFilterApplied({
+          search_query: query,
+          filter_type: 'fuzzy_search',
+          filter_value: newFuzzy.toString(),
+          results_count_before: 0, // TODO: можно получить из текущих результатов
+          results_count_after: 0, // TODO: можно получить после применения фильтра
+        });
+      } catch (error) {
+        console.error('Failed to track fuzzy filter change:', error);
+      }
+    }
+
     if (onFuzzyChange) {
       onFuzzyChange(newFuzzy);
     }

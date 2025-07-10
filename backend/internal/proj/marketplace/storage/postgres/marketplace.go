@@ -77,7 +77,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
-            address_city, address_country, show_on_map, original_language, 
+            city, country, show_on_map, original_language, 
             storefront_id, external_id
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING id
@@ -315,8 +315,8 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         l.location,
         l.latitude,
         l.longitude,
-        l.address_city as city,
-        l.address_country as country,
+        l.city,
+        l.country,
         l.views_count,
         l.created_at,
         l.updated_at,
@@ -824,8 +824,8 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
             l.location, 
             l.latitude,
             l.longitude, 
-            l.address_city, 
-            l.address_country, 
+            l.city, 
+            l.country, 
             l.views_count,
             l.created_at, 
             l.updated_at,
@@ -994,8 +994,8 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
             location = $6,
             latitude = $7,
             longitude = $8,
-            address_city = $9,
-            address_country = $10,
+            city = $9,
+            country = $10,
             show_on_map = $11,
             category_id = $12,
             original_language = $13,
@@ -2000,7 +2000,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
         SELECT
             l.id, l.user_id, l.category_id, l.title, l.description,
             l.price, l.condition, l.status, l.location, l.latitude,
-            l.longitude, l.address_city, l.address_country, l.views_count,
+            l.longitude, l.city, l.country, l.views_count,
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
             l.storefront_id, -- Добавляем поле storefront_id
             u.name, u.email, u.created_at as user_created_at,
@@ -2270,7 +2270,7 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
         SELECT
             sp.id, sp.storefront_id, 0 as user_id, sp.category_id, sp.name, sp.description,
             sp.price, 'new' as condition, 'active' as status, '' as location, 
-            0 as latitude, 0 as longitude, '' as address_city, '' as address_country, 
+            0 as latitude, 0 as longitude, '' as city, '' as country, 
             sp.view_count, sp.created_at, sp.updated_at, false as show_on_map, 'sr' as original_language,
             '' as user_name, '' as user_email, sp.created_at as user_created_at,
             '' as user_picture_url, '' as user_phone,

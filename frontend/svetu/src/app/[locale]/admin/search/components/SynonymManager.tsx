@@ -2,57 +2,96 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'react-hot-toast';
 import { tokenManager } from '@/utils/tokenManager';
 
 interface Synonym {
-  id: string;
+  id: number;
   term: string;
-  synonyms: string[];
+  synonym: string;
   language: 'en' | 'ru' | 'sr';
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SynonymResponse {
+  success: boolean;
+  data: {
+    data: Synonym[];
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
 }
 
 export default function SynonymManager() {
-  const t = useTranslations();
+  const t = useTranslations('admin.search.synonyms');
   const [synonyms, setSynonyms] = useState<Synonym[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [newWord, setNewWord] = useState('');
-  const [newSynonyms, setNewSynonyms] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'ru' | 'sr'>(
     'ru'
   );
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
-  useEffect(() => {
-    fetchSynonyms();
-  }, [selectedLanguage]);
+  // Состояние для создания/редактирования
+  const [isEditing, setIsEditing] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({
+    term: '',
+    synonym: '',
+    language: 'ru' as 'en' | 'ru' | 'sr',
+    is_active: true,
+  });
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const fetchSynonyms = async () => {
     try {
+      setLoading(true);
       const accessToken = await tokenManager.getAccessToken();
-      const response = await fetch(
-        `/api/v1/admin/search/synonyms?lang=${selectedLanguage}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-      if (!response.ok) throw new Error('Failed to fetch synonyms');
-      const data = await response.json();
-      setSynonyms(data.data || []);
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '20',
+      });
+
+      if (selectedLanguage) {
+        params.append('language', selectedLanguage);
+      }
+
+      if (searchTerm.trim()) {
+        params.append('search', searchTerm.trim());
+      }
+
+      const response = await fetch(`/api/v1/admin/search/synonyms?${params}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch synonyms');
+      }
+
+      const data: SynonymResponse = await response.json();
+      setSynonyms(data.data.data || []);
+      setTotal(data.data.total);
+      setTotalPages(data.data.total_pages);
     } catch (error) {
       console.error('Error fetching synonyms:', error);
-      toast.error(t('admin.search.synonyms.fetchError'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAdd = async () => {
-    if (!newWord.trim() || !newSynonyms.trim()) {
-      toast.error(t('admin.search.synonyms.fillAllFields'));
+  useEffect(() => {
+    fetchSynonyms();
+  }, [selectedLanguage, searchTerm, page]);
+
+  const handleCreate = async () => {
+    if (!editForm.term.trim() || !editForm.synonym.trim()) {
       return;
     }
 
@@ -64,25 +103,19 @@ export default function SynonymManager() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({
-          term: newWord.trim(),
-          synonyms: newSynonyms
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean),
-          language: selectedLanguage,
-        }),
+        body: JSON.stringify(editForm),
       });
 
-      if (!response.ok) throw new Error('Failed to add synonym');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create synonym');
+      }
 
-      setNewWord('');
-      setNewSynonyms('');
+      setEditForm({ term: '', synonym: '', language: 'ru', is_active: true });
+      setShowCreateForm(false);
       fetchSynonyms();
-      toast.success(t('admin.search.synonyms.addSuccess'));
     } catch (error) {
-      console.error('Error adding synonym:', error);
-      toast.error(t('admin.search.synonyms.addError'));
+      console.error('Error creating synonym:', error);
     }
   };
 
@@ -97,236 +130,388 @@ export default function SynonymManager() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify(synonym),
+          body: JSON.stringify({
+            term: synonym.term,
+            synonym: synonym.synonym,
+            language: synonym.language,
+            is_active: synonym.is_active,
+          }),
         }
       );
 
-      if (!response.ok) throw new Error('Failed to update synonym');
+      if (!response.ok) {
+        throw new Error('Failed to update synonym');
+      }
 
-      setEditingId(null);
+      setIsEditing(null);
       fetchSynonyms();
-      toast.success(t('admin.search.synonyms.updateSuccess'));
     } catch (error) {
       console.error('Error updating synonym:', error);
-      toast.error(t('admin.search.synonyms.updateError'));
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.search.synonyms.deleteConfirm'))) return;
+  const handleDelete = async (synonymId: number) => {
+    if (!confirm(t('confirmDelete'))) {
+      return;
+    }
 
     try {
       const accessToken = await tokenManager.getAccessToken();
-      const response = await fetch(`/api/v1/admin/search/synonyms/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(
+        `/api/v1/admin/search/synonyms/${synonymId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
-      if (!response.ok) throw new Error('Failed to delete synonym');
+      if (!response.ok) {
+        throw new Error('Failed to delete synonym');
+      }
 
       fetchSynonyms();
-      toast.success(t('admin.search.synonyms.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting synonym:', error);
-      toast.error(t('admin.search.synonyms.deleteError'));
     }
   };
 
-  const filteredSynonyms = synonyms.filter(
-    (s) =>
-      s.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.synonyms.some((syn) =>
-        syn.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  );
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPage(1); // Сброс на первую страницу при поиске
+  };
 
-  if (loading) {
-    return <div className="loading loading-spinner loading-lg"></div>;
-  }
+  const handleLanguageChange = (language: 'en' | 'ru' | 'sr') => {
+    setSelectedLanguage(language);
+    setPage(1); // Сброс на первую страницу при смене языка
+  };
+
+  const getLanguageLabel = (lang: string) => {
+    switch (lang) {
+      case 'en':
+        return 'English';
+      case 'ru':
+        return 'Русский';
+      case 'sr':
+        return 'Српски';
+      default:
+        return lang;
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-4 items-end">
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">
-              {t('admin.search.synonyms.language')}
-            </span>
-          </label>
-          <select
-            className="select select-bordered"
-            value={selectedLanguage}
-            onChange={(e) =>
-              setSelectedLanguage(e.target.value as 'en' | 'ru' | 'sr')
-            }
-          >
-            <option value="ru">Русский</option>
-            <option value="en">English</option>
-            <option value="sr">Српски</option>
-          </select>
+      {/* Заголовок */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-base-content">{t('title')}</h2>
+          <p className="text-base-content/70 mt-1">{t('description')}</p>
         </div>
-
-        <div className="form-control flex-1">
-          <label className="label">
-            <span className="label-text">
-              {t('admin.search.synonyms.search')}
-            </span>
-          </label>
-          <input
-            type="text"
-            className="input input-bordered"
-            placeholder={t('admin.search.synonyms.searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        <button
+          className="btn btn-primary"
+          onClick={() => setShowCreateForm(true)}
+        >
+          {t('addSynonym')}
+        </button>
       </div>
 
-      <div className="card bg-base-100 shadow-xl">
+      {/* Фильтры */}
+      <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
-          <h3 className="card-title">{t('admin.search.synonyms.addNew')}</h3>
-          <div className="flex gap-4 items-end">
-            <div className="form-control flex-1">
+          <div className="flex flex-wrap gap-4 items-end">
+            {/* Поиск */}
+            <div className="form-control flex-1 min-w-[200px]">
               <label className="label">
-                <span className="label-text">
-                  {t('admin.search.synonyms.word')}
-                </span>
+                <span className="label-text">{t('search')}</span>
               </label>
               <input
                 type="text"
+                placeholder={t('searchPlaceholder')}
                 className="input input-bordered"
-                placeholder={t('admin.search.synonyms.wordPlaceholder')}
-                value={newWord}
-                onChange={(e) => setNewWord(e.target.value)}
+                value={searchTerm}
+                onChange={handleSearchChange}
               />
             </div>
-            <div className="form-control flex-1">
+
+            {/* Выбор языка */}
+            <div className="form-control">
               <label className="label">
-                <span className="label-text">
-                  {t('admin.search.synonyms.synonymsList')}
-                </span>
+                <span className="label-text">{t('language')}</span>
               </label>
-              <input
-                type="text"
-                className="input input-bordered"
-                placeholder={t('admin.search.synonyms.synonymsPlaceholder')}
-                value={newSynonyms}
-                onChange={(e) => setNewSynonyms(e.target.value)}
-              />
+              <div className="tabs tabs-boxed">
+                {(['ru', 'en', 'sr'] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    className={`tab ${selectedLanguage === lang ? 'tab-active' : ''}`}
+                    onClick={() => handleLanguageChange(lang)}
+                  >
+                    {getLanguageLabel(lang)}
+                  </button>
+                ))}
+              </div>
             </div>
-            <button className="btn btn-primary" onClick={handleAdd}>
-              {t('admin.search.synonyms.add')}
-            </button>
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="table table-zebra">
-          <thead>
-            <tr>
-              <th>{t('admin.search.synonyms.word')}</th>
-              <th>{t('admin.search.synonyms.synonymsList')}</th>
-              <th>{t('admin.search.synonyms.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSynonyms.map((synonym) => (
-              <tr key={synonym.id}>
-                <td>
-                  {editingId === synonym.id ? (
-                    <input
-                      type="text"
-                      className="input input-bordered input-sm"
-                      value={synonym.term}
-                      onChange={(e) => {
-                        const updated = synonyms.map((s) =>
-                          s.id === synonym.id
-                            ? { ...s, term: e.target.value }
-                            : s
-                        );
-                        setSynonyms(updated);
-                      }}
-                    />
-                  ) : (
-                    <span className="font-mono">{synonym.term}</span>
-                  )}
-                </td>
-                <td>
-                  {editingId === synonym.id ? (
-                    <input
-                      type="text"
-                      className="input input-bordered input-sm w-full"
-                      value={synonym.synonyms.join(', ')}
-                      onChange={(e) => {
-                        const updated = synonyms.map((s) =>
-                          s.id === synonym.id
-                            ? {
-                                ...s,
-                                synonyms: e.target.value
-                                  .split(',')
-                                  .map((s) => s.trim())
-                                  .filter(Boolean),
-                              }
-                            : s
-                        );
-                        setSynonyms(updated);
-                      }}
-                    />
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {synonym.synonyms.map((syn, idx) => (
-                        <span key={idx} className="badge badge-outline">
-                          {syn}
+      {/* Форма создания */}
+      {showCreateForm && (
+        <div className="card bg-base-100 shadow-lg">
+          <div className="card-body">
+            <h3 className="card-title">{t('addSynonym')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">{t('term')}</span>
+                </label>
+                <input
+                  type="text"
+                  className="input input-bordered"
+                  value={editForm.term}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, term: e.target.value })
+                  }
+                  placeholder={t('termPlaceholder')}
+                />
+              </div>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">{t('synonym')}</span>
+                </label>
+                <input
+                  type="text"
+                  className="input input-bordered"
+                  value={editForm.synonym}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, synonym: e.target.value })
+                  }
+                  placeholder={t('synonymPlaceholder')}
+                />
+              </div>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">{t('language')}</span>
+                </label>
+                <select
+                  className="select select-bordered"
+                  value={editForm.language}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      language: e.target.value as 'en' | 'ru' | 'sr',
+                    })
+                  }
+                >
+                  <option value="ru">Русский</option>
+                  <option value="en">English</option>
+                  <option value="sr">Српски</option>
+                </select>
+              </div>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">{t('active')}</span>
+                </label>
+                <input
+                  type="checkbox"
+                  className="toggle toggle-primary"
+                  checked={editForm.is_active}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, is_active: e.target.checked })
+                  }
+                />
+              </div>
+            </div>
+            <div className="card-actions justify-end mt-4">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setShowCreateForm(false)}
+              >
+                {t('cancel')}
+              </button>
+              <button className="btn btn-primary" onClick={handleCreate}>
+                {t('create')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Таблица синонимов */}
+      <div className="card bg-base-100 shadow-lg">
+        <div className="card-body">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="card-title">{t('synonymsList')}</h3>
+            <div className="text-sm text-base-content/70">
+              {t('total')}: {total}
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <span className="loading loading-spinner loading-lg"></span>
+            </div>
+          ) : synonyms.length === 0 ? (
+            <div className="text-center py-8 text-base-content/50">
+              {t('noSynonyms')}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="table table-zebra w-full">
+                <thead>
+                  <tr>
+                    <th>{t('term')}</th>
+                    <th>{t('synonym')}</th>
+                    <th>{t('language')}</th>
+                    <th>{t('status')}</th>
+                    <th>{t('created')}</th>
+                    <th>{t('actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {synonyms.map((synonym) => (
+                    <tr key={synonym.id}>
+                      <td>
+                        {isEditing === synonym.id ? (
+                          <input
+                            type="text"
+                            className="input input-sm input-bordered"
+                            value={synonym.term}
+                            onChange={(e) => {
+                              const updatedSynonyms = synonyms.map((s) =>
+                                s.id === synonym.id
+                                  ? { ...s, term: e.target.value }
+                                  : s
+                              );
+                              setSynonyms(updatedSynonyms);
+                            }}
+                          />
+                        ) : (
+                          <span className="font-medium">{synonym.term}</span>
+                        )}
+                      </td>
+                      <td>
+                        {isEditing === synonym.id ? (
+                          <input
+                            type="text"
+                            className="input input-sm input-bordered"
+                            value={synonym.synonym}
+                            onChange={(e) => {
+                              const updatedSynonyms = synonyms.map((s) =>
+                                s.id === synonym.id
+                                  ? { ...s, synonym: e.target.value }
+                                  : s
+                              );
+                              setSynonyms(updatedSynonyms);
+                            }}
+                          />
+                        ) : (
+                          synonym.synonym
+                        )}
+                      </td>
+                      <td>
+                        <span className="badge badge-outline">
+                          {getLanguageLabel(synonym.language)}
                         </span>
-                      ))}
-                    </div>
-                  )}
-                </td>
-                <td>
-                  <div className="flex gap-2">
-                    {editingId === synonym.id ? (
-                      <>
-                        <button
-                          className="btn btn-success btn-xs"
-                          onClick={() => handleUpdate(synonym)}
-                        >
-                          {t('admin.search.synonyms.save')}
-                        </button>
-                        <button
-                          className="btn btn-ghost btn-xs"
-                          onClick={() => {
-                            setEditingId(null);
-                            fetchSynonyms();
-                          }}
-                        >
-                          {t('admin.search.synonyms.cancel')}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          className="btn btn-ghost btn-xs"
-                          onClick={() => setEditingId(synonym.id)}
-                        >
-                          {t('admin.search.synonyms.edit')}
-                        </button>
-                        <button
-                          className="btn btn-error btn-xs"
-                          onClick={() => handleDelete(synonym.id)}
-                        >
-                          {t('admin.search.synonyms.delete')}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      </td>
+                      <td>
+                        {isEditing === synonym.id ? (
+                          <input
+                            type="checkbox"
+                            className="toggle toggle-sm toggle-primary"
+                            checked={synonym.is_active}
+                            onChange={(e) => {
+                              const updatedSynonyms = synonyms.map((s) =>
+                                s.id === synonym.id
+                                  ? { ...s, is_active: e.target.checked }
+                                  : s
+                              );
+                              setSynonyms(updatedSynonyms);
+                            }}
+                          />
+                        ) : (
+                          <span
+                            className={`badge ${synonym.is_active ? 'badge-success' : 'badge-error'}`}
+                          >
+                            {synonym.is_active ? t('active') : t('inactive')}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span className="text-sm text-base-content/70">
+                          {new Date(synonym.created_at).toLocaleDateString()}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="flex gap-2">
+                          {isEditing === synonym.id ? (
+                            <>
+                              <button
+                                className="btn btn-sm btn-primary"
+                                onClick={() => handleUpdate(synonym)}
+                              >
+                                {t('save')}
+                              </button>
+                              <button
+                                className="btn btn-sm btn-ghost"
+                                onClick={() => {
+                                  setIsEditing(null);
+                                  fetchSynonyms(); // Перезагрузить данные
+                                }}
+                              >
+                                {t('cancel')}
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                className="btn btn-sm btn-ghost"
+                                onClick={() => setIsEditing(synonym.id)}
+                              >
+                                {t('edit')}
+                              </button>
+                              <button
+                                className="btn btn-sm btn-error"
+                                onClick={() => handleDelete(synonym.id)}
+                              >
+                                {t('delete')}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Пагинация */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-6">
+              <div className="join">
+                <button
+                  className="join-item btn"
+                  disabled={page <= 1}
+                  onClick={() => setPage(page - 1)}
+                >
+                  «
+                </button>
+                <button className="join-item btn btn-active">
+                  {page} / {totalPages}
+                </button>
+                <button
+                  className="join-item btn"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(page + 1)}
+                >
+                  »
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

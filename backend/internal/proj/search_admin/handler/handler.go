@@ -490,7 +490,7 @@ func (h *Handler) UpdateConfig(c *fiber.Ctx) error {
 
 // GetSearchAnalytics godoc
 // @Summary Get search analytics for admin
-// @Description Get comprehensive search analytics including usage metrics, popular queries, and performance data
+// @Description Get comprehensive search analytics including usage metrics, popular queries, and performance data. Note: This endpoint is deprecated. Use behavior_tracking analytics endpoints instead.
 // @Tags search-admin
 // @Accept json
 // @Produce json
@@ -502,15 +502,12 @@ func (h *Handler) UpdateConfig(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/search/analytics [get]
 func (h *Handler) GetSearchAnalytics(c *fiber.Ctx) error {
-	timeRange := c.Query("range", "7d")
-	offsetTop := c.QueryInt("offsetTop", 0)
-	offsetZero := c.QueryInt("offsetZero", 0)
-	limit := c.QueryInt("limit", 25)
-
-	analytics, err := h.service.GetSearchAnalyticsWithPagination(c.Context(), timeRange, offsetTop, offsetZero, limit)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.internalServerError")
+	// Возвращаем сообщение о том, что аналитика перенесена в другой модуль
+	response := map[string]interface{}{
+		"message": "Search analytics moved to behavior_tracking module",
+		"endpoint": "/api/v1/analytics/metrics/search",
+		"note": "This endpoint is deprecated. Use behavior_tracking analytics endpoints instead.",
 	}
 
-	return utils.SuccessResponse(c, analytics)
+	return utils.SuccessResponse(c, response)
 }

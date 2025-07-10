@@ -61,11 +61,11 @@ CREATE TABLE IF NOT EXISTS marketplace_orders (
 );
 
 -- Индексы для orders
-CREATE INDEX idx_marketplace_orders_buyer ON marketplace_orders(buyer_id);
-CREATE INDEX idx_marketplace_orders_seller ON marketplace_orders(seller_id);
-CREATE INDEX idx_marketplace_orders_listing ON marketplace_orders(listing_id);
-CREATE INDEX idx_marketplace_orders_status ON marketplace_orders(status);
-CREATE INDEX idx_marketplace_orders_protection ON marketplace_orders(protection_expires_at) 
+CREATE INDEX IF NOT EXISTS idx_marketplace_orders_buyer ON marketplace_orders(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_orders_seller ON marketplace_orders(seller_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_orders_listing ON marketplace_orders(listing_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_orders_status ON marketplace_orders(status);
+CREATE INDEX IF NOT EXISTS idx_marketplace_orders_protection ON marketplace_orders(protection_expires_at) 
 WHERE status IN ('delivered', 'shipped');
 
 -- Таблица для истории изменения статусов
@@ -105,5 +105,6 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_marketplace_orders_updated_at ON marketplace_orders;
 CREATE TRIGGER update_marketplace_orders_updated_at BEFORE UPDATE
 ON marketplace_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

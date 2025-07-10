@@ -1,0 +1,51 @@
+{
+  "User": {
+    "fields": {
+      "id": {
+        "type": "int",
+        "json_tag": "id",
+        "db_tag": ""
+      },
+      "name": {
+        "type": "string",
+        "json_tag": "name",
+        "db_tag": ""
+      },
+      "email": {
+        "type": "string",
+        "json_tag": "email",
+        "db_tag": ""
+      },
+      "google_id": {
+        "type": "string",
+        "json_tag": "google_id",
+        "db_tag": ""
+      },
+      "picture_url": {
+        "type": "string",
+        "json_tag": "picture_url",
+        "db_tag": ""
+      },
+      "phone": {
+        "type": "*string",
+        "json_tag": "phone,omitempty",
+        "db_tag": ""
+      },
+      "password": {
+        "type": "*string",
+        "json_tag": "-",
+        "db_tag": ""
+      },
+      "provider": {
+        "type": "string",
+        "json_tag": "provider",
+        "db_tag": ""
+      },
+      "created_at": {
+        "type": "time.Time",
+        "json_tag": "created_at",
+        "db_tag": ""
+      }
+    }
+  }
+}

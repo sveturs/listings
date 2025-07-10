@@ -24,8 +24,8 @@ func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neL
 			ml.condition,
 			ml.category_id,
 			ml.user_id,
-			ml.address_city,
-			ml.address_country,
+			ml.city,
+			ml.country,
 			ml.created_at,
 			COALESCE(mi.file_path, '') as main_image
 		FROM marketplace_listings ml

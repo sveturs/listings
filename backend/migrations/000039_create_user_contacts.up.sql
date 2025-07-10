@@ -18,10 +18,10 @@ CREATE TABLE IF NOT EXISTS user_contacts (
 );
 
 -- Создание индексов для быстрых запросов
-CREATE INDEX idx_user_contacts_user_id ON user_contacts(user_id);
-CREATE INDEX idx_user_contacts_contact_user_id ON user_contacts(contact_user_id);
-CREATE INDEX idx_user_contacts_status ON user_contacts(status);
-CREATE INDEX idx_user_contacts_created_at ON user_contacts(created_at);
+CREATE INDEX IF NOT EXISTS idx_user_contacts_user_id ON user_contacts(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_contacts_contact_user_id ON user_contacts(contact_user_id);
+CREATE INDEX IF NOT EXISTS idx_user_contacts_status ON user_contacts(status);
+CREATE INDEX IF NOT EXISTS idx_user_contacts_created_at ON user_contacts(created_at);
 
 -- Создание триггера для обновления updated_at
 CREATE OR REPLACE FUNCTION update_user_contacts_updated_at()
@@ -32,6 +32,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_user_contacts_updated_at ON user_contacts;
 CREATE TRIGGER update_user_contacts_updated_at
     BEFORE UPDATE ON user_contacts
     FOR EACH ROW EXECUTE FUNCTION update_user_contacts_updated_at();
@@ -69,9 +70,9 @@ CREATE TABLE IF NOT EXISTS chat_attachments (
 );
 
 -- Индексы для производительности
-CREATE INDEX idx_chat_attachments_message_id ON chat_attachments(message_id);
-CREATE INDEX idx_chat_attachments_created_at ON chat_attachments(created_at);
-CREATE INDEX idx_chat_attachments_file_type ON chat_attachments(file_type);
+CREATE INDEX IF NOT EXISTS idx_chat_attachments_message_id ON chat_attachments(message_id);
+CREATE INDEX IF NOT EXISTS idx_chat_attachments_created_at ON chat_attachments(created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_attachments_file_type ON chat_attachments(file_type);
 
 -- Обновление таблицы сообщений для поддержки вложений
 ALTER TABLE marketplace_messages

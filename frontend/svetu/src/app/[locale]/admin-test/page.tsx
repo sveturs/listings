@@ -10,7 +10,7 @@ import TransliterationConfig from '../admin/search/components/TransliterationCon
 import SearchConfig from '../admin/search/components/SearchConfig';
 
 export default function AdminTestPage() {
-  const t = useTranslations();
+  const _t = useTranslations();
   const [activeTab, setActiveTab] = useState<
     | 'dashboard'
     | 'weights'
@@ -22,7 +22,9 @@ export default function AdminTestPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">🔧 Admin Panel Test (No Auth Guard)</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        🔧 Admin Panel Test (No Auth Guard)
+      </h1>
 
       <div className="tabs tabs-boxed mb-6 flex-wrap">
         <button

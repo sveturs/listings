@@ -8,14 +8,14 @@ import (
 
 	"backend/internal/config"
 	balance "backend/internal/proj/balance/service"
+	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
+	behaviorTrackingPostgres "backend/internal/proj/behavior_tracking/storage/postgres"
 	geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
 	marketplaceService "backend/internal/proj/marketplace/service"
 	translationService "backend/internal/proj/marketplace/service"
 	notificationService "backend/internal/proj/notifications/service"
 	payment "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
-	searchlogsService "backend/internal/proj/searchlogs/service"
-	searchlogsStorage "backend/internal/proj/searchlogs/storage"
 	storefrontService "backend/internal/proj/storefronts/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage"
@@ -23,23 +23,23 @@ import (
 )
 
 type Service struct {
-	users          *userService.Service
-	marketplace    *marketplaceService.Service
-	review         *reviewService.Service
-	chat           *marketplaceService.Service
-	contacts       *marketplaceService.ContactsService
-	config         *config.Config
-	notification   *notificationService.Service
-	translation    translationService.TranslationServiceInterface
-	balance        *balance.BalanceService
-	payment        payment.PaymentServiceInterface
-	storefront     storefrontService.StorefrontService
-	storage        storage.Storage
-	geocode        geocodeService.GeocodeServiceInterface
-	fileStorage    filestorage.FileStorageInterface
-	chatAttachment *marketplaceService.ChatAttachmentService
-	unifiedSearch  UnifiedSearchServiceInterface
-	searchLogs     searchlogsService.ServiceInterface
+	users            *userService.Service
+	marketplace      *marketplaceService.Service
+	review           *reviewService.Service
+	chat             *marketplaceService.Service
+	contacts         *marketplaceService.ContactsService
+	config           *config.Config
+	notification     *notificationService.Service
+	translation      translationService.TranslationServiceInterface
+	balance          *balance.BalanceService
+	payment          payment.PaymentServiceInterface
+	storefront       storefrontService.StorefrontService
+	storage          storage.Storage
+	geocode          geocodeService.GeocodeServiceInterface
+	fileStorage      filestorage.FileStorageInterface
+	chatAttachment   *marketplaceService.ChatAttachmentService
+	unifiedSearch    UnifiedSearchServiceInterface
+	behaviorTracking behaviorTrackingService.BehaviorTrackingService
 }
 
 func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
@@ -47,17 +47,20 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
 
-	// Инициализируем searchLogs service
-	var searchLogsSvc searchlogsService.ServiceInterface
-	if postgresDB, ok := storage.(interface{ GetPool() *pgxpool.Pool }); ok {
-		log.Println("Creating SearchLogs service")
-		pool := postgresDB.GetPool()
-		searchLogsSvc = searchlogsService.NewService(
-			searchlogsStorage.NewPostgresStorage(pool),
-		)
-		log.Println("SearchLogs service created successfully")
+	// Initialize behavior tracking service
+	var behaviorTrackingSvc behaviorTrackingService.BehaviorTrackingService
+	// Get pool from storage if it's a postgres.Database
+	if poolAccessor, ok := storage.(interface{ GetPool() *pgxpool.Pool }); ok && poolAccessor != nil {
+		if pool := poolAccessor.GetPool(); pool != nil {
+			// Create behavior tracking repository and service
+			behaviorRepo := behaviorTrackingPostgres.NewBehaviorTrackingRepository(pool)
+			behaviorTrackingSvc = behaviorTrackingService.NewBehaviorTrackingService(behaviorRepo)
+			log.Println("Behavior tracking service initialized successfully")
+		} else {
+			log.Println("Warning: PostgreSQL pool not available for behavior tracking")
+		}
 	} else {
-		log.Println("WARNING: Failed to create SearchLogs service - storage does not implement GetPool")
+		log.Println("Warning: Storage does not support GetPool() method for behavior tracking")
 	}
 
 	// Создаем сервис витрин (временно без services, передадим позже)
@@ -67,15 +70,7 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	// В продакшене здесь будет AllSecure сервис
 	paymentSvc := payment.NewMockPaymentService(cfg.FrontendURL)
 	// Create services
-	// Получаем search weights из storage если доступно
-	var searchWeights *config.SearchWeights
-	type searchWeightsGetter interface {
-		GetSearchWeights() *config.SearchWeights
-	}
-	if swg, ok := storage.(searchWeightsGetter); ok {
-		searchWeights = swg.GetSearchWeights()
-	}
-	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification, searchWeights)
+	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification, cfg.SearchWeights)
 	contactsSvc := marketplaceService.NewContactsService(storage)
 
 	// Here we need to set the real translation service to the marketplace service
@@ -107,22 +102,22 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 
 	// Создаем экземпляр Service
 	s := &Service{
-		users:          userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.JWTSecret, cfg.JWTExpirationHours),
-		marketplace:    marketplaceSvc,
-		review:         reviewService.NewService(storage),
-		chat:           marketplaceSvc, // Reuse the same service for chat
-		contacts:       contactsSvc,
-		config:         cfg,
-		notification:   notificationSvc,
-		translation:    translationSvc,
-		balance:        balanceSvc,
-		payment:        paymentSvc,
-		storefront:     storefrontSvc,
-		storage:        storage,
-		geocode:        geocodeSvc,
-		fileStorage:    fileStorageSvc,
-		chatAttachment: chatAttachmentSvc,
-		searchLogs:     searchLogsSvc,
+		users:            userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.JWTSecret, cfg.JWTExpirationHours),
+		marketplace:      marketplaceSvc,
+		review:           reviewService.NewService(storage),
+		chat:             marketplaceSvc, // Reuse the same service for chat
+		contacts:         contactsSvc,
+		config:           cfg,
+		notification:     notificationSvc,
+		translation:      translationSvc,
+		balance:          balanceSvc,
+		payment:          paymentSvc,
+		storefront:       storefrontSvc,
+		storage:          storage,
+		geocode:          geocodeSvc,
+		fileStorage:      fileStorageSvc,
+		chatAttachment:   chatAttachmentSvc,
+		behaviorTracking: behaviorTrackingSvc,
 	}
 
 	// Теперь создаем сервис витрин с правильными зависимостями
@@ -219,6 +214,11 @@ func (s *Service) Orders() marketplaceService.OrderServiceInterface {
 	return nil
 }
 
-func (s *Service) SearchLogs() searchlogsService.ServiceInterface {
-	return s.searchLogs
+func (s *Service) BehaviorTracking() behaviorTrackingService.BehaviorTrackingService {
+	return s.behaviorTracking
+}
+
+func (s *Service) SearchLogs() SearchLogsServiceInterface {
+	// Временно возвращаем nil, пока не реализован сервис логирования поиска
+	return nil
 }

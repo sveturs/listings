@@ -37,94 +37,130 @@ definitions:
         example: Операция выполнена успешно
         type: string
     type: object
-  domain.SearchConfig:
+  behavior.BehaviorEvent:
     properties:
       created_at:
         type: string
-      fuzzy_enabled:
-        type: boolean
-      fuzzy_max_edits:
-        type: integer
+      event_type:
+        $ref: '#/definitions/behavior.EventType'
       id:
         type: integer
-      max_suggestions:
-        type: integer
-      min_search_length:
-        type: integer
-      synonyms_enabled:
-        type: boolean
-      transliteration_enabled:
-        type: boolean
-      updated_at:
+      item_id:
         type: string
-    type: object
-  domain.SearchStatistics:
-    properties:
-      created_at:
+      item_type:
+        $ref: '#/definitions/behavior.ItemType'
+      metadata:
+        additionalProperties: true
+        type: object
+      position:
+        type: integer
+      search_query:
         type: string
-      id:
-        type: integer
-      query:
-        type: string
-      results_count:
-        type: integer
-      search_duration_ms:
-        type: integer
-      search_filters:
+      session_id:
         type: string
       user_id:
         type: integer
+    required:
+    - event_type
+    - session_id
     type: object
-  domain.SearchSynonym:
+  behavior.EventType:
+    enum:
+    - search_performed
+    - result_clicked
+    - item_viewed
+    - item_purchased
+    - search_filter_applied
+    - search_sort_changed
+    - item_added_to_cart
+    type: string
+    x-enum-varnames:
+    - EventTypeSearchPerformed
+    - EventTypeResultClicked
+    - EventTypeItemViewed
+    - EventTypeItemPurchased
+    - EventTypeSearchFilterApplied
+    - EventTypeSearchSortChanged
+    - EventTypeItemAddedToCart
+  behavior.ItemMetrics:
     properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      language:
-        type: string
-      synonyms:
-        items:
-          type: string
-        type: array
-      term:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  domain.SearchWeight:
-    properties:
-      created_at:
-        type: string
-      description:
-        type: string
-      field_name:
-        type: string
-      id:
-        type: integer
-      updated_at:
-        type: string
-      weight:
+      avg_position:
         type: number
+      clicks:
+        type: integer
+      conversion_rate:
+        type: number
+      ctr:
+        type: number
+      item_id:
+        type: string
+      item_type:
+        $ref: '#/definitions/behavior.ItemType'
+      period_end:
+        type: string
+      period_start:
+        type: string
+      purchases:
+        type: integer
+      views:
+        type: integer
     type: object
-  domain.TransliterationRule:
+  behavior.ItemType:
+    enum:
+    - marketplace
+    - storefront
+    type: string
+    x-enum-varnames:
+    - ItemTypeMarketplace
+    - ItemTypeStorefront
+  behavior.TrackEventBatch:
     properties:
+      batch_id:
+        type: string
       created_at:
         type: string
-      from_pattern:
+      events:
+        items:
+          $ref: '#/definitions/behavior.TrackEventRequest'
+        type: array
+    required:
+    - batch_id
+    - created_at
+    - events
+    type: object
+  behavior.TrackEventRequest:
+    properties:
+      event_type:
+        allOf:
+        - $ref: '#/definitions/behavior.EventType'
+        enum:
+        - search_performed
+        - result_clicked
+        - item_viewed
+        - item_purchased
+        - search_filter_applied
+        - search_sort_changed
+        - item_added_to_cart
+      item_id:
         type: string
-      from_script:
-        type: string
-      id:
+      item_type:
+        allOf:
+        - $ref: '#/definitions/behavior.ItemType'
+        enum:
+        - marketplace
+        - storefront
+      metadata:
+        additionalProperties: true
+        type: object
+      position:
         type: integer
-      priority:
-        type: integer
-      to_pattern:
+      search_query:
         type: string
-      to_script:
+      session_id:
+        description: Если не передан, будет сгенерирован
         type: string
-      updated_at:
-        type: string
+    required:
+    - event_type
     type: object
   handler.AddMessageRequest:
     properties:
@@ -195,6 +231,37 @@ definitions:
       total:
         example: 100
         type: integer
+    type: object
+  handler.AnalyzeWeightsRequest:
+    properties:
+      category_id:
+        type: integer
+      from_date:
+        type: string
+      item_type:
+        enum:
+        - marketplace
+        - storefront
+        - global
+        type: string
+      to_date:
+        type: string
+    required:
+    - from_date
+    - item_type
+    - to_date
+    type: object
+  handler.ApplyWeightsRequest:
+    properties:
+      selected_results:
+        items:
+          type: integer
+        type: array
+      session_id:
+        type: integer
+    required:
+    - selected_results
+    - session_id
     type: object
   handler.AttributeCreateResponse:
     properties:
@@ -309,6 +376,17 @@ definitions:
       page:
         type: integer
       total:
+        type: integer
+    type: object
+  handler.ClickMetricsResponse:
+    properties:
+      average_click_position:
+        type: number
+      conversion_rate:
+        type: number
+      ctr:
+        type: number
+      total_clicks:
         type: integer
     type: object
   handler.CompleteMockPaymentRequest:
@@ -997,6 +1075,25 @@ definitions:
         example: 5
         type: integer
     type: object
+  handler.SearchMetricsResponse:
+    properties:
+      average_search_duration_ms:
+        type: number
+      click_metrics:
+        $ref: '#/definitions/handler.ClickMetricsResponse'
+      search_trends:
+        items:
+          $ref: '#/definitions/handler.SearchTrendResponse'
+        type: array
+      top_queries:
+        items:
+          $ref: '#/definitions/handler.TopQueryResponse'
+        type: array
+      total_searches:
+        type: integer
+      unique_searches:
+        type: integer
+    type: object
   handler.SearchResponse:
     properties:
       data:
@@ -1005,6 +1102,17 @@ definitions:
         type: array
       meta:
         $ref: '#/definitions/handler.SearchMetadata'
+    type: object
+  handler.SearchTrendResponse:
+    properties:
+      clicks_count:
+        type: integer
+      ctr:
+        type: number
+      date:
+        type: string
+      searches_count:
+        type: integer
     type: object
   handler.SessionResponse:
     properties:
@@ -1070,6 +1178,45 @@ definitions:
       total:
         type: integer
     type: object
+  handler.StartOptimizationRequest:
+    properties:
+      analysis_period_days:
+        maximum: 365
+        minimum: 1
+        type: integer
+      auto_apply:
+        type: boolean
+      category_id:
+        type: integer
+      confidence_level:
+        maximum: 0.99
+        minimum: 0.5
+        type: number
+      field_names:
+        items:
+          type: string
+        type: array
+      item_type:
+        enum:
+        - marketplace
+        - storefront
+        - global
+        type: string
+      learning_rate:
+        maximum: 1
+        minimum: 0.001
+        type: number
+      max_iterations:
+        maximum: 10000
+        minimum: 10
+        type: integer
+      min_sample_size:
+        maximum: 10000
+        minimum: 10
+        type: integer
+    required:
+    - item_type
+    type: object
   handler.StorefrontsListResponse:
     properties:
       limit:
@@ -1111,6 +1258,29 @@ definitions:
       type:
         example: product
         type: string
+    type: object
+  handler.SynonymRequest:
+    properties:
+      is_active:
+        type: boolean
+      language:
+        enum:
+        - en
+        - ru
+        - sr
+        type: string
+      synonym:
+        maxLength: 255
+        minLength: 1
+        type: string
+      term:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - language
+    - synonym
+    - term
     type: object
   handler.TelegramConnectResponse:
     description: Ответ при успешном подключении Telegram
@@ -1162,6 +1332,19 @@ definitions:
         type: integer
       token_type:
         example: Bearer
+        type: string
+    type: object
+  handler.TopQueryResponse:
+    properties:
+      avg_position:
+        type: number
+      avg_results:
+        type: number
+      count:
+        type: integer
+      ctr:
+        type: number
+      query:
         type: string
     type: object
   handler.TranslateTextRequest:
@@ -4499,6 +4682,28 @@ definitions:
       similarity_score:
         type: number
     type: object
+  service.OptimizationConfig:
+    properties:
+      default_analysis_period_days:
+        type: integer
+      default_confidence_level:
+        type: number
+      default_learning_rate:
+        type: number
+      default_max_iterations:
+        type: integer
+      default_min_sample_size:
+        type: integer
+      max_weight:
+        description: Максимальное значение веса
+        type: number
+      max_weight_change:
+        description: Максимальное изменение веса за одну оптимизацию
+        type: number
+      min_weight:
+        description: Минимальное значение веса
+        type: number
+    type: object
   service.SuggestionItem:
     properties:
       category_id:
@@ -4529,6 +4734,54 @@ definitions:
     - SuggestionTypeQuery
     - SuggestionTypeCategory
     - SuggestionTypeProduct
+  storage.OptimizationSession:
+    properties:
+      created_by:
+        type: integer
+      end_time:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: integer
+      processed_fields:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/storage.WeightOptimizationResult'
+        type: array
+      start_time:
+        type: string
+      status:
+        description: running, completed, failed
+        type: string
+      total_fields:
+        type: integer
+    type: object
+  storage.WeightOptimizationResult:
+    properties:
+      confidence_level:
+        description: Уровень уверенности в рекомендации
+        type: number
+      current_ctr:
+        type: number
+      current_weight:
+        type: number
+      field_name:
+        type: string
+      improvement_score:
+        description: Ожидаемое улучшение CTR
+        type: number
+      optimized_weight:
+        type: number
+      predicted_ctr:
+        type: number
+      sample_size:
+        description: Количество данных для анализа
+        type: integer
+      statistical_significance_level:
+        type: number
+    type: object
   tgbotapi.Animation:
     properties:
       file_id:
@@ -6920,6 +7173,571 @@ paths:
       summary: Reindex listing ratings
       tags:
       - marketplace-admin-indexing
+  /api/v1/admin/search/analyze-weights:
+    post:
+      consumes:
+      - application/json
+      description: Анализирует эффективность текущих весов без запуска полной оптимизации
+      parameters:
+      - description: Параметры анализа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AnalyzeWeightsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результаты анализа
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/storage.WeightOptimizationResult'
+                  type: array
+              type: object
+        "400":
+          description: Неверные параметры
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Анализ текущих весов поиска
+      tags:
+      - Search Optimization
+  /api/v1/admin/search/apply-weights:
+    post:
+      consumes:
+      - application/json
+      description: Применяет выбранные оптимизированные веса к системе поиска
+      parameters:
+      - description: Параметры применения весов
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ApplyWeightsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Веса применены
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Неверные параметры
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Применение оптимизированных весов
+      tags:
+      - Search Optimization
+  /api/v1/admin/search/backup-weights:
+    post:
+      consumes:
+      - application/json
+      description: Создает резервную копию текущих весов поиска для возможности отката
+      parameters:
+      - description: Параметры резервной копии
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Резервная копия создана
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Неверные параметры
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Создание резервной копии весов
+      tags:
+      - Search Optimization
+  /api/v1/admin/search/optimization-cancel/{session_id}:
+    post:
+      description: Отменяет запущенный процесс оптимизации весов
+      parameters:
+      - description: ID сессии оптимизации
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Оптимизация отменена
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Неверный ID сессии
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Отмена оптимизации
+      tags:
+      - Search Optimization
+  /api/v1/admin/search/optimization-config:
+    get:
+      description: Возвращает текущую конфигурацию параметров оптимизации весов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Конфигурация оптимизации
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.OptimizationConfig'
+              type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Конфигурация оптимизации
+      tags:
+      - Search Optimization
+    put:
+      consumes:
+      - application/json
+      description: Обновляет параметры оптимизации весов по умолчанию
+      parameters:
+      - description: Новая конфигурация
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/service.OptimizationConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Конфигурация обновлена
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Неверная конфигурация
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Обновление конфигурации оптимизации
+      tags:
+      - Search Optimization
+  /api/v1/admin/search/optimization-history:
+    get:
+      description: Возвращает список последних сессий оптимизации весов
+      parameters:
+      - default: 20
+        description: Максимальное количество записей
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: История оптимизаций
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/storage.OptimizationSession'
+                  type: array
+              type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: История оптимизаций
+      tags:
+      - Search Optimization
+  /api/v1/admin/search/optimization-status/{session_id}:
+    get:
+      description: Возвращает текущий статус и результаты процесса оптимизации весов
+      parameters:
+      - description: ID сессии оптимизации
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус оптимизации
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/storage.OptimizationSession'
+              type: object
+        "400":
+          description: Неверный ID сессии
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Сессия не найдена
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получение статуса оптимизации
+      tags:
+      - Search Optimization
+  /api/v1/admin/search/optimize-weights:
+    post:
+      consumes:
+      - application/json
+      description: Запускает процесс машинного обучения для оптимизации весов полей
+        поиска на основе поведенческих данных
+      parameters:
+      - description: Параметры оптимизации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.StartOptimizationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Оптимизация запущена
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Неверные параметры
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Запуск оптимизации весов поиска
+      tags:
+      - Search Optimization
+  /api/v1/admin/search/rollback-weights:
+    post:
+      consumes:
+      - application/json
+      description: Откатывает веса поиска к предыдущим значениям
+      parameters:
+      - description: ID весов для отката
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Откат выполнен
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Неверные параметры
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Откат весов
+      tags:
+      - Search Optimization
+  /api/v1/admin/search/synonyms:
+    get:
+      description: Возвращает список синонимов для указанного языка с возможностью
+        поиска
+      parameters:
+      - description: Язык синонимов (en, ru, sr)
+        in: query
+        name: language
+        type: string
+      - description: Поиск по термину
+        in: query
+        name: search
+        type: string
+      - default: 1
+        description: Номер страницы
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Количество записей на странице
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список синонимов
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    additionalProperties: true
+                    type: object
+                  type: array
+              type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получение списка синонимов
+      tags:
+      - Search Synonyms
+    post:
+      consumes:
+      - application/json
+      description: Создает новый синоним для улучшения поиска
+      parameters:
+      - description: Данные синонима
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SynonymRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Синоним создан
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Неверные параметры
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "409":
+          description: Синоним уже существует
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Создание нового синонима
+      tags:
+      - Search Synonyms
+  /api/v1/admin/search/synonyms/{id}:
+    delete:
+      description: Удаляет синоним из системы
+      parameters:
+      - description: ID синонима
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Синоним удален
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Неверный ID синонима
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Синоним не найден
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Удаление синонима
+      tags:
+      - Search Synonyms
+    put:
+      consumes:
+      - application/json
+      description: Обновляет существующий синоним
+      parameters:
+      - description: ID синонима
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Обновленные данные синонима
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SynonymRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Синоним обновлен
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Неверные параметры
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "404":
+          description: Синоним не найден
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Обновление синонима
+      tags:
+      - Search Synonyms
   /api/v1/admin/sync-discounts:
     post:
       consumes:
@@ -7261,6 +8079,302 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
       summary: Record analytics event
+      tags:
+      - analytics
+  /api/v1/analytics/metrics/items:
+    get:
+      consumes:
+      - application/json
+      description: Returns aggregated metrics for items (products/listings)
+      parameters:
+      - description: Item type filter (marketplace, storefront)
+        in: query
+        name: item_type
+        type: string
+      - description: Period start date (RFC3339)
+        in: query
+        name: period_start
+        type: string
+      - description: Period end date (RFC3339)
+        in: query
+        name: period_end
+        type: string
+      - description: 'Limit results (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      - description: Sort by field (views, clicks, purchases, ctr, conversion_rate)
+        in: query
+        name: sort_by
+        type: string
+      - description: Order direction (asc, desc)
+        in: query
+        name: order_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item metrics
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/behavior.ItemMetrics'
+                  type: array
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Get item metrics
+      tags:
+      - analytics
+  /api/v1/analytics/metrics/search:
+    get:
+      consumes:
+      - application/json
+      description: Returns aggregated search metrics for analysis
+      parameters:
+      - description: Search query filter
+        in: query
+        name: query
+        type: string
+      - description: Period start date (RFC3339)
+        in: query
+        name: period_start
+        type: string
+      - description: Period end date (RFC3339)
+        in: query
+        name: period_end
+        type: string
+      - description: 'Limit results (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      - description: Sort by field (ctr, conversions, total_searches)
+        in: query
+        name: sort_by
+        type: string
+      - description: Order direction (asc, desc)
+        in: query
+        name: order_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search metrics
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.SearchMetricsResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Get search metrics
+      tags:
+      - analytics
+  /api/v1/analytics/metrics/update:
+    post:
+      consumes:
+      - application/json
+      description: Forces update of aggregated search metrics for a specific period
+      parameters:
+      - description: Period start date (RFC3339)
+        in: query
+        name: period_start
+        required: true
+        type: string
+      - description: Period end date (RFC3339)
+        in: query
+        name: period_end
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Metrics updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Admin access required
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update aggregated metrics
+      tags:
+      - analytics
+  /api/v1/analytics/sessions/{session_id}/events:
+    get:
+      consumes:
+      - application/json
+      description: Returns behavior events for a specific session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session events
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/behavior.BehaviorEvent'
+                  type: array
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Get session events
+      tags:
+      - analytics
+  /api/v1/analytics/track:
+    post:
+      consumes:
+      - application/json
+      description: Records user behavior events for analytics (supports both single
+        event and batch)
+      parameters:
+      - description: Event batch data
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/behavior.TrackEventBatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Events tracked successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "429":
+          description: Too many requests
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Track behavior events
+      tags:
+      - analytics
+  /api/v1/analytics/users/{user_id}/events:
+    get:
+      consumes:
+      - application/json
+      description: Returns behavior events for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: 'Limit results (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User events
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/behavior.BehaviorEvent'
+                  type: array
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Get user events
       tags:
       - analytics
   /api/v1/auth/login:
@@ -12157,572 +13271,6 @@ paths:
       summary: Unified search across all product types
       tags:
       - search
-  /api/v1/search/config:
-    get:
-      consumes:
-      - application/json
-      description: Get general search configuration settings
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Search configuration
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.SearchConfig'
-              type: object
-        "404":
-          description: Configuration not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Get search configuration
-      tags:
-      - search-config
-    put:
-      consumes:
-      - application/json
-      description: Update general search configuration settings
-      parameters:
-      - description: Search configuration
-        in: body
-        name: config
-        required: true
-        schema:
-          $ref: '#/definitions/domain.SearchConfig'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Updated configuration
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.SearchConfig'
-              type: object
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Update search configuration
-      tags:
-      - search-config
-  /api/v1/search/config/synonyms:
-    get:
-      consumes:
-      - application/json
-      description: Get all synonyms for search terms
-      parameters:
-      - description: 'Language code (default: ru)'
-        in: query
-        name: language
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of synonyms
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/domain.SearchSynonym'
-                  type: array
-              type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Get search synonyms
-      tags:
-      - search-config
-    post:
-      consumes:
-      - application/json
-      description: Create synonym mapping for search terms
-      parameters:
-      - description: Synonym configuration
-        in: body
-        name: synonym
-        required: true
-        schema:
-          $ref: '#/definitions/domain.SearchSynonym'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created synonym
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.SearchSynonym'
-              type: object
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Create search synonym
-      tags:
-      - search-config
-  /api/v1/search/config/synonyms/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete synonym mapping
-      parameters:
-      - description: Synonym ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Synonym deleted successfully
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "404":
-          description: Synonym not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Delete search synonym
-      tags:
-      - search-config
-    put:
-      consumes:
-      - application/json
-      description: Update synonym mapping for search terms
-      parameters:
-      - description: Synonym ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Updated synonym configuration
-        in: body
-        name: synonym
-        required: true
-        schema:
-          $ref: '#/definitions/domain.SearchSynonym'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Updated synonym
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.SearchSynonym'
-              type: object
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "404":
-          description: Synonym not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Update search synonym
-      tags:
-      - search-config
-  /api/v1/search/config/transliteration:
-    get:
-      consumes:
-      - application/json
-      description: Get all transliteration rules for search
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of transliteration rules
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/domain.TransliterationRule'
-                  type: array
-              type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Get transliteration rules
-      tags:
-      - search-config
-    post:
-      consumes:
-      - application/json
-      description: Create new transliteration rule for search
-      parameters:
-      - description: Transliteration rule
-        in: body
-        name: rule
-        required: true
-        schema:
-          $ref: '#/definitions/domain.TransliterationRule'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created rule
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.TransliterationRule'
-              type: object
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Create transliteration rule
-      tags:
-      - search-config
-  /api/v1/search/config/transliteration/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete transliteration rule
-      parameters:
-      - description: Rule ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Rule deleted successfully
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "404":
-          description: Rule not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Delete transliteration rule
-      tags:
-      - search-config
-    put:
-      consumes:
-      - application/json
-      description: Update existing transliteration rule
-      parameters:
-      - description: Rule ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Updated rule
-        in: body
-        name: rule
-        required: true
-        schema:
-          $ref: '#/definitions/domain.TransliterationRule'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Updated rule
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.TransliterationRule'
-              type: object
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "404":
-          description: Rule not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Update transliteration rule
-      tags:
-      - search-config
-  /api/v1/search/config/weights:
-    get:
-      consumes:
-      - application/json
-      description: Get weights for all searchable fields
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of search weights
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/domain.SearchWeight'
-                  type: array
-              type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Get all search field weights
-      tags:
-      - search-config
-    post:
-      consumes:
-      - application/json
-      description: Create weight configuration for a search field
-      parameters:
-      - description: Weight configuration
-        in: body
-        name: weight
-        required: true
-        schema:
-          $ref: '#/definitions/domain.SearchWeight'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created weight
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.SearchWeight'
-              type: object
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Create new search weight
-      tags:
-      - search-config
-  /api/v1/search/config/weights/{field}:
-    get:
-      consumes:
-      - application/json
-      description: Get weight configuration for a specific search field
-      parameters:
-      - description: Field name
-        in: path
-        name: field
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Search weight details
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.SearchWeight'
-              type: object
-        "404":
-          description: Weight not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Get weight for specific field
-      tags:
-      - search-config
-  /api/v1/search/config/weights/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete weight configuration for a search field
-      parameters:
-      - description: Weight ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Weight deleted successfully
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "404":
-          description: Weight not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Delete search weight
-      tags:
-      - search-config
-    put:
-      consumes:
-      - application/json
-      description: Update weight configuration for a search field
-      parameters:
-      - description: Weight ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Updated weight configuration
-        in: body
-        name: weight
-        required: true
-        schema:
-          $ref: '#/definitions/domain.SearchWeight'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Updated weight
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.SearchWeight'
-              type: object
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "404":
-          description: Weight not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Update search weight
-      tags:
-      - search-config
-  /api/v1/search/statistics:
-    get:
-      consumes:
-      - application/json
-      description: Get recent search statistics
-      parameters:
-      - description: 'Limit results (default: 100)'
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Search statistics
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/domain.SearchStatistics'
-                  type: array
-              type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Get search statistics
-      tags:
-      - search-config
-  /api/v1/search/statistics/popular:
-    get:
-      consumes:
-      - application/json
-      description: Get most popular search queries from last 7 days
-      parameters:
-      - description: 'Limit results (default: 10)'
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Popular searches
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    additionalProperties: true
-                    type: object
-                  type: array
-              type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Get popular searches
-      tags:
-      - search-config
   /api/v1/storefronts:
     get:
       consumes:

@@ -7,6 +7,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_user_privacy_settings_updated_at ON user_privacy_settings;
 CREATE TRIGGER update_user_privacy_settings_updated_at
     BEFORE UPDATE ON user_privacy_settings
     FOR EACH ROW

@@ -58,11 +58,11 @@ CREATE TABLE IF NOT EXISTS storefronts (
 );
 
 -- Create indexes for storefronts
-CREATE INDEX idx_storefronts_user_id ON storefronts(user_id);
-CREATE INDEX idx_storefronts_slug ON storefronts(slug);
-CREATE INDEX idx_storefronts_city ON storefronts(city);
-CREATE INDEX idx_storefronts_is_active ON storefronts(is_active);
-CREATE INDEX idx_storefronts_rating ON storefronts(rating DESC);
+CREATE INDEX IF NOT EXISTS idx_storefronts_user_id ON storefronts(user_id);
+CREATE INDEX IF NOT EXISTS idx_storefronts_slug ON storefronts(slug);
+CREATE INDEX IF NOT EXISTS idx_storefronts_city ON storefronts(city);
+CREATE INDEX IF NOT EXISTS idx_storefronts_is_active ON storefronts(is_active);
+CREATE INDEX IF NOT EXISTS idx_storefronts_rating ON storefronts(rating DESC);
 
 -- Storefront staff/employees
 CREATE TABLE IF NOT EXISTS storefront_staff (
@@ -78,8 +78,8 @@ CREATE TABLE IF NOT EXISTS storefront_staff (
     UNIQUE(storefront_id, user_id)
 );
 
-CREATE INDEX idx_staff_storefront_id ON storefront_staff(storefront_id);
-CREATE INDEX idx_staff_user_id ON storefront_staff(user_id);
+CREATE INDEX IF NOT EXISTS idx_staff_storefront_id ON storefront_staff(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_staff_user_id ON storefront_staff(user_id);
 
 -- Working hours
 CREATE TABLE IF NOT EXISTS storefront_hours (
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS storefront_hours (
     UNIQUE(storefront_id, day_of_week, special_date)
 );
 
-CREATE INDEX idx_hours_storefront_id ON storefront_hours(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_hours_storefront_id ON storefront_hours(storefront_id);
 
 -- Payment methods
 CREATE TABLE IF NOT EXISTS storefront_payment_methods (
@@ -110,8 +110,8 @@ CREATE TABLE IF NOT EXISTS storefront_payment_methods (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_payment_storefront_id ON storefront_payment_methods(storefront_id);
-CREATE INDEX idx_payment_is_enabled ON storefront_payment_methods(is_enabled);
+CREATE INDEX IF NOT EXISTS idx_payment_storefront_id ON storefront_payment_methods(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_payment_is_enabled ON storefront_payment_methods(is_enabled);
 
 -- Delivery options
 CREATE TABLE IF NOT EXISTS storefront_delivery_options (
@@ -139,8 +139,8 @@ CREATE TABLE IF NOT EXISTS storefront_delivery_options (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_delivery_storefront_id ON storefront_delivery_options(storefront_id);
-CREATE INDEX idx_delivery_is_active ON storefront_delivery_options(is_active);
+CREATE INDEX IF NOT EXISTS idx_delivery_storefront_id ON storefront_delivery_options(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_delivery_is_active ON storefront_delivery_options(is_active);
 
 -- Analytics and metrics
 CREATE TABLE IF NOT EXISTS storefront_analytics (
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS storefront_analytics (
     UNIQUE(storefront_id, date)
 );
 
-CREATE INDEX idx_analytics_storefront_date ON storefront_analytics(storefront_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_storefront_date ON storefront_analytics(storefront_id, date DESC);
 
 -- Create storefront_products table
 CREATE TABLE IF NOT EXISTS storefront_products (
@@ -189,14 +189,14 @@ CREATE TABLE IF NOT EXISTS storefront_products (
 );
 
 -- Create indexes for storefront_products
-CREATE INDEX idx_storefront_products_storefront_id ON storefront_products(storefront_id);
-CREATE INDEX idx_storefront_products_category_id ON storefront_products(category_id);
-CREATE INDEX idx_storefront_products_stock_status ON storefront_products(stock_status);
-CREATE INDEX idx_storefront_products_is_active ON storefront_products(is_active);
-CREATE INDEX idx_storefront_products_sku ON storefront_products(sku) WHERE sku IS NOT NULL;
-CREATE INDEX idx_storefront_products_barcode ON storefront_products(barcode) WHERE barcode IS NOT NULL;
-CREATE INDEX idx_storefront_products_external_id ON storefront_products(external_id) WHERE external_id IS NOT NULL;
-CREATE INDEX idx_storefront_products_name_gin ON storefront_products USING gin(to_tsvector('simple', name));
+CREATE INDEX IF NOT EXISTS idx_storefront_products_storefront_id ON storefront_products(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_products_category_id ON storefront_products(category_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_products_stock_status ON storefront_products(stock_status);
+CREATE INDEX IF NOT EXISTS idx_storefront_products_is_active ON storefront_products(is_active);
+CREATE INDEX IF NOT EXISTS idx_storefront_products_sku ON storefront_products(sku) WHERE sku IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_storefront_products_barcode ON storefront_products(barcode) WHERE barcode IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_storefront_products_external_id ON storefront_products(external_id) WHERE external_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_storefront_products_name_gin ON storefront_products USING gin(to_tsvector('simple', name));
 
 -- Create storefront_product_images table
 CREATE TABLE IF NOT EXISTS storefront_product_images (
@@ -209,8 +209,8 @@ CREATE TABLE IF NOT EXISTS storefront_product_images (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_storefront_product_images_product_id ON storefront_product_images(storefront_product_id);
-CREATE INDEX idx_storefront_product_images_display_order ON storefront_product_images(display_order);
+CREATE INDEX IF NOT EXISTS idx_storefront_product_images_product_id ON storefront_product_images(storefront_product_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_product_images_display_order ON storefront_product_images(display_order);
 
 -- Create storefront_product_variants table
 CREATE TABLE IF NOT EXISTS storefront_product_variants (
@@ -226,9 +226,9 @@ CREATE TABLE IF NOT EXISTS storefront_product_variants (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_storefront_product_variants_product_id ON storefront_product_variants(storefront_product_id);
-CREATE INDEX idx_storefront_product_variants_sku ON storefront_product_variants(sku) WHERE sku IS NOT NULL;
-CREATE INDEX idx_storefront_product_variants_is_active ON storefront_product_variants(is_active);
+CREATE INDEX IF NOT EXISTS idx_storefront_product_variants_product_id ON storefront_product_variants(storefront_product_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_product_variants_sku ON storefront_product_variants(sku) WHERE sku IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_storefront_product_variants_is_active ON storefront_product_variants(is_active);
 
 -- Create storefront_inventory_movements table
 CREATE TABLE IF NOT EXISTS storefront_inventory_movements (
@@ -244,15 +244,15 @@ CREATE TABLE IF NOT EXISTS storefront_inventory_movements (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_storefront_inventory_movements_product_id ON storefront_inventory_movements(storefront_product_id);
-CREATE INDEX idx_storefront_inventory_movements_variant_id ON storefront_inventory_movements(variant_id) WHERE variant_id IS NOT NULL;
-CREATE INDEX idx_storefront_inventory_movements_type ON storefront_inventory_movements(type);
-CREATE INDEX idx_storefront_inventory_movements_created_at ON storefront_inventory_movements(created_at);
+CREATE INDEX IF NOT EXISTS idx_storefront_inventory_movements_product_id ON storefront_inventory_movements(storefront_product_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_inventory_movements_variant_id ON storefront_inventory_movements(variant_id) WHERE variant_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_storefront_inventory_movements_type ON storefront_inventory_movements(type);
+CREATE INDEX IF NOT EXISTS idx_storefront_inventory_movements_created_at ON storefront_inventory_movements(created_at);
 
 -- Add unique constraints
-CREATE UNIQUE INDEX unique_storefront_product_sku ON storefront_products (storefront_id, sku) WHERE sku IS NOT NULL;
-CREATE UNIQUE INDEX unique_storefront_product_barcode ON storefront_products (storefront_id, barcode) WHERE barcode IS NOT NULL;
-CREATE UNIQUE INDEX unique_variant_sku ON storefront_product_variants (storefront_product_id, sku) WHERE sku IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS unique_storefront_product_sku ON storefront_products (storefront_id, sku) WHERE sku IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS unique_storefront_product_barcode ON storefront_products (storefront_id, barcode) WHERE barcode IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS unique_variant_sku ON storefront_product_variants (storefront_product_id, sku) WHERE sku IS NOT NULL;
 
 -- Extended analytics fields
 ALTER TABLE storefront_analytics
@@ -285,10 +285,10 @@ CREATE TABLE IF NOT EXISTS storefront_events (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_storefront_events_storefront ON storefront_events(storefront_id);
-CREATE INDEX idx_storefront_events_type ON storefront_events(event_type);
-CREATE INDEX idx_storefront_events_created ON storefront_events(created_at);
-CREATE INDEX idx_storefront_events_session ON storefront_events(session_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_events_storefront ON storefront_events(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_events_type ON storefront_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_storefront_events_created ON storefront_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_storefront_events_session ON storefront_events(session_id);
 
 -- Import jobs table
 CREATE TABLE import_jobs (
@@ -310,9 +310,9 @@ CREATE TABLE import_jobs (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_import_jobs_storefront_id ON import_jobs(storefront_id);
-CREATE INDEX idx_import_jobs_status ON import_jobs(status);
-CREATE INDEX idx_import_jobs_created_at ON import_jobs(created_at);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_storefront_id ON import_jobs(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_status ON import_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_created_at ON import_jobs(created_at);
 
 -- Import errors table
 CREATE TABLE import_errors (
@@ -325,8 +325,8 @@ CREATE TABLE import_errors (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_import_errors_job_id ON import_errors(job_id);
-CREATE INDEX idx_import_errors_line_number ON import_errors(line_number);
+CREATE INDEX IF NOT EXISTS idx_import_errors_job_id ON import_errors(job_id);
+CREATE INDEX IF NOT EXISTS idx_import_errors_line_number ON import_errors(line_number);
 
 -- Category mappings table
 CREATE TABLE category_mappings (
@@ -342,8 +342,8 @@ CREATE TABLE category_mappings (
     UNIQUE(storefront_id, import_category1, import_category2, import_category3)
 );
 
-CREATE INDEX idx_category_mappings_storefront_id ON category_mappings(storefront_id);
-CREATE INDEX idx_category_mappings_import_categories ON category_mappings(import_category1, import_category2, import_category3);
+CREATE INDEX IF NOT EXISTS idx_category_mappings_storefront_id ON category_mappings(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_category_mappings_import_categories ON category_mappings(import_category1, import_category2, import_category3);
 
 -- Link listings to storefronts
 ALTER TABLE marketplace_listings
@@ -367,7 +367,8 @@ COMMENT ON COLUMN storefront_products.stock_status IS 'Calculated based on stock
 COMMENT ON COLUMN storefront_inventory_movements.type IS 'Type of movement: in, out, adjustment';
 COMMENT ON COLUMN storefront_inventory_movements.reason IS 'Reason: sale, return, damage, restock, adjustment';
 
--- Create trigger to update updated_at timestamp
+-- DROP TRIGGER IF EXISTS to ON update_import_tables_updated_at;
+CREATE TRIGGER to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_import_tables_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -376,11 +377,13 @@ RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_import_jobs_updated_at ON import_jobs;
 CREATE TRIGGER trigger_import_jobs_updated_at
   BEFORE UPDATE ON import_jobs
   FOR EACH ROW
   EXECUTE FUNCTION update_import_tables_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_category_mappings_updated_at ON category_mappings;
 CREATE TRIGGER trigger_category_mappings_updated_at
   BEFORE UPDATE ON category_mappings
   FOR EACH ROW

@@ -35,6 +35,7 @@ $$ LANGUAGE plpgsql;
 
 -- Создаем триггер для автоматического обновления порядка сортировки
 DROP TRIGGER IF EXISTS tr_update_category_attribute_sort_order ON category_attribute_mapping;
+DROP TRIGGER IF EXISTS tr_update_category_attribute_sort_order ON category_attribute_mapping;
 CREATE TRIGGER tr_update_category_attribute_sort_order
 BEFORE INSERT ON category_attribute_mapping
 FOR EACH ROW

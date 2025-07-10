@@ -359,8 +359,7 @@
       "productTypes": "Product Types",
       "byDate": "By Date",
       "filters": "Filters",
-      "resultsFor": "Search results for",
-      "popularSearches": "Popular Searches"
+      "resultsFor": "Search results for"
     }
   },
   "blog": {
@@ -647,11 +646,6 @@
     "common": {
       "loading": "Loading..."
     },
-    "pagination": {
-      "showing": "Showing",
-      "of": "of",
-      "itemsPerPage": "Items per page"
-    },
     "sections": {
       "dashboard": "Dashboard",
       "catalog": "Catalog",
@@ -661,13 +655,12 @@
       "content": "Content",
       "listings": "Listings",
       "users": "Users",
-      "system": "System",
-      "search": "Search",
+      "analytics": "Analytics",
+      "search": "Search Analytics",
       "usersDescription": "Manage user accounts and permissions",
       "listingsDescription": "Moderate and manage marketplace listings",
       "categoriesDescription": "Configure categories and attributes",
-      "attributesDescription": "Manage product attributes and their types",
-      "attributeGroupsDescription": "Organize attributes into logical groups"
+      "searchDescription": "Analyze search performance and user behavior"
     },
     "categories": {
       "title": "Categories",
@@ -836,148 +829,180 @@
       }
     },
     "search": {
-      "title": "Search Management",
-      "dashboard": {
-        "tab": "Overview",
-        "totalSearches": "Total Searches",
-        "avgResponseTime": "Average Response Time",
-        "searchPerformance": "Search Performance",
-        "topQueries": "Top Queries",
-        "uniqueQueries": "Unique Queries",
-        "last30Days": "Last 30 days",
-        "popularQueries": "Popular Queries",
-        "query": "Query",
-        "count": "Count",
-        "relevance": "Relevance",
-        "categoryDistribution": "Category Distribution",
-        "deviceDistribution": "Device Distribution",
-        "noDeviceData": "No device data available",
-        "error": "Error loading data",
-        "noData": "No data to display"
-      },
-      "weights": {
-        "tab": "Search Weights",
-        "global": "Global Weights",
-        "perCategory": "Per Category Weights",
-        "field": "Field",
-        "weight": "Weight",
-        "description": "Description",
-        "save": "Save Weights",
-        "fetchError": "Error loading weights",
-        "saveSuccess": "Weights saved successfully",
-        "saveError": "Error saving weights",
-        "title": "Title",
-        "titleDesc": "Listing title weight",
-        "descriptionDesc": "Description weight",
-        "attributesDesc": "Attributes weight",
-        "categoryDesc": "Category weight",
-        "tagsDesc": "Tags weight"
-      },
-      "listings": {
-        "title": "Listings Management",
-        "comingSoon": "Coming Soon",
-        "description": "Moderate and manage marketplace listings"
-      },
-      "users": {
-        "title": "User Management",
-        "comingSoon": "Coming Soon",
-        "description": "Manage user accounts and permissions"
+      "title": "Search Analytics",
+      "description": "Analyze search performance and user behavior metrics",
+      "tabs": {
+        "analytics": "Analytics",
+        "behavior": "Behavior",
+        "weights": "Search Weights",
+        "synonyms": "Synonyms",
+        "optimization": "Optimization"
       },
       "analytics": {
-        "tab": "Analytics",
-        "last24h": "24 hours",
-        "last7d": "7 days",
-        "last30d": "30 days",
-        "last90d": "90 days",
-        "export": "Export",
-        "totalSearches": "Total Searches",
-        "uniqueQueries": "Unique Queries",
-        "avgSearchTime": "Avg Search Time",
-        "zeroResultsRate": "Zero Results Rate",
-        "clickThroughRate": "CTR",
-        "topQueries": "Top Queries",
-        "zeroResultQueries": "Zero Result Queries",
-        "query": "Query",
-        "count": "Count",
-        "avgResults": "Avg Results",
-        "avgClickPos": "Avg Click Position",
-        "lastSearched": "Last Searched",
-        "fetchError": "Error loading analytics",
-        "exportSuccess": "Data exported successfully",
-        "exportError": "Error exporting data"
+        "title": "Search Analytics Overview",
+        "description": "General search performance metrics and statistics",
+        "loadError": "Failed to load analytics data",
+        "timeRange": "Time Range",
+        "exportCSV": "Export CSV",
+        "ranges": {
+          "24h": "Last 24 Hours",
+          "7d": "Last 7 Days",
+          "30d": "Last 30 Days",
+          "90d": "Last 90 Days"
+        },
+        "metrics": {
+          "totalSearches": "Total Searches",
+          "uniqueQueries": "Unique Queries",
+          "avgResponseTime": "Avg Response Time",
+          "zeroResults": "Zero Results",
+          "avgCTR": "Average CTR",
+          "conversionRate": "Conversion Rate"
+        },
+        "charts": {
+          "searchTrends": "Search Trends",
+          "ctrTrends": "CTR Trends",
+          "topQueries": "Top Queries Distribution"
+        },
+        "topQueries": {
+          "title": "Top Search Queries with Relevance Analysis",
+          "query": "Query",
+          "count": "Count",
+          "ctr": "CTR",
+          "avgPosition": "Avg Position",
+          "avgResults": "Avg Results",
+          "relevance": "Relevance Score"
+        }
+      },
+      "weights": {
+        "title": "Search Weights Configuration",
+        "description": "Configure search algorithm weights and parameters"
+      },
+      "behavior": {
+        "title": "Behavioral Analytics",
+        "loadError": "Failed to load analytics data",
+        "filters": {
+          "title": "Filters",
+          "period": "Period",
+          "periods": {
+            "day": "Last Day",
+            "week": "Last Week",
+            "month": "Last Month"
+          },
+          "limit": "Results Limit"
+        },
+        "metrics": {
+          "totalClicks": "Total Clicks",
+          "avgCTR": "Average CTR",
+          "avgPosition": "Avg Click Position",
+          "conversionRate": "Conversion Rate"
+        },
+        "ctr": {
+          "title": "Click-Through Rate Over Time",
+          "label": "CTR %",
+          "chartTitle": "CTR Trend Analysis"
+        },
+        "searchClicks": {
+          "title": "Searches vs Clicks",
+          "chartTitle": "Search Volume and Click Activity"
+        },
+        "searches": "Searches",
+        "clicks": "Clicks",
+        "topQueries": {
+          "title": "Top Performing Search Queries",
+          "query": "Query",
+          "searches": "Searches",
+          "ctr": "CTR",
+          "avgPosition": "Avg Position",
+          "avgResults": "Avg Results"
+        },
+        "itemPerformance": {
+          "title": "Item Performance Analytics",
+          "item": "Item",
+          "impressions": "Impressions",
+          "clicks": "Clicks",
+          "ctr": "CTR",
+          "avgPosition": "Avg Position",
+          "conversions": "Conversions"
+        }
       },
       "synonyms": {
-        "tab": "Synonyms",
-        "language": "Language",
+        "title": "Synonym Management",
+        "description": "Manage search synonyms to improve search results",
+        "addSynonym": "Add Synonym",
         "search": "Search",
         "searchPlaceholder": "Search synonyms...",
-        "addNew": "Add Synonym",
-        "word": "Word",
-        "wordPlaceholder": "Enter word",
-        "synonymsList": "Synonyms",
-        "synonymsPlaceholder": "Enter synonyms separated by comma",
+        "language": "Language",
+        "term": "Term",
+        "synonym": "Synonym",
+        "termPlaceholder": "Enter main term",
+        "synonymPlaceholder": "Enter synonym",
+        "active": "Active",
+        "inactive": "Inactive",
         "status": "Status",
+        "created": "Created",
         "actions": "Actions",
-        "add": "Add",
         "edit": "Edit",
+        "delete": "Delete",
         "save": "Save",
         "cancel": "Cancel",
-        "delete": "Delete",
-        "fillAllFields": "Please fill in all fields",
-        "deleteConfirm": "Are you sure you want to delete this synonym?",
-        "fetchError": "Error loading synonyms",
-        "addSuccess": "Synonym added successfully",
-        "addError": "Error adding synonym",
-        "updateSuccess": "Synonym updated successfully",
-        "updateError": "Error updating synonym",
-        "deleteSuccess": "Synonym deleted successfully",
-        "deleteError": "Error deleting synonym"
+        "create": "Create",
+        "synonymsList": "Synonyms List",
+        "total": "Total",
+        "noSynonyms": "No synonyms found",
+        "confirmDelete": "Are you sure you want to delete this synonym?"
       },
-      "transliteration": {
-        "tab": "Transliteration",
-        "addRule": "Add Rule",
-        "existingRules": "Existing Rules",
-        "from": "From",
-        "to": "To",
-        "language": "Language",
-        "status": "Status",
-        "actions": "Actions",
-        "delete": "Delete",
-        "fillFields": "Please fill in all fields",
-        "ruleAdded": "Rule added",
-        "ruleDeleted": "Rule deleted",
-        "ruleUpdated": "Rule updated",
-        "fetchError": "Error loading rules",
-        "saveError": "Error saving",
-        "deleteError": "Error deleting",
-        "updateError": "Error updating",
-        "info": "Transliteration rules help users find content even when using different alphabets"
-      },
-      "config": {
-        "tab": "Settings",
-        "general": "General Settings",
-        "maxResults": "Max Results",
-        "defaultSort": "Default Sort",
-        "relevance": "Relevance",
-        "date": "Date",
-        "price": "Price",
-        "fuzzySearch": "Fuzzy Search",
-        "enableFuzzySearch": "Enable Fuzzy Search",
-        "fuzzyThreshold": "Fuzzy Threshold",
-        "features": "Features",
-        "enableSynonyms": "Enable Synonyms",
-        "enableTransliteration": "Enable Transliteration",
-        "enableAnalytics": "Enable Analytics",
-        "debugMode": "Debug Mode",
-        "caching": "Caching",
-        "enableCache": "Enable Cache",
-        "cacheTimeout": "Cache Timeout (seconds)",
-        "save": "Save",
-        "reset": "Reset",
-        "saved": "Settings saved",
-        "fetchError": "Error loading settings",
-        "saveError": "Error saving settings",
-        "debugWarning": "Debug mode enabled! This may affect performance."
+      "optimization": {
+        "title": "Automatic Weight Optimization",
+        "description": "Machine learning for optimizing search weights based on behavioral data",
+        "startOptimization": "Start Optimization",
+        "optimizing": "Optimizing...",
+        "quickAnalysis": "Quick Analysis",
+        "analyzing": "Analyzing...",
+        "cancel": "Cancel",
+        "contentType": "Content Type",
+        "analysisPeriod": "Analysis Period (days)",
+        "minSampleSize": "Minimum Sample Size",
+        "confidenceLevel": "Confidence Level",
+        "advancedParams": "Advanced Machine Learning Parameters",
+        "learningRate": "Learning Rate",
+        "maxIterations": "Maximum Iterations",
+        "autoApply": "Automatically apply optimized weights",
+        "autoApplyWarning": "WARNING: Recommended to analyze results first",
+        "contentTypes": {
+          "global": "Global Weights",
+          "marketplace": "Marketplace",
+          "storefront": "Storefront"
+        },
+        "progress": {
+          "title": "Optimization Progress",
+          "processed": "Processed Fields",
+          "status": "Status",
+          "started": "Started"
+        },
+        "results": {
+          "optimizationTitle": "Optimization Results",
+          "analysisTitle": "Analysis Results",
+          "applySelected": "Apply Selected",
+          "field": "Field",
+          "currentWeight": "Current Weight",
+          "optimizedWeight": "Optimized Weight",
+          "improvement": "CTR Improvement",
+          "confidence": "Confidence",
+          "sample": "Sample",
+          "currentCTR": "Current CTR",
+          "predictedCTR": "Predicted CTR"
+        },
+        "safety": {
+          "title": "Important Safety Considerations:",
+          "checkResults": "Check results before applying",
+          "testSmall": "Recommended to test on small sample",
+          "backup": "Create backup before applying",
+          "monitor": "Monitor metrics after changes"
+        },
+        "messages": {
+          "weightsApplied": "Selected weights successfully applied!",
+          "weightsApplyError": "Error applying weights"
+        }
       }
     }
   },
@@ -2428,6 +2453,67 @@
       "in_stock": "In Stock",
       "low_stock": "Low Stock",
       "out_of_stock": "Out of Stock"
+    }
+  },
+  "analytics": {
+    "error": {
+      "rate_limit_exceeded": "Too many requests. Please try again later.",
+      "invalid_request": "Invalid request format",
+      "validation_failed": "Request validation failed",
+      "failed_to_track": "Failed to track event",
+      "failed_to_get_metrics": "Failed to retrieve metrics",
+      "invalid_period_start": "Invalid start date format",
+      "invalid_period_end": "Invalid end date format",
+      "failed_to_get_events": "Failed to retrieve events",
+      "invalid_user_id": "Invalid user ID",
+      "invalid_session_id": "Invalid session ID",
+      "period_required": "Period start and end dates are required",
+      "failed_to_update_metrics": "Failed to update metrics"
+    }
+  },
+  "behaviorTracking": {
+    "error": {
+      "initialization_failed": "Failed to initialize behavior tracking",
+      "session_generation_failed": "Failed to generate tracking session",
+      "event_send_failed": "Failed to send tracking event",
+      "batch_send_failed": "Failed to send event batch",
+      "retry_limit_exceeded": "Maximum retry attempts exceeded",
+      "invalid_event_data": "Invalid event data format",
+      "network_error": "Network error occurred during tracking",
+      "api_error": "API error occurred during tracking",
+      "storage_error": "Local storage error occurred",
+      "context_update_failed": "Failed to update tracking context",
+      "flush_failed": "Failed to flush pending events",
+      "disabled": "Behavior tracking is disabled",
+      "not_initialized": "Behavior tracking not initialized",
+      "invalid_batch_data": "Invalid batch data format",
+      "timeout": "Request timed out",
+      "server_error": "Server error occurred"
+    },
+    "success": {
+      "initialized": "Behavior tracking initialized successfully",
+      "event_sent": "Event sent successfully",
+      "batch_sent": "Event batch sent successfully",
+      "context_updated": "Tracking context updated",
+      "events_flushed": "Pending events flushed successfully",
+      "session_created": "New tracking session created"
+    },
+    "events": {
+      "search_performed": "Search performed",
+      "result_clicked": "Search result clicked",
+      "item_viewed": "Item viewed",
+      "item_purchased": "Item purchased",
+      "search_filter_applied": "Search filter applied",
+      "search_sort_changed": "Search sort changed"
+    },
+    "states": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "initializing": "Initializing...",
+      "sending": "Sending events...",
+      "retrying": "Retrying...",
+      "failed": "Failed",
+      "ready": "Ready"
     }
   }
 }

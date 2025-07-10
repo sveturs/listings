@@ -201,31 +201,31 @@ CREATE TABLE schema_migrations (
 );
 
 -- Create indexes
-CREATE INDEX idx_users_phone ON users(phone);
-CREATE INDEX idx_users_status ON users(account_status);
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(account_status);
 
-CREATE INDEX idx_marketplace_messages_chat ON marketplace_messages(chat_id);
-CREATE INDEX idx_marketplace_messages_listing ON marketplace_messages(listing_id);
-CREATE INDEX idx_marketplace_messages_sender ON marketplace_messages(sender_id);
-CREATE INDEX idx_marketplace_messages_receiver ON marketplace_messages(receiver_id);
-CREATE INDEX idx_marketplace_messages_created ON marketplace_messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_chat ON marketplace_messages(chat_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_listing ON marketplace_messages(listing_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_sender ON marketplace_messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_receiver ON marketplace_messages(receiver_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_messages_created ON marketplace_messages(created_at);
 
-CREATE INDEX idx_marketplace_chats_buyer ON marketplace_chats(buyer_id);
-CREATE INDEX idx_marketplace_chats_seller ON marketplace_chats(seller_id);
-CREATE INDEX idx_marketplace_chats_updated ON marketplace_chats(updated_at);
+CREATE INDEX IF NOT EXISTS idx_marketplace_chats_buyer ON marketplace_chats(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_chats_seller ON marketplace_chats(seller_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_chats_updated ON marketplace_chats(updated_at);
 
-CREATE INDEX idx_marketplace_listings_status ON marketplace_listings(status);
+CREATE INDEX IF NOT EXISTS idx_marketplace_listings_status ON marketplace_listings(status);
 
-CREATE INDEX idx_translations_lookup ON translations(entity_type, entity_id, language);
+CREATE INDEX IF NOT EXISTS idx_translations_lookup ON translations(entity_type, entity_id, language);
 
-CREATE INDEX idx_reviews_entity ON reviews(entity_type, entity_id);
-CREATE INDEX idx_reviews_user ON reviews(user_id);
-CREATE INDEX idx_reviews_rating ON reviews(rating);
-CREATE INDEX idx_reviews_status ON reviews(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_entity ON reviews(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status);
 
-CREATE INDEX idx_notifications_user ON notifications(user_id);
-CREATE INDEX idx_notifications_type ON notifications(type);
-CREATE INDEX idx_notifications_created ON notifications(created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at);
 
 -- Create trigger functions
 CREATE OR REPLACE FUNCTION update_marketplace_chats_updated_at()
@@ -284,36 +284,43 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers
+DROP TRIGGER IF EXISTS update_marketplace_chats_timestamp ON marketplace_chats;
 CREATE TRIGGER update_marketplace_chats_timestamp
     BEFORE UPDATE ON marketplace_chats
     FOR EACH ROW
     EXECUTE FUNCTION update_marketplace_chats_updated_at();
 
+DROP TRIGGER IF EXISTS update_marketplace_messages_timestamp ON marketplace_messages;
 CREATE TRIGGER update_marketplace_messages_timestamp
     BEFORE UPDATE ON marketplace_messages
     FOR EACH ROW
     EXECUTE FUNCTION update_marketplace_chats_updated_at();
 
+DROP TRIGGER IF EXISTS update_reviews_updated_at ON reviews;
 CREATE TRIGGER update_reviews_updated_at
     BEFORE UPDATE ON reviews
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_review_responses_updated_at ON review_responses;
 CREATE TRIGGER update_review_responses_updated_at
     BEFORE UPDATE ON review_responses
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW
     EXECUTE FUNCTION update_user_updated_at();
 
+DROP TRIGGER IF EXISTS update_notification_settings_timestamp ON notification_settings;
 CREATE TRIGGER update_notification_settings_timestamp
     BEFORE UPDATE ON notification_settings
     FOR EACH ROW
     EXECUTE FUNCTION update_notification_settings_updated_at();
 
+DROP TRIGGER IF EXISTS update_translations_timestamp ON translations;
 CREATE TRIGGER update_translations_timestamp
     BEFORE UPDATE ON translations
     FOR EACH ROW

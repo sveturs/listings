@@ -2,222 +2,289 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'react-hot-toast';
 
-interface TransliterationRule {
-  id: string;
-  from: string;
-  to: string;
-  language: 'sr' | 'en';
-  active: boolean;
+// Временные типы (до создания API)
+interface _TransliterationRule {
+  id: number;
+  source_char: string;
+  target_char: string;
+  language: 'ru' | 'sr';
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
+// Встроенные правила транслитерации (из slug.go)
+const BUILTIN_RULES = {
+  ru: [
+    { source_char: 'а', target_char: 'a' },
+    { source_char: 'б', target_char: 'b' },
+    { source_char: 'в', target_char: 'v' },
+    { source_char: 'г', target_char: 'g' },
+    { source_char: 'д', target_char: 'd' },
+    { source_char: 'е', target_char: 'e' },
+    { source_char: 'ё', target_char: 'yo' },
+    { source_char: 'ж', target_char: 'zh' },
+    { source_char: 'з', target_char: 'z' },
+    { source_char: 'и', target_char: 'i' },
+    { source_char: 'й', target_char: 'y' },
+    { source_char: 'к', target_char: 'k' },
+    { source_char: 'л', target_char: 'l' },
+    { source_char: 'м', target_char: 'm' },
+    { source_char: 'н', target_char: 'n' },
+    { source_char: 'о', target_char: 'o' },
+    { source_char: 'п', target_char: 'p' },
+    { source_char: 'р', target_char: 'r' },
+    { source_char: 'с', target_char: 's' },
+    { source_char: 'т', target_char: 't' },
+    { source_char: 'у', target_char: 'u' },
+    { source_char: 'ф', target_char: 'f' },
+    { source_char: 'х', target_char: 'h' },
+    { source_char: 'ц', target_char: 'ts' },
+    { source_char: 'ч', target_char: 'ch' },
+    { source_char: 'ш', target_char: 'sh' },
+    { source_char: 'щ', target_char: 'sch' },
+    { source_char: 'ъ', target_char: '' },
+    { source_char: 'ы', target_char: 'y' },
+    { source_char: 'ь', target_char: '' },
+    { source_char: 'э', target_char: 'e' },
+    { source_char: 'ю', target_char: 'yu' },
+    { source_char: 'я', target_char: 'ya' },
+  ],
+  sr: [
+    { source_char: 'ђ', target_char: 'đ' },
+    { source_char: 'ј', target_char: 'j' },
+    { source_char: 'љ', target_char: 'lj' },
+    { source_char: 'њ', target_char: 'nj' },
+    { source_char: 'ћ', target_char: 'ć' },
+    { source_char: 'џ', target_char: 'dž' },
+    { source_char: 'ш', target_char: 'š' },
+    { source_char: 'ж', target_char: 'ž' },
+    { source_char: 'ч', target_char: 'č' },
+    { source_char: 'Ђ', target_char: 'Đ' },
+    { source_char: 'Ј', target_char: 'J' },
+    { source_char: 'Љ', target_char: 'LJ' },
+    { source_char: 'Њ', target_char: 'NJ' },
+    { source_char: 'Ћ', target_char: 'Ć' },
+    { source_char: 'Џ', target_char: 'DŽ' },
+    { source_char: 'Ш', target_char: 'Š' },
+    { source_char: 'Ж', target_char: 'Ž' },
+    { source_char: 'Ч', target_char: 'Č' },
+  ],
+};
+
 export default function TransliterationConfig() {
-  const t = useTranslations();
-  const [rules, setRules] = useState<TransliterationRule[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [newRule, setNewRule] = useState<Omit<TransliterationRule, 'id'>>({
-    from: '',
-    to: '',
-    language: 'sr',
-    active: true,
-  });
+  const t = useTranslations('admin.search.transliteration');
+  const [selectedLanguage, setSelectedLanguage] = useState<'ru' | 'sr'>('ru');
+  const [testText, setTestText] = useState('');
+  const [transliteratedText, setTransliteratedText] = useState('');
+  const [newRule, setNewRule] = useState({ source_char: '', target_char: '' });
+  const [loading, setLoading] = useState(false);
 
+  // Простая функция транслитерации (пока без API)
+  const testTransliteration = (text: string, lang: 'ru' | 'sr') => {
+    let result = text.toLowerCase();
+    const rules = BUILTIN_RULES[lang];
+
+    rules.forEach((rule) => {
+      if (rule.target_char) {
+        result = result.replaceAll(rule.source_char, rule.target_char);
+      } else {
+        result = result.replaceAll(rule.source_char, '');
+      }
+    });
+
+    return result;
+  };
+
+  // Обновляем результат при изменении текста или языка
   useEffect(() => {
-    fetchRules();
-  }, []);
+    if (testText) {
+      setTransliteratedText(testTransliteration(testText, selectedLanguage));
+    } else {
+      setTransliteratedText('');
+    }
+  }, [testText, selectedLanguage]);
 
-  const fetchRules = async () => {
+  const handleAddRule = async () => {
+    if (!newRule.source_char || !newRule.target_char) return;
+
+    setLoading(true);
     try {
-      setLoading(true);
-      // Mock data for now since API may not be implemented
-      const mockRules: TransliterationRule[] = [
-        { id: '1', from: 'č', to: 'c', language: 'sr', active: true },
-        { id: '2', from: 'ć', to: 'c', language: 'sr', active: true },
-        { id: '3', from: 'š', to: 's', language: 'sr', active: true },
-        { id: '4', from: 'ž', to: 'z', language: 'sr', active: true },
-        { id: '5', from: 'đ', to: 'd', language: 'sr', active: true },
-      ];
-      setRules(mockRules);
+      // TODO: API вызов для добавления правила
+      console.log('Adding rule:', { ...newRule, language: selectedLanguage });
+      setNewRule({ source_char: '', target_char: '' });
     } catch (error) {
-      console.error('Error fetching transliteration rules:', error);
-      toast.error(t('admin.search.transliteration.fetchError'));
+      console.error('Failed to add rule:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddRule = async () => {
-    if (!newRule.from || !newRule.to) {
-      toast.error(t('admin.search.transliteration.fillFields'));
-      return;
-    }
-
-    try {
-      setSaving(true);
-      // Mock save - in real implementation, this would call an API
-      const rule: TransliterationRule = {
-        ...newRule,
-        id: Date.now().toString(),
-      };
-      setRules([...rules, rule]);
-      setNewRule({ from: '', to: '', language: 'sr', active: true });
-      toast.success(t('admin.search.transliteration.ruleAdded'));
-    } catch (error) {
-      console.error('Error adding rule:', error);
-      toast.error(t('admin.search.transliteration.saveError'));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteRule = async (id: string) => {
-    try {
-      setRules(rules.filter((rule) => rule.id !== id));
-      toast.success(t('admin.search.transliteration.ruleDeleted'));
-    } catch (error) {
-      console.error('Error deleting rule:', error);
-      toast.error(t('admin.search.transliteration.deleteError'));
-    }
-  };
-
-  const handleToggleRule = async (id: string) => {
-    try {
-      setRules(
-        rules.map((rule) =>
-          rule.id === id ? { ...rule, active: !rule.active } : rule
-        )
-      );
-      toast.success(t('admin.search.transliteration.ruleUpdated'));
-    } catch (error) {
-      console.error('Error updating rule:', error);
-      toast.error(t('admin.search.transliteration.updateError'));
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="loading loading-spinner loading-lg"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="card bg-base-100 shadow-xl">
+      {/* Заголовок */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">
+          {t('title', { defaultValue: 'Настройка транслитерации' })}
+        </h2>
+        <div className="badge badge-info">
+          {t('status', { defaultValue: 'В разработке' })}
+        </div>
+      </div>
+
+      {/* Выбор языка */}
+      <div className="card bg-base-100 shadow-md">
         <div className="card-body">
-          <h2 className="card-title">
-            {t('admin.search.transliteration.addRule')}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <h3 className="card-title">
+            {t('languageSelect', { defaultValue: 'Выбор языка' })}
+          </h3>
+          <div className="tabs tabs-boxed">
+            <button
+              className={`tab ${selectedLanguage === 'ru' ? 'tab-active' : ''}`}
+              onClick={() => setSelectedLanguage('ru')}
+            >
+              Русский
+            </button>
+            <button
+              className={`tab ${selectedLanguage === 'sr' ? 'tab-active' : ''}`}
+              onClick={() => setSelectedLanguage('sr')}
+            >
+              Српски
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Тестирование транслитерации */}
+      <div className="card bg-base-100 shadow-md">
+        <div className="card-body">
+          <h3 className="card-title">
+            {t('testing', { defaultValue: 'Тестирование транслитерации' })}
+          </h3>
+          <div className="space-y-4">
             <div className="form-control">
               <label className="label">
                 <span className="label-text">
-                  {t('admin.search.transliteration.from')}
+                  {t('inputText', {
+                    defaultValue: 'Введите текст для тестирования',
+                  })}
                 </span>
               </label>
-              <input
-                type="text"
-                className="input input-bordered"
-                value={newRule.from}
-                onChange={(e) =>
-                  setNewRule({ ...newRule, from: e.target.value })
+              <textarea
+                className="textarea textarea-bordered h-20"
+                placeholder={
+                  selectedLanguage === 'ru'
+                    ? 'Введите русский текст...'
+                    : 'Унесите српски текст...'
                 }
-                placeholder="č"
+                value={testText}
+                onChange={(e) => setTestText(e.target.value)}
               />
             </div>
             <div className="form-control">
               <label className="label">
                 <span className="label-text">
-                  {t('admin.search.transliteration.to')}
+                  {t('result', { defaultValue: 'Результат транслитерации' })}
                 </span>
               </label>
-              <input
-                type="text"
-                className="input input-bordered"
-                value={newRule.to}
-                onChange={(e) => setNewRule({ ...newRule, to: e.target.value })}
-                placeholder="c"
+              <textarea
+                className="textarea textarea-bordered h-20 bg-base-200"
+                value={transliteratedText}
+                readOnly
+                placeholder={t('resultPlaceholder', {
+                  defaultValue: 'Результат появится здесь...',
+                })}
               />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">
-                  {t('admin.search.transliteration.language')}
-                </span>
-              </label>
-              <select
-                className="select select-bordered"
-                value={newRule.language}
-                onChange={(e) =>
-                  setNewRule({
-                    ...newRule,
-                    language: e.target.value as 'sr' | 'en',
-                  })
-                }
-              >
-                <option value="sr">Српски</option>
-                <option value="en">English</option>
-              </select>
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">&nbsp;</span>
-              </label>
-              <button
-                className={`btn btn-primary ${saving ? 'loading' : ''}`}
-                onClick={handleAddRule}
-                disabled={saving}
-              >
-                {saving ? '' : t('admin.search.transliteration.addRule')}
-              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card bg-base-100 shadow-xl">
+      {/* Таблица правил */}
+      <div className="card bg-base-100 shadow-md">
         <div className="card-body">
-          <h2 className="card-title">
-            {t('admin.search.transliteration.existingRules')}
-          </h2>
+          <h3 className="card-title">
+            {t('rules', { defaultValue: 'Правила транслитерации' })} (
+            {selectedLanguage.toUpperCase()})
+          </h3>
+
+          {/* Добавление нового правила */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              className="input input-bordered input-sm flex-1"
+              placeholder={t('sourceChar', { defaultValue: 'Исходный символ' })}
+              value={newRule.source_char}
+              onChange={(e) =>
+                setNewRule({ ...newRule, source_char: e.target.value })
+              }
+              maxLength={2}
+            />
+            <input
+              type="text"
+              className="input input-bordered input-sm flex-1"
+              placeholder={t('targetChar', {
+                defaultValue: 'Целевой символ(ы)',
+              })}
+              value={newRule.target_char}
+              onChange={(e) =>
+                setNewRule({ ...newRule, target_char: e.target.value })
+              }
+              maxLength={5}
+            />
+            <button
+              className={`btn btn-primary btn-sm ${loading ? 'loading' : ''}`}
+              onClick={handleAddRule}
+              disabled={!newRule.source_char || loading}
+            >
+              {t('add', { defaultValue: 'Добавить' })}
+            </button>
+          </div>
+
+          {/* Таблица встроенных правил */}
           <div className="overflow-x-auto">
-            <table className="table table-zebra">
+            <table className="table table-compact w-full">
               <thead>
                 <tr>
-                  <th>{t('admin.search.transliteration.from')}</th>
-                  <th>{t('admin.search.transliteration.to')}</th>
-                  <th>{t('admin.search.transliteration.language')}</th>
-                  <th>{t('admin.search.transliteration.status')}</th>
-                  <th>{t('admin.search.transliteration.actions')}</th>
+                  <th>
+                    {t('sourceChar', { defaultValue: 'Исходный символ' })}
+                  </th>
+                  <th>
+                    {t('targetChar', { defaultValue: 'Целевой символ(ы)' })}
+                  </th>
+                  <th>{t('type', { defaultValue: 'Тип' })}</th>
+                  <th>{t('actions', { defaultValue: 'Действия' })}</th>
                 </tr>
               </thead>
               <tbody>
-                {rules.map((rule) => (
-                  <tr key={rule.id}>
-                    <td className="font-mono text-lg">{rule.from}</td>
-                    <td className="font-mono text-lg">{rule.to}</td>
+                {BUILTIN_RULES[selectedLanguage].map((rule, index) => (
+                  <tr key={index}>
                     <td>
-                      <div className="badge badge-outline">
-                        {rule.language === 'sr' ? 'Српски' : 'English'}
+                      <code className="bg-base-200 px-2 py-1 rounded text-lg">
+                        {rule.source_char}
+                      </code>
+                    </td>
+                    <td>
+                      <code className="bg-base-200 px-2 py-1 rounded">
+                        {rule.target_char || '(удаление)'}
+                      </code>
+                    </td>
+                    <td>
+                      <div className="badge badge-ghost">
+                        {t('builtin', { defaultValue: 'Встроенное' })}
                       </div>
                     </td>
                     <td>
-                      <input
-                        type="checkbox"
-                        className="toggle toggle-primary"
-                        checked={rule.active}
-                        onChange={() => handleToggleRule(rule.id)}
-                      />
-                    </td>
-                    <td>
                       <button
-                        className="btn btn-error btn-sm"
-                        onClick={() => handleDeleteRule(rule.id)}
+                        className="btn btn-ghost btn-xs"
+                        disabled
+                        title={t('builtinNotEditable', {
+                          defaultValue:
+                            'Встроенные правила нельзя редактировать',
+                        })}
                       >
-                        {t('admin.search.transliteration.delete')}
+                        {t('edit', { defaultValue: 'Редактировать' })}
                       </button>
                     </td>
                   </tr>
@@ -228,12 +295,12 @@ export default function TransliterationConfig() {
         </div>
       </div>
 
+      {/* Информация */}
       <div className="alert alert-info">
         <svg
-          xmlns="http://www.w3.org/2000/svg"
+          className="stroke-current shrink-0 h-6 w-6"
           fill="none"
           viewBox="0 0 24 24"
-          className="stroke-current shrink-0 w-6 h-6"
         >
           <path
             strokeLinecap="round"
@@ -242,7 +309,12 @@ export default function TransliterationConfig() {
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>{t('admin.search.transliteration.info')}</span>
+        <span>
+          {t('info', {
+            defaultValue:
+              "Транслитерация используется для создания URL-friendly slug'ов из названий на кириллице. Встроенные правила нельзя изменить, но можно добавить дополнительные.",
+          })}
+        </span>
       </div>
     </div>
   );

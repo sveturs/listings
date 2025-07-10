@@ -28,9 +28,9 @@ LEFT JOIN reviews r ON (
 GROUP BY u.id;
 
 -- Создаем индексы для материализованного представления
-CREATE UNIQUE INDEX idx_user_ratings_user_id ON user_ratings(user_id);
-CREATE INDEX idx_user_ratings_average ON user_ratings(average_rating DESC);
-CREATE INDEX idx_user_ratings_total ON user_ratings(total_reviews DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_ratings_user_id ON user_ratings(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_ratings_average ON user_ratings(average_rating DESC);
+CREATE INDEX IF NOT EXISTS idx_user_ratings_total ON user_ratings(total_reviews DESC);
 
 -- Создаем материализованное представление для рейтингов магазинов
 CREATE MATERIALIZED VIEW IF NOT EXISTS storefront_ratings AS
@@ -63,9 +63,9 @@ LEFT JOIN reviews r ON (
 GROUP BY s.id, s.user_id;
 
 -- Создаем индексы для материализованного представления магазинов
-CREATE UNIQUE INDEX idx_storefront_ratings_id ON storefront_ratings(storefront_id);
-CREATE INDEX idx_storefront_ratings_average ON storefront_ratings(average_rating DESC);
-CREATE INDEX idx_storefront_ratings_owner ON storefront_ratings(owner_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_storefront_ratings_id ON storefront_ratings(storefront_id);
+CREATE INDEX IF NOT EXISTS idx_storefront_ratings_average ON storefront_ratings(average_rating DESC);
+CREATE INDEX IF NOT EXISTS idx_storefront_ratings_owner ON storefront_ratings(owner_id);
 
 -- Создаем функцию для обновления материализованных представлений
 CREATE OR REPLACE FUNCTION refresh_rating_views() RETURNS TRIGGER AS $$
@@ -97,6 +97,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Создаем триггер для автоматического обновления представлений
+DROP TRIGGER IF EXISTS update_ratings_after_review_change ON reviews;
 CREATE TRIGGER update_ratings_after_review_change
 AFTER INSERT OR UPDATE OR DELETE ON reviews
 FOR EACH ROW
@@ -125,8 +126,8 @@ CREATE TABLE IF NOT EXISTS rating_cache (
 );
 
 -- Создаем индексы для быстрого доступа
-CREATE INDEX idx_rating_cache_type_rating ON rating_cache(entity_type, average_rating DESC);
-CREATE INDEX idx_rating_cache_updated ON rating_cache(calculated_at);
+CREATE INDEX IF NOT EXISTS idx_rating_cache_type_rating ON rating_cache(entity_type, average_rating DESC);
+CREATE INDEX IF NOT EXISTS idx_rating_cache_updated ON rating_cache(calculated_at);
 
 -- Комментарии для документации
 COMMENT ON MATERIALIZED VIEW user_ratings IS 'Агрегированные рейтинги пользователей с учетом всех типов отзывов';

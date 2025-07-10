@@ -18,6 +18,7 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/proj/analytics"
 	balanceHandler "backend/internal/proj/balance/handler"
+	"backend/internal/proj/behavior_tracking"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
@@ -30,32 +31,36 @@ import (
 	paymentHandler "backend/internal/proj/payments/handler"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
+	"backend/internal/proj/search_optimization"
 	"backend/internal/proj/storefronts"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
+	pkglogger "backend/pkg/logger"
 )
 
 type Server struct {
-	app           *fiber.App
-	cfg           *config.Config
-	users         *userHandler.Handler
-	middleware    *middleware.Middleware
-	review        *reviewHandler.Handler
-	marketplace   *marketplaceHandler.Handler
-	notifications *notificationHandler.Handler
-	balance       *balanceHandler.Handler
-	payments      *paymentHandler.Handler
-	orders        *orders.Module
-	storefront    *storefronts.Module
-	geocode       *geocodeHandler.Handler
-	contacts      *contactsHandler.Handler
-	docs          *docsHandler.Handler
-	analytics     *analytics.Module
-	global        *globalHandler.Handler
-	searchAdmin   *search_admin.Module
-	fileStorage   filestorage.FileStorageInterface
+	app                *fiber.App
+	cfg                *config.Config
+	users              *userHandler.Handler
+	middleware         *middleware.Middleware
+	review             *reviewHandler.Handler
+	marketplace        *marketplaceHandler.Handler
+	notifications      *notificationHandler.Handler
+	balance            *balanceHandler.Handler
+	payments           *paymentHandler.Handler
+	orders             *orders.Module
+	storefront         *storefronts.Module
+	geocode            *geocodeHandler.Handler
+	contacts           *contactsHandler.Handler
+	docs               *docsHandler.Handler
+	analytics          *analytics.Module
+	behaviorTracking   *behavior_tracking.Module
+	searchAdmin        *search_admin.Module
+	searchOptimization *search_optimization.Module
+	global             *globalHandler.Handler
+	fileStorage        filestorage.FileStorageInterface
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -99,7 +104,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	geocodeHandler := geocodeHandler.NewHandler(services)
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db)
+	behaviorTrackingModule := behavior_tracking.NewModule(db.GetPool())
 	searchAdminModule := search_admin.NewModule(db)
+	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -128,24 +135,26 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	})
 
 	server := &Server{
-		app:           app,
-		cfg:           cfg,
-		users:         usersHandler,
-		middleware:    middleware,
-		review:        reviewHandler,
-		marketplace:   marketplaceHandlerInstance,
-		notifications: notificationsHandler,
-		balance:       balanceHandler,
-		payments:      paymentsHandler,
-		orders:        ordersModule,
-		storefront:    storefrontModule,
-		geocode:       geocodeHandler,
-		contacts:      contactsHandler,
-		docs:          docsHandlerInstance,
-		analytics:     analyticsModule,
-		global:        globalHandlerInstance,
-		searchAdmin:   searchAdminModule,
-		fileStorage:   fileStorage,
+		app:                app,
+		cfg:                cfg,
+		users:              usersHandler,
+		middleware:         middleware,
+		review:             reviewHandler,
+		marketplace:        marketplaceHandlerInstance,
+		notifications:      notificationsHandler,
+		balance:            balanceHandler,
+		payments:           paymentsHandler,
+		orders:             ordersModule,
+		storefront:         storefrontModule,
+		geocode:            geocodeHandler,
+		contacts:           contactsHandler,
+		docs:               docsHandlerInstance,
+		analytics:          analyticsModule,
+		behaviorTracking:   behaviorTrackingModule,
+		searchAdmin:        searchAdminModule,
+		searchOptimization: searchOptimizationModule,
+		global:             globalHandlerInstance,
+		fileStorage:        fileStorage,
 	}
 
 	notificationsHandler.ConnectTelegramWebhook()
@@ -263,8 +272,9 @@ func (s *Server) registerProjectRoutes() {
 
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
-	registrars = append(registrars, s.global, s.notifications, s.searchAdmin, s.users, s.review, s.marketplace, s.balance, s.orders, s.storefront,
-		s.geocode, s.contacts, s.payments, s.docs, s.analytics)
+	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
+	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.marketplace, s.balance, s.orders, s.storefront,
+		s.geocode, s.contacts, s.payments, s.docs, s.analytics, s.behaviorTracking)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {

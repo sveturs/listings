@@ -2581,6 +2581,953 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/search/analyze-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Анализ текущих весов поиска
+     * @description Анализирует эффективность текущих весов без запуска полной оптимизации
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Параметры анализа */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.AnalyzeWeightsRequest'];
+        };
+      };
+      responses: {
+        /** @description Результаты анализа */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['storage.WeightOptimizationResult'][];
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/apply-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Применение оптимизированных весов
+     * @description Применяет выбранные оптимизированные веса к системе поиска
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Параметры применения весов */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.ApplyWeightsRequest'];
+        };
+      };
+      responses: {
+        /** @description Веса применены */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/backup-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Создание резервной копии весов
+     * @description Создает резервную копию текущих весов поиска для возможности отката
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Параметры резервной копии */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Резервная копия создана */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimization-cancel/{session_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Отмена оптимизации
+     * @description Отменяет запущенный процесс оптимизации весов
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID сессии оптимизации */
+          session_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Оптимизация отменена */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверный ID сессии */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimization-config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Конфигурация оптимизации
+     * @description Возвращает текущую конфигурацию параметров оптимизации весов
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Конфигурация оптимизации */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['service.OptimizationConfig'];
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Обновление конфигурации оптимизации
+     * @description Обновляет параметры оптимизации весов по умолчанию
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Новая конфигурация */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['service.OptimizationConfig'];
+        };
+      };
+      responses: {
+        /** @description Конфигурация обновлена */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверная конфигурация */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimization-history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * История оптимизаций
+     * @description Возвращает список последних сессий оптимизации весов
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Максимальное количество записей */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description История оптимизаций */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['storage.OptimizationSession'][];
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimization-status/{session_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получение статуса оптимизации
+     * @description Возвращает текущий статус и результаты процесса оптимизации весов
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID сессии оптимизации */
+          session_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Статус оптимизации */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['storage.OptimizationSession'];
+            };
+          };
+        };
+        /** @description Неверный ID сессии */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Сессия не найдена */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/optimize-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Запуск оптимизации весов поиска
+     * @description Запускает процесс машинного обучения для оптимизации весов полей поиска на основе поведенческих данных
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Параметры оптимизации */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.StartOptimizationRequest'];
+        };
+      };
+      responses: {
+        /** @description Оптимизация запущена */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/rollback-weights': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Откат весов
+     * @description Откатывает веса поиска к предыдущим значениям
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description ID весов для отката */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Откат выполнен */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/synonyms': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получение списка синонимов
+     * @description Возвращает список синонимов для указанного языка с возможностью поиска
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Язык синонимов (en, ru, sr) */
+          language?: string;
+          /** @description Поиск по термину */
+          search?: string;
+          /** @description Номер страницы */
+          page?: number;
+          /** @description Количество записей на странице */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Список синонимов */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              }[];
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Создание нового синонима
+     * @description Создает новый синоним для улучшения поиска
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные синонима */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.SynonymRequest'];
+        };
+      };
+      responses: {
+        /** @description Синоним создан */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Синоним уже существует */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/synonyms/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Обновление синонима
+     * @description Обновляет существующий синоним
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID синонима */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Обновленные данные синонима */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.SynonymRequest'];
+        };
+      };
+      responses: {
+        /** @description Синоним обновлен */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Синоним не найден */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Удаление синонима
+     * @description Удаляет синоним из системы
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID синонима */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Синоним удален */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Неверный ID синонима */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Синоним не найден */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/sync-discounts': {
     parameters: {
       query?: never;
@@ -3115,6 +4062,460 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/metrics/items': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get item metrics
+     * @description Returns aggregated metrics for items (products/listings)
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Item type filter (marketplace, storefront) */
+          item_type?: string;
+          /** @description Period start date (RFC3339) */
+          period_start?: string;
+          /** @description Period end date (RFC3339) */
+          period_end?: string;
+          /** @description Limit results (default: 20, max: 100) */
+          limit?: number;
+          /** @description Offset for pagination */
+          offset?: number;
+          /** @description Sort by field (views, clicks, purchases, ctr, conversion_rate) */
+          sort_by?: string;
+          /** @description Order direction (asc, desc) */
+          order_by?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Item metrics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['behavior.ItemMetrics'][];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/metrics/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search metrics
+     * @description Returns aggregated search metrics for analysis
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Search query filter */
+          query?: string;
+          /** @description Period start date (RFC3339) */
+          period_start?: string;
+          /** @description Period end date (RFC3339) */
+          period_end?: string;
+          /** @description Limit results (default: 20, max: 100) */
+          limit?: number;
+          /** @description Offset for pagination */
+          offset?: number;
+          /** @description Sort by field (ctr, conversions, total_searches) */
+          sort_by?: string;
+          /** @description Order direction (asc, desc) */
+          order_by?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search metrics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.SearchMetricsResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/metrics/update': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Update aggregated metrics
+     * @description Forces update of aggregated search metrics for a specific period
+     */
+    post: {
+      parameters: {
+        query: {
+          /** @description Period start date (RFC3339) */
+          period_start: string;
+          /** @description Period end date (RFC3339) */
+          period_end: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Metrics updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: string;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Admin access required */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/sessions/{session_id}/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get session events
+     * @description Returns behavior events for a specific session
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Session ID */
+          session_id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Session events */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['behavior.BehaviorEvent'][];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/track': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Track behavior events
+     * @description Records user behavior events for analytics (supports both single event and batch)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Event batch data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['behavior.TrackEventBatch'];
+        };
+      };
+      responses: {
+        /** @description Events tracked successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Too many requests */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/analytics/users/{user_id}/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user events
+     * @description Returns behavior events for a specific user
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit results (default: 20, max: 100) */
+          limit?: number;
+          /** @description Offset for pagination */
+          offset?: number;
+        };
+        header?: never;
+        path: {
+          /** @description User ID */
+          user_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description User events */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['behavior.BehaviorEvent'][];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -11182,961 +12583,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/search/config': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get search configuration
-     * @description Get general search configuration settings
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Search configuration */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchConfig'];
-            };
-          };
-        };
-        /** @description Configuration not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    /**
-     * Update search configuration
-     * @description Update general search configuration settings
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Search configuration */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['domain.SearchConfig'];
-        };
-      };
-      responses: {
-        /** @description Updated configuration */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchConfig'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/search/config/synonyms': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get search synonyms
-     * @description Get all synonyms for search terms
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Language code (default: ru) */
-          language?: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description List of synonyms */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchSynonym'][];
-            };
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Create search synonym
-     * @description Create synonym mapping for search terms
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Synonym configuration */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['domain.SearchSynonym'];
-        };
-      };
-      responses: {
-        /** @description Created synonym */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchSynonym'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/search/config/synonyms/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update search synonym
-     * @description Update synonym mapping for search terms
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Synonym ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Updated synonym configuration */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['domain.SearchSynonym'];
-        };
-      };
-      responses: {
-        /** @description Updated synonym */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchSynonym'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Synonym not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    /**
-     * Delete search synonym
-     * @description Delete synonym mapping
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Synonym ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Synonym deleted successfully */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Synonym not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/search/config/transliteration': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get transliteration rules
-     * @description Get all transliteration rules for search
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description List of transliteration rules */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.TransliterationRule'][];
-            };
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Create transliteration rule
-     * @description Create new transliteration rule for search
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Transliteration rule */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['domain.TransliterationRule'];
-        };
-      };
-      responses: {
-        /** @description Created rule */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.TransliterationRule'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/search/config/transliteration/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update transliteration rule
-     * @description Update existing transliteration rule
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Rule ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Updated rule */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['domain.TransliterationRule'];
-        };
-      };
-      responses: {
-        /** @description Updated rule */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.TransliterationRule'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Rule not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    /**
-     * Delete transliteration rule
-     * @description Delete transliteration rule
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Rule ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Rule deleted successfully */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Rule not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/search/config/weights': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get all search field weights
-     * @description Get weights for all searchable fields
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description List of search weights */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchWeight'][];
-            };
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Create new search weight
-     * @description Create weight configuration for a search field
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Weight configuration */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['domain.SearchWeight'];
-        };
-      };
-      responses: {
-        /** @description Created weight */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchWeight'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/search/config/weights/{field}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get weight for specific field
-     * @description Get weight configuration for a specific search field
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Field name */
-          field: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Search weight details */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchWeight'];
-            };
-          };
-        };
-        /** @description Weight not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/search/config/weights/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update search weight
-     * @description Update weight configuration for a search field
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Weight ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Updated weight configuration */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['domain.SearchWeight'];
-        };
-      };
-      responses: {
-        /** @description Updated weight */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchWeight'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Weight not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    /**
-     * Delete search weight
-     * @description Delete weight configuration for a search field
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Weight ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Weight deleted successfully */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Weight not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/search/statistics': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get search statistics
-     * @description Get recent search statistics
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Limit results (default: 100) */
-          limit?: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Search statistics */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchStatistics'][];
-            };
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/search/statistics/popular': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get popular searches
-     * @description Get most popular search queries from last 7 days
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Limit results (default: 10) */
-          limit?: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Popular searches */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              }[];
-            };
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/storefronts': {
     parameters: {
       query?: never;
@@ -16764,51 +17210,68 @@ export interface components {
       /** @example Операция выполнена успешно */
       message?: string;
     };
-    'domain.SearchConfig': {
+    'behavior.BehaviorEvent': {
       created_at?: string;
-      fuzzy_enabled?: boolean;
-      fuzzy_max_edits?: number;
+      event_type: components['schemas']['behavior.EventType'];
       id?: number;
-      max_suggestions?: number;
-      min_search_length?: number;
-      synonyms_enabled?: boolean;
-      transliteration_enabled?: boolean;
-      updated_at?: string;
-    };
-    'domain.SearchStatistics': {
-      created_at?: string;
-      id?: number;
-      query?: string;
-      results_count?: number;
-      search_duration_ms?: number;
-      search_filters?: string;
+      item_id?: string;
+      item_type?: components['schemas']['behavior.ItemType'];
+      metadata?: {
+        [key: string]: unknown;
+      };
+      position?: number;
+      search_query?: string;
+      session_id: string;
       user_id?: number;
     };
-    'domain.SearchSynonym': {
-      created_at?: string;
-      id?: number;
-      language?: string;
-      synonyms?: string[];
-      term?: string;
-      updated_at?: string;
+    /** @enum {string} */
+    'behavior.EventType':
+      | 'search_performed'
+      | 'result_clicked'
+      | 'item_viewed'
+      | 'item_purchased'
+      | 'search_filter_applied'
+      | 'search_sort_changed'
+      | 'item_added_to_cart';
+    'behavior.ItemMetrics': {
+      avg_position?: number;
+      clicks?: number;
+      conversion_rate?: number;
+      ctr?: number;
+      item_id?: string;
+      item_type?: components['schemas']['behavior.ItemType'];
+      period_end?: string;
+      period_start?: string;
+      purchases?: number;
+      views?: number;
     };
-    'domain.SearchWeight': {
-      created_at?: string;
-      description?: string;
-      field_name?: string;
-      id?: number;
-      updated_at?: string;
-      weight?: number;
+    /** @enum {string} */
+    'behavior.ItemType': 'marketplace' | 'storefront';
+    'behavior.TrackEventBatch': {
+      batch_id: string;
+      created_at: string;
+      events: components['schemas']['behavior.TrackEventRequest'][];
     };
-    'domain.TransliterationRule': {
-      created_at?: string;
-      from_pattern?: string;
-      from_script?: string;
-      id?: number;
-      priority?: number;
-      to_pattern?: string;
-      to_script?: string;
-      updated_at?: string;
+    'behavior.TrackEventRequest': {
+      /** @enum {unknown} */
+      event_type:
+        | 'search_performed'
+        | 'result_clicked'
+        | 'item_viewed'
+        | 'item_purchased'
+        | 'search_filter_applied'
+        | 'search_sort_changed'
+        | 'item_added_to_cart';
+      item_id?: string;
+      /** @enum {unknown} */
+      item_type?: 'marketplace' | 'storefront';
+      metadata?: {
+        [key: string]: unknown;
+      };
+      position?: number;
+      search_query?: string;
+      /** @description Если не передан, будет сгенерирован */
+      session_id?: string;
     };
     'handler.AddMessageRequest': {
       content: string;
@@ -16848,6 +17311,17 @@ export interface components {
       pages?: number;
       /** @example 100 */
       total?: number;
+    };
+    'handler.AnalyzeWeightsRequest': {
+      category_id?: number;
+      from_date: string;
+      /** @enum {string} */
+      item_type: 'marketplace' | 'storefront' | 'global';
+      to_date: string;
+    };
+    'handler.ApplyWeightsRequest': {
+      selected_results: number[];
+      session_id: number;
     };
     'handler.AttributeCreateResponse': {
       /** @example 123 */
@@ -16916,6 +17390,12 @@ export interface components {
       messages?: components['schemas']['models.MarketplaceMessage'][];
       page?: number;
       total?: number;
+    };
+    'handler.ClickMetricsResponse': {
+      average_click_position?: number;
+      conversion_rate?: number;
+      ctr?: number;
+      total_clicks?: number;
     };
     'handler.CompleteMockPaymentRequest': {
       /** @example 2000 */
@@ -17335,9 +17815,23 @@ export interface components {
       /** @example 5 */
       total_pages?: number;
     };
+    'handler.SearchMetricsResponse': {
+      average_search_duration_ms?: number;
+      click_metrics?: components['schemas']['handler.ClickMetricsResponse'];
+      search_trends?: components['schemas']['handler.SearchTrendResponse'][];
+      top_queries?: components['schemas']['handler.TopQueryResponse'][];
+      total_searches?: number;
+      unique_searches?: number;
+    };
     'handler.SearchResponse': {
       data?: components['schemas']['models.MarketplaceListing'][];
       meta?: components['schemas']['handler.SearchMetadata'];
+    };
+    'handler.SearchTrendResponse': {
+      clicks_count?: number;
+      ctr?: number;
+      date?: string;
+      searches_count?: number;
     };
     'handler.SessionResponse': {
       /** @example true */
@@ -17379,6 +17873,18 @@ export interface components {
       staff?: components['schemas']['models.StorefrontStaff'][];
       total?: number;
     };
+    'handler.StartOptimizationRequest': {
+      analysis_period_days?: number;
+      auto_apply?: boolean;
+      category_id?: number;
+      confidence_level?: number;
+      field_names?: string[];
+      /** @enum {string} */
+      item_type: 'marketplace' | 'storefront' | 'global';
+      learning_rate?: number;
+      max_iterations?: number;
+      min_sample_size?: number;
+    };
     'handler.StorefrontsListResponse': {
       limit?: number;
       offset?: number;
@@ -17404,6 +17910,13 @@ export interface components {
       text?: string;
       /** @example product */
       type?: string;
+    };
+    'handler.SynonymRequest': {
+      is_active?: boolean;
+      /** @enum {string} */
+      language: 'en' | 'ru' | 'sr';
+      synonym: string;
+      term: string;
     };
     /** @description Ответ при успешном подключении Telegram */
     'handler.TelegramConnectResponse': {
@@ -17454,6 +17967,13 @@ export interface components {
       expires_in?: number;
       /** @example Bearer */
       token_type?: string;
+    };
+    'handler.TopQueryResponse': {
+      avg_position?: number;
+      avg_results?: number;
+      count?: number;
+      ctr?: number;
+      query?: string;
     };
     'handler.TranslateTextRequest': {
       /** @example google */
@@ -19184,6 +19704,19 @@ export interface components {
       category_slug?: string;
       similarity_score?: number;
     };
+    'service.OptimizationConfig': {
+      default_analysis_period_days?: number;
+      default_confidence_level?: number;
+      default_learning_rate?: number;
+      default_max_iterations?: number;
+      default_min_sample_size?: number;
+      /** @description Максимальное значение веса */
+      max_weight?: number;
+      /** @description Максимальное изменение веса за одну оптимизацию */
+      max_weight_change?: number;
+      /** @description Минимальное значение веса */
+      min_weight?: number;
+    };
     'service.SuggestionItem': {
       category_id?: number;
       count?: number;
@@ -19198,6 +19731,32 @@ export interface components {
     };
     /** @enum {string} */
     'service.SuggestionType': 'query' | 'category' | 'product';
+    'storage.OptimizationSession': {
+      created_by?: number;
+      end_time?: string;
+      error_message?: string;
+      id?: number;
+      processed_fields?: number;
+      results?: components['schemas']['storage.WeightOptimizationResult'][];
+      start_time?: string;
+      /** @description running, completed, failed */
+      status?: string;
+      total_fields?: number;
+    };
+    'storage.WeightOptimizationResult': {
+      /** @description Уровень уверенности в рекомендации */
+      confidence_level?: number;
+      current_ctr?: number;
+      current_weight?: number;
+      field_name?: string;
+      /** @description Ожидаемое улучшение CTR */
+      improvement_score?: number;
+      optimized_weight?: number;
+      predicted_ctr?: number;
+      /** @description Количество данных для анализа */
+      sample_size?: number;
+      statistical_significance_level?: number;
+    };
     'tgbotapi.Animation': {
       file_id?: string;
       file_name?: string;

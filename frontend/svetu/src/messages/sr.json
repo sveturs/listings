@@ -334,7 +334,7 @@
     "reset": "Reset",
     "searchHistory": "Search History",
     "clearHistory": "Clear History",
-    "popularSearches": "Popularne pretrage",
+    "popularSearches": "Popular Searches",
     "search": {
       "searchHistory": "Search History",
       "clearHistory": "Clear History",
@@ -646,11 +646,6 @@
     "common": {
       "loading": "Loading..."
     },
-    "pagination": {
-      "showing": "Приказано",
-      "of": "од",
-      "itemsPerPage": "Ставки по страници"
-    },
     "sections": {
       "dashboard": "Dashboard",
       "catalog": "Catalog",
@@ -660,13 +655,12 @@
       "content": "Content",
       "listings": "oglasa",
       "users": "Users",
-      "system": "Sistem",
-      "search": "Upravljanje pretragom",
-      "usersDescription": "Upravljanje korisničkim nalozima i dozvolama",
-      "listingsDescription": "Moderacija i upravljanje oglasima",
-      "categoriesDescription": "Podešavanje kategorija i atributa",
-      "attributesDescription": "Upravljanje atributima proizvoda i njihovim tipovima",
-      "attributeGroupsDescription": "Organizovanje atributa u logičke grupe"
+      "analytics": "Analitika",
+      "search": "Analitika pretrage",
+      "usersDescription": "Manage user accounts and permissions",
+      "listingsDescription": "Moderate and manage marketplace listings",
+      "categoriesDescription": "Configure categories and attributes",
+      "searchDescription": "Analiza performansi pretrage i ponašanja korisnika"
     },
     "categories": {
       "title": "Categories",
@@ -820,6 +814,113 @@
       "supportMessage": "Ako imate problema sa uplatom, kontaktirajte podršku.",
       "contactSupport": "Kontaktirajte podršku"
     },
+    "search": {
+      "title": "Аналитика претраге",
+      "description": "Анализа перформанси претраге и метрика понашања корисника",
+      "tabs": {
+        "analytics": "Аналитика",
+        "behavior": "Понашање",
+        "weights": "Тежине претраге",
+        "synonyms": "Синоними",
+        "optimization": "Оптимизација"
+      },
+      "analytics": {
+        "title": "Преглед аналитике претраге",
+        "description": "Опште метрике перформанси претраге и статистика",
+        "loadError": "Није могуће учитати податке аналитике",
+        "timeRange": "Временски распон",
+        "exportCSV": "Извоз CSV",
+        "ranges": {
+          "24h": "Последњих 24 сата",
+          "7d": "Последњих 7 дана",
+          "30d": "Последњих 30 дана",
+          "90d": "Последњих 90 дана"
+        },
+        "metrics": {
+          "totalSearches": "Укупне претраге",
+          "uniqueQueries": "Јединствени упити",
+          "avgResponseTime": "Просечно време одговора",
+          "zeroResults": "Нулти резултати",
+          "avgCTR": "Просечни CTR",
+          "conversionRate": "Стопа конверзије"
+        },
+        "charts": {
+          "searchTrends": "Трендови претраге",
+          "ctrTrends": "CTR трендови",
+          "topQueries": "Дистрибуција топ упита"
+        },
+        "topQueries": {
+          "title": "Топ упити претраге са анализом релевантности",
+          "query": "Упит",
+          "count": "Број",
+          "ctr": "CTR",
+          "avgPosition": "Просечна позиција",
+          "avgResults": "Просечни резултати",
+          "relevance": "Оцена релевантности"
+        }
+      },
+      "weights": {
+        "title": "Конфигурација тежина претраге",
+        "description": "Конфигуришите тежине и параметре алгоритма претраге"
+      },
+      "behavior": {
+        "title": "Аналитика понашања",
+        "loadError": "Грешка учитавања аналитичких података"
+      },
+      "optimization": {
+        "title": "Аутоматска оптимизација тежина",
+        "description": "Машинско учење за оптимизацију тежина претраге на основу података о понашању",
+        "startOptimization": "Покрени оптимизацију",
+        "optimizing": "Оптимизација...",
+        "quickAnalysis": "Брза анализа",
+        "analyzing": "Анализа...",
+        "cancel": "Откажи",
+        "contentType": "Тип садржаја",
+        "analysisPeriod": "Период анализе (дани)",
+        "minSampleSize": "Минимална величина узорка",
+        "confidenceLevel": "Ниво поверења",
+        "advancedParams": "Напредни параметри машинског учења",
+        "learningRate": "Брзина учења",
+        "maxIterations": "Максимум итерација",
+        "autoApply": "Аутоматски примени оптимизоване тежине",
+        "autoApplyWarning": "УПОЗОРЕЊЕ: Препоручује се прво анализирање резултата",
+        "contentTypes": {
+          "global": "Глобалне тежине",
+          "marketplace": "Маркетплејс",
+          "storefront": "Продавнице"
+        },
+        "progress": {
+          "title": "Напредак оптимизације",
+          "processed": "Обрађена поља",
+          "status": "Статус",
+          "started": "Започето"
+        },
+        "results": {
+          "optimizationTitle": "Резултати оптимизације",
+          "analysisTitle": "Резултати анализе",
+          "applySelected": "Примени изабране",
+          "field": "Поље",
+          "currentWeight": "Тренутна тежина",
+          "optimizedWeight": "Оптимизована тежина",
+          "improvement": "Побољшање CTR",
+          "confidence": "Поверење",
+          "sample": "Узорак",
+          "currentCTR": "Тренутни CTR",
+          "predictedCTR": "Предвиђени CTR"
+        },
+        "safety": {
+          "title": "Важне безбедносне напомене:",
+          "checkResults": "Проверите резултате пре примене",
+          "testSmall": "Препоручује се тестирање на малом узорку",
+          "backup": "Направите резервну копију пре примене",
+          "monitor": "Пратите метрике након промена"
+        },
+        "messages": {
+          "weightsApplied": "Изабране тежине успешно примењене!",
+          "weightsApplyError": "Грешка при примени тежина"
+        }
+      }
+    },
     "admins": {
       "error": {
         "unauthorized": "Potrebna je autorizacija",
@@ -835,146 +936,34 @@
       }
     },
     "search": {
-      "title": "Upravljanje pretragom",
-      "dashboard": {
-        "tab": "Pregled",
-        "totalSearches": "Ukupno pretrage",
-        "avgResponseTime": "Prosečno vreme odgovora",
-        "searchPerformance": "Performanse pretrage",
-        "topQueries": "Top upiti",
-        "uniqueQueries": "Jedinstvenih upita",
-        "last30Days": "Poslednjih 30 dana",
-        "popularQueries": "Popularni upiti",
-        "query": "Upit",
-        "count": "Broj",
-        "relevance": "Relevantnost",
-        "categoryDistribution": "Distribucija po kategorijama",
-        "error": "Greška prilikom učitavanja podataka",
-        "noData": "Nema podataka za prikaz"
-      },
-      "weights": {
-        "tab": "Težine pretrage",
-        "global": "Globalne težine",
-        "perCategory": "Težine po kategorijama",
-        "field": "Polje",
-        "weight": "Težina",
-        "description": "Opis",
-        "save": "Sačuvaj težine",
-        "fetchError": "Greška učitavanja težina",
-        "saveSuccess": "Težine uspešno sačuvane",
-        "saveError": "Greška čuvanja težina",
-        "title": "Naslov",
-        "titleDesc": "Težina naslova oglasa",
-        "descriptionDesc": "Težina opisa",
-        "attributesDesc": "Težina atributa",
-        "categoryDesc": "Težina kategorije",
-        "tagsDesc": "Težina tagova"
-      },
-      "listings": {
-        "title": "Upravljanje oglasima",
-        "comingSoon": "Uskoro",
-        "description": "Moderacija i upravljanje oglasima tržišta"
-      },
-      "users": {
-        "title": "Upravljanje korisnicima",
-        "comingSoon": "Uskoro",
-        "description": "Upravljanje korisničkim nalozima i dozvolama"
-      },
-      "analytics": {
-        "tab": "Analitika",
-        "last24h": "24 sata",
-        "last7d": "7 dana",
-        "last30d": "30 dana",
-        "last90d": "90 dana",
-        "export": "Izvoz",
-        "totalSearches": "Ukupno pretrage",
-        "uniqueQueries": "Jedinstvenih upita",
-        "avgSearchTime": "Prosečno vreme pretrage",
-        "zeroResultsRate": "Stopa praznih rezultata",
-        "clickThroughRate": "CTR",
-        "topQueries": "Top upiti",
-        "zeroResultQueries": "Upiti bez rezultata",
-        "query": "Upit",
-        "count": "Broj",
-        "avgResults": "Pros. rezultati",
-        "avgClickPos": "Pros. pozicija klika",
-        "lastSearched": "Poslednja pretraga",
-        "fetchError": "Greška učitavanja analitike",
-        "exportSuccess": "Podaci uspešno izvezeni",
-        "exportError": "Greška izvoza podataka"
+      "tabs": {
+        "synonyms": "Синоними"
       },
       "synonyms": {
-        "tab": "Sinonimi",
-        "language": "Jezik",
-        "search": "Pretraga",
-        "searchPlaceholder": "Pretraži sinonime...",
-        "addNew": "Dodaj sinonim",
-        "word": "Reč",
-        "wordPlaceholder": "Unesite reč",
-        "synonymsList": "Sinonimi",
-        "synonymsPlaceholder": "Unesite sinonime odvojene zarezom",
-        "status": "Status",
-        "actions": "Akcije",
-        "add": "Dodaj",
-        "edit": "Izmeni",
-        "save": "Sačuvaj",
-        "cancel": "Otkaži",
-        "delete": "Obriši",
-        "fillAllFields": "Popunite sva polja",
-        "deleteConfirm": "Da li ste sigurni da želite da obrišete ovaj sinonim?",
-        "fetchError": "Greška učitavanja sinonima",
-        "addSuccess": "Sinonim uspešno dodat",
-        "addError": "Greška dodavanja sinonima",
-        "updateSuccess": "Sinonim uspešno ažuriran",
-        "updateError": "Greška ažuriranja sinonima",
-        "deleteSuccess": "Sinonim uspešno obrisan",
-        "deleteError": "Greška brisanja sinonima"
-      },
-      "transliteration": {
-        "tab": "Transliteracija",
-        "addRule": "Dodaj pravilo",
-        "existingRules": "Postojeća pravila",
-        "from": "Od",
-        "to": "Do",
-        "language": "Jezik",
-        "status": "Status",
-        "actions": "Akcije",
-        "delete": "Obriši",
-        "fillFields": "Popunite sva polja",
-        "ruleAdded": "Pravilo dodato",
-        "ruleDeleted": "Pravilo obrisano",
-        "ruleUpdated": "Pravilo ažurirano",
-        "fetchError": "Greška učitavanja pravila",
-        "saveError": "Greška čuvanja",
-        "deleteError": "Greška brisanja",
-        "updateError": "Greška ažuriranja",
-        "info": "Pravila transliteracije pomažu korisnicima da pronđu sadržaj čak i kada koriste različite alfabete"
-      },
-      "config": {
-        "tab": "Podešavanja",
-        "general": "Opšta podešavanja",
-        "maxResults": "Maksimalni broj rezultata",
-        "defaultSort": "Podrazumevano sortiranje",
-        "relevance": "Relevantnost",
-        "date": "Datum",
-        "price": "Cena",
-        "fuzzySearch": "Neizvodna pretraga",
-        "enableFuzzySearch": "Omogući neizvodnu pretragu",
-        "fuzzyThreshold": "Prag neizvodnosti",
-        "features": "Funkcije",
-        "enableSynonyms": "Omogući sinonime",
-        "enableTransliteration": "Omogući transliteraciju",
-        "enableAnalytics": "Omogući analitiku",
-        "debugMode": "Režim za raspravljanje",
-        "caching": "Keširanje",
-        "enableCache": "Omogući keš",
-        "cacheTimeout": "Vreme života keša (sek)",
-        "save": "Sačuvaj",
-        "reset": "Resetuj",
-        "saved": "Podešavanja sačuvana",
-        "fetchError": "Greška učitavanja podešavanja",
-        "saveError": "Greška čuvanja podešavanja",
-        "debugWarning": "Režim za raspravljanje je uključen! Ovo može uticati na performanse."
+        "title": "Управљање синонимима",
+        "description": "Управљање синонимима претраге за побољшање резултата",
+        "addSynonym": "Додај синоним",
+        "search": "Претрага",
+        "searchPlaceholder": "Претражи синониме...",
+        "language": "Језик",
+        "term": "Термин",
+        "synonym": "Синоним",
+        "termPlaceholder": "Унесите главни термин",
+        "synonymPlaceholder": "Унесите синоним",
+        "active": "Активан",
+        "inactive": "Неактиван",
+        "status": "Статус",
+        "created": "Креирано",
+        "actions": "Акције",
+        "edit": "Уреди",
+        "delete": "Обриши",
+        "save": "Сачувај",
+        "cancel": "Откажи",
+        "create": "Креирај",
+        "synonymsList": "Листа синонима",
+        "total": "Укупно",
+        "noSynonyms": "Синоними нису пронађени",
+        "confirmDelete": "Да ли сте сигурни да желите да обришете овај синоним?"
       }
     }
   },
@@ -2447,5 +2436,66 @@
     "viewAll": "Prikaži sve",
     "moreOptions": "Više opcija",
     "backToTop": "Vrati se na vrh"
+  },
+  "analytics": {
+    "error": {
+      "rate_limit_exceeded": "Previše zahteva. Pokušajte ponovo kasnije.",
+      "invalid_request": "Neispravan format zahteva",
+      "validation_failed": "Greška validacije zahteva",
+      "failed_to_track": "Nije moguće pratiti događaj",
+      "failed_to_get_metrics": "Nije moguće dobiti metrike",
+      "invalid_period_start": "Neispravan format početnog datuma",
+      "invalid_period_end": "Neispravan format završnog datuma",
+      "failed_to_get_events": "Nije moguće dobiti događaje",
+      "invalid_user_id": "Neispravan ID korisnika",
+      "invalid_session_id": "Neispravan ID sesije",
+      "period_required": "Potrebni su datumi početka i kraja perioda",
+      "failed_to_update_metrics": "Nije moguće ažurirati metrike"
+    }
+  },
+  "behaviorTracking": {
+    "error": {
+      "initialization_failed": "Nije moguće inicijalizovati praćenje ponašanja",
+      "session_generation_failed": "Nije moguće kreirati sesiju praćenja",
+      "event_send_failed": "Nije moguće poslati događaj praćenja",
+      "batch_send_failed": "Nije moguće poslati paket događaja",
+      "retry_limit_exceeded": "Prekoračen je maksimalni broj pokušaja",
+      "invalid_event_data": "Neispravan format podataka događaja",
+      "network_error": "Greška mreže tokom praćenja",
+      "api_error": "Greška API-ja tokom praćenja",
+      "storage_error": "Greška lokalnog skladišta",
+      "context_update_failed": "Nije moguće ažurirati kontekst praćenja",
+      "flush_failed": "Nije moguće poslati događaje na čekanju",
+      "disabled": "Praćenje ponašanja je onemogućeno",
+      "not_initialized": "Praćenje ponašanja nije inicijalizovano",
+      "invalid_batch_data": "Neispravan format podataka paketa",
+      "timeout": "Vreme zahteva je isteklo",
+      "server_error": "Greška servera"
+    },
+    "success": {
+      "initialized": "Praćenje ponašanja je uspešno inicijalizovano",
+      "event_sent": "Događaj je uspešno poslat",
+      "batch_sent": "Paket događaja je uspešno poslat",
+      "context_updated": "Kontekst praćenja je ažuriran",
+      "events_flushed": "Događaji na čekanju su uspešno poslati",
+      "session_created": "Kreirana je nova sesija praćenja"
+    },
+    "events": {
+      "search_performed": "Izvršena pretraga",
+      "result_clicked": "Klik na rezultat pretrage",
+      "item_viewed": "Pregled proizvoda",
+      "item_purchased": "Kupovina proizvoda",
+      "search_filter_applied": "Primenjen filter pretrage",
+      "search_sort_changed": "Promenjen način sortiranja pretrage"
+    },
+    "states": {
+      "enabled": "Omogućeno",
+      "disabled": "Onemogućeno",
+      "initializing": "Inicijalizacija...",
+      "sending": "Slanje događaja...",
+      "retrying": "Novi pokušaj...",
+      "failed": "Neuspešno",
+      "ready": "Spreman"
+    }
   }
 }

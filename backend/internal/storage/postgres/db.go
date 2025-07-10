@@ -59,7 +59,17 @@ type Database struct {
 }
 
 func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights) (*Database, error) {
-	pool, err := pgxpool.New(context.Background(), dbURL)
+	// Настраиваем конфигурацию пула
+	poolConfig, err := pgxpool.ParseConfig(dbURL)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing connection string: %w", err)
+	}
+	
+	// Увеличиваем количество соединений для behavior tracking
+	poolConfig.MaxConns = 50 // Увеличиваем максимальное количество соединений
+	poolConfig.MinConns = 10 // Минимальное количество соединений
+	
+	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error creating connection pool: %w", err)
 	}

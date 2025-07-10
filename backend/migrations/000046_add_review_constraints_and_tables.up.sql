@@ -1,6 +1,6 @@
 -- Добавляем уникальный индекс для защиты от спама
 -- Один пользователь может оставить только один отзыв на одну сущность
-CREATE UNIQUE INDEX idx_reviews_user_entity_unique 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_user_entity_unique 
 ON reviews(user_id, entity_type, entity_id) 
 WHERE status != 'deleted';
 
@@ -46,8 +46,8 @@ CREATE TABLE review_disputes (
 );
 
 -- Создаем индексы для таблицы споров
-CREATE INDEX idx_disputes_status ON review_disputes(status);
-CREATE INDEX idx_disputes_review_id ON review_disputes(review_id);
+CREATE INDEX IF NOT EXISTS idx_disputes_status ON review_disputes(status);
+CREATE INDEX IF NOT EXISTS idx_disputes_review_id ON review_disputes(review_id);
 
 -- Создаем таблицу для сообщений в спорах
 CREATE TABLE review_dispute_messages (
@@ -60,7 +60,7 @@ CREATE TABLE review_dispute_messages (
 );
 
 -- Создаем индекс для таблицы сообщений
-CREATE INDEX idx_dispute_messages_dispute_id ON review_dispute_messages(dispute_id);
+CREATE INDEX IF NOT EXISTS idx_dispute_messages_dispute_id ON review_dispute_messages(dispute_id);
 
 -- Добавляем поля в таблицу reviews для поддержки новой функциональности
 ALTER TABLE reviews
@@ -68,8 +68,8 @@ ADD COLUMN IF NOT EXISTS seller_confirmed BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS has_active_dispute BOOLEAN DEFAULT false;
 
 -- Создаем индексы для новых полей
-CREATE INDEX idx_reviews_seller_confirmed ON reviews(seller_confirmed) WHERE seller_confirmed = true;
-CREATE INDEX idx_reviews_has_dispute ON reviews(has_active_dispute) WHERE has_active_dispute = true;
+CREATE INDEX IF NOT EXISTS idx_reviews_seller_confirmed ON reviews(seller_confirmed) WHERE seller_confirmed = true;
+CREATE INDEX IF NOT EXISTS idx_reviews_has_dispute ON reviews(has_active_dispute) WHERE has_active_dispute = true;
 
 -- Добавляем комментарии для документации
 COMMENT ON TABLE review_confirmations IS 'Подтверждения отзывов продавцами';

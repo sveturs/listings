@@ -4,6 +4,7 @@ package handler
 import (
 	"context"
 	"math"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -11,58 +12,24 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"backend/internal/config"
+	"backend/internal/domain/behavior"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
-	searchlogsTypes "backend/internal/proj/searchlogs/types"
 	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
 	"backend/pkg/utils"
 )
 
 // UnifiedSearchHandler обрабатывает унифицированные поисковые запросы
 type UnifiedSearchHandler struct {
-	services      globalService.ServicesInterface
-	searchWeights *config.UnifiedSearchWeights
+	services globalService.ServicesInterface
 }
 
 // NewUnifiedSearchHandler создает новый обработчик унифицированного поиска
-func NewUnifiedSearchHandler(services globalService.ServicesInterface, searchWeights *config.SearchWeights) *UnifiedSearchHandler {
-	var unifiedWeights *config.UnifiedSearchWeights
-	if searchWeights != nil {
-		unifiedWeights = &searchWeights.UnifiedSearchWeights
-	}
-
+func NewUnifiedSearchHandler(services globalService.ServicesInterface) *UnifiedSearchHandler {
 	return &UnifiedSearchHandler{
-		services:      services,
-		searchWeights: unifiedWeights,
-	}
-}
-
-// getSearchWeight возвращает вес из конфигурации или значение по умолчанию
-func (h *UnifiedSearchHandler) getSearchWeight(weightName string, defaultValue float64) float64 {
-	if h.searchWeights == nil {
-		return defaultValue
-	}
-
-	switch weightName {
-	case "ExactTitleMatch":
-		return h.searchWeights.ExactTitleMatch
-	case "PartialTitleMatch":
-		return h.searchWeights.PartialTitleMatch
-	case "DescriptionMatch":
-		return h.searchWeights.DescriptionMatch
-	case "PopularityMaxBoost":
-		return h.searchWeights.PopularityMaxBoost
-	case "FreshnessWeek":
-		return h.searchWeights.FreshnessWeek
-	case "FreshnessMonth":
-		return h.searchWeights.FreshnessMonth
-	case "FreshnessQuarter":
-		return h.searchWeights.FreshnessQuarter
-	default:
-		return defaultValue
+		services: services,
 	}
 }
 
@@ -169,9 +136,8 @@ type UnifiedStorefrontInfo struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "search.searchError"
 // @Router /api/v1/search [get]
 func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
-	// Засекаем время начала для измерения производительности
-	startTime := time.Now()
 	ctx := c.Context()
+	startTime := time.Now()
 
 	// Парсим параметры поиска
 	var params UnifiedSearchParams
@@ -184,7 +150,10 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	}
 
 	// Получаем параметры из query string (перезаписывают JSON если есть)
-	if query := c.Query("query"); query != "" {
+	// Поддерживаем оба варианта: "q" и "query"
+	if query := c.Query("q"); query != "" {
+		params.Query = query
+	} else if query := c.Query("query"); query != "" {
 		params.Query = query
 	}
 	if page := c.Query("page"); page != "" {
@@ -270,79 +239,30 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 		}
 	}
 
-	// Асинхронное логирование поискового запроса через SearchLogs сервис
-	if searchLogsSvc := h.services.SearchLogs(); searchLogsSvc != nil {
-		logger.Info().Msg("SearchLogs service is available, logging unified search query")
-
-		// Извлекаем данные из контекста Fiber ДО запуска горутины
-		var userID *int
-		if uid, ok := c.Locals("user_id").(int); ok && uid > 0 {
-			userID = &uid
+	// Трекинг поискового события (только для первой страницы)
+	if params.Query != "" && params.Page == 1 {
+		// Извлекаем все необходимые данные из fiber.Ctx перед запуском горутины
+		trackCtx := &trackingContext{
+			userAgent: c.Get("User-Agent"),
+			referer:   c.Get("Referer"),
+			ipAddress: c.IP(),
 		}
 
-		// Получаем session ID из cookie или заголовков
-		sessionID := c.Cookies("session_id")
+		// Получаем userID если пользователь авторизован
+		if c.Locals("userID") != nil {
+			if uid, ok := c.Locals("userID").(int); ok && uid > 0 {
+				trackCtx.userID = &uid
+			}
+		}
+
+		// Получаем session_id из заголовков или query параметров
+		sessionID := c.Get("X-Session-ID")
 		if sessionID == "" {
-			sessionID = c.Get("X-Session-ID")
+			sessionID = c.Query("session_id")
 		}
+		trackCtx.sessionID = sessionID
 
-		// Определяем тип устройства из User-Agent
-		userAgent := c.Get("User-Agent")
-		ipAddress := c.IP()
-
-		go func() {
-			// Вычисляем время ответа
-			responseTime := time.Since(startTime).Milliseconds()
-
-			// Определяем тип устройства из User-Agent
-			deviceType := detectDeviceType(userAgent)
-
-			// Преобразуем filters из map[string]interface{} (они уже в правильном формате)
-			filters := params.AttributeFilters
-
-			// Преобразуем CategoryID в *int
-			var categoryIDInt *int
-			if params.CategoryID != "" {
-				if catID, err := strconv.Atoi(params.CategoryID); err == nil {
-					categoryIDInt = &catID
-				}
-			}
-
-			// Создаем запись лога
-			logEntry := &searchlogsTypes.SearchLogEntry{
-				Query:           params.Query,
-				UserID:          userID,
-				SessionID:       sessionID,
-				ResultCount:     result.Total,
-				ResponseTimeMS:  int64(responseTime),
-				Filters:         filters,
-				CategoryID:      categoryIDInt,
-				PriceMin:        &params.PriceMin,
-				PriceMax:        &params.PriceMax,
-				Location:        nil, // TODO: добавить поддержку локации
-				Language:        params.Language,
-				DeviceType:      deviceType,
-				UserAgent:       userAgent,
-				IP:              ipAddress,
-				SearchType:      "unified",
-				HasSpellCorrect: false,   // TODO: добавить поддержку spell correction
-				ClickedItems:    []int{}, // Будет заполняться позже при кликах
-				Timestamp:       time.Now(),
-			}
-
-			// Логируем асинхронно
-			logger.Info().
-				Str("query", logEntry.Query).
-				Int("results", logEntry.ResultCount).
-				Int64("response_ms", logEntry.ResponseTimeMS).
-				Msg("Logging unified search query")
-
-			if err := searchLogsSvc.LogSearch(context.Background(), logEntry); err != nil {
-				logger.Error().Err(err).Msg("Failed to log unified search query")
-			} else {
-				logger.Info().Msg("Unified search query logged successfully")
-			}
-		}()
+		go h.trackSearchEvent(trackCtx, &params, result, time.Since(startTime))
 	}
 
 	return c.JSON(result)
@@ -581,6 +501,11 @@ func (h *UnifiedSearchHandler) containsProductType(types []string, target string
 
 // mergeAndRankResults объединяет и ранжирует результаты поиска
 func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, params *UnifiedSearchParams) []UnifiedSearchItem {
+	// Проверяем входные параметры
+	if items == nil || params == nil {
+		return []UnifiedSearchItem{}
+	}
+
 	// Если нет поискового запроса, просто сортируем по указанному критерию
 	if params.Query == "" {
 		h.sortScoredItems(items, params.SortBy, params.SortOrder)
@@ -600,6 +525,11 @@ func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, pa
 
 // calculateRelevanceScore вычисляет оценку релевантности для элемента
 func (h *UnifiedSearchHandler) calculateRelevanceScore(item *UnifiedSearchItem, query string) float64 {
+	// Проверяем валидность входных параметров
+	if item == nil || query == "" {
+		return 0.0
+	}
+
 	score := item.Score // Начинаем с базового score из OpenSearch
 
 	// Приводим к нижнему регистру для сравнения
@@ -607,38 +537,37 @@ func (h *UnifiedSearchHandler) calculateRelevanceScore(item *UnifiedSearchItem, 
 	titleLower := strings.ToLower(item.Name)
 	descLower := strings.ToLower(item.Description)
 
-	// Точное совпадение в заголовке
+	// Точное совпадение в заголовке (вес 5.0)
 	if titleLower == queryLower {
-		score += h.getSearchWeight("ExactTitleMatch", 5.0)
+		score += 5.0
 	} else if strings.Contains(titleLower, queryLower) {
-		// Частичное совпадение в заголовке
-		score += h.getSearchWeight("PartialTitleMatch", 3.0)
+		// Частичное совпадение в заголовке (вес 3.0)
+		score += 3.0
 	}
 
-	// Совпадение в описании
+	// Совпадение в описании (вес 2.0)
 	if strings.Contains(descLower, queryLower) {
-		score += h.getSearchWeight("DescriptionMatch", 2.0)
+		score += 2.0
 	}
 
-	// Учитываем популярность
+	// Учитываем популярность (до 1.0 балла)
 	if item.ViewsCount > 0 {
-		maxBoost := h.getSearchWeight("PopularityMaxBoost", 1.0)
 		popularityScore := math.Log10(float64(item.ViewsCount+1)) / 3.0 // нормализуем до ~1.0
-		if popularityScore > maxBoost {
-			popularityScore = maxBoost
+		if popularityScore > 1.0 {
+			popularityScore = 1.0
 		}
 		score += popularityScore
 	}
 
-	// Учитываем свежесть объявления
+	// Учитываем свежесть объявления (до 0.5 балла)
 	if item.CreatedAt != nil {
 		daysSinceCreated := time.Since(*item.CreatedAt).Hours() / 24
 		if daysSinceCreated < 7 {
-			score += h.getSearchWeight("FreshnessWeek", 0.5) // Новые объявления получают бонус
+			score += 0.5 // Новые объявления получают бонус
 		} else if daysSinceCreated < 30 {
-			score += h.getSearchWeight("FreshnessMonth", 0.3)
+			score += 0.3
 		} else if daysSinceCreated < 90 {
-			score += h.getSearchWeight("FreshnessQuarter", 0.1)
+			score += 0.1
 		}
 	}
 
@@ -724,37 +653,184 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	return location
 }
 
-// detectDeviceType определяет тип устройства по User-Agent
-func detectDeviceType(userAgent string) string {
-	ua := strings.ToLower(userAgent)
+// trackingContext содержит все данные из fiber.Ctx для безопасной передачи в горутину
+type trackingContext struct {
+	userID    *int
+	sessionID string
+	userAgent string
+	referer   string
+	ipAddress string
+}
 
-	// Проверка на мобильные устройства
-	mobileKeywords := []string{
-		"mobile", "android", "iphone", "ipad", "ipod",
-		"blackberry", "windows phone", "opera mini", "iemobile",
+// trackSearchEvent отправляет событие поиска в behavior tracking
+func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, params *UnifiedSearchParams, result *UnifiedSearchResult, duration time.Duration) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error().
+				Interface("panic", r).
+				Interface("stack", string(debug.Stack())).
+				Msg("Panic in trackSearchEvent")
+		}
+	}()
+
+	// Проверяем валидность всех параметров
+	if h == nil || h.services == nil {
+		logger.Error().Msg("Handler or services is nil in trackSearchEvent")
+		return
 	}
 
-	for _, keyword := range mobileKeywords {
-		if strings.Contains(ua, keyword) {
-			// Планшеты
-			if strings.Contains(ua, "ipad") || strings.Contains(ua, "tablet") {
-				return "tablet"
+	if trackCtx == nil || params == nil || result == nil {
+		logger.Error().
+			Bool("trackCtx_nil", trackCtx == nil).
+			Bool("params_nil", params == nil).
+			Bool("result_nil", result == nil).
+			Msg("Invalid parameters in trackSearchEvent")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Используем данные из trackingContext
+	userID := trackCtx.userID
+	sessionID := trackCtx.sessionID
+	if sessionID == "" {
+		// Генерируем временный session_id если не предоставлен
+		sessionID = "backend_" + strconv.FormatInt(time.Now().UnixNano(), 36)
+	}
+
+	// Подготавливаем фильтры для трекинга
+	searchFilters := make(map[string]interface{})
+	if params.ProductTypes != nil && len(params.ProductTypes) > 0 {
+		searchFilters["product_types"] = params.ProductTypes
+	}
+	if params.CategoryID != "" {
+		searchFilters["category_id"] = params.CategoryID
+	}
+	if params.PriceMin > 0 {
+		searchFilters["price_min"] = params.PriceMin
+	}
+	if params.PriceMax > 0 {
+		searchFilters["price_max"] = params.PriceMax
+	}
+	if params.City != "" {
+		searchFilters["city"] = params.City
+	}
+	if params.StorefrontID > 0 {
+		searchFilters["storefront_id"] = params.StorefrontID
+	}
+
+	// Определяем тип элемента на основе типов товаров в поиске
+	var itemType behavior.ItemType
+
+	// Проверяем, что у нас есть типы товаров
+	if params.ProductTypes == nil || len(params.ProductTypes) == 0 {
+		// По умолчанию используем marketplace
+		itemType = behavior.ItemTypeMarketplace
+	} else if len(params.ProductTypes) == 1 {
+		// Если ищем только один тип, устанавливаем его
+		switch params.ProductTypes[0] {
+		case "marketplace":
+			itemType = behavior.ItemTypeMarketplace
+		case "storefront":
+			itemType = behavior.ItemTypeStorefront
+		default:
+			// Если неизвестный тип, используем marketplace по умолчанию
+			itemType = behavior.ItemTypeMarketplace
+		}
+	} else {
+		// Если ищем несколько типов или все типы, выбираем тип с большим количеством результатов
+		marketplaceCount := 0
+		storefrontCount := 0
+
+		// Проверяем, что Items не nil перед итерацией
+		if result.Items != nil {
+			for _, item := range result.Items {
+				switch item.ProductType {
+				case "marketplace":
+					marketplaceCount++
+				case "storefront":
+					storefrontCount++
+				}
 			}
-			return "mobile"
+		}
+
+		if marketplaceCount >= storefrontCount {
+			itemType = behavior.ItemTypeMarketplace
+		} else {
+			itemType = behavior.ItemTypeStorefront
 		}
 	}
 
-	// Проверка на боты
-	botKeywords := []string{
-		"bot", "crawl", "spider", "scraper", "curl", "wget",
+	// Создаем метаданные для трекинга
+	metadata := map[string]interface{}{
+		"search_query":       params.Query,
+		"search_filters":     searchFilters,
+		"search_sort":        params.SortBy,
+		"results_count":      result.Total,
+		"search_duration_ms": duration.Milliseconds(),
+		"page":               params.Page,
+		"limit":              params.Limit,
+		"language":           params.Language,
+		"device_type":        getDeviceTypeFromUserAgent(trackCtx.userAgent),
+		"browser":            trackCtx.userAgent,
+		"referer":            trackCtx.referer,
+		"user_agent":         trackCtx.userAgent,
+		"ip_address":         trackCtx.ipAddress,
 	}
 
-	for _, keyword := range botKeywords {
-		if strings.Contains(ua, keyword) {
-			return "bot"
+	// Добавляем product_types только если они не nil
+	if params.ProductTypes != nil {
+		metadata["product_types"] = params.ProductTypes
+	}
+
+	// Создаем запрос для трекинга
+	trackingReq := &behavior.TrackEventRequest{
+		SessionID:   sessionID,
+		EventType:   behavior.EventTypeSearchPerformed,
+		SearchQuery: params.Query,
+		ItemType:    itemType,
+		Metadata:    metadata,
+	}
+
+	// Отправляем событие в behavior tracking сервис (если доступен)
+	behaviorSvc := h.services.BehaviorTracking()
+	logger.Debug().
+		Bool("behavior_svc_nil", behaviorSvc == nil).
+		Str("query", params.Query).
+		Msg("Checking behavior tracking service")
+
+	if behaviorSvc != nil {
+		if err := behaviorSvc.TrackEvent(ctx, userID, trackingReq); err != nil {
+			logger.Error().Err(err).
+				Str("session_id", sessionID).
+				Str("query", params.Query).
+				Msg("Failed to track search event")
+		} else {
+			logger.Debug().
+				Str("session_id", sessionID).
+				Str("query", params.Query).
+				Msg("Successfully sent event to behavior tracking")
 		}
+	} else {
+		logger.Warn().Msg("Behavior tracking service is not available")
+	}
+}
+
+// getDeviceTypeFromUserAgent определяет тип устройства по User-Agent
+func getDeviceTypeFromUserAgent(userAgent string) string {
+	userAgent = strings.ToLower(userAgent)
+
+	if strings.Contains(userAgent, "mobile") ||
+		strings.Contains(userAgent, "android") ||
+		strings.Contains(userAgent, "iphone") {
+		return "mobile"
 	}
 
-	// По умолчанию - десктоп
+	if strings.Contains(userAgent, "tablet") ||
+		strings.Contains(userAgent, "ipad") {
+		return "tablet"
+	}
+
 	return "desktop"
 }

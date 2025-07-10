@@ -66,7 +66,7 @@ BEGIN
         GROUP BY ct.id, ct.direct_count, ct.category_path;
 
         -- Создаем уникальный индекс для возможности CONCURRENT обновления
-        CREATE UNIQUE INDEX category_listing_counts_idx ON category_listing_counts(category_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS category_listing_counts_idx ON category_listing_counts(category_id);
     ELSE
         -- Если представление уже существует, обновляем его
         REFRESH MATERIALIZED VIEW category_listing_counts;
@@ -112,7 +112,8 @@ BEGIN
         FROM pg_trigger 
         WHERE tgname = 'refresh_category_counts_insert'
     ) THEN
-        CREATE TRIGGER refresh_category_counts_insert
+        DROP TRIGGER IF EXISTS refresh_category_counts_insert ON marketplace_listings;
+CREATE TRIGGER refresh_category_counts_insert
             AFTER INSERT ON marketplace_listings
             FOR EACH ROW
             EXECUTE FUNCTION refresh_category_listing_counts();
@@ -124,7 +125,8 @@ BEGIN
         FROM pg_trigger 
         WHERE tgname = 'refresh_category_counts_update'
     ) THEN
-        CREATE TRIGGER refresh_category_counts_update
+        DROP TRIGGER IF EXISTS refresh_category_counts_update ON marketplace_listings;
+CREATE TRIGGER refresh_category_counts_update
             AFTER UPDATE ON marketplace_listings
             FOR EACH ROW
             WHEN (OLD.status IS DISTINCT FROM NEW.status)
@@ -137,7 +139,8 @@ BEGIN
         FROM pg_trigger 
         WHERE tgname = 'refresh_category_counts_delete'
     ) THEN
-        CREATE TRIGGER refresh_category_counts_delete
+        DROP TRIGGER IF EXISTS refresh_category_counts_delete ON marketplace_listings;
+CREATE TRIGGER refresh_category_counts_delete
             AFTER DELETE ON marketplace_listings
             FOR EACH ROW
             EXECUTE FUNCTION refresh_category_listing_counts();
