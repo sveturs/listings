@@ -22,6 +22,7 @@ import (
 	contactsHandler "backend/internal/proj/contacts/handler"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
+	gisHandler "backend/internal/proj/gis/handler"
 	globalHandler "backend/internal/proj/global/handler"
 	globalService "backend/internal/proj/global/service"
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
@@ -60,6 +61,7 @@ type Server struct {
 	searchAdmin        *search_admin.Module
 	searchOptimization *search_optimization.Module
 	global             *globalHandler.Handler
+	gis                *gisHandler.Handler
 	fileStorage        filestorage.FileStorageInterface
 }
 
@@ -107,6 +109,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	behaviorTrackingModule := behavior_tracking.NewModule(db.GetPool())
 	searchAdminModule := search_admin.NewModule(db)
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
+	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -154,6 +157,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		searchAdmin:        searchAdminModule,
 		searchOptimization: searchOptimizationModule,
 		global:             globalHandlerInstance,
+		gis:                gisHandlerInstance,
 		fileStorage:        fileStorage,
 	}
 
@@ -274,7 +278,7 @@ func (s *Server) registerProjectRoutes() {
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.marketplace, s.balance, s.orders, s.storefront,
-		s.geocode, s.contacts, s.payments, s.docs, s.analytics, s.behaviorTracking)
+		s.geocode, s.gis, s.contacts, s.payments, s.docs, s.analytics, s.behaviorTracking)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {
