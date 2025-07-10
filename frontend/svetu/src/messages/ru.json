@@ -2524,5 +2524,85 @@
       "failed": "Неудачно",
       "ready": "Готово"
     }
+  },
+  "gis": {
+    "map": {
+      "search_placeholder": "Поиск на карте...",
+      "search_button": "Найти",
+      "loading": "Загрузка карты...",
+      "no_results": "Ничего не найдено",
+      "show_all": "Показать все",
+      "my_location": "Мое местоположение",
+      "layers": "Слои",
+      "styles": {
+        "streets": "Улицы",
+        "satellite": "Спутник",
+        "outdoors": "Природа",
+        "light": "Светлая",
+        "dark": "Темная"
+      },
+      "legend": {
+        "title": "Легенда",
+        "listings": "Жилье",
+        "users": "Пользователи",
+        "poi": "Достопримечательности"
+      },
+      "controls": {
+        "zoom_in": "Приблизить",
+        "zoom_out": "Отдалить",
+        "compass": "Компас",
+        "fullscreen": "Полный экран",
+        "geolocation": "Геолокация",
+        "navigation": "Навигация"
+      }
+    },
+    "geolocation": {
+      "permission_denied": "Доступ к геолокации запрещен",
+      "position_unavailable": "Местоположение недоступно",
+      "timeout": "Время ожидания истекло",
+      "unknown_error": "Неизвестная ошибка геолокации",
+      "not_supported": "Геолокация не поддерживается"
+    },
+    "search": {
+      "placeholder": "Введите адрес или место...",
+      "no_results": "Ничего не найдено",
+      "error": "Ошибка поиска",
+      "searching": "Поиск...",
+      "recent": "Недавние поиски",
+      "clear_recent": "Очистить историю"
+    },
+    "popup": {
+      "close": "Закрыть",
+      "view_details": "Подробнее",
+      "view_profile": "Профиль",
+      "directions": "Проложить маршрут",
+      "share": "Поделиться",
+      "distance": "Расстояние",
+      "rating": "Рейтинг",
+      "reviews": "отзывов",
+      "per_night": "за ночь",
+      "was_online": "Был в сети",
+      "km_away": "км от вас"
+    },
+    "distance": {
+      "meters": "м",
+      "kilometers": "км",
+      "miles": "миль"
+    },
+    "directions": {
+      "driving": "На автомобиле",
+      "walking": "Пешком",
+      "cycling": "На велосипеде",
+      "transit": "Общественный транспорт"
+    },
+    "errors": {
+      "token_required": "Токен доступа к карте не настроен",
+      "load_failed": "Не удалось загрузить карту",
+      "search_failed": "Ошибка поиска",
+      "geolocation_failed": "Не удалось получить местоположение",
+      "api_error": "Ошибка API",
+      "network_error": "Ошибка сети",
+      "unknown_error": "Неизвестная ошибка"
+    }
   }
 }

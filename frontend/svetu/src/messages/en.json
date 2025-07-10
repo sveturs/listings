@@ -2515,5 +2515,85 @@
       "failed": "Failed",
       "ready": "Ready"
     }
+  },
+  "gis": {
+    "map": {
+      "search_placeholder": "Search on map...",
+      "search_button": "Search",
+      "loading": "Loading map...",
+      "no_results": "No results found",
+      "show_all": "Show all",
+      "my_location": "My location",
+      "layers": "Layers",
+      "styles": {
+        "streets": "Streets",
+        "satellite": "Satellite",
+        "outdoors": "Outdoors",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "legend": {
+        "title": "Legend",
+        "listings": "Listings",
+        "users": "Users",
+        "poi": "Points of Interest"
+      },
+      "controls": {
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out",
+        "compass": "Compass",
+        "fullscreen": "Fullscreen",
+        "geolocation": "Geolocation",
+        "navigation": "Navigation"
+      }
+    },
+    "geolocation": {
+      "permission_denied": "Geolocation access denied",
+      "position_unavailable": "Position unavailable",
+      "timeout": "Request timed out",
+      "unknown_error": "Unknown geolocation error",
+      "not_supported": "Geolocation not supported"
+    },
+    "search": {
+      "placeholder": "Enter address or location...",
+      "no_results": "No results found",
+      "error": "Search error",
+      "searching": "Searching...",
+      "recent": "Recent searches",
+      "clear_recent": "Clear history"
+    },
+    "popup": {
+      "close": "Close",
+      "view_details": "View details",
+      "view_profile": "View profile",
+      "directions": "Get directions",
+      "share": "Share",
+      "distance": "Distance",
+      "rating": "Rating",
+      "reviews": "reviews",
+      "per_night": "per night",
+      "was_online": "Last seen",
+      "km_away": "km away"
+    },
+    "distance": {
+      "meters": "m",
+      "kilometers": "km",
+      "miles": "mi"
+    },
+    "directions": {
+      "driving": "Driving",
+      "walking": "Walking",
+      "cycling": "Cycling",
+      "transit": "Transit"
+    },
+    "errors": {
+      "token_required": "Map access token not configured",
+      "load_failed": "Failed to load map",
+      "search_failed": "Search failed",
+      "geolocation_failed": "Failed to get location",
+      "api_error": "API error",
+      "network_error": "Network error",
+      "unknown_error": "Unknown error"
+    }
   }
 }
