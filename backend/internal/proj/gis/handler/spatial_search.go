@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 
 	"backend/internal/proj/gis/service"
 	"backend/internal/proj/gis/types"
@@ -243,7 +242,7 @@ func (h *SpatialHandler) GetNearbyListings(c *fiber.Ctx) error {
 func (h *SpatialHandler) GetListingLocation(c *fiber.Ctx) error {
 	// Парсим ID
 	idStr := c.Params("id")
-	listingID, err := uuid.Parse(idStr)
+	listingID, err := strconv.Atoi(idStr)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "gis.invalidListingId")
 	}
@@ -278,7 +277,7 @@ func (h *SpatialHandler) GetListingLocation(c *fiber.Ctx) error {
 func (h *SpatialHandler) UpdateListingLocation(c *fiber.Ctx) error {
 	// Парсим ID
 	idStr := c.Params("id")
-	listingID, err := uuid.Parse(idStr)
+	listingID, err := strconv.Atoi(idStr)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "gis.invalidListingId")
 	}

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"backend/internal/proj/gis/types"
@@ -35,11 +34,11 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 				ml.title,
 				ml.description,
 				ml.price,
-				ml.currency,
+				'RSD' as currency,
 				mc.name as category,
-				ST_Y(ml.location::geometry) as lat,
-				ST_X(ml.location::geometry) as lng,
-				ml.address,
+				ST_Y(lg.location::geometry) as lat,
+				ST_X(lg.location::geometry) as lng,
+				ml.location as address,
 				ml.user_id,
 				ml.status,
 				ml.created_at,
@@ -49,7 +48,7 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 	if params.Center != nil {
 		query += fmt.Sprintf(`,
 				ST_Distance(
-					ml.location::geography,
+					lg.location::geography,
 					ST_SetSRID(ST_MakePoint(%f, %f), 4326)::geography
 				) as distance`, params.Center.Lng, params.Center.Lat)
 	}
@@ -57,7 +56,8 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 	query += `
 			FROM marketplace_listings ml
 			LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
-			WHERE ml.status = 'active'`
+			LEFT JOIN listings_geo lg ON ml.id = lg.listing_id
+			WHERE ml.status = 'active' AND lg.location IS NOT NULL`
 
 	// Применяем фильтры
 	var conditions []string
@@ -67,7 +67,7 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 	// Фильтр по границам
 	if params.Bounds != nil {
 		conditions = append(conditions, fmt.Sprintf(
-			"ml.location && ST_MakeEnvelope($%d, $%d, $%d, $%d, 4326)",
+			"lg.location && ST_MakeEnvelope($%d, $%d, $%d, $%d, 4326)",
 			argCount, argCount+1, argCount+2, argCount+3,
 		))
 		args = append(args, params.Bounds.West, params.Bounds.South, params.Bounds.East, params.Bounds.North)
@@ -77,7 +77,7 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 	// Фильтр по радиусу
 	if params.Center != nil && params.RadiusKm > 0 {
 		conditions = append(conditions, fmt.Sprintf(
-			"ST_DWithin(ml.location::geography, ST_SetSRID(ST_MakePoint($%d, $%d), 4326)::geography, $%d)",
+			"ST_DWithin(lg.location::geography, ST_SetSRID(ST_MakePoint($%d, $%d), 4326)::geography, $%d)",
 			argCount, argCount+1, argCount+2,
 		))
 		args = append(args, params.Center.Lng, params.Center.Lat, params.RadiusKm*1000) // в метрах
@@ -108,12 +108,12 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 		argCount++
 	}
 
-	// Фильтр по валюте
-	if params.Currency != "" {
-		conditions = append(conditions, fmt.Sprintf("ml.currency = $%d", argCount))
-		args = append(args, params.Currency)
-		argCount++
-	}
+	// Фильтр по валюте (пропускаем, так как все объявления в RSD)
+	// if params.Currency != "" {
+	//	conditions = append(conditions, fmt.Sprintf("ml.currency = $%d", argCount))
+	//	args = append(args, params.Currency)
+	//	argCount++
+	// }
 
 	// Фильтр по пользователю
 	if params.UserID != nil {
@@ -256,19 +256,20 @@ func (r *PostGISRepository) GetClusters(ctx context.Context, params types.Cluste
 	clusterQuery := `
 		WITH grid AS (
 			SELECT 
-				width_bucket(ST_X(ml.location::geometry), $1, $3, $5) as x_bucket,
-				width_bucket(ST_Y(ml.location::geometry), $2, $4, $5) as y_bucket,
+				width_bucket(ST_X(lg.location::geometry), $1, $3, $5) as x_bucket,
+				width_bucket(ST_Y(lg.location::geometry), $2, $4, $5) as y_bucket,
 				COUNT(*) as count,
-				AVG(ST_X(ml.location::geometry)) as center_lng,
-				AVG(ST_Y(ml.location::geometry)) as center_lat,
-				MIN(ST_X(ml.location::geometry)) as min_lng,
-				MIN(ST_Y(ml.location::geometry)) as min_lat,
-				MAX(ST_X(ml.location::geometry)) as max_lng,
-				MAX(ST_Y(ml.location::geometry)) as max_lat
+				AVG(ST_X(lg.location::geometry)) as center_lng,
+				AVG(ST_Y(lg.location::geometry)) as center_lat,
+				MIN(ST_X(lg.location::geometry)) as min_lng,
+				MIN(ST_Y(lg.location::geometry)) as min_lat,
+				MAX(ST_X(lg.location::geometry)) as max_lng,
+				MAX(ST_Y(lg.location::geometry)) as max_lat
 			FROM marketplace_listings ml
 			LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
-			WHERE ml.status = 'active'
-				AND ml.location && ST_MakeEnvelope($1, $2, $3, $4, 4326)`
+			LEFT JOIN listings_geo lg ON ml.id = lg.listing_id
+			WHERE ml.status = 'active' AND lg.location IS NOT NULL
+				AND lg.location && ST_MakeEnvelope($1, $2, $3, $4, 4326)`
 
 	args := []interface{}{
 		params.Bounds.West,
@@ -302,11 +303,12 @@ func (r *PostGISRepository) GetClusters(ctx context.Context, params types.Cluste
 		argCount++
 	}
 
-	if params.Currency != "" {
-		clusterQuery += fmt.Sprintf(" AND ml.currency = $%d", argCount)
-		args = append(args, params.Currency)
-		argCount++
-	}
+	// Убираем фильтр по валюте, так как все объявления в RSD
+	// if params.Currency != "" {
+	//	clusterQuery += fmt.Sprintf(" AND ml.currency = $%d", argCount)
+	//	args = append(args, params.Currency)
+	//	argCount++
+	// }
 
 	clusterQuery += `
 			GROUP BY x_bucket, y_bucket
@@ -372,25 +374,26 @@ func (r *PostGISRepository) GetClusters(ctx context.Context, params types.Cluste
 }
 
 // GetListingByID получение объявления по ID с геоданными
-func (r *PostGISRepository) GetListingByID(ctx context.Context, id uuid.UUID) (*types.GeoListing, error) {
+func (r *PostGISRepository) GetListingByID(ctx context.Context, id int) (*types.GeoListing, error) {
 	query := `
 		SELECT 
 			ml.id,
 			ml.title,
 			ml.description,
 			ml.price,
-			ml.currency,
+			'RSD' as currency,
 			mc.name as category,
-			ST_Y(ml.location::geometry) as lat,
-			ST_X(ml.location::geometry) as lng,
-			ml.address,
+			ST_Y(lg.location::geometry) as lat,
+			ST_X(lg.location::geometry) as lng,
+			ml.location as address,
 			ml.user_id,
 			ml.status,
 			ml.created_at,
 			ml.updated_at
 		FROM marketplace_listings ml
 		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
-		WHERE ml.id = $1`
+		LEFT JOIN listings_geo lg ON ml.id = lg.listing_id
+		WHERE ml.id = $1 AND lg.location IS NOT NULL`
 
 	var listing types.GeoListing
 	var lat, lng float64
@@ -424,24 +427,37 @@ func (r *PostGISRepository) GetListingByID(ctx context.Context, id uuid.UUID) (*
 }
 
 // UpdateListingLocation обновление геолокации объявления
-func (r *PostGISRepository) UpdateListingLocation(ctx context.Context, id uuid.UUID, location types.Point, address string) error {
+func (r *PostGISRepository) UpdateListingLocation(ctx context.Context, id int, location types.Point, address string) error {
+	// Обновляем запись в listings_geo
 	query := `
-		UPDATE marketplace_listings
-		SET location = ST_SetSRID(ST_MakePoint($1, $2), 4326),
-		    address = $3,
-		    updated_at = NOW()
-		WHERE id = $4`
+		INSERT INTO listings_geo (listing_id, location, geohash, is_precise, blur_radius)
+		VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326), ST_GeoHash(ST_SetSRID(ST_MakePoint($2, $3), 4326), 8), true, 0)
+		ON CONFLICT (listing_id) DO UPDATE SET
+			location = ST_SetSRID(ST_MakePoint($2, $3), 4326),
+			geohash = ST_GeoHash(ST_SetSRID(ST_MakePoint($2, $3), 4326), 8),
+			updated_at = NOW()`
 
-	_, err := r.db.ExecContext(ctx, query, location.Lng, location.Lat, address, id)
+	_, err := r.db.ExecContext(ctx, query, id, location.Lng, location.Lat)
 	if err != nil {
 		return fmt.Errorf("failed to update listing location: %w", err)
+	}
+
+	// Обновляем адрес в основной таблице
+	updateAddressQuery := `
+		UPDATE marketplace_listings
+		SET location = $1, updated_at = NOW()
+		WHERE id = $2`
+
+	_, err = r.db.ExecContext(ctx, updateAddressQuery, address, id)
+	if err != nil {
+		return fmt.Errorf("failed to update listing address: %w", err)
 	}
 
 	return nil
 }
 
 // getListingImages получение изображений объявления
-func (r *PostGISRepository) getListingImages(ctx context.Context, listingID uuid.UUID) ([]string, error) {
+func (r *PostGISRepository) getListingImages(ctx context.Context, listingID int) ([]string, error) {
 	query := `
 		SELECT image_url
 		FROM marketplace_images

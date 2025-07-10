@@ -504,9 +504,9 @@ func (h *Handler) UpdateConfig(c *fiber.Ctx) error {
 func (h *Handler) GetSearchAnalytics(c *fiber.Ctx) error {
 	// Возвращаем сообщение о том, что аналитика перенесена в другой модуль
 	response := map[string]interface{}{
-		"message": "Search analytics moved to behavior_tracking module",
+		"message":  "Search analytics moved to behavior_tracking module",
 		"endpoint": "/api/v1/analytics/metrics/search",
-		"note": "This endpoint is deprecated. Use behavior_tracking analytics endpoints instead.",
+		"note":     "This endpoint is deprecated. Use behavior_tracking analytics endpoints instead.",
 	}
 
 	return utils.SuccessResponse(c, response)

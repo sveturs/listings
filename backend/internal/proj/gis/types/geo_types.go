@@ -3,8 +3,6 @@ package types
 import (
 	"math"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Point представляет географическую точку
@@ -23,7 +21,7 @@ type Bounds struct {
 
 // GeoListing представляет объявление с геоданными
 type GeoListing struct {
-	ID          uuid.UUID `json:"id"`
+	ID          int       `json:"id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description,omitempty"`
 	Price       float64   `json:"price"`
@@ -32,7 +30,7 @@ type GeoListing struct {
 	Location    Point     `json:"location"`
 	Address     string    `json:"address,omitempty"`
 	Images      []string  `json:"images,omitempty"`
-	UserID      uuid.UUID `json:"user_id"`
+	UserID      int       `json:"user_id"`
 	Status      string    `json:"status"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
@@ -41,20 +39,20 @@ type GeoListing struct {
 
 // SearchParams параметры пространственного поиска
 type SearchParams struct {
-	Bounds      *Bounds    `json:"bounds,omitempty"`
-	Center      *Point     `json:"center,omitempty"`    // Центр поиска для радиусного поиска
-	RadiusKm    float64    `json:"radius_km,omitempty"` // Радиус поиска в километрах
-	Categories  []string   `json:"categories,omitempty"`
-	MinPrice    *float64   `json:"min_price,omitempty"`
-	MaxPrice    *float64   `json:"max_price,omitempty"`
-	Currency    string     `json:"currency,omitempty"`
-	SearchQuery string     `json:"q,omitempty"`          // Текстовый поиск
-	SortBy      string     `json:"sort_by,omitempty"`    // distance, price, created_at
-	SortOrder   string     `json:"sort_order,omitempty"` // asc, desc
-	Limit       int        `json:"limit,omitempty"`
-	Offset      int        `json:"offset,omitempty"`
-	UserID      *uuid.UUID `json:"user_id,omitempty"` // Фильтр по пользователю
-	Status      string     `json:"status,omitempty"`  // Фильтр по статусу
+	Bounds      *Bounds  `json:"bounds,omitempty"`
+	Center      *Point   `json:"center,omitempty"`    // Центр поиска для радиусного поиска
+	RadiusKm    float64  `json:"radius_km,omitempty"` // Радиус поиска в километрах
+	Categories  []string `json:"categories,omitempty"`
+	MinPrice    *float64 `json:"min_price,omitempty"`
+	MaxPrice    *float64 `json:"max_price,omitempty"`
+	Currency    string   `json:"currency,omitempty"`
+	SearchQuery string   `json:"q,omitempty"`          // Текстовый поиск
+	SortBy      string   `json:"sort_by,omitempty"`    // distance, price, created_at
+	SortOrder   string   `json:"sort_order,omitempty"` // asc, desc
+	Limit       int      `json:"limit,omitempty"`
+	Offset      int      `json:"offset,omitempty"`
+	UserID      *int     `json:"user_id,omitempty"` // Фильтр по пользователю
+	Status      string   `json:"status,omitempty"`  // Фильтр по статусу
 }
 
 // Cluster представляет кластер объявлений

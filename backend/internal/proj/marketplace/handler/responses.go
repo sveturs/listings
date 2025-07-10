@@ -200,13 +200,6 @@ type SearchMetadata struct {
 	TookMs             int64                      `json:"took_ms,omitempty" example:"25"`
 }
 
-// SuggestionItem элемент подсказки
-type SuggestionItem struct {
-	Text     string           `json:"text" example:"iPhone 13"`
-	Type     string           `json:"type" example:"product"`
-	Category *CategorySummary `json:"category,omitempty"`
-}
-
 // CategorySummary краткая информация о категории
 type CategorySummary struct {
 	ID   int    `json:"id" example:"10"`

@@ -39,6 +39,18 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
+	// Пропускаем публичные GIS маршруты
+	if strings.HasPrefix(path, "/api/v1/gis") {
+		method := c.Method()
+		if method == "GET" && (strings.HasSuffix(path, "/search") ||
+			strings.HasSuffix(path, "/clusters") ||
+			strings.HasSuffix(path, "/nearby") ||
+			strings.Contains(path, "/listings/") && strings.HasSuffix(path, "/location")) {
+			logger.Info().Str("path", path).Msg("Skipping auth for public GIS routes")
+			return c.Next()
+		}
+	}
+
 	if strings.HasPrefix(path, "/api/v1/storefronts") && !strings.Contains(path, "/my") {
 		// Проверяем что это не защищенные маршруты
 		method := c.Method()

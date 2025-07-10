@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"backend/internal/proj/gis/repository"
@@ -88,7 +87,7 @@ func (s *SpatialService) GetClusters(ctx context.Context, params types.ClusterPa
 }
 
 // GetListingLocation получение геоданных объявления
-func (s *SpatialService) GetListingLocation(ctx context.Context, listingID uuid.UUID) (*types.GeoListing, error) {
+func (s *SpatialService) GetListingLocation(ctx context.Context, listingID int) (*types.GeoListing, error) {
 	listing, err := s.repo.GetListingByID(ctx, listingID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get listing location: %w", err)
@@ -98,7 +97,7 @@ func (s *SpatialService) GetListingLocation(ctx context.Context, listingID uuid.
 }
 
 // UpdateListingLocation обновление геолокации объявления
-func (s *SpatialService) UpdateListingLocation(ctx context.Context, listingID uuid.UUID, location types.Point, address string) error {
+func (s *SpatialService) UpdateListingLocation(ctx context.Context, listingID int, location types.Point, address string) error {
 	// Валидация координат
 	if location.Lat < -90 || location.Lat > 90 {
 		return types.ErrInvalidLatitude

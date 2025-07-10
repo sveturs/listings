@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/domain/models"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"

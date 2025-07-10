@@ -74,7 +74,7 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 	// Используем отдельное соединение для batch операций с retry логикой
 	var conn *pgxpool.Conn
 	var err error
-	
+
 	// Пробуем получить соединение с несколькими попытками
 	for i := 0; i < 3; i++ {
 		conn, err = r.pool.Acquire(ctx)
@@ -86,7 +86,7 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 			time.Sleep(time.Millisecond * 100 * time.Duration(i+1))
 		}
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to acquire connection after retries: %w", err)
 	}
@@ -135,12 +135,11 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 			event.EventType, event.UserID, event.SessionID, event.SearchQuery,
 			event.ItemID, event.ItemType, event.Position, metadataJSON,
 		)
-		
 		if err != nil {
 			logger.Error().Err(err).Int("index", validEvents).Msg("Failed to insert event")
 			return fmt.Errorf("failed to insert event: %w", err)
 		}
-		
+
 		validEvents++
 	}
 
@@ -159,11 +158,11 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 	}
 
 	committed = true
-	
+
 	logger.Info().
 		Int("saved_events", validEvents).
 		Msg("SaveEventsBatch: successfully saved behavior events")
-		
+
 	return nil
 }
 

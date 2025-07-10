@@ -9,9 +9,9 @@ import (
 
 func main() {
 	// Используем статичные данные для тестирования
-	userID := int64(9)  // ID админа из базы данных
+	userID := int64(9) // ID админа из базы данных
 	email := "admin@test.com"
-	secret := "yoursecretkey"  // Из .env файла
+	secret := "yoursecretkey" // Из .env файла
 	expirationHours := 24
 
 	// Генерируем JWT токен
