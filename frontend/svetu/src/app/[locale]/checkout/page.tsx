@@ -16,8 +16,10 @@ import { tokenManager } from '@/utils/tokenManager';
 import type { AppDispatch } from '@/store';
 import type { components } from '@/types/generated/api';
 
-type CreateOrderRequest = components['schemas']['models.CreateOrderRequest'];
-type ShippingAddress = components['schemas']['models.ShippingAddress'];
+type CreateOrderRequest =
+  components['schemas']['backend_internal_domain_models.CreateOrderRequest'];
+type ShippingAddress =
+  components['schemas']['backend_internal_domain_models.ShippingAddress'];
 
 export default function CheckoutPage() {
   const t = useTranslations('checkout');
@@ -83,7 +85,7 @@ export default function CheckoutPage() {
     if (!cart?.items) return { subtotal: 0, shipping: 0, tax: 0, total: 0 };
 
     const subtotal = cart.items.reduce(
-      (sum, item) => sum + Number(item.total_price || 0),
+      (sum: number, item: any) => sum + Number(item.total_price || 0),
       0
     );
     const shipping = 5.0; // Fixed shipping for now
@@ -111,7 +113,7 @@ export default function CheckoutPage() {
     try {
       const orderData: CreateOrderRequest = {
         storefront_id: Number(storefrontId),
-        items: cart.items.map((item) => ({
+        items: cart.items.map((item: any) => ({
           product_id: item.product_id!,
           quantity: item.quantity!,
           price_per_unit: item.price_per_unit!,
@@ -409,7 +411,7 @@ export default function CheckoutPage() {
               <h2 className="card-title">{t('orderSummary')}</h2>
 
               <div className="space-y-4">
-                {cart.items.map((item) => (
+                {cart.items.map((item: any) => (
                   <div key={item.id} className="flex items-center gap-4">
                     {item.product?.images?.[0] && (
                       <SafeImage

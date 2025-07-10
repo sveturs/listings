@@ -3,8 +3,10 @@ import { balanceService } from '@/services/balance';
 import { toast } from 'react-hot-toast';
 import type { components } from '@/types/generated/api';
 
-type UserBalance = components['schemas']['models.UserBalance'];
-type Transaction = components['schemas']['models.BalanceTransaction'];
+type UserBalance =
+  components['schemas']['backend_internal_domain_models.UserBalance'];
+type Transaction =
+  components['schemas']['backend_internal_domain_models.BalanceTransaction'];
 
 interface UseBalanceReturn {
   balance: UserBalance | null;

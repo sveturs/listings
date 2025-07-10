@@ -262,6 +262,7 @@
     "nav": {
       "blog": "Блог",
       "news": "Новости",
+      "map": "Карта",
       "contacts": "Контакты",
       "userContacts": "Мои контакты",
       "createListing": "Подать объявление"
@@ -2603,6 +2604,45 @@
       "api_error": "Ошибка API",
       "network_error": "Ошибка сети",
       "unknown_error": "Неизвестная ошибка"
+    }
+  },
+  "map": {
+    "title": "Карта объявлений",
+    "description": "Найдите товары и услуги рядом с вами",
+    "loading": "Загрузка карты...",
+    "search": {
+      "address": "Поиск по адресу",
+      "addressPlaceholder": "Введите адрес или название места",
+      "found": "Адрес найден",
+      "notFound": "Адрес не найден",
+      "error": "Ошибка поиска адреса"
+    },
+    "filters": {
+      "title": "Фильтры",
+      "category": "Категория",
+      "allCategories": "Все категории",
+      "priceFrom": "Цена от",
+      "priceTo": "Цена до",
+      "radius": "Радиус поиска"
+    },
+    "categories": {
+      "realEstate": "Недвижимость",
+      "vehicles": "Транспорт",
+      "electronics": "Электроника",
+      "clothing": "Одежда",
+      "services": "Услуги",
+      "jobs": "Работа"
+    },
+    "results": {
+      "showing": "Показано",
+      "listings": "объявлений"
+    },
+    "actions": {
+      "apply": "Применить",
+      "reset": "Сбросить"
+    },
+    "errors": {
+      "loadingFailed": "Не удалось загрузить объявления"
     }
   }
 }

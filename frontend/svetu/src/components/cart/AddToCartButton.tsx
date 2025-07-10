@@ -8,7 +8,7 @@ import type { AppDispatch } from '@/store';
 import type { components } from '@/types/generated/api';
 
 type StorefrontProductVariant =
-  components['schemas']['models.StorefrontProductVariant'];
+  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
 
 interface ProductForCart {
   id: number;

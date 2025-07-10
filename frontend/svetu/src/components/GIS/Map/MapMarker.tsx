@@ -94,8 +94,8 @@ const MapMarker: React.FC<MapMarkerProps> = ({
     }
   }, [marker.type]);
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleClick = (e: any) => {
+    e.originalEvent?.stopPropagation();
     if (onClick) {
       onClick(marker);
     }
@@ -125,7 +125,7 @@ const MapMarker: React.FC<MapMarkerProps> = ({
         <div
           className="absolute inset-0 rounded-full animate-ping"
           style={{
-            backgroundColor: markerStyle.backgroundColor,
+            backgroundColor: (markerStyle as any).backgroundColor || '#3b82f6',
             opacity: 0.5,
             width: '32px',
             height: '32px',

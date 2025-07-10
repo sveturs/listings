@@ -3,22 +3,28 @@ import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированного API
-type Storefront = components['schemas']['models.Storefront'];
-type StorefrontCreateDTO = components['schemas']['models.StorefrontCreateDTO'];
-type StorefrontUpdateDTO = components['schemas']['models.StorefrontUpdateDTO'];
-type StorefrontAnalytics = components['schemas']['models.StorefrontAnalytics'];
+type Storefront =
+  components['schemas']['backend_internal_domain_models.Storefront'];
+type StorefrontCreateDTO =
+  components['schemas']['backend_internal_domain_models.StorefrontCreateDTO'];
+type StorefrontUpdateDTO =
+  components['schemas']['backend_internal_domain_models.StorefrontUpdateDTO'];
+type StorefrontAnalytics =
+  components['schemas']['backend_internal_domain_models.StorefrontAnalytics'];
 type StorefrontRatingSummary =
-  components['schemas']['models.StorefrontRatingSummary'];
-type StorefrontMapData = components['schemas']['models.StorefrontMapData'];
+  components['schemas']['backend_internal_domain_models.StorefrontRatingSummary'];
+type StorefrontMapData =
+  components['schemas']['backend_internal_domain_models.StorefrontMapData'];
 type StorefrontSearchResult =
-  components['schemas']['opensearch.StorefrontSearchResult'];
+  components['schemas']['backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult'];
 type StorefrontsListResponse =
-  components['schemas']['handler.StorefrontsListResponse'];
-type StorefrontHours = components['schemas']['models.StorefrontHours'];
+  components['schemas']['internal_proj_storefronts_handler.StorefrontsListResponse'];
+type StorefrontHours =
+  components['schemas']['backend_internal_domain_models.StorefrontHours'];
 type StorefrontPaymentMethod =
-  components['schemas']['models.StorefrontPaymentMethod'];
+  components['schemas']['backend_internal_domain_models.StorefrontPaymentMethod'];
 type StorefrontDeliveryOption =
-  components['schemas']['models.StorefrontDeliveryOption'];
+  components['schemas']['backend_internal_domain_models.StorefrontDeliveryOption'];
 
 // Интерфейсы для параметров запросов
 export interface StorefrontSearchParams {

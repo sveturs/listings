@@ -4,12 +4,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
-import { useApi } from '@/hooks/useApi';
 import { MapViewState, MapMarkerData } from '@/components/GIS/types/gis';
 import { useDebounce } from '@/hooks/useDebounce';
 import { SearchBar } from '@/components/SearchBar';
 import { useRouter } from '@/i18n/routing';
 import { toast } from 'react-hot-toast';
+import { apiClient } from '@/services/api-client';
+import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
 
 interface ListingData {
   id: number;
@@ -40,7 +41,6 @@ interface MapFilters {
 const MapPage: React.FC = () => {
   const t = useTranslations('map');
   const router = useRouter();
-  const { get } = useApi();
   const { search: geoSearch } = useGeoSearch();
 
   // Состояние карты
@@ -70,6 +70,22 @@ const MapPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
+  // Состояние мобильных элементов
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Определение мобильного устройства
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Загрузка объявлений для карты
   const loadListings = useCallback(async () => {
     setIsLoading(true);
@@ -86,24 +102,29 @@ const MapPage: React.FC = () => {
         ...(filters.priceTo > 0 && { price_max: filters.priceTo.toString() }),
       });
 
-      const response = await get(`/api/v1/search?${params}`);
+      const response = await apiClient.get(`/api/v1/search?${params}`);
 
-      if (response.items) {
+      if (response.data?.items) {
         // Преобразуем данные API в формат, ожидаемый компонентом
-        const transformedListings = response.items.map((item: any) => ({
-          id: item.product_id,
-          name: item.name,
-          price: item.price,
-          location: {
-            lat: item.location.lat,
-            lng: item.location.lng,
-            city: item.location.city,
-            country: item.location.country,
-          },
-          category: item.category,
-          images: item.images || [],
-          created_at: item.created_at,
-        }));
+        const transformedListings = response.data.items
+          .filter(
+            (item: any) =>
+              item.location && item.location.lat && item.location.lng
+          )
+          .map((item: any) => ({
+            id: item.product_id,
+            name: item.name,
+            price: item.price,
+            location: {
+              lat: item.location.lat,
+              lng: item.location.lng,
+              city: item.location.city,
+              country: item.location.country,
+            },
+            category: item.category,
+            images: item.images || [],
+            created_at: item.created_at,
+          }));
         setListings(transformedListings);
       }
     } catch (error) {
@@ -112,7 +133,7 @@ const MapPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [filters, get, t]);
+  }, [filters, t]);
 
   // Преобразование объявлений в маркеры
   const createMarkers = useCallback(
@@ -125,7 +146,8 @@ const MapPage: React.FC = () => {
             number,
             number,
           ],
-          type: 'listing',
+          title: listing.name,
+          type: 'listing' as const,
           data: {
             title: listing.name,
             price: listing.price,
@@ -137,29 +159,27 @@ const MapPage: React.FC = () => {
                 .replace(/^,\s*|,\s*$/, ''),
             id: listing.id,
           },
-          color: getCategoryColor(listing.category?.slug || 'default'),
-          size: 'medium',
         }));
     },
     []
   );
 
-  // Получение цвета для категории
-  const getCategoryColor = (categorySlug: string): string => {
-    const colors: { [key: string]: string } = {
-      'real-estate': '#3B82F6', // blue
-      vehicles: '#EF4444', // red
-      electronics: '#10B981', // green
-      clothing: '#F59E0B', // amber
-      services: '#8B5CF6', // violet
-      jobs: '#F97316', // orange
-      'children-goods-toys': '#EC4899', // pink
-      'home-garden': '#16A34A', // green
-      appliances: '#0EA5E9', // sky
-      default: '#6B7280', // gray
-    };
-    return colors[categorySlug] || colors.default;
-  };
+  // Получение цвета для категории (если понадобится в будущем)
+  // const getCategoryColor = (categorySlug: string): string => {
+  //   const colors: { [key: string]: string } = {
+  //     'real-estate': '#3B82F6', // blue
+  //     vehicles: '#EF4444', // red
+  //     electronics: '#10B981', // green
+  //     clothing: '#F59E0B', // amber
+  //     services: '#8B5CF6', // violet
+  //     jobs: '#F97316', // orange
+  //     'children-goods-toys': '#EC4899', // pink
+  //     'home-garden': '#16A34A', // green
+  //     appliances: '#0EA5E9', // sky
+  //     default: '#6B7280', // gray
+  //   };
+  //   return colors[categorySlug] || colors.default;
+  // };
 
   // Поиск по адресу
   const handleAddressSearch = useCallback(
@@ -237,8 +257,8 @@ const MapPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-base-100">
-      {/* Заголовок */}
-      <div className="bg-white border-b border-base-300 px-4 py-4">
+      {/* Заголовок - скрываем на мобильном */}
+      <div className="bg-white border-b border-base-300 px-4 py-4 hidden md:block">
         <div className="container mx-auto">
           <h1 className="text-2xl font-bold text-base-content mb-2">
             {t('title')}
@@ -248,19 +268,18 @@ const MapPage: React.FC = () => {
       </div>
 
       {/* Контейнер с картой и фильтрами */}
-      <div className="relative h-screen">
-        {/* Боковая панель с фильтрами */}
-        <div className="absolute left-4 top-4 z-10 w-80 bg-white rounded-lg shadow-lg">
+      <div className="relative h-screen md:h-[calc(100vh-140px)]">
+        {/* Десктопная боковая панель с фильтрами */}
+        <div className="absolute left-4 top-4 z-10 w-80 bg-white rounded-lg shadow-lg hidden md:block">
           {/* Поиск по адресу */}
           <div className="p-4 border-b border-base-300">
             <label className="block text-sm font-medium text-base-content mb-2">
               {t('search.address')}
             </label>
             <SearchBar
-              value={searchQuery}
-              onChange={(value) => setSearchQuery(value)}
+              initialQuery={searchQuery}
+              onSearch={handleAddressSearch}
               placeholder={t('search.addressPlaceholder')}
-              isLoading={isSearching}
               className="w-full"
             />
           </div>
@@ -358,6 +377,46 @@ const MapPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Мобильная кнопка фильтров */}
+        <div className="absolute top-4 left-4 z-20 md:hidden">
+          <button
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="bg-white rounded-lg shadow-lg p-3 flex items-center space-x-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
+              />
+            </svg>
+            <span className="text-sm font-medium">{t('filters.title')}</span>
+            {(filters.category ||
+              filters.priceFrom > 0 ||
+              filters.priceTo > 0) && (
+              <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">
+                !
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Мобильный поиск */}
+        <div className="absolute top-4 right-4 left-20 z-20 md:hidden">
+          <SearchBar
+            initialQuery={searchQuery}
+            onSearch={handleAddressSearch}
+            placeholder={t('search.addressPlaceholder')}
+            className="w-full"
+          />
+        </div>
+
         {/* Карта */}
         <div className="absolute inset-0">
           <InteractiveMap
@@ -366,19 +425,63 @@ const MapPage: React.FC = () => {
             onMarkerClick={handleMarkerClick}
             onViewStateChange={handleViewStateChange}
             className="w-full h-full"
+            mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
             controlsConfig={{
               showNavigation: true,
               showFullscreen: true,
               showGeolocate: true,
-              showScale: true,
-              showSearch: false, // Отключаем встроенный поиск, используем свой
+              position: isMobile ? 'bottom-right' : 'top-right',
             }}
+            isMobile={isMobile}
           />
         </div>
 
+        {/* Мобильный drawer с фильтрами */}
+        <MobileFiltersDrawer
+          isOpen={isMobileFiltersOpen}
+          onClose={() => setIsMobileFiltersOpen(false)}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onSearch={handleAddressSearch}
+          isSearching={isSearching}
+          markersCount={markers.length}
+          translations={{
+            title: t('filters.title'),
+            search: {
+              address: t('search.address'),
+              placeholder: t('search.addressPlaceholder'),
+            },
+            filters: {
+              category: t('filters.category'),
+              allCategories: t('filters.allCategories'),
+              priceFrom: t('filters.priceFrom'),
+              priceTo: t('filters.priceTo'),
+              radius: t('filters.radius'),
+            },
+            categories: {
+              realEstate: t('categories.realEstate'),
+              vehicles: t('categories.vehicles'),
+              electronics: t('categories.electronics'),
+              clothing: t('categories.clothing'),
+              services: t('categories.services'),
+              jobs: t('categories.jobs'),
+            },
+            results: {
+              showing: t('results.showing'),
+              listings: t('results.listings'),
+            },
+            actions: {
+              apply: t('actions.apply'),
+              reset: t('actions.reset'),
+            },
+          }}
+        />
+
         {/* Индикатор загрузки */}
         {isLoading && (
-          <div className="absolute top-4 right-4 z-10 bg-white rounded-lg shadow-lg p-3">
+          <div className="absolute top-20 right-4 z-10 bg-white rounded-lg shadow-lg p-3 md:top-4">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
               <span className="text-sm text-base-content">{t('loading')}</span>

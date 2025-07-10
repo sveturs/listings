@@ -1,5 +1,6 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import Map, { MapRef } from 'react-map-gl';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import Map from 'react-map-gl';
+import type { MapRef } from 'react-map-gl';
 import {
   MapViewState,
   MapMarkerData,
@@ -24,6 +25,7 @@ interface InteractiveMapProps {
   className?: string;
   style?: React.CSSProperties;
   mapboxAccessToken?: string;
+  isMobile?: boolean;
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -41,6 +43,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   className = '',
   style,
   mapboxAccessToken,
+  isMobile = false,
 }) => {
   const mapRef = useRef<MapRef>(null);
   const { search } = useGeoSearch();
@@ -59,16 +62,72 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   );
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [useOpenStreetMap, setUseOpenStreetMap] = useState(false);
 
   // Получение токена Mapbox из переменных окружения
   const accessToken =
     mapboxAccessToken || process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
+  // Создаем кастомный стиль для OpenStreetMap
+  const openStreetMapStyle = useMemo(() => ({
+    version: 8,
+    sources: {
+      'osm-tiles': {
+        type: 'raster',
+        tiles: [
+          'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        ],
+        tileSize: 256,
+        attribution: '© OpenStreetMap contributors',
+      },
+    },
+    layers: [
+      {
+        id: 'osm-tiles',
+        type: 'raster',
+        source: 'osm-tiles',
+        minzoom: 0,
+        maxzoom: 19,
+      },
+    ],
+  }), []);
+
+  // Проверка токена и переключение на OpenStreetMap если токен не работает
   useEffect(() => {
     if (!accessToken) {
-      console.error('Mapbox access token is not provided');
+      console.warn(
+        'Mapbox access token is not provided, using OpenStreetMap as fallback'
+      );
+      setUseOpenStreetMap(true);
+      setMapStyle(openStreetMapStyle as any);
+    } else {
+      // Проверяем валидность токена
+      const checkToken = async () => {
+        try {
+          const response = await fetch(
+            `https://api.mapbox.com/v1/me?access_token=${accessToken}`
+          );
+          if (!response.ok) {
+            console.warn(
+              'Invalid Mapbox token, using OpenStreetMap as fallback'
+            );
+            setUseOpenStreetMap(true);
+            setMapStyle(openStreetMapStyle as any);
+          }
+        } catch {
+          console.warn(
+            'Unable to verify Mapbox token, using OpenStreetMap as fallback'
+          );
+          setUseOpenStreetMap(true);
+          setMapStyle(openStreetMapStyle as any);
+        }
+      };
+
+      checkToken();
     }
-  }, [accessToken]);
+  }, [accessToken, openStreetMapStyle]);
 
   const handleViewStateChange = useCallback(
     (newViewState: MapViewState) => {
@@ -217,19 +276,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [markers]);
 
-  if (!accessToken) {
-    return (
-      <div
-        className={`flex items-center justify-center bg-gray-100 ${className}`}
-        style={style}
-      >
-        <div className="text-center">
-          <div className="text-gray-500 mb-2">⚠️</div>
-          <p className="text-gray-600">Mapbox access token not configured</p>
-        </div>
-      </div>
-    );
-  }
+  // Убираем проверку на отсутствие токена, так как теперь используем fallback
 
   return (
     <div className={`relative ${className}`} style={style}>
@@ -239,7 +286,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         onMove={(evt) => handleViewStateChange(evt.viewState)}
         onClick={handleMapClick}
         mapStyle={mapStyle}
-        mapboxAccessToken={accessToken}
+        mapboxAccessToken={useOpenStreetMap ? 'pk.dummy' : accessToken}
         attributionControl={false}
         logoPosition="bottom-left"
         style={{ width: '100%', height: '100%' }}
@@ -264,6 +311,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           config={controlsConfig}
           onStyleChange={handleStyleChange}
           onSearch={handleSearch}
+          isMobile={isMobile}
         />
       </Map>
 

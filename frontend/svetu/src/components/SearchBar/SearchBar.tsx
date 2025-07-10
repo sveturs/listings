@@ -235,7 +235,8 @@ export default function SearchBar({
           click_position: position,
           total_results: suggestions.length,
           click_time_from_search_ms: Date.now() - Date.now(), // приблизительное время
-          item_type: suggestion.type === 'product' ? 'marketplace' : 'marketplace', // По умолчанию marketplace для всех предложений
+          item_type:
+            suggestion.type === 'product' ? 'marketplace' : 'marketplace', // По умолчанию marketplace для всех предложений
         });
       }
     } catch (error) {

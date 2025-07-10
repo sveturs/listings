@@ -272,6 +272,7 @@
     "nav": {
       "blog": "Blog",
       "news": "News",
+      "map": "Map",
       "contacts": "Contacts",
       "userContacts": "My Contacts",
       "createListing": "Create Listing"
@@ -2594,6 +2595,45 @@
       "api_error": "API error",
       "network_error": "Network error",
       "unknown_error": "Unknown error"
+    }
+  },
+  "map": {
+    "title": "Listings Map",
+    "description": "Find products and services near you",
+    "loading": "Loading map...",
+    "search": {
+      "address": "Address search",
+      "addressPlaceholder": "Enter address or place name",
+      "found": "Address found",
+      "notFound": "Address not found",
+      "error": "Address search error"
+    },
+    "filters": {
+      "title": "Filters",
+      "category": "Category",
+      "allCategories": "All Categories",
+      "priceFrom": "Price from",
+      "priceTo": "Price to",
+      "radius": "Search radius"
+    },
+    "categories": {
+      "realEstate": "Real Estate",
+      "vehicles": "Vehicles",
+      "electronics": "Electronics",
+      "clothing": "Clothing",
+      "services": "Services",
+      "jobs": "Jobs"
+    },
+    "results": {
+      "showing": "Showing",
+      "listings": "listings"
+    },
+    "actions": {
+      "apply": "Apply",
+      "reset": "Reset"
+    },
+    "errors": {
+      "loadingFailed": "Failed to load listings"
     }
   }
 }

@@ -5,21 +5,21 @@ import { tokenManager } from '@/utils/tokenManager';
 
 // Типы из сгенерированного API
 type BulkCreateProductsRequest =
-  components['schemas']['models.BulkCreateProductsRequest'];
+  components['schemas']['backend_internal_domain_models.BulkCreateProductsRequest'];
 type BulkCreateProductsResponse =
-  components['schemas']['models.BulkCreateProductsResponse'];
+  components['schemas']['backend_internal_domain_models.BulkCreateProductsResponse'];
 type BulkUpdateProductsRequest =
-  components['schemas']['models.BulkUpdateProductsRequest'];
+  components['schemas']['backend_internal_domain_models.BulkUpdateProductsRequest'];
 type BulkUpdateProductsResponse =
-  components['schemas']['models.BulkUpdateProductsResponse'];
+  components['schemas']['backend_internal_domain_models.BulkUpdateProductsResponse'];
 type BulkDeleteProductsRequest =
-  components['schemas']['models.BulkDeleteProductsRequest'];
+  components['schemas']['backend_internal_domain_models.BulkDeleteProductsRequest'];
 type BulkDeleteProductsResponse =
-  components['schemas']['models.BulkDeleteProductsResponse'];
+  components['schemas']['backend_internal_domain_models.BulkDeleteProductsResponse'];
 type BulkUpdateStatusRequest =
-  components['schemas']['models.BulkUpdateStatusRequest'];
+  components['schemas']['backend_internal_domain_models.BulkUpdateStatusRequest'];
 type BulkUpdateStatusResponse =
-  components['schemas']['models.BulkUpdateStatusResponse'];
+  components['schemas']['backend_internal_domain_models.BulkUpdateStatusResponse'];
 
 export const productApi = {
   /**

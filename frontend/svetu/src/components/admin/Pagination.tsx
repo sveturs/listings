@@ -26,32 +26,32 @@ export default function Pagination({
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxVisiblePages = 7;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
       pages.push(1);
-      
+
       if (currentPage > 3) {
         pages.push('...');
       }
-      
+
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(currentPage + 1, totalPages - 1);
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
-      
+
       if (currentPage < totalPages - 2) {
         pages.push('...');
       }
-      
+
       pages.push(totalPages);
     }
-    
+
     return pages;
   };
 
@@ -62,7 +62,8 @@ export default function Pagination({
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
       <div className="flex items-center gap-2">
         <span className="text-sm text-base-content/70">
-          {t('admin.pagination.showing')} {startItem}-{endItem} {t('admin.pagination.of')} {totalItems}
+          {t('admin.pagination.showing')} {startItem}-{endItem}{' '}
+          {t('admin.pagination.of')} {totalItems}
         </span>
       </div>
 
@@ -92,16 +93,19 @@ export default function Pagination({
           >
             «
           </button>
-          
+
           {getPageNumbers().map((page, index) => {
             if (page === '...') {
               return (
-                <button key={`ellipsis-${index}`} className="join-item btn btn-sm btn-disabled">
+                <button
+                  key={`ellipsis-${index}`}
+                  className="join-item btn btn-sm btn-disabled"
+                >
                   ...
                 </button>
               );
             }
-            
+
             return (
               <button
                 key={page}
@@ -114,7 +118,7 @@ export default function Pagination({
               </button>
             );
           })}
-          
+
           <button
             className="join-item btn btn-sm"
             onClick={() => onPageChange(currentPage + 1)}

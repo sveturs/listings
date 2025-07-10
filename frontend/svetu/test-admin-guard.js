@@ -8,11 +8,11 @@ console.log('Текущий пользователь:', currentUser);
 
 // 2. Создаем тестового пользователя БЕЗ прав администратора
 const testUser = {
-    id: 99999,
-    email: "test.nonadmin@example.com", 
-    name: "Тестовый НЕ администратор",
-    is_admin: false,  // Критически важно - пользователь НЕ админ
-    created_at: new Date().toISOString()
+  id: 99999,
+  email: 'test.nonadmin@example.com',
+  name: 'Тестовый НЕ администратор',
+  is_admin: false, // Критически важно - пользователь НЕ админ
+  created_at: new Date().toISOString(),
 };
 
 // 3. Сохраняем в sessionStorage
@@ -22,7 +22,7 @@ console.log('Установлен тестовый пользователь:', t
 // 4. Перезагружаем страницу для применения изменений
 console.log('Перезагрузка страницы через 2 секунды...');
 setTimeout(() => {
-    window.location.reload();
+  window.location.reload();
 }, 2000);
 
 // После перезагрузки выполните:
