@@ -2530,6 +2530,10 @@
       "showing": "Prikazano",
       "listings": "oglasa"
     },
+    "actions": {
+      "apply": "Primeni",
+      "reset": "Resetuj"
+    },
     "errors": {
       "loadingFailed": "Nije moguće učitati oglase"
     }

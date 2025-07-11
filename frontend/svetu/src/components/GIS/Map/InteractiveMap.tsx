@@ -15,12 +15,10 @@ import {
 } from '../types/gis';
 import { useGeoSearch } from '../hooks/useGeoSearch';
 import { useGeolocation } from '../hooks/useGeolocation';
-import MapMarker from './MapMarker';
 import MapPopup from './MapPopup';
 import MapControls from './MapControls';
-import { MapCluster } from './MapCluster';
+import MapboxClusterLayer from './MapboxClusterLayer';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import type { ClusterData } from '../types/gis';
 
 interface InteractiveMapProps {
   initialViewState?: Partial<MapViewState>;
@@ -34,15 +32,6 @@ interface InteractiveMapProps {
   style?: React.CSSProperties;
   mapboxAccessToken?: string;
   isMobile?: boolean;
-  loadClusters?: (
-    bounds: {
-      north: number;
-      south: number;
-      east: number;
-      west: number;
-    },
-    zoom: number
-  ) => Promise<ClusterData[]>;
   // Новые пропсы для маркера покупателя
   showBuyerMarker?: boolean;
   buyerLocation?: {
@@ -72,7 +61,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   style,
   mapboxAccessToken,
   isMobile = false,
-  loadClusters,
   showBuyerMarker = false,
   buyerLocation,
   searchRadius = 10000, // 10км по умолчанию
@@ -95,22 +83,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [mapStyle, setMapStyle] = useState(
     'mapbox://styles/mapbox/streets-v12'
   );
-  const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [useOpenStreetMap, setUseOpenStreetMap] = useState(false);
-
-  // Состояние для кластеров
-  const [clusters, setClusters] = useState<ClusterData[]>([]);
-  const [_isLoadingClusters, setIsLoadingClusters] = useState(false);
 
   // Состояние для маркера покупателя
   const [internalBuyerLocation, setInternalBuyerLocation] = useState({
     longitude: buyerLocation?.longitude || viewState.longitude,
     latitude: buyerLocation?.latitude || viewState.latitude,
   });
-
-  // Порог зума для переключения между кластерами и маркерами
-  const CLUSTER_ZOOM_THRESHOLD = 12; // При zoom < 12 показываем кластеры, при zoom >= 12 показываем индивидуальные маркеры
 
   // Получение токена Mapbox из переменных окружения
   const accessToken =
@@ -165,62 +145,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [buyerLocation]);
 
-  // Загрузка кластеров при изменении области просмотра
-  const loadClustersData = useCallback(
-    async (
-      bounds: { north: number; south: number; east: number; west: number },
-      zoom: number
-    ) => {
-      if (!loadClusters) return;
-
-      setIsLoadingClusters(true);
-      try {
-        const clustersData = await loadClusters(bounds, zoom);
-        console.log(
-          '[InteractiveMap] Loaded clusters:',
-          clustersData?.length || 0
-        );
-        setClusters(clustersData || []);
-      } catch (error) {
-        console.error('Error loading clusters:', error);
-        setClusters([]);
-      } finally {
-        setIsLoadingClusters(false);
-      }
-    },
-    [loadClusters]
-  );
-
-  // Получение границ карты
-  const getMapBounds = useCallback(() => {
-    if (!mapRef.current) return null;
-
-    const bounds = mapRef.current.getBounds();
-    if (!bounds) return null;
-
-    return {
-      north: bounds.getNorth(),
-      south: bounds.getSouth(),
-      east: bounds.getEast(),
-      west: bounds.getWest(),
-    };
-  }, []);
-
-  // Загрузка кластеров при изменении viewport
-  useEffect(() => {
-    if (!loadClusters || !mapRef.current) return;
-
-    const bounds = getMapBounds();
-    if (!bounds) return;
-
-    // Debounce для оптимизации
-    const timeoutId = setTimeout(() => {
-      loadClustersData(bounds, viewState.zoom);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [viewState, loadClusters, loadClustersData, getMapBounds]);
-
   const handleViewStateChange = useCallback(
     (newViewState: MapViewState) => {
       setViewState(newViewState);
@@ -233,7 +157,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   const handleMarkerClick = useCallback(
     (marker: MapMarkerData) => {
-      setSelectedMarker(marker.id);
       if (onMarkerClick) {
         onMarkerClick(marker);
       }
@@ -243,7 +166,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   const handleMapClick = useCallback(
     (event: any) => {
-      setSelectedMarker(null);
       if (onMapClick) {
         onMapClick(event);
       }
@@ -330,7 +252,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   //         zoom: 16,
   //         duration: 1500,
   //       });
-  //       setSelectedMarker(markerId);
   //     }
   //   },
   //   [markers]
@@ -427,21 +348,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     },
   };
 
-  // Обработчик клика по кластеру
-  const handleClusterClick = useCallback(
-    (cluster: ClusterData) => {
-      if (!mapRef.current) return;
-
-      // Увеличиваем масштаб и центрируем на кластере
-      mapRef.current.flyTo({
-        center: [cluster.center.lng, cluster.center.lat],
-        zoom: cluster.zoom_expand || viewState.zoom + 2, // Используем рекомендованный zoom или увеличиваем на 2
-        duration: 1000,
-      });
-    },
-    [viewState.zoom]
-  );
-
   const fitBounds = useCallback(() => {
     if (markers.length > 0 && mapRef.current) {
       const bounds = markers.reduce(
@@ -489,44 +395,20 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         logoPosition="bottom-left"
         style={{ width: '100%', height: '100%' }}
       >
-        {/* Кластеры при малом зуме */}
-        {viewState.zoom < CLUSTER_ZOOM_THRESHOLD && clusters.length > 0 && (
-          <>
-            {clusters.map((cluster, index) => (
-              <Marker
-                key={`cluster-${index}`}
-                longitude={cluster.center.lng}
-                latitude={cluster.center.lat}
-                anchor="center"
-              >
-                <MapCluster
-                  count={cluster.count}
-                  onClick={() => handleClusterClick(cluster)}
-                />
-              </Marker>
-            ))}
-          </>
-        )}
-
-        {/* Маркеры при большом зуме или если нет кластеров */}
-        {(viewState.zoom >= CLUSTER_ZOOM_THRESHOLD ||
-          clusters.length === 0) && (
-          <>
-            {markers.map((marker) => (
-              <MapMarker
-                key={marker.id}
-                marker={marker}
-                selected={selectedMarker === marker.id}
-                onClick={handleMarkerClick}
-              />
-            ))}
-          </>
+        {/* Кластеризация маркеров с помощью MapboxClusterLayer */}
+        {markers.length > 0 && (
+          <MapboxClusterLayer
+            markers={markers}
+            onMarkerClick={handleMarkerClick}
+            clusterRadius={50}
+            clusterMaxZoom={14}
+            clusterMinPoints={2}
+            showPrices={false}
+          />
         )}
 
         {/* Всплывающее окно */}
-        {popup && (
-          <MapPopup popup={popup} onClose={() => setSelectedMarker(null)} />
-        )}
+        {popup && <MapPopup popup={popup} onClose={() => {}} />}
 
         {/* Слой с радиусом поиска */}
         {showBuyerMarker && radiusCircleGeoJSON && (

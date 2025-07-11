@@ -12,7 +12,6 @@ import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
-import type { ClusterData, ClusterResponse } from '@/components/GIS/types/gis';
 
 interface ListingData {
   id: number;
@@ -153,75 +152,6 @@ const MapPage: React.FC = () => {
   useEffect(() => {
     setIsInitialized(true);
   }, []);
-
-  // Загрузка кластеров с API
-  const loadClusters = useCallback(
-    async (
-      bounds: {
-        north: number;
-        south: number;
-        east: number;
-        west: number;
-      },
-      zoom: number
-    ): Promise<ClusterData[]> => {
-      try {
-        // Формируем строку bounds в формате 'south,west,north,east' (как ожидает backend)
-        const boundsStr = `${bounds.south},${bounds.west},${bounds.north},${bounds.east}`;
-
-        // Формируем параметры запроса
-        const params = new URLSearchParams({
-          bounds: boundsStr,
-          zoom_level: Math.round(zoom).toString(),
-          ...(debouncedFilters.category && {
-            categories: debouncedFilters.category,
-          }),
-          ...(debouncedFilters.priceFrom > 0 && {
-            min_price: debouncedFilters.priceFrom.toString(),
-          }),
-          ...(debouncedFilters.priceTo > 0 && {
-            max_price: debouncedFilters.priceTo.toString(),
-          }),
-        });
-
-        // Добавляем географические параметры если есть центр карты
-        if (buyerLocation.latitude && buyerLocation.longitude) {
-          params.append('latitude', buyerLocation.latitude.toString());
-          params.append('longitude', buyerLocation.longitude.toString());
-
-          // Преобразуем радиус из метров в формат для backend (например, "10km")
-          if (debouncedFilters.radius) {
-            const radiusKm = Math.round(debouncedFilters.radius / 1000);
-            params.append('distance', `${radiusKm}km`);
-          }
-        }
-
-        console.log('[Map] Loading clusters with params:', params.toString());
-
-        // Делаем запрос к API
-        const response = await apiClient.get<ClusterResponse>(
-          `/api/v1/gis/clusters?${params}`
-        );
-
-        console.log(
-          '[Map] Clusters found:',
-          response.data?.data?.clusters?.length || 0
-        );
-
-        // Обрабатываем ответ и возвращаем данные кластеров
-        if (response.data?.data?.clusters) {
-          return response.data.data.clusters;
-        }
-
-        return [];
-      } catch (error) {
-        console.error('Error loading clusters:', error);
-        toast.error(t('errors.loadingFailed'));
-        return [];
-      }
-    },
-    [debouncedFilters, buyerLocation, t]
-  );
 
   // Загрузка объявлений для карты
   const loadListings = useCallback(async () => {
@@ -690,7 +620,6 @@ const MapPage: React.FC = () => {
             buyerLocation={buyerLocation}
             searchRadius={filters.radius}
             onBuyerLocationChange={handleBuyerLocationChange}
-            loadClusters={loadClusters}
           />
         </div>
 
