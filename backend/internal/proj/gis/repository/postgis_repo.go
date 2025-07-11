@@ -258,8 +258,8 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 // GetClusters получение кластеров для заданной области и уровня зума
 func (r *PostGISRepository) GetClusters(ctx context.Context, params types.ClusterParams) ([]types.Cluster, []types.GeoListing, error) {
 	// Логируем входные параметры
-	log.Printf("[GetClusters] Starting with params: ZoomLevel=%d, Bounds=%+v, Categories=%v, CategoryIDs=%v, MinPrice=%v, MaxPrice=%v",
-		params.ZoomLevel, params.Bounds, params.Categories, params.CategoryIDs, params.MinPrice, params.MaxPrice)
+	log.Printf("[GetClusters] Starting with params: ZoomLevel=%d, Bounds=%+v, Center=%+v, RadiusKm=%f, Categories=%v, CategoryIDs=%v, MinPrice=%v, MaxPrice=%v",
+		params.ZoomLevel, params.Bounds, params.Center, params.RadiusKm, params.Categories, params.CategoryIDs, params.MinPrice, params.MaxPrice)
 
 	// Определяем размер сетки на основе уровня зума
 	gridSize := params.GridSize
@@ -296,6 +296,14 @@ func (r *PostGISRepository) GetClusters(ctx context.Context, params types.Cluste
 		gridSize,
 	}
 	argCount := 6
+
+	// Добавляем фильтр по радиусу
+	if params.Center != nil && params.RadiusKm > 0 {
+		clusterQuery += fmt.Sprintf(" AND ST_DWithin(lg.location::geography, ST_SetSRID(ST_MakePoint($%d, $%d), 4326)::geography, $%d)",
+			argCount, argCount+1, argCount+2)
+		args = append(args, params.Center.Lng, params.Center.Lat, params.RadiusKm*1000) // в метрах
+		argCount += 3
+	}
 
 	// Добавляем фильтры по категориям (по названию)
 	if len(params.Categories) > 0 {
@@ -410,6 +418,8 @@ func (r *PostGISRepository) GetClusters(ctx context.Context, params types.Cluste
 		// Получаем все объявления в области для показа одиночных
 		searchParams := types.SearchParams{
 			Bounds:      &params.Bounds,
+			Center:      params.Center,
+			RadiusKm:    params.RadiusKm,
 			Categories:  params.Categories,
 			CategoryIDs: params.CategoryIDs,
 			MinPrice:    params.MinPrice,
