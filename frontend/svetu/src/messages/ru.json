@@ -2528,6 +2528,18 @@
     }
   },
   "gis": {
+    "meters": "м",
+    "kilometers": "км",
+    "minutes": "минут",
+    "min": "мин",
+    "accessibilitySettings": "Настройки зоны поиска",
+    "searchAreaSettings": "Настройки зоны поиска",
+    "byRadius": "По радиусу",
+    "byWalkingTime": "Пешком",
+    "searchRadius": "Радиус поиска",
+    "walkingTime": "Время ходьбы",
+    "walkingSpeedNote": "Расчет основан на средней скорости ходьбы 5 км/ч",
+    "atAverageSpeed": "при средней скорости",
     "map": {
       "search_placeholder": "Поиск на карте...",
       "search_button": "Найти",

@@ -291,8 +291,16 @@ const MapPage: React.FC = () => {
             number,
             number,
           ],
+          longitude: listing.location.lng,
+          latitude: listing.location.lat,
           title: listing.name,
           type: 'listing' as const,
+          imageUrl: listing.images?.[0],
+          metadata: {
+            price: listing.price,
+            currency: 'RSD',
+            category: listing.category?.name || 'Unknown',
+          },
           data: {
             title: listing.name,
             price: listing.price,

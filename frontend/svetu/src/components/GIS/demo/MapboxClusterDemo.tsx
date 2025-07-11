@@ -62,6 +62,8 @@ const MapboxClusterDemo: React.FC<MapboxClusterDemoProps> = ({
       markers.push({
         id: `listing-${i}`,
         position: [lng, lat],
+        longitude: lng,
+        latitude: lat,
         title: `Объявление ${i + 1}`,
         description: `Описание объявления ${i + 1}`,
         type: 'listing',
@@ -84,6 +86,8 @@ const MapboxClusterDemo: React.FC<MapboxClusterDemoProps> = ({
       markers.push({
         id: `user-${i}`,
         position: [lng, lat],
+        longitude: lng,
+        latitude: lat,
         title: `Пользователь ${i + 1}`,
         description: `Пользователь ${i + 1}`,
         type: 'user',
@@ -104,6 +108,8 @@ const MapboxClusterDemo: React.FC<MapboxClusterDemoProps> = ({
       markers.push({
         id: `poi-${i}`,
         position: [lng, lat],
+        longitude: lng,
+        latitude: lat,
         title: `Точка интереса ${i + 1}`,
         description: `Описание точки интереса ${i + 1}`,
         type: 'poi',

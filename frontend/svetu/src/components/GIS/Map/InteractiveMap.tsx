@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import Map, { Marker, Source, Layer } from 'react-map-gl';
 import type { MapRef, MarkerDragEvent } from 'react-map-gl';
+import circle from '@turf/circle';
 import {
   MapViewState,
   MapMarkerData,
@@ -284,38 +285,20 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const radiusCircleGeoJSON = useMemo(() => {
     if (!showBuyerMarker) return null;
 
-    // Создаем круг вокруг позиции покупателя
+    // Создаем круг вокруг позиции покупателя с помощью Turf.js
     const center = [
       internalBuyerLocation.longitude,
       internalBuyerLocation.latitude,
     ];
     const radiusInKm = searchRadius / 1000;
-    const options = { steps: 64, units: 'kilometers' as const };
 
-    // Простая аппроксимация круга полигоном
-    const points = [];
-    const numPoints = options.steps;
-    for (let i = 0; i < numPoints; i++) {
-      const angle = (i / numPoints) * 2 * Math.PI;
-      const dx = radiusInKm * Math.cos(angle);
-      const dy = radiusInKm * Math.sin(angle);
+    // Используем Turf.js для создания точного круга
+    const circleFeature = circle(center, radiusInKm, {
+      steps: 64,
+      units: 'kilometers',
+    });
 
-      // Приблизительное преобразование км в градусы
-      const lat = center[1] + dy / 111.32;
-      const lng =
-        center[0] + dx / (111.32 * Math.cos((center[1] * Math.PI) / 180));
-      points.push([lng, lat]);
-    }
-    points.push(points[0]); // Замыкаем полигон
-
-    return {
-      type: 'Feature' as const,
-      geometry: {
-        type: 'Polygon' as const,
-        coordinates: [points],
-      },
-      properties: {},
-    };
+    return circleFeature;
   }, [showBuyerMarker, internalBuyerLocation, searchRadius]);
 
   // Стиль для слоя круга (закомментирован, не используется)

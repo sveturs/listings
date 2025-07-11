@@ -12,6 +12,13 @@ export interface GeoJSONFeature {
     description?: string;
     type: 'listing' | 'user' | 'poi';
     data?: any;
+    imageUrl?: string;
+    metadata?: {
+      price?: number;
+      currency?: string;
+      category?: string;
+      [key: string]: any;
+    };
     // Дополнительные свойства для стилизации
     color?: string;
     size?: number;
@@ -46,6 +53,8 @@ export function markersToGeoJSON(
         description: marker.description,
         type: marker.type,
         data: marker.data,
+        imageUrl: marker.imageUrl,
+        metadata: marker.metadata,
         // Добавляем дополнительные свойства для стилизации
         color: getMarkerColor(marker.type),
         size: getMarkerSize(marker.type),
@@ -115,16 +124,20 @@ export function getMarkerIcon(type: 'listing' | 'user' | 'poi'): string {
  * @returns MapMarkerData
  */
 export function geoJsonToMarker(feature: GeoJSONFeature): MapMarkerData {
+  const longitude = feature.geometry.coordinates[0];
+  const latitude = feature.geometry.coordinates[1];
+  
   return {
     id: feature.properties.id,
-    position: [
-      feature.geometry.coordinates[0],
-      feature.geometry.coordinates[1],
-    ],
+    position: [longitude, latitude],
+    longitude,
+    latitude,
     title: feature.properties.title,
     description: feature.properties.description,
-    type: feature.properties.type,
+    type: feature.properties.type || 'listing',
     data: feature.properties.data,
+    imageUrl: feature.properties.imageUrl,
+    metadata: feature.properties.metadata,
   };
 }
 

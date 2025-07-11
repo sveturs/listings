@@ -19,10 +19,19 @@ export interface MapViewState {
 export interface MapMarkerData {
   id: string;
   position: [number, number]; // [longitude, latitude]
+  longitude: number;
+  latitude: number;
   title: string;
   description?: string;
   type: 'listing' | 'user' | 'poi';
   data?: any;
+  imageUrl?: string;
+  metadata?: {
+    price?: number;
+    currency?: string;
+    category?: string;
+    [key: string]: any;
+  };
 }
 
 export interface MapPopupData {
