@@ -56,15 +56,12 @@ type SearchParams struct {
 	Status      string   `json:"status,omitempty"`  // Фильтр по статусу
 }
 
-
-
 // SearchResponse ответ на поисковый запрос
 type SearchResponse struct {
 	Listings   []GeoListing `json:"listings"`
 	TotalCount int64        `json:"total_count"`
 	HasMore    bool         `json:"has_more"`
 }
-
 
 // Validate проверяет корректность границ
 func (b *Bounds) Validate() error {

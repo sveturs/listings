@@ -142,7 +142,6 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, response)
 }
 
-
 // GetNearbyListings получение ближайших объявлений
 // @Summary Получение ближайших объявлений
 // @Description Получение объявлений в радиусе от заданной точки

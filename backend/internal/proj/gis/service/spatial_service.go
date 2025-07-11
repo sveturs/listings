@@ -54,7 +54,6 @@ func (s *SpatialService) SearchListings(ctx context.Context, params types.Search
 	return response, nil
 }
 
-
 // GetListingLocation получение геоданных объявления
 func (s *SpatialService) GetListingLocation(ctx context.Context, listingID int) (*types.GeoListing, error) {
 	listing, err := s.repo.GetListingByID(ctx, listingID)
@@ -147,7 +146,6 @@ func (s *SpatialService) GetBoundsForRadius(center types.Point, radiusKm float64
 		West:  math.Max(-180, center.Lng-lngDelta),
 	}
 }
-
 
 // validateSearchParams валидация параметров поиска
 func (s *SpatialService) validateSearchParams(params *types.SearchParams) error {

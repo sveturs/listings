@@ -17,5 +17,4 @@ var (
 
 	// ErrLocationNotFound ошибка отсутствия геоданных
 	ErrLocationNotFound = errors.New("location not found")
-
 )

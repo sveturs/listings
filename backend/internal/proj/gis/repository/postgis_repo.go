@@ -254,7 +254,6 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 	return listings, totalCount, nil
 }
 
-
 // GetListingByID получение объявления по ID с геоданными
 func (r *PostGISRepository) GetListingByID(ctx context.Context, id int) (*types.GeoListing, error) {
 	query := `
@@ -354,4 +353,3 @@ func (r *PostGISRepository) getListingImages(ctx context.Context, listingID int)
 
 	return images, nil
 }
-
