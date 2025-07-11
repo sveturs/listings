@@ -126,7 +126,7 @@ export function getMarkerIcon(type: 'listing' | 'user' | 'poi'): string {
 export function geoJsonToMarker(feature: GeoJSONFeature): MapMarkerData {
   const longitude = feature.geometry.coordinates[0];
   const latitude = feature.geometry.coordinates[1];
-  
+
   return {
     id: feature.properties.id,
     position: [longitude, latitude],

@@ -10,7 +10,7 @@ import (
 )
 
 type AuthServiceInterface interface {
-	GetGoogleAuthURL() string
+	GetGoogleAuthURL(origin string) string
 	HandleGoogleCallback(ctx context.Context, code string) (*types.SessionData, error)
 	SaveSession(token string, data *types.SessionData)
 	DeleteSession(token string)

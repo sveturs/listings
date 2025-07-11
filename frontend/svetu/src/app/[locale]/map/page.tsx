@@ -628,6 +628,8 @@ const MapPage: React.FC = () => {
             showBuyerMarker={true}
             buyerLocation={buyerLocation}
             searchRadius={filters.radius}
+            walkingMode={walkingMode}
+            walkingTime={walkingTime}
             onBuyerLocationChange={handleBuyerLocationChange}
           />
         </div>

@@ -14,6 +14,7 @@ import {
   MapPopupData,
   MapControlsConfig,
 } from '../types/gis';
+import { generateStylizedIsochrone } from '../utils/isochrone';
 import { useGeoSearch } from '../hooks/useGeoSearch';
 import { useGeolocation } from '../hooks/useGeolocation';
 import MapPopup from './MapPopup';
@@ -40,6 +41,8 @@ interface InteractiveMapProps {
     latitude: number;
   };
   searchRadius?: number; // в метрах
+  walkingMode?: 'radius' | 'walking';
+  walkingTime?: number; // в минутах
   onBuyerLocationChange?: (location: {
     longitude: number;
     latitude: number;
@@ -65,6 +68,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   showBuyerMarker = false,
   buyerLocation,
   searchRadius = 10000, // 10км по умолчанию
+  walkingMode = 'radius',
+  walkingTime = 15,
   onBuyerLocationChange,
 }) => {
   console.log('[InteractiveMap] Received markers:', markers);
@@ -281,25 +286,29 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     [onBuyerLocationChange]
   );
 
-  // GeoJSON для круга радиуса поиска
+  // GeoJSON для радиуса поиска (круг или изохрона)
   const radiusCircleGeoJSON = useMemo(() => {
     if (!showBuyerMarker) return null;
 
-    // Создаем круг вокруг позиции покупателя с помощью Turf.js
     const center = [
       internalBuyerLocation.longitude,
       internalBuyerLocation.latitude,
     ];
-    const radiusInKm = searchRadius / 1000;
 
-    // Используем Turf.js для создания точного круга
-    const circleFeature = circle(center, radiusInKm, {
-      steps: 64,
-      units: 'kilometers',
-    });
-
-    return circleFeature;
-  }, [showBuyerMarker, internalBuyerLocation, searchRadius]);
+    // Выбираем между радиусом и изохроной в зависимости от режима
+    if (walkingMode === 'walking') {
+      // Генерируем изохрону для пешеходного времени
+      return generateStylizedIsochrone(center, walkingTime);
+    } else {
+      // Создаем обычный круг с помощью Turf.js
+      const radiusInKm = searchRadius / 1000;
+      const circleFeature = circle(center, radiusInKm, {
+        steps: 64,
+        units: 'kilometers',
+      });
+      return circleFeature;
+    }
+  }, [showBuyerMarker, internalBuyerLocation, searchRadius, walkingMode, walkingTime]);
 
   // Стиль для слоя круга (закомментирован, не используется)
   // const radiusCircleLayer: CircleLayer = {

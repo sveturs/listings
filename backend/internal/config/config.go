@@ -338,21 +338,26 @@ func (c *Config) GetCookieSecure() bool {
 
 // GetCookieSameSite возвращает значение SameSite для cookie в зависимости от окружения
 func (c *Config) GetCookieSameSite() string {
-	// В development используем пустую строку для максимальной совместимости
-	// API Routes в Next.js будут проксировать запросы
+	// В development используем "None" для работы с разными доменами/IP
+	// Это позволит cookies работать при доступе через Tailscale
 	// В production используем "Lax" для безопасности
 	if c.IsDevelopment() {
-		return "" // По умолчанию
+		// Если не используем HTTPS, то не можем использовать SameSite=None
+		// В таком случае используем пустую строку
+		if !c.GetCookieSecure() {
+			return "" // Без SameSite для HTTP
+		}
+		return "None" // Для HTTPS разрешаем кросс-доменные запросы
 	}
 	return "Lax"
 }
 
 // GetCookieDomain возвращает домен для cookie в зависимости от окружения
 func (c *Config) GetCookieDomain() string {
-	// В development используем localhost для работы с разными портами
-	// В production используем домен сайта
+	// В development не устанавливаем домен, чтобы cookie работали
+	// как для localhost, так и для IP адресов (например, через Tailscale)
 	if c.IsDevelopment() {
-		return "localhost" // Работает для localhost:3000 и localhost:3001
+		return "" // Пустой домен позволяет cookie работать на любом хосте
 	}
-	return "" // В production используем текущий домен
+	return "" // В production также используем текущий домен
 }
