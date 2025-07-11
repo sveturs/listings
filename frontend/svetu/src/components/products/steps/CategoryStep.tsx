@@ -7,7 +7,8 @@ import { apiClient } from '@/services/api-client';
 import { toast } from '@/utils/toast';
 import type { components } from '@/types/generated/api';
 
-type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];
+type MarketplaceCategory =
+  components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
 
 interface CategoryStepProps {
   onNext: () => void;

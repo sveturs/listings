@@ -23,6 +23,18 @@ var (
 	categoryTreeMutex      sync.RWMutex
 )
 
+// SuggestionItem представляет элемент автодополнения
+type SuggestionItem struct {
+	Type       string                 `json:"type"`
+	Value      string                 `json:"value"`
+	Label      string                 `json:"label"`
+	Count      int                    `json:"count,omitempty"`
+	CategoryID int                    `json:"category_id,omitempty"`
+	ProductID  int                    `json:"product_id,omitempty"`
+	Icon       string                 `json:"icon,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+}
+
 // Handler combines all marketplace handlers
 type Handler struct {
 	Listings           *ListingsHandler
@@ -260,7 +272,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 // @Param query query string true "Search query"
 // @Param limit query int false "Number of suggestions" default(10)
 // @Param types query string false "Comma-separated types (queries,categories,products)" default(queries,categories,products)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]service.SuggestionItem} "Enhanced suggestions list"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]SuggestionItem} "Enhanced suggestions list"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
 // @Router /api/v1/marketplace/enhanced-suggestions [get]

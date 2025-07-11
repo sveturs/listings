@@ -17,9 +17,11 @@ import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AdminGuard from '@/components/AdminGuard';
 import type { components } from '@/types/generated/api';
 
-type DocFile = components['schemas']['handler.DocFile'];
-type DocFilesResponse = components['schemas']['handler.DocFilesResponse'];
-type DocContentResponse = components['schemas']['handler.DocContentResponse'];
+type DocFile = components['schemas']['internal_proj_docserver_handler.DocFile'];
+type DocFilesResponse =
+  components['schemas']['internal_proj_docserver_handler.DocFilesResponse'];
+type DocContentResponse =
+  components['schemas']['internal_proj_docserver_handler.DocContentResponse'];
 
 export default function DocsPage() {
   const [files, setFiles] = useState<DocFile[]>([]);

@@ -272,6 +272,7 @@
     "nav": {
       "blog": "Blog",
       "news": "News",
+      "map": "Map",
       "contacts": "Contacts",
       "userContacts": "My Contacts",
       "createListing": "Create Listing"
@@ -657,10 +658,13 @@
       "users": "Users",
       "analytics": "Analytics",
       "search": "Search Analytics",
+      "system": "System",
       "usersDescription": "Manage user accounts and permissions",
       "listingsDescription": "Moderate and manage marketplace listings",
       "categoriesDescription": "Configure categories and attributes",
-      "searchDescription": "Analyze search performance and user behavior"
+      "searchDescription": "Analyze search performance and user behavior",
+      "attributesDescription": "Manage attributes for marketplace categories",
+      "attributeGroupsDescription": "Manage attribute groups for better organization"
     },
     "categories": {
       "title": "Categories",
@@ -836,7 +840,8 @@
         "behavior": "Behavior",
         "weights": "Search Weights",
         "synonyms": "Synonyms",
-        "optimization": "Optimization"
+        "optimization": "Optimization",
+        "transliteration": "Transliteration"
       },
       "analytics": {
         "title": "Search Analytics Overview",
@@ -1003,6 +1008,25 @@
           "weightsApplied": "Selected weights successfully applied!",
           "weightsApplyError": "Error applying weights"
         }
+      },
+      "transliteration": {
+        "title": "Transliteration Rules",
+        "info": "Configure character replacement rules for search",
+        "rules": "Rules",
+        "add": "Add Rule",
+        "edit": "Edit",
+        "sourceChar": "Source Character",
+        "targetChar": "Target Character",
+        "languageSelect": "Select Language",
+        "status": "Status",
+        "type": "Type",
+        "builtin": "Built-in",
+        "builtinNotEditable": "Built-in rules cannot be edited",
+        "actions": "Actions",
+        "testing": "Test Rules",
+        "inputText": "Input Text",
+        "result": "Result",
+        "resultPlaceholder": "Transliteration result will appear here"
       }
     }
   },
@@ -2514,6 +2538,145 @@
       "retrying": "Retrying...",
       "failed": "Failed",
       "ready": "Ready"
+    }
+  },
+  "gis": {
+    "map": {
+      "search_placeholder": "Search on map...",
+      "search_button": "Search",
+      "loading": "Loading map...",
+      "no_results": "No results found",
+      "show_all": "Show all",
+      "my_location": "My location",
+      "layers": "Layers",
+      "styles": {
+        "streets": "Streets",
+        "satellite": "Satellite",
+        "outdoors": "Outdoors",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "legend": {
+        "title": "Legend",
+        "listings": "Listings",
+        "users": "Users",
+        "poi": "Points of Interest"
+      },
+      "controls": {
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out",
+        "compass": "Compass",
+        "fullscreen": "Fullscreen",
+        "geolocation": "Geolocation",
+        "navigation": "Navigation"
+      }
+    },
+    "geolocation": {
+      "permission_denied": "Geolocation access denied",
+      "position_unavailable": "Position unavailable",
+      "timeout": "Request timed out",
+      "unknown_error": "Unknown geolocation error",
+      "not_supported": "Geolocation not supported"
+    },
+    "search": {
+      "placeholder": "Enter address or location...",
+      "no_results": "No results found",
+      "error": "Search error",
+      "searching": "Searching...",
+      "recent": "Recent searches",
+      "clear_recent": "Clear history"
+    },
+    "geo_search": {
+      "network_error": "Network error. Please check your internet connection",
+      "timeout_error": "Request timeout. Please try again",
+      "unknown_error": "An unknown error occurred",
+      "api_error": "Geocoding service error"
+    },
+    "geocoding": {
+      "network_error": "Unable to connect to geocoding service",
+      "timeout_error": "Geocoding service is not responding",
+      "error": "Geocoding error"
+    },
+    "reverse_geocoding": {
+      "network_error": "Error determining address from coordinates",
+      "timeout_error": "Timeout while determining address",
+      "error": "Unable to determine address"
+    },
+    "route": {
+      "calculation_error": "Unable to calculate route",
+      "unknown_error": "Error calculating route"
+    },
+    "popup": {
+      "close": "Close",
+      "view_details": "View details",
+      "view_profile": "View profile",
+      "directions": "Get directions",
+      "share": "Share",
+      "distance": "Distance",
+      "rating": "Rating",
+      "reviews": "reviews",
+      "per_night": "per night",
+      "was_online": "Last seen",
+      "km_away": "km away"
+    },
+    "distance": {
+      "meters": "m",
+      "kilometers": "km",
+      "miles": "mi"
+    },
+    "directions": {
+      "driving": "Driving",
+      "walking": "Walking",
+      "cycling": "Cycling",
+      "transit": "Transit"
+    },
+    "errors": {
+      "token_required": "Map access token not configured",
+      "load_failed": "Failed to load map",
+      "search_failed": "Search failed",
+      "geolocation_failed": "Failed to get location",
+      "api_error": "API error",
+      "network_error": "Network error",
+      "unknown_error": "Unknown error"
+    }
+  },
+  "map": {
+    "title": "Listings Map",
+    "description": "Find products and services near you",
+    "loading": "Loading map...",
+    "search": {
+      "address": "Address search",
+      "addressPlaceholder": "Enter address or place name",
+      "found": "Address found",
+      "notFound": "Address not found",
+      "error": "Address search error"
+    },
+    "filters": {
+      "title": "Filters",
+      "category": "Category",
+      "allCategories": "All Categories",
+      "priceFrom": "Price from",
+      "priceTo": "Price to",
+      "radius": "Search radius"
+    },
+    "categories": {
+      "realEstate": "Real Estate",
+      "vehicles": "Vehicles",
+      "electronics": "Electronics",
+      "clothing": "Clothing",
+      "services": "Services",
+      "jobs": "Jobs"
+    },
+    "results": {
+      "showing": "Showing",
+      "listings": "listings"
+    },
+    "actions": {
+      "apply": "Apply",
+      "reset": "Reset"
+    },
+    "errors": {
+      "loadingFailed": "Failed to load listings"
     }
   }
 }

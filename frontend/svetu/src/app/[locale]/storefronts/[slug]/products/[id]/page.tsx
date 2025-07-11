@@ -9,8 +9,10 @@ import type { components } from '@/types/generated/api';
 import SafeImage from '@/components/SafeImage';
 import AddToCartButton from '@/components/cart/AddToCartButton';
 
-type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
-type Storefront = components['schemas']['models.Storefront'];
+type StorefrontProduct =
+  components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+type Storefront =
+  components['schemas']['backend_internal_domain_models.Storefront'];
 
 type Props = {
   params: Promise<{ slug: string; id: string }>;

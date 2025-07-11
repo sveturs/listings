@@ -84,6 +84,15 @@ const nextConfig: NextConfig = {
           source: '/ws/:path*',
           destination: `${apiUrl}/ws/:path*`,
         },
+        // Проксируем запросы к Nominatim для избежания CORS
+        {
+          source: '/geocode/search',
+          destination: 'https://nominatim.openstreetmap.org/search',
+        },
+        {
+          source: '/geocode/reverse',
+          destination: 'https://nominatim.openstreetmap.org/reverse',
+        },
       ];
     }
     return [];

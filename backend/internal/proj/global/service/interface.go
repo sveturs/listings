@@ -3,7 +3,7 @@ package service
 
 import (
 	"context"
-	
+
 	"backend/internal/config"
 	balanceService "backend/internal/proj/balance/service"
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"

@@ -262,6 +262,7 @@
     "nav": {
       "blog": "Блог",
       "news": "Новости",
+      "map": "Карта",
       "contacts": "Контакты",
       "userContacts": "Мои контакты",
       "createListing": "Подать объявление"
@@ -646,7 +647,8 @@
       "attributesDescription": "Управление атрибутами для категорий маркетплейса",
       "attributeGroupsDescription": "Управление группами атрибутов для лучшей организации",
       "analytics": "Аналитика",
-      "search": "Аналитика поиска"
+      "search": "Аналитика поиска",
+      "system": "Система"
     },
     "categories": {
       "title": "Категории",
@@ -2523,6 +2525,145 @@
       "retrying": "Повторная попытка...",
       "failed": "Неудачно",
       "ready": "Готово"
+    }
+  },
+  "gis": {
+    "map": {
+      "search_placeholder": "Поиск на карте...",
+      "search_button": "Найти",
+      "loading": "Загрузка карты...",
+      "no_results": "Ничего не найдено",
+      "show_all": "Показать все",
+      "my_location": "Мое местоположение",
+      "layers": "Слои",
+      "styles": {
+        "streets": "Улицы",
+        "satellite": "Спутник",
+        "outdoors": "Природа",
+        "light": "Светлая",
+        "dark": "Темная"
+      },
+      "legend": {
+        "title": "Легенда",
+        "listings": "Жилье",
+        "users": "Пользователи",
+        "poi": "Достопримечательности"
+      },
+      "controls": {
+        "zoom_in": "Приблизить",
+        "zoom_out": "Отдалить",
+        "compass": "Компас",
+        "fullscreen": "Полный экран",
+        "geolocation": "Геолокация",
+        "navigation": "Навигация"
+      }
+    },
+    "geolocation": {
+      "permission_denied": "Доступ к геолокации запрещен",
+      "position_unavailable": "Местоположение недоступно",
+      "timeout": "Время ожидания истекло",
+      "unknown_error": "Неизвестная ошибка геолокации",
+      "not_supported": "Геолокация не поддерживается"
+    },
+    "search": {
+      "placeholder": "Введите адрес или место...",
+      "no_results": "Ничего не найдено",
+      "error": "Ошибка поиска",
+      "searching": "Поиск...",
+      "recent": "Недавние поиски",
+      "clear_recent": "Очистить историю"
+    },
+    "geo_search": {
+      "network_error": "Ошибка сети. Проверьте подключение к интернету",
+      "timeout_error": "Время ожидания истекло. Попробуйте еще раз",
+      "unknown_error": "Произошла неизвестная ошибка",
+      "api_error": "Ошибка сервиса геокодирования"
+    },
+    "geocoding": {
+      "network_error": "Не удалось подключиться к сервису геокодирования",
+      "timeout_error": "Сервис геокодирования не отвечает",
+      "error": "Ошибка геокодирования"
+    },
+    "reverse_geocoding": {
+      "network_error": "Ошибка при определении адреса по координатам",
+      "timeout_error": "Превышено время ожидания при определении адреса",
+      "error": "Не удалось определить адрес"
+    },
+    "route": {
+      "calculation_error": "Не удалось построить маршрут",
+      "unknown_error": "Ошибка при расчете маршрута"
+    },
+    "popup": {
+      "close": "Закрыть",
+      "view_details": "Подробнее",
+      "view_profile": "Профиль",
+      "directions": "Проложить маршрут",
+      "share": "Поделиться",
+      "distance": "Расстояние",
+      "rating": "Рейтинг",
+      "reviews": "отзывов",
+      "per_night": "за ночь",
+      "was_online": "Был в сети",
+      "km_away": "км от вас"
+    },
+    "distance": {
+      "meters": "м",
+      "kilometers": "км",
+      "miles": "миль"
+    },
+    "directions": {
+      "driving": "На автомобиле",
+      "walking": "Пешком",
+      "cycling": "На велосипеде",
+      "transit": "Общественный транспорт"
+    },
+    "errors": {
+      "token_required": "Токен доступа к карте не настроен",
+      "load_failed": "Не удалось загрузить карту",
+      "search_failed": "Ошибка поиска",
+      "geolocation_failed": "Не удалось получить местоположение",
+      "api_error": "Ошибка API",
+      "network_error": "Ошибка сети",
+      "unknown_error": "Неизвестная ошибка"
+    }
+  },
+  "map": {
+    "title": "Карта объявлений",
+    "description": "Найдите товары и услуги рядом с вами",
+    "loading": "Загрузка карты...",
+    "search": {
+      "address": "Поиск по адресу",
+      "addressPlaceholder": "Введите адрес или название места",
+      "found": "Адрес найден",
+      "notFound": "Адрес не найден",
+      "error": "Ошибка поиска адреса"
+    },
+    "filters": {
+      "title": "Фильтры",
+      "category": "Категория",
+      "allCategories": "Все категории",
+      "priceFrom": "Цена от",
+      "priceTo": "Цена до",
+      "radius": "Радиус поиска"
+    },
+    "categories": {
+      "realEstate": "Недвижимость",
+      "vehicles": "Транспорт",
+      "electronics": "Электроника",
+      "clothing": "Одежда",
+      "services": "Услуги",
+      "jobs": "Работа"
+    },
+    "results": {
+      "showing": "Показано",
+      "listings": "объявлений"
+    },
+    "actions": {
+      "apply": "Применить",
+      "reset": "Сбросить"
+    },
+    "errors": {
+      "loadingFailed": "Не удалось загрузить объявления"
     }
   }
 }

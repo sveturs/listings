@@ -87,8 +87,8 @@ export default function MyStorefrontsPage() {
   const filteredStorefronts = userStorefronts.filter(
     (storefront: Storefront) => {
       if (selectedTab === 'all') return true;
-      if (selectedTab === 'active') return storefront.is_active;
-      if (selectedTab === 'inactive') return !storefront.is_active;
+      if (selectedTab === 'active') return storefront.is_active === true;
+      if (selectedTab === 'inactive') return storefront.is_active === false;
       return true;
     }
   );

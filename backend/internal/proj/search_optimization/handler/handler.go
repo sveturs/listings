@@ -21,6 +21,29 @@ func NewSearchOptimizationHandler(service service.SearchOptimizationService) *Se
 	}
 }
 
+// OptimizationSession представляет сессию оптимизации весов (для swagger)
+type OptimizationSession struct {
+	ID              int64                       `json:"id"`
+	Status          string                      `json:"status"` // running, completed, failed
+	StartTime       time.Time                   `json:"start_time"`
+	EndTime         *time.Time                  `json:"end_time,omitempty"`
+	TotalFields     int                         `json:"total_fields"`
+	ProcessedFields int                         `json:"processed_fields"`
+	Results         []*WeightOptimizationResult `json:"results,omitempty"`
+	ErrorMessage    *string                     `json:"error_message,omitempty"`
+	CreatedBy       int                         `json:"created_by"`
+}
+
+// WeightOptimizationResult представляет результат оптимизации для одного поля (для swagger)
+type WeightOptimizationResult struct {
+	FieldName          string   `json:"field_name"`
+	OriginalWeight     float64  `json:"original_weight"`
+	OptimizedWeight    float64  `json:"optimized_weight"`
+	ImprovementPercent float64  `json:"improvement_percent"`
+	SearchQueries      []string `json:"search_queries"`
+	SampleSize         int      `json:"sample_size"`
+}
+
 // StartOptimizationRequest запрос на запуск оптимизации
 type StartOptimizationRequest struct {
 	FieldNames      []string `json:"field_names,omitempty"`
@@ -124,7 +147,7 @@ func (h *SearchOptimizationHandler) StartOptimization(c *fiber.Ctx) error {
 // @Tags Search Optimization
 // @Produce json
 // @Param session_id path int true "ID сессии оптимизации"
-// @Success 200 {object} utils.SuccessResponseSwag{data=storage.OptimizationSession} "Статус оптимизации"
+// @Success 200 {object} utils.SuccessResponseSwag{data=OptimizationSession} "Статус оптимизации"
 // @Failure 400 {object} utils.ErrorResponseSwag "Неверный ID сессии"
 // @Failure 404 {object} utils.ErrorResponseSwag "Сессия не найдена"
 // @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
@@ -230,7 +253,7 @@ func (h *SearchOptimizationHandler) ApplyOptimizedWeights(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body AnalyzeWeightsRequest true "Параметры анализа"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]storage.WeightOptimizationResult} "Результаты анализа"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]WeightOptimizationResult} "Результаты анализа"
 // @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
 // @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/analyze-weights [post]
@@ -273,7 +296,7 @@ func (h *SearchOptimizationHandler) AnalyzeCurrentWeights(c *fiber.Ctx) error {
 // @Tags Search Optimization
 // @Produce json
 // @Param limit query int false "Максимальное количество записей" default(20)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]storage.OptimizationSession} "История оптимизаций"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]OptimizationSession} "История оптимизаций"
 // @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/optimization-history [get]
 // @Security BearerAuth

@@ -7,10 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"backend/internal/config"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/postgres"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func main() {

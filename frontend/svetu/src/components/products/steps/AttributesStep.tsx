@@ -8,7 +8,8 @@ import { toast } from '@/utils/toast';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
 import type { components } from '@/types/generated/api';
 
-type CategoryAttribute = components['schemas']['models.CategoryAttribute'];
+type CategoryAttribute =
+  components['schemas']['backend_internal_domain_models.CategoryAttribute'];
 
 interface AttributeGroup {
   id: string;
