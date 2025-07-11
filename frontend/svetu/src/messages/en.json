@@ -2592,6 +2592,18 @@
       "unknown_error": "An unknown error occurred",
       "api_error": "Geocoding service error"
     },
+    "meters": "m",
+    "kilometers": "km",
+    "minutes": "minutes",
+    "min": "min",
+    "searchAreaSettings": "Search Area Settings",
+    "byRadius": "By Radius",
+    "byWalkingTime": "By Walking Time",
+    "searchRadius": "Search Radius",
+    "walkingTime": "Walking Time",
+    "walkingSpeedNote": "Based on average walking speed of 5 km/h",
+    "atAverageSpeed": "at average speed",
+    "accessibilitySettings": "Accessibility Settings",
     "geocoding": {
       "network_error": "Unable to connect to geocoding service",
       "timeout_error": "Geocoding service is not responding",

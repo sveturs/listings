@@ -3,6 +3,7 @@ export { default as InteractiveMap } from './Map/InteractiveMap';
 export { default as MapMarker } from './Map/MapMarker';
 export { default as MapPopup, ListingPopup, UserPopup } from './Map/MapPopup';
 export { default as MapControls } from './Map/MapControls';
+export { default as WalkingAccessibilityControl } from './Map/WalkingAccessibilityControl';
 export { default as MapboxClusterLayer } from './Map/MapboxClusterLayer';
 
 // Хуки

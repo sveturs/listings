@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
+import WalkingAccessibilityControl from '@/components/GIS/Map/WalkingAccessibilityControl';
 
 interface ListingData {
   id: number;
@@ -102,6 +103,12 @@ const MapPage: React.FC = () => {
   // Состояние загрузки
   const [isLoading, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Состояние для WalkingAccessibilityControl
+  const [walkingMode, setWalkingMode] = useState<'radius' | 'walking'>(
+    'radius'
+  );
+  const [walkingTime, setWalkingTime] = useState(15);
 
   // Состояние мобильных элементов
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -538,19 +545,13 @@ const MapPage: React.FC = () => {
 
             {/* Радиус поиска */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-base-content mb-1">
-                {t('filters.radius')}: {Math.round(filters.radius / 1000)} км
-              </label>
-              <input
-                type="range"
-                className="range range-primary"
-                min="1000"
-                max="50000"
-                step="1000"
-                value={filters.radius}
-                onChange={(e) =>
-                  handleFiltersChange({ radius: parseInt(e.target.value) })
-                }
+              <WalkingAccessibilityControl
+                mode={walkingMode}
+                searchRadius={filters.radius}
+                walkingTime={walkingTime}
+                onModeChange={setWalkingMode}
+                onRadiusChange={(radius) => handleFiltersChange({ radius })}
+                onWalkingTimeChange={setWalkingTime}
               />
             </div>
 
