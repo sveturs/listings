@@ -4,10 +4,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
-import { MapViewState, MapMarkerData } from '@/components/GIS/types/gis';
+import {
+  MapViewState,
+  MapMarkerData,
+  ClusterData,
+  ClusterResponse,
+} from '@/components/GIS/types/gis';
 import { useDebounce } from '@/hooks/useDebounce';
 import { SearchBar } from '@/components/SearchBar';
 import { useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
@@ -41,30 +47,53 @@ interface MapFilters {
 const MapPage: React.FC = () => {
   const t = useTranslations('map');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { search: geoSearch } = useGeoSearch();
 
+  // Функция для получения начальных значений из URL
+  const getInitialFiltersFromURL = (): MapFilters => {
+    return {
+      category: searchParams.get('category') || '',
+      priceFrom: parseInt(searchParams.get('priceFrom') || '0') || 0,
+      priceTo: parseInt(searchParams.get('priceTo') || '0') || 0,
+      radius: parseInt(searchParams.get('radius') || '10000') || 10000,
+    };
+  };
+
+  // Функция для получения начального состояния карты из URL
+  const getInitialViewStateFromURL = (): MapViewState => {
+    const lat = parseFloat(searchParams.get('lat') || '44.8176');
+    const lng = parseFloat(searchParams.get('lng') || '20.4649');
+    const zoom = parseFloat(searchParams.get('zoom') || '10');
+
+    return {
+      longitude: lng,
+      latitude: lat,
+      zoom: zoom,
+      pitch: 0,
+      bearing: 0,
+    };
+  };
+
   // Состояние карты
-  const [viewState, setViewState] = useState<MapViewState>({
-    longitude: 20.4649, // Сербия - Белград
-    latitude: 44.8176,
-    zoom: 10,
-    pitch: 0,
-    bearing: 0,
-  });
+  const [viewState, setViewState] = useState<MapViewState>(
+    getInitialViewStateFromURL()
+  );
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Данные и фильтры
   const [listings, setListings] = useState<ListingData[]>([]);
   const [markers, setMarkers] = useState<MapMarkerData[]>([]);
-  const [filters, setFilters] = useState<MapFilters>({
-    category: '',
-    priceFrom: 0,
-    priceTo: 0,
-    radius: 10000, // 10 км в метрах
-  });
+  const [filters, setFilters] = useState<MapFilters>(
+    getInitialFiltersFromURL()
+  );
 
   // Поиск
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  // Создаем debounced версию фильтров для оптимизации запросов
+  const debouncedFilters = useDebounce(filters, 800);
 
   // Состояние загрузки
   const [isLoading, setIsLoading] = useState(false);
@@ -73,6 +102,35 @@ const MapPage: React.FC = () => {
   // Состояние мобильных элементов
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Функция для обновления URL без перезагрузки страницы
+  const updateURL = useCallback(
+    (newFilters: MapFilters, newViewState: MapViewState, query?: string) => {
+      const params = new URLSearchParams();
+
+      // Добавляем только непустые значения
+      if (newFilters.category) params.set('category', newFilters.category);
+      if (newFilters.priceFrom > 0)
+        params.set('priceFrom', newFilters.priceFrom.toString());
+      if (newFilters.priceTo > 0)
+        params.set('priceTo', newFilters.priceTo.toString());
+      if (newFilters.radius !== 10000)
+        params.set('radius', newFilters.radius.toString());
+
+      // Координаты карты
+      params.set('lat', newViewState.latitude.toFixed(6));
+      params.set('lng', newViewState.longitude.toFixed(6));
+      params.set('zoom', newViewState.zoom.toFixed(2));
+
+      // Поисковый запрос
+      if (query) params.set('q', query);
+
+      // Обновляем URL без перезагрузки
+      const newURL = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+      window.history.replaceState({}, '', newURL);
+    },
+    []
+  );
 
   // Определение мобильного устройства
   useEffect(() => {
@@ -86,6 +144,73 @@ const MapPage: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Отмечаем, что компонент инициализирован
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
+
+  // Загрузка кластеров с API
+  const loadClusters = useCallback(
+    async (
+      bounds: {
+        north: number;
+        south: number;
+        east: number;
+        west: number;
+      },
+      zoom: number
+    ): Promise<ClusterData[]> => {
+      try {
+        // Формируем строку bounds в формате 'north,south,east,west'
+        const boundsStr = `${bounds.north},${bounds.south},${bounds.east},${bounds.west}`;
+
+        // Формируем параметры запроса
+        const params = new URLSearchParams({
+          bounds: boundsStr,
+          zoom: zoom.toString(),
+          ...(debouncedFilters.category && {
+            category_id: debouncedFilters.category,
+          }),
+          ...(debouncedFilters.priceFrom > 0 && {
+            price_min: debouncedFilters.priceFrom.toString(),
+          }),
+          ...(debouncedFilters.priceTo > 0 && {
+            price_max: debouncedFilters.priceTo.toString(),
+          }),
+        });
+
+        // Добавляем географические параметры если есть центр карты
+        if (viewState.latitude && viewState.longitude) {
+          params.append('latitude', viewState.latitude.toString());
+          params.append('longitude', viewState.longitude.toString());
+
+          // Преобразуем радиус из метров в формат для backend (например, "10km")
+          if (debouncedFilters.radius) {
+            const radiusKm = Math.round(debouncedFilters.radius / 1000);
+            params.append('distance', `${radiusKm}km`);
+          }
+        }
+
+        // Делаем запрос к API
+        const response = await apiClient.get<ClusterResponse>(
+          `/api/v1/gis/clusters?${params}`
+        );
+
+        // Обрабатываем ответ и возвращаем данные кластеров
+        if (response.data?.clusters) {
+          return response.data.clusters;
+        }
+
+        return [];
+      } catch (error) {
+        console.error('Error loading clusters:', error);
+        toast.error(t('errors.loadingFailed'));
+        return [];
+      }
+    },
+    [debouncedFilters, viewState, t]
+  );
+
   // Загрузка объявлений для карты
   const loadListings = useCallback(async () => {
     setIsLoading(true);
@@ -95,17 +220,66 @@ const MapPage: React.FC = () => {
         page: '1',
         sort_by: 'date',
         sort_order: 'desc',
-        ...(filters.category && { category_id: filters.category }),
-        ...(filters.priceFrom > 0 && {
-          price_min: filters.priceFrom.toString(),
+        ...(debouncedFilters.category && {
+          category_id: debouncedFilters.category,
         }),
-        ...(filters.priceTo > 0 && { price_max: filters.priceTo.toString() }),
+        ...(debouncedFilters.priceFrom > 0 && {
+          price_min: debouncedFilters.priceFrom.toString(),
+        }),
+        ...(debouncedFilters.priceTo > 0 && {
+          price_max: debouncedFilters.priceTo.toString(),
+        }),
       });
 
-      const response = await apiClient.get(`/api/v1/search?${params}`);
+      // Добавляем географические параметры если есть центр карты
+      if (viewState.latitude && viewState.longitude) {
+        params.append('latitude', viewState.latitude.toString());
+        params.append('longitude', viewState.longitude.toString());
 
-      if (response.data?.items) {
-        // Преобразуем данные API в формат, ожидаемый компонентом
+        // Преобразуем радиус из метров в формат для backend (например, "10km")
+        if (debouncedFilters.radius) {
+          const radiusKm = Math.round(debouncedFilters.radius / 1000);
+          params.append('distance', `${radiusKm}km`);
+        }
+      }
+
+      // Используем GIS API если есть координаты, иначе обычный search
+      const endpoint =
+        viewState.latitude && viewState.longitude
+          ? '/api/v1/gis/search'
+          : '/api/v1/search';
+
+      const response = await apiClient.get(`${endpoint}?${params}`);
+
+      // Обрабатываем ответ в зависимости от используемого API
+      if (endpoint === '/api/v1/gis/search' && response.data?.data?.listings) {
+        // GIS API возвращает data.listings
+        const transformedListings = response.data.data.listings
+          .filter(
+            (item: any) =>
+              item.location && item.location.lat && item.location.lng
+          )
+          .map((item: any) => ({
+            id: item.id,
+            name: item.title,
+            price: item.price,
+            location: {
+              lat: item.location.lat,
+              lng: item.location.lng,
+              city: item.address || '',
+              country: 'Serbia',
+            },
+            category: {
+              id: 0,
+              name: item.category || 'Unknown',
+              slug: '',
+            },
+            images: [],
+            created_at: item.created_at,
+          }));
+        setListings(transformedListings);
+      } else if (response.data?.items) {
+        // Обычный search API возвращает items
         const transformedListings = response.data.items
           .filter(
             (item: any) =>
@@ -133,7 +307,7 @@ const MapPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [filters, t]);
+  }, [debouncedFilters, viewState, t]);
 
   // Преобразование объявлений в маркеры
   const createMarkers = useCallback(
@@ -187,6 +361,8 @@ const MapPage: React.FC = () => {
       if (!query.trim()) return;
 
       setIsSearching(true);
+      setSearchQuery(query);
+
       try {
         const results = await geoSearch({
           query,
@@ -203,6 +379,8 @@ const MapPage: React.FC = () => {
             zoom: 14,
           };
           setViewState(newViewState);
+          // Обновляем URL с новыми координатами и поисковым запросом
+          updateURL(filters, newViewState, query);
           toast.success(t('search.found'));
         } else {
           toast.error(t('search.notFound'));
@@ -214,7 +392,7 @@ const MapPage: React.FC = () => {
         setIsSearching(false);
       }
     },
-    [geoSearch, viewState, t]
+    [geoSearch, viewState, filters, updateURL, t]
   );
 
   // Обработка поиска
@@ -224,10 +402,18 @@ const MapPage: React.FC = () => {
     }
   }, [debouncedSearchQuery, handleAddressSearch]);
 
-  // Обработка изменений фильтров
+  // Обработка изменений фильтров с debounce
   useEffect(() => {
     loadListings();
-  }, [loadListings]);
+  }, [
+    loadListings,
+    debouncedFilters.category,
+    debouncedFilters.priceFrom,
+    debouncedFilters.priceTo,
+    debouncedFilters.radius,
+    viewState.latitude,
+    viewState.longitude,
+  ]);
 
   // Создание маркеров при изменении объявлений
   useEffect(() => {
@@ -246,14 +432,32 @@ const MapPage: React.FC = () => {
   );
 
   // Обработка изменения области просмотра
-  const handleViewStateChange = useCallback((newViewState: MapViewState) => {
-    setViewState(newViewState);
-  }, []);
+  const handleViewStateChange = useCallback(
+    (newViewState: MapViewState) => {
+      setViewState(newViewState);
+      // Обновляем URL с небольшой задержкой для производительности
+      if (isInitialized) {
+        const timeoutId = setTimeout(() => {
+          updateURL(filters, newViewState, searchQuery);
+        }, 500);
+        return () => clearTimeout(timeoutId);
+      }
+    },
+    [filters, searchQuery, updateURL, isInitialized]
+  );
 
   // Обработка изменения фильтров
-  const handleFiltersChange = useCallback((newFilters: Partial<MapFilters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-  }, []);
+  const handleFiltersChange = useCallback(
+    (newFilters: Partial<MapFilters>) => {
+      setFilters((prev) => {
+        const updated = { ...prev, ...newFilters };
+        // Обновляем URL при изменении фильтров
+        updateURL(updated, viewState, searchQuery);
+        return updated;
+      });
+    },
+    [viewState, searchQuery, updateURL]
+  );
 
   return (
     <div className="min-h-screen bg-base-100">
@@ -281,6 +485,15 @@ const MapPage: React.FC = () => {
               onSearch={handleAddressSearch}
               placeholder={t('search.addressPlaceholder')}
               className="w-full"
+              geoLocation={
+                viewState.latitude && viewState.longitude
+                  ? {
+                      lat: viewState.latitude,
+                      lon: viewState.longitude,
+                      radius: filters.radius,
+                    }
+                  : undefined
+              }
             />
           </div>
 
