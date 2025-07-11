@@ -658,10 +658,13 @@
       "users": "Users",
       "analytics": "Analytics",
       "search": "Search Analytics",
+      "system": "System",
       "usersDescription": "Manage user accounts and permissions",
       "listingsDescription": "Moderate and manage marketplace listings",
       "categoriesDescription": "Configure categories and attributes",
-      "searchDescription": "Analyze search performance and user behavior"
+      "searchDescription": "Analyze search performance and user behavior",
+      "attributesDescription": "Manage attributes for marketplace categories",
+      "attributeGroupsDescription": "Manage attribute groups for better organization"
     },
     "categories": {
       "title": "Categories",
@@ -837,7 +840,8 @@
         "behavior": "Behavior",
         "weights": "Search Weights",
         "synonyms": "Synonyms",
-        "optimization": "Optimization"
+        "optimization": "Optimization",
+        "transliteration": "Transliteration"
       },
       "analytics": {
         "title": "Search Analytics Overview",
@@ -1004,6 +1008,25 @@
           "weightsApplied": "Selected weights successfully applied!",
           "weightsApplyError": "Error applying weights"
         }
+      },
+      "transliteration": {
+        "title": "Transliteration Rules",
+        "info": "Configure character replacement rules for search",
+        "rules": "Rules",
+        "add": "Add Rule",
+        "edit": "Edit",
+        "sourceChar": "Source Character",
+        "targetChar": "Target Character",
+        "languageSelect": "Select Language",
+        "status": "Status",
+        "type": "Type",
+        "builtin": "Built-in",
+        "builtinNotEditable": "Built-in rules cannot be edited",
+        "actions": "Actions",
+        "testing": "Test Rules",
+        "inputText": "Input Text",
+        "result": "Result",
+        "resultPlaceholder": "Transliteration result will appear here"
       }
     }
   },
@@ -2562,6 +2585,26 @@
       "searching": "Searching...",
       "recent": "Recent searches",
       "clear_recent": "Clear history"
+    },
+    "geo_search": {
+      "network_error": "Network error. Please check your internet connection",
+      "timeout_error": "Request timeout. Please try again",
+      "unknown_error": "An unknown error occurred",
+      "api_error": "Geocoding service error"
+    },
+    "geocoding": {
+      "network_error": "Unable to connect to geocoding service",
+      "timeout_error": "Geocoding service is not responding",
+      "error": "Geocoding error"
+    },
+    "reverse_geocoding": {
+      "network_error": "Error determining address from coordinates",
+      "timeout_error": "Timeout while determining address",
+      "error": "Unable to determine address"
+    },
+    "route": {
+      "calculation_error": "Unable to calculate route",
+      "unknown_error": "Error calculating route"
     },
     "popup": {
       "close": "Close",

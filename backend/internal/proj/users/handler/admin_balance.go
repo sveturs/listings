@@ -6,7 +6,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"backend/internal/domain/models"
 	"backend/pkg/utils"
 )
 

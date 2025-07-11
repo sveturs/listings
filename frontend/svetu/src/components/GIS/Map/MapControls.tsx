@@ -13,6 +13,7 @@ interface MapControlsProps {
   onSearch?: (query: string) => void;
   className?: string;
   isMobile?: boolean;
+  useOpenStreetMap?: boolean;
 }
 
 const MapControls: React.FC<MapControlsProps> = ({
@@ -21,6 +22,7 @@ const MapControls: React.FC<MapControlsProps> = ({
   onSearch,
   className = '',
   isMobile = false,
+  useOpenStreetMap = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -46,7 +48,7 @@ const MapControls: React.FC<MapControlsProps> = ({
     {
       id: 'satellite',
       name: 'Satellite',
-      url: 'mapbox://styles/mapbox/satellite-v9',
+      url: 'mapbox://styles/mapbox/satellite-streets-v12',
     },
     {
       id: 'outdoors',
@@ -171,30 +173,32 @@ const MapControls: React.FC<MapControlsProps> = ({
         {showFullscreen && <FullscreenControl />}
       </div>
 
-      {/* Панель переключения стилей - адаптивная */}
-      <div
-        className={`absolute ${isMobile ? 'bottom-20' : 'bottom-4'} left-4 z-10`}
-      >
-        <div className="bg-white rounded-lg shadow-lg p-2">
-          <div
-            className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3'} gap-1`}
-          >
-            {mapStyles.slice(0, isMobile ? 4 : 5).map((style) => (
-              <button
-                key={style.id}
-                onClick={() => handleStyleChange(style.id)}
-                className={`px-2 py-1 text-xs rounded-md transition-colors ${
-                  currentStyle === style.id
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {style.name}
-              </button>
-            ))}
+      {/* Панель переключения стилей - адаптивная (скрыта для OpenStreetMap) */}
+      {!useOpenStreetMap && (
+        <div
+          className={`absolute ${isMobile ? 'bottom-20' : 'bottom-4'} left-4 z-10`}
+        >
+          <div className="bg-white rounded-lg shadow-lg p-2">
+            <div
+              className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3'} gap-1`}
+            >
+              {mapStyles.slice(0, isMobile ? 4 : 5).map((style) => (
+                <button
+                  key={style.id}
+                  onClick={() => handleStyleChange(style.id)}
+                  className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                    currentStyle === style.id
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {style.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Кнопка геолокации (дополнительная) - скрыта на мобильном */}
       {!isMobile && (

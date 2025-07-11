@@ -67,6 +67,13 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 		}
 		params.Center = &center
 	}
+	
+	// Поддерживаем также latitude/longitude отдельно
+	if lat := c.QueryFloat("latitude", 0); lat != 0 {
+		if lng := c.QueryFloat("longitude", 0); lng != 0 {
+			params.Center = &types.Point{Lat: lat, Lng: lng}
+		}
+	}
 
 	if radiusStr := c.Query("radius_km"); radiusStr != "" {
 		radius, err := strconv.ParseFloat(radiusStr, 64)
@@ -75,11 +82,30 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 		}
 		params.RadiusKm = radius
 	}
+	
+	// Поддерживаем параметр distance в формате "10km"
+	if distanceStr := c.Query("distance"); distanceStr != "" {
+		if strings.HasSuffix(distanceStr, "km") {
+			distanceStr = strings.TrimSuffix(distanceStr, "km")
+			if radius, err := strconv.ParseFloat(distanceStr, 64); err == nil {
+				params.RadiusKm = radius
+			}
+		}
+	}
 
-	// Категории
+	// Категории - поддерживаем оба параметра для совместимости
 	categories := c.Query("categories")
 	if categories != "" {
 		params.Categories = strings.Split(categories, ",")
+	}
+	
+	// Также поддерживаем category_id для фильтрации по ID категории
+	categoryID := c.Query("category_id")
+	if categoryID != "" && len(params.Categories) == 0 {
+		params.CategoryIDs = []int{}
+		if id, err := strconv.Atoi(categoryID); err == nil {
+			params.CategoryIDs = append(params.CategoryIDs, id)
+		}
 	}
 
 	// Фильтры по цене
@@ -157,10 +183,19 @@ func (h *SpatialHandler) GetClusters(c *fiber.Ctx) error {
 		GridSize:  c.QueryInt("grid_size", 0),
 	}
 
-	// Категории
+	// Категории - поддерживаем оба параметра для совместимости
 	categories := c.Query("categories")
 	if categories != "" {
 		params.Categories = strings.Split(categories, ",")
+	}
+	
+	// Также поддерживаем category_id для фильтрации по ID категории
+	categoryID := c.Query("category_id")
+	if categoryID != "" && len(params.Categories) == 0 {
+		params.CategoryIDs = []int{}
+		if id, err := strconv.Atoi(categoryID); err == nil {
+			params.CategoryIDs = append(params.CategoryIDs, id)
+		}
 	}
 
 	// Фильтры по цене

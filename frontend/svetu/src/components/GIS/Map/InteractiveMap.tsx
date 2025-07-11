@@ -5,8 +5,8 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
-import Map from 'react-map-gl';
-import type { MapRef } from 'react-map-gl';
+import Map, { Marker, Source, Layer } from 'react-map-gl';
+import type { MapRef, MarkerDragEvent } from 'react-map-gl';
 import {
   MapViewState,
   MapMarkerData,
@@ -18,7 +18,9 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import MapMarker from './MapMarker';
 import MapPopup from './MapPopup';
 import MapControls from './MapControls';
+import { MapCluster } from './MapCluster';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import type { ClusterData } from '../types/gis';
 
 interface InteractiveMapProps {
   initialViewState?: Partial<MapViewState>;
@@ -32,6 +34,26 @@ interface InteractiveMapProps {
   style?: React.CSSProperties;
   mapboxAccessToken?: string;
   isMobile?: boolean;
+  loadClusters?: (
+    bounds: {
+      north: number;
+      south: number;
+      east: number;
+      west: number;
+    },
+    zoom: number
+  ) => Promise<ClusterData[]>;
+  // Новые пропсы для маркера покупателя
+  showBuyerMarker?: boolean;
+  buyerLocation?: {
+    longitude: number;
+    latitude: number;
+  };
+  searchRadius?: number; // в метрах
+  onBuyerLocationChange?: (location: {
+    longitude: number;
+    latitude: number;
+  }) => void;
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -50,7 +72,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   style,
   mapboxAccessToken,
   isMobile = false,
+  loadClusters,
+  showBuyerMarker = false,
+  buyerLocation,
+  searchRadius = 10000, // 10км по умолчанию
+  onBuyerLocationChange,
 }) => {
+  console.log('[InteractiveMap] Received markers:', markers);
+
   const mapRef = useRef<MapRef>(null);
   const { search } = useGeoSearch();
   const { getCurrentPosition } = useGeolocation();
@@ -69,6 +98,19 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [useOpenStreetMap, setUseOpenStreetMap] = useState(false);
+
+  // Состояние для кластеров
+  const [clusters, setClusters] = useState<ClusterData[]>([]);
+  const [_isLoadingClusters, setIsLoadingClusters] = useState(false);
+
+  // Состояние для маркера покупателя
+  const [internalBuyerLocation, setInternalBuyerLocation] = useState({
+    longitude: buyerLocation?.longitude || viewState.longitude,
+    latitude: buyerLocation?.latitude || viewState.latitude,
+  });
+
+  // Порог зума для переключения между кластерами и маркерами
+  const CLUSTER_ZOOM_THRESHOLD = 14;
 
   // Получение токена Mapbox из переменных окружения
   const accessToken =
@@ -103,7 +145,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     []
   );
 
-  // Проверка токена и переключение на OpenStreetMap если токен не работает
+  // Автоматическое переключение на OpenStreetMap если токен не предоставлен
   useEffect(() => {
     if (!accessToken) {
       console.warn(
@@ -112,31 +154,68 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
       setUseOpenStreetMap(true);
       setMapStyle(openStreetMapStyle as any);
     } else {
-      // Проверяем валидность токена
-      const checkToken = async () => {
-        try {
-          const response = await fetch(
-            `https://api.mapbox.com/v1/me?access_token=${accessToken}`
-          );
-          if (!response.ok) {
-            console.warn(
-              'Invalid Mapbox token, using OpenStreetMap as fallback'
-            );
-            setUseOpenStreetMap(true);
-            setMapStyle(openStreetMapStyle as any);
-          }
-        } catch {
-          console.warn(
-            'Unable to verify Mapbox token, using OpenStreetMap as fallback'
-          );
-          setUseOpenStreetMap(true);
-          setMapStyle(openStreetMapStyle as any);
-        }
-      };
-
-      checkToken();
+      console.info('Using Mapbox GL with provided token');
     }
   }, [accessToken, openStreetMapStyle]);
+
+  // Обновление внутреннего состояния при изменении внешнего buyerLocation
+  useEffect(() => {
+    if (buyerLocation) {
+      setInternalBuyerLocation(buyerLocation);
+    }
+  }, [buyerLocation]);
+
+  // Загрузка кластеров при изменении области просмотра
+  const loadClustersData = useCallback(
+    async (
+      bounds: { north: number; south: number; east: number; west: number },
+      zoom: number
+    ) => {
+      if (!loadClusters) return;
+
+      setIsLoadingClusters(true);
+      try {
+        const clustersData = await loadClusters(bounds, zoom);
+        setClusters(clustersData || []);
+      } catch (error) {
+        console.error('Error loading clusters:', error);
+        setClusters([]);
+      } finally {
+        setIsLoadingClusters(false);
+      }
+    },
+    [loadClusters]
+  );
+
+  // Получение границ карты
+  const getMapBounds = useCallback(() => {
+    if (!mapRef.current) return null;
+
+    const bounds = mapRef.current.getBounds();
+    if (!bounds) return null;
+
+    return {
+      north: bounds.getNorth(),
+      south: bounds.getSouth(),
+      east: bounds.getEast(),
+      west: bounds.getWest(),
+    };
+  }, []);
+
+  // Загрузка кластеров при изменении viewport
+  useEffect(() => {
+    if (!loadClusters || !mapRef.current) return;
+
+    const bounds = getMapBounds();
+    if (!bounds) return;
+
+    // Debounce для оптимизации
+    const timeoutId = setTimeout(() => {
+      loadClustersData(bounds, viewState.zoom);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [viewState, loadClusters, loadClustersData, getMapBounds]);
 
   const handleViewStateChange = useCallback(
     (newViewState: MapViewState) => {
@@ -253,6 +332,112 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   //   [markers]
   // );
 
+  // Обработчик перетаскивания маркера покупателя
+  const handleBuyerMarkerDrag = useCallback((event: MarkerDragEvent) => {
+    const newLocation = {
+      longitude: event.lngLat.lng,
+      latitude: event.lngLat.lat,
+    };
+    setInternalBuyerLocation(newLocation);
+  }, []);
+
+  const handleBuyerMarkerDragEnd = useCallback(
+    (event: MarkerDragEvent) => {
+      const newLocation = {
+        longitude: event.lngLat.lng,
+        latitude: event.lngLat.lat,
+      };
+      setInternalBuyerLocation(newLocation);
+      if (onBuyerLocationChange) {
+        onBuyerLocationChange(newLocation);
+      }
+    },
+    [onBuyerLocationChange]
+  );
+
+  // GeoJSON для круга радиуса поиска
+  const radiusCircleGeoJSON = useMemo(() => {
+    if (!showBuyerMarker) return null;
+
+    // Создаем круг вокруг позиции покупателя
+    const center = [
+      internalBuyerLocation.longitude,
+      internalBuyerLocation.latitude,
+    ];
+    const radiusInKm = searchRadius / 1000;
+    const options = { steps: 64, units: 'kilometers' as const };
+
+    // Простая аппроксимация круга полигоном
+    const points = [];
+    const numPoints = options.steps;
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * 2 * Math.PI;
+      const dx = radiusInKm * Math.cos(angle);
+      const dy = radiusInKm * Math.sin(angle);
+
+      // Приблизительное преобразование км в градусы
+      const lat = center[1] + dy / 111.32;
+      const lng =
+        center[0] + dx / (111.32 * Math.cos((center[1] * Math.PI) / 180));
+      points.push([lng, lat]);
+    }
+    points.push(points[0]); // Замыкаем полигон
+
+    return {
+      type: 'Feature' as const,
+      geometry: {
+        type: 'Polygon' as const,
+        coordinates: [points],
+      },
+      properties: {},
+    };
+  }, [showBuyerMarker, internalBuyerLocation, searchRadius]);
+
+  // Стиль для слоя круга (закомментирован, не используется)
+  // const radiusCircleLayer: CircleLayer = {
+  //   id: 'radius-circle',
+  //   type: 'circle',
+  //   paint: {
+  //     'circle-radius': 0,
+  //     'circle-color': 'transparent',
+  //   },
+  // };
+
+  const radiusFillLayer = {
+    id: 'radius-fill',
+    type: 'fill' as const,
+    paint: {
+      'fill-color': '#3B82F6',
+      'fill-opacity': 0.1,
+    },
+  };
+
+  const radiusLineLayer = {
+    id: 'radius-line',
+    type: 'line' as const,
+    paint: {
+      'line-color': '#3B82F6',
+      'line-width': 2,
+      'line-opacity': 0.8,
+      'line-dasharray': [2, 2],
+    },
+  };
+
+  // Обработчик клика по кластеру
+  const handleClusterClick = useCallback(
+    (cluster: ClusterData) => {
+      if (!mapRef.current) return;
+
+      // Увеличиваем масштаб и центрируем на кластере
+      mapRef.current.flyTo({
+        center: [cluster.center.lng, cluster.center.lat],
+        zoom: cluster.zoom_expand || viewState.zoom + 2, // Используем рекомендованный zoom или увеличиваем на 2
+        duration: 1000,
+      });
+    },
+    [viewState.zoom]
+  );
+
   const fitBounds = useCallback(() => {
     if (markers.length > 0 && mapRef.current) {
       const bounds = markers.reduce(
@@ -300,19 +485,91 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         logoPosition="bottom-left"
         style={{ width: '100%', height: '100%' }}
       >
-        {/* Маркеры */}
-        {markers.map((marker) => (
-          <MapMarker
-            key={marker.id}
-            marker={marker}
-            selected={selectedMarker === marker.id}
-            onClick={handleMarkerClick}
-          />
-        ))}
+        {/* Кластеры или маркеры в зависимости от уровня зума */}
+        {viewState.zoom < CLUSTER_ZOOM_THRESHOLD && clusters.length > 0
+          ? // Показываем кластеры
+            clusters.map((cluster, index) => (
+              <Marker
+                key={`cluster-${index}`}
+                longitude={cluster.center.lng}
+                latitude={cluster.center.lat}
+                anchor="center"
+              >
+                <MapCluster
+                  count={cluster.count}
+                  onClick={() => handleClusterClick(cluster)}
+                />
+              </Marker>
+            ))
+          : // Показываем обычные маркеры
+            markers.map((marker) => (
+              <MapMarker
+                key={marker.id}
+                marker={marker}
+                selected={selectedMarker === marker.id}
+                onClick={handleMarkerClick}
+              />
+            ))}
 
         {/* Всплывающее окно */}
         {popup && (
           <MapPopup popup={popup} onClose={() => setSelectedMarker(null)} />
+        )}
+
+        {/* Слой с радиусом поиска */}
+        {showBuyerMarker && radiusCircleGeoJSON && (
+          <Source type="geojson" data={radiusCircleGeoJSON}>
+            <Layer {...radiusFillLayer} />
+            <Layer {...radiusLineLayer} />
+          </Source>
+        )}
+
+        {/* Маркер покупателя */}
+        {showBuyerMarker && (
+          <Marker
+            longitude={internalBuyerLocation.longitude}
+            latitude={internalBuyerLocation.latitude}
+            draggable
+            onDrag={handleBuyerMarkerDrag}
+            onDragEnd={handleBuyerMarkerDragEnd}
+            anchor="bottom"
+          >
+            <div
+              className="cursor-move hover:scale-110 transition-transform"
+              style={{ width: 40, height: 40 }}
+            >
+              <svg
+                width="40"
+                height="40"
+                viewBox="0 0 40 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Тень */}
+                <ellipse
+                  cx="20"
+                  cy="38"
+                  rx="8"
+                  ry="2"
+                  fill="black"
+                  fillOpacity="0.2"
+                />
+                {/* Основной маркер */}
+                <path
+                  d="M20 36C20 36 32 24 32 16C32 9.37258 26.6274 4 20 4C13.3726 4 8 9.37258 8 16C8 24 20 36 20 36Z"
+                  fill="#EF4444"
+                  stroke="white"
+                  strokeWidth="2"
+                />
+                {/* Иконка человека */}
+                <circle cx="20" cy="13" r="3" fill="white" />
+                <path
+                  d="M15 20C15 18.3431 16.3431 17 18 17H22C23.6569 17 25 18.3431 25 20V24C25 24.5523 24.5523 25 24 25H16C15.4477 25 15 24.5523 15 24V20Z"
+                  fill="white"
+                />
+              </svg>
+            </div>
+          </Marker>
         )}
 
         {/* Контролы */}
@@ -321,6 +578,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           onStyleChange={handleStyleChange}
           onSearch={handleSearch}
           isMobile={isMobile}
+          useOpenStreetMap={useOpenStreetMap}
         />
       </Map>
 
@@ -363,3 +621,4 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 };
 
 export default InteractiveMap;
+export { InteractiveMap };

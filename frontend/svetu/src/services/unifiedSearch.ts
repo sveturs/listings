@@ -16,6 +16,9 @@ export interface UnifiedSearchParams {
   city?: string;
   language?: string;
   fuzzy?: boolean; // Параметр для включения нечеткого поиска
+  latitude?: number; // Широта для геопоиска
+  longitude?: number; // Долгота для геопоиска
+  distance?: string; // Радиус поиска (например, "10km", "5000m")
 }
 
 export interface UnifiedSearchItem {
@@ -109,7 +112,13 @@ export class UnifiedSearchService {
     params: UnifiedSearchParams
   ): Promise<UnifiedSearchResult> {
     const baseUrl = configManager.getApiUrl({ internal: true });
-    const fullUrl = baseUrl ? `${baseUrl}/api/v1/search` : '/api/v1/search'; // Для development proxy
+
+    // Используем GIS endpoint если есть геопараметры
+    const endpoint =
+      params.latitude && params.longitude
+        ? '/api/v1/gis/search'
+        : '/api/v1/search';
+    const fullUrl = baseUrl ? `${baseUrl}${endpoint}` : endpoint; // Для development proxy
 
     const url = new URL(fullUrl, baseUrl || window.location.origin);
 

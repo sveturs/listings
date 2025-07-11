@@ -4,12 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
-import {
-  MapViewState,
-  MapMarkerData,
-  ClusterData,
-  ClusterResponse,
-} from '@/components/GIS/types/gis';
+import { MapViewState, MapMarkerData } from '@/components/GIS/types/gis';
 import { useDebounce } from '@/hooks/useDebounce';
 import { SearchBar } from '@/components/SearchBar';
 import { useRouter } from '@/i18n/routing';
@@ -81,6 +76,12 @@ const MapPage: React.FC = () => {
   );
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Состояние маркера покупателя
+  const [buyerLocation, setBuyerLocation] = useState({
+    longitude: viewState.longitude,
+    latitude: viewState.latitude,
+  });
+
   // Данные и фильтры
   const [listings, setListings] = useState<ListingData[]>([]);
   const [markers, setMarkers] = useState<MapMarkerData[]>([]);
@@ -94,6 +95,9 @@ const MapPage: React.FC = () => {
 
   // Создаем debounced версию фильтров для оптимизации запросов
   const debouncedFilters = useDebounce(filters, 800);
+
+  // Создаем debounced версию viewState для оптимизации обновления URL
+  const debouncedViewState = useDebounce(viewState, 500);
 
   // Состояние загрузки
   const [isLoading, setIsLoading] = useState(false);
@@ -150,70 +154,72 @@ const MapPage: React.FC = () => {
   }, []);
 
   // Загрузка кластеров с API
-  const loadClusters = useCallback(
-    async (
-      bounds: {
-        north: number;
-        south: number;
-        east: number;
-        west: number;
-      },
-      zoom: number
-    ): Promise<ClusterData[]> => {
-      try {
-        // Формируем строку bounds в формате 'north,south,east,west'
-        const boundsStr = `${bounds.north},${bounds.south},${bounds.east},${bounds.west}`;
+  // Закомментировано, так как не используется в текущей версии
+  // const loadClusters = useCallback(
+  //   async (
+  //     bounds: {
+  //       north: number;
+  //       south: number;
+  //       east: number;
+  //       west: number;
+  //     },
+  //     zoom: number
+  //   ): Promise<ClusterData[]> => {
+  //     try {
+  //       // Формируем строку bounds в формате 'north,south,east,west'
+  //       const boundsStr = `${bounds.north},${bounds.south},${bounds.east},${bounds.west}`;
 
-        // Формируем параметры запроса
-        const params = new URLSearchParams({
-          bounds: boundsStr,
-          zoom: zoom.toString(),
-          ...(debouncedFilters.category && {
-            category_id: debouncedFilters.category,
-          }),
-          ...(debouncedFilters.priceFrom > 0 && {
-            price_min: debouncedFilters.priceFrom.toString(),
-          }),
-          ...(debouncedFilters.priceTo > 0 && {
-            price_max: debouncedFilters.priceTo.toString(),
-          }),
-        });
+  //       // Формируем параметры запроса
+  //       const params = new URLSearchParams({
+  //         bounds: boundsStr,
+  //         zoom: zoom.toString(),
+  //         ...(debouncedFilters.category && {
+  //           categories: debouncedFilters.category,
+  //         }),
+  //         ...(debouncedFilters.priceFrom > 0 && {
+  //           price_min: debouncedFilters.priceFrom.toString(),
+  //         }),
+  //         ...(debouncedFilters.priceTo > 0 && {
+  //           price_max: debouncedFilters.priceTo.toString(),
+  //         }),
+  //       });
 
-        // Добавляем географические параметры если есть центр карты
-        if (viewState.latitude && viewState.longitude) {
-          params.append('latitude', viewState.latitude.toString());
-          params.append('longitude', viewState.longitude.toString());
+  //       // Добавляем географические параметры если есть центр карты
+  //       if (viewState.latitude && viewState.longitude) {
+  //         params.append('latitude', viewState.latitude.toString());
+  //         params.append('longitude', viewState.longitude.toString());
 
-          // Преобразуем радиус из метров в формат для backend (например, "10km")
-          if (debouncedFilters.radius) {
-            const radiusKm = Math.round(debouncedFilters.radius / 1000);
-            params.append('distance', `${radiusKm}km`);
-          }
-        }
+  //         // Преобразуем радиус из метров в формат для backend (например, "10km")
+  //         if (debouncedFilters.radius) {
+  //           const radiusKm = Math.round(debouncedFilters.radius / 1000);
+  //           params.append('distance', `${radiusKm}km`);
+  //         }
+  //       }
 
-        // Делаем запрос к API
-        const response = await apiClient.get<ClusterResponse>(
-          `/api/v1/gis/clusters?${params}`
-        );
+  //       // Делаем запрос к API
+  //       const response = await apiClient.get<ClusterResponse>(
+  //         `/api/v1/gis/clusters?${params}`
+  //       );
 
-        // Обрабатываем ответ и возвращаем данные кластеров
-        if (response.data?.clusters) {
-          return response.data.clusters;
-        }
+  //       // Обрабатываем ответ и возвращаем данные кластеров
+  //       if (response.data?.clusters) {
+  //         return response.data.clusters;
+  //       }
 
-        return [];
-      } catch (error) {
-        console.error('Error loading clusters:', error);
-        toast.error(t('errors.loadingFailed'));
-        return [];
-      }
-    },
-    [debouncedFilters, viewState, t]
-  );
+  //       return [];
+  //     } catch (error) {
+  //       console.error('Error loading clusters:', error);
+  //       toast.error(t('errors.loadingFailed'));
+  //       return [];
+  //     }
+  //   },
+  //   [debouncedFilters, viewState, t]
+  // );
 
   // Загрузка объявлений для карты
   const loadListings = useCallback(async () => {
     setIsLoading(true);
+    console.log('[Map] Starting loadListings with filters:', debouncedFilters);
     try {
       const params = new URLSearchParams({
         limit: '100',
@@ -221,20 +227,20 @@ const MapPage: React.FC = () => {
         sort_by: 'date',
         sort_order: 'desc',
         ...(debouncedFilters.category && {
-          category_id: debouncedFilters.category,
+          categories: debouncedFilters.category,
         }),
         ...(debouncedFilters.priceFrom > 0 && {
-          price_min: debouncedFilters.priceFrom.toString(),
+          min_price: debouncedFilters.priceFrom.toString(),
         }),
         ...(debouncedFilters.priceTo > 0 && {
-          price_max: debouncedFilters.priceTo.toString(),
+          max_price: debouncedFilters.priceTo.toString(),
         }),
       });
 
-      // Добавляем географические параметры если есть центр карты
-      if (viewState.latitude && viewState.longitude) {
-        params.append('latitude', viewState.latitude.toString());
-        params.append('longitude', viewState.longitude.toString());
+      // Используем позицию покупателя для географического поиска
+      if (buyerLocation.latitude && buyerLocation.longitude) {
+        params.append('latitude', buyerLocation.latitude.toString());
+        params.append('longitude', buyerLocation.longitude.toString());
 
         // Преобразуем радиус из метров в формат для backend (например, "10km")
         if (debouncedFilters.radius) {
@@ -243,13 +249,42 @@ const MapPage: React.FC = () => {
         }
       }
 
-      // Используем GIS API если есть координаты, иначе обычный search
+      // Используем GIS API если есть координаты покупателя, иначе обычный search
       const endpoint =
-        viewState.latitude && viewState.longitude
+        buyerLocation.latitude && buyerLocation.longitude
           ? '/api/v1/gis/search'
           : '/api/v1/search';
 
-      const response = await apiClient.get(`${endpoint}?${params}`);
+      // Логируем полный URL запроса и параметры
+      const fullUrl = `${endpoint}?${params}`;
+      console.log('[Map] Request URL:', fullUrl);
+      console.log('[Map] Request params:', {
+        min_price: debouncedFilters.priceFrom,
+        max_price: debouncedFilters.priceTo,
+        category: debouncedFilters.category,
+        center_lat: buyerLocation.latitude,
+        center_lng: buyerLocation.longitude,
+        radius: debouncedFilters.radius,
+      });
+
+      const response = await apiClient.get(fullUrl);
+      console.log('[Map] API response:', response.data);
+      console.log(
+        '[Map] Listings count:',
+        response.data?.data?.listings?.length ||
+          response.data?.data?.length ||
+          0
+      );
+
+      // Логируем цены объявлений для отладки
+      if (response.data?.data?.listings) {
+        const prices = response.data.data.listings.map((l: any) => ({
+          id: l.id,
+          price: l.price,
+          title: l.title,
+        }));
+        console.log('[Map] Listings prices:', prices);
+      }
 
       // Обрабатываем ответ в зависимости от используемого API
       if (endpoint === '/api/v1/gis/search' && response.data?.data?.listings) {
@@ -277,6 +312,10 @@ const MapPage: React.FC = () => {
             images: [],
             created_at: item.created_at,
           }));
+        console.log(
+          '[Map] Transformed listings from GIS API:',
+          transformedListings
+        );
         setListings(transformedListings);
       } else if (response.data?.items) {
         // Обычный search API возвращает items
@@ -307,7 +346,7 @@ const MapPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedFilters, viewState, t]);
+  }, [debouncedFilters, buyerLocation, t]);
 
   // Преобразование объявлений в маркеры
   const createMarkers = useCallback(
@@ -379,8 +418,6 @@ const MapPage: React.FC = () => {
             zoom: 14,
           };
           setViewState(newViewState);
-          // Обновляем URL с новыми координатами и поисковым запросом
-          updateURL(filters, newViewState, query);
           toast.success(t('search.found'));
         } else {
           toast.error(t('search.notFound'));
@@ -392,7 +429,7 @@ const MapPage: React.FC = () => {
         setIsSearching(false);
       }
     },
-    [geoSearch, viewState, filters, updateURL, t]
+    [geoSearch, viewState, t]
   );
 
   // Обработка поиска
@@ -402,7 +439,7 @@ const MapPage: React.FC = () => {
     }
   }, [debouncedSearchQuery, handleAddressSearch]);
 
-  // Обработка изменений фильтров с debounce
+  // Обработка изменений фильтров и позиции покупателя
   useEffect(() => {
     loadListings();
   }, [
@@ -411,13 +448,14 @@ const MapPage: React.FC = () => {
     debouncedFilters.priceFrom,
     debouncedFilters.priceTo,
     debouncedFilters.radius,
-    viewState.latitude,
-    viewState.longitude,
+    buyerLocation.latitude,
+    buyerLocation.longitude,
   ]);
 
   // Создание маркеров при изменении объявлений
   useEffect(() => {
     const newMarkers = createMarkers(listings);
+    console.log('[Map] Setting markers:', newMarkers);
     setMarkers(newMarkers);
   }, [listings, createMarkers]);
 
@@ -432,32 +470,29 @@ const MapPage: React.FC = () => {
   );
 
   // Обработка изменения области просмотра
-  const handleViewStateChange = useCallback(
-    (newViewState: MapViewState) => {
-      setViewState(newViewState);
-      // Обновляем URL с небольшой задержкой для производительности
-      if (isInitialized) {
-        const timeoutId = setTimeout(() => {
-          updateURL(filters, newViewState, searchQuery);
-        }, 500);
-        return () => clearTimeout(timeoutId);
-      }
+  const handleViewStateChange = useCallback((newViewState: MapViewState) => {
+    setViewState(newViewState);
+  }, []);
+
+  // Обработчик изменения позиции покупателя
+  const handleBuyerLocationChange = useCallback(
+    (newLocation: { longitude: number; latitude: number }) => {
+      setBuyerLocation(newLocation);
     },
-    [filters, searchQuery, updateURL, isInitialized]
+    []
   );
 
   // Обработка изменения фильтров
-  const handleFiltersChange = useCallback(
-    (newFilters: Partial<MapFilters>) => {
-      setFilters((prev) => {
-        const updated = { ...prev, ...newFilters };
-        // Обновляем URL при изменении фильтров
-        updateURL(updated, viewState, searchQuery);
-        return updated;
-      });
-    },
-    [viewState, searchQuery, updateURL]
-  );
+  const handleFiltersChange = useCallback((newFilters: Partial<MapFilters>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+  }, []);
+
+  // Обновление URL при изменении фильтров, viewState или searchQuery
+  useEffect(() => {
+    if (isInitialized) {
+      updateURL(filters, debouncedViewState, searchQuery);
+    }
+  }, [filters, debouncedViewState, searchQuery, updateURL, isInitialized]);
 
   return (
     <div className="min-h-screen bg-base-100">
@@ -516,16 +551,12 @@ const MapPage: React.FC = () => {
                 }
               >
                 <option value="">{t('filters.allCategories')}</option>
-                <option value="real-estate">
-                  {t('categories.realEstate')}
-                </option>
-                <option value="vehicles">{t('categories.vehicles')}</option>
-                <option value="electronics">
-                  {t('categories.electronics')}
-                </option>
-                <option value="clothing">{t('categories.clothing')}</option>
-                <option value="services">{t('categories.services')}</option>
-                <option value="jobs">{t('categories.jobs')}</option>
+                <option value="1100">Квартира</option>
+                <option value="1200">Комната</option>
+                <option value="1300">Дом, дача, коттедж</option>
+                <option value="2000">Автомобили</option>
+                <option value="3000">Электроника</option>
+                <option value="9000">Работа</option>
               </select>
             </div>
 
@@ -653,6 +684,10 @@ const MapPage: React.FC = () => {
               position: isMobile ? 'bottom-right' : 'top-right',
             }}
             isMobile={isMobile}
+            showBuyerMarker={true}
+            buyerLocation={buyerLocation}
+            searchRadius={filters.radius}
+            onBuyerLocationChange={handleBuyerLocationChange}
           />
         </div>
 

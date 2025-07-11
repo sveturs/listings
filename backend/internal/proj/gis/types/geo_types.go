@@ -43,6 +43,7 @@ type SearchParams struct {
 	Center      *Point   `json:"center,omitempty"`    // Центр поиска для радиусного поиска
 	RadiusKm    float64  `json:"radius_km,omitempty"` // Радиус поиска в километрах
 	Categories  []string `json:"categories,omitempty"`
+	CategoryIDs []int    `json:"category_ids,omitempty"`
 	MinPrice    *float64 `json:"min_price,omitempty"`
 	MaxPrice    *float64 `json:"max_price,omitempty"`
 	Currency    string   `json:"currency,omitempty"`
@@ -67,7 +68,8 @@ type Cluster struct {
 type ClusterParams struct {
 	Bounds     Bounds   `json:"bounds" validate:"required"`
 	ZoomLevel  int      `json:"zoom_level" validate:"required,min=0,max=20"`
-	Categories []string `json:"categories,omitempty"`
+	Categories  []string `json:"categories,omitempty"`
+	CategoryIDs []int    `json:"category_ids,omitempty"`
 	MinPrice   *float64 `json:"min_price,omitempty"`
 	MaxPrice   *float64 `json:"max_price,omitempty"`
 	Currency   string   `json:"currency,omitempty"`

@@ -20,6 +20,11 @@ interface SearchBarProps {
   showTrending?: boolean;
   fuzzy?: boolean;
   onFuzzyChange?: (fuzzy: boolean) => void;
+  geoLocation?: {
+    lat: number;
+    lon: number;
+    radius: number; // в метрах
+  };
 }
 
 export default function SearchBar({
@@ -31,6 +36,7 @@ export default function SearchBar({
   showTrending = false,
   fuzzy: initialFuzzy = true,
   onFuzzyChange,
+  geoLocation,
 }: SearchBarProps) {
   const t = useTranslations('search');
   const locale = useLocale();
@@ -159,8 +165,22 @@ export default function SearchBar({
           onSearch(trimmedQuery, fuzzy);
         } else {
           // Строим URL с правильной локалью и параметром fuzzy
-          const searchUrl = `/${locale}/search?q=${encodeURIComponent(trimmedQuery)}&fuzzy=${fuzzy}`;
-          router.push(searchUrl);
+          const searchUrl = new URL(
+            `/${locale}/search`,
+            window.location.origin
+          );
+          searchUrl.searchParams.set('q', trimmedQuery);
+          searchUrl.searchParams.set('fuzzy', fuzzy.toString());
+
+          // Добавляем геопараметры если они есть
+          if (geoLocation) {
+            searchUrl.searchParams.set('lat', geoLocation.lat.toString());
+            searchUrl.searchParams.set('lon', geoLocation.lon.toString());
+            const radiusKm = Math.round(geoLocation.radius / 1000);
+            searchUrl.searchParams.set('distance', `${radiusKm}km`);
+          }
+
+          router.push(searchUrl.toString());
         }
       } catch (error) {
         console.error('Search tracking error:', error);
@@ -168,12 +188,35 @@ export default function SearchBar({
         if (onSearch) {
           onSearch(trimmedQuery, fuzzy);
         } else {
-          const searchUrl = `/${locale}/search?q=${encodeURIComponent(trimmedQuery)}&fuzzy=${fuzzy}`;
-          router.push(searchUrl);
+          const searchUrl = new URL(
+            `/${locale}/search`,
+            window.location.origin
+          );
+          searchUrl.searchParams.set('q', trimmedQuery);
+          searchUrl.searchParams.set('fuzzy', fuzzy.toString());
+
+          // Добавляем геопараметры если они есть
+          if (geoLocation) {
+            searchUrl.searchParams.set('lat', geoLocation.lat.toString());
+            searchUrl.searchParams.set('lon', geoLocation.lon.toString());
+            const radiusKm = Math.round(geoLocation.radius / 1000);
+            searchUrl.searchParams.set('distance', `${radiusKm}km`);
+          }
+
+          router.push(searchUrl.toString());
         }
       }
     },
-    [query, fuzzy, onSearch, router, locale, trackSearchPerformed, startSearch]
+    [
+      query,
+      fuzzy,
+      onSearch,
+      router,
+      locale,
+      trackSearchPerformed,
+      startSearch,
+      geoLocation,
+    ]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

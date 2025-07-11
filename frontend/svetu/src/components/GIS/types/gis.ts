@@ -169,6 +169,38 @@ export interface MapClusterOptions {
   nodeSize: number;
 }
 
+// Типы для API кластеров
+export interface ClusterData {
+  center: {
+    lat: number;
+    lng: number;
+  };
+  count: number;
+  bounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
+  zoom_expand: number;
+}
+
+export interface ClusterResponse {
+  clusters: ClusterData[];
+  listings: MapMarkerData[];
+  total_count: number;
+}
+
+export interface ClusterRequestParams {
+  bounds: string; // "north,south,east,west"
+  zoom_level: number;
+  categories?: string;
+  min_price?: number;
+  max_price?: number;
+  currency?: string;
+  grid_size?: number;
+}
+
 // Типы для геозон
 export interface Geofence {
   id: string;
@@ -187,4 +219,10 @@ export interface GeofenceEvent {
   timestamp: Date;
   location: GeoLocation;
   userId?: string;
+}
+
+// Типы для компонентов карты
+export interface MapClusterProps {
+  count: number;
+  onClick?: () => void;
 }

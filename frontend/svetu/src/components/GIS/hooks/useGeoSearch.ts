@@ -6,6 +6,50 @@ import {
   NearbySearchParams,
 } from '../types/gis';
 
+// Утилита для создания таймаута
+const fetchWithTimeout = async (
+  url: string,
+  options: RequestInit = {},
+  timeout = 10000
+) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout');
+    }
+    throw error;
+  }
+};
+
+// Утилита для определения правильного URL в зависимости от окружения
+const getGeocodingUrl = (path: string, params: string) => {
+  // В production всегда используем backend прокси для избежания CORS
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname !== 'localhost'
+  ) {
+    return `/api/v1/geocode${path}?${params}`;
+  }
+
+  // В development используем прокси Next.js
+  if (process.env.NODE_ENV === 'development') {
+    return `/geocode${path}?${params}`;
+  }
+
+  // Fallback на прямой вызов (может не работать из-за CORS)
+  return `https://nominatim.openstreetmap.org${path}?${params}`;
+};
+
 interface UseGeoSearchResult {
   results: GeoSearchResult[];
   loading: boolean;
@@ -37,9 +81,19 @@ export const useGeoSearch = (): UseGeoSearchResult => {
           ...(params.language && { 'accept-language': params.language }),
         });
 
-        // Используем Nominatim API для поиска
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?${queryParams.toString()}`
+        // Используем Nominatim API для поиска через прокси
+        const url = getGeocodingUrl('/search', queryParams.toString());
+
+        const response = await fetchWithTimeout(
+          url,
+          {
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'SveTu Platform/1.0',
+            },
+            mode: 'cors',
+          },
+          8000
         );
 
         if (!response.ok) {
@@ -62,8 +116,22 @@ export const useGeoSearch = (): UseGeoSearchResult => {
         setResults(searchResults);
         return searchResults;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'geo_search.unknown_error';
+        let errorMessage = 'geo_search.unknown_error';
+
+        if (err instanceof TypeError && err.message === 'Failed to fetch') {
+          errorMessage = 'geo_search.network_error';
+          console.error(
+            'Network error: Unable to reach geocoding service. Possible CORS issue or network problem.'
+          );
+        } else if (err instanceof Error && err.message === 'Request timeout') {
+          errorMessage = 'geo_search.timeout_error';
+          console.error(
+            'Request timeout: Geocoding service took too long to respond.'
+          );
+        } else if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+
         setError(errorMessage);
         console.error('Geo search error:', err);
         return [];
@@ -81,13 +149,17 @@ export const useGeoSearch = (): UseGeoSearchResult => {
 
       try {
         // Используем наш backend API для поиска ближайших объектов
-        const response = await fetch('/api/gis/nearby', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        const response = await fetchWithTimeout(
+          '/api/gis/nearby',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params),
           },
-          body: JSON.stringify(params),
-        });
+          10000
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -143,17 +215,21 @@ export const useRouteCalculation = () => {
       setError(null);
 
       try {
-        const response = await fetch('/api/gis/route', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        const response = await fetchWithTimeout(
+          '/api/gis/route',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              origin,
+              destination,
+              mode,
+            }),
           },
-          body: JSON.stringify({
-            origin,
-            destination,
-            mode,
-          }),
-        });
+          15000
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -197,8 +273,24 @@ export const useGeocoding = () => {
       setError(null);
 
       try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`
+        const queryParams = new URLSearchParams({
+          q: address,
+          format: 'json',
+          limit: '1',
+        });
+
+        const url = getGeocodingUrl('/search', queryParams.toString());
+
+        const response = await fetchWithTimeout(
+          url,
+          {
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'SveTu Platform/1.0',
+            },
+            mode: 'cors',
+          },
+          8000
         );
 
         if (!response.ok) {
@@ -224,8 +316,17 @@ export const useGeocoding = () => {
 
         return result;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'geocoding.error';
+        let errorMessage = 'geocoding.error';
+
+        if (err instanceof TypeError && err.message === 'Failed to fetch') {
+          errorMessage = 'geocoding.network_error';
+          console.error(
+            'Network error: Unable to reach geocoding service. Possible CORS issue or network problem.'
+          );
+        } else if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+
         setError(errorMessage);
         console.error('Geocoding error:', err);
         return null;
@@ -242,15 +343,31 @@ export const useGeocoding = () => {
       setError(null);
 
       try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+        // Используем backend API для обратного геокодирования
+        const response = await fetchWithTimeout(
+          '/api/v1/geocode/reverse',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ lat, lon }),
+          },
+          8000
         );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
+        const apiResponse = await response.json();
+
+        // Backend возвращает данные в формате { data: {...}, error: string }
+        if (apiResponse.error || !apiResponse.data) {
+          throw new Error(apiResponse.error || 'No data received');
+        }
+
+        const data = apiResponse.data;
 
         if (!data.display_name) {
           return null;
@@ -274,8 +391,17 @@ export const useGeocoding = () => {
 
         return result;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'reverse_geocoding.error';
+        let errorMessage = 'reverse_geocoding.error';
+
+        if (err instanceof TypeError && err.message === 'Failed to fetch') {
+          errorMessage = 'reverse_geocoding.network_error';
+          console.error(
+            'Network error: Unable to reach geocoding service. Possible CORS issue or network problem.'
+          );
+        } else if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+
         setError(errorMessage);
         console.error('Reverse geocoding error:', err);
         return null;

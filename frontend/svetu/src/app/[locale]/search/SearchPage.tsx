@@ -36,6 +36,13 @@ export default function SearchPage() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const initialFuzzy = searchParams.get('fuzzy') !== 'false'; // По умолчанию true
+  const initialLat = searchParams.get('lat')
+    ? parseFloat(searchParams.get('lat')!)
+    : undefined;
+  const initialLon = searchParams.get('lon')
+    ? parseFloat(searchParams.get('lon')!)
+    : undefined;
+  const initialDistance = searchParams.get('distance') || undefined;
 
   const [query, setQuery] = useState(initialQuery);
   const [fuzzy, setFuzzy] = useState(initialFuzzy);
@@ -52,6 +59,11 @@ export default function SearchPage() {
   const [hasInitialSearchRun, setHasInitialSearchRun] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useViewPreference('grid');
+  const [geoParams, setGeoParams] = useState({
+    latitude: initialLat,
+    longitude: initialLon,
+    distance: initialDistance,
+  });
 
   // Для трекинга времени поиска
   const searchStartTimeRef = useRef<number>(0);
@@ -79,17 +91,30 @@ export default function SearchPage() {
   useEffect(() => {
     const searchQuery = searchParams.get('q');
     const searchFuzzy = searchParams.get('fuzzy') !== 'false';
+    const lat = searchParams.get('lat')
+      ? parseFloat(searchParams.get('lat')!)
+      : undefined;
+    const lon = searchParams.get('lon')
+      ? parseFloat(searchParams.get('lon')!)
+      : undefined;
+    const distance = searchParams.get('distance') || undefined;
+
     if (searchQuery) {
       // Perform search if:
       // 1. This is the initial load (!hasInitialSearchRun)
       // 2. Or the query/fuzzy params have changed
+      // 3. Or geo params have changed
       if (
         !hasInitialSearchRun ||
         searchQuery !== query ||
-        searchFuzzy !== fuzzy
+        searchFuzzy !== fuzzy ||
+        lat !== geoParams.latitude ||
+        lon !== geoParams.longitude ||
+        distance !== geoParams.distance
       ) {
         setQuery(searchQuery);
         setFuzzy(searchFuzzy);
+        setGeoParams({ latitude: lat, longitude: lon, distance });
         setPage(1);
         setAllItems([]);
         performSearch(searchQuery, 1, filters, searchFuzzy);
@@ -151,6 +176,9 @@ export default function SearchPage() {
         price_max: currentFilters.price_max,
         city: currentFilters.city,
         fuzzy: useFuzzy,
+        latitude: geoParams.latitude,
+        longitude: geoParams.longitude,
+        distance: geoParams.distance,
       };
 
       const data = await UnifiedSearchService.search(params);

@@ -84,7 +84,7 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 		argCount += 3
 	}
 
-	// Фильтр по категориям
+	// Фильтр по категориям (по названию)
 	if len(params.Categories) > 0 {
 		placeholders := make([]string, len(params.Categories))
 		for i, cat := range params.Categories {
@@ -93,6 +93,17 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 			argCount++
 		}
 		conditions = append(conditions, fmt.Sprintf("mc.name IN (%s)", strings.Join(placeholders, ",")))
+	}
+	
+	// Фильтр по категориям (по ID)
+	if len(params.CategoryIDs) > 0 {
+		placeholders := make([]string, len(params.CategoryIDs))
+		for i, catID := range params.CategoryIDs {
+			placeholders[i] = fmt.Sprintf("$%d", argCount)
+			args = append(args, catID)
+			argCount++
+		}
+		conditions = append(conditions, fmt.Sprintf("mc.id IN (%s)", strings.Join(placeholders, ",")))
 	}
 
 	// Фильтр по цене
@@ -280,7 +291,7 @@ func (r *PostGISRepository) GetClusters(ctx context.Context, params types.Cluste
 	}
 	argCount := 6
 
-	// Добавляем фильтры
+	// Добавляем фильтры по категориям (по названию)
 	if len(params.Categories) > 0 {
 		placeholders := make([]string, len(params.Categories))
 		for i, cat := range params.Categories {
@@ -289,6 +300,17 @@ func (r *PostGISRepository) GetClusters(ctx context.Context, params types.Cluste
 			argCount++
 		}
 		clusterQuery += fmt.Sprintf(" AND mc.name IN (%s)", strings.Join(placeholders, ","))
+	}
+	
+	// Фильтр по категориям (по ID)
+	if len(params.CategoryIDs) > 0 {
+		placeholders := make([]string, len(params.CategoryIDs))
+		for i, catID := range params.CategoryIDs {
+			placeholders[i] = fmt.Sprintf("$%d", argCount)
+			args = append(args, catID)
+			argCount++
+		}
+		clusterQuery += fmt.Sprintf(" AND mc.id IN (%s)", strings.Join(placeholders, ","))
 	}
 
 	if params.MinPrice != nil {

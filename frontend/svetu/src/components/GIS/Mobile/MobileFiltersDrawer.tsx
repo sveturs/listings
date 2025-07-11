@@ -179,14 +179,12 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
                   }
                 >
                   <option value="">{t.filters.allCategories}</option>
-                  <option value="real-estate">{t.categories.realEstate}</option>
-                  <option value="vehicles">{t.categories.vehicles}</option>
-                  <option value="electronics">
-                    {t.categories.electronics}
-                  </option>
-                  <option value="clothing">{t.categories.clothing}</option>
-                  <option value="services">{t.categories.services}</option>
-                  <option value="jobs">{t.categories.jobs}</option>
+                  <option value="1100">Квартира</option>
+                  <option value="1200">Комната</option>
+                  <option value="1300">Дом, дача, коттедж</option>
+                  <option value="2000">Автомобили</option>
+                  <option value="3000">Электроника</option>
+                  <option value="9000">Работа</option>
                 </select>
               </div>
 
