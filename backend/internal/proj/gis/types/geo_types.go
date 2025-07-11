@@ -66,14 +66,14 @@ type Cluster struct {
 
 // ClusterParams параметры кластеризации
 type ClusterParams struct {
-	Bounds     Bounds   `json:"bounds" validate:"required"`
-	ZoomLevel  int      `json:"zoom_level" validate:"required,min=0,max=20"`
+	Bounds      Bounds   `json:"bounds" validate:"required"`
+	ZoomLevel   int      `json:"zoom_level" validate:"required,min=0,max=20"`
 	Categories  []string `json:"categories,omitempty"`
 	CategoryIDs []int    `json:"category_ids,omitempty"`
-	MinPrice   *float64 `json:"min_price,omitempty"`
-	MaxPrice   *float64 `json:"max_price,omitempty"`
-	Currency   string   `json:"currency,omitempty"`
-	GridSize   int      `json:"grid_size,omitempty"` // Размер сетки для кластеризации
+	MinPrice    *float64 `json:"min_price,omitempty"`
+	MaxPrice    *float64 `json:"max_price,omitempty"`
+	Currency    string   `json:"currency,omitempty"`
+	GridSize    int      `json:"grid_size,omitempty"` // Размер сетки для кластеризации
 }
 
 // SearchResponse ответ на поисковый запрос

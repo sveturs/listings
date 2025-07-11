@@ -67,7 +67,7 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 		}
 		params.Center = &center
 	}
-	
+
 	// Поддерживаем также latitude/longitude отдельно
 	if lat := c.QueryFloat("latitude", 0); lat != 0 {
 		if lng := c.QueryFloat("longitude", 0); lng != 0 {
@@ -82,7 +82,7 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 		}
 		params.RadiusKm = radius
 	}
-	
+
 	// Поддерживаем параметр distance в формате "10km"
 	if distanceStr := c.Query("distance"); distanceStr != "" {
 		if strings.HasSuffix(distanceStr, "km") {
@@ -98,7 +98,7 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 	if categories != "" {
 		params.Categories = strings.Split(categories, ",")
 	}
-	
+
 	// Также поддерживаем category_id для фильтрации по ID категории
 	categoryID := c.Query("category_id")
 	if categoryID != "" && len(params.Categories) == 0 {
@@ -188,7 +188,7 @@ func (h *SpatialHandler) GetClusters(c *fiber.Ctx) error {
 	if categories != "" {
 		params.Categories = strings.Split(categories, ",")
 	}
-	
+
 	// Также поддерживаем category_id для фильтрации по ID категории
 	categoryID := c.Query("category_id")
 	if categoryID != "" && len(params.Categories) == 0 {

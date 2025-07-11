@@ -94,7 +94,7 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 		}
 		conditions = append(conditions, fmt.Sprintf("mc.name IN (%s)", strings.Join(placeholders, ",")))
 	}
-	
+
 	// Фильтр по категориям (по ID)
 	if len(params.CategoryIDs) > 0 {
 		placeholders := make([]string, len(params.CategoryIDs))
@@ -301,7 +301,7 @@ func (r *PostGISRepository) GetClusters(ctx context.Context, params types.Cluste
 		}
 		clusterQuery += fmt.Sprintf(" AND mc.name IN (%s)", strings.Join(placeholders, ","))
 	}
-	
+
 	// Фильтр по категориям (по ID)
 	if len(params.CategoryIDs) > 0 {
 		placeholders := make([]string, len(params.CategoryIDs))
