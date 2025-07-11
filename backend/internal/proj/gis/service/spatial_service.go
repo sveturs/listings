@@ -255,6 +255,3 @@ func degreesToRadians(degrees float64) float64 {
 	return degrees * math.Pi / 180
 }
 
-func radiansToDegrees(radians float64) float64 {
-	return radians * 180 / math.Pi
-}

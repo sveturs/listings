@@ -343,8 +343,9 @@ func (h *SpatialHandler) UpdateListingLocation(c *fiber.Ctx) error {
 
 func parseBounds(boundsStr string) (types.Bounds, error) {
 	var bounds types.Bounds
+	// Ожидаем формат: south,west,north,east (как в Leaflet/OpenStreetMap)
 	_, err := fmt.Sscanf(boundsStr, "%f,%f,%f,%f",
-		&bounds.North, &bounds.South, &bounds.East, &bounds.West)
+		&bounds.South, &bounds.West, &bounds.North, &bounds.East)
 	return bounds, err
 }
 

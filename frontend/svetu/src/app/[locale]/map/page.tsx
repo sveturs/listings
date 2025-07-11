@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
+import type { ClusterData, ClusterResponse } from '@/components/GIS/types/gis';
 
 interface ListingData {
   id: number;
@@ -154,72 +155,77 @@ const MapPage: React.FC = () => {
   }, []);
 
   // Загрузка кластеров с API
-  // Закомментировано, так как не используется в текущей версии
-  // const loadClusters = useCallback(
-  //   async (
-  //     bounds: {
-  //       north: number;
-  //       south: number;
-  //       east: number;
-  //       west: number;
-  //     },
-  //     zoom: number
-  //   ): Promise<ClusterData[]> => {
-  //     try {
-  //       // Формируем строку bounds в формате 'north,south,east,west'
-  //       const boundsStr = `${bounds.north},${bounds.south},${bounds.east},${bounds.west}`;
+  const loadClusters = useCallback(
+    async (
+      bounds: {
+        north: number;
+        south: number;
+        east: number;
+        west: number;
+      },
+      zoom: number
+    ): Promise<ClusterData[]> => {
+      try {
+        // Формируем строку bounds в формате 'south,west,north,east' (как ожидает backend)
+        const boundsStr = `${bounds.south},${bounds.west},${bounds.north},${bounds.east}`;
 
-  //       // Формируем параметры запроса
-  //       const params = new URLSearchParams({
-  //         bounds: boundsStr,
-  //         zoom: zoom.toString(),
-  //         ...(debouncedFilters.category && {
-  //           categories: debouncedFilters.category,
-  //         }),
-  //         ...(debouncedFilters.priceFrom > 0 && {
-  //           price_min: debouncedFilters.priceFrom.toString(),
-  //         }),
-  //         ...(debouncedFilters.priceTo > 0 && {
-  //           price_max: debouncedFilters.priceTo.toString(),
-  //         }),
-  //       });
+        // Формируем параметры запроса
+        const params = new URLSearchParams({
+          bounds: boundsStr,
+          zoom_level: Math.round(zoom).toString(),
+          ...(debouncedFilters.category && {
+            categories: debouncedFilters.category,
+          }),
+          ...(debouncedFilters.priceFrom > 0 && {
+            min_price: debouncedFilters.priceFrom.toString(),
+          }),
+          ...(debouncedFilters.priceTo > 0 && {
+            max_price: debouncedFilters.priceTo.toString(),
+          }),
+        });
 
-  //       // Добавляем географические параметры если есть центр карты
-  //       if (viewState.latitude && viewState.longitude) {
-  //         params.append('latitude', viewState.latitude.toString());
-  //         params.append('longitude', viewState.longitude.toString());
+        // Добавляем географические параметры если есть центр карты
+        if (buyerLocation.latitude && buyerLocation.longitude) {
+          params.append('latitude', buyerLocation.latitude.toString());
+          params.append('longitude', buyerLocation.longitude.toString());
 
-  //         // Преобразуем радиус из метров в формат для backend (например, "10km")
-  //         if (debouncedFilters.radius) {
-  //           const radiusKm = Math.round(debouncedFilters.radius / 1000);
-  //           params.append('distance', `${radiusKm}km`);
-  //         }
-  //       }
+          // Преобразуем радиус из метров в формат для backend (например, "10km")
+          if (debouncedFilters.radius) {
+            const radiusKm = Math.round(debouncedFilters.radius / 1000);
+            params.append('distance', `${radiusKm}km`);
+          }
+        }
 
-  //       // Делаем запрос к API
-  //       const response = await apiClient.get<ClusterResponse>(
-  //         `/api/v1/gis/clusters?${params}`
-  //       );
+        console.log('[Map] Loading clusters with params:', params.toString());
 
-  //       // Обрабатываем ответ и возвращаем данные кластеров
-  //       if (response.data?.clusters) {
-  //         return response.data.clusters;
-  //       }
+        // Делаем запрос к API
+        const response = await apiClient.get<ClusterResponse>(
+          `/api/v1/gis/clusters?${params}`
+        );
 
-  //       return [];
-  //     } catch (error) {
-  //       console.error('Error loading clusters:', error);
-  //       toast.error(t('errors.loadingFailed'));
-  //       return [];
-  //     }
-  //   },
-  //   [debouncedFilters, viewState, t]
-  // );
+        console.log(
+          '[Map] Clusters found:',
+          response.data?.data?.clusters?.length || 0
+        );
+
+        // Обрабатываем ответ и возвращаем данные кластеров
+        if (response.data?.data?.clusters) {
+          return response.data.data.clusters;
+        }
+
+        return [];
+      } catch (error) {
+        console.error('Error loading clusters:', error);
+        toast.error(t('errors.loadingFailed'));
+        return [];
+      }
+    },
+    [debouncedFilters, buyerLocation, t]
+  );
 
   // Загрузка объявлений для карты
   const loadListings = useCallback(async () => {
     setIsLoading(true);
-    console.log('[Map] Starting loadListings with filters:', debouncedFilters);
     try {
       const params = new URLSearchParams({
         limit: '100',
@@ -257,15 +263,12 @@ const MapPage: React.FC = () => {
 
       // Логируем полный URL запроса и параметры
       const fullUrl = `${endpoint}?${params}`;
-      console.log('[Map] Request URL:', fullUrl);
-      console.log('[Map] Request params:', {
-        min_price: debouncedFilters.priceFrom,
-        max_price: debouncedFilters.priceTo,
-        category: debouncedFilters.category,
-        center_lat: buyerLocation.latitude,
-        center_lng: buyerLocation.longitude,
-        radius: debouncedFilters.radius,
-      });
+      console.log(
+        '[Map] Using endpoint:',
+        endpoint,
+        'with params:',
+        Object.fromEntries(params)
+      );
 
       const response = await apiClient.get(fullUrl);
       console.log('[Map] API response:', response.data);
@@ -312,10 +315,6 @@ const MapPage: React.FC = () => {
             images: [],
             created_at: item.created_at,
           }));
-        console.log(
-          '[Map] Transformed listings from GIS API:',
-          transformedListings
-        );
         setListings(transformedListings);
       } else if (response.data?.items) {
         // Обычный search API возвращает items
@@ -339,6 +338,9 @@ const MapPage: React.FC = () => {
             created_at: item.created_at,
           }));
         setListings(transformedListings);
+      } else {
+        console.warn('[Map] Unknown API response format:', response.data);
+        setListings([]);
       }
     } catch (error) {
       console.error('Error loading listings:', error);
@@ -688,6 +690,7 @@ const MapPage: React.FC = () => {
             buyerLocation={buyerLocation}
             searchRadius={filters.radius}
             onBuyerLocationChange={handleBuyerLocationChange}
+            loadClusters={loadClusters}
           />
         </div>
 

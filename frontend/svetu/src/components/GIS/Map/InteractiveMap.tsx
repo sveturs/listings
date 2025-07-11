@@ -110,7 +110,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   });
 
   // Порог зума для переключения между кластерами и маркерами
-  const CLUSTER_ZOOM_THRESHOLD = 14;
+  const CLUSTER_ZOOM_THRESHOLD = 12; // При zoom < 12 показываем кластеры, при zoom >= 12 показываем индивидуальные маркеры
 
   // Получение токена Mapbox из переменных окружения
   const accessToken =
@@ -176,6 +176,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
       setIsLoadingClusters(true);
       try {
         const clustersData = await loadClusters(bounds, zoom);
+        console.log(
+          '[InteractiveMap] Loaded clusters:',
+          clustersData?.length || 0
+        );
         setClusters(clustersData || []);
       } catch (error) {
         console.error('Error loading clusters:', error);
@@ -485,10 +489,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         logoPosition="bottom-left"
         style={{ width: '100%', height: '100%' }}
       >
-        {/* Кластеры или маркеры в зависимости от уровня зума */}
-        {viewState.zoom < CLUSTER_ZOOM_THRESHOLD && clusters.length > 0
-          ? // Показываем кластеры
-            clusters.map((cluster, index) => (
+        {/* Кластеры при малом зуме */}
+        {viewState.zoom < CLUSTER_ZOOM_THRESHOLD && clusters.length > 0 && (
+          <>
+            {clusters.map((cluster, index) => (
               <Marker
                 key={`cluster-${index}`}
                 longitude={cluster.center.lng}
@@ -500,9 +504,15 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   onClick={() => handleClusterClick(cluster)}
                 />
               </Marker>
-            ))
-          : // Показываем обычные маркеры
-            markers.map((marker) => (
+            ))}
+          </>
+        )}
+
+        {/* Маркеры при большом зуме или если нет кластеров */}
+        {(viewState.zoom >= CLUSTER_ZOOM_THRESHOLD ||
+          clusters.length === 0) && (
+          <>
+            {markers.map((marker) => (
               <MapMarker
                 key={marker.id}
                 marker={marker}
@@ -510,6 +520,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 onClick={handleMarkerClick}
               />
             ))}
+          </>
+        )}
 
         {/* Всплывающее окно */}
         {popup && (
