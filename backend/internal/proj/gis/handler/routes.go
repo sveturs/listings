@@ -19,7 +19,6 @@ func RegisterRoutes(app *fiber.App, db *sqlx.DB, authMiddleware *middleware.Midd
 
 	// Публичные маршруты (не требуют авторизации)
 	gis.Get("/search", spatialHandler.SearchListings)
-	gis.Get("/clusters", spatialHandler.GetClusters)
 	gis.Get("/nearby", spatialHandler.GetNearbyListings)
 	gis.Get("/listings/:id/location", spatialHandler.GetListingLocation)
 
@@ -32,7 +31,6 @@ func RegisterPublicRoutes(router fiber.Router, spatialHandler *SpatialHandler) {
 	gis := router.Group("/gis")
 
 	gis.Get("/search", spatialHandler.SearchListings)
-	gis.Get("/clusters", spatialHandler.GetClusters)
 	gis.Get("/nearby", spatialHandler.GetNearbyListings)
 	gis.Get("/listings/:id/location", spatialHandler.GetListingLocation)
 }

@@ -30,7 +30,6 @@ func (h *Handler) RegisterRoutes(app *fiber.App, authMiddleware *middleware.Midd
 
 	// Публичные маршруты (не требуют авторизации)
 	gis.Get("/search", h.spatialHandler.SearchListings)
-	gis.Get("/clusters", h.spatialHandler.GetClusters)
 	gis.Get("/nearby", h.spatialHandler.GetNearbyListings)
 	gis.Get("/listings/:id/location", h.spatialHandler.GetListingLocation)
 

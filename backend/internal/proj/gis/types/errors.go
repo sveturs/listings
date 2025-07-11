@@ -18,6 +18,4 @@ var (
 	// ErrLocationNotFound ошибка отсутствия геоданных
 	ErrLocationNotFound = errors.New("location not found")
 
-	// ErrInvalidZoomLevel ошибка некорректного уровня зума
-	ErrInvalidZoomLevel = errors.New("zoom level must be between 0 and 20")
 )

@@ -56,27 +56,7 @@ type SearchParams struct {
 	Status      string   `json:"status,omitempty"`  // Фильтр по статусу
 }
 
-// Cluster представляет кластер объявлений
-type Cluster struct {
-	Center     Point  `json:"center"`
-	Count      int    `json:"count"`
-	Bounds     Bounds `json:"bounds"`
-	ZoomExpand int    `json:"zoom_expand"` // Уровень зума для раскрытия кластера
-}
 
-// ClusterParams параметры кластеризации
-type ClusterParams struct {
-	Bounds      Bounds   `json:"bounds" validate:"required"`
-	ZoomLevel   int      `json:"zoom_level" validate:"required,min=0,max=20"`
-	Center      *Point   `json:"center,omitempty"`    // Центр поиска для радиусного поиска
-	RadiusKm    float64  `json:"radius_km,omitempty"` // Радиус поиска в километрах
-	Categories  []string `json:"categories,omitempty"`
-	CategoryIDs []int    `json:"category_ids,omitempty"`
-	MinPrice    *float64 `json:"min_price,omitempty"`
-	MaxPrice    *float64 `json:"max_price,omitempty"`
-	Currency    string   `json:"currency,omitempty"`
-	GridSize    int      `json:"grid_size,omitempty"` // Размер сетки для кластеризации
-}
 
 // SearchResponse ответ на поисковый запрос
 type SearchResponse struct {
@@ -85,12 +65,6 @@ type SearchResponse struct {
 	HasMore    bool         `json:"has_more"`
 }
 
-// ClusterResponse ответ на запрос кластеров
-type ClusterResponse struct {
-	Clusters   []Cluster    `json:"clusters"`
-	Listings   []GeoListing `json:"listings"` // Некластеризованные объявления
-	TotalCount int64        `json:"total_count"`
-}
 
 // Validate проверяет корректность границ
 func (b *Bounds) Validate() error {

@@ -54,37 +54,6 @@ func (s *SpatialService) SearchListings(ctx context.Context, params types.Search
 	return response, nil
 }
 
-// GetClusters получение кластеров для карты
-func (s *SpatialService) GetClusters(ctx context.Context, params types.ClusterParams) (*types.ClusterResponse, error) {
-	// Валидация параметров
-	if err := params.Bounds.Validate(); err != nil {
-		return nil, err
-	}
-
-	if params.ZoomLevel < 0 || params.ZoomLevel > 20 {
-		return nil, types.ErrInvalidZoomLevel
-	}
-
-	// Получаем кластеры
-	clusters, listings, err := s.repo.GetClusters(ctx, params)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get clusters: %w", err)
-	}
-
-	// Подсчитываем общее количество
-	totalCount := int64(len(listings))
-	for _, cluster := range clusters {
-		totalCount += int64(cluster.Count)
-	}
-
-	response := &types.ClusterResponse{
-		Clusters:   clusters,
-		Listings:   listings,
-		TotalCount: totalCount,
-	}
-
-	return response, nil
-}
 
 // GetListingLocation получение геоданных объявления
 func (s *SpatialService) GetListingLocation(ctx context.Context, listingID int) (*types.GeoListing, error) {
@@ -179,34 +148,6 @@ func (s *SpatialService) GetBoundsForRadius(center types.Point, radiusKm float64
 	}
 }
 
-// OptimizeClusterParams оптимизация параметров кластеризации
-func (s *SpatialService) OptimizeClusterParams(bounds types.Bounds, zoomLevel int) types.ClusterParams {
-	params := types.ClusterParams{
-		Bounds:    bounds,
-		ZoomLevel: zoomLevel,
-	}
-
-	// Автоматический расчет размера сетки
-	// Чем больше область и меньше зум, тем крупнее кластеры
-	boundsArea := (bounds.North - bounds.South) * (bounds.East - bounds.West)
-
-	if boundsArea > 100 { // Большая область
-		params.GridSize = 20
-	} else if boundsArea > 10 {
-		params.GridSize = 50
-	} else {
-		params.GridSize = 100
-	}
-
-	// Корректировка по уровню зума
-	if zoomLevel < 10 {
-		params.GridSize = params.GridSize / 2
-	} else if zoomLevel > 15 {
-		params.GridSize = params.GridSize * 2
-	}
-
-	return params
-}
 
 // validateSearchParams валидация параметров поиска
 func (s *SpatialService) validateSearchParams(params *types.SearchParams) error {
