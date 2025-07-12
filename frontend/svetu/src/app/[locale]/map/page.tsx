@@ -13,6 +13,8 @@ import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
 import WalkingAccessibilityControl from '@/components/GIS/Map/WalkingAccessibilityControl';
+import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
+import type { Feature, Polygon } from 'geojson';
 
 interface ListingData {
   id: number;
@@ -113,6 +115,10 @@ const MapPage: React.FC = () => {
   // Состояние мобильных элементов
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Состояние для текущего изохрона
+  const [currentIsochrone, setCurrentIsochrone] =
+    useState<Feature<Polygon> | null>(null);
 
   // Функция для обновления URL без перезагрузки страницы
   const updateURL = useCallback(
@@ -399,12 +405,29 @@ const MapPage: React.FC = () => {
     buyerLocation.longitude,
   ]);
 
-  // Создание маркеров при изменении объявлений
+  // Создание маркеров при изменении объявлений с фильтрацией по изохрону
   useEffect(() => {
-    const newMarkers = createMarkers(listings);
+    let newMarkers = createMarkers(listings);
+
+    // Фильтруем маркеры по изохрону если включен режим walking и есть изохрон
+    if (walkingMode === 'walking' && currentIsochrone) {
+      console.log('[Map] Filtering markers by isochrone');
+      const filteredMarkers = newMarkers.filter((marker) => {
+        const isInside = isPointInIsochrone(
+          [marker.longitude, marker.latitude],
+          currentIsochrone
+        );
+        return isInside;
+      });
+      console.log(
+        `[Map] Filtered ${newMarkers.length} markers to ${filteredMarkers.length} within isochrone`
+      );
+      newMarkers = filteredMarkers;
+    }
+
     console.log('[Map] Setting markers:', newMarkers);
     setMarkers(newMarkers);
-  }, [listings, createMarkers]);
+  }, [listings, createMarkers, walkingMode, currentIsochrone]);
 
   // Обработка клика по маркеру
   const handleMarkerClick = useCallback(
@@ -631,6 +654,7 @@ const MapPage: React.FC = () => {
             walkingMode={walkingMode}
             walkingTime={walkingTime}
             onBuyerLocationChange={handleBuyerLocationChange}
+            onIsochroneChange={setCurrentIsochrone}
           />
         </div>
 

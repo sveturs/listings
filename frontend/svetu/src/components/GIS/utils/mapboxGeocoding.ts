@@ -1,7 +1,4 @@
 import mbxGeocoding from '@mapbox/mapbox-sdk/services/geocoding';
-import type {
-  GeocodeRequest,
-} from '@mapbox/mapbox-sdk/services/geocoding';
 
 // Определяем тип для MapboxFeature
 interface MapboxFeature {
@@ -73,7 +70,9 @@ class MapboxGeocodingService {
 
       const response = await this.client.forwardGeocode(request).send();
 
-      return this.convertMapboxFeaturesToResults(response.body.features as any || []);
+      return this.convertMapboxFeaturesToResults(
+        (response.body.features as any) || []
+      );
     } catch (error) {
       console.error('MapBox Geocoding error:', error);
       throw new Error('Geocoding failed');
@@ -100,7 +99,9 @@ class MapboxGeocodingService {
         } as any)
         .send();
 
-      return this.convertMapboxFeaturesToResults(response.body.features as any || []);
+      return this.convertMapboxFeaturesToResults(
+        (response.body.features as any) || []
+      );
     } catch (error) {
       console.error('MapBox Reverse Geocoding error:', error);
       throw new Error('Reverse geocoding failed');
@@ -132,10 +133,10 @@ class MapboxGeocodingService {
         } as any)
         .send();
 
-      return this.convertToNearbyResults(response.body.features as any || [], [
-        longitude,
-        latitude,
-      ]);
+      return this.convertToNearbyResults(
+        (response.body.features as any) || [],
+        [longitude, latitude]
+      );
     } catch (error) {
       console.error('MapBox Nearby Search error:', error);
       throw new Error('Nearby search failed');
@@ -164,7 +165,9 @@ class MapboxGeocodingService {
         } as any)
         .send();
 
-      return this.convertMapboxFeaturesToResults(response.body.features as any || []);
+      return this.convertMapboxFeaturesToResults(
+        (response.body.features as any) || []
+      );
     } catch (error) {
       console.error('MapBox City Suggestions error:', error);
       throw new Error('City suggestions failed');

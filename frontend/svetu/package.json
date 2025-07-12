@@ -30,6 +30,7 @@
     "@turf/boolean-point-in-polygon": "^7.2.0",
     "@turf/circle": "^7.2.0",
     "@turf/distance": "^7.2.0",
+    "@turf/helpers": "^7.2.0",
     "@turf/turf": "^7.2.0",
     "@types/mapbox-gl": "^3.4.1",
     "@types/react-syntax-highlighter": "^15.5.13",

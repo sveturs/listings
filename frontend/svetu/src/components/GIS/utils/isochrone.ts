@@ -40,8 +40,19 @@ export function generateStylizedIsochrone(
   walkingTimeMinutes: number,
   walkingSpeedKmh: number = 5
 ): Feature<Polygon> {
+  console.log('[generateStylizedIsochrone] Input:', {
+    center,
+    walkingTimeMinutes,
+    walkingSpeedKmh,
+  });
+
   const distanceKm = (walkingTimeMinutes / 60) * walkingSpeedKmh;
-  const baseRadius = distanceKm * 0.7; // км
+  const baseRadius = distanceKm * 1.2; // км - увеличиваем коэффициент для более заметного эффекта
+
+  console.log('[generateStylizedIsochrone] Calculated:', {
+    distanceKm,
+    baseRadius,
+  });
 
   // Преобразуем в градусы (приблизительно)
   const degreeRadius = baseRadius / 111.32;
@@ -68,7 +79,7 @@ export function generateStylizedIsochrone(
   // Замыкаем полигон
   points.push(points[0]);
 
-  return {
+  const result: Feature<Polygon> = {
     type: 'Feature',
     geometry: {
       type: 'Polygon',
@@ -79,6 +90,15 @@ export function generateStylizedIsochrone(
       walkingSpeed: walkingSpeedKmh,
     },
   };
+
+  console.log('[generateStylizedIsochrone] Result:', {
+    pointsCount: points.length,
+    firstPoint: points[0],
+    lastPoint: points[points.length - 1],
+    degreeRadius,
+  });
+
+  return result;
 }
 
 /**
@@ -103,4 +123,15 @@ export function walkingTimeToRadius(
   const hours = minutes / 60;
   const radiusKm = hours * walkingSpeedKmh;
   return Math.round(radiusKm * 1000);
+}
+
+/**
+ * Генерирует локальную изохрону для fallback
+ * Используется когда Mapbox API недоступен
+ */
+export function generateLocalIsochrone(
+  coordinates: [number, number],
+  minutes: number
+): Feature<Polygon> {
+  return generateStylizedIsochrone(coordinates, minutes);
 }

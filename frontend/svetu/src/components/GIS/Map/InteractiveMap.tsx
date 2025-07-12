@@ -15,6 +15,8 @@ import {
   MapControlsConfig,
 } from '../types/gis';
 import { generateStylizedIsochrone } from '../utils/isochrone';
+import { getMapboxIsochrone } from '../utils/mapboxIsochrone';
+import type { Feature, Polygon } from 'geojson';
 import { useGeoSearch } from '../hooks/useGeoSearch';
 import { useGeolocation } from '../hooks/useGeolocation';
 import MapPopup from './MapPopup';
@@ -47,6 +49,7 @@ interface InteractiveMapProps {
     longitude: number;
     latitude: number;
   }) => void;
+  onIsochroneChange?: (isochrone: Feature<Polygon> | null) => void;
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -71,8 +74,16 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   walkingMode = 'radius',
   walkingTime = 15,
   onBuyerLocationChange,
+  onIsochroneChange,
 }) => {
-  console.log('[InteractiveMap] Received markers:', markers);
+  console.log('[InteractiveMap] Received props:', {
+    markersCount: markers.length,
+    walkingMode,
+    walkingTime,
+    searchRadius,
+    showBuyerMarker,
+    buyerLocation,
+  });
 
   const mapRef = useRef<MapRef>(null);
   const { search } = useGeoSearch();
@@ -272,6 +283,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setInternalBuyerLocation(newLocation);
   }, []);
 
+  const handleBuyerMarkerDragStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
   const handleBuyerMarkerDragEnd = useCallback(
     (event: MarkerDragEvent) => {
       const newLocation = {
@@ -279,12 +294,83 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         latitude: event.lngLat.lat,
       };
       setInternalBuyerLocation(newLocation);
+      setIsDragging(false); // Теперь разрешаем пересчет изохрона
       if (onBuyerLocationChange) {
         onBuyerLocationChange(newLocation);
       }
     },
     [onBuyerLocationChange]
   );
+
+  // Состояние для изохроны
+  const [isochroneData, setIsochroneData] = useState<any>(null);
+  const [isLoadingIsochrone, setIsLoadingIsochrone] = useState(false);
+
+  // Состояние для отслеживания перетаскивания
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Функция для загрузки изохроны
+  const loadIsochrone = useCallback(async () => {
+    if (!showBuyerMarker || walkingMode !== 'walking') {
+      // Очищаем изохрон только при переключении режима
+      setIsochroneData(null);
+      if (onIsochroneChange) {
+        onIsochroneChange(null);
+      }
+      return;
+    }
+
+    const center: [number, number] = [
+      internalBuyerLocation.longitude,
+      internalBuyerLocation.latitude,
+    ];
+
+    // НЕ очищаем старый изохрон до загрузки нового - это предотвращает мигание
+    setIsLoadingIsochrone(true);
+
+    // Используем переданное время ходьбы или 10 минут по умолчанию
+    const timeInMinutes = walkingTime || 10;
+
+    console.log('[InteractiveMap] Fetching isochrone from Mapbox API:', {
+      center,
+      timeInMinutes,
+      walkingMode,
+    });
+
+    try {
+      const isochrone = await getMapboxIsochrone({
+        coordinates: center,
+        minutes: timeInMinutes,
+        profile: 'walking',
+      });
+
+      console.log('[InteractiveMap] Received isochrone from API:', isochrone);
+
+      // Обновляем изохрон только после успешной загрузки
+      setIsochroneData(isochrone);
+      if (onIsochroneChange) {
+        onIsochroneChange(isochrone);
+      }
+    } catch (error) {
+      console.error('[InteractiveMap] Failed to fetch isochrone:', error);
+      // При ошибке оставляем старый изохрон, не очищаем
+    } finally {
+      setIsLoadingIsochrone(false);
+    }
+  }, [
+    showBuyerMarker,
+    walkingMode,
+    walkingTime,
+    internalBuyerLocation,
+    onIsochroneChange,
+  ]);
+
+  // Эффект для загрузки изохроны при изменении параметров (НЕ при перетаскивании)
+  useEffect(() => {
+    if (!isDragging) {
+      loadIsochrone();
+    }
+  }, [loadIsochrone, isDragging]);
 
   // GeoJSON для радиуса поиска (круг или изохрона)
   const radiusCircleGeoJSON = useMemo(() => {
@@ -297,10 +383,26 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     // Выбираем между радиусом и изохроной в зависимости от режима
     if (walkingMode === 'walking') {
-      // Генерируем изохрону для пешеходного времени
-      return generateStylizedIsochrone(center, walkingTime);
+      // Используем загруженную изохрону или fallback на локальную генерацию
+      if (isochroneData) {
+        console.log('[InteractiveMap] Using API isochrone data');
+        return isochroneData;
+      } else if (!isLoadingIsochrone) {
+        // Если API недоступен и загрузка завершена, используем локальную генерацию
+        console.log(
+          '[InteractiveMap] Using local isochrone generation as fallback'
+        );
+        const isochrone = generateStylizedIsochrone(center, 10); // 10 минут для пешехода
+        return isochrone;
+      }
+      return null;
     } else {
       // Создаем обычный круг с помощью Turf.js
+      console.log('[InteractiveMap] Generating circle for radius mode:', {
+        center,
+        searchRadius,
+        walkingMode,
+      });
       const radiusInKm = searchRadius / 1000;
       const circleFeature = circle(center, radiusInKm, {
         steps: 64,
@@ -313,7 +415,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     internalBuyerLocation,
     searchRadius,
     walkingMode,
-    walkingTime,
+    isochroneData,
+    isLoadingIsochrone,
   ]);
 
   // Стиль для слоя круга (закомментирован, не используется)
@@ -330,8 +433,12 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     id: 'radius-fill',
     type: 'fill' as const,
     paint: {
-      'fill-color': '#3B82F6',
-      'fill-opacity': 0.1,
+      'fill-color': walkingMode === 'walking' ? '#10B981' : '#3B82F6', // Зеленый для пешеходного режима
+      'fill-opacity': walkingMode === 'walking' ? 0.2 : 0.1, // Более заметная для пешеходного режима
+      'fill-opacity-transition': {
+        duration: 300,
+        delay: 0,
+      },
     },
   };
 
@@ -339,10 +446,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     id: 'radius-line',
     type: 'line' as const,
     paint: {
-      'line-color': '#3B82F6',
-      'line-width': 2,
+      'line-color': walkingMode === 'walking' ? '#10B981' : '#3B82F6', // Зеленый для пешеходного режима
+      'line-width': walkingMode === 'walking' ? 3 : 2, // Толще для пешеходного режима
       'line-opacity': 0.8,
-      'line-dasharray': [2, 2],
+      'line-dasharray': walkingMode === 'walking' ? [4, 4] : [2, 2], // Другой пунктир для пешеходного режима
+      'line-opacity-transition': {
+        duration: 300,
+        delay: 0,
+      },
     },
   };
 
@@ -410,10 +521,18 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
         {/* Слой с радиусом поиска */}
         {showBuyerMarker && radiusCircleGeoJSON && (
-          <Source type="geojson" data={radiusCircleGeoJSON}>
-            <Layer {...radiusFillLayer} />
-            <Layer {...radiusLineLayer} />
-          </Source>
+          <>
+            {console.log('[InteractiveMap] Rendering radius layer:', {
+              showBuyerMarker,
+              hasData: !!radiusCircleGeoJSON,
+              walkingMode,
+              dataType: radiusCircleGeoJSON?.geometry?.type,
+            })}
+            <Source type="geojson" data={radiusCircleGeoJSON}>
+              <Layer {...radiusFillLayer} />
+              <Layer {...radiusLineLayer} />
+            </Source>
+          </>
         )}
 
         {/* Маркер покупателя */}
@@ -423,6 +542,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             latitude={internalBuyerLocation.latitude}
             draggable
             onDrag={handleBuyerMarkerDrag}
+            onDragStart={handleBuyerMarkerDragStart}
             onDragEnd={handleBuyerMarkerDragEnd}
             anchor="bottom"
           >
@@ -474,8 +594,22 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         />
       </Map>
 
-      {/* Индикатор загрузки */}
-      {isLoading && (
+      {/* Индикатор загрузки изохрона */}
+      {isLoadingIsochrone && (
+        <div className="absolute top-4 right-4 z-20">
+          <div className="bg-white rounded-lg p-3 shadow-lg border border-gray-200">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
+              <span className="text-sm text-gray-600">
+                Обновление зоны доступности...
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Индикатор общей загрузки */}
+      {isLoading && !isLoadingIsochrone && (
         <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center z-20">
           <div className="bg-white rounded-lg p-4 shadow-lg">
             <div className="flex items-center space-x-2">
