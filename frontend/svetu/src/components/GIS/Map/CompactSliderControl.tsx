@@ -31,6 +31,9 @@ class CompactSliderControlClass implements IControl {
     this.props = props;
     this.onPropsChange = onPropsChange;
     this.container = document.createElement('div');
+    // Инициализируем временные значения
+    this.tempWalkingTime = props.walkingTime;
+    this.tempSearchRadius = props.searchRadius;
   }
 
   onAdd(map: MapboxMap): HTMLElement {
@@ -65,6 +68,12 @@ class CompactSliderControlClass implements IControl {
 
   updateProps(newProps: CompactSliderControlProps): void {
     this.props = newProps;
+    // Обновляем временные значения при изменении props
+    if (this.props.mode === 'walking') {
+      this.tempWalkingTime = newProps.walkingTime;
+    } else {
+      this.tempSearchRadius = newProps.searchRadius;
+    }
     this.updateContainerStyle();
     this.render();
   }
@@ -76,8 +85,9 @@ class CompactSliderControlClass implements IControl {
     this.container.style.position = 'relative';
     this.container.style.transition = 'all 0.3s ease-in-out';
     
-    // Убираем дополнительный отступ сверху - пусть mapbox сам управляет позиционированием
-    this.container.style.margin = '0';
+    // Добавляем отступ между контролами (как у других нативных контролов)
+    this.container.style.marginTop = '10px';
+    this.container.style.marginBottom = '0';
 
     if (this.isExpanded) {
       // Развернутое состояние - переопределяем стили для расширенной панели
@@ -120,27 +130,38 @@ class CompactSliderControlClass implements IControl {
     const bgColor = mode === 'walking' ? '#10B981' : '#3B82F6';
 
     this.container.innerHTML = `
-      <div id="compact-icon" style="
+      <button id="compact-icon" style="
         width: 29px;
         height: 29px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
+        font-size: 18px;
         position: relative;
         transition: all 0.2s ease;
+        border: none;
+        background: transparent;
+        padding: 0;
+        cursor: pointer;
+        outline: none;
       ">
-        <span>${icon}</span>
+        <span style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+        ">${icon}</span>
 
         <!-- Индикатор значения -->
         <div style="
           position: absolute;
-          bottom: -3px;
-          right: -3px;
+          bottom: -2px;
+          right: -2px;
           background: ${bgColor};
           color: white;
           border-radius: 8px;
-          padding: 1px 3px;
+          padding: 1px 4px;
           font-size: 9px;
           font-weight: 600;
           line-height: 1;
@@ -149,7 +170,7 @@ class CompactSliderControlClass implements IControl {
         ">
           ${this.getCompactValue()}
         </div>
-      </div>
+      </button>
     `;
   }
 
@@ -466,11 +487,18 @@ class CompactSliderControlClass implements IControl {
 
       // События для отслеживания движения слайдера
       slider.addEventListener('input', handleSliderInput);
-
-      // События для применения изменений
+      
+      // События для применения изменений только при отпускании
       slider.addEventListener('change', handleSliderEnd);
-      slider.addEventListener('mouseup', handleSliderEnd);
-      slider.addEventListener('touchend', handleSliderEnd);
+      
+      // Предотвращаем сброс значения при клике
+      slider.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+      });
+      
+      slider.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+      });
     }
 
     // Клик по заголовку для переключения режима
