@@ -42,11 +42,21 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	// Пропускаем публичные GIS маршруты
 	if strings.HasPrefix(path, "/api/v1/gis") {
 		method := c.Method()
+		// Публичные GET routes
 		if method == "GET" && (strings.HasSuffix(path, "/search") ||
+			strings.HasSuffix(path, "/search/radius") ||
 			strings.HasSuffix(path, "/clusters") ||
 			strings.HasSuffix(path, "/nearby") ||
 			strings.Contains(path, "/listings/") && strings.HasSuffix(path, "/location")) {
 			logger.Info().Str("path", path).Msg("Skipping auth for public GIS routes")
+			return c.Next()
+		}
+		// Публичные Geocoding API routes (Phase 2)
+		if strings.Contains(path, "/geocode/") && ((method == "GET" && (strings.HasSuffix(path, "/suggestions") ||
+			strings.HasSuffix(path, "/reverse") ||
+			strings.HasSuffix(path, "/stats"))) ||
+			(method == "POST" && strings.HasSuffix(path, "/validate"))) {
+			logger.Info().Str("path", path).Msg("Skipping auth for public GIS geocoding routes")
 			return c.Next()
 		}
 	}

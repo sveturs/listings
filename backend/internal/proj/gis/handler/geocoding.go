@@ -2,11 +2,12 @@ package handler
 
 import (
 	"strconv"
-	
-	"github.com/gofiber/fiber/v2"
+
 	"backend/internal/proj/gis/service"
 	"backend/internal/proj/gis/types"
 	"backend/pkg/utils"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // GeocodingHandler обработчик для геокодирования
@@ -112,26 +113,26 @@ func (h *GeocodingHandler) SearchAddressSuggestions(c *fiber.Ctx) error {
 func (h *GeocodingHandler) ReverseGeocode(c *fiber.Ctx) error {
 	latStr := c.Query("lat")
 	lngStr := c.Query("lng")
-	
+
 	if latStr == "" || lngStr == "" {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "geocoding.missingCoordinates")
 	}
-	
+
 	lat, err := strconv.ParseFloat(latStr, 64)
 	if err != nil || lat < -90 || lat > 90 {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "geocoding.invalidLatitude")
 	}
-	
+
 	lng, err := strconv.ParseFloat(lngStr, 64)
 	if err != nil || lng < -180 || lng > 180 {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "geocoding.invalidLongitude")
 	}
 
 	language := c.Query("language", "en")
-	
+
 	ctx := c.Context()
 	point := types.Point{Lat: lat, Lng: lng}
-	
+
 	result, err := h.geocodingService.ReverseGeocode(ctx, point, language)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "geocoding.reverseError")
@@ -151,12 +152,12 @@ func (h *GeocodingHandler) ReverseGeocode(c *fiber.Ctx) error {
 // @Router /api/v1/gis/geocode/cache/stats [get]
 func (h *GeocodingHandler) GetCacheStats(c *fiber.Ctx) error {
 	ctx := c.Context()
-	
+
 	stats, err := h.geocodingService.GetCacheStats(ctx)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "geocoding.cacheStatsError")
 	}
-	
+
 	return utils.SuccessResponse(c, stats)
 }
 
@@ -171,15 +172,15 @@ func (h *GeocodingHandler) GetCacheStats(c *fiber.Ctx) error {
 // @Router /api/v1/gis/geocode/cache/cleanup [post]
 func (h *GeocodingHandler) CleanupExpiredCache(c *fiber.Ctx) error {
 	ctx := c.Context()
-	
+
 	deletedCount, err := h.geocodingService.CleanupExpiredCache(ctx)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "geocoding.cacheCleanupError")
 	}
-	
+
 	result := map[string]int64{
 		"deleted_count": deletedCount,
 	}
-	
+
 	return utils.SuccessResponse(c, result)
 }

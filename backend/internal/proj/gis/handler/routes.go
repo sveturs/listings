@@ -13,7 +13,7 @@ func RegisterRoutes(app *fiber.App, db *sqlx.DB, authMiddleware *middleware.Midd
 	// Создаем сервисы и обработчики
 	spatialService := service.NewSpatialService(db)
 	geocodingService := service.NewGeocodingService(db)
-	
+
 	spatialHandler := NewSpatialHandler(spatialService)
 	geocodingHandler := NewGeocodingHandler(geocodingService)
 
@@ -28,15 +28,16 @@ func RegisterRoutes(app *fiber.App, db *sqlx.DB, authMiddleware *middleware.Midd
 
 	// ========== Публичные маршруты поиска ==========
 	gis.Get("/search", spatialHandler.SearchListings)
+	gis.Get("/search/radius", spatialHandler.RadiusSearch)
 	gis.Get("/nearby", spatialHandler.GetNearbyListings)
 	gis.Get("/listings/:id/location", spatialHandler.GetListingLocation)
 
 	// ========== Защищенные маршруты (требуют авторизации) ==========
 	protected := gis.Group("/", authMiddleware.AuthRequiredJWT)
-	
+
 	// Старые endpoints
 	protected.Put("/listings/:id/location", spatialHandler.UpdateListingLocation)
-	
+
 	// Новые endpoints Phase 2
 	protected.Put("/listings/:id/address", spatialHandler.UpdateListingAddress)
 	protected.Post("/geocode/cache/cleanup", geocodingHandler.CleanupExpiredCache)
@@ -47,6 +48,7 @@ func RegisterPublicRoutes(router fiber.Router, spatialHandler *SpatialHandler) {
 	gis := router.Group("/gis")
 
 	gis.Get("/search", spatialHandler.SearchListings)
+	gis.Get("/search/radius", spatialHandler.RadiusSearch)
 	gis.Get("/nearby", spatialHandler.GetNearbyListings)
 	gis.Get("/listings/:id/location", spatialHandler.GetListingLocation)
 }

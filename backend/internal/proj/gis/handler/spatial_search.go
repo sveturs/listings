@@ -302,15 +302,15 @@ func (h *SpatialHandler) UpdateListingAddress(c *fiber.Ctx) error {
 	userID := int64(1) // TODO: получать из middleware
 
 	ctx := c.Context()
-	
+
 	// Получаем IP и User-Agent для логирования
 	ipAddress := c.IP()
 	userAgent := c.Get("User-Agent")
-	
+
 	// Обновляем адрес через сервис
 	updatedGeo, err := h.service.UpdateListingAddress(
-		ctx, 
-		int64(listingID), 
+		ctx,
+		int64(listingID),
 		int64(userID),
 		req,
 		ipAddress,
@@ -329,6 +329,106 @@ func (h *SpatialHandler) UpdateListingAddress(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, updatedGeo)
+}
+
+// RadiusSearch радиусный поиск объявлений
+// @Summary Радиусный поиск объявлений
+// @Description Поиск объявлений в заданном радиусе от точки с детальными фильтрами
+// @Tags GIS
+// @Accept json
+// @Produce json
+// @Param latitude query number true "Широта центра поиска"
+// @Param longitude query number true "Долгота центра поиска"
+// @Param radius query number true "Радиус поиска в метрах"
+// @Param categories query array false "Категории объявлений"
+// @Param category_ids query array false "ID категорий"
+// @Param min_price query number false "Минимальная цена"
+// @Param max_price query number false "Максимальная цена"
+// @Param currency query string false "Валюта"
+// @Param q query string false "Текстовый поиск"
+// @Param sort_by query string false "Поле сортировки (distance, price, created_at)"
+// @Param sort_order query string false "Порядок сортировки (asc, desc)"
+// @Param limit query int false "Количество результатов (по умолчанию 50, максимум 1000)"
+// @Param offset query int false "Смещение"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.RadiusSearchResponse} "Результаты радиусного поиска"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректные параметры"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Router /api/v1/gis/search/radius [get]
+func (h *SpatialHandler) RadiusSearch(c *fiber.Ctx) error {
+	// Создаем запрос радиусного поиска
+	var req types.RadiusSearchRequest
+
+	// Парсим основные параметры
+	req.Latitude = c.QueryFloat("latitude", 0)
+	req.Longitude = c.QueryFloat("longitude", 0)
+	req.Radius = c.QueryFloat("radius", 0)
+	req.Limit = c.QueryInt("limit", 50)
+	req.Offset = c.QueryInt("offset", 0)
+
+	// Валидация основных параметров
+	if err := req.Validate(); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "gis.invalidSearchParams")
+	}
+
+	// Парсим фильтры если есть дополнительные параметры
+	if c.Query("categories") != "" || c.Query("min_price") != "" || c.Query("max_price") != "" ||
+		c.Query("currency") != "" || c.Query("q") != "" || c.Query("sort_by") != "" || c.Query("sort_order") != "" {
+
+		req.Filters = &types.RadiusFilters{}
+
+		// Категории
+		if categories := c.Query("categories"); categories != "" {
+			req.Filters.Categories = strings.Split(categories, ",")
+		}
+
+		// ID категорий
+		if categoryIDs := c.Query("category_ids"); categoryIDs != "" {
+			idStrings := strings.Split(categoryIDs, ",")
+			req.Filters.CategoryIDs = make([]int, 0, len(idStrings))
+			for _, idStr := range idStrings {
+				if id, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
+					req.Filters.CategoryIDs = append(req.Filters.CategoryIDs, id)
+				}
+			}
+		}
+
+		// Фильтры по цене
+		if minPriceStr := c.Query("min_price"); minPriceStr != "" {
+			if minPrice, err := strconv.ParseFloat(minPriceStr, 64); err == nil {
+				req.Filters.MinPrice = &minPrice
+			}
+		}
+
+		if maxPriceStr := c.Query("max_price"); maxPriceStr != "" {
+			if maxPrice, err := strconv.ParseFloat(maxPriceStr, 64); err == nil {
+				req.Filters.MaxPrice = &maxPrice
+			}
+		}
+
+		// Остальные фильтры
+		req.Filters.Currency = c.Query("currency")
+		req.Filters.SearchQuery = c.Query("q")
+		req.Filters.SortBy = c.Query("sort_by", "distance")
+		req.Filters.SortOrder = c.Query("sort_order", "asc")
+
+		// Фильтр по пользователю (опционально)
+		if userIDStr := c.Query("user_id"); userIDStr != "" {
+			if userID, err := strconv.Atoi(userIDStr); err == nil {
+				req.Filters.UserID = &userID
+			}
+		}
+
+		// Фильтр по статусу
+		req.Filters.Status = c.Query("status")
+	}
+
+	// Выполняем радиусный поиск
+	response, err := h.service.SearchByRadius(c.Context(), req)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "gis.radiusSearchError")
+	}
+
+	return utils.SuccessResponse(c, response)
 }
 
 // Helper функции
