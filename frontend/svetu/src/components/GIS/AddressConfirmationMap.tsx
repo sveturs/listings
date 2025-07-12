@@ -8,7 +8,12 @@ import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
 export interface AddressConfirmationMapProps {
   address: string;
   initialLocation?: { lat: number; lng: number };
-  onLocationConfirm: (location: { lat: number; lng: number; address: string; confidence: number }) => void;
+  onLocationConfirm: (location: {
+    lat: number;
+    lng: number;
+    address: string;
+    confidence: number;
+  }) => void;
   onLocationChange?: (location: { lat: number; lng: number }) => void;
   editable?: boolean;
   zoom?: number;
@@ -29,12 +34,12 @@ export default function AddressConfirmationMap({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
-  
+
   const [currentLocation, setCurrentLocation] = useState(initialLocation);
   const [isReversing, setIsReversing] = useState(false);
   const [confidence, setConfidence] = useState(0);
   const [reverseAddress, setReverseAddress] = useState('');
-  
+
   const { reverseGeocode, validateAddress } = useAddressGeocoding();
 
   // Инициализация карты
@@ -53,16 +58,21 @@ export default function AddressConfirmationMap({
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: currentLocation ? [currentLocation.lng, currentLocation.lat] : [20.4651, 44.8176], // Belgrade default
+      center: currentLocation
+        ? [currentLocation.lng, currentLocation.lat]
+        : [20.4651, 44.8176], // Belgrade default
       zoom: currentLocation ? zoom : 10,
       attributionControl: false,
     });
 
     // Добавляем контролы
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    map.current.addControl(new mapboxgl.AttributionControl({
-      compact: true
-    }), 'bottom-right');
+    map.current.addControl(
+      new mapboxgl.AttributionControl({
+        compact: true,
+      }),
+      'bottom-right'
+    );
 
     return () => {
       if (map.current) {
@@ -106,13 +116,13 @@ export default function AddressConfirmationMap({
     if (editable) {
       marker.current.on('dragend', () => {
         if (!marker.current) return;
-        
+
         const lngLat = marker.current.getLngLat();
         const newLocation = { lat: lngLat.lat, lng: lngLat.lng };
-        
+
         setCurrentLocation(newLocation);
         onLocationChange?.(newLocation);
-        
+
         // Обратное геокодирование при перетаскивании
         handleReverseGeocode(newLocation);
       });
@@ -127,27 +137,30 @@ export default function AddressConfirmationMap({
   }, [currentLocation, editable, zoom, onLocationChange]);
 
   // Обратное геокодирование
-  const handleReverseGeocode = useCallback(async (location: { lat: number; lng: number }) => {
-    setIsReversing(true);
-    
-    try {
-      const result = await reverseGeocode(location.lat, location.lng);
-      
-      if (result) {
-        setReverseAddress(result.address_components.formatted);
-        setConfidence(result.confidence);
-      } else {
-        setReverseAddress('Адрес не найден');
+  const handleReverseGeocode = useCallback(
+    async (location: { lat: number; lng: number }) => {
+      setIsReversing(true);
+
+      try {
+        const result = await reverseGeocode(location.lat, location.lng);
+
+        if (result) {
+          setReverseAddress(result.address_components.formatted);
+          setConfidence(result.confidence);
+        } else {
+          setReverseAddress('Адрес не найден');
+          setConfidence(0);
+        }
+      } catch (error) {
+        console.error('Reverse geocoding error:', error);
+        setReverseAddress('Ошибка определения адреса');
         setConfidence(0);
+      } finally {
+        setIsReversing(false);
       }
-    } catch (error) {
-      console.error('Reverse geocoding error:', error);
-      setReverseAddress('Ошибка определения адреса');
-      setConfidence(0);
-    } finally {
-      setIsReversing(false);
-    }
-  }, [reverseGeocode]);
+    },
+    [reverseGeocode]
+  );
 
   // Обновление локации при изменении адреса
   useEffect(() => {
@@ -156,13 +169,13 @@ export default function AddressConfirmationMap({
     const geocodeAddress = async () => {
       try {
         const result = await validateAddress(address);
-        
+
         if (result.success && result.location) {
           const newLocation = {
             lat: result.location.lat,
             lng: result.location.lng,
           };
-          
+
           setCurrentLocation(newLocation);
           setReverseAddress(result.formatted_address || address);
           setConfidence(result.confidence || 0.5);
@@ -185,7 +198,7 @@ export default function AddressConfirmationMap({
         lat: e.lngLat.lat,
         lng: e.lngLat.lng,
       };
-      
+
       setCurrentLocation(newLocation);
       onLocationChange?.(newLocation);
       handleReverseGeocode(newLocation);
@@ -226,7 +239,7 @@ export default function AddressConfirmationMap({
   return (
     <div className={`w-full ${className}`}>
       {/* Карта */}
-      <div 
+      <div
         ref={mapContainer}
         className="w-full rounded-lg border border-base-300 shadow-sm"
         style={{ height }}
@@ -237,8 +250,10 @@ export default function AddressConfirmationMap({
         <div className="mt-4 p-4 bg-base-100 border border-base-300 rounded-lg">
           {/* Заголовок */}
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold">Подтверждение местоположения</h3>
-            
+            <h3 className="text-lg font-semibold">
+              Подтверждение местоположения
+            </h3>
+
             {/* Показатель доверия */}
             <div className={`badge ${getConfidenceBadgeClass(confidence)}`}>
               Точность: {Math.round(confidence * 100)}%
@@ -248,7 +263,9 @@ export default function AddressConfirmationMap({
           {/* Адрес */}
           <div className="space-y-2">
             <div>
-              <span className="text-sm font-medium text-base-content/70">Введенный адрес:</span>
+              <span className="text-sm font-medium text-base-content/70">
+                Введенный адрес:
+              </span>
               <p className="text-sm mt-1">{address}</p>
             </div>
 
@@ -256,7 +273,9 @@ export default function AddressConfirmationMap({
               <div>
                 <span className="text-sm font-medium text-base-content/70">
                   Адрес по координатам:
-                  {isReversing && <span className="loading loading-spinner loading-xs ml-2"></span>}
+                  {isReversing && (
+                    <span className="loading loading-spinner loading-xs ml-2"></span>
+                  )}
                 </span>
                 <p className="text-sm mt-1">{reverseAddress}</p>
               </div>
@@ -266,10 +285,12 @@ export default function AddressConfirmationMap({
           {/* Координаты */}
           <div className="mt-3 grid grid-cols-2 gap-4 text-xs text-base-content/50">
             <div>
-              <span className="font-medium">Широта:</span> {currentLocation.lat.toFixed(6)}
+              <span className="font-medium">Широта:</span>{' '}
+              {currentLocation.lat.toFixed(6)}
             </div>
             <div>
-              <span className="font-medium">Долгота:</span> {currentLocation.lng.toFixed(6)}
+              <span className="font-medium">Долгота:</span>{' '}
+              {currentLocation.lng.toFixed(6)}
             </div>
           </div>
 
@@ -277,7 +298,8 @@ export default function AddressConfirmationMap({
           {editable && (
             <div className="mt-3 p-3 bg-info/10 border border-info/20 rounded-lg">
               <p className="text-sm text-info-content">
-                💡 <strong>Подсказка:</strong> Вы можете перетащить маркер или кликнуть по карте для точной настройки местоположения.
+                💡 <strong>Подсказка:</strong> Вы можете перетащить маркер или
+                кликнуть по карте для точной настройки местоположения.
               </p>
             </div>
           )}
@@ -286,7 +308,8 @@ export default function AddressConfirmationMap({
           {confidence < 0.7 && (
             <div className="mt-3 p-3 bg-warning/10 border border-warning/20 rounded-lg">
               <p className="text-sm text-warning-content">
-                ⚠️ <strong>Низкая точность:</strong> Рекомендуется проверить и при необходимости скорректировать местоположение на карте.
+                ⚠️ <strong>Низкая точность:</strong> Рекомендуется проверить и
+                при необходимости скорректировать местоположение на карте.
               </p>
             </div>
           )}
@@ -298,12 +321,22 @@ export default function AddressConfirmationMap({
               disabled={!currentLocation}
               className="btn btn-primary flex-1"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               Подтвердить местоположение
             </button>
-            
+
             <button
               onClick={() => {
                 // Сброс к исходному состоянию
@@ -326,15 +359,31 @@ export default function AddressConfirmationMap({
       {!currentLocation && (
         <div className="mt-4 p-6 text-center bg-base-100 border border-base-300 rounded-lg">
           <div className="text-base-content/50 mb-2">
-            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            <svg
+              className="w-12 h-12 mx-auto mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
           </div>
-          
+
           <h3 className="text-lg font-medium mb-2">Укажите местоположение</h3>
           <p className="text-sm text-base-content/70">
-            Введите адрес в поле выше или кликните по карте для установки местоположения
+            Введите адрес в поле выше или кликните по карте для установки
+            местоположения
           </p>
         </div>
       )}

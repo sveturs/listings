@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { UnifiedSearchService } from '@/services/unifiedSearch';
-import MarketplaceList from '@/components/marketplace/MarketplaceList';
+import HomePage from '@/components/marketplace/HomePage';
 import { Link } from '@/i18n/routing';
 import configManager from '@/config';
 import { SearchBar } from '@/components/SearchBar';
@@ -63,45 +63,12 @@ export default async function Home({
       </div>
 
       <div className="container mx-auto px-4">
-        {paymentsEnabled && (
-          <div className="alert alert-info mb-8 shadow-lg">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="stroke-current shrink-0 w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
-            </svg>
-            <span>🎉 {t('paymentsNowAvailable')}</span>
-          </div>
-        )}
-
-        {error && (
-          <div className="alert alert-error mb-8 shadow-lg">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="stroke-current shrink-0 h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span>{t('errorLoadingData')}</span>
-          </div>
-        )}
-
-        <MarketplaceList initialData={marketplaceData} locale={locale} />
+        <HomePage
+          initialData={marketplaceData}
+          locale={locale}
+          error={error}
+          paymentsEnabled={paymentsEnabled}
+        />
 
         {/* Плавающая кнопка создания объявления */}
         <Link

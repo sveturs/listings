@@ -1,12 +1,20 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useAddressGeocoding, AddressGeocodingResult } from '@/hooks/useAddressGeocoding';
+import {
+  useAddressGeocoding,
+  AddressGeocodingResult,
+} from '@/hooks/useAddressGeocoding';
 
 export interface SmartAddressInputProps {
   value: string;
   onChange: (value: string, result?: AddressGeocodingResult) => void;
-  onLocationSelect?: (location: { lat: number; lng: number; address: string; confidence: number }) => void;
+  onLocationSelect?: (location: {
+    lat: number;
+    lng: number;
+    address: string;
+    confidence: number;
+  }) => void;
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
@@ -21,7 +29,7 @@ export default function SmartAddressInput({
   value,
   onChange,
   onLocationSelect,
-  placeholder = "Начните вводить адрес...",
+  placeholder = 'Начните вводить адрес...',
   disabled = false,
   required = false,
   showCurrentLocation = true,
@@ -33,10 +41,10 @@ export default function SmartAddressInput({
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-  
+
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const {
     suggestions,
     loading,
@@ -70,80 +78,89 @@ export default function SmartAddressInput({
   }, []);
 
   // Обработка ввода
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    onChange(newValue);
-    
-    if (newValue.trim()) {
-      search(newValue);
-      setIsOpen(true);
-      setHighlightedIndex(-1);
-    } else {
-      clearSuggestions();
-      setIsOpen(false);
-    }
-    
-    clearError();
-  }, [onChange, search, clearSuggestions, clearError]);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      onChange(newValue);
+
+      if (newValue.trim()) {
+        search(newValue);
+        setIsOpen(true);
+        setHighlightedIndex(-1);
+      } else {
+        clearSuggestions();
+        setIsOpen(false);
+      }
+
+      clearError();
+    },
+    [onChange, search, clearSuggestions, clearError]
+  );
 
   // Обработка клавиш
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!isOpen || suggestions.length === 0) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setIsOpen(true);
-      }
-      return;
-    }
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev < suggestions.length - 1 ? prev + 1 : 0
-        );
-        break;
-        
-      case 'ArrowUp':
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev > 0 ? prev - 1 : suggestions.length - 1
-        );
-        break;
-        
-      case 'Enter':
-        e.preventDefault();
-        if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
-          selectSuggestion(suggestions[highlightedIndex]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!isOpen || suggestions.length === 0) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setIsOpen(true);
         }
-        break;
-        
-      case 'Escape':
-        e.preventDefault();
-        setIsOpen(false);
-        setHighlightedIndex(-1);
-        inputRef.current?.blur();
-        break;
-    }
-  }, [isOpen, suggestions, highlightedIndex]);
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setHighlightedIndex((prev) =>
+            prev < suggestions.length - 1 ? prev + 1 : 0
+          );
+          break;
+
+        case 'ArrowUp':
+          e.preventDefault();
+          setHighlightedIndex((prev) =>
+            prev > 0 ? prev - 1 : suggestions.length - 1
+          );
+          break;
+
+        case 'Enter':
+          e.preventDefault();
+          if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
+            selectSuggestion(suggestions[highlightedIndex]);
+          }
+          break;
+
+        case 'Escape':
+          e.preventDefault();
+          setIsOpen(false);
+          setHighlightedIndex(-1);
+          inputRef.current?.blur();
+          break;
+      }
+    },
+    [isOpen, suggestions, highlightedIndex]
+  );
 
   // Выбор предложения
-  const selectSuggestion = useCallback((suggestion: AddressGeocodingResult) => {
-    onChange(suggestion.address_components.formatted, suggestion);
-    
-    if (onLocationSelect) {
-      onLocationSelect({
-        lat: suggestion.location.lat,
-        lng: suggestion.location.lng,
-        address: suggestion.address_components.formatted,
-        confidence: suggestion.confidence,
-      });
-    }
-    
-    setIsOpen(false);
-    setHighlightedIndex(-1);
-    inputRef.current?.blur();
-  }, [onChange, onLocationSelect]);
+  const selectSuggestion = useCallback(
+    (suggestion: AddressGeocodingResult) => {
+      onChange(suggestion.address_components.formatted, suggestion);
+
+      if (onLocationSelect) {
+        onLocationSelect({
+          lat: suggestion.location.lat,
+          lng: suggestion.location.lng,
+          address: suggestion.address_components.formatted,
+          confidence: suggestion.confidence,
+        });
+      }
+
+      setIsOpen(false);
+      setHighlightedIndex(-1);
+      inputRef.current?.blur();
+    },
+    [onChange, onLocationSelect]
+  );
 
   // Получение текущего местоположения
   const getCurrentLocation = useCallback(async () => {
@@ -153,16 +170,16 @@ export default function SmartAddressInput({
     }
 
     setIsGettingLocation(true);
-    
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
           const result = await reverseGeocode(latitude, longitude);
-          
+
           if (result) {
             onChange(result.address_components.formatted, result);
-            
+
             if (onLocationSelect) {
               onLocationSelect({
                 lat: latitude,
@@ -184,10 +201,11 @@ export default function SmartAddressInput({
       (error) => {
         console.error('Geolocation error:', error);
         let message = 'Не удалось получить ваше местоположение.';
-        
+
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            message = 'Доступ к геолокации запрещен. Разрешите доступ в настройках браузера.';
+            message =
+              'Доступ к геолокации запрещен. Разрешите доступ в настройках браузера.';
             break;
           case error.POSITION_UNAVAILABLE:
             message = 'Информация о местоположении недоступна.';
@@ -196,7 +214,7 @@ export default function SmartAddressInput({
             message = 'Время ожидания определения местоположения истекло.';
             break;
         }
-        
+
         alert(message);
         setIsGettingLocation(false);
       },
@@ -243,7 +261,7 @@ export default function SmartAddressInput({
           `}
           autoComplete="off"
         />
-        
+
         {/* Кнопка текущего местоположения */}
         {showCurrentLocation && (
           <button
@@ -290,7 +308,9 @@ export default function SmartAddressInput({
           {loading && (
             <div className="p-3 text-center">
               <span className="loading loading-spinner loading-sm mr-2"></span>
-              <span className="text-sm text-base-content/70">Поиск адресов...</span>
+              <span className="text-sm text-base-content/70">
+                Поиск адресов...
+              </span>
             </div>
           )}
 
@@ -312,26 +332,30 @@ export default function SmartAddressInput({
                   <div className="font-medium text-sm text-base-content truncate">
                     {suggestion.text}
                   </div>
-                  
+
                   {/* Полный адрес */}
                   <div className="text-xs text-base-content/70 mt-1 truncate">
                     {suggestion.place_name}
                   </div>
-                  
+
                   {/* Компоненты адреса */}
                   {suggestion.address_components.city && (
                     <div className="text-xs text-base-content/50 mt-1">
                       {[
                         suggestion.address_components.city,
-                        suggestion.address_components.country
-                      ].filter(Boolean).join(', ')}
+                        suggestion.address_components.country,
+                      ]
+                        .filter(Boolean)
+                        .join(', ')}
                     </div>
                   )}
                 </div>
-                
+
                 {/* Показатель доверия */}
                 <div className="ml-2 flex items-center">
-                  <div className={`text-xs font-medium ${getConfidenceColor(suggestion.confidence)}`}>
+                  <div
+                    className={`text-xs font-medium ${getConfidenceColor(suggestion.confidence)}`}
+                  >
                     {Math.round(suggestion.confidence * 100)}%
                   </div>
                 </div>
@@ -350,17 +374,19 @@ export default function SmartAddressInput({
 
       {/* Сообщения об ошибках */}
       {(error || geocodingError) && (
-        <div className="mt-1 text-sm text-error">
-          {error || geocodingError}
-        </div>
+        <div className="mt-1 text-sm text-error">{error || geocodingError}</div>
       )}
 
       {/* Вспомогательный текст */}
-      {!error && !geocodingError && value.trim() && !loading && suggestions.length === 0 && (
-        <div className="mt-1 text-xs text-base-content/50">
-          Введите минимум 2 символа для поиска адресов
-        </div>
-      )}
+      {!error &&
+        !geocodingError &&
+        value.trim() &&
+        !loading &&
+        suggestions.length === 0 && (
+          <div className="mt-1 text-xs text-base-content/50">
+            Введите минимум 2 символа для поиска адресов
+          </div>
+        )}
     </div>
   );
 }

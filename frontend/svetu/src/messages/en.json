@@ -265,6 +265,11 @@
     "loadMore": "Load more",
     "loading": "Loading...",
     "createListing": "Create Listing",
+    "latestListings": "Latest Listings",
+    "mapView": "Map",
+    "listView": "List",
+    "switchToMapView": "Switch to map view",
+    "switchToListView": "Switch to list view",
     "paymentsNowAvailable": "Payments are now available!",
     "description": "Find the best deals from individuals and stores"
   },
@@ -2617,6 +2622,23 @@
     "route": {
       "calculation_error": "Unable to calculate route",
       "unknown_error": "Error calculating route"
+    },
+    "radius_search": {
+      "title": "Radius Search",
+      "radius": "Search radius",
+      "address": "Address",
+      "address_placeholder": "Enter address to search",
+      "use_my_location": "Use my location",
+      "show_search_area": "Show search area",
+      "searching": "Searching...",
+      "results_found": "Found {count} items within {radius}",
+      "clear_results": "Clear results",
+      "network_error": "Network error. Please check your internet connection",
+      "timeout_error": "Request timed out. Please try again",
+      "unknown_error": "An unknown search error occurred",
+      "address_not_found": "Address not found. Please refine your search",
+      "address_error": "Error searching by address",
+      "location_error": "Unable to determine your location"
     },
     "popup": {
       "close": "Close",

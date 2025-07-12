@@ -5,6 +5,7 @@ export { default as MapPopup, ListingPopup, UserPopup } from './Map/MapPopup';
 export { default as MapControls } from './Map/MapControls';
 export { default as WalkingAccessibilityControl } from './Map/WalkingAccessibilityControl';
 export { default as MapboxClusterLayer } from './Map/MapboxClusterLayer';
+export { default as RadiusSearchControl } from './RadiusSearchControl';
 
 // Хуки
 export { useGeolocation } from './hooks/useGeolocation';
@@ -13,6 +14,13 @@ export {
   useRouteCalculation,
   useGeocoding,
 } from './hooks/useGeoSearch';
+export {
+  useRadiusSearch,
+  formatRadius,
+  validateRadius,
+  normalizeRadius,
+  createRadiusCircle,
+} from './hooks/useRadiusSearch';
 
 // Типы
 export type {
@@ -37,6 +45,10 @@ export type {
   GeofenceEvent,
   DistanceCalculation,
   MapBounds,
+  RadiusSearchParams,
+  RadiusSearchResult,
+  RadiusSearchResponse,
+  RadiusSearchControlConfig,
 } from './types/gis';
 
 // Утилитные функции

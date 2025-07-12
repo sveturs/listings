@@ -8,14 +8,21 @@ import { AddressGeocodingResult } from '@/hooks/useAddressGeocoding';
 
 export default function TestSmartAddressPage() {
   const [address, setAddress] = useState('');
-  const [location, setLocation] = useState<{ lat: number; lng: number } | undefined>();
+  const [location, setLocation] = useState<
+    { lat: number; lng: number } | undefined
+  >();
   const [confidence, setConfidence] = useState(0);
-  const [privacyLevel, setPrivacyLevel] = useState<'exact' | 'street' | 'district' | 'city'>('street');
+  const [privacyLevel, setPrivacyLevel] = useState<
+    'exact' | 'street' | 'district' | 'city'
+  >('street');
   const [step, setStep] = useState<'input' | 'confirm' | 'privacy'>('input');
 
-  const handleAddressChange = (value: string, result?: AddressGeocodingResult) => {
+  const handleAddressChange = (
+    value: string,
+    result?: AddressGeocodingResult
+  ) => {
     setAddress(value);
-    
+
     if (result) {
       setLocation({
         lat: result.location.lat,
@@ -25,14 +32,24 @@ export default function TestSmartAddressPage() {
     }
   };
 
-  const handleLocationSelect = (locationData: { lat: number; lng: number; address: string; confidence: number }) => {
+  const handleLocationSelect = (locationData: {
+    lat: number;
+    lng: number;
+    address: string;
+    confidence: number;
+  }) => {
     setLocation({ lat: locationData.lat, lng: locationData.lng });
     setAddress(locationData.address);
     setConfidence(locationData.confidence);
     setStep('confirm');
   };
 
-  const handleLocationConfirm = (locationData: { lat: number; lng: number; address: string; confidence: number }) => {
+  const handleLocationConfirm = (locationData: {
+    lat: number;
+    lng: number;
+    address: string;
+    confidence: number;
+  }) => {
     setLocation({ lat: locationData.lat, lng: locationData.lng });
     setAddress(locationData.address);
     setConfidence(locationData.confidence);
@@ -48,9 +65,12 @@ export default function TestSmartAddressPage() {
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Заголовок */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2">GIS Phase 2: Умный ввод адресов</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            GIS Phase 2: Умный ввод адресов
+          </h1>
           <p className="text-base-content/70">
-            Тестирование компонентов SmartAddressInput, AddressConfirmationMap и LocationPrivacySettings
+            Тестирование компонентов SmartAddressInput, AddressConfirmationMap и
+            LocationPrivacySettings
           </p>
         </div>
 
@@ -58,19 +78,19 @@ export default function TestSmartAddressPage() {
         <div className="mb-8">
           <div className="flex justify-center">
             <div className="steps">
-              <div 
+              <div
                 className={`step ${step === 'input' ? 'step-primary' : ''} ${location ? 'step-success' : ''}`}
                 onClick={() => setStep('input')}
               >
                 Ввод адреса
               </div>
-              <div 
+              <div
                 className={`step ${step === 'confirm' ? 'step-primary' : ''} ${step === 'privacy' ? 'step-success' : ''}`}
                 onClick={() => location && setStep('confirm')}
               >
                 Подтверждение
               </div>
-              <div 
+              <div
                 className={`step ${step === 'privacy' ? 'step-primary' : ''}`}
                 onClick={() => location && setStep('privacy')}
               >
@@ -90,7 +110,7 @@ export default function TestSmartAddressPage() {
                   <span className="text-2xl mr-2">📍</span>
                   Шаг 1: Введите адрес
                 </h2>
-                
+
                 <div className="space-y-4">
                   <SmartAddressInput
                     value={address}
@@ -101,18 +121,28 @@ export default function TestSmartAddressPage() {
                     country={['rs', 'hr', 'ba', 'me']}
                     language="ru"
                   />
-                  
+
                   {location && (
                     <div className="mt-4 p-4 bg-success/10 border border-success/20 rounded-lg">
-                      <h3 className="font-medium text-success-content mb-2">✅ Адрес найден!</h3>
+                      <h3 className="font-medium text-success-content mb-2">
+                        ✅ Адрес найден!
+                      </h3>
                       <div className="text-sm text-success-content/80 space-y-1">
-                        <p><strong>Адрес:</strong> {address}</p>
-                        <p><strong>Координаты:</strong> {location.lat.toFixed(6)}, {location.lng.toFixed(6)}</p>
-                        <p><strong>Точность:</strong> {Math.round(confidence * 100)}%</p>
+                        <p>
+                          <strong>Адрес:</strong> {address}
+                        </p>
+                        <p>
+                          <strong>Координаты:</strong> {location.lat.toFixed(6)}
+                          , {location.lng.toFixed(6)}
+                        </p>
+                        <p>
+                          <strong>Точность:</strong>{' '}
+                          {Math.round(confidence * 100)}%
+                        </p>
                       </div>
-                      
+
                       <div className="mt-3">
-                        <button 
+                        <button
                           className="btn btn-primary"
                           onClick={() => setStep('confirm')}
                         >
@@ -134,7 +164,7 @@ export default function TestSmartAddressPage() {
                   <span className="text-2xl mr-2">🗺️</span>
                   Шаг 2: Подтвердите местоположение на карте
                 </h2>
-                
+
                 <AddressConfirmationMap
                   address={address}
                   initialLocation={location}
@@ -156,26 +186,28 @@ export default function TestSmartAddressPage() {
                   <span className="text-2xl mr-2">🛡️</span>
                   Шаг 3: Настройки приватности
                 </h2>
-                
+
                 <LocationPrivacySettings
                   selectedLevel={privacyLevel}
                   onLevelChange={setPrivacyLevel}
                   location={location}
                   showPreview={true}
                 />
-                
+
                 <div className="mt-6 flex gap-2">
-                  <button 
+                  <button
                     className="btn btn-outline"
                     onClick={() => setStep('confirm')}
                   >
                     ← Назад к карте
                   </button>
-                  
-                  <button 
+
+                  <button
                     className="btn btn-primary flex-1"
                     onClick={() => {
-                      alert(`Настройки сохранены!\n\nАдрес: ${address}\nКоординаты: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}\nПриватность: ${privacyLevel}\nТочность: ${Math.round(confidence * 100)}%`);
+                      alert(
+                        `Настройки сохранены!\n\nАдрес: ${address}\nКоординаты: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}\nПриватность: ${privacyLevel}\nТочность: ${Math.round(confidence * 100)}%`
+                      );
                     }}
                   >
                     Сохранить объявление
@@ -192,7 +224,7 @@ export default function TestSmartAddressPage() {
                 <span className="text-2xl mr-2">📊</span>
                 Текущее состояние
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="font-medium mb-2">Адрес</h3>
@@ -200,21 +232,25 @@ export default function TestSmartAddressPage() {
                     {address || 'Не указан'}
                   </p>
                 </div>
-                
+
                 <div>
                   <h3 className="font-medium mb-2">Координаты</h3>
                   <p className="text-sm text-base-content/70 bg-base-200 p-2 rounded font-mono">
-                    {location ? `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}` : 'Не указаны'}
+                    {location
+                      ? `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`
+                      : 'Не указаны'}
                   </p>
                 </div>
-                
+
                 <div>
                   <h3 className="font-medium mb-2">Точность</h3>
                   <p className="text-sm text-base-content/70 bg-base-200 p-2 rounded">
-                    {confidence ? `${Math.round(confidence * 100)}%` : 'Неизвестно'}
+                    {confidence
+                      ? `${Math.round(confidence * 100)}%`
+                      : 'Неизвестно'}
                   </p>
                 </div>
-                
+
                 <div>
                   <h3 className="font-medium mb-2">Приватность</h3>
                   <p className="text-sm text-base-content/70 bg-base-200 p-2 rounded">
@@ -232,11 +268,21 @@ export default function TestSmartAddressPage() {
                 <span className="text-2xl mr-2">💡</span>
                 Как пользоваться
               </h2>
-              
+
               <div className="text-sm text-info-content/80 space-y-2">
-                <p><strong>1. Ввод адреса:</strong> Начните вводить адрес и выберите из предложений или используйте кнопку геолокации</p>
-                <p><strong>2. Подтверждение:</strong> Проверьте местоположение на карте, при необходимости скорректируйте перетаскиванием маркера</p>
-                <p><strong>3. Приватность:</strong> Выберите уровень приватности для отображения местоположения другим пользователям</p>
+                <p>
+                  <strong>1. Ввод адреса:</strong> Начните вводить адрес и
+                  выберите из предложений или используйте кнопку геолокации
+                </p>
+                <p>
+                  <strong>2. Подтверждение:</strong> Проверьте местоположение на
+                  карте, при необходимости скорректируйте перетаскиванием
+                  маркера
+                </p>
+                <p>
+                  <strong>3. Приватность:</strong> Выберите уровень приватности
+                  для отображения местоположения другим пользователям
+                </p>
               </div>
             </div>
           </div>
