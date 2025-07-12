@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"math"
+	"math/rand"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -14,12 +17,14 @@ import (
 // SpatialService сервис для работы с пространственными данными
 type SpatialService struct {
 	repo *repository.PostGISRepository
+	db   *sqlx.DB
 }
 
 // NewSpatialService создает новый сервис
 func NewSpatialService(db *sqlx.DB) *SpatialService {
 	return &SpatialService{
 		repo: repository.NewPostGISRepository(db),
+		db:   db,
 	}
 }
 
@@ -186,6 +191,329 @@ func (s *SpatialService) validateSearchParams(params *types.SearchParams) error 
 	}
 
 	return nil
+}
+
+// ========== PHASE 2: Новые методы для умного ввода адресов ==========
+
+// UpdateListingAddress обновление адреса объявления
+func (s *SpatialService) UpdateListingAddress(
+	ctx context.Context, 
+	listingID, userID int64,
+	req types.UpdateAddressRequest,
+	ipAddress, userAgent string,
+) (*types.EnhancedListingGeo, error) {
+	
+	// Проверяем права доступа
+	if err := s.checkListingAccess(ctx, listingID, userID); err != nil {
+		return nil, err
+	}
+	
+	// Получаем текущие данные для логирования
+	currentGeo, err := s.getEnhancedListingGeo(ctx, listingID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("failed to get current geo data: %w", err)
+	}
+	
+	// Вычисляем размытую локацию в зависимости от настроек приватности
+	blurredLocation := s.calculateBlurredLocation(req.Location, req.LocationPrivacy)
+	
+	// Создаем обновленную запись
+	updatedGeo := &types.EnhancedListingGeo{
+		ListingID:           listingID,
+		Location:            req.Location,
+		BlurredLocation:     blurredLocation,
+		LocationPrivacy:     req.LocationPrivacy,
+		AddressComponents:   req.AddressComponents,
+		FormattedAddress:    req.Address,
+		AddressVerified:     req.Verified,
+		InputMethod:         req.InputMethod,
+		GeocodingConfidence: s.calculateConfidenceScore(req),
+		UpdatedAt:           time.Now(),
+	}
+	
+	// Обновляем в базе данных
+	if err := s.updateEnhancedListingGeo(ctx, updatedGeo); err != nil {
+		return nil, fmt.Errorf("failed to update listing geo: %w", err)
+	}
+	
+	// Логируем изменение если есть предыдущие данные
+	if currentGeo != nil {
+		changeLog := &types.AddressChangeLog{
+			ListingID:        listingID,
+			UserID:           userID,
+			OldAddress:       currentGeo.FormattedAddress,
+			NewAddress:       req.Address,
+			OldLocation:      &currentGeo.Location,
+			NewLocation:      &req.Location,
+			ChangeReason:     string(req.InputMethod),
+			ConfidenceBefore: currentGeo.GeocodingConfidence,
+			ConfidenceAfter:  updatedGeo.GeocodingConfidence,
+			IPAddress:        ipAddress,
+			UserAgent:        userAgent,
+			CreatedAt:        time.Now(),
+		}
+		
+		if err := s.logAddressChange(ctx, changeLog); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+			fmt.Printf("Warning: failed to log address change: %v\n", err)
+		}
+	}
+	
+	return updatedGeo, nil
+}
+
+// checkListingAccess проверка прав доступа к объявлению
+func (s *SpatialService) checkListingAccess(ctx context.Context, listingID, userID int64) error {
+	query := `SELECT user_id FROM marketplace_listings WHERE id = $1`
+	var ownerID int64
+	
+	err := s.db.QueryRowContext(ctx, query, listingID).Scan(&ownerID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return types.ErrListingNotFound
+		}
+		return err
+	}
+	
+	if ownerID != userID {
+		return types.ErrAccessDenied
+	}
+	
+	return nil
+}
+
+// getEnhancedListingGeo получение расширенных геоданных объявления
+func (s *SpatialService) getEnhancedListingGeo(ctx context.Context, listingID int64) (*types.EnhancedListingGeo, error) {
+	query := `
+		SELECT 
+			id, listing_id, 
+			ST_Y(location::geometry) as lat,
+			ST_X(location::geometry) as lng,
+			COALESCE(ST_Y(blurred_location::geometry), 0) as blurred_lat,
+			COALESCE(ST_X(blurred_location::geometry), 0) as blurred_lng,
+			geohash, is_precise, blur_radius,
+			address_components, formatted_address, geocoding_confidence,
+			address_verified, input_method, location_privacy,
+			created_at, updated_at
+		FROM listings_geo 
+		WHERE listing_id = $1`
+	
+	var geo types.EnhancedListingGeo
+	var lat, lng, blurredLat, blurredLng float64
+	var addressComponentsJSON sql.NullString
+	
+	err := s.db.QueryRowContext(ctx, query, listingID).Scan(
+		&geo.ID,
+		&geo.ListingID,
+		&lat,
+		&lng,
+		&blurredLat,
+		&blurredLng,
+		&geo.Geohash,
+		&geo.IsPrecise,
+		&geo.BlurRadius,
+		&addressComponentsJSON,
+		&geo.FormattedAddress,
+		&geo.GeocodingConfidence,
+		&geo.AddressVerified,
+		&geo.InputMethod,
+		&geo.LocationPrivacy,
+		&geo.CreatedAt,
+		&geo.UpdatedAt,
+	)
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	geo.Location = types.Point{Lat: lat, Lng: lng}
+	
+	if blurredLat != 0 || blurredLng != 0 {
+		geo.BlurredLocation = &types.Point{Lat: blurredLat, Lng: blurredLng}
+	}
+	
+	// Парсим компоненты адреса если есть
+	if addressComponentsJSON.Valid && addressComponentsJSON.String != "" {
+		// TODO: реализовать парсинг JSON
+	}
+	
+	return &geo, nil
+}
+
+// updateEnhancedListingGeo обновление расширенных геоданных
+func (s *SpatialService) updateEnhancedListingGeo(ctx context.Context, geo *types.EnhancedListingGeo) error {
+	// Для простоты используем UPSERT
+	query := `
+		INSERT INTO listings_geo (
+			listing_id, location, blurred_location, geohash, is_precise, blur_radius,
+			address_components, formatted_address, geocoding_confidence,
+			address_verified, input_method, location_privacy, updated_at
+		) VALUES (
+			$1, ST_SetSRID(ST_MakePoint($2, $3), 4326), 
+			CASE WHEN $4 IS NOT NULL AND $5 IS NOT NULL 
+				THEN ST_SetSRID(ST_MakePoint($4, $5), 4326) 
+				ELSE NULL END,
+			$6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+		)
+		ON CONFLICT (listing_id) 
+		DO UPDATE SET
+			location = EXCLUDED.location,
+			blurred_location = EXCLUDED.blurred_location,
+			formatted_address = EXCLUDED.formatted_address,
+			geocoding_confidence = EXCLUDED.geocoding_confidence,
+			address_verified = EXCLUDED.address_verified,
+			input_method = EXCLUDED.input_method,
+			location_privacy = EXCLUDED.location_privacy,
+			updated_at = EXCLUDED.updated_at
+		RETURNING id`
+	
+	var blurredLng, blurredLat sql.NullFloat64
+	if geo.BlurredLocation != nil {
+		blurredLng = sql.NullFloat64{Float64: geo.BlurredLocation.Lng, Valid: true}
+		blurredLat = sql.NullFloat64{Float64: geo.BlurredLocation.Lat, Valid: true}
+	}
+	
+	// Вычисляем geohash - для простоты используем базовую реализацию
+	geohash := s.calculateGeohash(geo.Location)
+	
+	err := s.db.QueryRowContext(ctx, query,
+		geo.ListingID,
+		geo.Location.Lng,
+		geo.Location.Lat,
+		blurredLng,
+		blurredLat,
+		geohash,
+		geo.LocationPrivacy != types.PrivacyExact,
+		geo.LocationPrivacy.CalculateBlurRadius(),
+		nil, // address_components JSON - пока nil
+		geo.FormattedAddress,
+		geo.GeocodingConfidence,
+		geo.AddressVerified,
+		string(geo.InputMethod),
+		string(geo.LocationPrivacy),
+		time.Now(),
+	).Scan(&geo.ID)
+	
+	return err
+}
+
+// logAddressChange логирование изменения адреса
+func (s *SpatialService) logAddressChange(ctx context.Context, log *types.AddressChangeLog) error {
+	query := `
+		INSERT INTO address_change_log (
+			listing_id, user_id, old_address, new_address,
+			old_location, new_location, change_reason,
+			confidence_before, confidence_after, ip_address, user_agent, created_at
+		) VALUES (
+			$1, $2, $3, $4,
+			CASE WHEN $5 IS NOT NULL AND $6 IS NOT NULL 
+				THEN ST_SetSRID(ST_MakePoint($5, $6), 4326) 
+				ELSE NULL END,
+			CASE WHEN $7 IS NOT NULL AND $8 IS NOT NULL 
+				THEN ST_SetSRID(ST_MakePoint($7, $8), 4326) 
+				ELSE NULL END,
+			$9, $10, $11, $12, $13, $14
+		)`
+	
+	var oldLng, oldLat, newLng, newLat sql.NullFloat64
+	
+	if log.OldLocation != nil {
+		oldLng = sql.NullFloat64{Float64: log.OldLocation.Lng, Valid: true}
+		oldLat = sql.NullFloat64{Float64: log.OldLocation.Lat, Valid: true}
+	}
+	
+	if log.NewLocation != nil {
+		newLng = sql.NullFloat64{Float64: log.NewLocation.Lng, Valid: true}
+		newLat = sql.NullFloat64{Float64: log.NewLocation.Lat, Valid: true}
+	}
+	
+	_, err := s.db.ExecContext(ctx, query,
+		log.ListingID,
+		log.UserID,
+		log.OldAddress,
+		log.NewAddress,
+		oldLng,
+		oldLat,
+		newLng,
+		newLat,
+		log.ChangeReason,
+		log.ConfidenceBefore,
+		log.ConfidenceAfter,
+		log.IPAddress,
+		log.UserAgent,
+		log.CreatedAt,
+	)
+	
+	return err
+}
+
+// calculateBlurredLocation вычисление размытой локации
+func (s *SpatialService) calculateBlurredLocation(location types.Point, privacy types.LocationPrivacyLevel) *types.Point {
+	if privacy == types.PrivacyExact {
+		return nil // Возвращаем точную локацию
+	}
+	
+	// Получаем радиус размытия
+	blurRadius := privacy.CalculateBlurRadius()
+	
+	// Генерируем случайное смещение в пределах радиуса
+	// Используем равномерное распределение по площади круга
+	angle := rand.Float64() * 2 * math.Pi
+	distance := math.Sqrt(rand.Float64()) * blurRadius
+	
+	// Преобразуем метры в градусы (приблизительно)
+	offsetLat := (distance * math.Cos(angle)) / 111000 // ~111км на градус широты
+	offsetLng := (distance * math.Sin(angle)) / (111000 * math.Cos(location.Lat*math.Pi/180))
+	
+	blurredLocation := &types.Point{
+		Lat: location.Lat + offsetLat,
+		Lng: location.Lng + offsetLng,
+	}
+	
+	return blurredLocation
+}
+
+// calculateConfidenceScore вычисление показателя доверия
+func (s *SpatialService) calculateConfidenceScore(req types.UpdateAddressRequest) float64 {
+	baseScore := 0.5
+	
+	// Увеличиваем доверие в зависимости от метода ввода
+	switch req.InputMethod {
+	case types.InputGeocoded:
+		baseScore += 0.3
+	case types.InputMapClick:
+		baseScore += 0.2
+	case types.InputCurrentLocation:
+		baseScore += 0.4
+	case types.InputManual:
+		baseScore += 0.1
+	}
+	
+	// Увеличиваем если адрес подтвержден пользователем
+	if req.Verified {
+		baseScore += 0.2
+	}
+	
+	// Увеличиваем если есть структурированные компоненты адреса
+	if req.AddressComponents != nil && req.AddressComponents.HouseNumber != "" {
+		baseScore += 0.1
+	}
+	
+	// Ограничиваем значение
+	if baseScore > 1.0 {
+		baseScore = 1.0
+	}
+	if baseScore < 0.0 {
+		baseScore = 0.0
+	}
+	
+	return baseScore
+}
+
+// calculateGeohash базовая реализация geohash
+func (s *SpatialService) calculateGeohash(point types.Point) string {
+	// Упрощенная версия - в реальности стоит использовать библиотеку
+	return fmt.Sprintf("gh%.6f%.6f", point.Lat, point.Lng)
 }
 
 // Helper функции

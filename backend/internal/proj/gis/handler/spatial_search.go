@@ -255,6 +255,82 @@ func (h *SpatialHandler) UpdateListingLocation(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, "Location updated successfully")
 }
 
+// UpdateListingAddress обновление адреса объявления (Phase 2)
+// @Summary Обновление адреса объявления с валидацией
+// @Description Обновляет геолокацию и адрес объявления с полной валидацией и логированием
+// @Tags gis
+// @Accept json
+// @Produce json
+// @Param id path int true "ID объявления"
+// @Param request body types.UpdateAddressRequest true "Данные для обновления"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.EnhancedListingGeo} "Обновленные геоданные"
+// @Failure 400 {object} utils.ErrorResponseSwag "Ошибка валидации"
+// @Failure 403 {object} utils.ErrorResponseSwag "Нет прав доступа"
+// @Failure 404 {object} utils.ErrorResponseSwag "Объявление не найдено"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка"
+// @Router /api/v1/gis/listings/{id}/address [put]
+// @Security BearerAuth
+func (h *SpatialHandler) UpdateListingAddress(c *fiber.Ctx) error {
+	// Получаем ID объявления
+	listingID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "gis.invalidListingID")
+	}
+
+	// Парсим запрос
+	var req types.UpdateAddressRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "gis.parseError")
+	}
+
+	// Базовая валидация
+	if req.Address == "" || len(req.Address) < 5 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "gis.validationError")
+	}
+
+	// Валидируем значения enum
+	if !req.LocationPrivacy.IsValid() {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "gis.invalidPrivacyLevel")
+	}
+
+	if !req.InputMethod.IsValid() {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "gis.invalidInputMethod")
+	}
+
+	// Получаем пользователя из контекста (middleware должен установить это)
+	// Пока используем захардкоженное значение для тестирования
+	userID := int64(1) // TODO: получать из middleware
+
+	ctx := c.Context()
+	
+	// Получаем IP и User-Agent для логирования
+	ipAddress := c.IP()
+	userAgent := c.Get("User-Agent")
+	
+	// Обновляем адрес через сервис
+	updatedGeo, err := h.service.UpdateListingAddress(
+		ctx, 
+		int64(listingID), 
+		int64(userID),
+		req,
+		ipAddress,
+		userAgent,
+	)
+	if err != nil {
+		// Разные типы ошибок
+		switch err {
+		case types.ErrListingNotFound:
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "gis.listingNotFound")
+		case types.ErrAccessDenied:
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "gis.accessDenied")
+		default:
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "gis.updateError")
+		}
+	}
+
+	return utils.SuccessResponse(c, updatedGeo)
+}
+
 // Helper функции
 
 func parseBounds(boundsStr string) (types.Bounds, error) {

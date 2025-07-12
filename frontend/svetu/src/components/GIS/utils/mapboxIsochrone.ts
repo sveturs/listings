@@ -3,8 +3,7 @@ import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import { point } from '@turf/helpers';
 import { generateLocalIsochrone } from './isochrone';
 
-const MAPBOX_ACCESS_TOKEN =
-  'pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA';
+const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const MAPBOX_ISOCHRONE_API = 'https://api.mapbox.com/isochrone/v1/mapbox';
 
 interface MapboxIsochroneOptions {
@@ -32,6 +31,11 @@ export async function getMapboxIsochrone(
     // Формируем URL для запроса
     const [lng, lat] = coordinates;
     const url = new URL(`${MAPBOX_ISOCHRONE_API}/${profile}/${lng},${lat}`);
+
+    // Проверяем наличие токена
+    if (!MAPBOX_ACCESS_TOKEN) {
+      throw new Error('MAPBOX_ACCESS_TOKEN is not configured');
+    }
 
     // Добавляем параметры
     url.searchParams.append('contours_minutes', minutes.toString());
@@ -82,6 +86,11 @@ export async function getMultipleMapboxIsochrones(
   profile: 'walking' | 'cycling' | 'driving' = 'walking'
 ): Promise<Feature<Polygon>[]> {
   try {
+    // Проверяем наличие токена
+    if (!MAPBOX_ACCESS_TOKEN) {
+      throw new Error('MAPBOX_ACCESS_TOKEN is not configured');
+    }
+
     // Mapbox API поддерживает запрос нескольких контуров за раз
     const url = new URL(
       `${MAPBOX_ISOCHRONE_API}/${profile}/${coordinates[0]},${coordinates[1]}`
@@ -133,6 +142,11 @@ export async function getMultipleMapboxIsochrones(
  */
 export async function checkMapboxIsochroneAvailability(): Promise<boolean> {
   try {
+    // Проверяем наличие токена
+    if (!MAPBOX_ACCESS_TOKEN) {
+      return false;
+    }
+
     // Тестовый запрос с минимальными параметрами
     const testCoordinates: [number, number] = [0, 0];
     const url = new URL(
