@@ -106,6 +106,7 @@ class CompactSliderControlClass implements IControl {
       this.container.style.width = isMobile ? '260px' : '300px';
       this.container.style.height = 'auto';
       this.container.style.cursor = 'default';
+      this.container.style.zIndex = '1000'; // Высокий z-index для развернутого состояния
     } else {
       // Свернутое состояние - используем стандартные стили mapbox контролов
       this.container.style.background = '';
@@ -152,6 +153,8 @@ class CompactSliderControlClass implements IControl {
         padding: 0;
         cursor: pointer;
         outline: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
       ">
         <span style="
           display: flex;
@@ -386,44 +389,77 @@ class CompactSliderControlClass implements IControl {
       }, 250);
     });
 
-    // Long press для мобильных
+    // Long press и double tap для мобильных
     let touchStartTime = 0;
     let touchTimer: NodeJS.Timeout | null = null;
+    let lastTouchTime = 0;
 
     icon.addEventListener('touchstart', (e) => {
+      console.log('[CompactSliderControl] Touch start detected');
       e.preventDefault();
+      e.stopPropagation(); // Останавливаем всплытие события
       touchStartTime = Date.now();
+      
+      // Визуальная обратная связь
+      icon.style.opacity = '0.7';
+      icon.style.transform = 'scale(0.95)';
 
       touchTimer = setTimeout(() => {
         // Long press detected
+        console.log('[CompactSliderControl] Long press detected - toggling expanded');
         this.toggleExpanded();
 
         // Вибрация на мобильных (если поддерживается)
         if ('vibrate' in navigator) {
           navigator.vibrate(50);
         }
+        
+        // Возвращаем визуальное состояние
+        icon.style.opacity = '1';
+        icon.style.transform = 'scale(1)';
       }, 500); // 500ms для long press
-    });
+    }, { passive: false }); // passive: false для preventDefault
 
     icon.addEventListener('touchend', (e) => {
+      console.log('[CompactSliderControl] Touch end detected');
       e.preventDefault();
+      e.stopPropagation();
+      
+      // Возвращаем визуальное состояние
+      icon.style.opacity = '1';
+      icon.style.transform = 'scale(1)';
 
       if (touchTimer) {
         clearTimeout(touchTimer);
       }
 
       const touchDuration = Date.now() - touchStartTime;
+      const currentTime = Date.now();
+      
       if (touchDuration < 500) {
-        // Короткое касание - переключаем режим
-        handleSingleTap();
+        // Проверка на двойной тап
+        if (currentTime - lastTouchTime < 300) {
+          console.log('[CompactSliderControl] Double tap detected - toggling expanded');
+          this.toggleExpanded();
+          lastTouchTime = 0; // Сбрасываем для избежания тройного тапа
+        } else {
+          // Короткое касание - переключаем режим
+          console.log('[CompactSliderControl] Short tap - switching mode');
+          handleSingleTap();
+          lastTouchTime = currentTime;
+        }
       }
-    });
+    }, { passive: false });
 
-    icon.addEventListener('touchmove', () => {
+    icon.addEventListener('touchmove', (e) => {
+      e.preventDefault();
       if (touchTimer) {
         clearTimeout(touchTimer);
       }
-    });
+      // Возвращаем визуальное состояние при движении
+      icon.style.opacity = '1';
+      icon.style.transform = 'scale(1)';
+    }, { passive: false });
 
     // Hover эффект для десктопа
     icon.addEventListener('mouseenter', () => {
