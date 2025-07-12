@@ -12,7 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
-import WalkingAccessibilityControl from '@/components/GIS/Map/WalkingAccessibilityControl';
+// import WalkingAccessibilityControl from '@/components/GIS/Map/WalkingAccessibilityControl'; // Заменен на NativeSliderControl
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
 
@@ -466,16 +466,6 @@ const MapPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-base-100">
-      {/* Заголовок - скрываем на мобильном */}
-      <div className="bg-white border-b border-base-300 px-4 py-4 hidden md:block">
-        <div className="container mx-auto">
-          <h1 className="text-2xl font-bold text-base-content mb-2">
-            {t('title')}
-          </h1>
-          <p className="text-base-content-secondary">{t('description')}</p>
-        </div>
-      </div>
-
       {/* Контейнер с картой и фильтрами */}
       <div className="relative h-screen md:h-[calc(100vh-140px)]">
         {/* Десктопная боковая панель с фильтрами */}
@@ -566,16 +556,20 @@ const MapPage: React.FC = () => {
               />
             </div>
 
-            {/* Радиус поиска */}
+            {/* Радиус поиска - теперь управляется через нативный контрол на карте */}
             <div className="mb-4">
-              <WalkingAccessibilityControl
-                mode={walkingMode}
-                searchRadius={filters.radius}
-                walkingTime={walkingTime}
-                onModeChange={setWalkingMode}
-                onRadiusChange={(radius) => handleFiltersChange({ radius })}
-                onWalkingTimeChange={setWalkingTime}
-              />
+              <div className="text-sm text-base-content-secondary bg-base-200 p-3 rounded-lg">
+                <p>
+                  📍 Используйте контрол на карте для настройки радиуса поиска
+                  или зоны пешей доступности
+                </p>
+                <p className="mt-1 text-xs">
+                  Текущий режим:{' '}
+                  {walkingMode === 'walking'
+                    ? `🚶 ${walkingTime} мин`
+                    : `📍 ${filters.radius >= 1000 ? `${(filters.radius / 1000).toFixed(1)} км` : `${filters.radius} м`}`}
+                </p>
+              </div>
             </div>
 
             {/* Статистика */}
@@ -655,6 +649,10 @@ const MapPage: React.FC = () => {
             walkingTime={walkingTime}
             onBuyerLocationChange={handleBuyerLocationChange}
             onIsochroneChange={setCurrentIsochrone}
+            onWalkingModeChange={setWalkingMode}
+            onWalkingTimeChange={setWalkingTime}
+            onSearchRadiusChange={(radius) => handleFiltersChange({ radius })}
+            useNativeControl={true} // Используем FloatingSliderControl по умолчанию
           />
         </div>
 

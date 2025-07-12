@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 
 interface WalkingAccessibilityControlProps {
@@ -22,12 +22,41 @@ const WalkingAccessibilityControl: React.FC<
 }) => {
   const t = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const walkingTimes = [5, 10, 15, 20, 30]; // минуты
   const radiusOptions = [1000, 2000, 5000, 10000, 20000]; // метры
 
+  // Закрытие меню при клике вне его
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
+
   const handleModeChange = useCallback(
     (newMode: 'radius' | 'walking') => {
+      console.log(
+        '[WalkingAccessibilityControl] Mode change:',
+        mode,
+        '->',
+        newMode
+      );
       onModeChange(newMode);
 
       // При переключении в режим пешей доступности, конвертируем радиус в время
@@ -71,11 +100,15 @@ const WalkingAccessibilityControl: React.FC<
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       {/* Кнопка открытия */}
       <button
-        className="btn btn-sm btn-ghost"
+        className="btn btn-sm btn-ghost min-h-[2.5rem] touch-manipulation"
         onClick={() => setIsOpen(!isOpen)}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          setIsOpen(!isOpen);
+        }}
         title={t('gis.accessibilitySettings')}
       >
         {mode === 'walking' ? '🚶' : '📍'}
@@ -88,7 +121,7 @@ const WalkingAccessibilityControl: React.FC<
 
       {/* Выпадающее меню */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-base-100 rounded-lg shadow-lg p-4 z-50">
+        <div className="absolute right-0 mt-2 w-72 bg-base-100 rounded-lg shadow-xl border border-base-300 p-4 z-[9999] touch-none">
           <h3 className="font-semibold mb-3">{t('gis.searchAreaSettings')}</h3>
 
           {/* Переключатель режима */}
@@ -96,12 +129,20 @@ const WalkingAccessibilityControl: React.FC<
             <button
               className={`tab ${mode === 'radius' ? 'tab-active' : ''}`}
               onClick={() => handleModeChange('radius')}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleModeChange('radius');
+              }}
             >
               📍 {t('gis.byRadius')}
             </button>
             <button
               className={`tab ${mode === 'walking' ? 'tab-active' : ''}`}
               onClick={() => handleModeChange('walking')}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleModeChange('walking');
+              }}
             >
               🚶 {t('gis.byWalkingTime')}
             </button>
@@ -120,8 +161,12 @@ const WalkingAccessibilityControl: React.FC<
                 {radiusOptions.map((radius) => (
                   <button
                     key={radius}
-                    className={`btn btn-xs ${searchRadius === radius ? 'btn-primary' : 'btn-ghost'}`}
+                    className={`btn btn-sm min-h-[2.5rem] ${searchRadius === radius ? 'btn-primary' : 'btn-ghost'}`}
                     onClick={() => onRadiusChange(radius)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      onRadiusChange(radius);
+                    }}
                   >
                     {formatDistance(radius)}
                   </button>
@@ -134,7 +179,11 @@ const WalkingAccessibilityControl: React.FC<
                 step="500"
                 value={searchRadius}
                 onChange={(e) => onRadiusChange(Number(e.target.value))}
-                className="range range-primary range-xs mt-3"
+                onTouchMove={(e) => {
+                  // Предотвращаем всплытие события на мобильных
+                  e.stopPropagation();
+                }}
+                className="range range-primary range-xs mt-3 touch-manipulation"
               />
             </div>
           )}
@@ -152,8 +201,12 @@ const WalkingAccessibilityControl: React.FC<
                 {walkingTimes.map((time) => (
                   <button
                     key={time}
-                    className={`btn btn-xs ${walkingTime === time ? 'btn-primary' : 'btn-ghost'}`}
+                    className={`btn btn-sm min-h-[2.5rem] ${walkingTime === time ? 'btn-primary' : 'btn-ghost'}`}
                     onClick={() => onWalkingTimeChange(time)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      onWalkingTimeChange(time);
+                    }}
                   >
                     {time} {t('gis.min')}
                   </button>
@@ -171,8 +224,12 @@ const WalkingAccessibilityControl: React.FC<
 
           {/* Кнопка закрытия */}
           <button
-            className="btn btn-sm btn-block mt-4"
+            className="btn btn-sm btn-block mt-4 min-h-[2.5rem]"
             onClick={() => setIsOpen(false)}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setIsOpen(false);
+            }}
           >
             {t('common.close')}
           </button>

@@ -40,7 +40,9 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import MapPopup from './MapPopup';
 import MapControls from './MapControls';
 import MapboxClusterLayer from './MapboxClusterLayer';
-import NativeSliderControl from './NativeSliderControl';
+// import NativeSliderControl from './NativeSliderControl';
+import CompactSliderControl from './CompactSliderControl';
+import FloatingSliderControl from './FloatingSliderControl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface InteractiveMapProps {
@@ -72,6 +74,7 @@ interface InteractiveMapProps {
   onWalkingModeChange?: (mode: 'radius' | 'walking') => void;
   onWalkingTimeChange?: (time: number) => void;
   onSearchRadiusChange?: (radius: number) => void;
+  useNativeControl?: boolean; // Флаг для выбора типа контрола
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -100,6 +103,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onWalkingModeChange,
   onWalkingTimeChange,
   onSearchRadiusChange,
+  useNativeControl = false,
 }) => {
   console.log('[InteractiveMap] Received props:', {
     markersCount: markers.length,
@@ -333,6 +337,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // Состояние для изохроны
   const [isochroneData, setIsochroneData] = useState<any>(null);
   const [isLoadingIsochrone, setIsLoadingIsochrone] = useState(false);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // Состояние для отслеживания перетаскивания
   const [isDragging, setIsDragging] = useState(false);
@@ -531,6 +536,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         attributionControl={false}
         logoPosition="bottom-left"
         style={{ width: '100%', height: '100%' }}
+        onLoad={() => {
+          console.log('[InteractiveMap] Map loaded');
+          setIsMapLoaded(true);
+        }}
       >
         {/* Кластеризация маркеров с помощью MapboxClusterLayer */}
         {markers.length > 0 && (
@@ -621,21 +630,22 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           useOpenStreetMap={useOpenStreetMap}
         />
 
-        {/* Нативный ползунок для радиуса/времени ходьбы - адаптивное позиционирование */}
-        {showBuyerMarker && (
-          <NativeSliderControl
-            map={mapRef.current?.getMap() || null}
+        {/* Нативный контрол Mapbox */}
+        {showBuyerMarker && useNativeControl && mapRef.current && (
+          <CompactSliderControl
+            map={mapRef.current.getMap()}
             mode={walkingMode}
-            isFullscreen={isFullscreen}
-            isMobile={isMobile}
             onModeChange={(mode) => {
-              console.log('[InteractiveMap] Mode change from slider:', mode);
+              console.log(
+                '[InteractiveMap] Mode change from native control:',
+                mode
+              );
               onWalkingModeChange?.(mode);
             }}
             walkingTime={walkingTime}
             onWalkingTimeChange={(time) => {
               console.log(
-                '[InteractiveMap] Walking time change from slider:',
+                '[InteractiveMap] Walking time change from native control:',
                 time
               );
               onWalkingTimeChange?.(time);
@@ -643,14 +653,42 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             searchRadius={searchRadius}
             onRadiusChange={(radius) => {
               console.log(
-                '[InteractiveMap] Radius change from slider:',
+                '[InteractiveMap] Radius change from native control:',
                 radius
               );
               onSearchRadiusChange?.(radius);
             }}
+            isFullscreen={isFullscreen}
+            isMobile={isMobile}
           />
         )}
       </Map>
+
+      {/* Плавающий контрол с выдвижным слайдером - вне MapBox контейнера */}
+      {showBuyerMarker && !useNativeControl && (
+        <FloatingSliderControl
+          mode={walkingMode}
+          isFullscreen={isFullscreen}
+          isMobile={isMobile}
+          onModeChange={(mode) => {
+            console.log('[InteractiveMap] Mode change from slider:', mode);
+            onWalkingModeChange?.(mode);
+          }}
+          walkingTime={walkingTime}
+          onWalkingTimeChange={(time) => {
+            console.log(
+              '[InteractiveMap] Walking time change from slider:',
+              time
+            );
+            onWalkingTimeChange?.(time);
+          }}
+          searchRadius={searchRadius}
+          onRadiusChange={(radius) => {
+            console.log('[InteractiveMap] Radius change from slider:', radius);
+            onSearchRadiusChange?.(radius);
+          }}
+        />
+      )}
 
       {/* Индикатор загрузки изохрона */}
       {isLoadingIsochrone && (
