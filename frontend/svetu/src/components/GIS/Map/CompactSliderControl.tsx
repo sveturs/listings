@@ -55,6 +55,8 @@ class CompactSliderControlClass implements IControl {
     this.container.style.overflow = 'visible';
     this.container.style.userSelect = 'none';
     this.container.style.touchAction = 'manipulation';
+    this.container.style.pointerEvents = 'auto'; // Явно разрешаем события
+    this.container.style.zIndex = '999'; // Высокий z-index
 
     this.updateContainerStyle();
     this.render();
@@ -155,6 +157,10 @@ class CompactSliderControlClass implements IControl {
         outline: none;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
+        pointer-events: auto;
+        z-index: 1000;
+        user-select: none;
+        -webkit-user-select: none;
       ">
         <span style="
           display: flex;
@@ -328,6 +334,13 @@ class CompactSliderControlClass implements IControl {
   }
 
   private addEventListeners(): void {
+    // Добавляем слушатель на контейнер для отладки
+    this.container.addEventListener('touchstart', (e) => {
+      console.log('[CompactSliderControl] Container touchstart detected!');
+      console.log('Event target:', e.target);
+      console.log('Current target:', e.currentTarget);
+    }, { capture: true });
+
     if (!this.isExpanded) {
       this.addCompactListeners();
     } else {
@@ -394,10 +407,11 @@ class CompactSliderControlClass implements IControl {
     let touchTimer: NodeJS.Timeout | null = null;
     let lastTouchTime = 0;
 
-    icon.addEventListener('touchstart', (e) => {
-      console.log('[CompactSliderControl] Touch start detected');
+    // Используем pointerdown вместо touchstart для лучшей совместимости
+    icon.addEventListener('pointerdown', (e) => {
+      console.log('[CompactSliderControl] Pointer down detected');
       e.preventDefault();
-      e.stopPropagation(); // Останавливаем всплытие события
+      e.stopPropagation();
       touchStartTime = Date.now();
       
       // Визуальная обратная связь
@@ -418,10 +432,10 @@ class CompactSliderControlClass implements IControl {
         icon.style.opacity = '1';
         icon.style.transform = 'scale(1)';
       }, 500); // 500ms для long press
-    }, { passive: false }); // passive: false для preventDefault
+    });
 
-    icon.addEventListener('touchend', (e) => {
-      console.log('[CompactSliderControl] Touch end detected');
+    icon.addEventListener('pointerup', (e) => {
+      console.log('[CompactSliderControl] Pointer up detected');
       e.preventDefault();
       e.stopPropagation();
       
@@ -449,17 +463,16 @@ class CompactSliderControlClass implements IControl {
           lastTouchTime = currentTime;
         }
       }
-    }, { passive: false });
+    });
 
-    icon.addEventListener('touchmove', (e) => {
-      e.preventDefault();
+    icon.addEventListener('pointercancel', (e) => {
       if (touchTimer) {
         clearTimeout(touchTimer);
       }
-      // Возвращаем визуальное состояние при движении
+      // Возвращаем визуальное состояние при отмене
       icon.style.opacity = '1';
       icon.style.transform = 'scale(1)';
-    }, { passive: false });
+    });
 
     // Hover эффект для десктопа
     icon.addEventListener('mouseenter', () => {

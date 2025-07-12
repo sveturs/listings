@@ -667,7 +667,7 @@ const MapPage: React.FC = () => {
             onWalkingModeChange={setWalkingMode}
             onWalkingTimeChange={setWalkingTime}
             onSearchRadiusChange={(radius) => handleFiltersChange({ radius })}
-            useNativeControl={false} // Используем FloatingSliderControl по умолчанию
+            useNativeControl={true} // Используем нативный контрол по умолчанию
             controlTranslations={controlTranslations}
           />
         </div>
