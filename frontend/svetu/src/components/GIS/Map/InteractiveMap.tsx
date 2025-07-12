@@ -290,7 +290,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const radiusCircleGeoJSON = useMemo(() => {
     if (!showBuyerMarker) return null;
 
-    const center = [
+    const center: [number, number] = [
       internalBuyerLocation.longitude,
       internalBuyerLocation.latitude,
     ];
@@ -308,7 +308,13 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
       });
       return circleFeature;
     }
-  }, [showBuyerMarker, internalBuyerLocation, searchRadius, walkingMode, walkingTime]);
+  }, [
+    showBuyerMarker,
+    internalBuyerLocation,
+    searchRadius,
+    walkingMode,
+    walkingTime,
+  ]);
 
   // Стиль для слоя круга (закомментирован, не используется)
   // const radiusCircleLayer: CircleLayer = {
