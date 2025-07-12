@@ -234,8 +234,8 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
   const color = mode === 'walking' ? '#10B981' : '#3B82F6';
 
   // Позиционирование под нативными контролами Mapbox
-  // NavigationControl (88px) + GeolocateControl (32px) + FullscreenControl (32px) + отступы = ~170px
-  const positionClasses = 'top-[170px] right-2';
+  // NavigationControl (88px) + GeolocateControl (32px) + FullscreenControl (32px) + отступы = ~195px
+  const positionClasses = 'top-[195px] right-[10px]';
 
   // Конвертируем значения в проценты для слайдера
   const displayRadius = mode === 'radius' ? tempSearchRadius : searchRadius;
@@ -248,47 +248,43 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
     <div
       className={`floating-slider-control fixed ${positionClasses} z-10 transition-all duration-300 ease-in-out`}
       style={{
-        width: isExpanded ? (isMobile ? '260px' : '300px') : '48px',
-        height: isExpanded ? 'auto' : '48px',
+        width: isExpanded ? (isMobile ? '260px' : '300px') : '29px',
+        height: isExpanded ? 'auto' : '29px',
       }}
     >
-      <div
-        className="bg-white rounded-lg shadow-lg overflow-hidden"
-        style={{
-          boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
-        }}
-      >
         {!isExpanded ? (
-          // Компактное состояние
-          <div
-            className="w-full h-full p-2 cursor-pointer hover:bg-gray-50 transition-colors relative"
+          // Компактное состояние - стиль как у нативного контрола
+          <button
+            className="w-full h-full flex items-center justify-center bg-white rounded cursor-pointer transition-all duration-200 hover:bg-gray-50"
+            style={{
+              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              border: 'none',
+              padding: 0,
+              outline: 'none',
+              WebkitTapHighlightColor: 'transparent',
+            }}
             onClick={handleIconClick}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
             title={translations?.singleClickHint || "Click - change mode, double click - expand"}
           >
-            <div className="relative w-8 h-8 flex items-center justify-center">
-              <div
-                className="w-full h-full flex items-center justify-center rounded-md transition-all duration-200"
-                style={{ backgroundColor: `${color}20` }}
-              >
-                <span className="text-lg transition-all duration-200">
-                  {icon}
-                </span>
-              </div>
-
-              {/* Индикатор значения */}
-              <div
-                className="absolute -bottom-1 -right-1 text-white text-xs font-semibold px-1 py-0.5 rounded-md shadow-sm"
-                style={{
-                  backgroundColor: color,
-                  fontSize: '9px',
-                  lineHeight: '1',
-                }}
-              >
-                {getCompactValue()}
-              </div>
+            <span style={{ fontSize: '18px' }}>{icon}</span>
+            
+            {/* Индикатор значения */}
+            <div
+              className="absolute text-white font-semibold rounded shadow-sm"
+              style={{
+                backgroundColor: color,
+                fontSize: '9px',
+                lineHeight: '1',
+                padding: '1px 4px',
+                bottom: '-2px',
+                right: '-2px',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+              }}
+            >
+              {getCompactValue()}
             </div>
 
             {/* Подсказка для мобильных */}
@@ -298,10 +294,15 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
                 <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-800 transform rotate-45"></div>
               </div>
             )}
-          </div>
+          </button>
         ) : (
           // Развернутое состояние
-          <div className="p-3 space-y-3">
+          <div 
+            className="bg-white rounded-lg shadow-lg p-3 space-y-3"
+            style={{
+              boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+            }}
+          >
             {/* Заголовок */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -369,7 +370,6 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
             />
           </div>
         )}
-      </div>
 
       <style jsx>{`
         .slider::-webkit-slider-thumb {
