@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
+import MarkerClickPopup from '@/components/GIS/Map/MarkerClickPopup';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
 import { MapViewState, MapMarkerData } from '@/components/GIS/types/gis';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -44,7 +45,7 @@ interface MapFilters {
 
 const MapPage: React.FC = () => {
   const t = useTranslations('map');
-  const router = useRouter();
+  const _router = useRouter();
   const searchParams = useSearchParams();
   const { search: geoSearch } = useGeoSearch();
 
@@ -114,6 +115,9 @@ const MapPage: React.FC = () => {
 
   // Состояние мобильных элементов
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [selectedMarker, setSelectedMarker] = useState<MapMarkerData | null>(
+    null
+  );
   const [isMobile, setIsMobile] = useState(false);
 
   // Состояние для текущего изохрона
@@ -430,14 +434,10 @@ const MapPage: React.FC = () => {
   }, [listings, createMarkers, walkingMode, currentIsochrone]);
 
   // Обработка клика по маркеру
-  const handleMarkerClick = useCallback(
-    (marker: MapMarkerData) => {
-      if (marker.data?.id) {
-        router.push(`/marketplace/${marker.data.id}`);
-      }
-    },
-    [router]
-  );
+  const handleMarkerClick = useCallback((marker: MapMarkerData) => {
+    // Показываем расширенный popup вместо мгновенного перехода
+    setSelectedMarker(marker);
+  }, []);
 
   // Обработка изменения области просмотра
   const handleViewStateChange = useCallback((newViewState: MapViewState) => {
@@ -729,6 +729,14 @@ const MapPage: React.FC = () => {
             useNativeControl={true} // Используем нативный контрол по умолчанию
             controlTranslations={controlTranslations}
           />
+
+          {/* Расширенный popup при клике */}
+          {selectedMarker && (
+            <MarkerClickPopup
+              marker={selectedMarker}
+              onClose={() => setSelectedMarker(null)}
+            />
+          )}
         </div>
 
         {/* Мобильный drawer с фильтрами */}

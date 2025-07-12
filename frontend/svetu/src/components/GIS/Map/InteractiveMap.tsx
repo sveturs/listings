@@ -40,10 +40,12 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import MapPopup from './MapPopup';
 import MapControls from './MapControls';
 import MapboxClusterLayer from './MapboxClusterLayer';
+import MarkerHoverPopup from './MarkerHoverPopup';
 // import NativeSliderControl from './NativeSliderControl';
 import CompactSliderControl from './CompactSliderControl';
 import FloatingSliderControl from './FloatingSliderControl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import '@/styles/map-popup.css';
 
 interface InteractiveMapProps {
   initialViewState?: Partial<MapViewState>;
@@ -148,6 +150,11 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [useOpenStreetMap, setUseOpenStreetMap] = useState(false);
+
+  // Состояние для hover popup
+  const [hoveredMarker, setHoveredMarker] = useState<MapMarkerData | null>(
+    null
+  );
 
   // Состояние для маркера покупателя
   const [internalBuyerLocation, setInternalBuyerLocation] = useState({
@@ -352,6 +359,15 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [isochroneData, setIsochroneData] = useState<any>(null);
   const [isLoadingIsochrone, setIsLoadingIsochrone] = useState(false);
   const [_isMapLoaded, setIsMapLoaded] = useState(false);
+
+  // Обработчики для hover
+  const handleMarkerHover = useCallback((marker: MapMarkerData) => {
+    setHoveredMarker(marker);
+  }, []);
+
+  const handleMarkerLeave = useCallback(() => {
+    setHoveredMarker(null);
+  }, []);
 
   // Состояние для отслеживания перетаскивания
   const [isDragging, setIsDragging] = useState(false);
@@ -560,6 +576,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <MapboxClusterLayer
             markers={markers}
             onMarkerClick={handleMarkerClick}
+            onMarkerHover={handleMarkerHover}
+            onMarkerLeave={handleMarkerLeave}
             clusterRadius={50}
             clusterMaxZoom={14}
             clusterMinPoints={2}
@@ -569,6 +587,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
         {/* Всплывающее окно */}
         {popup && <MapPopup popup={popup} onClose={() => {}} />}
+
+        {/* Hover popup */}
+        {hoveredMarker && (
+          <MarkerHoverPopup
+            marker={hoveredMarker}
+            onClose={() => setHoveredMarker(null)}
+          />
+        )}
 
         {/* Слой с радиусом поиска */}
         {showBuyerMarker && radiusCircleGeoJSON && (
