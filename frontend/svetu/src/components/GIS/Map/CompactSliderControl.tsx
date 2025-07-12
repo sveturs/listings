@@ -36,16 +36,18 @@ class CompactSliderControlClass implements IControl {
   onAdd(map: MapboxMap): HTMLElement {
     console.log('[CompactSliderControlClass] onAdd called');
     this.map = map;
+    // Добавляем классы как у нативных контролов
     this.container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
 
     // Основные стили контейнера
     this.container.style.transition = 'all 0.3s ease-in-out';
-    this.container.style.overflow = 'hidden';
+    this.container.style.overflow = 'visible';
     this.container.style.userSelect = 'none';
     this.container.style.touchAction = 'manipulation';
 
     this.updateContainerStyle();
     this.render();
+
     console.log('[CompactSliderControlClass] Container created and styled');
     return this.container;
   }
@@ -57,6 +59,7 @@ class CompactSliderControlClass implements IControl {
     if (this.longPressTimer) {
       clearTimeout(this.longPressTimer);
     }
+    this.removeOutsideClickHandler();
     this.map = undefined;
   }
 
@@ -70,29 +73,29 @@ class CompactSliderControlClass implements IControl {
     const { isMobile } = this.props;
 
     // Базовые стили
-    this.container.style.background = 'white';
-    this.container.style.borderRadius = '8px';
-    this.container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.15)';
-    this.container.style.zIndex = '1'; // стандартный z-index для mapbox контролов
     this.container.style.position = 'relative';
-    this.container.style.margin = '10px';
     this.container.style.transition = 'all 0.3s ease-in-out';
     
-    // Добавляем отступ сверху чтобы расположиться под другими контролами
-    // NavigationControl (88px) + GeolocateControl (32px) + FullscreenControl (32px) + отступы
-    this.container.style.marginTop = '162px';
+    // Убираем дополнительный отступ сверху - пусть mapbox сам управляет позиционированием
+    this.container.style.margin = '0';
 
     if (this.isExpanded) {
-      // Развернутое состояние
+      // Развернутое состояние - переопределяем стили для расширенной панели
+      this.container.style.background = 'white';
+      this.container.style.borderRadius = '8px';
+      this.container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.15)';
       this.container.style.padding = '12px';
       this.container.style.width = isMobile ? '260px' : '300px';
       this.container.style.height = 'auto';
       this.container.style.cursor = 'default';
     } else {
-      // Свернутое состояние - компактная иконка
-      this.container.style.padding = '10px';
-      this.container.style.width = '48px';
-      this.container.style.height = '48px';
+      // Свернутое состояние - используем стандартные стили mapbox контролов
+      this.container.style.background = '';
+      this.container.style.borderRadius = '';
+      this.container.style.boxShadow = '';
+      this.container.style.padding = '0';
+      this.container.style.width = '29px';
+      this.container.style.height = '29px';
       this.container.style.cursor = 'pointer';
     }
   }
@@ -118,14 +121,12 @@ class CompactSliderControlClass implements IControl {
 
     this.container.innerHTML = `
       <div id="compact-icon" style="
-        width: 28px;
-        height: 28px;
+        width: 29px;
+        height: 29px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
-        background: ${bgColor}20;
-        border-radius: 6px;
+        font-size: 14px;
         position: relative;
         transition: all 0.2s ease;
       ">
@@ -134,12 +135,12 @@ class CompactSliderControlClass implements IControl {
         <!-- Индикатор значения -->
         <div style="
           position: absolute;
-          bottom: -4px;
-          right: -4px;
+          bottom: -3px;
+          right: -3px;
           background: ${bgColor};
           color: white;
           border-radius: 8px;
-          padding: 1px 4px;
+          padding: 1px 3px;
           font-size: 9px;
           font-weight: 600;
           line-height: 1;
@@ -524,6 +525,13 @@ class CompactSliderControlClass implements IControl {
     this.tempWalkingTime = null;
     this.tempSearchRadius = null;
 
+    // Управляем обработчиком кликов вне контрола
+    if (this.isExpanded) {
+      this.setupOutsideClickHandler();
+    } else {
+      this.removeOutsideClickHandler();
+    }
+
     // Принудительное обновление стилей и содержимого
     setTimeout(() => {
       this.updateContainerStyle();
@@ -531,6 +539,24 @@ class CompactSliderControlClass implements IControl {
     }, 10);
 
     console.log('[CompactSliderControl] Toggled expanded:', this.isExpanded);
+  }
+
+  private outsideClickHandler = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!this.container.contains(target) && this.isExpanded) {
+      this.toggleExpanded();
+    }
+  };
+
+  private setupOutsideClickHandler(): void {
+    // Добавляем слушатель с небольшой задержкой, чтобы не сработало сразу при открытии
+    setTimeout(() => {
+      document.addEventListener('click', this.outsideClickHandler, true);
+    }, 100);
+  }
+
+  private removeOutsideClickHandler(): void {
+    document.removeEventListener('click', this.outsideClickHandler, true);
   }
 }
 
