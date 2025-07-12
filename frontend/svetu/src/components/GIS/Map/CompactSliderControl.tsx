@@ -378,28 +378,39 @@ class CompactSliderControlClass implements IControl {
       this.toggleExpanded();
     };
 
-    // Обработчик клика - упрощенная логика
-    let clickCount = 0;
-    let clickTimer: NodeJS.Timeout | null = null;
+    // Обработчик мыши для десктопа - отдельная логика для двойного клика
+    let mouseClickCount = 0;
+    let mouseClickTimer: NodeJS.Timeout | null = null;
 
     icon.addEventListener('click', (e) => {
       e.preventDefault();
-      clickCount++;
+      e.stopPropagation();
+      
+      mouseClickCount++;
+      console.log('[CompactSliderControl] Mouse click detected, count:', mouseClickCount);
 
-      if (clickTimer) {
-        clearTimeout(clickTimer);
+      if (mouseClickTimer) {
+        clearTimeout(mouseClickTimer);
       }
 
-      clickTimer = setTimeout(() => {
-        if (clickCount === 1) {
-          // Одиночный клик - переключение режима
-          handleSingleTap();
-        } else if (clickCount >= 2) {
-          // Двойной клик - открытие/закрытие слайдера
-          handleDoubleTap();
+      if (mouseClickCount === 1) {
+        mouseClickTimer = setTimeout(() => {
+          if (mouseClickCount === 1) {
+            // Одиночный клик - переключение режима
+            console.log('[CompactSliderControl] Single mouse click - switching mode');
+            handleSingleTap();
+          }
+          mouseClickCount = 0;
+        }, 250);
+      } else if (mouseClickCount === 2) {
+        // Двойной клик - открытие/закрытие слайдера
+        console.log('[CompactSliderControl] Double mouse click - toggling expanded');
+        handleDoubleTap();
+        mouseClickCount = 0;
+        if (mouseClickTimer) {
+          clearTimeout(mouseClickTimer);
         }
-        clickCount = 0;
-      }, 250);
+      }
     });
 
     // Long press и double tap для мобильных
