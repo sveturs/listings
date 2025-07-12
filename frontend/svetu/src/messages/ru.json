@@ -2676,6 +2676,19 @@
     },
     "errors": {
       "loadingFailed": "Не удалось загрузить объявления"
+    },
+    "controls": {
+      "walkingAccessibility": "Пешая доступность",
+      "searchRadius": "Радиус поиска",
+      "minutes": "мин",
+      "km": "км",
+      "m": "м",
+      "changeModeHint": "Нажмите для смены режима",
+      "holdForSettings": "Удерживайте для настроек",
+      "singleClickHint": "Клик - смена режима, двойной клик - развернуть",
+      "mobileHint": "Тап на иконку сменит режим",
+      "desktopHint": "R/W - смена режима",
+      "updatingIsochrone": "Обновление зоны доступности..."
     }
   }
 }

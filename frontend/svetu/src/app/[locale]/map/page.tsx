@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
@@ -464,6 +464,21 @@ const MapPage: React.FC = () => {
     }
   }, [filters, debouncedViewState, searchQuery, updateURL, isInitialized]);
 
+  // Memoized переводы для контролов
+  const controlTranslations = useMemo(() => ({
+    walkingAccessibility: t('controls.walkingAccessibility'),
+    searchRadius: t('controls.searchRadius'),
+    minutes: t('controls.minutes'),
+    km: t('controls.km'),
+    m: t('controls.m'),
+    changeModeHint: t('controls.changeModeHint'),
+    holdForSettings: t('controls.holdForSettings'),
+    singleClickHint: t('controls.singleClickHint'),
+    mobileHint: t('controls.mobileHint'),
+    desktopHint: t('controls.desktopHint'),
+    updatingIsochrone: t('controls.updatingIsochrone')
+  }), [t]);
+
   return (
     <div className="min-h-screen bg-base-100">
       {/* Контейнер с картой и фильтрами */}
@@ -653,6 +668,7 @@ const MapPage: React.FC = () => {
             onWalkingTimeChange={setWalkingTime}
             onSearchRadiusChange={(radius) => handleFiltersChange({ radius })}
             useNativeControl={true} // Используем FloatingSliderControl по умолчанию
+            controlTranslations={controlTranslations}
           />
         </div>
 

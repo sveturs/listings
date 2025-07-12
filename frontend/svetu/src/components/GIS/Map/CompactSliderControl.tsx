@@ -11,6 +11,14 @@ interface CompactSliderControlProps {
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   isFullscreen?: boolean;
   isMobile?: boolean;
+  translations?: {
+    walkingAccessibility: string;
+    searchRadius: string;
+    minutes: string;
+    km: string;
+    m: string;
+    changeModeHint: string;
+  };
 }
 
 class CompactSliderControlClass implements IControl {
@@ -196,7 +204,7 @@ class CompactSliderControlClass implements IControl {
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 18px;">${icon}</span>
           <span style="font-size: 14px; font-weight: 500; color: #374151;">
-            ${mode === 'walking' ? 'Пешая доступность' : 'Радиус поиска'}
+            ${mode === 'walking' ? (this.props.translations?.walkingAccessibility || 'Walking accessibility') : (this.props.translations?.searchRadius || 'Search radius')}
           </span>
         </div>
         <button id="close-btn" style="
@@ -266,7 +274,7 @@ class CompactSliderControlClass implements IControl {
       <!-- Значение и подсказка -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
         <span style="font-size: 11px; color: #6B7280;">
-          Нажмите для смены режима
+          ${this.props.translations?.changeModeHint || 'Click to change mode'}
         </span>
         <span style="font-size: 13px; font-weight: 600; color: ${color};">
           ${displayValue}
@@ -276,33 +284,43 @@ class CompactSliderControlClass implements IControl {
   }
 
   private getCompactValue(): string {
-    const { mode, walkingTime, searchRadius } = this.props;
+    const { mode, walkingTime, searchRadius, translations } = this.props;
+    const t = translations || {
+      minutes: 'min',
+      km: 'km',
+      m: 'm'
+    };
 
     if (mode === 'walking') {
       return `${walkingTime}'`;
     } else {
       if (searchRadius >= 1000) {
         const km = (searchRadius / 1000).toFixed(0);
-        return `${km}км`;
+        return `${km}${t.km}`;
       }
-      return `${searchRadius}м`;
+      return `${searchRadius}${t.m}`;
     }
   }
 
   private getDisplayValue(): string {
-    const { mode, walkingTime, searchRadius } = this.props;
+    const { mode, walkingTime, searchRadius, translations } = this.props;
+    const t = translations || {
+      minutes: 'min',
+      km: 'km',
+      m: 'm'
+    };
 
     // Используем временные значения если они есть
     const currentWalkingTime = this.tempWalkingTime ?? walkingTime;
     const currentSearchRadius = this.tempSearchRadius ?? searchRadius;
 
     if (mode === 'walking') {
-      return `${currentWalkingTime} мин`;
+      return `${currentWalkingTime} ${t.minutes}`;
     } else {
       if (currentSearchRadius >= 1000) {
-        return `${(currentSearchRadius / 1000).toFixed(1)} км`;
+        return `${(currentSearchRadius / 1000).toFixed(1)} ${t.km}`;
       }
-      return `${currentSearchRadius} м`;
+      return `${currentSearchRadius} ${t.m}`;
     }
   }
 

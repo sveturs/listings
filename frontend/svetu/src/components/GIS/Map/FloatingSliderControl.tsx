@@ -9,6 +9,17 @@ interface FloatingSliderControlProps {
   onRadiusChange: (radius: number) => void;
   isFullscreen?: boolean;
   isMobile?: boolean;
+  translations?: {
+    walkingAccessibility: string;
+    searchRadius: string;
+    minutes: string;
+    km: string;
+    m: string;
+    holdForSettings: string;
+    singleClickHint: string;
+    mobileHint: string;
+    desktopHint: string;
+  };
 }
 
 const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
@@ -20,6 +31,7 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
   onRadiusChange,
   isFullscreen = false,
   isMobile = false,
+  translations,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [lastTapTime, setLastTapTime] = useState(0);
@@ -31,26 +43,38 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
 
   // Форматирование значения для компактного отображения
   const getCompactValue = () => {
+    const t = translations || {
+      minutes: 'min',
+      km: 'km',
+      m: 'm'
+    };
+
     if (mode === 'walking') {
       return `${walkingTime}'`;
     } else {
       if (searchRadius >= 1000) {
         const km = (searchRadius / 1000).toFixed(0);
-        return `${km}км`;
+        return `${km}${t.km}`;
       }
-      return `${searchRadius}м`;
+      return `${searchRadius}${t.m}`;
     }
   };
 
   // Форматирование значения для полного отображения
   const getDisplayValue = () => {
+    const t = translations || {
+      minutes: 'min',
+      km: 'km',
+      m: 'm'
+    };
+
     if (mode === 'walking') {
-      return `${displayWalkingTime} мин`;
+      return `${displayWalkingTime} ${t.minutes}`;
     } else {
       if (displayRadius >= 1000) {
-        return `${(displayRadius / 1000).toFixed(1)} км`;
+        return `${(displayRadius / 1000).toFixed(1)} ${t.km}`;
       }
-      return `${displayRadius} м`;
+      return `${displayRadius} ${t.m}`;
     }
   };
 
@@ -242,7 +266,7 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
-            title="Клик - смена режима, двойной клик - развернуть"
+            title={translations?.singleClickHint || "Click - change mode, double click - expand"}
           >
             <div className="relative w-8 h-8 flex items-center justify-center">
               <div
@@ -270,7 +294,7 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
             {/* Подсказка для мобильных */}
             {showTooltip && isMobile && (
               <div className="absolute -bottom-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
-                Удерживайте для настроек
+                {translations?.holdForSettings || "Hold for settings"}
                 <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-800 transform rotate-45"></div>
               </div>
             )}
@@ -285,7 +309,7 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
                   {icon}
                 </span>
                 <span className="text-sm font-medium text-gray-700">
-                  {mode === 'walking' ? 'Пешая доступность' : 'Радиус поиска'}
+                  {mode === 'walking' ? (translations?.walkingAccessibility || 'Walking accessibility') : (translations?.searchRadius || 'Search radius')}
                 </span>
               </div>
               <button
@@ -328,8 +352,8 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-500">
                   {isMobile
-                    ? 'Тап на иконку сменит режим'
-                    : 'R/W - смена режима'}
+                    ? (translations?.mobileHint || 'Tap icon to change mode')
+                    : (translations?.desktopHint || 'R/W - change mode')}
                 </span>
                 <span className="font-semibold" style={{ color }}>
                   {getDisplayValue()}

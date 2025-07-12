@@ -75,6 +75,19 @@ interface InteractiveMapProps {
   onWalkingTimeChange?: (time: number) => void;
   onSearchRadiusChange?: (radius: number) => void;
   useNativeControl?: boolean; // Флаг для выбора типа контрола
+  controlTranslations?: {
+    walkingAccessibility: string;
+    searchRadius: string;
+    minutes: string;
+    km: string;
+    m: string;
+    changeModeHint: string;
+    holdForSettings: string;
+    singleClickHint: string;
+    mobileHint: string;
+    desktopHint: string;
+    updatingIsochrone: string;
+  };
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -104,6 +117,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onWalkingTimeChange,
   onSearchRadiusChange,
   useNativeControl = false,
+  controlTranslations,
 }) => {
   console.log('[InteractiveMap] Received props:', {
     markersCount: markers.length,
@@ -660,6 +674,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             }}
             isFullscreen={isFullscreen}
             isMobile={isMobile}
+            translations={controlTranslations}
           />
         )}
       </Map>
@@ -687,6 +702,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             console.log('[InteractiveMap] Radius change from slider:', radius);
             onSearchRadiusChange?.(radius);
           }}
+          translations={controlTranslations}
         />
       )}
 
@@ -697,7 +713,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
               <span className="text-sm text-gray-600">
-                Обновление зоны доступности...
+                {controlTranslations?.updatingIsochrone || 'Updating accessibility zone...'}
               </span>
             </div>
           </div>

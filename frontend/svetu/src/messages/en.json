@@ -2689,6 +2689,19 @@
     },
     "errors": {
       "loadingFailed": "Failed to load listings"
+    },
+    "controls": {
+      "walkingAccessibility": "Walking accessibility",
+      "searchRadius": "Search radius",
+      "minutes": "min",
+      "km": "km",
+      "m": "m",
+      "changeModeHint": "Click to change mode",
+      "holdForSettings": "Hold for settings",
+      "singleClickHint": "Click - change mode, double click - expand",
+      "mobileHint": "Tap icon to change mode",
+      "desktopHint": "R/W - change mode",
+      "updatingIsochrone": "Updating accessibility zone..."
     }
   }
 }
