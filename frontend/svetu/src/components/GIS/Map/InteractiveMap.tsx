@@ -5,6 +5,24 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
+
+// Хук для детекции fullscreen режима
+const useFullscreen = () => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  return isFullscreen;
+};
 import Map, { Marker, Source, Layer } from 'react-map-gl';
 import type { MapRef, MarkerDragEvent } from 'react-map-gl';
 import circle from '@turf/circle';
@@ -22,6 +40,7 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import MapPopup from './MapPopup';
 import MapControls from './MapControls';
 import MapboxClusterLayer from './MapboxClusterLayer';
+import NativeSliderControl from './NativeSliderControl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface InteractiveMapProps {
@@ -50,6 +69,9 @@ interface InteractiveMapProps {
     latitude: number;
   }) => void;
   onIsochroneChange?: (isochrone: Feature<Polygon> | null) => void;
+  onWalkingModeChange?: (mode: 'radius' | 'walking') => void;
+  onWalkingTimeChange?: (time: number) => void;
+  onSearchRadiusChange?: (radius: number) => void;
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -75,6 +97,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   walkingTime = 15,
   onBuyerLocationChange,
   onIsochroneChange,
+  onWalkingModeChange,
+  onWalkingTimeChange,
+  onSearchRadiusChange,
 }) => {
   console.log('[InteractiveMap] Received props:', {
     markersCount: markers.length,
@@ -84,6 +109,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     showBuyerMarker,
     buyerLocation,
   });
+
+  // Детекция fullscreen режима
+  const isFullscreen = useFullscreen();
 
   const mapRef = useRef<MapRef>(null);
   const { search } = useGeoSearch();
@@ -592,6 +620,36 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           isMobile={isMobile}
           useOpenStreetMap={useOpenStreetMap}
         />
+
+        {/* Нативный ползунок для радиуса/времени ходьбы - адаптивное позиционирование */}
+        {showBuyerMarker && (
+          <NativeSliderControl
+            map={mapRef.current?.getMap() || null}
+            mode={walkingMode}
+            isFullscreen={isFullscreen}
+            isMobile={isMobile}
+            onModeChange={(mode) => {
+              console.log('[InteractiveMap] Mode change from slider:', mode);
+              onWalkingModeChange?.(mode);
+            }}
+            walkingTime={walkingTime}
+            onWalkingTimeChange={(time) => {
+              console.log(
+                '[InteractiveMap] Walking time change from slider:',
+                time
+              );
+              onWalkingTimeChange?.(time);
+            }}
+            searchRadius={searchRadius}
+            onRadiusChange={(radius) => {
+              console.log(
+                '[InteractiveMap] Radius change from slider:',
+                radius
+              );
+              onSearchRadiusChange?.(radius);
+            }}
+          />
+        )}
       </Map>
 
       {/* Индикатор загрузки изохрона */}
