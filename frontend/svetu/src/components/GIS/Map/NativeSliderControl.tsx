@@ -267,7 +267,7 @@ interface NativeSliderControlComponentProps extends NativeSliderControlProps {
 
 const NativeSliderControl: React.FC<NativeSliderControlComponentProps> = ({
   map,
-  position = 'top-right',
+  position: _position = 'top-right',
   isFullscreen = false,
   isMobile = false,
   ...props
@@ -330,7 +330,7 @@ const NativeSliderControl: React.FC<NativeSliderControlComponentProps> = ({
       controlRef.current = null;
       setIsAdded(false);
     };
-  }, [map, adaptivePosition, isFullscreen, isMobile]);
+  }, [map, adaptivePosition, isFullscreen, isMobile, props]);
 
   // Обновляем props контрола при их изменении
   useEffect(() => {

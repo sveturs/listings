@@ -2680,8 +2680,13 @@
     "controls": {
       "walkingAccessibility": "Пешая доступность",
       "searchRadius": "Радиус поиска",
+      "radiusControl": "Радиус поиска",
+      "walkingMode": "Пешком",
+      "distanceMode": "На транспорте",
       "minutes": "мин",
+      "minUnit": "мин",
       "km": "км",
+      "kmUnit": "км",
       "m": "м",
       "changeModeHint": "Нажмите для смены режима",
       "holdForSettings": "Удерживайте для настроек",

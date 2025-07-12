@@ -351,7 +351,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // Состояние для изохроны
   const [isochroneData, setIsochroneData] = useState<any>(null);
   const [isLoadingIsochrone, setIsLoadingIsochrone] = useState(false);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [_isMapLoaded, setIsMapLoaded] = useState(false);
 
   // Состояние для отслеживания перетаскивания
   const [isDragging, setIsDragging] = useState(false);
@@ -713,7 +713,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
               <span className="text-sm text-gray-600">
-                {controlTranslations?.updatingIsochrone || 'Updating accessibility zone...'}
+                {controlTranslations?.updatingIsochrone ||
+                  'Updating accessibility zone...'}
               </span>
             </div>
           </div>

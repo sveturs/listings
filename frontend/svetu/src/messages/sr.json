@@ -2499,6 +2499,11 @@
       "ready": "Spreman"
     }
   },
+  "gis": {
+    "accessibilitySettings": "Podešavanja dostupnosti",
+    "kilometers": "km",
+    "meters": "m"
+  },
   "map": {
     "title": "Mapa oglasa",
     "description": "Pronađite proizvode i usluge u vašoj blizini",
@@ -2536,6 +2541,24 @@
     },
     "errors": {
       "loadingFailed": "Nije moguće učitati oglase"
+    },
+    "controls": {
+      "walkingAccessibility": "Pešačka dostupnost",
+      "searchRadius": "Radijus pretrage",
+      "radiusControl": "Radijus pretrage",
+      "walkingMode": "Pešice",
+      "distanceMode": "Udaljenost",
+      "minutes": "min",
+      "minUnit": "min",
+      "km": "km",
+      "kmUnit": "km",
+      "m": "m",
+      "changeModeHint": "Kliknite za promenu režima",
+      "holdForSettings": "Držite za podešavanja",
+      "singleClickHint": "Klik - promena režima, dupli klik - proširivanje",
+      "mobileHint": "Tap na ikonu menja režim",
+      "desktopHint": "R/W - promena režima",
+      "updatingIsochrone": "Ažuriranje zone dostupnosti..."
     }
   }
 }

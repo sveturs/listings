@@ -94,7 +94,7 @@ class CompactSliderControlClass implements IControl {
     // Базовые стили
     this.container.style.position = 'relative';
     this.container.style.transition = 'all 0.3s ease-in-out';
-    
+
     // Добавляем отступ между контролами (как у других нативных контролов)
     this.container.style.marginTop = '10px';
     this.container.style.marginBottom = '0';
@@ -122,8 +122,6 @@ class CompactSliderControlClass implements IControl {
   }
 
   private render(): void {
-    const { mode, walkingTime, searchRadius } = this.props;
-
     if (!this.isExpanded) {
       // Свернутое состояние - только иконка
       this.renderCompact();
@@ -213,7 +211,7 @@ class CompactSliderControlClass implements IControl {
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 18px;">${icon}</span>
           <span style="font-size: 14px; font-weight: 500; color: #374151;">
-            ${mode === 'walking' ? (this.props.translations?.walkingAccessibility || 'Walking accessibility') : (this.props.translations?.searchRadius || 'Search radius')}
+            ${mode === 'walking' ? this.props.translations?.walkingAccessibility || 'Walking accessibility' : this.props.translations?.searchRadius || 'Search radius'}
           </span>
         </div>
         <button id="close-btn" style="
@@ -297,7 +295,7 @@ class CompactSliderControlClass implements IControl {
     const t = translations || {
       minutes: 'min',
       km: 'km',
-      m: 'm'
+      m: 'm',
     };
 
     if (mode === 'walking') {
@@ -316,7 +314,7 @@ class CompactSliderControlClass implements IControl {
     const t = translations || {
       minutes: 'min',
       km: 'km',
-      m: 'm'
+      m: 'm',
     };
 
     // Используем временные значения если они есть
@@ -335,11 +333,15 @@ class CompactSliderControlClass implements IControl {
 
   private addEventListeners(): void {
     // Добавляем слушатель на контейнер для отладки
-    this.container.addEventListener('touchstart', (e) => {
-      console.log('[CompactSliderControl] Container touchstart detected!');
-      console.log('Event target:', e.target);
-      console.log('Current target:', e.currentTarget);
-    }, { capture: true });
+    this.container.addEventListener(
+      'touchstart',
+      (e) => {
+        console.log('[CompactSliderControl] Container touchstart detected!');
+        console.log('Event target:', e.target);
+        console.log('Current target:', e.currentTarget);
+      },
+      { capture: true }
+    );
 
     if (!this.isExpanded) {
       this.addCompactListeners();
@@ -385,9 +387,12 @@ class CompactSliderControlClass implements IControl {
     icon.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       mouseClickCount++;
-      console.log('[CompactSliderControl] Mouse click detected, count:', mouseClickCount);
+      console.log(
+        '[CompactSliderControl] Mouse click detected, count:',
+        mouseClickCount
+      );
 
       if (mouseClickTimer) {
         clearTimeout(mouseClickTimer);
@@ -397,14 +402,18 @@ class CompactSliderControlClass implements IControl {
         mouseClickTimer = setTimeout(() => {
           if (mouseClickCount === 1) {
             // Одиночный клик - переключение режима
-            console.log('[CompactSliderControl] Single mouse click - switching mode');
+            console.log(
+              '[CompactSliderControl] Single mouse click - switching mode'
+            );
             handleSingleTap();
           }
           mouseClickCount = 0;
         }, 250);
       } else if (mouseClickCount === 2) {
         // Двойной клик - открытие/закрытие слайдера
-        console.log('[CompactSliderControl] Double mouse click - toggling expanded');
+        console.log(
+          '[CompactSliderControl] Double mouse click - toggling expanded'
+        );
         handleDoubleTap();
         mouseClickCount = 0;
         if (mouseClickTimer) {
@@ -424,21 +433,23 @@ class CompactSliderControlClass implements IControl {
       e.preventDefault();
       e.stopPropagation();
       touchStartTime = Date.now();
-      
+
       // Визуальная обратная связь
       icon.style.opacity = '0.7';
       icon.style.transform = 'scale(0.95)';
 
       touchTimer = setTimeout(() => {
         // Long press detected
-        console.log('[CompactSliderControl] Long press detected - toggling expanded');
+        console.log(
+          '[CompactSliderControl] Long press detected - toggling expanded'
+        );
         this.toggleExpanded();
 
         // Вибрация на мобильных (если поддерживается)
         if ('vibrate' in navigator) {
           navigator.vibrate(50);
         }
-        
+
         // Возвращаем визуальное состояние
         icon.style.opacity = '1';
         icon.style.transform = 'scale(1)';
@@ -449,7 +460,7 @@ class CompactSliderControlClass implements IControl {
       console.log('[CompactSliderControl] Pointer up detected');
       e.preventDefault();
       e.stopPropagation();
-      
+
       // Возвращаем визуальное состояние
       icon.style.opacity = '1';
       icon.style.transform = 'scale(1)';
@@ -460,11 +471,13 @@ class CompactSliderControlClass implements IControl {
 
       const touchDuration = Date.now() - touchStartTime;
       const currentTime = Date.now();
-      
+
       if (touchDuration < 500) {
         // Проверка на двойной тап
         if (currentTime - lastTouchTime < 300) {
-          console.log('[CompactSliderControl] Double tap detected - toggling expanded');
+          console.log(
+            '[CompactSliderControl] Double tap detected - toggling expanded'
+          );
           this.toggleExpanded();
           lastTouchTime = 0; // Сбрасываем для избежания тройного тапа
         } else {
@@ -476,7 +489,7 @@ class CompactSliderControlClass implements IControl {
       }
     });
 
-    icon.addEventListener('pointercancel', (e) => {
+    icon.addEventListener('pointercancel', () => {
       if (touchTimer) {
         clearTimeout(touchTimer);
       }
@@ -565,15 +578,15 @@ class CompactSliderControlClass implements IControl {
 
       // События для отслеживания движения слайдера
       slider.addEventListener('input', handleSliderInput);
-      
+
       // События для применения изменений только при отпускании
       slider.addEventListener('change', handleSliderEnd);
-      
+
       // Предотвращаем сброс значения при клике
       slider.addEventListener('mousedown', (e) => {
         e.stopPropagation();
       });
-      
+
       slider.addEventListener('touchstart', (e) => {
         e.stopPropagation();
       });
@@ -672,7 +685,7 @@ interface CompactSliderControlComponentProps extends CompactSliderControlProps {
 
 const CompactSliderControl: React.FC<CompactSliderControlComponentProps> = ({
   map,
-  position = 'top-right',
+  position: _position = 'top-right',
   isFullscreen = false,
   isMobile = false,
   ...props
@@ -726,7 +739,7 @@ const CompactSliderControl: React.FC<CompactSliderControlComponentProps> = ({
       controlRef.current = null;
       setIsAdded(false);
     };
-  }, [map, adaptivePosition, isFullscreen, isMobile]);
+  }, [map, adaptivePosition, isFullscreen, isMobile, props]);
 
   useEffect(() => {
     if (controlRef.current && isAdded) {

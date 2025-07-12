@@ -2693,8 +2693,13 @@
     "controls": {
       "walkingAccessibility": "Walking accessibility",
       "searchRadius": "Search radius",
+      "radiusControl": "Search Radius",
+      "walkingMode": "Walking",
+      "distanceMode": "Distance",
       "minutes": "min",
+      "minUnit": "min",
       "km": "km",
+      "kmUnit": "km",
       "m": "m",
       "changeModeHint": "Click to change mode",
       "holdForSettings": "Hold for settings",

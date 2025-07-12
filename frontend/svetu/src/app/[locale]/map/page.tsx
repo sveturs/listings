@@ -465,19 +465,22 @@ const MapPage: React.FC = () => {
   }, [filters, debouncedViewState, searchQuery, updateURL, isInitialized]);
 
   // Memoized переводы для контролов
-  const controlTranslations = useMemo(() => ({
-    walkingAccessibility: t('controls.walkingAccessibility'),
-    searchRadius: t('controls.searchRadius'),
-    minutes: t('controls.minutes'),
-    km: t('controls.km'),
-    m: t('controls.m'),
-    changeModeHint: t('controls.changeModeHint'),
-    holdForSettings: t('controls.holdForSettings'),
-    singleClickHint: t('controls.singleClickHint'),
-    mobileHint: t('controls.mobileHint'),
-    desktopHint: t('controls.desktopHint'),
-    updatingIsochrone: t('controls.updatingIsochrone')
-  }), [t]);
+  const controlTranslations = useMemo(
+    () => ({
+      walkingAccessibility: t('controls.walkingAccessibility'),
+      searchRadius: t('controls.searchRadius'),
+      minutes: t('controls.minutes'),
+      km: t('controls.km'),
+      m: t('controls.m'),
+      changeModeHint: t('controls.changeModeHint'),
+      holdForSettings: t('controls.holdForSettings'),
+      singleClickHint: t('controls.singleClickHint'),
+      mobileHint: t('controls.mobileHint'),
+      desktopHint: t('controls.desktopHint'),
+      updatingIsochrone: t('controls.updatingIsochrone'),
+    }),
+    [t]
+  );
 
   return (
     <div className="min-h-screen bg-base-100">
@@ -571,19 +574,75 @@ const MapPage: React.FC = () => {
               />
             </div>
 
-            {/* Радиус поиска - теперь управляется через нативный контрол на карте */}
-            <div className="mb-4">
-              <div className="text-sm text-base-content-secondary bg-base-200 p-3 rounded-lg">
-                <p>
-                  📍 Используйте контрол на карте для настройки радиуса поиска
-                  или зоны пешей доступности
-                </p>
-                <p className="mt-1 text-xs">
-                  Текущий режим:{' '}
-                  {walkingMode === 'walking'
-                    ? `🚶 ${walkingTime} мин`
-                    : `📍 ${filters.radius >= 1000 ? `${(filters.radius / 1000).toFixed(1)} км` : `${filters.radius} м`}`}
-                </p>
+            {/* Контроль радиуса поиска */}
+            <div className="mb-4 space-y-3">
+              <label className="block text-sm font-medium text-base-content">
+                {t('controls.radiusControl')}
+              </label>
+
+              {/* Переключатель типа радиуса */}
+              <div className="flex gap-1 p-1 bg-base-200 rounded-lg">
+                <button
+                  type="button"
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    walkingMode === 'walking'
+                      ? 'bg-primary text-primary-content'
+                      : 'text-base-content hover:bg-base-300'
+                  }`}
+                  onClick={() => setWalkingMode('walking')}
+                >
+                  🚶 {t('controls.walkingMode')}
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    walkingMode === 'radius'
+                      ? 'bg-primary text-primary-content'
+                      : 'text-base-content hover:bg-base-300'
+                  }`}
+                  onClick={() => setWalkingMode('radius')}
+                >
+                  📏 {t('controls.distanceMode')}
+                </button>
+              </div>
+
+              {/* Слайдер радиуса */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-base-content/70">
+                  <span>
+                    {walkingMode === 'walking'
+                      ? `5 ${t('controls.minUnit')}`
+                      : `0.5 ${t('controls.kmUnit')}`}
+                  </span>
+                  <span className="font-medium">
+                    {walkingMode === 'walking'
+                      ? `${walkingTime} ${t('controls.minUnit')}`
+                      : `${filters.radius >= 1000 ? (filters.radius / 1000).toFixed(1) : (filters.radius / 1000).toFixed(1)} ${t('controls.kmUnit')}`}
+                  </span>
+                  <span>
+                    {walkingMode === 'walking'
+                      ? `60 ${t('controls.minUnit')}`
+                      : `10 ${t('controls.kmUnit')}`}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  className="range range-primary range-sm"
+                  min={walkingMode === 'walking' ? 5 : 500}
+                  max={walkingMode === 'walking' ? 60 : 10000}
+                  step={walkingMode === 'walking' ? 5 : 500}
+                  value={
+                    walkingMode === 'walking' ? walkingTime : filters.radius
+                  }
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    if (walkingMode === 'walking') {
+                      setWalkingTime(value);
+                    } else {
+                      handleFiltersChange({ radius: value });
+                    }
+                  }}
+                />
               </div>
             </div>
 

@@ -29,7 +29,7 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
   onWalkingTimeChange,
   searchRadius,
   onRadiusChange,
-  isFullscreen = false,
+  isFullscreen: _isFullscreen = false,
   isMobile = false,
   translations,
 }) => {
@@ -46,7 +46,7 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
     const t = translations || {
       minutes: 'min',
       km: 'km',
-      m: 'm'
+      m: 'm',
     };
 
     if (mode === 'walking') {
@@ -65,7 +65,7 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
     const t = translations || {
       minutes: 'min',
       km: 'km',
-      m: 'm'
+      m: 'm',
     };
 
     if (mode === 'walking') {
@@ -252,124 +252,130 @@ const FloatingSliderControl: React.FC<FloatingSliderControlProps> = ({
         height: isExpanded ? 'auto' : '29px',
       }}
     >
-        {!isExpanded ? (
-          // Компактное состояние - стиль как у нативного контрола
-          <button
-            className="w-full h-full flex items-center justify-center bg-white rounded cursor-pointer transition-all duration-200 hover:bg-gray-50"
-            style={{
-              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-              border: 'none',
-              padding: 0,
-              outline: 'none',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-            onClick={handleIconClick}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            onTouchMove={handleTouchMove}
-            title={translations?.singleClickHint || "Click - change mode, double click - expand"}
-          >
-            <span style={{ fontSize: '18px' }}>{icon}</span>
-            
-            {/* Индикатор значения */}
-            <div
-              className="absolute text-white font-semibold rounded shadow-sm"
-              style={{
-                backgroundColor: color,
-                fontSize: '9px',
-                lineHeight: '1',
-                padding: '1px 4px',
-                bottom: '-2px',
-                right: '-2px',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-              }}
-            >
-              {getCompactValue()}
-            </div>
+      {!isExpanded ? (
+        // Компактное состояние - стиль как у нативного контрола
+        <button
+          className="w-full h-full flex items-center justify-center bg-white rounded cursor-pointer transition-all duration-200 hover:bg-gray-50"
+          style={{
+            boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+            border: 'none',
+            padding: 0,
+            outline: 'none',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+          onClick={handleIconClick}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchMove={handleTouchMove}
+          title={
+            translations?.singleClickHint ||
+            'Click - change mode, double click - expand'
+          }
+        >
+          <span style={{ fontSize: '18px' }}>{icon}</span>
 
-            {/* Подсказка для мобильных */}
-            {showTooltip && isMobile && (
-              <div className="absolute -bottom-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
-                {translations?.holdForSettings || "Hold for settings"}
-                <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-800 transform rotate-45"></div>
-              </div>
-            )}
-          </button>
-        ) : (
-          // Развернутое состояние
-          <div 
-            className="bg-white rounded-lg shadow-lg p-3 space-y-3"
+          {/* Индикатор значения */}
+          <div
+            className="absolute text-white font-semibold rounded shadow-sm"
             style={{
-              boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+              backgroundColor: color,
+              fontSize: '9px',
+              lineHeight: '1',
+              padding: '1px 4px',
+              bottom: '-2px',
+              right: '-2px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
             }}
           >
-            {/* Заголовок */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-lg transition-all duration-200">
-                  {icon}
-                </span>
-                <span className="text-sm font-medium text-gray-700">
-                  {mode === 'walking' ? (translations?.walkingAccessibility || 'Walking accessibility') : (translations?.searchRadius || 'Search radius')}
-                </span>
-              </div>
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Слайдер */}
-            <div className="space-y-2">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={currentPercent}
-                onChange={handleSliderChange}
-                onMouseUp={handleSliderChangeEnd}
-                onTouchEnd={handleSliderChangeEnd}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                style={{
-                  background: `linear-gradient(to right, ${color} 0%, ${color} ${currentPercent}%, #e5e7eb ${currentPercent}%, #e5e7eb 100%)`,
-                }}
-              />
-
-              {/* Значение и подсказка */}
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-500">
-                  {isMobile
-                    ? (translations?.mobileHint || 'Tap icon to change mode')
-                    : (translations?.desktopHint || 'R/W - change mode')}
-                </span>
-                <span className="font-semibold" style={{ color }}>
-                  {getDisplayValue()}
-                </span>
-              </div>
-            </div>
-
-            {/* Кликабельная область для переключения режима */}
-            <button
-              className="absolute inset-x-0 top-0 h-10 cursor-pointer hover:bg-gray-50 hover:bg-opacity-50 transition-all duration-200 rounded-t-lg"
-              onClick={handleSingleTap}
-              aria-label="Переключить режим измерения"
-            />
+            {getCompactValue()}
           </div>
-        )}
+
+          {/* Подсказка для мобильных */}
+          {showTooltip && isMobile && (
+            <div className="absolute -bottom-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
+              {translations?.holdForSettings || 'Hold for settings'}
+              <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-800 transform rotate-45"></div>
+            </div>
+          )}
+        </button>
+      ) : (
+        // Развернутое состояние
+        <div
+          className="bg-white rounded-lg shadow-lg p-3 space-y-3"
+          style={{
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+          }}
+        >
+          {/* Заголовок */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg transition-all duration-200">
+                {icon}
+              </span>
+              <span className="text-sm font-medium text-gray-700">
+                {mode === 'walking'
+                  ? translations?.walkingAccessibility ||
+                    'Walking accessibility'
+                  : translations?.searchRadius || 'Search radius'}
+              </span>
+            </div>
+            <button
+              onClick={() => setIsExpanded(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Слайдер */}
+          <div className="space-y-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={currentPercent}
+              onChange={handleSliderChange}
+              onMouseUp={handleSliderChangeEnd}
+              onTouchEnd={handleSliderChangeEnd}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              style={{
+                background: `linear-gradient(to right, ${color} 0%, ${color} ${currentPercent}%, #e5e7eb ${currentPercent}%, #e5e7eb 100%)`,
+              }}
+            />
+
+            {/* Значение и подсказка */}
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-500">
+                {isMobile
+                  ? translations?.mobileHint || 'Tap icon to change mode'
+                  : translations?.desktopHint || 'R/W - change mode'}
+              </span>
+              <span className="font-semibold" style={{ color }}>
+                {getDisplayValue()}
+              </span>
+            </div>
+          </div>
+
+          {/* Кликабельная область для переключения режима */}
+          <button
+            className="absolute inset-x-0 top-0 h-10 cursor-pointer hover:bg-gray-50 hover:bg-opacity-50 transition-all duration-200 rounded-t-lg"
+            onClick={handleSingleTap}
+            aria-label="Переключить режим измерения"
+          />
+        </div>
+      )}
 
       <style jsx>{`
         .slider::-webkit-slider-thumb {
