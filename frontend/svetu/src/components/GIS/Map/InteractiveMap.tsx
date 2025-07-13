@@ -665,7 +665,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <MapControls
           config={controlsConfig}
           onStyleChange={handleStyleChange}
-          onSearch={handleSearch}
           isMobile={isMobile}
           useOpenStreetMap={useOpenStreetMap}
         />

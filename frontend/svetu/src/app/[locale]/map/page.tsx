@@ -16,6 +16,7 @@ import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
 // import WalkingAccessibilityControl from '@/components/GIS/Map/WalkingAccessibilityControl'; // Заменен на NativeSliderControl
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
+import { DistrictMapSelector } from '@/components/search/DistrictMapSelector';
 
 interface ListingData {
   id: number;
@@ -95,6 +96,7 @@ const MapPage: React.FC = () => {
 
   // Поиск
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [isSearchFromUser, setIsSearchFromUser] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   // Создаем debounced версию фильтров для оптимизации запросов
@@ -123,6 +125,11 @@ const MapPage: React.FC = () => {
   // Состояние для текущего изохрона
   const [currentIsochrone, setCurrentIsochrone] =
     useState<Feature<Polygon> | null>(null);
+
+  // Состояние для типа поиска (адрес или район)
+  const [searchType, setSearchType] = useState<'address' | 'district'>(
+    'address'
+  );
 
   // Функция для обновления URL без перезагрузки страницы
   const updateURL = useCallback(
@@ -246,7 +253,7 @@ const MapPage: React.FC = () => {
       }
 
       // Обрабатываем ответ в зависимости от используемого API
-      if ((useRadiusSearch || endpoint === '/api/v1/gis/search') && response.data?.data?.listings) {
+      if (useRadiusSearch && response.data?.data?.listings) {
         // GIS API возвращает data.listings
         const transformedListings = response.data.data.listings
           .filter(
@@ -366,6 +373,7 @@ const MapPage: React.FC = () => {
       if (!query.trim()) return;
 
       setIsSearching(true);
+      setIsSearchFromUser(true);
       setSearchQuery(query);
 
       try {
@@ -384,6 +392,13 @@ const MapPage: React.FC = () => {
             zoom: 14,
           };
           setViewState(newViewState);
+
+          // Обновляем позицию покупателя на найденную локацию
+          setBuyerLocation({
+            longitude: parseFloat(result.lon),
+            latitude: parseFloat(result.lat),
+          });
+
           toast.success(t('search.found'));
         } else {
           toast.error(t('search.notFound'));
@@ -393,6 +408,7 @@ const MapPage: React.FC = () => {
         toast.error(t('search.error'));
       } finally {
         setIsSearching(false);
+        setIsSearchFromUser(false);
       }
     },
     [geoSearch, viewState, t]
@@ -400,10 +416,10 @@ const MapPage: React.FC = () => {
 
   // Обработка поиска
   useEffect(() => {
-    if (debouncedSearchQuery) {
+    if (debouncedSearchQuery && isSearchFromUser) {
       handleAddressSearch(debouncedSearchQuery);
     }
-  }, [debouncedSearchQuery, handleAddressSearch]);
+  }, [debouncedSearchQuery]);
 
   // Обработка изменений фильтров и позиции покупателя
   useEffect(() => {
@@ -447,6 +463,72 @@ const MapPage: React.FC = () => {
     // Показываем расширенный popup вместо мгновенного перехода
     setSelectedMarker(marker);
   }, []);
+
+  // Обработчик результатов поиска по районам
+  const handleDistrictSearchResults = useCallback((results: any[]) => {
+    console.log('[Map] District search results:', results);
+
+    // Преобразуем результаты в формат ListingData
+    const transformedListings = results
+      .filter((item: any) => item.latitude && item.longitude)
+      .map((item: any) => ({
+        id: parseInt(item.id),
+        name: item.title || 'Untitled',
+        price: item.price || 0,
+        location: {
+          lat: item.latitude,
+          lng: item.longitude,
+          city: item.address || '',
+          country: 'Serbia',
+        },
+        category: {
+          id: 0,
+          name: item.category_name || item.category || 'Unknown',
+          slug: '',
+        },
+        images: item.first_image_url ? [item.first_image_url] : [],
+        created_at: item.created_at || new Date().toISOString(),
+      }));
+
+    setListings(transformedListings);
+  }, []);
+
+  // Обработчик изменения границ района
+  const handleDistrictBoundsChange = useCallback(
+    (bounds: [number, number, number, number] | null) => {
+      if (bounds) {
+        const [minLng, minLat, maxLng, maxLat] = bounds;
+        const centerLng = (minLng + maxLng) / 2;
+        const centerLat = (minLat + maxLat) / 2;
+
+        // Рассчитываем уровень зума чтобы вместить весь район
+        const lngDiff = maxLng - minLng;
+        const latDiff = maxLat - minLat;
+        const maxDiff = Math.max(lngDiff, latDiff);
+
+        let zoom = 12;
+        if (maxDiff < 0.05) zoom = 14;
+        else if (maxDiff < 0.1) zoom = 13;
+        else if (maxDiff < 0.2) zoom = 12;
+        else if (maxDiff < 0.4) zoom = 11;
+        else zoom = 10;
+
+        setViewState({
+          ...viewState,
+          longitude: centerLng,
+          latitude: centerLat,
+          zoom: zoom,
+        });
+
+        // Также обновляем позицию покупателя на центр района
+        setBuyerLocation({
+          longitude: centerLng,
+          latitude: centerLat,
+        });
+      }
+    },
+    [viewState]
+  );
 
   // Обработка изменения области просмотра
   const handleViewStateChange = useCallback((newViewState: MapViewState) => {
@@ -497,26 +579,68 @@ const MapPage: React.FC = () => {
       <div className="relative h-screen md:h-[calc(100vh-140px)]">
         {/* Десктопная боковая панель с фильтрами */}
         <div className="absolute left-4 top-4 z-10 w-80 bg-white rounded-lg shadow-lg hidden md:block">
-          {/* Поиск по адресу */}
+          {/* Переключатель типа поиска */}
           <div className="p-4 border-b border-base-300">
-            <label className="block text-sm font-medium text-base-content mb-2">
-              {t('search.address')}
-            </label>
-            <SearchBar
-              initialQuery={searchQuery}
-              onSearch={handleAddressSearch}
-              placeholder={t('search.addressPlaceholder')}
-              className="w-full"
-              geoLocation={
-                viewState.latitude && viewState.longitude
-                  ? {
-                      lat: viewState.latitude,
-                      lon: viewState.longitude,
-                      radius: filters.radius,
-                    }
-                  : undefined
-              }
-            />
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  searchType === 'address'
+                    ? 'bg-primary text-primary-content'
+                    : 'bg-base-200 text-base-content hover:bg-base-300'
+                }`}
+                onClick={() => setSearchType('address')}
+              >
+                {t('search.byAddress')}
+              </button>
+              <button
+                type="button"
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  searchType === 'district'
+                    ? 'bg-primary text-primary-content'
+                    : 'bg-base-200 text-base-content hover:bg-base-300'
+                }`}
+                onClick={() => setSearchType('district')}
+              >
+                {t('search.byDistrict')}
+              </button>
+            </div>
+
+            {/* Поиск по адресу */}
+            {searchType === 'address' && (
+              <>
+                <label className="block text-sm font-medium text-base-content mb-2">
+                  {t('search.address')}
+                </label>
+                <SearchBar
+                  initialQuery={searchQuery}
+                  onSearch={(query) => {
+                    setIsSearchFromUser(true);
+                    handleAddressSearch(query);
+                  }}
+                  placeholder={t('search.addressPlaceholder')}
+                  className="w-full"
+                  geoLocation={
+                    viewState.latitude && viewState.longitude
+                      ? {
+                          lat: viewState.latitude,
+                          lon: viewState.longitude,
+                          radius: filters.radius,
+                        }
+                      : undefined
+                  }
+                />
+              </>
+            )}
+
+            {/* Поиск по районам */}
+            {searchType === 'district' && (
+              <DistrictMapSelector
+                onSearchResults={handleDistrictSearchResults}
+                onDistrictBoundsChange={handleDistrictBoundsChange}
+                className="w-full"
+              />
+            )}
           </div>
 
           {/* Фильтры */}
@@ -703,7 +827,10 @@ const MapPage: React.FC = () => {
         <div className="absolute top-4 right-4 left-20 z-[1000] md:hidden">
           <SearchBar
             initialQuery={searchQuery}
-            onSearch={handleAddressSearch}
+            onSearch={(query) => {
+              setIsSearchFromUser(true);
+              handleAddressSearch(query);
+            }}
             placeholder={t('search.addressPlaceholder')}
             className="w-full"
           />

@@ -13,7 +13,7 @@ export default function AdminLayout({
   const t = useTranslations('admin');
   const pathname = usePathname();
 
-  const isActive = (path: string) => pathname.includes(path);
+  const isActive = (path: string) => pathname?.includes(path) || false;
 
   return (
     <AdminGuard>

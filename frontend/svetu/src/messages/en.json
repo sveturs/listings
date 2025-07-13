@@ -2740,7 +2740,9 @@
       "addressPlaceholder": "Enter address or place name",
       "found": "Address found",
       "notFound": "Address not found",
-      "error": "Address search error"
+      "error": "Address search error",
+      "byAddress": "By address",
+      "byDistrict": "By district"
     },
     "filters": {
       "title": "Filters",

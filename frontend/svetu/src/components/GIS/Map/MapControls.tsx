@@ -10,7 +10,6 @@ import { useGeolocation } from '../hooks/useGeolocation';
 interface MapControlsProps {
   config?: MapControlsConfig;
   onStyleChange?: (style: string) => void;
-  onSearch?: (query: string) => void;
   className?: string;
   isMobile?: boolean;
   useOpenStreetMap?: boolean;
@@ -19,13 +18,10 @@ interface MapControlsProps {
 const MapControls: React.FC<MapControlsProps> = ({
   config = {},
   onStyleChange,
-  onSearch,
   className = '',
   isMobile = false,
   useOpenStreetMap = false,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [currentStyle, setCurrentStyle] = useState('streets');
 
   const { getCurrentPosition, loading: geoLoading } = useGeolocation();
@@ -67,13 +63,6 @@ const MapControls: React.FC<MapControlsProps> = ({
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSearch && searchQuery.trim()) {
-      onSearch(searchQuery.trim());
-    }
-  };
-
   const handleGeolocation = async () => {
     try {
       await getCurrentPosition();
@@ -91,65 +80,6 @@ const MapControls: React.FC<MapControlsProps> = ({
 
   return (
     <>
-      {/* Поисковая панель - скрыта на мобильном */}
-      {!isMobile && (
-        <div
-          className={`absolute top-4 z-10 w-full max-w-md ${className}`}
-          style={{ right: 'calc(var(--spacing) * 12)' }}
-        >
-          <form onSubmit={handleSearch} className="relative">
-            <div
-              className={`relative transition-all duration-200 ${
-                isSearchFocused ? 'ring-2 ring-primary' : ''
-              }`}
-            >
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                placeholder="Поиск на карте..."
-                className="w-full px-4 py-3 pl-12 pr-20 text-sm bg-white rounded-lg shadow-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <button
-                type="submit"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-primary hover:text-primary-dark"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
       {/* Стандартные контролы Mapbox */}
       <div
         className={`absolute ${controlsPosition} ${

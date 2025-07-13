@@ -18,8 +18,8 @@ export default function ChatPage() {
   const [chatInitialized, setChatInitialized] = useState(false);
 
   // Параметры для создания нового чата
-  const listingId = searchParams.get('listing_id');
-  const sellerId = searchParams.get('seller_id');
+  const listingId = searchParams?.get('listing_id');
+  const sellerId = searchParams?.get('seller_id');
 
   useEffect(() => {
     setMounted(true);

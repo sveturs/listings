@@ -2513,7 +2513,9 @@
       "addressPlaceholder": "Unesite adresu ili naziv mesta",
       "found": "Adresa pronađena",
       "notFound": "Adresa nije pronađena",
-      "error": "Greška pri pretraživanju adrese"
+      "error": "Greška pri pretraživanju adrese",
+      "byAddress": "Po adresi",
+      "byDistrict": "Po opštini"
     },
     "filters": {
       "title": "Filteri",
