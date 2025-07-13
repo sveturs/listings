@@ -33,21 +33,8 @@ const fetchWithTimeout = async (
 
 // Утилита для определения правильного URL в зависимости от окружения
 const getGeocodingUrl = (path: string, params: string) => {
-  // В production всегда используем backend прокси для избежания CORS
-  if (
-    typeof window !== 'undefined' &&
-    window.location.hostname !== 'localhost'
-  ) {
-    return `/api/v1/geocode${path}?${params}`;
-  }
-
-  // В development используем прокси Next.js
-  if (process.env.NODE_ENV === 'development') {
-    return `/geocode${path}?${params}`;
-  }
-
-  // Fallback на прямой вызов (может не работать из-за CORS)
-  return `https://nominatim.openstreetmap.org${path}?${params}`;
+  // Всегда используем backend API для геокодирования
+  return `/api/v1/gis/geocode${path}?${params}`;
 };
 
 interface UseGeoSearchResult {
@@ -81,8 +68,8 @@ export const useGeoSearch = (): UseGeoSearchResult => {
           ...(params.language && { 'accept-language': params.language }),
         });
 
-        // Используем Nominatim API для поиска через прокси
-        const url = getGeocodingUrl('/search', queryParams.toString());
+        // Используем backend API для поиска адресов
+        const url = getGeocodingUrl('/suggestions', queryParams.toString());
 
         const response = await fetchWithTimeout(
           url,
@@ -279,7 +266,7 @@ export const useGeocoding = () => {
           limit: '1',
         });
 
-        const url = getGeocodingUrl('/search', queryParams.toString());
+        const url = getGeocodingUrl('/suggestions', queryParams.toString());
 
         const response = await fetchWithTimeout(
           url,
@@ -344,14 +331,18 @@ export const useGeocoding = () => {
 
       try {
         // Используем backend API для обратного геокодирования
+        const queryParams = new URLSearchParams({
+          lat: lat.toString(),
+          lon: lon.toString(),
+        });
+
         const response = await fetchWithTimeout(
-          '/api/v1/geocode/reverse',
+          `/api/v1/gis/geocode/reverse?${queryParams.toString()}`,
           {
-            method: 'POST',
+            method: 'GET',
             headers: {
-              'Content-Type': 'application/json',
+              Accept: 'application/json',
             },
-            body: JSON.stringify({ lat, lon }),
           },
           8000
         );

@@ -43,12 +43,40 @@ func NewSearchHandler(services globalService.ServicesInterface) *SearchHandler {
 // @Success 200 {object} handler.SearchResponse "Search results with metadata"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.searchError"
 // @Router /api/v1/marketplace/search [get]
+// @Router /api/v1/marketplace/search [post]
 func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	// Засекаем время начала для измерения производительности
 	startTime := time.Now()
 	// Парсим параметры поиска из запроса
 	var params search.ServiceParams
-	if err := c.BodyParser(&params); err != nil {
+
+	// Если это POST запрос, пробуем распарсить JSON body
+	if c.Method() == "POST" {
+		// Структура для POST запроса
+		var postRequest struct {
+			search.ServiceParams
+			AdvancedGeoFilters *search.AdvancedGeoFilters `json:"advanced_geo_filters"`
+		}
+
+		if err := c.BodyParser(&postRequest); err != nil {
+			logger.Error().Err(err).Msg("Failed to parse POST search params")
+			return utils.SendError(c, fiber.StatusBadRequest, "validation.failed")
+		}
+
+		params = postRequest.ServiceParams
+		params.AdvancedGeoFilters = postRequest.AdvancedGeoFilters
+
+		// Также парсим query параметры для POST запроса
+		if query := c.Query("query"); query != "" {
+			params.Query = query
+		}
+		if page := c.QueryInt("page", 0); page > 0 {
+			params.Page = page
+		}
+		if limit := c.QueryInt("limit", 0); limit > 0 {
+			params.Size = limit
+		}
+	} else if err := c.BodyParser(&params); err != nil {
 		logger.Error().Err(err).Msg("Failed to parse search params")
 
 		// Попробуем разобрать запрос как form-data

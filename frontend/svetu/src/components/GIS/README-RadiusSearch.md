@@ -9,6 +9,7 @@
 Главный компонент управления радиусным поиском с адаптивным интерфейсом.
 
 **Возможности:**
+
 - Слайдер для выбора радиуса поиска (0.1км - 50км)
 - Поле ввода адреса с автодополнением
 - Кнопка "Использовать мое местоположение"
@@ -16,6 +17,7 @@
 - Адаптивный дизайн для мобильных устройств
 
 **Пример использования:**
+
 ```tsx
 <RadiusSearchControl
   config={{
@@ -39,12 +41,14 @@
 Хук для работы с радиусным поиском и управления состоянием.
 
 **API функции:**
+
 - `search(params)` - основной поиск по параметрам
 - `searchByAddress(address, radius, category?)` - поиск по адресу
 - `searchByCurrentLocation(radius, category?)` - поиск по текущему местоположению
 - `clearResults()` - очистка результатов
 
 **Утилитные функции:**
+
 - `formatRadius(radius)` - форматирование радиуса
 - `validateRadius(radius, min, max)` - валидация радиуса
 - `normalizeRadius(radius, min, max)` - нормализация радиуса
@@ -55,6 +59,7 @@
 Интегрированный компонент карты с радиусным поиском для маркетплейса.
 
 **Возможности:**
+
 - Интерактивная карта с маркерами
 - Интегрированный контроль радиусного поиска
 - Отображение результатов поиска
@@ -66,6 +71,7 @@
 Обновленная главная страница с переключением между списком и картой.
 
 **Новые возможности:**
+
 - Переключатель "Список/Карта"
 - Интеграция радиусного поиска
 - Отображение выбранного объявления
@@ -74,6 +80,7 @@
 ## Типы данных
 
 ### RadiusSearchParams
+
 ```typescript
 interface RadiusSearchParams {
   latitude: number;
@@ -86,6 +93,7 @@ interface RadiusSearchParams {
 ```
 
 ### RadiusSearchResult
+
 ```typescript
 interface RadiusSearchResult {
   id: string;
@@ -103,6 +111,7 @@ interface RadiusSearchResult {
 ```
 
 ### RadiusSearchControlConfig
+
 ```typescript
 interface RadiusSearchControlConfig {
   minRadius: number; // в км
@@ -119,9 +128,11 @@ interface RadiusSearchControlConfig {
 ## API Endpoints
 
 Компоненты работают с API endpoint:
+
 - `POST /api/v1/gis/search/radius` - радиусный поиск
 
 Ожидаемый формат ответа:
+
 ```json
 {
   "data": {
@@ -139,6 +150,7 @@ interface RadiusSearchControlConfig {
 ## Переводы
 
 Добавлены переводы в `src/messages/`:
+
 - `gis.radius_search.title` - "Радиусный поиск"
 - `gis.radius_search.radius` - "Радиус поиска"
 - `gis.radius_search.address` - "Адрес"
@@ -148,6 +160,7 @@ interface RadiusSearchControlConfig {
 ## Стили
 
 Компоненты используют существующие стили DaisyUI:
+
 - `btn`, `btn-primary`, `btn-outline` для кнопок
 - `input`, `input-bordered` для полей ввода
 - `range`, `range-primary` для слайдеров
@@ -157,6 +170,7 @@ interface RadiusSearchControlConfig {
 ## Мобильная адаптация
 
 Все компоненты адаптированы для мобильных устройств:
+
 - Компактные контролы на маленьких экранах
 - Адаптивная сетка и отступы
 - Оптимизированные размеры кнопок для touch-интерфейса
@@ -165,6 +179,7 @@ interface RadiusSearchControlConfig {
 ## Интеграция
 
 Компоненты интегрированы в:
+
 1. **Главную страницу** (`/`) - переключатель список/карта
 2. **Систему типов** - новые TypeScript интерфейсы
 3. **Систему переводов** - многоязычная поддержка

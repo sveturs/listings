@@ -47,12 +47,19 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			strings.HasSuffix(path, "/search/radius") ||
 			strings.HasSuffix(path, "/clusters") ||
 			strings.HasSuffix(path, "/nearby") ||
-			strings.Contains(path, "/listings/") && strings.HasSuffix(path, "/location")) {
+			strings.Contains(path, "/listings/") && strings.HasSuffix(path, "/location") ||
+			strings.HasSuffix(path, "/districts") ||
+			strings.Contains(path, "/districts/") ||
+			strings.HasSuffix(path, "/municipalities") ||
+			strings.Contains(path, "/municipalities/") ||
+			strings.Contains(path, "/search/by-district/") ||
+			strings.Contains(path, "/search/by-municipality/")) {
 			logger.Info().Str("path", path).Msg("Skipping auth for public GIS routes")
 			return c.Next()
 		}
 		// Публичные Geocoding API routes (Phase 2)
 		if strings.Contains(path, "/geocode/") && ((method == "GET" && (strings.HasSuffix(path, "/suggestions") ||
+			strings.HasSuffix(path, "/search") ||
 			strings.HasSuffix(path, "/reverse") ||
 			strings.HasSuffix(path, "/stats"))) ||
 			(method == "POST" && strings.HasSuffix(path, "/validate"))) {

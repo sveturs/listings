@@ -69,6 +69,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^29.5.14",
     "@types/leaflet": "^1.9.18",
+    "@types/lodash": "^4.17.20",
     "@types/mapbox__mapbox-sdk": "^0.16.3",
     "@types/node": "^20",
     "@types/react": "^19",

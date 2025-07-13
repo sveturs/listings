@@ -48,6 +48,10 @@
     "continue": "Продолжить",
     "select": "Выбрать",
     "accessDenied": "Доступ запрещен",
+    "minutes": "минут",
+    "km": "км",
+    "m": "м",
+    "resetFilters": "Сбросить фильтры",
     "you": "вы",
     "send": "Отправить",
     "page": "Страница",
@@ -258,6 +262,11 @@
     "latestListings": "Последние объявления",
     "mapView": "Карта",
     "listView": "Список",
+    "filters": "Фильтры",
+    "view": "Вид",
+    "activeFilters": "Активные фильтры",
+    "clearAll": "Очистить все",
+    "map": "Карта",
     "switchToMapView": "Переключить на вид карты",
     "switchToListView": "Переключить на вид списка",
     "paymentsNowAvailable": "Платежи теперь доступны!",
@@ -297,6 +306,18 @@
     "results": "результатов",
     "time": "Время",
     "ms": "мс",
+    "district": "Район",
+    "municipality": "Муниципалитет",
+    "allDistricts": "Все районы",
+    "allMunicipalities": "Все муниципалитеты",
+    "searchByDistrict": "Поиск по району",
+    "population": "Население",
+    "area": "Площадь",
+    "searching": "Поиск...",
+    "errors": {
+      "loadingDistricts": "Не удалось загрузить районы",
+      "loadingMunicipalities": "Не удалось загрузить муниципалитеты"
+    },
     "activeFilters": "Активные фильтры",
     "noResultsTitle": "По вашему запросу ничего не найдено",
     "noResultsDescription": "Попробуйте изменить условия поиска или использовать другие ключевые слова",
@@ -1050,7 +1071,13 @@
   },
   "metadata": {
     "title": "SveTu - Торговая площадка",
-    "description": "Sve Tu - торговая площадка для покупки и продажи товаров"
+    "description": "Sve Tu - торговая площадка для покупки и продажи товаров",
+    "map": {
+      "districtSearch": {
+        "title": "Поиск по районам - Sve Tu",
+        "description": "Просмотр объявлений по районам и муниципалитетам Белграда и Сербии"
+      }
+    }
   },
   "errors": {
     "authError": {
@@ -2609,6 +2636,36 @@
     "route": {
       "calculation_error": "Не удалось построить маршрут",
       "unknown_error": "Ошибка при расчете маршрута"
+    },
+    "advancedFilters": {
+      "title": "Расширенные фильтры",
+      "travelTime": "Время пути",
+      "maxTravelTime": "Максимальное время пути",
+      "transportMode": "Способ передвижения",
+      "nearPOI": "Рядом с объектами",
+      "poiType": "Тип объекта",
+      "maxDistance": "Максимальное расстояние",
+      "foundPOIs": "Найдено объектов: {count}",
+      "density": "Плотность объявлений",
+      "avoidCrowded": "Избегать переполненных районов",
+      "maxDensity": "Максимальная плотность (объявлений/км²)",
+      "densityPlaceholder": "например, 50"
+    },
+    "transport": {
+      "walking": "Пешком",
+      "driving": "На авто",
+      "cycling": "Велосипед",
+      "transit": "Транспорт"
+    },
+    "poi": {
+      "school": "Школа",
+      "hospital": "Больница",
+      "metro": "Метро",
+      "supermarket": "Супермаркет",
+      "park": "Парк",
+      "bank": "Банк",
+      "pharmacy": "Аптека",
+      "busStop": "Автобусная остановка"
     },
     "radius_search": {
       "title": "Радиусный поиск",

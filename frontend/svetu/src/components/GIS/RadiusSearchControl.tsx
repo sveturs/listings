@@ -6,7 +6,6 @@ import { RadiusSearchControlConfig, GeoSearchResult } from './types/gis';
 import {
   useRadiusSearch,
   formatRadius,
-  validateRadius,
   normalizeRadius,
 } from './hooks/useRadiusSearch';
 import { useGeolocation } from './hooks/useGeolocation';
@@ -61,7 +60,6 @@ export default function RadiusSearchControl({
 
   // Хуки
   const {
-    results,
     loading: searchLoading,
     error: searchError,
     total,
@@ -72,10 +70,8 @@ export default function RadiusSearchControl({
   } = useRadiusSearch();
 
   const {
-    location: currentLocation,
     loading: locationLoading,
     error: locationError,
-    getCurrentPosition,
   } = useGeolocation();
 
   const {
