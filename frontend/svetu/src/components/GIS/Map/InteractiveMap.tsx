@@ -5,22 +5,47 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
+
+// Хук для детекции fullscreen режима
+const useFullscreen = () => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  return isFullscreen;
+};
 import Map, { Marker, Source, Layer } from 'react-map-gl';
 import type { MapRef, MarkerDragEvent } from 'react-map-gl';
+import circle from '@turf/circle';
 import {
   MapViewState,
   MapMarkerData,
   MapPopupData,
   MapControlsConfig,
 } from '../types/gis';
+import { generateStylizedIsochrone } from '../utils/isochrone';
+import { getMapboxIsochrone } from '../utils/mapboxIsochrone';
+import type { Feature, Polygon } from 'geojson';
 import { useGeoSearch } from '../hooks/useGeoSearch';
 import { useGeolocation } from '../hooks/useGeolocation';
-import MapMarker from './MapMarker';
 import MapPopup from './MapPopup';
 import MapControls from './MapControls';
-import { MapCluster } from './MapCluster';
+import MapboxClusterLayer from './MapboxClusterLayer';
+import MarkerHoverPopup from './MarkerHoverPopup';
+// import NativeSliderControl from './NativeSliderControl';
+import CompactSliderControl from './CompactSliderControl';
+import FloatingSliderControl from './FloatingSliderControl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import type { ClusterData } from '../types/gis';
+import '@/styles/map-popup.css';
 
 interface InteractiveMapProps {
   initialViewState?: Partial<MapViewState>;
@@ -34,15 +59,6 @@ interface InteractiveMapProps {
   style?: React.CSSProperties;
   mapboxAccessToken?: string;
   isMobile?: boolean;
-  loadClusters?: (
-    bounds: {
-      north: number;
-      south: number;
-      east: number;
-      west: number;
-    },
-    zoom: number
-  ) => Promise<ClusterData[]>;
   // Новые пропсы для маркера покупателя
   showBuyerMarker?: boolean;
   buyerLocation?: {
@@ -50,10 +66,30 @@ interface InteractiveMapProps {
     latitude: number;
   };
   searchRadius?: number; // в метрах
+  walkingMode?: 'radius' | 'walking';
+  walkingTime?: number; // в минутах
   onBuyerLocationChange?: (location: {
     longitude: number;
     latitude: number;
   }) => void;
+  onIsochroneChange?: (isochrone: Feature<Polygon> | null) => void;
+  onWalkingModeChange?: (mode: 'radius' | 'walking') => void;
+  onWalkingTimeChange?: (time: number) => void;
+  onSearchRadiusChange?: (radius: number) => void;
+  useNativeControl?: boolean; // Флаг для выбора типа контрола
+  controlTranslations?: {
+    walkingAccessibility: string;
+    searchRadius: string;
+    minutes: string;
+    km: string;
+    m: string;
+    changeModeHint: string;
+    holdForSettings: string;
+    singleClickHint: string;
+    mobileHint: string;
+    desktopHint: string;
+    updatingIsochrone: string;
+  };
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -72,13 +108,30 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   style,
   mapboxAccessToken,
   isMobile = false,
-  loadClusters,
   showBuyerMarker = false,
   buyerLocation,
   searchRadius = 10000, // 10км по умолчанию
+  walkingMode = 'radius',
+  walkingTime = 15,
   onBuyerLocationChange,
+  onIsochroneChange,
+  onWalkingModeChange,
+  onWalkingTimeChange,
+  onSearchRadiusChange,
+  useNativeControl = false,
+  controlTranslations,
 }) => {
-  console.log('[InteractiveMap] Received markers:', markers);
+  console.log('[InteractiveMap] Received props:', {
+    markersCount: markers.length,
+    walkingMode,
+    walkingTime,
+    searchRadius,
+    showBuyerMarker,
+    buyerLocation,
+  });
+
+  // Детекция fullscreen режима
+  const isFullscreen = useFullscreen();
 
   const mapRef = useRef<MapRef>(null);
   const { search } = useGeoSearch();
@@ -95,22 +148,19 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [mapStyle, setMapStyle] = useState(
     'mapbox://styles/mapbox/streets-v12'
   );
-  const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [useOpenStreetMap, setUseOpenStreetMap] = useState(false);
 
-  // Состояние для кластеров
-  const [clusters, setClusters] = useState<ClusterData[]>([]);
-  const [_isLoadingClusters, setIsLoadingClusters] = useState(false);
+  // Состояние для hover popup
+  const [hoveredMarker, setHoveredMarker] = useState<MapMarkerData | null>(
+    null
+  );
 
   // Состояние для маркера покупателя
   const [internalBuyerLocation, setInternalBuyerLocation] = useState({
     longitude: buyerLocation?.longitude || viewState.longitude,
     latitude: buyerLocation?.latitude || viewState.latitude,
   });
-
-  // Порог зума для переключения между кластерами и маркерами
-  const CLUSTER_ZOOM_THRESHOLD = 12; // При zoom < 12 показываем кластеры, при zoom >= 12 показываем индивидуальные маркеры
 
   // Получение токена Mapbox из переменных окружения
   const accessToken =
@@ -165,62 +215,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [buyerLocation]);
 
-  // Загрузка кластеров при изменении области просмотра
-  const loadClustersData = useCallback(
-    async (
-      bounds: { north: number; south: number; east: number; west: number },
-      zoom: number
-    ) => {
-      if (!loadClusters) return;
-
-      setIsLoadingClusters(true);
-      try {
-        const clustersData = await loadClusters(bounds, zoom);
-        console.log(
-          '[InteractiveMap] Loaded clusters:',
-          clustersData?.length || 0
-        );
-        setClusters(clustersData || []);
-      } catch (error) {
-        console.error('Error loading clusters:', error);
-        setClusters([]);
-      } finally {
-        setIsLoadingClusters(false);
-      }
-    },
-    [loadClusters]
-  );
-
-  // Получение границ карты
-  const getMapBounds = useCallback(() => {
-    if (!mapRef.current) return null;
-
-    const bounds = mapRef.current.getBounds();
-    if (!bounds) return null;
-
-    return {
-      north: bounds.getNorth(),
-      south: bounds.getSouth(),
-      east: bounds.getEast(),
-      west: bounds.getWest(),
-    };
-  }, []);
-
-  // Загрузка кластеров при изменении viewport
-  useEffect(() => {
-    if (!loadClusters || !mapRef.current) return;
-
-    const bounds = getMapBounds();
-    if (!bounds) return;
-
-    // Debounce для оптимизации
-    const timeoutId = setTimeout(() => {
-      loadClustersData(bounds, viewState.zoom);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [viewState, loadClusters, loadClustersData, getMapBounds]);
-
   const handleViewStateChange = useCallback(
     (newViewState: MapViewState) => {
       setViewState(newViewState);
@@ -233,7 +227,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   const handleMarkerClick = useCallback(
     (marker: MapMarkerData) => {
-      setSelectedMarker(marker.id);
       if (onMarkerClick) {
         onMarkerClick(marker);
       }
@@ -243,7 +236,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   const handleMapClick = useCallback(
     (event: any) => {
-      setSelectedMarker(null);
       if (onMapClick) {
         onMapClick(event);
       }
@@ -330,7 +322,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   //         zoom: 16,
   //         duration: 1500,
   //       });
-  //       setSelectedMarker(markerId);
   //     }
   //   },
   //   [markers]
@@ -345,6 +336,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setInternalBuyerLocation(newLocation);
   }, []);
 
+  const handleBuyerMarkerDragStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
   const handleBuyerMarkerDragEnd = useCallback(
     (event: MarkerDragEvent) => {
       const newLocation = {
@@ -352,6 +347,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         latitude: event.lngLat.lat,
       };
       setInternalBuyerLocation(newLocation);
+      setIsDragging(false); // Теперь разрешаем пересчет изохрона
       if (onBuyerLocationChange) {
         onBuyerLocationChange(newLocation);
       }
@@ -359,43 +355,132 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     [onBuyerLocationChange]
   );
 
-  // GeoJSON для круга радиуса поиска
-  const radiusCircleGeoJSON = useMemo(() => {
-    if (!showBuyerMarker) return null;
+  // Состояние для изохроны
+  const [isochroneData, setIsochroneData] = useState<any>(null);
+  const [isLoadingIsochrone, setIsLoadingIsochrone] = useState(false);
+  const [_isMapLoaded, setIsMapLoaded] = useState(false);
 
-    // Создаем круг вокруг позиции покупателя
-    const center = [
+  // Обработчики для hover
+  const handleMarkerHover = useCallback((marker: MapMarkerData) => {
+    setHoveredMarker(marker);
+  }, []);
+
+  const handleMarkerLeave = useCallback(() => {
+    setHoveredMarker(null);
+  }, []);
+
+  // Состояние для отслеживания перетаскивания
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Функция для загрузки изохроны
+  const loadIsochrone = useCallback(async () => {
+    if (!showBuyerMarker || walkingMode !== 'walking') {
+      // Очищаем изохрон только при переключении режима
+      setIsochroneData(null);
+      if (onIsochroneChange) {
+        onIsochroneChange(null);
+      }
+      return;
+    }
+
+    const center: [number, number] = [
       internalBuyerLocation.longitude,
       internalBuyerLocation.latitude,
     ];
-    const radiusInKm = searchRadius / 1000;
-    const options = { steps: 64, units: 'kilometers' as const };
 
-    // Простая аппроксимация круга полигоном
-    const points = [];
-    const numPoints = options.steps;
-    for (let i = 0; i < numPoints; i++) {
-      const angle = (i / numPoints) * 2 * Math.PI;
-      const dx = radiusInKm * Math.cos(angle);
-      const dy = radiusInKm * Math.sin(angle);
+    // НЕ очищаем старый изохрон до загрузки нового - это предотвращает мигание
+    setIsLoadingIsochrone(true);
 
-      // Приблизительное преобразование км в градусы
-      const lat = center[1] + dy / 111.32;
-      const lng =
-        center[0] + dx / (111.32 * Math.cos((center[1] * Math.PI) / 180));
-      points.push([lng, lat]);
+    // Используем переданное время ходьбы или 10 минут по умолчанию
+    const timeInMinutes = walkingTime || 10;
+
+    console.log('[InteractiveMap] Fetching isochrone from Mapbox API:', {
+      center,
+      timeInMinutes,
+      walkingMode,
+    });
+
+    try {
+      const isochrone = await getMapboxIsochrone({
+        coordinates: center,
+        minutes: timeInMinutes,
+        profile: 'walking',
+      });
+
+      console.log('[InteractiveMap] Received isochrone from API:', isochrone);
+
+      // Обновляем изохрон только после успешной загрузки
+      setIsochroneData(isochrone);
+      if (onIsochroneChange) {
+        onIsochroneChange(isochrone);
+      }
+    } catch (error) {
+      console.error('[InteractiveMap] Failed to fetch isochrone:', error);
+      // При ошибке оставляем старый изохрон, не очищаем
+    } finally {
+      setIsLoadingIsochrone(false);
     }
-    points.push(points[0]); // Замыкаем полигон
+  }, [
+    showBuyerMarker,
+    walkingMode,
+    walkingTime,
+    internalBuyerLocation,
+    onIsochroneChange,
+  ]);
 
-    return {
-      type: 'Feature' as const,
-      geometry: {
-        type: 'Polygon' as const,
-        coordinates: [points],
-      },
-      properties: {},
-    };
-  }, [showBuyerMarker, internalBuyerLocation, searchRadius]);
+  // Эффект для загрузки изохроны при изменении параметров (НЕ при перетаскивании)
+  useEffect(() => {
+    if (!isDragging) {
+      loadIsochrone();
+    }
+  }, [loadIsochrone, isDragging]);
+
+  // GeoJSON для радиуса поиска (круг или изохрона)
+  const radiusCircleGeoJSON = useMemo(() => {
+    if (!showBuyerMarker) return null;
+
+    const center: [number, number] = [
+      internalBuyerLocation.longitude,
+      internalBuyerLocation.latitude,
+    ];
+
+    // Выбираем между радиусом и изохроной в зависимости от режима
+    if (walkingMode === 'walking') {
+      // Используем загруженную изохрону или fallback на локальную генерацию
+      if (isochroneData) {
+        console.log('[InteractiveMap] Using API isochrone data');
+        return isochroneData;
+      } else if (!isLoadingIsochrone) {
+        // Если API недоступен и загрузка завершена, используем локальную генерацию
+        console.log(
+          '[InteractiveMap] Using local isochrone generation as fallback'
+        );
+        const isochrone = generateStylizedIsochrone(center, 10); // 10 минут для пешехода
+        return isochrone;
+      }
+      return null;
+    } else {
+      // Создаем обычный круг с помощью Turf.js
+      console.log('[InteractiveMap] Generating circle for radius mode:', {
+        center,
+        searchRadius,
+        walkingMode,
+      });
+      const radiusInKm = searchRadius / 1000;
+      const circleFeature = circle(center, radiusInKm, {
+        steps: 64,
+        units: 'kilometers',
+      });
+      return circleFeature;
+    }
+  }, [
+    showBuyerMarker,
+    internalBuyerLocation,
+    searchRadius,
+    walkingMode,
+    isochroneData,
+    isLoadingIsochrone,
+  ]);
 
   // Стиль для слоя круга (закомментирован, не используется)
   // const radiusCircleLayer: CircleLayer = {
@@ -411,8 +496,12 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     id: 'radius-fill',
     type: 'fill' as const,
     paint: {
-      'fill-color': '#3B82F6',
-      'fill-opacity': 0.1,
+      'fill-color': walkingMode === 'walking' ? '#10B981' : '#3B82F6', // Зеленый для пешеходного режима
+      'fill-opacity': walkingMode === 'walking' ? 0.2 : 0.1, // Более заметная для пешеходного режима
+      'fill-opacity-transition': {
+        duration: 300,
+        delay: 0,
+      },
     },
   };
 
@@ -420,27 +509,16 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     id: 'radius-line',
     type: 'line' as const,
     paint: {
-      'line-color': '#3B82F6',
-      'line-width': 2,
+      'line-color': walkingMode === 'walking' ? '#10B981' : '#3B82F6', // Зеленый для пешеходного режима
+      'line-width': walkingMode === 'walking' ? 3 : 2, // Толще для пешеходного режима
       'line-opacity': 0.8,
-      'line-dasharray': [2, 2],
+      'line-dasharray': walkingMode === 'walking' ? [4, 4] : [2, 2], // Другой пунктир для пешеходного режима
+      'line-opacity-transition': {
+        duration: 300,
+        delay: 0,
+      },
     },
   };
-
-  // Обработчик клика по кластеру
-  const handleClusterClick = useCallback(
-    (cluster: ClusterData) => {
-      if (!mapRef.current) return;
-
-      // Увеличиваем масштаб и центрируем на кластере
-      mapRef.current.flyTo({
-        center: [cluster.center.lng, cluster.center.lat],
-        zoom: cluster.zoom_expand || viewState.zoom + 2, // Используем рекомендованный zoom или увеличиваем на 2
-        duration: 1000,
-      });
-    },
-    [viewState.zoom]
-  );
 
   const fitBounds = useCallback(() => {
     if (markers.length > 0 && mapRef.current) {
@@ -488,52 +566,50 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         attributionControl={false}
         logoPosition="bottom-left"
         style={{ width: '100%', height: '100%' }}
+        onLoad={() => {
+          console.log('[InteractiveMap] Map loaded');
+          setIsMapLoaded(true);
+        }}
       >
-        {/* Кластеры при малом зуме */}
-        {viewState.zoom < CLUSTER_ZOOM_THRESHOLD && clusters.length > 0 && (
-          <>
-            {clusters.map((cluster, index) => (
-              <Marker
-                key={`cluster-${index}`}
-                longitude={cluster.center.lng}
-                latitude={cluster.center.lat}
-                anchor="center"
-              >
-                <MapCluster
-                  count={cluster.count}
-                  onClick={() => handleClusterClick(cluster)}
-                />
-              </Marker>
-            ))}
-          </>
-        )}
-
-        {/* Маркеры при большом зуме или если нет кластеров */}
-        {(viewState.zoom >= CLUSTER_ZOOM_THRESHOLD ||
-          clusters.length === 0) && (
-          <>
-            {markers.map((marker) => (
-              <MapMarker
-                key={marker.id}
-                marker={marker}
-                selected={selectedMarker === marker.id}
-                onClick={handleMarkerClick}
-              />
-            ))}
-          </>
+        {/* Кластеризация маркеров с помощью MapboxClusterLayer */}
+        {markers.length > 0 && (
+          <MapboxClusterLayer
+            markers={markers}
+            onMarkerClick={handleMarkerClick}
+            onMarkerHover={handleMarkerHover}
+            onMarkerLeave={handleMarkerLeave}
+            clusterRadius={50}
+            clusterMaxZoom={14}
+            clusterMinPoints={2}
+            showPrices={false}
+          />
         )}
 
         {/* Всплывающее окно */}
-        {popup && (
-          <MapPopup popup={popup} onClose={() => setSelectedMarker(null)} />
+        {popup && <MapPopup popup={popup} onClose={() => {}} />}
+
+        {/* Hover popup */}
+        {hoveredMarker && (
+          <MarkerHoverPopup
+            marker={hoveredMarker}
+            onClose={() => setHoveredMarker(null)}
+          />
         )}
 
         {/* Слой с радиусом поиска */}
         {showBuyerMarker && radiusCircleGeoJSON && (
-          <Source type="geojson" data={radiusCircleGeoJSON}>
-            <Layer {...radiusFillLayer} />
-            <Layer {...radiusLineLayer} />
-          </Source>
+          <>
+            {console.log('[InteractiveMap] Rendering radius layer:', {
+              showBuyerMarker,
+              hasData: !!radiusCircleGeoJSON,
+              walkingMode,
+              dataType: radiusCircleGeoJSON?.geometry?.type,
+            })}
+            <Source type="geojson" data={radiusCircleGeoJSON}>
+              <Layer {...radiusFillLayer} />
+              <Layer {...radiusLineLayer} />
+            </Source>
+          </>
         )}
 
         {/* Маркер покупателя */}
@@ -543,6 +619,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             latitude={internalBuyerLocation.latitude}
             draggable
             onDrag={handleBuyerMarkerDrag}
+            onDragStart={handleBuyerMarkerDragStart}
             onDragEnd={handleBuyerMarkerDragEnd}
             anchor="bottom"
           >
@@ -592,10 +669,86 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           isMobile={isMobile}
           useOpenStreetMap={useOpenStreetMap}
         />
+
+        {/* Нативный контрол Mapbox */}
+        {showBuyerMarker && useNativeControl && mapRef.current && (
+          <CompactSliderControl
+            map={mapRef.current.getMap()}
+            mode={walkingMode}
+            onModeChange={(mode) => {
+              console.log(
+                '[InteractiveMap] Mode change from native control:',
+                mode
+              );
+              onWalkingModeChange?.(mode);
+            }}
+            walkingTime={walkingTime}
+            onWalkingTimeChange={(time) => {
+              console.log(
+                '[InteractiveMap] Walking time change from native control:',
+                time
+              );
+              onWalkingTimeChange?.(time);
+            }}
+            searchRadius={searchRadius}
+            onRadiusChange={(radius) => {
+              console.log(
+                '[InteractiveMap] Radius change from native control:',
+                radius
+              );
+              onSearchRadiusChange?.(radius);
+            }}
+            isFullscreen={isFullscreen}
+            isMobile={isMobile}
+            translations={controlTranslations}
+          />
+        )}
       </Map>
 
-      {/* Индикатор загрузки */}
-      {isLoading && (
+      {/* Плавающий контрол с выдвижным слайдером - вне MapBox контейнера */}
+      {showBuyerMarker && !useNativeControl && (
+        <FloatingSliderControl
+          mode={walkingMode}
+          isFullscreen={isFullscreen}
+          isMobile={isMobile}
+          onModeChange={(mode) => {
+            console.log('[InteractiveMap] Mode change from slider:', mode);
+            onWalkingModeChange?.(mode);
+          }}
+          walkingTime={walkingTime}
+          onWalkingTimeChange={(time) => {
+            console.log(
+              '[InteractiveMap] Walking time change from slider:',
+              time
+            );
+            onWalkingTimeChange?.(time);
+          }}
+          searchRadius={searchRadius}
+          onRadiusChange={(radius) => {
+            console.log('[InteractiveMap] Radius change from slider:', radius);
+            onSearchRadiusChange?.(radius);
+          }}
+          translations={controlTranslations}
+        />
+      )}
+
+      {/* Индикатор загрузки изохрона */}
+      {isLoadingIsochrone && (
+        <div className="absolute top-4 right-4 z-20">
+          <div className="bg-white rounded-lg p-3 shadow-lg border border-gray-200">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
+              <span className="text-sm text-gray-600">
+                {controlTranslations?.updatingIsochrone ||
+                  'Updating accessibility zone...'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Индикатор общей загрузки */}
+      {isLoading && !isLoadingIsochrone && (
         <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center z-20">
           <div className="bg-white rounded-lg p-4 shadow-lg">
             <div className="flex items-center space-x-2">

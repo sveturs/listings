@@ -19,6 +19,24 @@ export interface UnifiedSearchParams {
   latitude?: number; // Широта для геопоиска
   longitude?: number; // Долгота для геопоиска
   distance?: string; // Радиус поиска (например, "10km", "5000m")
+  advanced_geo_filters?: {
+    travel_time?: {
+      center_lat: number;
+      center_lng: number;
+      max_minutes: number;
+      transport_mode: 'walking' | 'driving' | 'cycling' | 'transit';
+    };
+    poi_filter?: {
+      poi_type: string;
+      max_distance: number;
+      min_count?: number;
+    };
+    density_filter?: {
+      avoid_crowded: boolean;
+      max_density?: number;
+      min_density?: number;
+    };
+  };
 }
 
 export interface UnifiedSearchItem {
@@ -125,6 +143,12 @@ export class UnifiedSearchService {
     // Добавляем параметры в URL
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
+        if (key === 'advanced_geo_filters') {
+          // Обрабатываем расширенные геофильтры отдельно
+          // Они будут отправлены в теле запроса
+          return;
+        }
+
         if (Array.isArray(value)) {
           // Для массивов используем запятую в качестве разделителя
           if (key === 'product_types') {
@@ -148,11 +172,24 @@ export class UnifiedSearchService {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
+    // Если есть расширенные геофильтры, используем POST запрос
+    const hasAdvancedFilters =
+      params.advanced_geo_filters &&
+      Object.keys(params.advanced_geo_filters).length > 0;
+
+    const fetchOptions: RequestInit = {
+      method: hasAdvancedFilters ? 'POST' : 'GET',
       headers,
       credentials: 'include',
-    });
+    };
+
+    if (hasAdvancedFilters) {
+      fetchOptions.body = JSON.stringify({
+        advanced_geo_filters: params.advanced_geo_filters,
+      });
+    }
+
+    const response = await fetch(url.toString(), fetchOptions);
 
     if (!response.ok) {
       throw new Error(`Search failed: ${response.status}`);

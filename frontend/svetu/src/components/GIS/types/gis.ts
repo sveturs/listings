@@ -19,10 +19,19 @@ export interface MapViewState {
 export interface MapMarkerData {
   id: string;
   position: [number, number]; // [longitude, latitude]
+  longitude: number;
+  latitude: number;
   title: string;
   description?: string;
   type: 'listing' | 'user' | 'poi';
   data?: any;
+  imageUrl?: string;
+  metadata?: {
+    price?: number;
+    currency?: string;
+    category?: string;
+    [key: string]: any;
+  };
 }
 
 export interface MapPopupData {
@@ -225,4 +234,49 @@ export interface GeofenceEvent {
 export interface MapClusterProps {
   count: number;
   onClick?: () => void;
+}
+
+// Типы для радиусного поиска
+export interface RadiusSearchParams {
+  latitude: number;
+  longitude: number;
+  radius: number; // в километрах
+  category?: string;
+  limit?: number;
+  query?: string;
+}
+
+export interface RadiusSearchResult {
+  id: string;
+  title: string;
+  description?: string;
+  latitude: number;
+  longitude: number;
+  distance: number; // расстояние в км
+  category?: string;
+  price?: number;
+  currency?: string;
+  imageUrl?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface RadiusSearchResponse {
+  items: RadiusSearchResult[];
+  total: number;
+  center: {
+    latitude: number;
+    longitude: number;
+  };
+  radius: number;
+}
+
+export interface RadiusSearchControlConfig {
+  minRadius: number; // в км
+  maxRadius: number; // в км
+  defaultRadius: number; // в км
+  step: number; // шаг изменения радиуса
+  showMyLocation: boolean;
+  showAddressInput: boolean;
+  showRadiusCircle: boolean;
+  enableGeolocation: boolean;
 }

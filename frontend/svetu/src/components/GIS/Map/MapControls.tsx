@@ -255,31 +255,6 @@ const MapControls: React.FC<MapControlsProps> = ({
           </button>
         </div>
       )}
-
-      {/* Легенда карты - скрыта на мобильном */}
-      {!isMobile && (
-        <div className="absolute top-20 right-4 z-10">
-          <div className="bg-white rounded-lg shadow-lg p-3 max-w-48">
-            <h4 className="font-semibold text-gray-900 text-sm mb-2">
-              Легенда
-            </h4>
-            <div className="space-y-1 text-xs">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
-                <span className="text-gray-700">Жилье</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-orange-500 rounded-full mr-2"></div>
-                <span className="text-gray-700">Пользователи</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-                <span className="text-gray-700">Достопримечательности</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

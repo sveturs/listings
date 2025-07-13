@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
+import MarkerClickPopup from '@/components/GIS/Map/MarkerClickPopup';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
 import { MapViewState, MapMarkerData } from '@/components/GIS/types/gis';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -12,7 +13,9 @@ import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
-import type { ClusterData, ClusterResponse } from '@/components/GIS/types/gis';
+// import WalkingAccessibilityControl from '@/components/GIS/Map/WalkingAccessibilityControl'; // Заменен на NativeSliderControl
+import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
+import type { Feature, Polygon } from 'geojson';
 
 interface ListingData {
   id: number;
@@ -42,7 +45,7 @@ interface MapFilters {
 
 const MapPage: React.FC = () => {
   const t = useTranslations('map');
-  const router = useRouter();
+  const _router = useRouter();
   const searchParams = useSearchParams();
   const { search: geoSearch } = useGeoSearch();
 
@@ -104,9 +107,22 @@ const MapPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
+  // Состояние для WalkingAccessibilityControl
+  const [walkingMode, setWalkingMode] = useState<'radius' | 'walking'>(
+    'radius'
+  );
+  const [walkingTime, setWalkingTime] = useState(15);
+
   // Состояние мобильных элементов
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [selectedMarker, setSelectedMarker] = useState<MapMarkerData | null>(
+    null
+  );
   const [isMobile, setIsMobile] = useState(false);
+
+  // Состояние для текущего изохрона
+  const [currentIsochrone, setCurrentIsochrone] =
+    useState<Feature<Polygon> | null>(null);
 
   // Функция для обновления URL без перезагрузки страницы
   const updateURL = useCallback(
@@ -153,75 +169,6 @@ const MapPage: React.FC = () => {
   useEffect(() => {
     setIsInitialized(true);
   }, []);
-
-  // Загрузка кластеров с API
-  const loadClusters = useCallback(
-    async (
-      bounds: {
-        north: number;
-        south: number;
-        east: number;
-        west: number;
-      },
-      zoom: number
-    ): Promise<ClusterData[]> => {
-      try {
-        // Формируем строку bounds в формате 'south,west,north,east' (как ожидает backend)
-        const boundsStr = `${bounds.south},${bounds.west},${bounds.north},${bounds.east}`;
-
-        // Формируем параметры запроса
-        const params = new URLSearchParams({
-          bounds: boundsStr,
-          zoom_level: Math.round(zoom).toString(),
-          ...(debouncedFilters.category && {
-            categories: debouncedFilters.category,
-          }),
-          ...(debouncedFilters.priceFrom > 0 && {
-            min_price: debouncedFilters.priceFrom.toString(),
-          }),
-          ...(debouncedFilters.priceTo > 0 && {
-            max_price: debouncedFilters.priceTo.toString(),
-          }),
-        });
-
-        // Добавляем географические параметры если есть центр карты
-        if (buyerLocation.latitude && buyerLocation.longitude) {
-          params.append('latitude', buyerLocation.latitude.toString());
-          params.append('longitude', buyerLocation.longitude.toString());
-
-          // Преобразуем радиус из метров в формат для backend (например, "10km")
-          if (debouncedFilters.radius) {
-            const radiusKm = Math.round(debouncedFilters.radius / 1000);
-            params.append('distance', `${radiusKm}km`);
-          }
-        }
-
-        console.log('[Map] Loading clusters with params:', params.toString());
-
-        // Делаем запрос к API
-        const response = await apiClient.get<ClusterResponse>(
-          `/api/v1/gis/clusters?${params}`
-        );
-
-        console.log(
-          '[Map] Clusters found:',
-          response.data?.data?.clusters?.length || 0
-        );
-
-        // Обрабатываем ответ и возвращаем данные кластеров
-        if (response.data?.data?.clusters) {
-          return response.data.data.clusters;
-        }
-
-        return [];
-      } catch (error) {
-        console.error('Error loading clusters:', error);
-        toast.error(t('errors.loadingFailed'));
-        return [];
-      }
-    },
-    [debouncedFilters, buyerLocation, t]
-  );
 
   // Загрузка объявлений для карты
   const loadListings = useCallback(async () => {
@@ -361,8 +308,16 @@ const MapPage: React.FC = () => {
             number,
             number,
           ],
+          longitude: listing.location.lng,
+          latitude: listing.location.lat,
           title: listing.name,
           type: 'listing' as const,
+          imageUrl: listing.images?.[0],
+          metadata: {
+            price: listing.price,
+            currency: 'RSD',
+            category: listing.category?.name || 'Unknown',
+          },
           data: {
             title: listing.name,
             price: listing.price,
@@ -454,22 +409,35 @@ const MapPage: React.FC = () => {
     buyerLocation.longitude,
   ]);
 
-  // Создание маркеров при изменении объявлений
+  // Создание маркеров при изменении объявлений с фильтрацией по изохрону
   useEffect(() => {
-    const newMarkers = createMarkers(listings);
+    let newMarkers = createMarkers(listings);
+
+    // Фильтруем маркеры по изохрону если включен режим walking и есть изохрон
+    if (walkingMode === 'walking' && currentIsochrone) {
+      console.log('[Map] Filtering markers by isochrone');
+      const filteredMarkers = newMarkers.filter((marker) => {
+        const isInside = isPointInIsochrone(
+          [marker.longitude, marker.latitude],
+          currentIsochrone
+        );
+        return isInside;
+      });
+      console.log(
+        `[Map] Filtered ${newMarkers.length} markers to ${filteredMarkers.length} within isochrone`
+      );
+      newMarkers = filteredMarkers;
+    }
+
     console.log('[Map] Setting markers:', newMarkers);
     setMarkers(newMarkers);
-  }, [listings, createMarkers]);
+  }, [listings, createMarkers, walkingMode, currentIsochrone]);
 
   // Обработка клика по маркеру
-  const handleMarkerClick = useCallback(
-    (marker: MapMarkerData) => {
-      if (marker.data?.id) {
-        router.push(`/marketplace/${marker.data.id}`);
-      }
-    },
-    [router]
-  );
+  const handleMarkerClick = useCallback((marker: MapMarkerData) => {
+    // Показываем расширенный popup вместо мгновенного перехода
+    setSelectedMarker(marker);
+  }, []);
 
   // Обработка изменения области просмотра
   const handleViewStateChange = useCallback((newViewState: MapViewState) => {
@@ -496,18 +464,26 @@ const MapPage: React.FC = () => {
     }
   }, [filters, debouncedViewState, searchQuery, updateURL, isInitialized]);
 
+  // Memoized переводы для контролов
+  const controlTranslations = useMemo(
+    () => ({
+      walkingAccessibility: t('controls.walkingAccessibility'),
+      searchRadius: t('controls.searchRadius'),
+      minutes: t('controls.minutes'),
+      km: t('controls.km'),
+      m: t('controls.m'),
+      changeModeHint: t('controls.changeModeHint'),
+      holdForSettings: t('controls.holdForSettings'),
+      singleClickHint: t('controls.singleClickHint'),
+      mobileHint: t('controls.mobileHint'),
+      desktopHint: t('controls.desktopHint'),
+      updatingIsochrone: t('controls.updatingIsochrone'),
+    }),
+    [t]
+  );
+
   return (
     <div className="min-h-screen bg-base-100">
-      {/* Заголовок - скрываем на мобильном */}
-      <div className="bg-white border-b border-base-300 px-4 py-4 hidden md:block">
-        <div className="container mx-auto">
-          <h1 className="text-2xl font-bold text-base-content mb-2">
-            {t('title')}
-          </h1>
-          <p className="text-base-content-secondary">{t('description')}</p>
-        </div>
-      </div>
-
       {/* Контейнер с картой и фильтрами */}
       <div className="relative h-screen md:h-[calc(100vh-140px)]">
         {/* Десктопная боковая панель с фильтрами */}
@@ -598,22 +574,76 @@ const MapPage: React.FC = () => {
               />
             </div>
 
-            {/* Радиус поиска */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-base-content mb-1">
-                {t('filters.radius')}: {Math.round(filters.radius / 1000)} км
+            {/* Контроль радиуса поиска */}
+            <div className="mb-4 space-y-3">
+              <label className="block text-sm font-medium text-base-content">
+                {t('controls.radiusControl')}
               </label>
-              <input
-                type="range"
-                className="range range-primary"
-                min="1000"
-                max="50000"
-                step="1000"
-                value={filters.radius}
-                onChange={(e) =>
-                  handleFiltersChange({ radius: parseInt(e.target.value) })
-                }
-              />
+
+              {/* Переключатель типа радиуса */}
+              <div className="flex gap-1 p-1 bg-base-200 rounded-lg">
+                <button
+                  type="button"
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    walkingMode === 'walking'
+                      ? 'bg-primary text-primary-content'
+                      : 'text-base-content hover:bg-base-300'
+                  }`}
+                  onClick={() => setWalkingMode('walking')}
+                >
+                  🚶 {t('controls.walkingMode')}
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    walkingMode === 'radius'
+                      ? 'bg-primary text-primary-content'
+                      : 'text-base-content hover:bg-base-300'
+                  }`}
+                  onClick={() => setWalkingMode('radius')}
+                >
+                  📏 {t('controls.distanceMode')}
+                </button>
+              </div>
+
+              {/* Слайдер радиуса */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-base-content/70">
+                  <span>
+                    {walkingMode === 'walking'
+                      ? `5 ${t('controls.minUnit')}`
+                      : `0.5 ${t('controls.kmUnit')}`}
+                  </span>
+                  <span className="font-medium">
+                    {walkingMode === 'walking'
+                      ? `${walkingTime} ${t('controls.minUnit')}`
+                      : `${filters.radius >= 1000 ? (filters.radius / 1000).toFixed(1) : (filters.radius / 1000).toFixed(1)} ${t('controls.kmUnit')}`}
+                  </span>
+                  <span>
+                    {walkingMode === 'walking'
+                      ? `60 ${t('controls.minUnit')}`
+                      : `10 ${t('controls.kmUnit')}`}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  className="range range-primary range-sm"
+                  min={walkingMode === 'walking' ? 5 : 500}
+                  max={walkingMode === 'walking' ? 60 : 10000}
+                  step={walkingMode === 'walking' ? 5 : 500}
+                  value={
+                    walkingMode === 'walking' ? walkingTime : filters.radius
+                  }
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    if (walkingMode === 'walking') {
+                      setWalkingTime(value);
+                    } else {
+                      handleFiltersChange({ radius: value });
+                    }
+                  }}
+                />
+              </div>
             </div>
 
             {/* Статистика */}
@@ -689,9 +719,24 @@ const MapPage: React.FC = () => {
             showBuyerMarker={true}
             buyerLocation={buyerLocation}
             searchRadius={filters.radius}
+            walkingMode={walkingMode}
+            walkingTime={walkingTime}
             onBuyerLocationChange={handleBuyerLocationChange}
-            loadClusters={loadClusters}
+            onIsochroneChange={setCurrentIsochrone}
+            onWalkingModeChange={setWalkingMode}
+            onWalkingTimeChange={setWalkingTime}
+            onSearchRadiusChange={(radius) => handleFiltersChange({ radius })}
+            useNativeControl={true} // Используем нативный контрол по умолчанию
+            controlTranslations={controlTranslations}
           />
+
+          {/* Расширенный popup при клике */}
+          {selectedMarker && (
+            <MarkerClickPopup
+              marker={selectedMarker}
+              onClose={() => setSelectedMarker(null)}
+            />
+          )}
         </div>
 
         {/* Мобильный drawer с фильтрами */}

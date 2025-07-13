@@ -48,6 +48,10 @@
     "continue": "Continue",
     "select": "Select",
     "accessDenied": "Access Denied",
+    "minutes": "minutes",
+    "km": "km",
+    "m": "m",
+    "resetFilters": "Reset filters",
     "you": "you",
     "send": "Send",
     "page": "Page",
@@ -265,6 +269,16 @@
     "loadMore": "Load more",
     "loading": "Loading...",
     "createListing": "Create Listing",
+    "latestListings": "Latest Listings",
+    "mapView": "Map",
+    "listView": "List",
+    "filters": "Filters",
+    "view": "View",
+    "activeFilters": "Active filters",
+    "clearAll": "Clear all",
+    "map": "Map",
+    "switchToMapView": "Switch to map view",
+    "switchToListView": "Switch to list view",
     "paymentsNowAvailable": "Payments are now available!",
     "description": "Find the best deals from individuals and stores"
   },
@@ -302,6 +316,18 @@
     "results": "results",
     "time": "Time",
     "ms": "ms",
+    "district": "District",
+    "municipality": "Municipality",
+    "allDistricts": "All districts",
+    "allMunicipalities": "All municipalities",
+    "searchByDistrict": "Search by district",
+    "population": "Population",
+    "area": "Area",
+    "searching": "Searching...",
+    "errors": {
+      "loadingDistricts": "Failed to load districts",
+      "loadingMunicipalities": "Failed to load municipalities"
+    },
     "activeFilters": "Active filters",
     "noResultsTitle": "No results found for your query",
     "noResultsDescription": "Try changing search criteria or using different keywords",
@@ -1062,7 +1088,13 @@
   },
   "metadata": {
     "title": "SveTu - Marketplace",
-    "description": "Sve Tu - marketplace for buying and selling goods"
+    "description": "Sve Tu - marketplace for buying and selling goods",
+    "map": {
+      "districtSearch": {
+        "title": "Search by districts - Sve Tu",
+        "description": "Browse listings by districts and municipalities in Belgrade and Serbia"
+      }
+    }
   },
   "errors": {
     "authError": {
@@ -2592,6 +2624,18 @@
       "unknown_error": "An unknown error occurred",
       "api_error": "Geocoding service error"
     },
+    "meters": "m",
+    "kilometers": "km",
+    "minutes": "minutes",
+    "min": "min",
+    "searchAreaSettings": "Search Area Settings",
+    "byRadius": "By Radius",
+    "byWalkingTime": "By Walking Time",
+    "searchRadius": "Search Radius",
+    "walkingTime": "Walking Time",
+    "walkingSpeedNote": "Based on average walking speed of 5 km/h",
+    "atAverageSpeed": "at average speed",
+    "accessibilitySettings": "Accessibility Settings",
     "geocoding": {
       "network_error": "Unable to connect to geocoding service",
       "timeout_error": "Geocoding service is not responding",
@@ -2605,6 +2649,53 @@
     "route": {
       "calculation_error": "Unable to calculate route",
       "unknown_error": "Error calculating route"
+    },
+    "advancedFilters": {
+      "title": "Advanced Filters",
+      "travelTime": "Travel Time",
+      "maxTravelTime": "Maximum travel time",
+      "transportMode": "Transport mode",
+      "nearPOI": "Near points of interest",
+      "poiType": "Type of point",
+      "maxDistance": "Maximum distance",
+      "foundPOIs": "Found points: {count}",
+      "density": "Listing density",
+      "avoidCrowded": "Avoid crowded areas",
+      "maxDensity": "Maximum density (listings/km²)",
+      "densityPlaceholder": "e.g., 50"
+    },
+    "transport": {
+      "walking": "Walking",
+      "driving": "Driving",
+      "cycling": "Cycling",
+      "transit": "Transit"
+    },
+    "poi": {
+      "school": "School",
+      "hospital": "Hospital",
+      "metro": "Metro",
+      "supermarket": "Supermarket",
+      "park": "Park",
+      "bank": "Bank",
+      "pharmacy": "Pharmacy",
+      "busStop": "Bus Stop"
+    },
+    "radius_search": {
+      "title": "Radius Search",
+      "radius": "Search radius",
+      "address": "Address",
+      "address_placeholder": "Enter address to search",
+      "use_my_location": "Use my location",
+      "show_search_area": "Show search area",
+      "searching": "Searching...",
+      "results_found": "Found {count} items within {radius}",
+      "clear_results": "Clear results",
+      "network_error": "Network error. Please check your internet connection",
+      "timeout_error": "Request timed out. Please try again",
+      "unknown_error": "An unknown search error occurred",
+      "address_not_found": "Address not found. Please refine your search",
+      "address_error": "Error searching by address",
+      "location_error": "Unable to determine your location"
     },
     "popup": {
       "close": "Close",
@@ -2677,6 +2768,24 @@
     },
     "errors": {
       "loadingFailed": "Failed to load listings"
+    },
+    "controls": {
+      "walkingAccessibility": "Walking accessibility",
+      "searchRadius": "Search radius",
+      "radiusControl": "Search Radius",
+      "walkingMode": "Walking",
+      "distanceMode": "Distance",
+      "minutes": "min",
+      "minUnit": "min",
+      "km": "km",
+      "kmUnit": "km",
+      "m": "m",
+      "changeModeHint": "Click to change mode",
+      "holdForSettings": "Hold for settings",
+      "singleClickHint": "Click - change mode, double click - expand",
+      "mobileHint": "Tap icon to change mode",
+      "desktopHint": "R/W - change mode",
+      "updatingIsochrone": "Updating accessibility zone..."
     }
   }
 }

@@ -19,6 +19,8 @@ const MapDemo: React.FC = () => {
       {
         id: '1',
         position: [20.4649, 44.8176],
+        longitude: 20.4649,
+        latitude: 44.8176,
         title: 'Хостел "Центр"',
         description: 'Уютный хостел в центре города',
         type: 'listing',
@@ -33,6 +35,8 @@ const MapDemo: React.FC = () => {
       {
         id: '2',
         position: [20.47, 44.82],
+        longitude: 20.47,
+        latitude: 44.82,
         title: 'Гостиница "Комфорт"',
         description: 'Современные номера с видом на реку',
         type: 'listing',
@@ -47,6 +51,8 @@ const MapDemo: React.FC = () => {
       {
         id: '3',
         position: [20.46, 44.815],
+        longitude: 20.46,
+        latitude: 44.815,
         title: 'Пользователь Марко',
         description: 'Активный путешественник',
         type: 'user',
@@ -58,6 +64,8 @@ const MapDemo: React.FC = () => {
       {
         id: '4',
         position: [20.475, 44.825],
+        longitude: 20.475,
+        latitude: 44.825,
         title: 'Крепость Калемегдан',
         description: 'Историческая достопримечательность',
         type: 'poi',

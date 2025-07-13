@@ -52,9 +52,14 @@ func NewAuthService(
 	}
 }
 
-func (s *AuthService) GetGoogleAuthURL() string {
+func (s *AuthService) GetGoogleAuthURL(origin string) string {
+	// Используем origin как state для последующего редиректа
+	state := origin
+	if state == "" {
+		state = "default"
+	}
 	return s.googleConfig.AuthCodeURL(
-		"state",
+		state,
 		oauth2.SetAuthURLParam("prompt", "select_account"),
 		oauth2.SetAuthURLParam("access_type", "offline"),
 		oauth2.SetAuthURLParam("include_granted_scopes", "true"),

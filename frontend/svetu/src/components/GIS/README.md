@@ -120,6 +120,30 @@ import { MapControls } from '@/components/GIS';
 />;
 ```
 
+### MapboxClusterLayer
+
+Компонент для нативной кластеризации маркеров с использованием встроенных возможностей Mapbox GL.
+
+```tsx
+import { MapboxClusterLayer } from '@/components/GIS';
+
+<Map {...viewState} mapboxAccessToken={accessToken}>
+  <MapboxClusterLayer
+    markers={markers}
+    clusterRadius={50}
+    clusterMaxZoom={14}
+    onClusterClick={handleClusterClick}
+    onMarkerClick={handleMarkerClick}
+    showPrices={true}
+    clusterStyles={{
+      small: { color: '#3b82f6', size: 40 },
+      medium: { color: '#059669', size: 55 },
+      large: { color: '#dc2626', size: 70 },
+    }}
+  />
+</Map>;
+```
+
 ## Хуки
 
 ### useGeolocation
@@ -395,10 +419,25 @@ const searchPlaceholder = t('search_placeholder'); // "Поиск на карт�
 
 ### Оптимизация маркеров
 
-Для большого количества маркеров рекомендуется использовать кластеризацию или виртуализацию:
+Для большого количества маркеров рекомендуется использовать кластеризацию:
 
 ```tsx
-// TODO: Добавить поддержку кластеризации
+import { MapboxClusterLayer } from '@/components/GIS';
+
+// Нативная кластеризация Mapbox (рекомендуется)
+<MapboxClusterLayer
+  markers={markers}
+  clusterRadius={50}
+  clusterMaxZoom={14}
+  onClusterClick={handleClusterClick}
+  onMarkerClick={handleMarkerClick}
+/>
+
+// Или серверная кластеризация для очень больших датасетов
+<InteractiveMap
+  loadClusters={loadClustersFromServer}
+  // другие пропсы
+/>
 ```
 
 ### Ленивая загрузка

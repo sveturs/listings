@@ -2,11 +2,14 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -19,7 +22,6 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/storage"
-	//	"net/http"
 	//	"net/url"
 )
 
@@ -1448,8 +1450,45 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		}
 	}
 
+	// Применяем расширенные геофильтры если они заданы
+	filteredListings := searchResult.Listings
+	if params.AdvancedGeoFilters != nil && len(filteredListings) > 0 {
+		log.Printf("Применяем расширенные геофильтры к %d объявлениям", len(filteredListings))
+
+		// Получаем IDs всех найденных объявлений
+		listingIDs := make([]string, len(filteredListings))
+		for i, listing := range filteredListings {
+			listingIDs[i] = strconv.Itoa(listing.ID)
+		}
+
+		// Применяем фильтры через GIS сервис
+		filteredIDs, err := s.applyAdvancedGeoFilters(ctx, params.AdvancedGeoFilters, listingIDs)
+		if err != nil {
+			log.Printf("Ошибка применения расширенных геофильтров: %v", err)
+			// Продолжаем без фильтрации в случае ошибки
+		} else {
+			// Фильтруем результаты по полученным ID
+			filteredMap := make(map[string]bool)
+			for _, id := range filteredIDs {
+				filteredMap[id] = true
+			}
+
+			newFilteredListings := make([]*models.MarketplaceListing, 0, len(filteredIDs))
+			for _, listing := range filteredListings {
+				if filteredMap[strconv.Itoa(listing.ID)] {
+					newFilteredListings = append(newFilteredListings, listing)
+				}
+			}
+
+			log.Printf("После применения геофильтров осталось %d из %d объявлений",
+				len(newFilteredListings), len(filteredListings))
+			filteredListings = newFilteredListings
+			searchResult.Total = len(newFilteredListings)
+		}
+	}
+
 	result := &search.ServiceResult{
-		Items:      searchResult.Listings,
+		Items:      filteredListings,
 		Total:      searchResult.Total,
 		Page:       params.Page,
 		Size:       params.Size,
@@ -1735,4 +1774,63 @@ func (s *MarketplaceService) getFallbackSimilarListings(ctx context.Context, lis
 	log.Printf("Найдено %d похожих объявлений для листинга %d после %d попыток (запасной поиск)", len(similarListings), listingID, triesCount)
 
 	return similarListings, nil
+}
+
+// applyAdvancedGeoFilters применяет расширенные геофильтры к списку объявлений
+func (s *MarketplaceService) applyAdvancedGeoFilters(ctx context.Context, filters *search.AdvancedGeoFilters, listingIDs []string) ([]string, error) {
+	// Формируем запрос к GIS сервису
+	requestBody := map[string]interface{}{
+		"filters":     filters,
+		"listing_ids": listingIDs,
+	}
+
+	jsonBody, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// Вызываем GIS сервис
+	// TODO: Получить URL из конфигурации
+	gisURL := "http://localhost:3000/api/v1/gis/advanced/apply-filters"
+
+	req, err := http.NewRequestWithContext(ctx, "POST", gisURL, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call GIS service: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("GIS service returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Парсим ответ
+	var response struct {
+		Success bool `json:"success"`
+		Data    struct {
+			FilteredIDs []string `json:"filtered_ids"`
+		} `json:"data"`
+		Error string `json:"error,omitempty"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode GIS response: %w", err)
+	}
+
+	if !response.Success {
+		return nil, fmt.Errorf("GIS service error: %s", response.Error)
+	}
+
+	return response.Data.FilteredIDs, nil
 }

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { SearchBar } from '@/components/SearchBar';
+import WalkingAccessibilityControl from '../Map/WalkingAccessibilityControl';
 
 interface MapFilters {
   category: string;
   priceFrom: number;
   priceTo: number;
   radius: number;
+  accessibilityMode?: 'radius' | 'walking';
+  walkingTime?: number;
 }
 
 interface MobileFiltersDrawerProps {
@@ -62,12 +65,20 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
   markersCount,
   translations: t,
 }) => {
-  const [localFilters, setLocalFilters] = useState<MapFilters>(filters);
+  const [localFilters, setLocalFilters] = useState<MapFilters>({
+    ...filters,
+    accessibilityMode: filters.accessibilityMode || 'radius',
+    walkingTime: filters.walkingTime || 15,
+  });
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
   // Синхронизация с внешними фильтрами
   useEffect(() => {
-    setLocalFilters(filters);
+    setLocalFilters({
+      ...filters,
+      accessibilityMode: filters.accessibilityMode || 'radius',
+      walkingTime: filters.walkingTime || 15,
+    });
   }, [filters]);
 
   useEffect(() => {
@@ -93,6 +104,8 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
       priceFrom: 0,
       priceTo: 0,
       radius: 10000,
+      accessibilityMode: 'radius' as const,
+      walkingTime: 15,
     };
     setLocalFilters(resetFilters);
     setLocalSearchQuery('');
@@ -224,29 +237,25 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
                 />
               </div>
 
-              {/* Радиус поиска */}
+              {/* Радиус поиска с WalkingAccessibilityControl */}
               <div>
-                <label className="block text-sm font-medium text-base-content mb-2">
-                  {t.filters.radius}: {Math.round(localFilters.radius / 1000)}{' '}
-                  км
+                <label className="block text-sm font-medium text-base-content mb-3">
+                  {t.filters.radius}
                 </label>
-                <input
-                  type="range"
-                  className="range range-primary w-full"
-                  min="1000"
-                  max="50000"
-                  step="1000"
-                  value={localFilters.radius}
-                  onChange={(e) =>
-                    handleLocalFiltersChange({
-                      radius: parseInt(e.target.value),
-                    })
+                <WalkingAccessibilityControl
+                  mode={localFilters.accessibilityMode || 'radius'}
+                  onModeChange={(mode) =>
+                    handleLocalFiltersChange({ accessibilityMode: mode })
+                  }
+                  walkingTime={localFilters.walkingTime || 15}
+                  onWalkingTimeChange={(time) =>
+                    handleLocalFiltersChange({ walkingTime: time })
+                  }
+                  searchRadius={localFilters.radius}
+                  onRadiusChange={(radius) =>
+                    handleLocalFiltersChange({ radius })
                   }
                 />
-                <div className="flex justify-between text-xs text-base-content-secondary mt-1">
-                  <span>1 км</span>
-                  <span>50 км</span>
-                </div>
               </div>
             </div>
           </div>

@@ -56,6 +56,43 @@ type ServiceParams struct {
 	AttributeFilters   map[string]string //  поле для фильтров атрибутов
 	Status             string
 	UseSynonyms        bool // Использовать расширение запроса синонимами
+
+	// Расширенные геофильтры
+	AdvancedGeoFilters *AdvancedGeoFilters `json:"advanced_geo_filters,omitempty"`
+}
+
+// AdvancedGeoFilters расширенные геофильтры для поиска
+type AdvancedGeoFilters struct {
+	// Фильтр по времени пути
+	TravelTime *TravelTimeFilter `json:"travel_time,omitempty"`
+
+	// Фильтр по точкам интереса
+	POIFilter *POIFilter `json:"poi_filter,omitempty"`
+
+	// Фильтр по плотности объявлений
+	DensityFilter *DensityFilter `json:"density_filter,omitempty"`
+}
+
+// TravelTimeFilter фильтр по времени пути через изохроны
+type TravelTimeFilter struct {
+	CenterLat     float64 `json:"center_lat"`
+	CenterLng     float64 `json:"center_lng"`
+	MaxMinutes    int     `json:"max_minutes"`
+	TransportMode string  `json:"transport_mode"`
+}
+
+// POIFilter фильтр по близости к точкам интереса
+type POIFilter struct {
+	POIType     string `json:"poi_type"`
+	MaxDistance int    `json:"max_distance"`
+	MinCount    int    `json:"min_count,omitempty"`
+}
+
+// DensityFilter фильтр по плотности объявлений
+type DensityFilter struct {
+	AvoidCrowded bool    `json:"avoid_crowded"`
+	MaxDensity   float64 `json:"max_density,omitempty"`
+	MinDensity   float64 `json:"min_density,omitempty"`
 }
 
 // GeoLocation координаты для геопоиска

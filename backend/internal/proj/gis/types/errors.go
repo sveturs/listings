@@ -18,6 +18,29 @@ var (
 	// ErrLocationNotFound ошибка отсутствия геоданных
 	ErrLocationNotFound = errors.New("location not found")
 
-	// ErrInvalidZoomLevel ошибка некорректного уровня зума
-	ErrInvalidZoomLevel = errors.New("zoom level must be between 0 and 20")
+	// ========== PHASE 2: Новые ошибки ==========
+
+	// ErrListingNotFound ошибка отсутствия объявления
+	ErrListingNotFound = errors.New("listing not found")
+
+	// ErrAccessDenied ошибка отсутствия прав доступа
+	ErrAccessDenied = errors.New("access denied")
+
+	// ErrInvalidPrivacyLevel ошибка некорректного уровня приватности
+	ErrInvalidPrivacyLevel = errors.New("invalid privacy level")
+
+	// ErrInvalidInputMethod ошибка некорректного метода ввода
+	ErrInvalidInputMethod = errors.New("invalid input method")
+
+	// ErrGeocodingFailed ошибка неудачного геокодирования
+	ErrGeocodingFailed = errors.New("geocoding failed")
+
+	// ErrLowConfidence ошибка низкого доверия к геокодированию
+	ErrLowConfidence = errors.New("geocoding confidence too low")
+
+	// ErrCacheNotFound ошибка отсутствия в кэше
+	ErrCacheNotFound = errors.New("not found in cache")
+
+	// ErrInvalidAddressComponents ошибка некорректных компонентов адреса
+	ErrInvalidAddressComponents = errors.New("invalid address components")
 )

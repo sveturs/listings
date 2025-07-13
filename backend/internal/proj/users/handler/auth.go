@@ -37,6 +37,18 @@ func NewAuthHandler(services globalService.ServicesInterface) *AuthHandler {
 // @Success 302 {string} string "Redirect to Google OAuth"
 // @Router /auth/google [get]
 func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
+	// Получаем origin из заголовков
+	origin := c.Get("Origin")
+	if origin == "" {
+		origin = c.Get("Referer")
+	}
+
+	logger.Info().
+		Str("origin_header", c.Get("Origin")).
+		Str("referer_header", c.Get("Referer")).
+		Str("final_origin", origin).
+		Msg("GoogleAuth: processing OAuth request")
+
 	// Получаем returnTo из query параметров
 	returnTo := c.Query("returnTo")
 	if returnTo != "" {
@@ -50,7 +62,7 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 			HTTPOnly: true,
 		})
 	}
-	url := h.services.Auth().GetGoogleAuthURL()
+	url := h.services.Auth().GetGoogleAuthURL(origin)
 	return c.Redirect(url)
 }
 
@@ -66,6 +78,12 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 // @Router /auth/google/callback [get]
 func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	code := c.Query("code")
+	state := c.Query("state") // Получаем origin из state параметра
+
+	logger.Info().
+		Str("state", state).
+		Str("code_prefix", code[:10]+"...").
+		Msg("GoogleCallback: received OAuth callback")
 
 	sessionData, err := h.services.Auth().HandleGoogleCallback(c.Context(), code)
 	if err != nil {
@@ -109,9 +127,17 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 		})
 		logger.Info().Str("email", sessionData.Email).Bool("access_token_generated", accessToken != "").Msg("OAuth: Set refresh_token cookie for user")
 	}
-	returnTo := h.services.Config().FrontendURL // значение по умолчанию
+	// Определяем базовый URL для редиректа
+	baseURL := h.services.Config().FrontendURL // значение по умолчанию
+
+	// Если есть origin в state, используем его как базовый URL
+	if state != "" && state != "default" {
+		baseURL = state
+	}
+
+	returnTo := baseURL
 	if saved := c.Cookies("returnTo"); saved != "" {
-		returnTo = h.services.Config().FrontendURL + saved
+		returnTo = baseURL + saved
 		// Удаляем cookie
 		c.Cookie(&fiber.Cookie{
 			Name:   "returnTo",
@@ -528,10 +554,15 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		Bool("token_present", refreshToken != "").
 		Int("token_length", len(refreshToken)).
 		Str("cookie_header", c.Get("Cookie")).
+		Str("host", c.Hostname()).
+		Str("origin", c.Get("Origin")).
+		Str("referer", c.Get("Referer")).
 		Msg("RefreshToken called")
 
 	if refreshToken == "" {
-		logger.Error().Msg("Refresh token not found in cookie")
+		logger.Error().
+			Str("all_cookies", c.Get("Cookie")).
+			Msg("Refresh token not found in cookie")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.refresh_token.error.token_not_found")
 	}
 

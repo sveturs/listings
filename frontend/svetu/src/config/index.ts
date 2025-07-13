@@ -204,9 +204,12 @@ class ConfigManager {
       return config.api.internalUrl;
     }
 
-    // В разработке на клиенте используем прямой URL к backend
+    // В development на клиенте используем относительные пути
+    // чтобы запросы шли через прокси Next.js и сохранялись cookies
     if (config.env.isDevelopment && !config.env.isServer) {
-      return config.api.url;
+      // Возвращаем пустую строку чтобы использовались относительные пути
+      // Например: /api/v1/auth/refresh вместо http://100.88.44.15:3000/api/v1/auth/refresh
+      return '';
     }
 
     return config.api.url;

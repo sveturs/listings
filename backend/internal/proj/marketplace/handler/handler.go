@@ -124,8 +124,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/categories", h.Categories.GetCategories)
 	marketplace.Get("/category-tree", h.Categories.GetCategoryTree)
 	marketplace.Get("/listings/:id", h.Listings.GetListing)
-	marketplace.Get("/search", h.Search.SearchListingsAdvanced) // маршрут поиска
-	marketplace.Get("/suggestions", h.Search.GetSuggestions)    // маршрут автодополнения
+	marketplace.Get("/search", h.Search.SearchListingsAdvanced)  // маршрут поиска GET
+	marketplace.Post("/search", h.Search.SearchListingsAdvanced) // маршрут поиска POST для расширенных фильтров
+	marketplace.Get("/suggestions", h.Search.GetSuggestions)     // маршрут автодополнения
 	marketplace.Get("/category-suggestions", h.Search.GetCategorySuggestions)
 	marketplace.Get("/categories/:id/attributes", h.Categories.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)

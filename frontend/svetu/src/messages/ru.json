@@ -48,6 +48,10 @@
     "continue": "Продолжить",
     "select": "Выбрать",
     "accessDenied": "Доступ запрещен",
+    "minutes": "минут",
+    "km": "км",
+    "m": "м",
+    "resetFilters": "Сбросить фильтры",
     "you": "вы",
     "send": "Отправить",
     "page": "Страница",
@@ -255,6 +259,16 @@
     "loadMore": "Загрузить еще",
     "loading": "Загрузка...",
     "createListing": "Подать объявление",
+    "latestListings": "Последние объявления",
+    "mapView": "Карта",
+    "listView": "Список",
+    "filters": "Фильтры",
+    "view": "Вид",
+    "activeFilters": "Активные фильтры",
+    "clearAll": "Очистить все",
+    "map": "Карта",
+    "switchToMapView": "Переключить на вид карты",
+    "switchToListView": "Переключить на вид списка",
     "paymentsNowAvailable": "Платежи теперь доступны!",
     "description": "Находите лучшие предложения от частных лиц и магазинов"
   },
@@ -292,6 +306,18 @@
     "results": "результатов",
     "time": "Время",
     "ms": "мс",
+    "district": "Район",
+    "municipality": "Муниципалитет",
+    "allDistricts": "Все районы",
+    "allMunicipalities": "Все муниципалитеты",
+    "searchByDistrict": "Поиск по району",
+    "population": "Население",
+    "area": "Площадь",
+    "searching": "Поиск...",
+    "errors": {
+      "loadingDistricts": "Не удалось загрузить районы",
+      "loadingMunicipalities": "Не удалось загрузить муниципалитеты"
+    },
     "activeFilters": "Активные фильтры",
     "noResultsTitle": "По вашему запросу ничего не найдено",
     "noResultsDescription": "Попробуйте изменить условия поиска или использовать другие ключевые слова",
@@ -1045,7 +1071,13 @@
   },
   "metadata": {
     "title": "SveTu - Торговая площадка",
-    "description": "Sve Tu - торговая площадка для покупки и продажи товаров"
+    "description": "Sve Tu - торговая площадка для покупки и продажи товаров",
+    "map": {
+      "districtSearch": {
+        "title": "Поиск по районам - Sve Tu",
+        "description": "Просмотр объявлений по районам и муниципалитетам Белграда и Сербии"
+      }
+    }
   },
   "errors": {
     "authError": {
@@ -2528,6 +2560,18 @@
     }
   },
   "gis": {
+    "meters": "м",
+    "kilometers": "км",
+    "minutes": "минут",
+    "min": "мин",
+    "accessibilitySettings": "Настройки зоны поиска",
+    "searchAreaSettings": "Настройки зоны поиска",
+    "byRadius": "По радиусу",
+    "byWalkingTime": "Пешком",
+    "searchRadius": "Радиус поиска",
+    "walkingTime": "Время ходьбы",
+    "walkingSpeedNote": "Расчет основан на средней скорости ходьбы 5 км/ч",
+    "atAverageSpeed": "при средней скорости",
     "map": {
       "search_placeholder": "Поиск на карте...",
       "search_button": "Найти",
@@ -2592,6 +2636,53 @@
     "route": {
       "calculation_error": "Не удалось построить маршрут",
       "unknown_error": "Ошибка при расчете маршрута"
+    },
+    "advancedFilters": {
+      "title": "Расширенные фильтры",
+      "travelTime": "Время пути",
+      "maxTravelTime": "Максимальное время пути",
+      "transportMode": "Способ передвижения",
+      "nearPOI": "Рядом с объектами",
+      "poiType": "Тип объекта",
+      "maxDistance": "Максимальное расстояние",
+      "foundPOIs": "Найдено объектов: {count}",
+      "density": "Плотность объявлений",
+      "avoidCrowded": "Избегать переполненных районов",
+      "maxDensity": "Максимальная плотность (объявлений/км²)",
+      "densityPlaceholder": "например, 50"
+    },
+    "transport": {
+      "walking": "Пешком",
+      "driving": "На авто",
+      "cycling": "Велосипед",
+      "transit": "Транспорт"
+    },
+    "poi": {
+      "school": "Школа",
+      "hospital": "Больница",
+      "metro": "Метро",
+      "supermarket": "Супермаркет",
+      "park": "Парк",
+      "bank": "Банк",
+      "pharmacy": "Аптека",
+      "busStop": "Автобусная остановка"
+    },
+    "radius_search": {
+      "title": "Радиусный поиск",
+      "radius": "Радиус поиска",
+      "address": "Адрес",
+      "address_placeholder": "Введите адрес для поиска",
+      "use_my_location": "Использовать мое местоположение",
+      "show_search_area": "Показать область поиска",
+      "searching": "Поиск...",
+      "results_found": "Найдено {count} объектов в радиусе {radius}",
+      "clear_results": "Очистить результаты",
+      "network_error": "Ошибка сети. Проверьте подключение к интернету",
+      "timeout_error": "Время ожидания истекло. Попробуйте еще раз",
+      "unknown_error": "Произошла неизвестная ошибка поиска",
+      "address_not_found": "Адрес не найден. Попробуйте уточнить запрос",
+      "address_error": "Ошибка при поиске по адресу",
+      "location_error": "Не удалось определить ваше местоположение"
     },
     "popup": {
       "close": "Закрыть",
@@ -2664,6 +2755,24 @@
     },
     "errors": {
       "loadingFailed": "Не удалось загрузить объявления"
+    },
+    "controls": {
+      "walkingAccessibility": "Пешая доступность",
+      "searchRadius": "Радиус поиска",
+      "radiusControl": "Радиус поиска",
+      "walkingMode": "Пешком",
+      "distanceMode": "На транспорте",
+      "minutes": "мин",
+      "minUnit": "мин",
+      "km": "км",
+      "kmUnit": "км",
+      "m": "м",
+      "changeModeHint": "Нажмите для смены режима",
+      "holdForSettings": "Удерживайте для настроек",
+      "singleClickHint": "Клик - смена режима, двойной клик - развернуть",
+      "mobileHint": "Тап на иконку сменит режим",
+      "desktopHint": "R/W - смена режима",
+      "updatingIsochrone": "Обновление зоны доступности..."
     }
   }
 }

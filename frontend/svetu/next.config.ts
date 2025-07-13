@@ -74,7 +74,12 @@ const nextConfig: NextConfig = {
           source: '/api/:path*',
           destination: `${apiUrl}/api/:path*`,
         },
-        // Проксируем auth запросы (не API)
+        // Проксируем auth запросы (не API) с учетом локали
+        {
+          source: '/:locale/auth/:path*',
+          destination: `${apiUrl}/auth/:path*`,
+        },
+        // Проксируем auth запросы (не API) без локали
         {
           source: '/auth/:path*',
           destination: `${apiUrl}/auth/:path*`,
