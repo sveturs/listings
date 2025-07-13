@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import dynamic from 'next/dynamic';
 import MarketplaceList from './MarketplaceList';
 import {
   UnifiedSearchItem,
@@ -16,17 +15,16 @@ import {
   AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
 
-// Динамический импорт карты для избежания SSR проблем
-const MarketplaceMapWithRadiusSearch = dynamic(
-  () => import('./MarketplaceMapWithRadiusSearch'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-96 bg-base-200 rounded-lg flex items-center justify-center mb-8">
-        <div className="loading loading-spinner loading-lg"></div>
-      </div>
-    ),
-  }
+// Редирект на основную карту
+import { Link } from '@/i18n/routing';
+
+const MapRedirectComponent = () => (
+  <div className="mb-8 p-4 bg-base-200 rounded-lg text-center">
+    <p className="text-base-content/70 mb-2">Переходим на полную карту...</p>
+    <Link href="/map" className="btn btn-primary">
+      Открыть карту
+    </Link>
+  </div>
 );
 
 interface HomePageWithFiltersProps {
@@ -153,7 +151,7 @@ export default function HomePageWithFilters({
     };
   }, [applyFilters]);
 
-  const handleListingSelect = (listing: RadiusSearchResult) => {
+  const _handleListingSelect = (listing: RadiusSearchResult) => {
     console.log('Selected listing:', listing);
   };
 
@@ -273,9 +271,7 @@ export default function HomePageWithFilters({
 
         {/* Контент - карта или список */}
         {showMap ? (
-          <MarketplaceMapWithRadiusSearch
-            onListingSelect={handleListingSelect}
-          />
+          <MapRedirectComponent />
         ) : (
           <MarketplaceList initialData={filteredData} locale={locale} />
         )}

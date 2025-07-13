@@ -55,7 +55,7 @@ const MapPage: React.FC = () => {
       category: searchParams.get('category') || '',
       priceFrom: parseInt(searchParams.get('priceFrom') || '0') || 0,
       priceTo: parseInt(searchParams.get('priceTo') || '0') || 0,
-      radius: parseInt(searchParams.get('radius') || '10000') || 10000,
+      radius: parseInt(searchParams.get('radius') || '5000') || 5000,
     };
   };
 
@@ -135,7 +135,7 @@ const MapPage: React.FC = () => {
         params.set('priceFrom', newFilters.priceFrom.toString());
       if (newFilters.priceTo > 0)
         params.set('priceTo', newFilters.priceTo.toString());
-      if (newFilters.radius !== 10000)
+      if (newFilters.radius !== 5000)
         params.set('radius', newFilters.radius.toString());
 
       // Координаты карты
@@ -174,50 +174,58 @@ const MapPage: React.FC = () => {
   const loadListings = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        limit: '100',
-        page: '1',
-        sort_by: 'date',
-        sort_order: 'desc',
-        ...(debouncedFilters.category && {
-          categories: debouncedFilters.category,
-        }),
-        ...(debouncedFilters.priceFrom > 0 && {
-          min_price: debouncedFilters.priceFrom.toString(),
-        }),
-        ...(debouncedFilters.priceTo > 0 && {
-          max_price: debouncedFilters.priceTo.toString(),
-        }),
-      });
+      // Используем специализированный радиусный поиск если есть координаты покупателя, иначе обычный search
+      const useRadiusSearch = buyerLocation.latitude && buyerLocation.longitude;
+      const endpoint = useRadiusSearch
+        ? '/api/v1/gis/search/radius'
+        : '/api/v1/search';
 
-      // Используем позицию покупателя для географического поиска
-      if (buyerLocation.latitude && buyerLocation.longitude) {
-        params.append('latitude', buyerLocation.latitude.toString());
-        params.append('longitude', buyerLocation.longitude.toString());
+      let response;
 
-        // Преобразуем радиус из метров в формат для backend (например, "10km")
-        if (debouncedFilters.radius) {
-          const radiusKm = Math.round(debouncedFilters.radius / 1000);
-          params.append('distance', `${radiusKm}km`);
-        }
+      if (useRadiusSearch) {
+        // Для радиусного поиска используем POST с JSON
+        const requestBody = {
+          latitude: buyerLocation.latitude,
+          longitude: buyerLocation.longitude,
+          radius: debouncedFilters.radius, // в метрах
+          limit: 100,
+          ...(debouncedFilters.category && {
+            category: debouncedFilters.category,
+          }),
+          ...(debouncedFilters.priceFrom > 0 && {
+            min_price: debouncedFilters.priceFrom,
+          }),
+          ...(debouncedFilters.priceTo > 0 && {
+            max_price: debouncedFilters.priceTo,
+          }),
+        };
+
+        console.log('[Map] Using radius search with body:', requestBody);
+
+        response = await apiClient.post(endpoint, requestBody);
+      } else {
+        // Для обычного поиска используем GET с параметрами
+        const params = new URLSearchParams({
+          limit: '100',
+          page: '1',
+          sort_by: 'date',
+          sort_order: 'desc',
+          ...(debouncedFilters.category && {
+            categories: debouncedFilters.category,
+          }),
+          ...(debouncedFilters.priceFrom > 0 && {
+            min_price: debouncedFilters.priceFrom.toString(),
+          }),
+          ...(debouncedFilters.priceTo > 0 && {
+            max_price: debouncedFilters.priceTo.toString(),
+          }),
+        });
+
+        const fullUrl = `${endpoint}?${params}`;
+        console.log('[Map] Using search endpoint:', fullUrl);
+
+        response = await apiClient.get(fullUrl);
       }
-
-      // Используем GIS API если есть координаты покупателя, иначе обычный search
-      const endpoint =
-        buyerLocation.latitude && buyerLocation.longitude
-          ? '/api/v1/gis/search'
-          : '/api/v1/search';
-
-      // Логируем полный URL запроса и параметры
-      const fullUrl = `${endpoint}?${params}`;
-      console.log(
-        '[Map] Using endpoint:',
-        endpoint,
-        'with params:',
-        Object.fromEntries(params)
-      );
-
-      const response = await apiClient.get(fullUrl);
       console.log('[Map] API response:', response.data);
       console.log(
         '[Map] Listings count:',
@@ -237,7 +245,30 @@ const MapPage: React.FC = () => {
       }
 
       // Обрабатываем ответ в зависимости от используемого API
-      if (endpoint === '/api/v1/gis/search' && response.data?.data?.listings) {
+      if (useRadiusSearch && response.data?.data?.items) {
+        // Радиусный поиск возвращает data.items
+        const transformedListings = response.data.data.items
+          .filter((item: any) => item.latitude && item.longitude)
+          .map((item: any) => ({
+            id: item.id,
+            name: item.title,
+            price: item.price,
+            location: {
+              lat: item.latitude,
+              lng: item.longitude,
+              city: item.category || '',
+              country: 'Serbia',
+            },
+            category: {
+              id: 0,
+              name: item.category || 'Unknown',
+              slug: '',
+            },
+            images: item.imageUrl ? [item.imageUrl] : [],
+            created_at: item.created_at,
+          }));
+        setListings(transformedListings);
+      } else if (response.data?.data?.listings) {
         // GIS API возвращает data.listings
         const transformedListings = response.data.data.listings
           .filter(
@@ -612,7 +643,7 @@ const MapPage: React.FC = () => {
                   <span>
                     {walkingMode === 'walking'
                       ? `5 ${t('controls.minUnit')}`
-                      : `0.5 ${t('controls.kmUnit')}`}
+                      : `0.1 ${t('controls.kmUnit')}`}
                   </span>
                   <span className="font-medium">
                     {walkingMode === 'walking'
@@ -622,15 +653,15 @@ const MapPage: React.FC = () => {
                   <span>
                     {walkingMode === 'walking'
                       ? `60 ${t('controls.minUnit')}`
-                      : `10 ${t('controls.kmUnit')}`}
+                      : `50 ${t('controls.kmUnit')}`}
                   </span>
                 </div>
                 <input
                   type="range"
                   className="range range-primary range-sm"
-                  min={walkingMode === 'walking' ? 5 : 500}
-                  max={walkingMode === 'walking' ? 60 : 10000}
-                  step={walkingMode === 'walking' ? 5 : 500}
+                  min={walkingMode === 'walking' ? 5 : 100}
+                  max={walkingMode === 'walking' ? 60 : 50000}
+                  step={walkingMode === 'walking' ? 5 : 100}
                   value={
                     walkingMode === 'walking' ? walkingTime : filters.radius
                   }

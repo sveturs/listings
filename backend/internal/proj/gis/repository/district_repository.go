@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 
@@ -66,7 +67,7 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.Dist
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to query districts")
+		return nil, errors.Wrapf(err, "failed to query districts with query: %s, args: %v", query, args)
 	}
 	defer rows.Close()
 
@@ -78,7 +79,7 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.Dist
 		err := rows.Scan(
 			&d.ID, &d.Name, &d.CityID, &d.CountryCode,
 			&boundaryJSON, &centerJSON,
-			&d.Population, &d.AreaKm2, &d.PostalCodes,
+			&d.Population, &d.AreaKm2, pq.Array(&d.PostalCodes),
 			&d.CreatedAt, &d.UpdatedAt,
 		)
 		if err != nil {
@@ -118,7 +119,7 @@ func (r *DistrictRepository) GetDistrictByID(ctx context.Context, id uuid.UUID) 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&d.ID, &d.Name, &d.CityID, &d.CountryCode,
 		&boundaryJSON, &centerJSON,
-		&d.Population, &d.AreaKm2, &d.PostalCodes,
+		&d.Population, &d.AreaKm2, pq.Array(&d.PostalCodes),
 		&d.CreatedAt, &d.UpdatedAt,
 	)
 	if err != nil {
@@ -195,7 +196,7 @@ func (r *DistrictRepository) GetMunicipalities(ctx context.Context, params types
 		err := rows.Scan(
 			&m.ID, &m.Name, &m.DistrictID, &m.CountryCode,
 			&boundaryJSON, &centerJSON,
-			&m.Population, &m.AreaKm2, &m.PostalCodes,
+			&m.Population, &m.AreaKm2, pq.Array(&m.PostalCodes),
 			&m.CreatedAt, &m.UpdatedAt,
 		)
 		if err != nil {
@@ -235,7 +236,7 @@ func (r *DistrictRepository) GetMunicipalityByID(ctx context.Context, id uuid.UU
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&m.ID, &m.Name, &m.DistrictID, &m.CountryCode,
 		&boundaryJSON, &centerJSON,
-		&m.Population, &m.AreaKm2, &m.PostalCodes,
+		&m.Population, &m.AreaKm2, pq.Array(&m.PostalCodes),
 		&m.CreatedAt, &m.UpdatedAt,
 	)
 	if err != nil {
@@ -286,7 +287,7 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 				''
 			) as first_image_url
 		FROM marketplace_listings ml
-		JOIN marketplace_listings_geo mlg ON ml.id = mlg.listing_id
+		JOIN listings_geo mlg ON ml.id = mlg.listing_id
 		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
 		LEFT JOIN users u ON ml.user_id = u.id
 		WHERE mlg.district_id = $1
@@ -398,7 +399,7 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 				''
 			) as first_image_url
 		FROM marketplace_listings ml
-		JOIN marketplace_listings_geo mlg ON ml.id = mlg.listing_id
+		JOIN listings_geo mlg ON ml.id = mlg.listing_id
 		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
 		LEFT JOIN users u ON ml.user_id = u.id
 		WHERE mlg.municipality_id = $1

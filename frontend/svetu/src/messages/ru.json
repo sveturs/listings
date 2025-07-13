@@ -2702,6 +2702,14 @@
       "kilometers": "км",
       "miles": "миль"
     },
+    "district_filter": {
+      "district": "Район",
+      "municipality": "Муниципалитет",
+      "select_district": "Выберите район",
+      "select_municipality": "Выберите муниципалитет",
+      "loading": "Загрузка...",
+      "load_error": "Ошибка загрузки данных"
+    },
     "directions": {
       "driving": "На автомобиле",
       "walking": "Пешком",

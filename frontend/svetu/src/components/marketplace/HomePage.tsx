@@ -2,23 +2,12 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import dynamic from 'next/dynamic';
 import MarketplaceList from './MarketplaceList';
 import { UnifiedSearchItem } from '@/services/unifiedSearch';
 import { RadiusSearchResult } from '@/components/GIS/types/gis';
 
-// Динамический импорт карты для избежания SSR проблем
-const MarketplaceMapWithRadiusSearch = dynamic(
-  () => import('./MarketplaceMapWithRadiusSearch'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-96 bg-base-200 rounded-lg flex items-center justify-center mb-8">
-        <div className="loading loading-spinner loading-lg"></div>
-      </div>
-    ),
-  }
-);
+// Использовем основную карту вместо дублирующего компонента
+import { Link } from '@/i18n/routing';
 
 interface HomePageProps {
   initialData: {
@@ -44,7 +33,7 @@ export default function HomePage({
   const [selectedListing, setSelectedListing] =
     useState<RadiusSearchResult | null>(null);
 
-  const handleListingSelect = (listing: RadiusSearchResult) => {
+  const _handleListingSelect = (listing: RadiusSearchResult) => {
     setSelectedListing(listing);
     // Можно добавить логику для показа детальной информации
     console.log('Selected listing:', listing);
@@ -145,17 +134,13 @@ export default function HomePage({
 
       {/* Показываем либо карту, либо список */}
       {showMap ? (
-        <div className="mb-8">
-          <MarketplaceMapWithRadiusSearch
-            className="rounded-lg overflow-hidden border border-base-300"
-            onListingSelect={handleListingSelect}
-            initialViewState={{
-              // Центр на Белград, Сербия
-              latitude: 44.8176,
-              longitude: 20.4649,
-              zoom: 11,
-            }}
-          />
+        <div className="mb-8 p-4 bg-base-200 rounded-lg">
+          <p className="text-center text-base-content/70">
+            {t('map.redirecting')}{' '}
+            <Link href="/map" className="link link-primary">
+              {t('map.goToMap')}
+            </Link>
+          </p>
 
           {/* Информация о выбранном объявлении */}
           {selectedListing && (

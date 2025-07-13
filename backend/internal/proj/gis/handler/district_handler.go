@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -52,6 +53,8 @@ func (h *DistrictHandler) GetDistricts(c *fiber.Ctx) error {
 
 	districts, err := h.service.GetDistricts(c.Context(), params)
 	if err != nil {
+		// Log the actual error for debugging
+		fmt.Printf("ERROR: Failed to get districts: %+v\n", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "api.failedToGetDistricts")
 	}
 

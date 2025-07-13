@@ -6,6 +6,7 @@ export { default as MapControls } from './Map/MapControls';
 export { default as WalkingAccessibilityControl } from './Map/WalkingAccessibilityControl';
 export { default as MapboxClusterLayer } from './Map/MapboxClusterLayer';
 export { default as RadiusSearchControl } from './RadiusSearchControl';
+export { default as DistrictFilter } from './DistrictFilter';
 
 // Хуки
 export { useGeolocation } from './hooks/useGeolocation';
