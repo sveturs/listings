@@ -103,6 +103,7 @@ require (
 	github.com/swaggo/files/v2 v2.0.2 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/tinylib/msgp v1.2.5 // indirect
+	github.com/twpayne/go-geom v1.6.1 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect

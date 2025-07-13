@@ -60,7 +60,7 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 
 		if err := c.BodyParser(&postRequest); err != nil {
 			logger.Error().Err(err).Msg("Failed to parse POST search params")
-			return utils.SendError(c, fiber.StatusBadRequest, "validation.failed")
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.failed")
 		}
 
 		params = postRequest.ServiceParams
