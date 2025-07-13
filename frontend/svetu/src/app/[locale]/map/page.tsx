@@ -183,26 +183,27 @@ const MapPage: React.FC = () => {
       let response;
 
       if (useRadiusSearch) {
-        // Для радиусного поиска используем POST с JSON
-        const requestBody = {
-          latitude: buyerLocation.latitude,
-          longitude: buyerLocation.longitude,
-          radius: debouncedFilters.radius, // в метрах
-          limit: 100,
+        // Для радиусного поиска используем GET с query параметрами
+        const params = new URLSearchParams({
+          latitude: buyerLocation.latitude.toString(),
+          longitude: buyerLocation.longitude.toString(),
+          radius: debouncedFilters.radius.toString(), // в метрах
+          limit: '100',
           ...(debouncedFilters.category && {
             category: debouncedFilters.category,
           }),
           ...(debouncedFilters.priceFrom > 0 && {
-            min_price: debouncedFilters.priceFrom,
+            min_price: debouncedFilters.priceFrom.toString(),
           }),
           ...(debouncedFilters.priceTo > 0 && {
-            max_price: debouncedFilters.priceTo,
+            max_price: debouncedFilters.priceTo.toString(),
           }),
-        };
+        });
 
-        console.log('[Map] Using radius search with body:', requestBody);
+        const fullUrl = `${endpoint}?${params}`;
+        console.log('[Map] Using radius search endpoint:', fullUrl);
 
-        response = await apiClient.post(endpoint, requestBody);
+        response = await apiClient.get(fullUrl);
       } else {
         // Для обычного поиска используем GET с параметрами
         const params = new URLSearchParams({
@@ -245,30 +246,7 @@ const MapPage: React.FC = () => {
       }
 
       // Обрабатываем ответ в зависимости от используемого API
-      if (useRadiusSearch && response.data?.data?.items) {
-        // Радиусный поиск возвращает data.items
-        const transformedListings = response.data.data.items
-          .filter((item: any) => item.latitude && item.longitude)
-          .map((item: any) => ({
-            id: item.id,
-            name: item.title,
-            price: item.price,
-            location: {
-              lat: item.latitude,
-              lng: item.longitude,
-              city: item.category || '',
-              country: 'Serbia',
-            },
-            category: {
-              id: 0,
-              name: item.category || 'Unknown',
-              slug: '',
-            },
-            images: item.imageUrl ? [item.imageUrl] : [],
-            created_at: item.created_at,
-          }));
-        setListings(transformedListings);
-      } else if (response.data?.data?.listings) {
+      if ((useRadiusSearch || endpoint === '/api/v1/gis/search') && response.data?.data?.listings) {
         // GIS API возвращает data.listings
         const transformedListings = response.data.data.listings
           .filter(
