@@ -321,6 +321,18 @@
     "searchError": "Search error",
     "tryAgain": "Try again",
     "listings": "oglasa",
+    "district": "Opština",
+    "allDistricts": "Sve opštine",
+    "municipality": "Mesna zajednica",
+    "allMunicipalities": "Sve mesne zajednice",
+    "searchByDistrict": "Pretraži po opštini",
+    "population": "Stanovništvo",
+    "area": "Površina",
+    "searching": "Pretraživanje...",
+    "errors": {
+      "loadingDistricts": "Greška pri učitavanju opština",
+      "loadingMunicipalities": "Greška pri učitavanju mesnih zajednica"
+    },
     "storeProducts": "Store Products",
     "byPrice": "By Price",
     "byDate": "Po datumu",
