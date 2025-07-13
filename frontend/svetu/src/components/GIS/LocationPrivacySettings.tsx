@@ -134,7 +134,7 @@ export default function LocationPrivacySettings({
       <div className="grid gap-4 mb-6">
         {PRIVACY_LEVELS.map((level) => {
           const isSelected = selectedLevel === level.id;
-          const isHovered = hoveredLevel === level.id;
+          const _isHovered = hoveredLevel === level.id;
 
           return (
             <div
@@ -198,7 +198,7 @@ export default function LocationPrivacySettings({
                   Пример отображения:
                 </span>
                 <p className="text-xs text-base-content/60 italic mt-1">
-                  "{level.example}"
+                  &ldquo;{level.example}&rdquo;
                 </p>
               </div>
 
@@ -302,16 +302,16 @@ export default function LocationPrivacySettings({
 
         <ul className="text-sm text-base-content/70 space-y-1">
           <li>
-            • <strong>Для бизнеса:</strong> используйте "Точный адрес" для
-            магазинов и офисов
+            • <strong>Для бизнеса:</strong> используйте &ldquo;Точный
+            адрес&rdquo; для магазинов и офисов
           </li>
           <li>
-            • <strong>Для дома:</strong> рекомендуется "Улица" или "Район" для
-            защиты приватности
+            • <strong>Для дома:</strong> рекомендуется &ldquo;Улица&rdquo; или
+            &ldquo;Район&rdquo; для защиты приватности
           </li>
           <li>
-            • <strong>Для встреч:</strong> "Район" позволяет договориться о
-            точном месте отдельно
+            • <strong>Для встреч:</strong> &ldquo;Район&rdquo; позволяет
+            договориться о точном месте отдельно
           </li>
           <li>
             • Вы всегда можете изменить настройки приватности в любое время

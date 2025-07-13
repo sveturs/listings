@@ -2,10 +2,27 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { components } from '@/types/generated/api';
+import type { components as _components } from '@/types/generated/api';
 
-type District = components['schemas']['types.District'];
-type Municipality = components['schemas']['types.Municipality'];
+// Временные интерфейсы до исправления API типов
+interface District {
+  id: string;
+  name: string;
+  geometry?: any;
+  boundary?: {
+    coordinates: number[][][];
+  };
+  bounds?: [number, number, number, number];
+  population?: number;
+  area?: number;
+  area_km2?: number;
+}
+
+interface Municipality {
+  id: string;
+  name: string;
+  districts?: District[];
+}
 
 interface DistrictSelectorProps {
   selectedDistrictId?: string;

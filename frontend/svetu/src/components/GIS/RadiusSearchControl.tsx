@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { RadiusSearchControlConfig, GeoSearchResult } from './types/gis';
 import {
@@ -69,13 +69,10 @@ export default function RadiusSearchControl({
     clearResults,
   } = useRadiusSearch();
 
-  const {
-    loading: locationLoading,
-    error: locationError,
-  } = useGeolocation();
+  const { loading: locationLoading, error: locationError } = useGeolocation();
 
   const {
-    results: geoResults,
+    results: _geoResults,
     loading: geoLoading,
     search: geoSearch,
   } = useGeoSearch();

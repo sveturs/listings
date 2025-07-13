@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   RadiusSearchParams,
   RadiusSearchResponse,
   RadiusSearchResult,
-  GeoLocation,
+  GeoLocation as _GeoLocation,
 } from '../types/gis';
 import { useGeolocation } from './useGeolocation';
 import { useGeocoding } from './useGeoSearch';
@@ -52,23 +52,6 @@ const fetchWithTimeout = async (
     throw error;
   }
 };
-
-// Простой дебаунс хук для строковых значений
-function useDebounce(value: string, delay: number): string {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 export const useRadiusSearch = (): UseRadiusSearchResult => {
   const [results, setResults] = useState<RadiusSearchResult[]>([]);

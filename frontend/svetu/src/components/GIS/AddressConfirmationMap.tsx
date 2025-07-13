@@ -224,7 +224,7 @@ export default function AddressConfirmationMap({
   }, [currentLocation, reverseAddress, address, confidence, onLocationConfirm]);
 
   // Определение цвета по уровню доверия
-  const getConfidenceColor = (conf: number) => {
+  const _getConfidenceColor = (conf: number) => {
     if (conf >= 0.8) return 'text-success';
     if (conf >= 0.6) return 'text-warning';
     return 'text-error';

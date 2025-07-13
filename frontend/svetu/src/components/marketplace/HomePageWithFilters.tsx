@@ -88,7 +88,7 @@ export default function HomePageWithFilters({
     try {
       // Преобразуем фильтры в нужный формат
       const transformedFilters: any = {};
-      
+
       if (filters.travelTime) {
         transformedFilters.travel_time = {
           center_lat: filters.travelTime.centerLat,
@@ -97,7 +97,7 @@ export default function HomePageWithFilters({
           transport_mode: filters.travelTime.transportMode,
         };
       }
-      
+
       if (filters.poiFilter) {
         transformedFilters.poi_filter = {
           poi_type: filters.poiFilter.poiType,
@@ -105,7 +105,7 @@ export default function HomePageWithFilters({
           min_count: filters.poiFilter.minCount,
         };
       }
-      
+
       if (filters.densityFilter) {
         transformedFilters.density_filter = {
           avoid_crowded: filters.densityFilter.avoidCrowded,
@@ -136,7 +136,7 @@ export default function HomePageWithFilters({
 
   // Слушаем события изменения фильтров
   useEffect(() => {
-    const handleFiltersChanged = (event: CustomEvent) => {
+    const handleFiltersChanged = (_event: CustomEvent) => {
       applyFilters();
     };
 

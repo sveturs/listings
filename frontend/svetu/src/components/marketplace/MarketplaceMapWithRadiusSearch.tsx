@@ -11,7 +11,6 @@ import {
   RadiusSearchResult,
 } from '@/components/GIS';
 import { MapViewState, MapMarkerData } from '@/components/GIS/types/gis';
-import { Source, Layer } from 'react-map-gl';
 import type { LayerProps } from 'react-map-gl';
 
 // Динамический импорт для избежания SSR проблем
@@ -68,10 +67,10 @@ export default function MarketplaceMapWithRadiusSearch({
     loading: searchLoading,
     error: searchError,
     total,
-    search,
-    searchByAddress,
-    searchByCurrentLocation,
-    clearResults,
+    search: _search,
+    searchByAddress: _searchByAddress,
+    searchByCurrentLocation: _searchByCurrentLocation,
+    clearResults: _clearResults,
   } = useRadiusSearch();
 
   // Создание маркеров из результатов поиска
@@ -180,14 +179,14 @@ export default function MarketplaceMapWithRadiusSearch({
   }, []);
 
   // Создание данных для круга радиуса поиска
-  const radiusCircleData = useMemo(() => {
+  const _radiusCircleData = useMemo(() => {
     if (!searchCenter || !showSearchCircle) return null;
 
     return createRadiusCircle(searchCenter, searchRadius);
   }, [searchCenter, searchRadius, showSearchCircle]);
 
   // Стили для круга радиуса
-  const circleLayerStyle: LayerProps = {
+  const _circleLayerStyle: LayerProps = {
     id: 'radius-circle-fill',
     type: 'fill',
     paint: {
@@ -196,7 +195,7 @@ export default function MarketplaceMapWithRadiusSearch({
     },
   };
 
-  const circleOutlineLayerStyle: LayerProps = {
+  const _circleOutlineLayerStyle: LayerProps = {
     id: 'radius-circle-outline',
     type: 'line',
     paint: {

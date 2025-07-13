@@ -4,7 +4,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { DistrictMapSelector } from './DistrictMapSelector';
-import type { components } from '@/types/generated/api';
+import type { components as _components } from '@/types/generated/api';
 import { ListingPopup } from '../GIS/Map/MapPopup';
 import type {
   MapMarkerData,
@@ -18,7 +18,23 @@ const InteractiveMap = dynamic(
   { ssr: false }
 );
 
-type SpatialSearchResult = components['schemas']['types.SpatialSearchResult'];
+// Временный интерфейс до исправления API типов
+interface SpatialSearchResult {
+  id: string;
+  title: string;
+  description?: string;
+  latitude: number;
+  longitude: number;
+  distance?: number;
+  category?: string;
+  price?: number;
+  currency?: string;
+  imageUrl?: string;
+  first_image_url?: string;
+  category_name?: string;
+  address?: string;
+  user_email?: string;
+}
 
 export default function DistrictMapSearch() {
   const t = useTranslations();
@@ -32,7 +48,7 @@ export default function DistrictMapSearch() {
 
   const [markers, setMarkers] = useState<MapMarkerData[]>([]);
   const [popup, setPopup] = useState<MapPopupData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, _setIsLoading] = useState(false);
 
   // Обработка результатов поиска
   const handleSearchResults = useCallback((results: SpatialSearchResult[]) => {
@@ -65,8 +81,8 @@ export default function DistrictMapSearch() {
       const [minLng, minLat, maxLng, maxLat] = bounds;
 
       // Рассчитываем центр и масштаб для отображения всего района
-      const centerLng = (minLng + maxLng) / 2;
-      const centerLat = (minLat + maxLat) / 2;
+      const _centerLng = (minLng + maxLng) / 2;
+      const _centerLat = (minLat + maxLat) / 2;
 
       // Добавляем небольшой отступ
       const padding = 0.01;
@@ -87,18 +103,22 @@ export default function DistrictMapSearch() {
   // Обработка клика по маркеру
   const handleMarkerClick = useCallback((marker: MapMarkerData) => {
     setPopup({
-      longitude: marker.longitude,
-      latitude: marker.latitude,
+      id: marker.id,
+      position: [marker.longitude, marker.latitude],
+      title: marker.title,
+      description: marker.description,
       content: (
         <ListingPopup
-          title={marker.title}
-          description={marker.description}
-          price={marker.data?.price}
-          currency={marker.data?.currency}
-          imageUrl={marker.data?.imageUrl}
-          link={`/listings/${marker.id}`}
-          categoryName={marker.data?.categoryName}
-          address={marker.data?.address}
+          listing={{
+            id: marker.id,
+            title: marker.title,
+            price: marker.data?.price || 0,
+            currency: marker.data?.currency || 'RSD',
+            imageUrl: marker.data?.imageUrl,
+            category: marker.data?.categoryName,
+          }}
+          position={[marker.longitude, marker.latitude]}
+          onClose={() => setPopup(null)}
         />
       ),
     });
@@ -108,13 +128,11 @@ export default function DistrictMapSearch() {
     <div className="relative h-screen w-full">
       {/* Карта на весь экран */}
       <InteractiveMap
-        ref={mapRef}
-        viewState={viewState}
+        initialViewState={viewState}
         onViewStateChange={setViewState}
         markers={markers}
         onMarkerClick={handleMarkerClick}
         popup={popup}
-        onPopupClose={() => setPopup(null)}
         style={{ width: '100%', height: '100%' }}
       />
 

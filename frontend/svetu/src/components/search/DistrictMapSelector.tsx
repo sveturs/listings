@@ -3,10 +3,38 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { DistrictSelector } from './DistrictSelector';
-import type { components } from '@/types/generated/api';
+import type { components as _components } from '@/types/generated/api';
 
-type District = components['schemas']['types.District'];
-type SpatialSearchResult = components['schemas']['types.SpatialSearchResult'];
+// Временные интерфейсы до исправления API типов
+interface District {
+  id: string;
+  name: string;
+  geometry?: any;
+  boundary?: {
+    coordinates: number[][][];
+  };
+  bounds?: [number, number, number, number];
+  population?: number;
+  area?: number;
+  area_km2?: number;
+}
+
+interface SpatialSearchResult {
+  id: string;
+  title: string;
+  description?: string;
+  latitude: number;
+  longitude: number;
+  distance?: number;
+  category?: string;
+  price?: number;
+  currency?: string;
+  imageUrl?: string;
+  first_image_url?: string;
+  category_name?: string;
+  address?: string;
+  user_email?: string;
+}
 
 interface DistrictMapSelectorProps {
   onSearchResults?: (results: SpatialSearchResult[]) => void;

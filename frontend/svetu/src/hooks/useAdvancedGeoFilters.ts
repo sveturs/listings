@@ -5,7 +5,7 @@ import { AdvancedGeoFilters } from '@/components/GIS/AdvancedGeoFilters';
 export function useAdvancedGeoFilters() {
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<AdvancedGeoFilters>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, _setIsLoading] = useState(false);
 
   // Загрузка фильтров из URL при инициализации
   useEffect(() => {
