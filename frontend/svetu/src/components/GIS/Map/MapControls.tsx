@@ -93,7 +93,7 @@ const MapControls: React.FC<MapControlsProps> = ({
     <>
       {/* Поисковая панель - скрыта на мобильном */}
       {!isMobile && (
-        <div className={`absolute top-4 left-4 right-4 z-10 ${className}`}>
+        <div className={`absolute top-4 z-10 w-full max-w-md ${className}`} style={{ right: 'calc(var(--spacing) * 12)' }}>
           <form onSubmit={handleSearch} className="relative">
             <div
               className={`relative transition-all duration-200 ${
