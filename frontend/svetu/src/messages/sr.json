@@ -2515,7 +2515,10 @@
       "notFound": "Adresa nije pronađena",
       "error": "Greška pri pretraživanju adrese",
       "byAddress": "Po adresi",
-      "byDistrict": "Po opštini"
+      "byDistrict": "Po opštini",
+      "searchByDistrict": "Pretraži po opštini",
+      "district": "Opština",
+      "allDistricts": "Sve opštine"
     },
     "filters": {
       "title": "Filteri",
