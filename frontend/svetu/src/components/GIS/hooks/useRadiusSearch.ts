@@ -72,6 +72,25 @@ export const useRadiusSearch = (): UseRadiusSearchResult => {
     async (
       params: RadiusSearchParams
     ): Promise<RadiusSearchResponse | null> => {
+      console.log('🔍 RADIUS SEARCH TRIGGERED:', params);
+      console.trace('🔍 RADIUS SEARCH CALL STACK');
+
+      // Проверяем, не активен ли поиск по району
+      if (
+        typeof window !== 'undefined' &&
+        (window.location.pathname.includes('/districts') ||
+          localStorage.getItem('blockRadiusSearch') === 'true' ||
+          (window as any).__BLOCK_RADIUS_SEARCH__)
+      ) {
+        console.log('🚫 RADIUS SEARCH BLOCKED: District search is active');
+        setLoading(false);
+        setResults([]); // Очищаем результаты
+        setTotal(0);
+        setSearchCenter(null);
+        setSearchRadius(0);
+        return null;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -172,6 +191,18 @@ export const useRadiusSearch = (): UseRadiusSearchResult => {
       radius: number,
       category?: string
     ): Promise<RadiusSearchResponse | null> => {
+      // Проверяем, не активен ли поиск по району
+      if (
+        typeof window !== 'undefined' &&
+        (window.location.pathname.includes('/districts') ||
+          localStorage.getItem('blockRadiusSearch') === 'true')
+      ) {
+        console.log(
+          '🚫 RADIUS SEARCH BY ADDRESS BLOCKED: District search is active'
+        );
+        return null;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -209,6 +240,18 @@ export const useRadiusSearch = (): UseRadiusSearchResult => {
       radius: number,
       category?: string
     ): Promise<RadiusSearchResponse | null> => {
+      // Проверяем, не активен ли поиск по району
+      if (
+        typeof window !== 'undefined' &&
+        (window.location.pathname.includes('/districts') ||
+          localStorage.getItem('blockRadiusSearch') === 'true')
+      ) {
+        console.log(
+          '🚫 RADIUS SEARCH BY LOCATION BLOCKED: District search is active'
+        );
+        return null;
+      }
+
       try {
         setLoading(true);
         setError(null);

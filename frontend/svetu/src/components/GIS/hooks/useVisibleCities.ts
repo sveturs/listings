@@ -155,11 +155,37 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
     []
   );
 
+  // Кэш для районов городов
+  const [cityDistrictsCache, setCityDistrictsCache] = useState<
+    Map<string, District[]>
+  >(new Map());
+  const [loadingCityDistricts, setLoadingCityDistricts] = useState<Set<string>>(
+    new Set()
+  );
+
   /**
    * Получение районов для конкретного города
    */
   const getDistrictsForCity = useCallback(
     async (cityId: string): Promise<District[]> => {
+      // Проверяем кэш
+      const cachedDistricts = cityDistrictsCache.get(cityId);
+      if (cachedDistricts) {
+        console.log('📋 Using cached districts for city:', cityId);
+        return cachedDistricts;
+      }
+
+      // Проверяем, не загружаются ли уже районы для этого города
+      if (loadingCityDistricts.has(cityId)) {
+        console.log('⏳ Districts already loading for city:', cityId);
+        return [];
+      }
+
+      console.log('📡 Fetching districts for city:', cityId);
+
+      // Добавляем в список загружаемых
+      setLoadingCityDistricts((prev) => new Set(prev).add(cityId));
+
       try {
         const response = await fetch(
           `/api/v1/gis/districts?city_id=${encodeURIComponent(cityId)}`
@@ -175,13 +201,27 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
           throw new Error(data.error || 'Failed to fetch districts');
         }
 
-        return data.data as District[];
+        const districts = data.data as District[];
+
+        // Сохраняем в кэш
+        setCityDistrictsCache((prev) => new Map(prev).set(cityId, districts));
+
+        return districts;
       } catch (err) {
-        console.error('Error fetching districts for city:', err);
+        console.error('❌ Error fetching districts for city:', err);
+        // Сохраняем пустой массив в кэш, чтобы не повторять неудачные запросы
+        setCityDistrictsCache((prev) => new Map(prev).set(cityId, []));
         throw err;
+      } finally {
+        // Убираем из списка загружаемых
+        setLoadingCityDistricts((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(cityId);
+          return newSet;
+        });
       }
     },
-    []
+    [cityDistrictsCache, loadingCityDistricts]
   );
 
   /**
@@ -242,10 +282,18 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
 
           // Если есть ближайший город с районами, загружаем их
           if (result.closest_city?.city.has_districts) {
-            const districts = await getDistrictsForCity(
-              result.closest_city.city.id
-            );
-            setAvailableDistricts(districts);
+            try {
+              const districts = await getDistrictsForCity(
+                result.closest_city.city.id
+              );
+              setAvailableDistricts(districts);
+            } catch (districtErr) {
+              console.error(
+                'Error loading districts for closest city:',
+                districtErr
+              );
+              setAvailableDistricts([]);
+            }
           } else {
             setAvailableDistricts([]);
           }
@@ -263,7 +311,7 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
     };
 
     updateVisibleCities();
-  }, [debouncedViewport, fetchVisibleCities, getDistrictsForCity]);
+  }, [debouncedViewport, fetchVisibleCities]);
 
   /**
    * Обновление viewport (вызывается из компонента карты)
@@ -295,10 +343,18 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
         setClosestCity(result.closest_city);
 
         if (result.closest_city?.city.has_districts) {
-          const districts = await getDistrictsForCity(
-            result.closest_city.city.id
-          );
-          setAvailableDistricts(districts);
+          try {
+            const districts = await getDistrictsForCity(
+              result.closest_city.city.id
+            );
+            setAvailableDistricts(districts);
+          } catch (districtErr) {
+            console.error(
+              'Error loading districts for closest city:',
+              districtErr
+            );
+            setAvailableDistricts([]);
+          }
         } else {
           setAvailableDistricts([]);
         }
@@ -309,14 +365,16 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
     } finally {
       setLoading(false);
     }
-  }, [currentViewport, fetchVisibleCities, getDistrictsForCity]);
+  }, [currentViewport, fetchVisibleCities]);
 
   /**
    * Вычисляемые свойства
    */
   const hasDistrictsInViewport = useMemo(() => {
-    return visibleCities.some(
-      (cityWithDistance) => cityWithDistance.city.has_districts
+    return (
+      visibleCities?.some(
+        (cityWithDistance) => cityWithDistance.city.has_districts
+      ) || false
     );
   }, [visibleCities]);
 

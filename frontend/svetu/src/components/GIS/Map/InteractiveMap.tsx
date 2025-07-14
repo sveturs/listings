@@ -126,15 +126,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   districtBoundary = null,
   onDistrictBoundaryChange: _onDistrictBoundaryChange,
 }) => {
-  console.log('[InteractiveMap] Received props:', {
-    markersCount: markers.length,
-    walkingMode,
-    walkingTime,
-    searchRadius,
-    showBuyerMarker,
-    buyerLocation,
-  });
-
   // Детекция fullscreen режима
   const isFullscreen = useFullscreen();
 
@@ -209,16 +200,71 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
       setUseOpenStreetMap(true);
       setMapStyle(openStreetMapStyle as any);
     } else {
-      console.info('Using Mapbox GL with provided token');
     }
   }, [accessToken, openStreetMapStyle]);
 
   // Обновление внутреннего состояния при изменении внешнего buyerLocation
   useEffect(() => {
-    if (buyerLocation) {
+    if (
+      buyerLocation &&
+      (buyerLocation.longitude !== internalBuyerLocation.longitude ||
+        buyerLocation.latitude !== internalBuyerLocation.latitude)
+    ) {
       setInternalBuyerLocation(buyerLocation);
     }
-  }, [buyerLocation]);
+  }, [buyerLocation?.longitude, buyerLocation?.latitude]);
+
+  // Логирование изменений границ района
+  useEffect(() => {
+    console.log('🗺️ District boundary in InteractiveMap:', districtBoundary);
+    if (districtBoundary) {
+      console.log('🗺️ District boundary type:', districtBoundary.type);
+      console.log('🗺️ District boundary geometry:', districtBoundary.geometry);
+      console.log(
+        '🗺️ District boundary geometry type:',
+        districtBoundary.geometry?.type
+      );
+      console.log(
+        '🗺️ District boundary coordinates length:',
+        districtBoundary.geometry?.coordinates?.length
+      );
+      if (districtBoundary.geometry?.coordinates?.[0]) {
+        console.log(
+          '🗺️ First coordinate ring length:',
+          districtBoundary.geometry.coordinates[0].length
+        );
+        console.log(
+          '🗺️ First few coordinates:',
+          districtBoundary.geometry.coordinates[0].slice(0, 3)
+        );
+        console.log(
+          '🗺️ Last few coordinates:',
+          districtBoundary.geometry.coordinates[0].slice(-3)
+        );
+
+        // Проверяем, что полигон замкнут (первая и последняя точки должны совпадать)
+        const coords = districtBoundary.geometry.coordinates[0];
+        const first = coords[0];
+        const last = coords[coords.length - 1];
+        const isClosed = first[0] === last[0] && first[1] === last[1];
+        console.log('🗺️ Polygon closed?', isClosed);
+
+        // Проверяем валидность координат
+        const hasValidCoords = coords.every(
+          (coord) =>
+            Array.isArray(coord) &&
+            coord.length === 2 &&
+            typeof coord[0] === 'number' &&
+            typeof coord[1] === 'number' &&
+            coord[0] >= -180 &&
+            coord[0] <= 180 &&
+            coord[1] >= -90 &&
+            coord[1] <= 90
+        );
+        console.log('🗺️ Valid coordinates?', hasValidCoords);
+      }
+    }
+  }, [districtBoundary]);
 
   const handleViewStateChange = useCallback(
     (newViewState: MapViewState) => {
@@ -399,20 +445,12 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     // Используем переданное время ходьбы или 10 минут по умолчанию
     const timeInMinutes = walkingTime || 10;
 
-    console.log('[InteractiveMap] Fetching isochrone from Mapbox API:', {
-      center,
-      timeInMinutes,
-      walkingMode,
-    });
-
     try {
       const isochrone = await getMapboxIsochrone({
         coordinates: center,
         minutes: timeInMinutes,
         profile: 'walking',
       });
-
-      console.log('[InteractiveMap] Received isochrone from API:', isochrone);
 
       // Обновляем изохрон только после успешной загрузки
       setIsochroneData(isochrone);
@@ -429,7 +467,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     showBuyerMarker,
     walkingMode,
     walkingTime,
-    internalBuyerLocation,
+    internalBuyerLocation.longitude,
+    internalBuyerLocation.latitude,
     onIsochroneChange,
   ]);
 
@@ -453,24 +492,15 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     if (walkingMode === 'walking') {
       // Используем загруженную изохрону или fallback на локальную генерацию
       if (isochroneData) {
-        console.log('[InteractiveMap] Using API isochrone data');
         return isochroneData;
       } else if (!isLoadingIsochrone) {
         // Если API недоступен и загрузка завершена, используем локальную генерацию
-        console.log(
-          '[InteractiveMap] Using local isochrone generation as fallback'
-        );
         const isochrone = generateStylizedIsochrone(center, 10); // 10 минут для пешехода
         return isochrone;
       }
       return null;
     } else {
       // Создаем обычный круг с помощью Turf.js
-      console.log('[InteractiveMap] Generating circle for radius mode:', {
-        center,
-        searchRadius,
-        walkingMode,
-      });
       const radiusInKm = searchRadius / 1000;
       const circleFeature = circle(center, radiusInKm, {
         steps: 64,
@@ -572,7 +602,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         logoPosition="bottom-left"
         style={{ width: '100%', height: '100%' }}
         onLoad={() => {
-          console.log('[InteractiveMap] Map loaded');
           setIsMapLoaded(true);
         }}
       >
@@ -601,31 +630,19 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           />
         )}
 
-        {/* Слой с радиусом поиска */}
-        {showBuyerMarker && radiusCircleGeoJSON && (
-          <>
-            {console.log('[InteractiveMap] Rendering radius layer:', {
-              showBuyerMarker,
-              hasData: !!radiusCircleGeoJSON,
-              walkingMode,
-              dataType: radiusCircleGeoJSON?.geometry?.type,
-            })}
-            <Source type="geojson" data={radiusCircleGeoJSON}>
-              <Layer {...radiusFillLayer} />
-              <Layer {...radiusLineLayer} />
-            </Source>
-          </>
-        )}
-
         {/* Границы выбранного района */}
         {districtBoundary && (
-          <Source type="geojson" data={districtBoundary}>
+          <Source
+            id="district-boundary-source"
+            type="geojson"
+            data={districtBoundary}
+          >
             <Layer
               id="district-boundary-fill"
               type="fill"
               paint={{
                 'fill-color': '#3b82f6',
-                'fill-opacity': 0.1,
+                'fill-opacity': 0.3,
               }}
             />
             <Layer
@@ -633,10 +650,18 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               type="line"
               paint={{
                 'line-color': '#3b82f6',
-                'line-width': 2,
-                'line-opacity': 0.8,
+                'line-width': 4,
+                'line-opacity': 1.0,
               }}
             />
+          </Source>
+        )}
+
+        {/* Слой с радиусом поиска */}
+        {showBuyerMarker && radiusCircleGeoJSON && (
+          <Source type="geojson" data={radiusCircleGeoJSON}>
+            <Layer {...radiusFillLayer} />
+            <Layer {...radiusLineLayer} />
           </Source>
         )}
 
@@ -703,26 +728,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             map={mapRef.current.getMap()}
             mode={walkingMode}
             onModeChange={(mode) => {
-              console.log(
-                '[InteractiveMap] Mode change from native control:',
-                mode
-              );
               onWalkingModeChange?.(mode);
             }}
             walkingTime={walkingTime}
             onWalkingTimeChange={(time) => {
-              console.log(
-                '[InteractiveMap] Walking time change from native control:',
-                time
-              );
               onWalkingTimeChange?.(time);
             }}
             searchRadius={searchRadius}
             onRadiusChange={(radius) => {
-              console.log(
-                '[InteractiveMap] Radius change from native control:',
-                radius
-              );
               onSearchRadiusChange?.(radius);
             }}
             isFullscreen={isFullscreen}
@@ -739,20 +752,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           isFullscreen={isFullscreen}
           isMobile={isMobile}
           onModeChange={(mode) => {
-            console.log('[InteractiveMap] Mode change from slider:', mode);
             onWalkingModeChange?.(mode);
           }}
           walkingTime={walkingTime}
           onWalkingTimeChange={(time) => {
-            console.log(
-              '[InteractiveMap] Walking time change from slider:',
-              time
-            );
             onWalkingTimeChange?.(time);
           }}
           searchRadius={searchRadius}
           onRadiusChange={(radius) => {
-            console.log('[InteractiveMap] Radius change from slider:', radius);
             onSearchRadiusChange?.(radius);
           }}
           translations={controlTranslations}

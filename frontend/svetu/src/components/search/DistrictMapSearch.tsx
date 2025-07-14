@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { DistrictMapSelector } from './DistrictMapSelector';
@@ -11,6 +11,11 @@ import type {
   MapPopupData,
   MapViewState,
 } from '@/components/GIS/types/gis';
+import type { Feature, Polygon } from 'geojson';
+import {
+  SearchModeProvider,
+  useSearchMode,
+} from '@/contexts/SearchModeContext';
 
 // Динамическая загрузка карты
 const InteractiveMap = dynamic(
@@ -36,9 +41,35 @@ interface SpatialSearchResult {
   user_email?: string;
 }
 
-export default function DistrictMapSearch() {
+function DistrictMapSearchInner() {
   const t = useTranslations();
   const mapRef = useRef<any>(null);
+  const { setSearchMode } = useSearchMode();
+
+  // Устанавливаем флаг блокировки радиусного поиска при монтировании компонента
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('blockRadiusSearch', 'true');
+      // Устанавливаем глобальный флаг
+      (window as any).__BLOCK_RADIUS_SEARCH__ = true;
+      (window as any).__DISTRICT_PAGE_ACTIVE__ = true;
+      console.log('🚫 Radius search blocked for district page (frontend)');
+
+      // ВРЕМЕННО ОТКЛЮЧЕНО: Перехватчики fetch и XHR
+      // Блокировка теперь работает на уровне backend
+      console.log('ℹ️ Frontend interceptors disabled - using backend blocking');
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('blockRadiusSearch');
+        delete (window as any).__BLOCK_RADIUS_SEARCH__;
+        delete (window as any).__DISTRICT_PAGE_ACTIVE__;
+        delete (window as any).__DISTRICT_MARKERS_SET__;
+        console.log('✅ Radius search unblocked');
+      }
+    };
+  }, []);
 
   const [viewState, setViewState] = useState<MapViewState>({
     longitude: 20.4649,
@@ -48,10 +79,19 @@ export default function DistrictMapSearch() {
 
   const [markers, setMarkers] = useState<MapMarkerData[]>([]);
   const [popup, setPopup] = useState<MapPopupData | null>(null);
-  const [isLoading, _setIsLoading] = useState(false);
+  const [_isLoading, _setIsLoading] = useState(false);
+  const [districtBoundary, setDistrictBoundary] =
+    useState<Feature<Polygon> | null>(null);
+  const [_isDistrictSelected, setIsDistrictSelected] = useState(false);
 
   // Обработка результатов поиска
   const handleSearchResults = useCallback((results: SpatialSearchResult[]) => {
+    console.log(
+      '🔍 District search results received:',
+      results.length,
+      'items'
+    );
+
     const newMarkers: MapMarkerData[] = results.map((result) => ({
       id: result.id,
       position: [result.longitude, result.latitude],
@@ -70,10 +110,20 @@ export default function DistrictMapSearch() {
       },
     }));
 
+    console.log('🗺️ Setting district markers:', newMarkers.length);
     setMarkers(newMarkers);
+    setIsDistrictSelected(results.length > 0); // Устанавливаем флаг, что район выбран
+
+    // Защита от очистки маркеров - устанавливаем флаг
+    if (typeof window !== 'undefined') {
+      (window as any).__DISTRICT_MARKERS_SET__ = true;
+      setTimeout(() => {
+        delete (window as any).__DISTRICT_MARKERS_SET__;
+      }, 2000); // Защита на 2 секунды
+    }
   }, []);
 
-  // Обработка изменения границ района
+  // Обработка изменения границ района (для изменения viewport)
   const handleDistrictBoundsChange = useCallback(
     (bounds: [number, number, number, number] | null) => {
       if (!bounds || !mapRef.current) return;
@@ -98,6 +148,19 @@ export default function DistrictMapSearch() {
       });
     },
     []
+  );
+
+  // Обработка изменения границ района (для отображения на карте)
+  const handleDistrictBoundaryChange = useCallback(
+    (boundary: Feature<Polygon> | null) => {
+      console.log('🗺️ District boundary changed:', boundary);
+      setDistrictBoundary(boundary);
+      setIsDistrictSelected(boundary !== null); // Устанавливаем флаг на основе наличия границ
+
+      // Устанавливаем режим поиска
+      setSearchMode(boundary !== null ? 'district' : 'none');
+    },
+    [setSearchMode]
   );
 
   // Обработка клика по маркеру
@@ -134,6 +197,7 @@ export default function DistrictMapSearch() {
         onMarkerClick={handleMarkerClick}
         popup={popup}
         style={{ width: '100%', height: '100%' }}
+        districtBoundary={districtBoundary}
       />
 
       {/* Панель выбора района */}
@@ -141,6 +205,7 @@ export default function DistrictMapSearch() {
         <DistrictMapSelector
           onSearchResults={handleSearchResults}
           onDistrictBoundsChange={handleDistrictBoundsChange}
+          onDistrictBoundaryChange={handleDistrictBoundaryChange}
           className="shadow-2xl"
         />
       </div>
@@ -155,11 +220,19 @@ export default function DistrictMapSearch() {
       )}
 
       {/* Индикатор загрузки */}
-      {isLoading && (
+      {_isLoading && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
           <div className="loading loading-spinner loading-lg"></div>
         </div>
       )}
     </div>
+  );
+}
+
+export default function DistrictMapSearch() {
+  return (
+    <SearchModeProvider>
+      <DistrictMapSearchInner />
+    </SearchModeProvider>
   );
 }

@@ -403,10 +403,10 @@ func (h *DistrictHandler) GetCities(c *fiber.Ctx) error {
 // @Router /api/v1/gis/cities/visible [post]
 func (h *DistrictHandler) GetVisibleCities(c *fiber.Ctx) error {
 	var req types.VisibleCitiesRequest
-	
+
 	// Логирование сырого тела запроса
 	fmt.Printf("DEBUG: GetVisibleCities raw body: %s\n", string(c.Body()))
-	
+
 	if err := c.BodyParser(&req); err != nil {
 		fmt.Printf("ERROR: Failed to parse request body: %+v\n", err)
 		return utils.ErrorResponse(c, http.StatusBadRequest, "api.invalidRequestBody")

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import WalkingAccessibilityControl from '../Map/WalkingAccessibilityControl';
+import { DistrictMapSelector } from '@/components/search';
+import type { Feature, Polygon } from 'geojson';
+import type { MapBounds } from '@/components/GIS/types/gis';
 
 interface MapFilters {
   category: string;
@@ -21,11 +24,26 @@ interface MobileFiltersDrawerProps {
   onSearch: (query: string) => void;
   isSearching?: boolean;
   markersCount: number;
+  // Props для DistrictMapSelector
+  enableDistrictSearch?: boolean;
+  onDistrictSearchResults?: (results: any[]) => void;
+  onDistrictBoundsChange?: (
+    bounds: [number, number, number, number] | null
+  ) => void;
+  onDistrictBoundaryChange?: (boundary: Feature<Polygon> | null) => void;
+  currentViewport?: {
+    bounds: MapBounds;
+    center: { lat: number; lng: number };
+  } | null;
+  searchType?: 'address' | 'district';
+  onSearchTypeChange?: (type: 'address' | 'district') => void;
   translations: {
     title: string;
     search: {
       address: string;
       placeholder: string;
+      byAddress?: string;
+      byDistrict?: string;
     };
     filters: {
       category: string;
@@ -63,6 +81,13 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
   onSearch,
   isSearching: _isSearching,
   markersCount,
+  enableDistrictSearch: _enableDistrictSearch,
+  onDistrictSearchResults,
+  onDistrictBoundsChange,
+  onDistrictBoundaryChange,
+  currentViewport,
+  searchType = 'address',
+  onSearchTypeChange,
   translations: t,
 }) => {
   const [localFilters, setLocalFilters] = useState<MapFilters>({
@@ -164,17 +189,58 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
 
           {/* Содержимое */}
           <div className="flex-1 overflow-y-auto overscroll-contain">
-            {/* Поиск по адресу */}
+            {/* Переключатель типа поиска */}
             <div className="p-4 border-b border-base-300">
-              <label className="block text-sm font-medium text-base-content mb-2">
-                {t.search.address}
-              </label>
-              <SearchBar
-                initialQuery={localSearchQuery}
-                onSearch={(query) => setLocalSearchQuery(query)}
-                placeholder={t.search.placeholder}
-                className="w-full"
-              />
+              <div className="flex gap-2 p-1 bg-base-200 rounded-lg mb-4">
+                <button
+                  type="button"
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    searchType === 'address'
+                      ? 'bg-primary text-primary-content'
+                      : 'bg-base-200 text-base-content hover:bg-base-300'
+                  }`}
+                  onClick={() => onSearchTypeChange?.('address')}
+                >
+                  {t.search.byAddress || 'По адресу'}
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    searchType === 'district'
+                      ? 'bg-primary text-primary-content'
+                      : 'bg-base-200 text-base-content hover:bg-base-300'
+                  }`}
+                  onClick={() => onSearchTypeChange?.('district')}
+                >
+                  {t.search.byDistrict || 'По районам'}
+                </button>
+              </div>
+
+              {/* Поиск по адресу */}
+              {searchType === 'address' && (
+                <>
+                  <label className="block text-sm font-medium text-base-content mb-2">
+                    {t.search.address}
+                  </label>
+                  <SearchBar
+                    initialQuery={localSearchQuery}
+                    onSearch={(query) => setLocalSearchQuery(query)}
+                    placeholder={t.search.placeholder}
+                    className="w-full"
+                  />
+                </>
+              )}
+
+              {/* Поиск по районам */}
+              {searchType === 'district' && (
+                <DistrictMapSelector
+                  onSearchResults={onDistrictSearchResults}
+                  onDistrictBoundsChange={onDistrictBoundsChange}
+                  onDistrictBoundaryChange={onDistrictBoundaryChange}
+                  currentViewport={currentViewport}
+                  className="w-full"
+                />
+              )}
             </div>
 
             {/* Фильтры */}

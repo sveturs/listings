@@ -1,0 +1,85 @@
+<\!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test District Map</title>
+    <script>
+      // Эмуляция window для проверки функций
+      window.checkDistrictViewportOverlap = function () {
+        console.log('checkDistrictViewportOverlap called');
+      };
+
+      // Открытие страницы с картой
+      function openMap() {
+        window.open('http://localhost:3001/map', '_blank');
+      }
+
+      // Тестирование переключения режимов
+      function testDistrictToggle() {
+        const iframe = document.getElementById('mapFrame');
+        if (iframe && iframe.contentWindow) {
+          // Попытка найти переключатель в iframe
+          const doc = iframe.contentDocument || iframe.contentWindow.document;
+          const selectors = [
+            'button:has-text("By district")',
+            'label:has-text("By district")',
+            '[aria-label*="district"]',
+            '.toggle-button:has-text("district")',
+            'input[type="checkbox"] + label:has-text("district")',
+            'div:has-text("By district")',
+          ];
+
+          for (const selector of selectors) {
+            try {
+              const element = doc.querySelector(selector);
+              if (element) {
+                console.log(`Found element with selector: ${selector}`);
+                element.click();
+                return;
+              }
+            } catch (e) {
+              console.log(`Error with selector ${selector}:`, e);
+            }
+          }
+          console.log('No district toggle found');
+        }
+      }
+    </script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      button {
+        margin: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      #mapFrame {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #ccc;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Test District Map Functionality</h1>
+
+    <button onclick="openMap()">Open Map in New Tab</button>
+    <button onclick="testDistrictToggle()">Test District Toggle</button>
+
+    <h2>Map Preview:</h2>
+    <iframe id="mapFrame" src="http://localhost:3001/map"></iframe>
+
+    <h2>Instructions:</h2>
+    <ol>
+      <li>Click "Open Map in New Tab" to open the map page</li>
+      <li>Look for a toggle or switch labeled "By district"</li>
+      <li>Click on it to switch between normal and district view</li>
+      <li>Check if the map visualization changes</li>
+    </ol>
+  </body>
+</html>
