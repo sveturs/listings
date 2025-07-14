@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
 import MarkerClickPopup from '@/components/GIS/Map/MarkerClickPopup';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
-import { MapViewState, MapMarkerData } from '@/components/GIS/types/gis';
+import { MapViewState, MapMarkerData, MapBounds } from '@/components/GIS/types/gis';
 import { useDebounce } from '@/hooks/useDebounce';
 import { SearchBar } from '@/components/SearchBar';
 import { useRouter } from '@/i18n/routing';
@@ -53,18 +53,18 @@ const MapPage: React.FC = () => {
   // Функция для получения начальных значений из URL
   const getInitialFiltersFromURL = (): MapFilters => {
     return {
-      category: searchParams.get('category') || '',
-      priceFrom: parseInt(searchParams.get('priceFrom') || '0') || 0,
-      priceTo: parseInt(searchParams.get('priceTo') || '0') || 0,
-      radius: parseInt(searchParams.get('radius') || '5000') || 5000,
+      category: searchParams?.get('category') || '',
+      priceFrom: parseInt(searchParams?.get('priceFrom') || '0') || 0,
+      priceTo: parseInt(searchParams?.get('priceTo') || '0') || 0,
+      radius: parseInt(searchParams?.get('radius') || '5000') || 5000,
     };
   };
 
   // Функция для получения начального состояния карты из URL
   const getInitialViewStateFromURL = (): MapViewState => {
-    const lat = parseFloat(searchParams.get('lat') || '44.8176');
-    const lng = parseFloat(searchParams.get('lng') || '20.4649');
-    const zoom = parseFloat(searchParams.get('zoom') || '10');
+    const lat = parseFloat(searchParams?.get('lat') || '44.8176');
+    const lng = parseFloat(searchParams?.get('lng') || '20.4649');
+    const zoom = parseFloat(searchParams?.get('zoom') || '10');
 
     return {
       longitude: lng,
@@ -95,7 +95,7 @@ const MapPage: React.FC = () => {
   );
 
   // Поиск
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') || '');
   const [isSearchFromUser, setIsSearchFromUser] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
@@ -124,6 +124,10 @@ const MapPage: React.FC = () => {
 
   // Состояние для текущего изохрона
   const [currentIsochrone, setCurrentIsochrone] =
+    useState<Feature<Polygon> | null>(null);
+
+  // Состояние для границ районов
+  const [districtBoundary, setDistrictBoundary] =
     useState<Feature<Polygon> | null>(null);
 
   // Состояние для типа поиска (адрес или район)
@@ -530,10 +534,39 @@ const MapPage: React.FC = () => {
     [viewState]
   );
 
+  // Текущий viewport для передачи в DistrictMapSelector
+  const [currentMapViewport, setCurrentMapViewport] = useState<{
+    bounds: MapBounds;
+    center: { lat: number; lng: number };
+  } | null>(null);
+
+  // Обработчик изменения viewport для DistrictMapSelector
+  const handleViewportChange = useCallback(
+    (bounds: MapBounds, center: { lat: number; lng: number }) => {
+      setCurrentMapViewport({ bounds, center });
+    },
+    []
+  );
+
   // Обработка изменения области просмотра
   const handleViewStateChange = useCallback((newViewState: MapViewState) => {
     setViewState(newViewState);
-  }, []);
+    
+    // Вычисляем bounds из viewport - это нужно для DistrictMapSelector
+    const zoomFactor = Math.pow(2, 14 - newViewState.zoom) * 0.01; // Приблизительный расчет
+    const bounds: MapBounds = {
+      north: newViewState.latitude + zoomFactor,
+      south: newViewState.latitude - zoomFactor,
+      east: newViewState.longitude + zoomFactor,
+      west: newViewState.longitude - zoomFactor,
+    };
+    
+    // Обновляем viewport для DistrictMapSelector независимо от режима поиска
+    handleViewportChange(bounds, {
+      lat: newViewState.latitude,
+      lng: newViewState.longitude,
+    });
+  }, [handleViewportChange]);
 
   // Обработчик изменения позиции покупателя
   const handleBuyerLocationChange = useCallback(
@@ -638,6 +671,9 @@ const MapPage: React.FC = () => {
               <DistrictMapSelector
                 onSearchResults={handleDistrictSearchResults}
                 onDistrictBoundsChange={handleDistrictBoundsChange}
+                onDistrictBoundaryChange={setDistrictBoundary}
+                onViewportChange={handleViewportChange}
+                currentViewport={currentMapViewport}
                 className="w-full"
               />
             )}
@@ -864,6 +900,7 @@ const MapPage: React.FC = () => {
             onSearchRadiusChange={(radius) => handleFiltersChange({ radius })}
             useNativeControl={true} // Используем нативный контрол по умолчанию
             controlTranslations={controlTranslations}
+            districtBoundary={districtBoundary}
           />
 
           {/* Расширенный popup при клике */}

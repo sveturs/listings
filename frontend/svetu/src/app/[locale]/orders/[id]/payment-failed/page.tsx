@@ -18,8 +18,8 @@ export default function OrderPaymentFailedPage({ params }: Props) {
   const { isAuthenticated } = useAuth();
   const searchParams = useSearchParams();
 
-  const sessionId = searchParams.get('session_id');
-  const reason = searchParams.get('reason') || 'unknown';
+  const sessionId = searchParams?.get('session_id');
+  const reason = searchParams?.get('reason') || 'unknown';
 
   useEffect(() => {
     if (!isAuthenticated) {

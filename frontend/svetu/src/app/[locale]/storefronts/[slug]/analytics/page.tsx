@@ -56,7 +56,7 @@ export default function StorefrontAnalyticsPage() {
   const router = useRouter();
   const params = useParams();
   const dispatch = useAppDispatch();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { user } = useAuth();
 
   const { currentStorefront, isLoading, analytics, isLoadingAnalytics } =

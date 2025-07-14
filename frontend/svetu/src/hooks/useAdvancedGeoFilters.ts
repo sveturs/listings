@@ -12,7 +12,7 @@ export function useAdvancedGeoFilters() {
     const loadedFilters: AdvancedGeoFilters = {};
 
     // Travel Time Filter
-    const travelTime = searchParams.get('travel_time');
+    const travelTime = searchParams?.get('travel_time');
     if (travelTime) {
       try {
         const [lat, lng, minutes, mode] = travelTime.split(',');
@@ -28,7 +28,7 @@ export function useAdvancedGeoFilters() {
     }
 
     // POI Filter
-    const poiFilter = searchParams.get('poi');
+    const poiFilter = searchParams?.get('poi');
     if (poiFilter) {
       try {
         const [type, distance, minCount] = poiFilter.split(',');
@@ -43,7 +43,7 @@ export function useAdvancedGeoFilters() {
     }
 
     // Density Filter
-    const densityFilter = searchParams.get('density');
+    const densityFilter = searchParams?.get('density');
     if (densityFilter) {
       try {
         const parts = densityFilter.split(',');
@@ -63,7 +63,7 @@ export function useAdvancedGeoFilters() {
   // Обновление URL при изменении фильтров
   const updateURL = useCallback(
     (newFilters: AdvancedGeoFilters) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParams?.toString() || '');
 
       // Travel Time
       if (newFilters.travelTime) {

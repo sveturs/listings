@@ -64,10 +64,15 @@ func (h *Handler) RegisterRoutes(app *fiber.App, authMiddleware *middleware.Midd
 	// ========== Публичные маршруты районов и муниципалитетов (Phase 3) ==========
 	gis.Get("/districts", h.districtHandler.GetDistricts)
 	gis.Get("/districts/:id", h.districtHandler.GetDistrictByID)
+	gis.Get("/districts/:id/boundary", h.districtHandler.GetDistrictBoundary)
 	gis.Get("/municipalities", h.districtHandler.GetMunicipalities)
 	gis.Get("/municipalities/:id", h.districtHandler.GetMunicipalityByID)
 	gis.Get("/search/by-district/:district_id", h.districtHandler.SearchByDistrict)
 	gis.Get("/search/by-municipality/:municipality_id", h.districtHandler.SearchByMunicipality)
+
+	// ========== Публичные маршруты городов (Phase 2.5) ==========
+	gis.Get("/cities", h.districtHandler.GetCities)
+	gis.Post("/cities/visible", h.districtHandler.GetVisibleCities)
 
 	// ========== Расширенные геофильтры (Phase 4) ==========
 	advanced := gis.Group("/advanced")

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"math"
 	"time"
 )
@@ -25,7 +26,6 @@ type GeoListing struct {
 	Title       string    `json:"title"`
 	Description string    `json:"description,omitempty"`
 	Price       float64   `json:"price"`
-	Currency    string    `json:"currency"`
 	Category    string    `json:"category"`
 	Location    Point     `json:"location"`
 	Address     string    `json:"address,omitempty"`
@@ -46,7 +46,6 @@ type SearchParams struct {
 	CategoryIDs []int    `json:"category_ids,omitempty"`
 	MinPrice    *float64 `json:"min_price,omitempty"`
 	MaxPrice    *float64 `json:"max_price,omitempty"`
-	Currency    string   `json:"currency,omitempty"`
 	SearchQuery string   `json:"q,omitempty"`          // Текстовый поиск
 	SortBy      string   `json:"sort_by,omitempty"`    // distance, price, created_at
 	SortOrder   string   `json:"sort_order,omitempty"` // asc, desc
@@ -333,7 +332,6 @@ type RadiusFilters struct {
 	CategoryIDs []int    `json:"category_ids,omitempty"`
 	MinPrice    *float64 `json:"min_price,omitempty"`
 	MaxPrice    *float64 `json:"max_price,omitempty"`
-	Currency    string   `json:"currency,omitempty"`
 	SearchQuery string   `json:"q,omitempty"`          // Текстовый поиск
 	UserID      *int     `json:"user_id,omitempty"`    // Фильтр по пользователю
 	Status      string   `json:"status,omitempty"`     // Фильтр по статусу
@@ -389,7 +387,6 @@ func (r *RadiusSearchRequest) ToSearchParams() SearchParams {
 		params.CategoryIDs = r.Filters.CategoryIDs
 		params.MinPrice = r.Filters.MinPrice
 		params.MaxPrice = r.Filters.MaxPrice
-		params.Currency = r.Filters.Currency
 		params.SearchQuery = r.Filters.SearchQuery
 		params.UserID = r.Filters.UserID
 		params.Status = r.Filters.Status
@@ -408,4 +405,92 @@ func (r *RadiusSearchRequest) ToSearchParams() SearchParams {
 func cosine(degrees float64) float64 {
 	radians := degrees * math.Pi / 180
 	return math.Cos(radians)
+}
+
+// ========== PHASE 2.5: Типы для городов и контекстно-зависимого поиска ==========
+
+// City представляет город с районами
+type City struct {
+	ID           string    `json:"id" db:"id"`
+	Name         string    `json:"name" db:"name"`
+	Slug         string    `json:"slug" db:"slug"`
+	CountryCode  string    `json:"country_code" db:"country_code"`
+	CenterPoint  *Point    `json:"center_point,omitempty" db:"-"`
+	Boundary     *Polygon  `json:"boundary,omitempty" db:"-"`
+	Population   *int      `json:"population,omitempty" db:"population"`
+	AreaKm2      *float64  `json:"area_km2,omitempty" db:"area_km2"`
+	PostalCodes  []string  `json:"postal_codes,omitempty" db:"postal_codes"`
+	HasDistricts bool      `json:"has_districts" db:"has_districts"`
+	Priority     int       `json:"priority" db:"priority"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// CitySearchParams параметры поиска городов
+type CitySearchParams struct {
+	Bounds       *Bounds `json:"bounds,omitempty"`
+	CountryCode  string  `json:"country_code,omitempty"`
+	HasDistricts *bool   `json:"has_districts,omitempty"`
+	SearchQuery  string  `json:"q,omitempty"`
+	Limit        int     `json:"limit,omitempty"`
+	Offset       int     `json:"offset,omitempty"`
+}
+
+// VisibleCitiesRequest запрос для определения видимых городов
+type VisibleCitiesRequest struct {
+	Bounds *Bounds `json:"bounds" validate:"required"`
+	Center *Point  `json:"center" validate:"required"`
+}
+
+// VisibleCitiesResponse ответ с видимыми городами
+type VisibleCitiesResponse struct {
+	VisibleCities []CityWithDistance `json:"visible_cities"`
+	ClosestCity   *CityWithDistance  `json:"closest_city,omitempty"`
+}
+
+// CityWithDistance город с расстоянием до центра карты
+type CityWithDistance struct {
+	City     City    `json:"city"`
+	Distance float64 `json:"distance"` // расстояние в метрах
+}
+
+// DistrictBoundaryResponse ответ с границами района
+type DistrictBoundaryResponse struct {
+	ID       string          `json:"id"`
+	Name     string          `json:"name"`
+	CityID   *string         `json:"city_id,omitempty"`
+	Boundary json.RawMessage `json:"boundary"` // GeoJSON polygon as JSON object
+}
+
+// Distance вычисляет расстояние между двумя точками в метрах
+func (p Point) Distance(other Point) float64 {
+	const R = 6371000 // радиус Земли в метрах
+
+	lat1Rad := p.Lat * math.Pi / 180
+	lat2Rad := other.Lat * math.Pi / 180
+	deltaLatRad := (other.Lat - p.Lat) * math.Pi / 180
+	deltaLngRad := (other.Lng - p.Lng) * math.Pi / 180
+
+	a := math.Sin(deltaLatRad/2)*math.Sin(deltaLatRad/2) +
+		math.Cos(lat1Rad)*math.Cos(lat2Rad)*
+			math.Sin(deltaLngRad/2)*math.Sin(deltaLngRad/2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+
+	return R * c
+}
+
+// CalculateDistance вычисляет расстояние до города
+func (c City) CalculateDistance(center Point) float64 {
+	return c.CenterPoint.Distance(center)
+}
+
+// Validate валидация параметров поиска видимых городов
+func (v *VisibleCitiesRequest) Validate() error {
+	if v.Bounds == nil {
+		return ErrMissingBounds
+	}
+	if v.Center == nil {
+		return ErrMissingCenter
+	}
+	return v.Bounds.Validate()
 }

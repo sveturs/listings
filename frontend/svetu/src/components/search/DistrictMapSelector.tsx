@@ -1,9 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { DistrictSelector } from './DistrictSelector';
+import {
+  useVisibleCities,
+  formatDistance,
+} from '@/components/GIS/hooks/useVisibleCities';
+import type { MapBounds } from '@/components/GIS/types/gis';
 import type { components as _components } from '@/types/generated/api';
+import type { Feature, Polygon } from 'geojson';
 
 // Временные интерфейсы до исправления API типов
 interface District {
@@ -41,12 +47,24 @@ interface DistrictMapSelectorProps {
   onDistrictBoundsChange?: (
     bounds: [number, number, number, number] | null
   ) => void;
+  onDistrictBoundaryChange?: (boundary: Feature<Polygon> | null) => void;
+  onViewportChange?: (
+    bounds: MapBounds,
+    center: { lat: number; lng: number }
+  ) => void;
+  currentViewport?: {
+    bounds: MapBounds;
+    center: { lat: number; lng: number };
+  } | null;
   className?: string;
 }
 
 export function DistrictMapSelector({
   onSearchResults,
   onDistrictBoundsChange,
+  onDistrictBoundaryChange,
+  onViewportChange,
+  currentViewport,
   className = '',
 }: DistrictMapSelectorProps) {
   const t = useTranslations('search');
@@ -58,6 +76,35 @@ export function DistrictMapSelector({
   >(null);
   const [isSearching, setIsSearching] = useState(false);
   const [currentDistrict, setCurrentDistrict] = useState<District | null>(null);
+
+  // Используем новый хук для отслеживания видимых городов
+  const {
+    visibleCities,
+    closestCity,
+    loading: citiesLoading,
+    error: citiesError,
+    updateViewport,
+    refreshCities,
+    shouldShowDistrictSearch,
+    hasDistrictsInViewport,
+  } = useVisibleCities();
+
+  // Обработчик изменения viewport карты
+  const _handleViewportChange = useCallback(
+    (bounds: MapBounds, center: { lat: number; lng: number }) => {
+      updateViewport(bounds, center);
+      onViewportChange?.(bounds, center);
+    },
+    [updateViewport, onViewportChange]
+  );
+
+  // Отслеживание изменений viewport от MapPage
+  useEffect(() => {
+    if (currentViewport) {
+      console.log('[DistrictMapSelector] Updating viewport from MapPage:', currentViewport);
+      updateViewport(currentViewport.bounds, currentViewport.center);
+    }
+  }, [currentViewport, updateViewport]);
 
   // Загрузка информации о выбранном районе
   useEffect(() => {
@@ -139,26 +186,151 @@ export function DistrictMapSelector({
     searchListings();
   }, [selectedDistrictId, selectedMunicipalityId, onSearchResults]);
 
-  const handleDistrictChange = (districtId: string | null) => {
-    setSelectedDistrictId(districtId);
-    setSelectedMunicipalityId(null);
-  };
+  /**
+   * Загружает границы района в формате GeoJSON
+   */
+  const loadDistrictBoundary = useCallback(
+    async (districtId: string): Promise<Feature<Polygon> | null> => {
+      try {
+        const response = await fetch(
+          `/api/v1/gis/districts/${encodeURIComponent(districtId)}/boundary`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success || !data.data) {
+          throw new Error(data.error || 'Failed to fetch district boundary');
+        }
+
+        // data.data содержит объект с полем boundary
+        const boundaryData = data.data.boundary;
+        
+        // Если boundary уже является объектом, используем его напрямую
+        // Если это строка, парсим её
+        const geoJson = typeof boundaryData === 'string' 
+          ? JSON.parse(boundaryData) 
+          : boundaryData;
+
+        // Если это просто Polygon, оборачиваем в Feature
+        if (geoJson.type === 'Polygon') {
+          return {
+            type: 'Feature',
+            geometry: geoJson,
+            properties: {
+              id: data.data.id,
+              name: data.data.name
+            }
+          } as Feature<Polygon>;
+        }
+
+        return geoJson as Feature<Polygon>;
+      } catch (error) {
+        console.error('Error loading district boundary:', error);
+        return null;
+      }
+    },
+    []
+  );
+
+  const handleDistrictChange = useCallback(
+    async (districtId: string | null) => {
+      setSelectedDistrictId(districtId);
+      setSelectedMunicipalityId(null);
+
+      // Загружаем границы выбранного района
+      if (districtId && onDistrictBoundaryChange) {
+        const boundary = await loadDistrictBoundary(districtId);
+        onDistrictBoundaryChange(boundary);
+      } else if (onDistrictBoundaryChange) {
+        // Убираем границы если район не выбран
+        onDistrictBoundaryChange(null);
+      }
+    },
+    [loadDistrictBoundary, onDistrictBoundaryChange]
+  );
 
   const handleMunicipalityChange = (municipalityId: string | null) => {
     setSelectedMunicipalityId(municipalityId);
   };
 
+  // Не показываем компонент если нет городов с районами в viewport
+  if (!shouldShowDistrictSearch && !citiesLoading) {
+    return null;
+  }
+
   return (
     <div className={`card bg-base-100 shadow-lg ${className}`}>
       <div className="card-body">
-        <h3 className="card-title text-lg">{t('searchByDistrict')}</h3>
+        {/* Заголовок с информацией о текущем городе */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="card-title text-lg">
+            {closestCity ? (
+              <>
+                {t('searchByDistrict')} — {closestCity.city.name}
+                <div className="badge badge-outline badge-sm ml-2">
+                  {formatDistance(closestCity.distance)}
+                </div>
+              </>
+            ) : (
+              t('searchByDistrict')
+            )}
+          </h3>
 
-        <DistrictSelector
-          selectedDistrictId={selectedDistrictId || undefined}
-          selectedMunicipalityId={selectedMunicipalityId || undefined}
-          onDistrictChange={handleDistrictChange}
-          onMunicipalityChange={handleMunicipalityChange}
-        />
+          {visibleCities.length > 1 && (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={refreshCities}
+              disabled={citiesLoading}
+            >
+              {citiesLoading ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : (
+                '🔄'
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Информация о видимых городах */}
+        {visibleCities.length > 0 && (
+          <div className="alert alert-info mb-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="stroke-current shrink-0 w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <span>
+              {hasDistrictsInViewport
+                ? t('citiesWithDistrictsFound', {
+                    count: visibleCities.filter((c) => c.city.has_districts)
+                      .length,
+                  })
+                : t('noCitiesWithDistricts')}
+            </span>
+          </div>
+        )}
+
+        {/* Селектор районов - показываем только если есть доступные районы */}
+        {shouldShowDistrictSearch && (
+          <DistrictSelector
+            selectedDistrictId={selectedDistrictId || undefined}
+            selectedMunicipalityId={selectedMunicipalityId || undefined}
+            onDistrictChange={handleDistrictChange}
+            onMunicipalityChange={handleMunicipalityChange}
+          />
+        )}
 
         {/* Информация о выбранном районе */}
         {currentDistrict && (
@@ -182,11 +354,33 @@ export function DistrictMapSelector({
           </div>
         )}
 
-        {/* Индикатор поиска */}
-        {isSearching && (
+        {/* Индикаторы загрузки */}
+        {(isSearching || citiesLoading) && (
           <div className="flex items-center justify-center mt-4">
             <span className="loading loading-spinner loading-md"></span>
-            <span className="ml-2">{t('searching')}</span>
+            <span className="ml-2">
+              {citiesLoading ? t('loadingCities') : t('searching')}
+            </span>
+          </div>
+        )}
+
+        {/* Ошибки */}
+        {citiesError && (
+          <div className="alert alert-error mt-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>{citiesError}</span>
           </div>
         )}
       </div>

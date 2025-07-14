@@ -362,6 +362,9 @@
     "searchHistory": "Search History",
     "clearHistory": "Clear History",
     "popularSearches": "Popular Searches",
+    "loadingCities": "Loading cities...",
+    "citiesWithDistrictsFound": "Cities with districts found: {count}",
+    "noCitiesWithDistricts": "No cities with districts in this region",
     "search": {
       "searchHistory": "Search History",
       "clearHistory": "Clear History",

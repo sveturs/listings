@@ -13,8 +13,8 @@ export default function ProductImportPage() {
   const { currentStorefront, isLoading, error, loadStorefrontBySlug } =
     useStorefronts();
 
-  const slug = params.slug as string;
-  const locale = params.locale as string;
+  const slug = params?.slug as string;
+  const locale = params?.locale as string;
 
   useEffect(() => {
     if (slug) {

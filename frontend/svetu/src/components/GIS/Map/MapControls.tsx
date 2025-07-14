@@ -18,7 +18,7 @@ interface MapControlsProps {
 const MapControls: React.FC<MapControlsProps> = ({
   config = {},
   onStyleChange,
-  className = '',
+  className: _className = '',
   isMobile = false,
   useOpenStreetMap = false,
 }) => {

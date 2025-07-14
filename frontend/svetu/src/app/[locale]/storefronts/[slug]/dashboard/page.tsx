@@ -30,7 +30,7 @@ export default function StorefrontDashboardPage() {
   const router = useRouter();
   const params = useParams();
   const dispatch = useAppDispatch();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { user } = useAuth();
 
   const { currentStorefront, isLoading } = useAppSelector(

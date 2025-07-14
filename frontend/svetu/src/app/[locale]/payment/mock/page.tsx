@@ -15,12 +15,12 @@ export default function MockPaymentPage() {
   const searchParams = useSearchParams();
   const paymentService = usePaymentService();
 
-  const paymentId = searchParams.get('id');
-  const sessionId = searchParams.get('session_id');
-  const amount = parseFloat(searchParams.get('amount') || '0');
-  const currency = searchParams.get('currency') || '';
-  const orderId = searchParams.get('order_id');
-  const requires3DS = searchParams.get('require3ds') === 'true';
+  const paymentId = searchParams?.get('id');
+  const sessionId = searchParams?.get('session_id');
+  const amount = parseFloat(searchParams?.get('amount') || '0');
+  const currency = searchParams?.get('currency') || '';
+  const orderId = searchParams?.get('order_id');
+  const requires3DS = searchParams?.get('require3ds') === 'true';
 
   const [step, setStep] = useState<'card' | '3ds' | 'processing'>('card');
   const [paymentData, setPaymentData] = useState<any>(null);

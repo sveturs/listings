@@ -44,10 +44,11 @@ type Polygon struct {
 
 // DistrictSearchParams represents search parameters for districts
 type DistrictSearchParams struct {
-	CountryCode string     `json:"country_code,omitempty"`
-	CityID      *uuid.UUID `json:"city_id,omitempty"`
-	Name        string     `json:"name,omitempty"`
-	Point       *Point     `json:"point,omitempty"` // Find district containing this point
+	CountryCode string      `json:"country_code,omitempty"`
+	CityID      *uuid.UUID  `json:"city_id,omitempty"`
+	CityIDs     []uuid.UUID `json:"city_ids,omitempty"` // Filter by multiple cities
+	Name        string      `json:"name,omitempty"`
+	Point       *Point      `json:"point,omitempty"` // Find district containing this point
 }
 
 // MunicipalitySearchParams represents search parameters for municipalities

@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"backend/internal/proj/gis/types"
 
@@ -50,6 +52,16 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.Dist
 		args = append(args, *params.CityID)
 	}
 
+	if len(params.CityIDs) > 0 {
+		placeholders := make([]string, len(params.CityIDs))
+		for i, cityID := range params.CityIDs {
+			argCount++
+			placeholders[i] = fmt.Sprintf("$%d", argCount)
+			args = append(args, cityID)
+		}
+		query += fmt.Sprintf(" AND city_id IN (%s)", strings.Join(placeholders, ","))
+	}
+
 	if params.Name != "" {
 		argCount++
 		query += fmt.Sprintf(" AND name ILIKE $%d", argCount)
@@ -87,11 +99,19 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.Dist
 		}
 
 		// Parse geometry JSON
-		if boundaryJSON.Valid {
-			// TODO: Parse GeoJSON to Polygon type
+		if boundaryJSON.Valid && boundaryJSON.String != "" {
+			boundary, err := parsePolygonFromGeoJSON(boundaryJSON.String)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse boundary for district %s", d.ID)
+			}
+			d.Boundary = boundary
 		}
-		if centerJSON.Valid {
-			// TODO: Parse GeoJSON to Point type
+		if centerJSON.Valid && centerJSON.String != "" {
+			centerPoint, err := parsePointFromGeoJSON(centerJSON.String)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse center point for district %s", d.ID)
+			}
+			d.CenterPoint = centerPoint
 		}
 
 		districts = append(districts, d)
@@ -130,11 +150,19 @@ func (r *DistrictRepository) GetDistrictByID(ctx context.Context, id uuid.UUID) 
 	}
 
 	// Parse geometry JSON
-	if boundaryJSON.Valid {
-		// TODO: Parse GeoJSON to Polygon type
+	if boundaryJSON.Valid && boundaryJSON.String != "" {
+		boundary, err := parsePolygonFromGeoJSON(boundaryJSON.String)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse boundary for district %s", d.ID)
+		}
+		d.Boundary = boundary
 	}
-	if centerJSON.Valid {
-		// TODO: Parse GeoJSON to Point type
+	if centerJSON.Valid && centerJSON.String != "" {
+		centerPoint, err := parsePointFromGeoJSON(centerJSON.String)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse center point for district %s", d.ID)
+		}
+		d.CenterPoint = centerPoint
 	}
 
 	return &d, nil
@@ -204,11 +232,19 @@ func (r *DistrictRepository) GetMunicipalities(ctx context.Context, params types
 		}
 
 		// Parse geometry JSON
-		if boundaryJSON.Valid {
-			// TODO: Parse GeoJSON to Polygon type
+		if boundaryJSON.Valid && boundaryJSON.String != "" {
+			boundary, err := parsePolygonFromGeoJSON(boundaryJSON.String)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse boundary for municipality %s", m.ID)
+			}
+			m.Boundary = boundary
 		}
-		if centerJSON.Valid {
-			// TODO: Parse GeoJSON to Point type
+		if centerJSON.Valid && centerJSON.String != "" {
+			centerPoint, err := parsePointFromGeoJSON(centerJSON.String)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse center point for municipality %s", m.ID)
+			}
+			m.CenterPoint = centerPoint
 		}
 
 		municipalities = append(municipalities, m)
@@ -247,11 +283,19 @@ func (r *DistrictRepository) GetMunicipalityByID(ctx context.Context, id uuid.UU
 	}
 
 	// Parse geometry JSON
-	if boundaryJSON.Valid {
-		// TODO: Parse GeoJSON to Polygon type
+	if boundaryJSON.Valid && boundaryJSON.String != "" {
+		boundary, err := parsePolygonFromGeoJSON(boundaryJSON.String)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse boundary for municipality %s", m.ID)
+		}
+		m.Boundary = boundary
 	}
-	if centerJSON.Valid {
-		// TODO: Parse GeoJSON to Point type
+	if centerJSON.Valid && centerJSON.String != "" {
+		centerPoint, err := parsePointFromGeoJSON(centerJSON.String)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse center point for municipality %s", m.ID)
+		}
+		m.CenterPoint = centerPoint
 	}
 
 	return &m, nil
@@ -263,26 +307,25 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 		SELECT 
 			ml.id,
 			ml.title,
-			ml.description,
-			ml.price,
-			ml.currency,
-			ml.category_id,
-			mc.name as category_name,
-			ml.user_id,
-			u.email as user_email,
-			u.name as user_name,
-			mlg.address,
-			mlg.city,
-			mlg.country,
-			ST_Y(mlg.location) as latitude,
-			ST_X(mlg.location) as longitude,
+			COALESCE(ml.description, '') as description,
+			COALESCE(ml.price, 0) as price,
+			COALESCE(ml.category_id, 0) as category_id,
+			COALESCE(mc.name, '') as category_name,
+			COALESCE(ml.user_id, 0) as user_id,
+			COALESCE(u.email, '') as user_email,
+			COALESCE(u.name, '') as user_name,
+			COALESCE(mlg.formatted_address, '') as address,
+			COALESCE(ml.city, '') as city,
+			COALESCE(ml.country, '') as country,
+			ST_Y(mlg.location::geometry) as latitude,
+			ST_X(mlg.location::geometry) as longitude,
 			ml.created_at,
 			ml.updated_at,
 			COALESCE(
-				(SELECT mi.file_url 
+				(SELECT mi.public_url 
 				 FROM marketplace_images mi 
 				 WHERE mi.listing_id = ml.id 
-				 ORDER BY mi.order_index, mi.created_at 
+				 ORDER BY mi.created_at 
 				 LIMIT 1), 
 				''
 			) as first_image_url
@@ -290,7 +333,8 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 		JOIN listings_geo mlg ON ml.id = mlg.listing_id
 		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
 		LEFT JOIN users u ON ml.user_id = u.id
-		WHERE mlg.district_id = $1
+		JOIN districts d ON d.id = $1
+		WHERE ST_Contains(d.boundary, mlg.location::geometry)
 			AND ml.status = 'active'
 	`
 
@@ -330,27 +374,31 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 		var categoryName, userEmail, userName, firstImageURL sql.NullString
 		var lat, lng float64
 		var categoryID sql.NullString
+		var address, city, country string
 		err := rows.Scan(
 			&result.ID,
 			&result.Title,
 			&result.Description,
 			&result.Price,
-			&result.Currency,
 			&categoryID,
 			&categoryName,
 			&result.UserID,
 			&userEmail,
 			&userName,
-			&result.Address,
-			&result.Address, // city - временно дублируем address
-			&result.Address, // country - временно дублируем address
+			&address,
+			&city,
+			&country,
 			&lat,
 			&lng,
 			&result.CreatedAt,
 			&result.UpdatedAt,
 			&firstImageURL,
 		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan listing result")
+		}
 
+		result.Address = address
 		result.Location = types.Point{Lat: lat, Lng: lng}
 		if categoryName.Valid {
 			result.Category = categoryName.String
@@ -359,9 +407,6 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 		// Добавляем первое изображение в массив, если есть
 		if firstImageURL.Valid && firstImageURL.String != "" {
 			result.Images = []string{firstImageURL.String}
-		}
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to scan listing result")
 		}
 		results = append(results, result)
 	}
@@ -377,24 +422,23 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 			ml.title,
 			ml.description,
 			ml.price,
-			ml.currency,
 			ml.category_id,
 			mc.name as category_name,
 			ml.user_id,
 			u.email as user_email,
 			u.name as user_name,
-			mlg.address,
-			mlg.city,
-			mlg.country,
-			ST_Y(mlg.location) as latitude,
-			ST_X(mlg.location) as longitude,
+			COALESCE(mlg.formatted_address, '') as address,
+			COALESCE(ml.city, '') as city,
+			COALESCE(ml.country, '') as country,
+			ST_Y(mlg.location::geometry) as latitude,
+			ST_X(mlg.location::geometry) as longitude,
 			ml.created_at,
 			ml.updated_at,
 			COALESCE(
-				(SELECT mi.file_url 
+				(SELECT mi.public_url 
 				 FROM marketplace_images mi 
 				 WHERE mi.listing_id = ml.id 
-				 ORDER BY mi.order_index, mi.created_at 
+				 ORDER BY mi.created_at 
 				 LIMIT 1), 
 				''
 			) as first_image_url
@@ -442,27 +486,31 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 		var categoryName, userEmail, userName, firstImageURL sql.NullString
 		var lat, lng float64
 		var categoryID sql.NullString
+		var address, city, country string
 		err := rows.Scan(
 			&result.ID,
 			&result.Title,
 			&result.Description,
 			&result.Price,
-			&result.Currency,
 			&categoryID,
 			&categoryName,
 			&result.UserID,
 			&userEmail,
 			&userName,
-			&result.Address,
-			&result.Address, // city - временно дублируем address
-			&result.Address, // country - временно дублируем address
+			&address,
+			&city,
+			&country,
 			&lat,
 			&lng,
 			&result.CreatedAt,
 			&result.UpdatedAt,
 			&firstImageURL,
 		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan listing result")
+		}
 
+		result.Address = address
 		result.Location = types.Point{Lat: lat, Lng: lng}
 		if categoryName.Valid {
 			result.Category = categoryName.String
@@ -472,11 +520,187 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 		if firstImageURL.Valid && firstImageURL.String != "" {
 			result.Images = []string{firstImageURL.String}
 		}
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to scan listing result")
-		}
 		results = append(results, result)
 	}
 
 	return results, nil
+}
+
+// GetDistrictBoundaryGeoJSON returns district boundary as GeoJSON string
+func (r *DistrictRepository) GetDistrictBoundaryGeoJSON(ctx context.Context, districtID uuid.UUID) (string, error) {
+	var boundaryGeoJSON sql.NullString
+
+	query := `
+		SELECT ST_AsGeoJSON(boundary) as boundary_geojson
+		FROM districts 
+		WHERE id = $1
+	`
+
+	err := r.db.QueryRowContext(ctx, query, districtID).Scan(&boundaryGeoJSON)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", types.ErrDistrictNotFound
+		}
+		return "", errors.Wrapf(err, "failed to get district boundary for ID: %s", districtID)
+	}
+
+	if !boundaryGeoJSON.Valid || boundaryGeoJSON.String == "" {
+		return "", errors.New("district boundary is null or empty")
+	}
+
+	return boundaryGeoJSON.String, nil
+}
+
+// GetCities returns cities with optional filtering
+func (r *DistrictRepository) GetCities(ctx context.Context, params types.CitySearchParams) ([]types.City, error) {
+	query := `
+		SELECT 
+			id, name, slug, country_code,
+			ST_AsGeoJSON(center_point) as center_json,
+			ST_AsGeoJSON(boundary) as boundary_json,
+			population, area_km2, postal_codes,
+			has_districts, priority,
+			created_at, updated_at
+		FROM cities
+		WHERE 1=1
+	`
+	args := []interface{}{}
+	argCount := 0
+
+	// Filter by country code
+	if params.CountryCode != "" {
+		argCount++
+		query += fmt.Sprintf(" AND country_code = $%d", argCount)
+		args = append(args, params.CountryCode)
+	}
+
+	// Filter by districts availability
+	if params.HasDistricts != nil {
+		argCount++
+		query += fmt.Sprintf(" AND has_districts = $%d", argCount)
+		args = append(args, *params.HasDistricts)
+	}
+
+	// Text search by name
+	if params.SearchQuery != "" {
+		argCount++
+		query += fmt.Sprintf(" AND (name ILIKE $%d OR slug ILIKE $%d)", argCount, argCount)
+		args = append(args, "%"+params.SearchQuery+"%")
+	}
+
+	// Bounds filtering using ST_Intersects
+	if params.Bounds != nil {
+		argCount++
+		query += fmt.Sprintf(" AND ST_Intersects(boundary, ST_MakeEnvelope($%d, $%d, $%d, $%d, 4326))",
+			argCount, argCount+1, argCount+2, argCount+3)
+		args = append(args, params.Bounds.West, params.Bounds.South, params.Bounds.East, params.Bounds.North)
+		argCount += 3
+	}
+
+	// Order by priority and name
+	query += " ORDER BY priority DESC, name"
+
+	// Apply limit and offset
+	if params.Limit > 0 {
+		argCount++
+		query += fmt.Sprintf(" LIMIT $%d", argCount)
+		args = append(args, params.Limit)
+	}
+
+	if params.Offset > 0 {
+		argCount++
+		query += fmt.Sprintf(" OFFSET $%d", argCount)
+		args = append(args, params.Offset)
+	}
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to query cities with query: %s, args: %v", query, args)
+	}
+	defer rows.Close()
+
+	var cities []types.City
+	for rows.Next() {
+		var c types.City
+		var centerJSON, boundaryJSON sql.NullString
+
+		err := rows.Scan(
+			&c.ID, &c.Name, &c.Slug, &c.CountryCode,
+			&centerJSON, &boundaryJSON,
+			&c.Population, &c.AreaKm2, pq.Array(&c.PostalCodes),
+			&c.HasDistricts, &c.Priority,
+			&c.CreatedAt, &c.UpdatedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan city")
+		}
+
+		// Parse center point geometry from JSON
+		if centerJSON.Valid && centerJSON.String != "" {
+			centerPoint, err := parsePointFromGeoJSON(centerJSON.String)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse center point for city %s", c.ID)
+			}
+			c.CenterPoint = centerPoint
+		}
+
+		// Parse boundary geometry from JSON
+		if boundaryJSON.Valid && boundaryJSON.String != "" {
+			boundary, err := parsePolygonFromGeoJSON(boundaryJSON.String)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse boundary for city %s", c.ID)
+			}
+			c.Boundary = boundary
+		}
+
+		cities = append(cities, c)
+	}
+
+	return cities, nil
+}
+
+// parsePointFromGeoJSON parses a Point from PostGIS GeoJSON output
+func parsePointFromGeoJSON(geoJSON string) (*types.Point, error) {
+	var geom struct {
+		Type        string    `json:"type"`
+		Coordinates []float64 `json:"coordinates"`
+	}
+
+	if err := json.Unmarshal([]byte(geoJSON), &geom); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal point GeoJSON")
+	}
+
+	if geom.Type != "Point" {
+		return nil, fmt.Errorf("expected Point geometry, got %s", geom.Type)
+	}
+
+	if len(geom.Coordinates) != 2 {
+		return nil, fmt.Errorf("point coordinates must have exactly 2 elements, got %d", len(geom.Coordinates))
+	}
+
+	return &types.Point{
+		Lng: geom.Coordinates[0], // GeoJSON uses [longitude, latitude]
+		Lat: geom.Coordinates[1],
+	}, nil
+}
+
+// parsePolygonFromGeoJSON parses a Polygon from PostGIS GeoJSON output
+func parsePolygonFromGeoJSON(geoJSON string) (*types.Polygon, error) {
+	var geom struct {
+		Type        string        `json:"type"`
+		Coordinates [][][]float64 `json:"coordinates"`
+	}
+
+	if err := json.Unmarshal([]byte(geoJSON), &geom); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal polygon GeoJSON")
+	}
+
+	if geom.Type != "Polygon" {
+		return nil, fmt.Errorf("expected Polygon geometry, got %s", geom.Type)
+	}
+
+	return &types.Polygon{
+		Type:        geom.Type,
+		Coordinates: geom.Coordinates,
+	}, nil
 }

@@ -7,7 +7,8 @@ import { useAllSecurePayment } from '@/hooks/useAllSecurePayment';
 import PaymentProcessing from '@/components/payment/PaymentProcessing';
 
 export default function PaymentProcessPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
   const router = useRouter();
   const { checkPaymentStatus } = useAllSecurePayment();
 

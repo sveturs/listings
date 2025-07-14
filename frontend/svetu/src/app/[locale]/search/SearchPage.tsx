@@ -34,15 +34,15 @@ export default function SearchPage() {
   const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialQuery = searchParams.get('q') || '';
-  const initialFuzzy = searchParams.get('fuzzy') !== 'false'; // По умолчанию true
-  const initialLat = searchParams.get('lat')
+  const initialQuery = searchParams?.get('q') || '';
+  const initialFuzzy = searchParams?.get('fuzzy') !== 'false'; // По умолчанию true
+  const initialLat = searchParams?.get('lat')
     ? parseFloat(searchParams.get('lat')!)
     : undefined;
-  const initialLon = searchParams.get('lon')
+  const initialLon = searchParams?.get('lon')
     ? parseFloat(searchParams.get('lon')!)
     : undefined;
-  const initialDistance = searchParams.get('distance') || undefined;
+  const initialDistance = searchParams?.get('distance') || undefined;
 
   const [query, setQuery] = useState(initialQuery);
   const [fuzzy, setFuzzy] = useState(initialFuzzy);
@@ -89,15 +89,15 @@ export default function SearchPage() {
 
   // Handle URL query changes (this handles both initial load and subsequent changes)
   useEffect(() => {
-    const searchQuery = searchParams.get('q');
-    const searchFuzzy = searchParams.get('fuzzy') !== 'false';
-    const lat = searchParams.get('lat')
+    const searchQuery = searchParams?.get('q');
+    const searchFuzzy = searchParams?.get('fuzzy') !== 'false';
+    const lat = searchParams?.get('lat')
       ? parseFloat(searchParams.get('lat')!)
       : undefined;
-    const lon = searchParams.get('lon')
+    const lon = searchParams?.get('lon')
       ? parseFloat(searchParams.get('lon')!)
       : undefined;
-    const distance = searchParams.get('distance') || undefined;
+    const distance = searchParams?.get('distance') || undefined;
 
     if (searchQuery) {
       // Perform search if:

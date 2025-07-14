@@ -126,7 +126,6 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 	}
 
 	// Остальные параметры
-	params.Currency = c.Query("currency")
 	params.SearchQuery = c.Query("q")
 	params.SortBy = c.Query("sort_by", "created_at")
 	params.SortOrder = c.Query("sort_order", "desc")
@@ -406,7 +405,6 @@ func (h *SpatialHandler) RadiusSearch(c *fiber.Ctx) error {
 		}
 
 		// Остальные фильтры
-		req.Filters.Currency = c.Query("currency")
 		req.Filters.SearchQuery = c.Query("q")
 		req.Filters.SortBy = c.Query("sort_by", "distance")
 		req.Filters.SortOrder = c.Query("sort_order", "asc")

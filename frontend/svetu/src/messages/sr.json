@@ -348,6 +348,9 @@
     "searchHistory": "Search History",
     "clearHistory": "Clear History",
     "popularSearches": "Popular Searches",
+    "loadingCities": "Učitavanje gradova...",
+    "citiesWithDistrictsFound": "Pronađeno gradova sa opštinama: {count}",
+    "noCitiesWithDistricts": "Nema gradova sa opštinama u ovoj oblasti",
     "search": {
       "searchHistory": "Search History",
       "clearHistory": "Clear History",

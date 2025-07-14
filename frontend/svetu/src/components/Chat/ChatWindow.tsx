@@ -42,7 +42,8 @@ export default function ChatWindow({
   showBackButton,
 }: ChatWindowProps) {
   const t = useTranslations('Chat');
-  const { locale } = useParams();
+  const params = useParams();
+  const locale = params?.locale as string;
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);

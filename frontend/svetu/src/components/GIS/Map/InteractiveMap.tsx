@@ -90,6 +90,9 @@ interface InteractiveMapProps {
     desktopHint: string;
     updatingIsochrone: string;
   };
+  // Визуализация границ районов
+  districtBoundary?: Feature<Polygon> | null;
+  onDistrictBoundaryChange?: (boundary: Feature<Polygon> | null) => void;
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -120,6 +123,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onSearchRadiusChange,
   useNativeControl = false,
   controlTranslations,
+  districtBoundary = null,
+  onDistrictBoundaryChange: _onDistrictBoundaryChange,
 }) => {
   console.log('[InteractiveMap] Received props:', {
     markersCount: markers.length,
@@ -247,7 +252,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setMapStyle(newStyle);
   }, []);
 
-  const handleSearch = useCallback(
+  const _handleSearch = useCallback(
     async (query: string) => {
       setIsLoading(true);
       try {
@@ -610,6 +615,29 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               <Layer {...radiusLineLayer} />
             </Source>
           </>
+        )}
+
+        {/* Границы выбранного района */}
+        {districtBoundary && (
+          <Source type="geojson" data={districtBoundary}>
+            <Layer
+              id="district-boundary-fill"
+              type="fill"
+              paint={{
+                'fill-color': '#3b82f6',
+                'fill-opacity': 0.1,
+              }}
+            />
+            <Layer
+              id="district-boundary-line"
+              type="line"
+              paint={{
+                'line-color': '#3b82f6',
+                'line-width': 2,
+                'line-opacity': 0.8,
+              }}
+            />
+          </Source>
         )}
 
         {/* Маркер покупателя */}

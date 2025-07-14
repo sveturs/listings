@@ -20,7 +20,7 @@ export default function OrderSuccessPage({ params }: Props) {
   const { isAuthenticated } = useAuth();
   const searchParams = useSearchParams();
 
-  const sessionId = searchParams.get('session_id');
+  const sessionId = searchParams?.get('session_id');
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

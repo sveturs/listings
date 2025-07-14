@@ -377,7 +377,10 @@
     "reset": "Сбросить",
     "searchHistory": "История поиска",
     "clearHistory": "Очистить историю",
-    "popularSearches": "Популярные запросы"
+    "popularSearches": "Популярные запросы",
+    "loadingCities": "Загрузка городов...",
+    "citiesWithDistrictsFound": "Найдено городов с районами: {count}",
+    "noCitiesWithDistricts": "В данной области нет городов с районами"
   },
   "blog": {
     "title": "Блог",
