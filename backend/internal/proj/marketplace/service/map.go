@@ -131,7 +131,7 @@ func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neL
 						}
 					}
 				}
-				
+
 				query += ")"
 			}
 		}
@@ -296,7 +296,7 @@ func (s *MarketplaceService) GetMapClusters(ctx context.Context, neLat, neLng, s
 						}
 					}
 				}
-				
+
 				query += ")"
 			}
 		}

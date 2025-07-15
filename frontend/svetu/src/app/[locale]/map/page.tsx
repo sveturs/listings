@@ -22,6 +22,7 @@ import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
 // import { DistrictMapSelector } from '@/components/search';
 import { SmartFilters } from '@/components/marketplace/SmartFilters';
+import { QuickFilters } from '@/components/marketplace/QuickFilters';
 
 // Функция для проверки, находится ли точка внутри полигона (Ray Casting Algorithm)
 function isPointInPolygon(
@@ -76,8 +77,15 @@ const MapPage: React.FC = () => {
   const searchParams = useSearchParams();
   const { search: geoSearch } = useGeoSearch();
 
-  // Получаем язык из URL
-  const currentLang = window.location.pathname.split('/')[1] || 'sr';
+  // Получаем язык из URL безопасно для SSR
+  const [currentLang, setCurrentLang] = useState('sr');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const lang = window.location.pathname.split('/')[1] || 'sr';
+      setCurrentLang(lang);
+    }
+  }, []);
 
   // Функция для получения начальных значений из URL
   const getInitialFiltersFromURL = (): MapFilters => {
@@ -729,6 +737,20 @@ const MapPage: React.FC = () => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   }, []);
 
+  // Обработчик для быстрых фильтров
+  const handleQuickFilterSelect = useCallback(
+    (quickFilters: Record<string, any>) => {
+      setFilters((prev) => ({
+        ...prev,
+        attributes: {
+          ...prev.attributes,
+          ...quickFilters,
+        },
+      }));
+    },
+    []
+  );
+
   // Обработчик изменения радиуса поиска
   const handleSearchRadiusChange = useCallback(
     (radius: number) => {
@@ -943,6 +965,29 @@ const MapPage: React.FC = () => {
                 />
               </div>
             </div>
+
+            {/* Быстрые фильтры для категории */}
+            {filters.category && (
+              <div className="mb-4">
+                <QuickFilters
+                  categoryId={filters.category}
+                  onSelectFilter={handleQuickFilterSelect}
+                />
+              </div>
+            )}
+
+            {/* Умные фильтры по атрибутам категории */}
+            {filters.category && (
+              <div className="mb-4 border-t pt-4">
+                <SmartFilters
+                  categoryId={parseInt(filters.category) || null}
+                  onChange={(attributeFilters) =>
+                    handleFiltersChange({ attributes: attributeFilters })
+                  }
+                  lang={currentLang}
+                />
+              </div>
+            )}
 
             {/* Статистика */}
             <div className="text-sm text-base-content-secondary">

@@ -5,6 +5,7 @@ import WalkingAccessibilityControl from '../Map/WalkingAccessibilityControl';
 import type { Feature, Polygon } from 'geojson';
 import type { MapBounds } from '@/components/GIS/types/gis';
 import { SmartFilters } from '@/components/marketplace/SmartFilters';
+import { QuickFilters } from '@/components/marketplace/QuickFilters';
 
 interface MapFilters {
   category: string;
@@ -114,6 +115,16 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
 
   const handleLocalFiltersChange = (newFilters: Partial<MapFilters>) => {
     setLocalFilters((prev) => ({ ...prev, ...newFilters }));
+  };
+
+  const handleQuickFilterSelect = (quickFilters: Record<string, any>) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      attributes: {
+        ...prev.attributes,
+        ...quickFilters,
+      },
+    }));
   };
 
   const handleApplyFilters = () => {
@@ -266,6 +277,17 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
                 />
               </div>
 
+              {/* Быстрые фильтры */}
+              {localFilters.category && (
+                <div className="mb-4">
+                  <QuickFilters
+                    categoryId={localFilters.category}
+                    onSelectFilter={handleQuickFilterSelect}
+                    className="mb-4"
+                  />
+                </div>
+              )}
+
               {/* Динамические фильтры по атрибутам категории */}
               {localFilters.category && (
                 <div>
@@ -274,7 +296,11 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
                     onChange={(attributeFilters) =>
                       handleLocalFiltersChange({ attributes: attributeFilters })
                     }
-                    lang={window.location.pathname.split('/')[1] || 'sr'}
+                    lang={
+                      typeof window !== 'undefined'
+                        ? window.location.pathname.split('/')[1] || 'sr'
+                        : 'sr'
+                    }
                     className="space-y-3"
                   />
                 </div>

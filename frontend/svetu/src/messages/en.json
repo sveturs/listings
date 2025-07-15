@@ -2773,6 +2773,17 @@
       "loading": "Loading filters...",
       "error": "Error loading filters",
       "retry": "Try again",
+      "enterValue": "Enter value",
+      "enterNumber": "Enter number",
+      "selectOption": "Select option",
+      "clearAll": "Clear all",
+      "noFilters": "No filters available",
+      "min": "Min",
+      "max": "Max",
+      "any": "Any",
+      "yes": "Yes",
+      "no": "No",
+      "loadError": "Error loading filters",
       "attributes": {
         "brand": "Brand",
         "model": "Model",
@@ -2807,7 +2818,14 @@
         "inBox": "In box",
         "verified": "Verified",
         "urgent": "Urgent",
-        "priceReduced": "Price reduced"
+        "priceReduced": "Price reduced",
+        "furnished": "Furnished",
+        "fullTime": "Full-time",
+        "noExperience": "No experience required",
+        "remote": "Remote work",
+        "withGarage": "With garage",
+        "withGarden": "With garden",
+        "withParking": "With parking"
       },
       "conditions": {
         "new": "New",

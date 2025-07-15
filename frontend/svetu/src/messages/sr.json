@@ -2561,6 +2561,17 @@
       "loading": "Učitavanje filtera...",
       "error": "Greška pri učitavanju filtera",
       "retry": "Pokušaj ponovo",
+      "enterValue": "Unesite vrednost",
+      "enterNumber": "Unesite broj",
+      "selectOption": "Izaberite opciju",
+      "clearAll": "Obriši sve",
+      "noFilters": "Nema dostupnih filtera",
+      "min": "Min",
+      "max": "Maks",
+      "any": "Bilo koji",
+      "yes": "Da",
+      "no": "Ne",
+      "loadError": "Greška učitavanja filtera",
       "attributes": {
         "brand": "Marka",
         "model": "Model",
@@ -2595,7 +2606,14 @@
         "inBox": "U kutiji",
         "verified": "Provereno",
         "urgent": "Hitno",
-        "priceReduced": "Snižena cena"
+        "priceReduced": "Snižena cena",
+        "furnished": "Namešteno",
+        "fullTime": "Puno radno vreme",
+        "noExperience": "Bez iskustva",
+        "remote": "Rad od kuće",
+        "withGarage": "Sa garažom",
+        "withGarden": "Sa baštom",
+        "withParking": "Sa parkingom"
       },
       "conditions": {
         "new": "Novo",
