@@ -24,6 +24,7 @@ type CategoryAttribute struct {
 	Translations       map[string]string            `json:"translations,omitempty"`
 	OptionTranslations map[string]map[string]string `json:"option_translations,omitempty"`
 	CustomComponent    string                       `json:"custom_component,omitempty"`
+	TranslatedOptions  json.RawMessage              `json:"translated_options,omitempty"`
 }
 
 // AttributeOptions содержит опции для атрибутов типа select

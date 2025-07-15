@@ -21,6 +21,7 @@ import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
 // import { DistrictMapSelector } from '@/components/search';
+import { SmartFilters } from '@/components/marketplace/SmartFilters';
 
 // Функция для проверки, находится ли точка внутри полигона (Ray Casting Algorithm)
 function isPointInPolygon(
@@ -66,6 +67,7 @@ interface MapFilters {
   priceFrom: number;
   priceTo: number;
   radius: number;
+  attributes?: Record<string, any>;
 }
 
 const MapPage: React.FC = () => {
@@ -74,13 +76,28 @@ const MapPage: React.FC = () => {
   const searchParams = useSearchParams();
   const { search: geoSearch } = useGeoSearch();
 
+  // Получаем язык из URL
+  const currentLang = window.location.pathname.split('/')[1] || 'sr';
+
   // Функция для получения начальных значений из URL
   const getInitialFiltersFromURL = (): MapFilters => {
+    const attributesStr = searchParams?.get('attributes');
+    let attributes: Record<string, any> = {};
+
+    if (attributesStr) {
+      try {
+        attributes = JSON.parse(decodeURIComponent(attributesStr));
+      } catch (e) {
+        console.error('Failed to parse attributes from URL', e);
+      }
+    }
+
     return {
       category: searchParams?.get('category') || '',
       priceFrom: parseInt(searchParams?.get('priceFrom') || '0') || 0,
       priceTo: parseInt(searchParams?.get('priceTo') || '0') || 0,
       radius: parseInt(searchParams?.get('radius') || '5000') || 5000,
+      attributes,
     };
   };
 
@@ -178,6 +195,14 @@ const MapPage: React.FC = () => {
         params.set('priceTo', newFilters.priceTo.toString());
       if (newFilters.radius !== 5000)
         params.set('radius', newFilters.radius.toString());
+      if (
+        newFilters.attributes &&
+        Object.keys(newFilters.attributes).length > 0
+      )
+        params.set(
+          'attributes',
+          encodeURIComponent(JSON.stringify(newFilters.attributes))
+        );
 
       // Координаты карты
       params.set('lat', newViewState.latitude.toFixed(6));
@@ -265,6 +290,10 @@ const MapPage: React.FC = () => {
           ...(debouncedFilters.priceTo > 0 && {
             max_price: debouncedFilters.priceTo.toString(),
           }),
+          ...(debouncedFilters.attributes &&
+            Object.keys(debouncedFilters.attributes).length > 0 && {
+              attributes: JSON.stringify(debouncedFilters.attributes),
+            }),
         });
 
         const fullUrl = `${endpoint}?${params}`;
@@ -295,6 +324,10 @@ const MapPage: React.FC = () => {
           ...(debouncedFilters.priceTo > 0 && {
             max_price: debouncedFilters.priceTo.toString(),
           }),
+          ...(debouncedFilters.attributes &&
+            Object.keys(debouncedFilters.attributes).length > 0 && {
+              attributes: JSON.stringify(debouncedFilters.attributes),
+            }),
         });
 
         const fullUrl = `${endpoint}?${params}`;
@@ -519,6 +552,7 @@ const MapPage: React.FC = () => {
     debouncedFilters.priceFrom,
     debouncedFilters.priceTo,
     debouncedFilters.radius,
+    debouncedFilters.attributes,
     debouncedBuyerLocation.latitude,
     debouncedBuyerLocation.longitude,
   ]);
@@ -823,6 +857,20 @@ const MapPage: React.FC = () => {
                 placeholder="∞"
               />
             </div>
+
+            {/* Динамические фильтры по атрибутам категории */}
+            {filters.category && (
+              <div className="mb-4">
+                <SmartFilters
+                  categoryId={parseInt(filters.category) || null}
+                  onChange={(attributeFilters) =>
+                    handleFiltersChange({ attributes: attributeFilters })
+                  }
+                  lang={currentLang}
+                  className="space-y-3"
+                />
+              </div>
+            )}
 
             {/* Контроль радиуса поиска */}
             <div className="mb-4 space-y-3">

@@ -4,6 +4,7 @@ import WalkingAccessibilityControl from '../Map/WalkingAccessibilityControl';
 // import { DistrictMapSelector } from '@/components/search';
 import type { Feature, Polygon } from 'geojson';
 import type { MapBounds } from '@/components/GIS/types/gis';
+import { SmartFilters } from '@/components/marketplace/SmartFilters';
 
 interface MapFilters {
   category: string;
@@ -12,6 +13,7 @@ interface MapFilters {
   radius: number;
   accessibilityMode?: 'radius' | 'walking';
   walkingTime?: number;
+  attributes?: Record<string, any>;
 }
 
 interface MobileFiltersDrawerProps {
@@ -131,6 +133,7 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
       radius: 10000,
       accessibilityMode: 'radius' as const,
       walkingTime: 15,
+      attributes: {},
     };
     setLocalFilters(resetFilters);
     setLocalSearchQuery('');
@@ -262,6 +265,20 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
                   placeholder="∞"
                 />
               </div>
+
+              {/* Динамические фильтры по атрибутам категории */}
+              {localFilters.category && (
+                <div>
+                  <SmartFilters
+                    categoryId={parseInt(localFilters.category) || null}
+                    onChange={(attributeFilters) =>
+                      handleLocalFiltersChange({ attributes: attributeFilters })
+                    }
+                    lang={window.location.pathname.split('/')[1] || 'sr'}
+                    className="space-y-3"
+                  />
+                </div>
+              )}
 
               {/* Радиус поиска с WalkingAccessibilityControl */}
               <div>

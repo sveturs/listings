@@ -6070,9 +6070,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/gis/clusters": {
-            "get": {
-                "description": "Получение кластеризованных объявлений для отображения на карте",
+        "/api/v1/gis/advanced/apply-filters": {
+            "post": {
+                "description": "Apply travel time, POI, and density filters to listings",
                 "consumes": [
                     "application/json"
                 ],
@@ -6080,58 +6080,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "GIS"
+                    "gis-advanced"
                 ],
-                "summary": "Получение кластеров объявлений",
+                "summary": "Apply advanced geo filters",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Границы видимой области карты в формате: north,south,east,west",
-                        "name": "bounds",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Уровень зума карты (0-20)",
-                        "name": "zoom_level",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "description": "Категории объявлений",
-                        "name": "categories",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Минимальная цена",
-                        "name": "min_price",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Максимальная цена",
-                        "name": "max_price",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Валюта",
-                        "name": "currency",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Размер сетки для кластеризации",
-                        "name": "grid_size",
-                        "in": "query"
+                        "description": "Advanced filters request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.ApplyAdvancedFiltersRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Кластеры и объявления",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -6141,7 +6106,8 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/backend_internal_proj_gis_types.ClusterResponse"
+                                            "type": "object",
+                                            "additionalProperties": true
                                         }
                                     }
                                 }
@@ -6149,13 +6115,963 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Некорректные параметры",
+                        "description": "validation.failed",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "Внутренняя ошибка сервера",
+                        "description": "gis.filterError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/advanced/density/analyze": {
+            "post": {
+                "description": "Analyze listing density in a given area",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis-advanced"
+                ],
+                "summary": "Analyze listing density",
+                "parameters": [
+                    {
+                        "description": "Bounding box for analysis",
+                        "name": "bbox",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.BoundingBox"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_gis_types.DensityAnalysisResult"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "gis.densityAnalysisError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/advanced/density/heatmap": {
+            "get": {
+                "description": "Get point data for density heatmap visualization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis-advanced"
+                ],
+                "summary": "Get density heatmap data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "gis.heatmapError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/advanced/isochrone": {
+            "post": {
+                "description": "Returns isochrone polygon for travel time analysis",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis-advanced"
+                ],
+                "summary": "Get isochrone polygon",
+                "parameters": [
+                    {
+                        "description": "Travel time filter parameters",
+                        "name": "filter",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.TravelTimeFilter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_gis_types.IsohronResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "gis.isochroneError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/advanced/poi/search": {
+            "get": {
+                "description": "Search for POIs like schools, hospitals, metro stations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis-advanced"
+                ],
+                "summary": "Search points of interest",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_gis_types.POISearchResult"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation.failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "gis.poiSearchError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/cities": {
+            "get": {
+                "description": "Get all cities with optional filtering by viewport bounds",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Get cities",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Country code (e.g., RS)",
+                        "name": "country_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter cities with districts",
+                        "name": "has_districts",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Viewport north boundary",
+                        "name": "bounds_north",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Viewport south boundary",
+                        "name": "bounds_south",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Viewport east boundary",
+                        "name": "bounds_east",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Viewport west boundary",
+                        "name": "bounds_west",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of cities",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_gis_types.City"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/cities/visible": {
+            "post": {
+                "description": "Get cities visible in viewport bounds with distance to center",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Get visible cities",
+                "parameters": [
+                    {
+                        "description": "Viewport bounds and center",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.VisibleCitiesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Visible cities with distances",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_gis_types.VisibleCitiesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/districts": {
+            "get": {
+                "description": "Get all districts with optional filtering",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Get districts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Country code (e.g., RS)",
+                        "name": "country_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "City ID",
+                        "name": "city_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "City IDs (comma-separated)",
+                        "name": "city_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "District name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of districts",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_gis_types.District"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/districts/{id}": {
+            "get": {
+                "description": "Get a single district by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Get district by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "District ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "District details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_gis_types.District"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "District not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/districts/{id}/boundary": {
+            "get": {
+                "description": "Get district boundary as GeoJSON polygon for map visualization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Get district boundary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "District ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "District boundary",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_gis_types.DistrictBoundaryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "District not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/geocode/cache/cleanup": {
+            "post": {
+                "description": "Удаляет устаревшие записи из кэша геокодирования",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Очистка устаревшего кэша",
+                "responses": {
+                    "200": {
+                        "description": "Количество удаленных записей",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/geocode/cache/stats": {
+            "get": {
+                "description": "Возвращает статистику использования кэша геокодирования",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Статистика кэша геокодирования",
+                "responses": {
+                    "200": {
+                        "description": "Статистика кэша",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/geocode/reverse": {
+            "get": {
+                "description": "Получает адрес по координатам",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Обратное геокодирование",
+                "parameters": [
+                    {
+                        "maximum": 90,
+                        "minimum": -90,
+                        "type": "number",
+                        "description": "Широта",
+                        "name": "lat",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "maximum": 180,
+                        "minimum": -180,
+                        "type": "number",
+                        "description": "Долгота",
+                        "name": "lng",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"en\"",
+                        "description": "Язык ответа",
+                        "name": "language",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Найденный адрес",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_gis_types.AddressSuggestion"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка валидации",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/geocode/suggestions": {
+            "get": {
+                "description": "Возвращает список предложений адресов для автодополнения",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Поиск предложений адресов",
+                "parameters": [
+                    {
+                        "minLength": 2,
+                        "type": "string",
+                        "description": "Поисковый запрос",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 5,
+                        "description": "Лимит результатов",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"en\"",
+                        "description": "Язык ответа",
+                        "name": "language",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Код страны для фильтрации",
+                        "name": "country_code",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список предложений",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_gis_types.AddressSuggestion"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка валидации",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/geocode/validate": {
+            "post": {
+                "description": "Проверяет и возвращает геокодированные данные для указанного адреса",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Валидация геокодирования адреса",
+                "parameters": [
+                    {
+                        "description": "Запрос валидации",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.GeocodeValidateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат валидации",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_gis_types.GeocodeValidateResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка валидации",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/listings/{id}/address": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Обновляет геолокацию и адрес объявления с полной валидацией и логированием",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Обновление адреса объявления с валидацией",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID объявления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для обновления",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.UpdateAddressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Обновленные геоданные",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_gis_types.EnhancedListingGeo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка валидации",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Нет прав доступа",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Объявление не найдено",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -6298,6 +7214,138 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/municipalities": {
+            "get": {
+                "description": "Get all municipalities with optional filtering",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Get municipalities",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Country code (e.g., RS)",
+                        "name": "country_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "District ID",
+                        "name": "district_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Municipality name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of municipalities",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_gis_types.Municipality"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/municipalities/{id}": {
+            "get": {
+                "description": "Get a single municipality by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Get municipality by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Municipality ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Municipality details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_gis_types.Municipality"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Municipality not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -6480,6 +7528,326 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/backend_internal_proj_gis_types.SearchResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные параметры",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/search/by-district/{district_id}": {
+            "get": {
+                "description": "Search for listings within a specific district",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Search listings by district",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "District ID",
+                        "name": "district_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Minimum price",
+                        "name": "min_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Maximum price",
+                        "name": "max_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results (default: 50, max: 200)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_gis_types.GeoListing"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "District not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/search/by-municipality/{municipality_id}": {
+            "get": {
+                "description": "Search for listings within a specific municipality",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Search listings by municipality",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Municipality ID",
+                        "name": "municipality_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Minimum price",
+                        "name": "min_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Maximum price",
+                        "name": "max_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results (default: 50, max: 200)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_gis_types.GeoListing"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Municipality not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gis/search/radius": {
+            "get": {
+                "description": "Поиск объявлений в заданном радиусе от точки с детальными фильтрами",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GIS"
+                ],
+                "summary": "Радиусный поиск объявлений",
+                "parameters": [
+                    {
+                        "type": "number",
+                        "description": "Широта центра поиска",
+                        "name": "latitude",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Долгота центра поиска",
+                        "name": "longitude",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Радиус поиска в метрах",
+                        "name": "radius",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "description": "Категории объявлений",
+                        "name": "categories",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "description": "ID категорий",
+                        "name": "category_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Минимальная цена",
+                        "name": "min_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Максимальная цена",
+                        "name": "max_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Валюта",
+                        "name": "currency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Текстовый поиск",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки (distance, price, created_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Порядок сортировки (asc, desc)",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество результатов (по умолчанию 50, максимум 1000)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результаты радиусного поиска",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_gis_types.RadiusSearchResponse"
                                         }
                                     }
                                 }
@@ -7692,6 +9060,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Language code (e.g., 'sr', 'en', 'ru')",
+                        "name": "lang",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -9449,6 +10823,12 @@ const docTemplate = `{
                         "description": "Maximum price filter",
                         "name": "max_price",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON object with attribute filters",
+                        "name": "attributes",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -9544,6 +10924,12 @@ const docTemplate = `{
                         "type": "number",
                         "description": "Maximum price filter",
                         "name": "max_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON object with attribute filters",
+                        "name": "attributes",
                         "in": "query"
                     }
                 ],
@@ -10287,6 +11673,44 @@ const docTemplate = `{
         },
         "/api/v1/marketplace/search": {
             "get": {
+                "description": "Performs advanced search with filters, facets, and suggestions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-search"
+                ],
+                "summary": "Advanced search for listings",
+                "parameters": [
+                    {
+                        "description": "Search parameters",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_search.ServiceParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results with metadata",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.SearchResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.searchError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "post": {
                 "description": "Performs advanced search with filters, facets, and suggestions",
                 "consumes": [
                     "application/json"
@@ -19410,6 +20834,12 @@ const docTemplate = `{
                 "sort_order": {
                     "type": "integer"
                 },
+                "translated_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "translations": {
                     "type": "object",
                     "additionalProperties": {
@@ -23224,6 +24654,35 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_search.AdvancedGeoFilters": {
+            "type": "object",
+            "properties": {
+                "density_filter": {
+                    "description": "Фильтр по плотности объявлений",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_search.DensityFilter"
+                        }
+                    ]
+                },
+                "poi_filter": {
+                    "description": "Фильтр по точкам интереса",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_search.POIFilter"
+                        }
+                    ]
+                },
+                "travel_time": {
+                    "description": "Фильтр по времени пути",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_search.TravelTimeFilter"
+                        }
+                    ]
+                }
+            }
+        },
         "backend_internal_domain_search.Bucket": {
             "type": "object",
             "properties": {
@@ -23237,9 +24696,45 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_search.DensityFilter": {
+            "type": "object",
+            "properties": {
+                "avoid_crowded": {
+                    "type": "boolean"
+                },
+                "max_density": {
+                    "type": "number"
+                },
+                "min_density": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_domain_search.POIFilter": {
+            "type": "object",
+            "properties": {
+                "max_distance": {
+                    "type": "integer"
+                },
+                "min_count": {
+                    "type": "integer"
+                },
+                "poi_type": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_search.ServiceParams": {
             "type": "object",
             "properties": {
+                "advanced_geo_filters": {
+                    "description": "Расширенные геофильтры",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_search.AdvancedGeoFilters"
+                        }
+                    ]
+                },
                 "aggregations": {
                     "description": "Запрашиваемые агрегации",
                     "type": "array",
@@ -23335,6 +24830,158 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_search.TravelTimeFilter": {
+            "type": "object",
+            "properties": {
+                "center_lat": {
+                    "type": "number"
+                },
+                "center_lng": {
+                    "type": "number"
+                },
+                "max_minutes": {
+                    "type": "integer"
+                },
+                "transport_mode": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.AddressComponents": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "country_code": {
+                    "type": "string"
+                },
+                "district": {
+                    "type": "string"
+                },
+                "formatted": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.AddressSuggestion": {
+            "type": "object",
+            "properties": {
+                "address_components": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.AddressComponents"
+                },
+                "confidence": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "location": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                },
+                "place_name": {
+                    "type": "string"
+                },
+                "place_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.AdvancedGeoFilters": {
+            "type": "object",
+            "properties": {
+                "bounding_box": {
+                    "description": "Базовые геофильтры",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.BoundingBox"
+                        }
+                    ]
+                },
+                "density_filter": {
+                    "description": "Фильтр по плотности объявлений",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.DensityFilter"
+                        }
+                    ]
+                },
+                "poi_filter": {
+                    "description": "Фильтр по точкам интереса",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.POIFilter"
+                        }
+                    ]
+                },
+                "radius": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.RadiusFilter"
+                },
+                "travel_time": {
+                    "description": "Фильтр по времени пути",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.TravelTimeFilter"
+                        }
+                    ]
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.ApplyAdvancedFiltersRequest": {
+            "type": "object",
+            "properties": {
+                "filters": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.AdvancedGeoFilters"
+                },
+                "listing_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.BoundingBox": {
+            "type": "object",
+            "required": [
+                "max_lat",
+                "max_lng",
+                "min_lat",
+                "min_lng"
+            ],
+            "properties": {
+                "max_lat": {
+                    "type": "number"
+                },
+                "max_lng": {
+                    "type": "number"
+                },
+                "min_lat": {
+                    "type": "number"
+                },
+                "min_lng": {
+                    "type": "number"
+                }
+            }
+        },
         "backend_internal_proj_gis_types.Bounds": {
             "type": "object",
             "required": [
@@ -23366,42 +25013,216 @@ const docTemplate = `{
                 }
             }
         },
-        "backend_internal_proj_gis_types.Cluster": {
+        "backend_internal_proj_gis_types.City": {
             "type": "object",
             "properties": {
-                "bounds": {
-                    "$ref": "#/definitions/backend_internal_proj_gis_types.Bounds"
+                "area_km2": {
+                    "type": "number"
                 },
-                "center": {
+                "boundary": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Polygon"
+                },
+                "center_point": {
                     "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
                 },
-                "count": {
+                "country_code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "has_districts": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "population": {
                     "type": "integer"
                 },
-                "zoom_expand": {
-                    "description": "Уровень зума для раскрытия кластера",
+                "postal_codes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.CityWithDistance": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.City"
+                },
+                "distance": {
+                    "description": "расстояние в метрах",
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.DensityAnalysisResult": {
+            "type": "object",
+            "properties": {
+                "area_km2": {
+                    "type": "number"
+                },
+                "center_lat": {
+                    "type": "number"
+                },
+                "center_lng": {
+                    "type": "number"
+                },
+                "density": {
+                    "type": "number"
+                },
+                "grid_cell_id": {
+                    "type": "string"
+                },
+                "listing_count": {
                     "type": "integer"
                 }
             }
         },
-        "backend_internal_proj_gis_types.ClusterResponse": {
+        "backend_internal_proj_gis_types.DensityFilter": {
             "type": "object",
             "properties": {
-                "clusters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/backend_internal_proj_gis_types.Cluster"
-                    }
+                "avoid_crowded": {
+                    "description": "Избегать переполненных районов",
+                    "type": "boolean"
                 },
-                "listings": {
-                    "description": "Некластеризованные объявления",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/backend_internal_proj_gis_types.GeoListing"
-                    }
+                "max_density": {
+                    "description": "Максимальное количество объявлений на км²",
+                    "type": "number",
+                    "minimum": 0
                 },
-                "total_count": {
+                "min_density": {
+                    "description": "Минимальное количество объявлений на км²",
+                    "type": "number",
+                    "minimum": 0
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.District": {
+            "type": "object",
+            "properties": {
+                "area_km2": {
+                    "type": "number"
+                },
+                "boundary": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Polygon"
+                },
+                "center_point": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                },
+                "city_id": {
+                    "type": "string"
+                },
+                "country_code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "population": {
                     "type": "integer"
+                },
+                "postal_codes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.DistrictBoundaryResponse": {
+            "type": "object",
+            "properties": {
+                "boundary": {
+                    "description": "GeoJSON polygon as JSON object",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "city_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.EnhancedListingGeo": {
+            "type": "object",
+            "properties": {
+                "address_components": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.AddressComponents"
+                },
+                "address_verified": {
+                    "type": "boolean"
+                },
+                "blur_radius": {
+                    "type": "number"
+                },
+                "blurred_location": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "formatted_address": {
+                    "type": "string"
+                },
+                "geocoding_confidence": {
+                    "type": "number"
+                },
+                "geohash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "input_method": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.InputMethod"
+                },
+                "is_precise": {
+                    "type": "boolean"
+                },
+                "listing_id": {
+                    "type": "integer"
+                },
+                "location": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                },
+                "location_privacy": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.LocationPrivacyLevel"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -23415,9 +25236,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "created_at": {
-                    "type": "string"
-                },
-                "currency": {
                     "type": "string"
                 },
                 "description": {
@@ -23456,6 +25274,269 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_proj_gis_types.GeocodeContext": {
+            "type": "object",
+            "properties": {
+                "bounds": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Bounds"
+                },
+                "place_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "proximity_to": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.GeocodeValidateRequest": {
+            "type": "object",
+            "required": [
+                "address"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "minLength": 5
+                },
+                "context": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.GeocodeContext"
+                },
+                "country_code": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.GeocodeValidateResponse": {
+            "type": "object",
+            "properties": {
+                "address_components": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.AddressComponents"
+                },
+                "confidence": {
+                    "type": "number"
+                },
+                "formatted_address": {
+                    "type": "string"
+                },
+                "location": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "suggestions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_gis_types.AddressSuggestion"
+                    }
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.InputMethod": {
+            "type": "string",
+            "enum": [
+                "manual",
+                "geocoded",
+                "map_click",
+                "current_location"
+            ],
+            "x-enum-varnames": [
+                "InputManual",
+                "InputGeocoded",
+                "InputMapClick",
+                "InputCurrentLocation"
+            ]
+        },
+        "backend_internal_proj_gis_types.IsohronResponse": {
+            "type": "object",
+            "properties": {
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "geometry": {
+                                "type": "object",
+                                "properties": {
+                                    "coordinates": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "number"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "properties": {
+                                "type": "object",
+                                "properties": {
+                                    "contour": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.LocationPrivacyLevel": {
+            "type": "string",
+            "enum": [
+                "exact",
+                "street",
+                "district",
+                "city"
+            ],
+            "x-enum-comments": {
+                "PrivacyCity": "Только город",
+                "PrivacyDistrict": "Размытие ±500-1000м",
+                "PrivacyExact": "Точный адрес",
+                "PrivacyStreet": "Размытие ±100-200м"
+            },
+            "x-enum-varnames": [
+                "PrivacyExact",
+                "PrivacyStreet",
+                "PrivacyDistrict",
+                "PrivacyCity"
+            ]
+        },
+        "backend_internal_proj_gis_types.Municipality": {
+            "type": "object",
+            "properties": {
+                "area_km2": {
+                    "type": "number"
+                },
+                "boundary": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Polygon"
+                },
+                "center_point": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                },
+                "country_code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "district_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "population": {
+                    "type": "integer"
+                },
+                "postal_codes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.POIFilter": {
+            "type": "object",
+            "required": [
+                "max_distance",
+                "poi_type"
+            ],
+            "properties": {
+                "max_distance": {
+                    "description": "Максимальное расстояние в метрах",
+                    "type": "integer",
+                    "maximum": 5000,
+                    "minimum": 100
+                },
+                "min_count": {
+                    "description": "Минимальное количество POI в радиусе",
+                    "type": "integer",
+                    "maximum": 10,
+                    "minimum": 0
+                },
+                "poi_type": {
+                    "description": "Тип точки интереса",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.POIType"
+                        }
+                    ]
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.POISearchResult": {
+            "type": "object",
+            "properties": {
+                "distance": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "lng": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.POIType"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.POIType": {
+            "type": "string",
+            "enum": [
+                "school",
+                "hospital",
+                "metro",
+                "supermarket",
+                "park",
+                "bank",
+                "pharmacy",
+                "bus_stop"
+            ],
+            "x-enum-varnames": [
+                "POISchool",
+                "POIHospital",
+                "POIMetro",
+                "POISupermarket",
+                "POIPark",
+                "POIBank",
+                "POIPharmacy",
+                "POIBusStop"
+            ]
+        },
         "backend_internal_proj_gis_types.Point": {
             "type": "object",
             "required": [
@@ -23475,6 +25556,76 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_proj_gis_types.Polygon": {
+            "type": "object",
+            "properties": {
+                "coordinates": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.RadiusFilter": {
+            "type": "object",
+            "required": [
+                "center_lat",
+                "center_lng",
+                "radius_km"
+            ],
+            "properties": {
+                "center_lat": {
+                    "type": "number"
+                },
+                "center_lng": {
+                    "type": "number"
+                },
+                "radius_km": {
+                    "type": "number",
+                    "maximum": 50,
+                    "minimum": 0.1
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.RadiusSearchResponse": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "listings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_gis_types.GeoListing"
+                    }
+                },
+                "search_center": {
+                    "description": "центр поиска",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                        }
+                    ]
+                },
+                "search_radius": {
+                    "description": "радиус в метрах",
+                    "type": "number"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
         "backend_internal_proj_gis_types.SearchResponse": {
             "type": "object",
             "properties": {
@@ -23489,6 +25640,89 @@ const docTemplate = `{
                 },
                 "total_count": {
                     "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.TransportMode": {
+            "type": "string",
+            "enum": [
+                "walking",
+                "driving",
+                "cycling",
+                "transit"
+            ],
+            "x-enum-varnames": [
+                "TransportWalking",
+                "TransportDriving",
+                "TransportCycling",
+                "TransportTransit"
+            ]
+        },
+        "backend_internal_proj_gis_types.TravelTimeFilter": {
+            "type": "object",
+            "required": [
+                "center_lat",
+                "center_lng",
+                "max_minutes",
+                "transport_mode"
+            ],
+            "properties": {
+                "center_lat": {
+                    "description": "Центральная точка для расчета изохрон",
+                    "type": "number"
+                },
+                "center_lng": {
+                    "type": "number"
+                },
+                "max_minutes": {
+                    "description": "Максимальное время пути в минутах (5-60)",
+                    "type": "integer",
+                    "maximum": 60,
+                    "minimum": 5
+                },
+                "transport_mode": {
+                    "description": "Тип транспорта",
+                    "enum": [
+                        "walking",
+                        "driving",
+                        "cycling",
+                        "transit"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_gis_types.TransportMode"
+                        }
+                    ]
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.UpdateAddressRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "input_method",
+                "location",
+                "location_privacy"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "minLength": 5
+                },
+                "address_components": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.AddressComponents"
+                },
+                "input_method": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.InputMethod"
+                },
+                "location": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                },
+                "location_privacy": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.LocationPrivacyLevel"
+                },
+                "verified": {
+                    "type": "boolean"
                 }
             }
         },
@@ -23514,6 +25748,35 @@ const docTemplate = `{
                     "type": "number",
                     "maximum": 180,
                     "minimum": -180
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.VisibleCitiesRequest": {
+            "type": "object",
+            "required": [
+                "bounds",
+                "center"
+            ],
+            "properties": {
+                "bounds": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Bounds"
+                },
+                "center": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.Point"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.VisibleCitiesResponse": {
+            "type": "object",
+            "properties": {
+                "closest_city": {
+                    "$ref": "#/definitions/backend_internal_proj_gis_types.CityWithDistance"
+                },
+                "visible_cities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_gis_types.CityWithDistance"
+                    }
                 }
             }
         },

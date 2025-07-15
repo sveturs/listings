@@ -44,6 +44,7 @@ type MarketplaceServiceInterface interface {
 
 	// атрибуты
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
+	GetCategoryAttributesWithLang(ctx context.Context, categoryID int, lang string) ([]models.CategoryAttribute, error)
 	SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error
 	GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error)
 
@@ -77,8 +78,8 @@ type MarketplaceServiceInterface interface {
 	SaveSearchQuery(ctx context.Context, query string, resultsCount int, language string) error
 
 	// Карта - геопространственные методы
-	GetListingsInBounds(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapMarker, error)
-	GetMapClusters(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapCluster, error)
+	GetListingsInBounds(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64, attributesFilter string) ([]models.MapMarker, error)
+	GetMapClusters(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64, attributesFilter string) ([]models.MapCluster, error)
 
 	// Методы перевода
 	TranslateText(ctx context.Context, text, sourceLanguage, targetLanguage string) (string, error)
