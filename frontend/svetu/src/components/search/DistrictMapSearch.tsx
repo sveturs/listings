@@ -230,9 +230,13 @@ function DistrictMapSearchInner() {
 }
 
 export default function DistrictMapSearch() {
+  // DISTRICT FUNCTIONALITY TEMPORARILY DISABLED
+  return null;
+  /*
   return (
     <SearchModeProvider>
       <DistrictMapSearchInner />
     </SearchModeProvider>
   );
+  */
 }

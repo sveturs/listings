@@ -4,8 +4,8 @@ import { MapBounds } from '../types/gis';
 
 // Глобальный кэш для предотвращения множественных экземпляров
 let globalVisibleCitiesData: {
-  visibleCities: City[];
-  closestCity: { city: City; distance: number } | null;
+  visibleCities: CityWithDistance[];
+  closestCity: CityWithDistance | null;
   availableDistricts: District[];
   loading: boolean;
   error: string | null;
@@ -340,6 +340,8 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
             closestCity: result.closest_city
           });
 
+          // DISTRICT FUNCTIONALITY TEMPORARILY DISABLED
+          /*
           // Если есть ближайший город с районами, загружаем их
           if (result.closest_city?.city.has_districts) {
             console.log('🏙️ Closest city has districts:', result.closest_city.city.name, result.closest_city.city.id);
@@ -360,6 +362,8 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
             console.log('🏙️ Closest city has NO districts:', result.closest_city?.city.name);
             updateGlobalData({ availableDistricts: [] });
           }
+          */
+          updateGlobalData({ availableDistricts: [] });
         }
       } catch (err) {
         const errorMessage =
@@ -407,6 +411,8 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
         setVisibleCities(result.visible_cities);
         setClosestCity(result.closest_city);
 
+        // DISTRICT FUNCTIONALITY TEMPORARILY DISABLED
+        /*
         if (result.closest_city?.city.has_districts) {
           try {
             const districts = await getDistrictsForCity(
@@ -421,6 +427,8 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
             setAvailableDistricts([]);
           }
         } else {
+        */
+        if (true) {
           setAvailableDistricts([]);
         }
       }

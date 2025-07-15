@@ -725,37 +725,11 @@ const MapPage: React.FC = () => {
       <div className="relative h-screen md:h-[calc(100vh-140px)]">
         {/* Десктопная боковая панель с фильтрами */}
         <div className="absolute left-4 top-4 z-10 w-80 bg-white rounded-lg shadow-lg hidden md:block">
-          {/* Переключатель типа поиска */}
+          {/* Поиск по адресу */}
           <div className="p-4 border-b border-base-300">
-            <div className="flex gap-2 mb-4">
-              <button
-                type="button"
-                className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  searchType === 'address'
-                    ? 'bg-primary text-primary-content'
-                    : 'bg-base-200 text-base-content hover:bg-base-300'
-                }`}
-                onClick={() => setSearchType('address')}
-              >
-                {t('search.byAddress')}
-              </button>
-              <button
-                type="button"
-                className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  searchType === 'district'
-                    ? 'bg-primary text-primary-content'
-                    : 'bg-base-200 text-base-content hover:bg-base-300'
-                }`}
-                onClick={() => setSearchType('district')}
-              >
-                {t('search.byDistrict')}
-              </button>
-            </div>
 
-            {/* Поиск по адресу */}
-            {searchType === 'address' && (
-              <>
-                <label className="block text-sm font-medium text-base-content mb-2">
+            {/* Поиск по адресу - всегда показываем, так как районы отключены */}
+            <label className="block text-sm font-medium text-base-content mb-2">
                   {t('search.address')}
                 </label>
                 <SearchBar
@@ -776,22 +750,7 @@ const MapPage: React.FC = () => {
                       : undefined
                   }
                 />
-              </>
-            )}
 
-            {/* Поиск по районам */}
-            {searchType === 'district' && (
-              <DistrictMapSelector
-                onSearchResults={handleDistrictSearchResults}
-                onDistrictBoundsChange={handleDistrictBoundsChange}
-                onDistrictBoundaryChange={(boundary) => {
-                  console.log('🌍 District boundary received:', boundary);
-                  setDistrictBoundary(boundary);
-                }}
-                currentViewport={currentMapViewport}
-                className="w-full"
-              />
-            )}
           </div>
 
           {/* Фильтры */}

@@ -2,11 +2,11 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useVisibleCities } from '../hooks/useVisibleCities';
-import type { City, District } from '../types';
+import type { CityWithDistance, District } from '../hooks/useVisibleCities';
 
 interface VisibleCitiesContextType {
-  visibleCities: City[];
-  closestCity: { city: City; distance: number } | null;
+  visibleCities: CityWithDistance[];
+  closestCity: CityWithDistance | null;
   availableDistricts: District[];
   loading: boolean;
   error: string | null;
