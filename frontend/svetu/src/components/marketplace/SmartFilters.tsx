@@ -25,7 +25,7 @@ export function SmartFilters({
   lang = 'sr',
   className = '',
 }: SmartFiltersProps) {
-  const t = useTranslations('marketplace');
+  const t = useTranslations('map');
   const { attributes, loading, error } = useCategoryFilters(categoryId, {
     lang,
   });
