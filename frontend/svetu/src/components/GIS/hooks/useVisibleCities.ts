@@ -1,6 +1,33 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { MapBounds } from '../types/gis';
+
+// Глобальный кэш для предотвращения множественных экземпляров
+let globalVisibleCitiesData: {
+  visibleCities: City[];
+  closestCity: { city: City; distance: number } | null;
+  availableDistricts: District[];
+  loading: boolean;
+  error: string | null;
+} | null = null;
+
+let globalDataListeners: Set<() => void> = new Set();
+
+// Функция для обновления глобального состояния
+function updateGlobalData(newData: Partial<typeof globalVisibleCitiesData>) {
+  globalVisibleCitiesData = {
+    visibleCities: [],
+    closestCity: null,
+    availableDistricts: [],
+    loading: false,
+    error: null,
+    ...globalVisibleCitiesData,
+    ...newData
+  };
+
+  // Уведомляем всех слушателей
+  globalDataListeners.forEach(listener => listener());
+}
 
 // Типы для работы с городами и видимостью
 export interface City {
@@ -92,11 +119,35 @@ interface UseVisibleCitiesResult {
  */
 export const useVisibleCities = (): UseVisibleCitiesResult => {
   // Состояние
-  const [visibleCities, setVisibleCities] = useState<CityWithDistance[]>([]);
-  const [closestCity, setClosestCity] = useState<CityWithDistance | null>(null);
-  const [availableDistricts, setAvailableDistricts] = useState<District[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [visibleCities, setVisibleCities] = useState<CityWithDistance[]>(
+    globalVisibleCitiesData?.visibleCities || []
+  );
+  const [closestCity, setClosestCity] = useState<CityWithDistance | null>(
+    globalVisibleCitiesData?.closestCity || null
+  );
+  const [availableDistricts, setAvailableDistricts] = useState<District[]>(
+    globalVisibleCitiesData?.availableDistricts || []
+  );
+  const [loading, setLoading] = useState(globalVisibleCitiesData?.loading || false);
+  const [error, setError] = useState<string | null>(globalVisibleCitiesData?.error || null);
+
+  // Регистрируем слушатель для синхронизации состояния
+  const forceUpdate = useCallback(() => {
+    if (globalVisibleCitiesData) {
+      setVisibleCities(globalVisibleCitiesData.visibleCities);
+      setClosestCity(globalVisibleCitiesData.closestCity);
+      setAvailableDistricts(globalVisibleCitiesData.availableDistricts);
+      setLoading(globalVisibleCitiesData.loading);
+      setError(globalVisibleCitiesData.error);
+    }
+  }, []);
+
+  useEffect(() => {
+    globalDataListeners.add(forceUpdate);
+    return () => {
+      globalDataListeners.delete(forceUpdate);
+    };
+  }, [forceUpdate]);
 
   // Viewport состояние (дебаунсированное для оптимизации)
   const [currentViewport, setCurrentViewport] = useState<{
@@ -203,6 +254,13 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
 
         const districts = data.data as District[];
 
+        console.log('📊 Districts data received:', {
+          cityId,
+          count: districts.length,
+          firstDistrict: districts[0]?.name,
+          lastDistrict: districts[districts.length - 1]?.name
+        });
+
         // Сохраняем в кэш
         setCityDistrictsCache((prev) => new Map(prev).set(cityId, districts));
 
@@ -267,8 +325,7 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
     if (!debouncedViewport) return;
 
     const updateVisibleCities = async () => {
-      setLoading(true);
-      setError(null);
+      updateGlobalData({ loading: true, error: null });
 
       try {
         const result = await fetchVisibleCities(
@@ -277,36 +334,44 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
         );
 
         if (result) {
-          setVisibleCities(result.visible_cities);
-          setClosestCity(result.closest_city);
+          console.log('🌆 Visible cities response:', result);
+          updateGlobalData({
+            visibleCities: result.visible_cities,
+            closestCity: result.closest_city
+          });
 
           // Если есть ближайший город с районами, загружаем их
           if (result.closest_city?.city.has_districts) {
+            console.log('🏙️ Closest city has districts:', result.closest_city.city.name, result.closest_city.city.id);
             try {
               const districts = await getDistrictsForCity(
                 result.closest_city.city.id
               );
-              setAvailableDistricts(districts);
+              console.log('📍 Districts loaded:', districts.length, 'districts');
+              updateGlobalData({ availableDistricts: districts });
             } catch (districtErr) {
               console.error(
                 'Error loading districts for closest city:',
                 districtErr
               );
-              setAvailableDistricts([]);
+              updateGlobalData({ availableDistricts: [] });
             }
           } else {
-            setAvailableDistricts([]);
+            console.log('🏙️ Closest city has NO districts:', result.closest_city?.city.name);
+            updateGlobalData({ availableDistricts: [] });
           }
         }
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Unknown error';
-        setError(errorMessage);
-        setVisibleCities([]);
-        setClosestCity(null);
-        setAvailableDistricts([]);
+        updateGlobalData({
+          error: errorMessage,
+          visibleCities: [],
+          closestCity: null,
+          availableDistricts: []
+        });
       } finally {
-        setLoading(false);
+        updateGlobalData({ loading: false });
       }
     };
 

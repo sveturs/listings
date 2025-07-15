@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useVisibleCitiesContext } from '../GIS/contexts/VisibleCitiesContext';
 import type { components as _components } from '@/types/generated/api';
 
 // Временные интерфейсы до исправления API типов
@@ -40,33 +41,35 @@ export function DistrictSelector({
   className = '',
 }: DistrictSelectorProps) {
   const t = useTranslations('search');
-  const [districts, setDistricts] = useState<District[]>([]);
+
+  // Используем контекст для получения районов текущего города
+  const { availableDistricts, closestCity, loading: citiesLoading } = useVisibleCitiesContext();
+
+  // Логирование для отладки
+  console.log('🏗️ DistrictSelector render:', {
+    availableDistricts: availableDistricts.length,
+    closestCity: closestCity?.city.name,
+    citiesLoading
+  });
+
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
-  const [loadingDistricts, setLoadingDistricts] = useState(true);
   const [loadingMunicipalities, setLoadingMunicipalities] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Загрузка районов
+  // Сбрасываем выбранный район, если изменился город
   useEffect(() => {
-    const fetchDistricts = async () => {
-      try {
-        setLoadingDistricts(true);
-        const response = await fetch('/api/v1/gis/districts?country_code=RS');
-        if (!response.ok) {
-          throw new Error('Failed to fetch districts');
-        }
-        const data = await response.json();
-        setDistricts(data.data || []);
-      } catch (err) {
-        console.error('Error fetching districts:', err);
-        setError(t('errors.loadingDistricts'));
-      } finally {
-        setLoadingDistricts(false);
-      }
-    };
+    if (selectedDistrictId) {
+      // Проверяем, есть ли выбранный район в списке доступных районов
+      const stillAvailable = availableDistricts.some(
+        (district) => district.id === selectedDistrictId
+      );
 
-    fetchDistricts();
-  }, [t]);
+      if (!stillAvailable) {
+        onDistrictChange('');
+        onMunicipalityChange('');
+      }
+    }
+  }, [availableDistricts, selectedDistrictId, onDistrictChange, onMunicipalityChange]);
 
   // Загрузка муниципалитетов при выборе района
   useEffect(() => {
@@ -130,14 +133,18 @@ export function DistrictSelector({
           className="select select-bordered w-full"
           value={selectedDistrictId || ''}
           onChange={handleDistrictChange}
-          disabled={loadingDistricts}
+          disabled={citiesLoading}
         >
           <option value="">{t('allDistricts')}</option>
-          {districts.map((district) => (
-            <option key={district.id} value={district.id}>
-              {district.name}
-            </option>
-          ))}
+          {closestCity && (
+            <optgroup label={`${t('districtsIn')} ${closestCity.city.name}`}>
+              {availableDistricts.map((district) => (
+                <option key={district.id} value={district.id}>
+                  {district.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
       </div>
 
@@ -164,7 +171,7 @@ export function DistrictSelector({
       )}
 
       {/* Индикатор загрузки */}
-      {(loadingDistricts || loadingMunicipalities) && (
+      {(citiesLoading || loadingMunicipalities) && (
         <div className="flex justify-center">
           <span className="loading loading-spinner loading-sm"></span>
         </div>

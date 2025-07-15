@@ -321,6 +321,7 @@
     "allDistricts": "All districts",
     "allMunicipalities": "All municipalities",
     "searchByDistrict": "Search by district",
+    "districtsIn": "Districts in",
     "population": "Population",
     "area": "Area",
     "searching": "Searching...",
@@ -2612,6 +2613,12 @@
       "timeout": "Request timed out",
       "unknown_error": "Unknown geolocation error",
       "not_supported": "Geolocation not supported"
+    },
+    "district_filter": {
+      "district": "District",
+      "select_district": "Select district",
+      "districts_in": "Districts in",
+      "load_error": "Failed to load districts"
     },
     "search": {
       "placeholder": "Enter address or location...",

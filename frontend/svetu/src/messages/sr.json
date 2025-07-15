@@ -326,6 +326,7 @@
     "municipality": "Mesna zajednica",
     "allMunicipalities": "Sve mesne zajednice",
     "searchByDistrict": "Pretraži po opštini",
+    "districtsIn": "Opštine u",
     "population": "Stanovništvo",
     "area": "Površina",
     "searching": "Pretraživanje...",
@@ -2517,7 +2518,13 @@
   "gis": {
     "accessibilitySettings": "Podešavanja dostupnosti",
     "kilometers": "km",
-    "meters": "m"
+    "meters": "m",
+    "district_filter": {
+      "district": "Opština",
+      "select_district": "Izaberite opštinu",
+      "districts_in": "Opštine u",
+      "load_error": "Greška pri učitavanju opština"
+    }
   },
   "map": {
     "title": "Mapa oglasa",

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useVisibleCitiesContext } from './contexts/VisibleCitiesContext';
 
 interface District {
   id: string;
@@ -35,7 +36,16 @@ export default function DistrictFilter({
 }: DistrictFilterProps) {
   const t = useTranslations('gis');
 
-  const [districts, setDistricts] = useState<District[]>([]);
+  // Используем контекст для получения районов текущего города
+  const { availableDistricts, closestCity, loading: citiesLoading } = useVisibleCitiesContext();
+
+  // Логирование для отладки
+  console.log('🏗️ DistrictFilter render:', {
+    availableDistricts: availableDistricts.length,
+    closestCity: closestCity?.city.name,
+    citiesLoading
+  });
+
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
   const [selectedDistrict, setSelectedDistrict] = useState<District | null>(
     null
@@ -44,27 +54,6 @@ export default function DistrictFilter({
     useState<Municipality | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Загрузка районов
-  const loadDistricts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/v1/gis/districts?country_code=RS');
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setDistricts(data.data || []);
-    } catch (err) {
-      console.error('Failed to load districts:', err);
-      setError(t('district_filter.load_error'));
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
 
   // Загрузка муниципалитетов для выбранного района
   const loadMunicipalities = useCallback(
@@ -92,10 +81,22 @@ export default function DistrictFilter({
     [t]
   );
 
-  // Загрузка районов при монтировании
+  // Сбрасываем выбранный район, если изменился город
   useEffect(() => {
-    loadDistricts();
-  }, [loadDistricts]);
+    if (selectedDistrict) {
+      // Проверяем, есть ли выбранный район в списке доступных районов
+      const stillAvailable = availableDistricts.some(
+        (district) => district.id === selectedDistrict.id
+      );
+
+      if (!stillAvailable) {
+        setSelectedDistrict(null);
+        setSelectedMunicipality(null);
+        if (onDistrictSelect) onDistrictSelect(null);
+        if (onMunicipalitySelect) onMunicipalitySelect(null);
+      }
+    }
+  }, [availableDistricts, selectedDistrict, onDistrictSelect, onMunicipalitySelect]);
 
   // Обработка выбора района
   const handleDistrictChange = useCallback(
@@ -109,7 +110,7 @@ export default function DistrictFilter({
         return;
       }
 
-      const district = districts.find((d) => d.id === districtId) || null;
+      const district = availableDistricts.find((d) => d.id === districtId) || null;
       setSelectedDistrict(district);
       setSelectedMunicipality(null);
       onDistrictSelect?.(district);
@@ -119,7 +120,7 @@ export default function DistrictFilter({
         loadMunicipalities(district.id);
       }
     },
-    [districts, onDistrictSelect, onMunicipalitySelect, loadMunicipalities]
+    [availableDistricts, onDistrictSelect, onMunicipalitySelect, loadMunicipalities]
   );
 
   // Обработка выбора муниципалитета
@@ -150,16 +151,20 @@ export default function DistrictFilter({
           value={selectedDistrict?.id || ''}
           onChange={(e) => handleDistrictChange(e.target.value)}
           className="select select-bordered select-sm w-full"
-          disabled={disabled || loading}
+          disabled={disabled || loading || citiesLoading}
         >
           <option value="">{t('district_filter.select_district')}</option>
-          {districts.map((district) => (
-            <option key={district.id} value={district.id}>
-              {district.name}
-              {district.population &&
-                ` (${district.population.toLocaleString()})`}
-            </option>
-          ))}
+          {closestCity && (
+            <optgroup label={`${t('district_filter.districts_in')} ${closestCity.city.name}`}>
+              {availableDistricts.map((district) => (
+                <option key={district.id} value={district.id}>
+                  {district.name}
+                  {district.population &&
+                    ` (${district.population.toLocaleString()})`}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
       </div>
 

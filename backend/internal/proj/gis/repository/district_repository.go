@@ -28,7 +28,7 @@ func NewDistrictRepository(db *sqlx.DB) *DistrictRepository {
 // GetDistricts returns all districts with optional filtering
 func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.DistrictSearchParams) ([]types.District, error) {
 	query := `
-		SELECT 
+		SELECT
 			id, name, city_id, country_code,
 			ST_AsGeoJSON(boundary) as boundary_json,
 			ST_AsGeoJSON(center_point) as center_json,
@@ -126,7 +126,7 @@ func (r *DistrictRepository) GetDistrictByID(ctx context.Context, id uuid.UUID) 
 	var boundaryJSON, centerJSON sql.NullString
 
 	query := `
-		SELECT 
+		SELECT
 			id, name, city_id, country_code,
 			ST_AsGeoJSON(boundary) as boundary_json,
 			ST_AsGeoJSON(center_point) as center_json,
@@ -171,7 +171,7 @@ func (r *DistrictRepository) GetDistrictByID(ctx context.Context, id uuid.UUID) 
 // GetMunicipalities returns all municipalities with optional filtering
 func (r *DistrictRepository) GetMunicipalities(ctx context.Context, params types.MunicipalitySearchParams) ([]types.Municipality, error) {
 	query := `
-		SELECT 
+		SELECT
 			id, name, district_id, country_code,
 			ST_AsGeoJSON(boundary) as boundary_json,
 			ST_AsGeoJSON(center_point) as center_json,
@@ -259,7 +259,7 @@ func (r *DistrictRepository) GetMunicipalityByID(ctx context.Context, id uuid.UU
 	var boundaryJSON, centerJSON sql.NullString
 
 	query := `
-		SELECT 
+		SELECT
 			id, name, district_id, country_code,
 			ST_AsGeoJSON(boundary) as boundary_json,
 			ST_AsGeoJSON(center_point) as center_json,
@@ -304,7 +304,7 @@ func (r *DistrictRepository) GetMunicipalityByID(ctx context.Context, id uuid.UU
 // SearchListingsByDistrict searches for listings within a district
 func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, params types.DistrictListingSearchParams) ([]types.GeoListing, error) {
 	query := `
-		SELECT 
+		SELECT
 			ml.id,
 			ml.title,
 			COALESCE(ml.description, '') as description,
@@ -322,11 +322,11 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 			ml.created_at,
 			ml.updated_at,
 			COALESCE(
-				(SELECT mi.public_url 
-				 FROM marketplace_images mi 
-				 WHERE mi.listing_id = ml.id 
-				 ORDER BY mi.created_at 
-				 LIMIT 1), 
+				(SELECT mi.public_url
+				 FROM marketplace_images mi
+				 WHERE mi.listing_id = ml.id
+				 ORDER BY mi.created_at
+				 LIMIT 1),
 				''
 			) as first_image_url
 		FROM marketplace_listings ml
@@ -417,7 +417,7 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 // SearchListingsByMunicipality searches for listings within a municipality
 func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, params types.MunicipalityListingSearchParams) ([]types.GeoListing, error) {
 	query := `
-		SELECT 
+		SELECT
 			ml.id,
 			ml.title,
 			ml.description,
@@ -435,11 +435,11 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 			ml.created_at,
 			ml.updated_at,
 			COALESCE(
-				(SELECT mi.public_url 
-				 FROM marketplace_images mi 
-				 WHERE mi.listing_id = ml.id 
-				 ORDER BY mi.created_at 
-				 LIMIT 1), 
+				(SELECT mi.public_url
+				 FROM marketplace_images mi
+				 WHERE mi.listing_id = ml.id
+				 ORDER BY mi.created_at
+				 LIMIT 1),
 				''
 			) as first_image_url
 		FROM marketplace_listings ml
@@ -532,7 +532,7 @@ func (r *DistrictRepository) GetDistrictBoundaryGeoJSON(ctx context.Context, dis
 
 	query := `
 		SELECT ST_AsGeoJSON(boundary) as boundary_geojson
-		FROM districts 
+		FROM districts
 		WHERE id = $1
 	`
 
@@ -554,7 +554,7 @@ func (r *DistrictRepository) GetDistrictBoundaryGeoJSON(ctx context.Context, dis
 // GetCities returns cities with optional filtering
 func (r *DistrictRepository) GetCities(ctx context.Context, params types.CitySearchParams) ([]types.City, error) {
 	query := `
-		SELECT 
+		SELECT
 			id, name, slug, country_code,
 			ST_AsGeoJSON(center_point) as center_json,
 			ST_AsGeoJSON(boundary) as boundary_json,
@@ -588,11 +588,14 @@ func (r *DistrictRepository) GetCities(ctx context.Context, params types.CitySea
 		args = append(args, "%"+params.SearchQuery+"%")
 	}
 
-	// Bounds filtering using ST_Intersects
+	// Bounds filtering - use boundary if available, otherwise use center_point
 	if params.Bounds != nil {
 		argCount++
-		query += fmt.Sprintf(" AND ST_Intersects(boundary, ST_MakeEnvelope($%d, $%d, $%d, $%d, 4326))",
-			argCount, argCount+1, argCount+2, argCount+3)
+		query += fmt.Sprintf(` AND (
+			(boundary IS NOT NULL AND ST_Intersects(boundary, ST_MakeEnvelope($%d, $%d, $%d, $%d, 4326)))
+			OR
+			(boundary IS NULL AND ST_Intersects(center_point, ST_MakeEnvelope($%d, $%d, $%d, $%d, 4326)))
+		)`, argCount, argCount+1, argCount+2, argCount+3, argCount, argCount+1, argCount+2, argCount+3)
 		args = append(args, params.Bounds.West, params.Bounds.South, params.Bounds.East, params.Bounds.North)
 		argCount += 3
 	}
