@@ -20,7 +20,9 @@ if [ ! -f .env ]; then
 fi
 
 # Загрузка переменных окружения
-export $(cat .env | grep -v '^#' | xargs)
+set -o allexport
+source .env
+set +o allexport
 
 # Проверка подключения к OpenSearch
 echo -e "${YELLOW}Checking OpenSearch connection...${NC}"
