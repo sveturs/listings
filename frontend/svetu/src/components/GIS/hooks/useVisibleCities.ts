@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { MapBounds } from '../types/gis';
 
@@ -11,7 +11,7 @@ let globalVisibleCitiesData: {
   error: string | null;
 } | null = null;
 
-let globalDataListeners: Set<() => void> = new Set();
+const globalDataListeners: Set<() => void> = new Set();
 
 // Функция для обновления глобального состояния
 function updateGlobalData(newData: Partial<typeof globalVisibleCitiesData>) {
@@ -22,11 +22,11 @@ function updateGlobalData(newData: Partial<typeof globalVisibleCitiesData>) {
     loading: false,
     error: null,
     ...globalVisibleCitiesData,
-    ...newData
+    ...newData,
   };
 
   // Уведомляем всех слушателей
-  globalDataListeners.forEach(listener => listener());
+  globalDataListeners.forEach((listener) => listener());
 }
 
 // Типы для работы с городами и видимостью
@@ -128,8 +128,12 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
   const [availableDistricts, setAvailableDistricts] = useState<District[]>(
     globalVisibleCitiesData?.availableDistricts || []
   );
-  const [loading, setLoading] = useState(globalVisibleCitiesData?.loading || false);
-  const [error, setError] = useState<string | null>(globalVisibleCitiesData?.error || null);
+  const [loading, setLoading] = useState(
+    globalVisibleCitiesData?.loading || false
+  );
+  const [error, setError] = useState<string | null>(
+    globalVisibleCitiesData?.error || null
+  );
 
   // Регистрируем слушатель для синхронизации состояния
   const forceUpdate = useCallback(() => {
@@ -258,7 +262,7 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
           cityId,
           count: districts.length,
           firstDistrict: districts[0]?.name,
-          lastDistrict: districts[districts.length - 1]?.name
+          lastDistrict: districts[districts.length - 1]?.name,
         });
 
         // Сохраняем в кэш
@@ -337,7 +341,7 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
           console.log('🌆 Visible cities response:', result);
           updateGlobalData({
             visibleCities: result.visible_cities,
-            closestCity: result.closest_city
+            closestCity: result.closest_city,
           });
 
           // DISTRICT FUNCTIONALITY TEMPORARILY DISABLED
@@ -372,7 +376,7 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
           error: errorMessage,
           visibleCities: [],
           closestCity: null,
-          availableDistricts: []
+          availableDistricts: [],
         });
       } finally {
         updateGlobalData({ loading: false });

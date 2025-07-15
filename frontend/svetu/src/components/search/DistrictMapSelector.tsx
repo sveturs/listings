@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+// import React from 'react';
 import type { Feature, Polygon } from 'geojson';
 import type { MapBounds } from '@/components/GIS/types/gis';
 
 // Временные интерфейсы до исправления API типов
-interface District {
+interface _District {
   id: string;
   name: string;
   geometry?: any;
@@ -53,12 +53,12 @@ interface DistrictMapSelectorProps {
 }
 
 export function DistrictMapSelector({
-  onSearchResults,
-  onDistrictBoundsChange,
-  onDistrictBoundaryChange,
-  onViewportChange,
-  currentViewport,
-  className = '',
+  onSearchResults: _onSearchResults,
+  onDistrictBoundsChange: _onDistrictBoundsChange,
+  onDistrictBoundaryChange: _onDistrictBoundaryChange,
+  onViewportChange: _onViewportChange,
+  currentViewport: _currentViewport,
+  className: _className = '',
 }: DistrictMapSelectorProps) {
   // DISTRICT FUNCTIONALITY TEMPORARILY DISABLED
   return null;

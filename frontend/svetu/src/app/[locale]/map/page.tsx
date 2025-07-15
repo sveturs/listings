@@ -20,7 +20,7 @@ import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
 // import WalkingAccessibilityControl from '@/components/GIS/Map/WalkingAccessibilityControl'; // Заменен на NativeSliderControl
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
-import { DistrictMapSelector } from '@/components/search';
+// import { DistrictMapSelector } from '@/components/search';
 
 // Функция для проверки, находится ли точка внутри полигона (Ray Casting Algorithm)
 function isPointInPolygon(
@@ -320,7 +320,10 @@ const MapPage: React.FC = () => {
           );
 
           filteredListings = filteredListings.filter((item: any) => {
-            const point: [number, number] = [item.location.lng, item.location.lat];
+            const point: [number, number] = [
+              item.location.lng,
+              item.location.lat,
+            ];
             const isInside = isPointInPolygon(
               point,
               districtBoundary.geometry.coordinates[0] as [number, number][]
@@ -391,7 +394,13 @@ const MapPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedFilters, debouncedBuyerLocation, t]);
+  }, [
+    debouncedFilters,
+    debouncedBuyerLocation,
+    districtBoundary,
+    searchType,
+    t,
+  ]);
 
   // Преобразование объявлений в маркеры
   const createMarkers = useCallback(
@@ -499,7 +508,7 @@ const MapPage: React.FC = () => {
     if (debouncedSearchQuery && isSearchFromUser) {
       handleAddressSearch(debouncedSearchQuery);
     }
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, handleAddressSearch, isSearchFromUser]);
 
   // Обработка изменений фильтров и позиции покупателя
   useEffect(() => {
@@ -722,35 +731,33 @@ const MapPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-base-100">
       {/* Контейнер с картой и фильтрами */}
-      <div className="relative h-screen md:h-[calc(100vh-140px)]">
+      <div className="relative h-[100dvh] md:h-[calc(100vh-140px)]">
         {/* Десктопная боковая панель с фильтрами */}
         <div className="absolute left-4 top-4 z-10 w-80 bg-white rounded-lg shadow-lg hidden md:block">
           {/* Поиск по адресу */}
           <div className="p-4 border-b border-base-300">
-
             {/* Поиск по адресу - всегда показываем, так как районы отключены */}
             <label className="block text-sm font-medium text-base-content mb-2">
-                  {t('search.address')}
-                </label>
-                <SearchBar
-                  initialQuery={searchQuery}
-                  onSearch={(query) => {
-                    setIsSearchFromUser(true);
-                    handleAddressSearch(query);
-                  }}
-                  placeholder={t('search.addressPlaceholder')}
-                  className="w-full"
-                  geoLocation={
-                    viewState.latitude && viewState.longitude
-                      ? {
-                          lat: viewState.latitude,
-                          lon: viewState.longitude,
-                          radius: filters.radius,
-                        }
-                      : undefined
-                  }
-                />
-
+              {t('search.address')}
+            </label>
+            <SearchBar
+              initialQuery={searchQuery}
+              onSearch={(query) => {
+                setIsSearchFromUser(true);
+                handleAddressSearch(query);
+              }}
+              placeholder={t('search.addressPlaceholder')}
+              className="w-full"
+              geoLocation={
+                viewState.latitude && viewState.longitude
+                  ? {
+                      lat: viewState.latitude,
+                      lon: viewState.longitude,
+                      radius: filters.radius,
+                    }
+                  : undefined
+              }
+            />
           </div>
 
           {/* Фильтры */}

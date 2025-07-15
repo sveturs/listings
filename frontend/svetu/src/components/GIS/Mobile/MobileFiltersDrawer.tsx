@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import WalkingAccessibilityControl from '../Map/WalkingAccessibilityControl';
-import { DistrictMapSelector } from '@/components/search';
+// import { DistrictMapSelector } from '@/components/search';
 import type { Feature, Polygon } from 'geojson';
 import type { MapBounds } from '@/components/GIS/types/gis';
 
@@ -82,12 +82,12 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
   isSearching: _isSearching,
   markersCount,
   enableDistrictSearch: _enableDistrictSearch,
-  onDistrictSearchResults,
-  onDistrictBoundsChange,
-  onDistrictBoundaryChange,
-  currentViewport,
-  searchType = 'address',
-  onSearchTypeChange,
+  onDistrictSearchResults: _onDistrictSearchResults,
+  onDistrictBoundsChange: _onDistrictBoundsChange,
+  onDistrictBoundaryChange: _onDistrictBoundaryChange,
+  currentViewport: _currentViewport,
+  searchType: _searchType = 'address',
+  onSearchTypeChange: _onSearchTypeChange,
   translations: t,
 }) => {
   const [localFilters, setLocalFilters] = useState<MapFilters>({
@@ -191,7 +191,6 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
           <div className="flex-1 overflow-y-auto overscroll-contain">
             {/* Поиск по адресу */}
             <div className="p-4 border-b border-base-300">
-
               {/* Поиск по адресу - всегда показываем, так как районы отключены */}
               <label className="block text-sm font-medium text-base-content mb-2">
                 {t.search.address}
@@ -202,7 +201,6 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
                 placeholder={t.search.placeholder}
                 className="w-full"
               />
-
             </div>
 
             {/* Фильтры */}

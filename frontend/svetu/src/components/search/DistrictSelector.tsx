@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// import React from 'react';
 
 // Временные интерфейсы до исправления API типов
 interface District {
@@ -16,7 +16,7 @@ interface District {
   area_km2?: number;
 }
 
-interface Municipality {
+interface _Municipality {
   id: string;
   name: string;
   districts?: District[];
@@ -31,11 +31,11 @@ interface DistrictSelectorProps {
 }
 
 export function DistrictSelector({
-  selectedDistrictId,
-  selectedMunicipalityId,
-  onDistrictChange,
-  onMunicipalityChange,
-  className = '',
+  selectedDistrictId: _selectedDistrictId,
+  selectedMunicipalityId: _selectedMunicipalityId,
+  onDistrictChange: _onDistrictChange,
+  onMunicipalityChange: _onMunicipalityChange,
+  className: _className = '',
 }: DistrictSelectorProps) {
   // DISTRICT FUNCTIONALITY TEMPORARILY DISABLED
   return null;

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// import React from 'react';
 
 interface District {
   id: string;
@@ -27,10 +27,10 @@ interface DistrictFilterProps {
 }
 
 export default function DistrictFilter({
-  onDistrictSelect,
-  onMunicipalitySelect,
-  className = '',
-  disabled = false,
+  onDistrictSelect: _onDistrictSelect,
+  onMunicipalitySelect: _onMunicipalitySelect,
+  className: _className = '',
+  disabled: _disabled = false,
 }: DistrictFilterProps) {
   // DISTRICT FUNCTIONALITY TEMPORARILY DISABLED
   return null;

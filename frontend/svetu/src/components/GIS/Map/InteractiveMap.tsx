@@ -44,6 +44,7 @@ import MarkerHoverPopup from './MarkerHoverPopup';
 // import NativeSliderControl from './NativeSliderControl';
 import CompactSliderControl from './CompactSliderControl';
 import FloatingSliderControl from './FloatingSliderControl';
+import DraggableLocationIcon from './DraggableLocationIcon';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@/styles/map-popup.css';
 
@@ -763,6 +764,20 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             onSearchRadiusChange?.(radius);
           }}
           translations={controlTranslations}
+        />
+      )}
+
+      {/* Перетаскиваемая иконка для установки локации */}
+      {showBuyerMarker && (
+        <DraggableLocationIcon
+          mapRef={mapRef}
+          onDropLocation={(lng, lat) => {
+            const newLocation = { longitude: lng, latitude: lat };
+            setInternalBuyerLocation(newLocation);
+            if (onBuyerLocationChange) {
+              onBuyerLocationChange(newLocation);
+            }
+          }}
         />
       )}
 
