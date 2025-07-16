@@ -168,6 +168,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     latitude: buyerLocation?.latitude || viewState.latitude,
   });
 
+  // Ref для таймера скрытия popup
+  const hidePopupTimer = useRef<NodeJS.Timeout | null>(null);
+
   // Получение токена Mapbox из переменных окружения
   const accessToken =
     mapboxAccessToken || process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -423,17 +426,31 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   // Обработчики для hover
   const handleMarkerHover = useCallback((marker: MapMarkerData) => {
+    // Отменяем таймер скрытия если он есть
+    if (hidePopupTimer.current) {
+      clearTimeout(hidePopupTimer.current);
+      hidePopupTimer.current = null;
+    }
     setHoveredMarker(marker);
     setHoveredCluster(null); // Очищаем hover кластера
   }, []);
 
   const handleMarkerLeave = useCallback(() => {
-    setHoveredMarker(null);
+    // Добавляем задержку перед скрытием popup
+    hidePopupTimer.current = setTimeout(() => {
+      setHoveredMarker(null);
+    }, 300); // 300ms задержка
   }, []);
 
   // Обработчики для hover кластеров
   const handleClusterHover = useCallback(
     async (clusterId: number, coordinates: [number, number]) => {
+      // Отменяем таймер скрытия если он есть
+      if (hidePopupTimer.current) {
+        clearTimeout(hidePopupTimer.current);
+        hidePopupTimer.current = null;
+      }
+
       if (!mapRef.current) return;
 
       const map = mapRef.current.getMap();
@@ -497,7 +514,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   );
 
   const handleClusterLeave = useCallback(() => {
-    setHoveredCluster(null);
+    // Добавляем задержку перед скрытием popup кластера
+    hidePopupTimer.current = setTimeout(() => {
+      setHoveredCluster(null);
+    }, 300);
   }, []);
 
   // Состояние для отслеживания перетаскивания
@@ -709,6 +729,23 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <MarkerHoverPopup
             marker={hoveredMarker}
             onClose={() => setHoveredMarker(null)}
+            onClick={() => {
+              // TODO: Открыть детальный popup
+              console.log('Clicked on hover popup for:', hoveredMarker);
+            }}
+            onMouseEnter={() => {
+              // Отменяем скрытие popup при наведении на него
+              if (hidePopupTimer.current) {
+                clearTimeout(hidePopupTimer.current);
+                hidePopupTimer.current = null;
+              }
+            }}
+            onMouseLeave={() => {
+              // Скрываем popup при уходе курсора
+              hidePopupTimer.current = setTimeout(() => {
+                setHoveredMarker(null);
+              }, 100); // Короткая задержка для плавности
+            }}
           />
         )}
 
@@ -726,6 +763,19 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 handleMarkerClick(marker);
                 setHoveredCluster(null);
               }
+            }}
+            onMouseEnter={() => {
+              // Отменяем скрытие popup при наведении на него
+              if (hidePopupTimer.current) {
+                clearTimeout(hidePopupTimer.current);
+                hidePopupTimer.current = null;
+              }
+            }}
+            onMouseLeave={() => {
+              // Скрываем popup при уходе курсора
+              hidePopupTimer.current = setTimeout(() => {
+                setHoveredCluster(null);
+              }, 100);
             }}
           />
         )}

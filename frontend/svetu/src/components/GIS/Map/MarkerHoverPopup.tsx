@@ -7,11 +7,17 @@ import type { MapMarkerData } from '../types/gis';
 interface MarkerHoverPopupProps {
   marker: MapMarkerData;
   onClose: () => void;
+  onClick?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
   marker,
   onClose,
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   // Форматирование цены
   const formatPrice = (price?: number) => {
@@ -44,7 +50,12 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
       className="marker-hover-popup"
       maxWidth="320px"
     >
-      <div className="relative overflow-hidden">
+      <div
+        className="relative overflow-hidden cursor-pointer"
+        onClick={onClick}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
         {/* Фоновое изображение с blur эффектом */}
         {marker.imageUrl && (
           <div className="absolute inset-0 -z-10">

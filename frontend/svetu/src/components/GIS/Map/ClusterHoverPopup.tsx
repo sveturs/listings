@@ -18,6 +18,8 @@ interface ClusterHoverPopupProps {
   totalCount: number;
   onClose: () => void;
   onListingClick?: (listingId: string) => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
@@ -26,6 +28,8 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
   totalCount,
   onClose,
   onListingClick,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   // Форматирование цены
   const formatPrice = (price: number) => {
@@ -98,7 +102,11 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
       className="cluster-hover-popup"
       maxWidth="380px"
     >
-      <div className="p-4">
+      <div
+        className="p-4"
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
         {/* Заголовок */}
         <div className="mb-3 pb-3 border-b border-gray-200">
           <h3 className="text-lg font-bold text-gray-900">
