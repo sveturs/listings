@@ -34,8 +34,6 @@ interface MapboxClusterLayerProps {
   ) => void;
   /** Обработчик ухода курсора с кластера */
   onClusterLeave?: () => void;
-  /** Показывать ли цены на маркерах объявлений */
-  showPrices?: boolean;
   /** Настройки стилей кластеров */
   clusterStyles?: {
     small?: {
@@ -67,7 +65,6 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
   onMarkerLeave,
   onClusterHover,
   onClusterLeave,
-  showPrices = false,
   clusterStyles = {},
 }) => {
   const mapRef = useMap();
@@ -126,8 +123,8 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
           const source = map.getSource('markers') as mapboxgl.GeoJSONSource;
 
           if (source) {
-            source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-              if (err) return;
+            source.getClusterExpansionZoom(clusterId, (_err, zoom) => {
+              if (_err) return;
 
               mapRef.current?.flyTo({
                 center: coordinates,
@@ -368,8 +365,30 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
         'text-field': [
           'case',
           ['==', ['get', 'minPrice'], ['get', 'maxPrice']],
-          ['concat', ['number-format', ['get', 'minPrice'], {"min-fraction-digits": 0, "max-fraction-digits": 0}], ' RSD'],
-          ['concat', ['number-format', ['get', 'minPrice'], {"min-fraction-digits": 0, "max-fraction-digits": 0}], '-', ['number-format', ['get', 'maxPrice'], {"min-fraction-digits": 0, "max-fraction-digits": 0}], ' RSD'],
+          [
+            'concat',
+            [
+              'number-format',
+              ['get', 'minPrice'],
+              { 'min-fraction-digits': 0, 'max-fraction-digits': 0 },
+            ],
+            ' RSD',
+          ],
+          [
+            'concat',
+            [
+              'number-format',
+              ['get', 'minPrice'],
+              { 'min-fraction-digits': 0, 'max-fraction-digits': 0 },
+            ],
+            '-',
+            [
+              'number-format',
+              ['get', 'maxPrice'],
+              { 'min-fraction-digits': 0, 'max-fraction-digits': 0 },
+            ],
+            ' RSD',
+          ],
         ],
         'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
         'text-size': 11,
@@ -400,7 +419,15 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
         ['==', ['get', 'type'], 'listing'],
       ],
       layout: {
-        'text-field': ['concat', ['number-format', ['get', 'price', ['get', 'metadata']], {"min-fraction-digits": 0, "max-fraction-digits": 0}], ' RSD'],
+        'text-field': [
+          'concat',
+          [
+            'number-format',
+            ['get', 'price', ['get', 'metadata']],
+            { 'min-fraction-digits': 0, 'max-fraction-digits': 0 },
+          ],
+          ' RSD',
+        ],
         'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
         'text-size': 10,
         'text-allow-overlap': false,

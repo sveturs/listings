@@ -35,23 +35,51 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
   // Получение иконки категории
   const getCategoryIcon = (category?: string) => {
     if (!category) return '📦';
-    
+
     const cat = category.toLowerCase();
-    
+
     // Автомобили
-    if (cat.includes('автомобил') || cat.includes('car') || cat.includes('vozilo')) return '🚗';
+    if (
+      cat.includes('автомобил') ||
+      cat.includes('car') ||
+      cat.includes('vozilo')
+    )
+      return '🚗';
     // Недвижимость
-    if (cat.includes('квартир') || cat.includes('apartment') || cat.includes('stan')) return '🏠';
-    if (cat.includes('дом') || cat.includes('house') || cat.includes('kuća')) return '🏘️';
-    if (cat.includes('комнат') || cat.includes('room') || cat.includes('soba')) return '🛏️';
+    if (
+      cat.includes('квартир') ||
+      cat.includes('apartment') ||
+      cat.includes('stan')
+    )
+      return '🏠';
+    if (cat.includes('дом') || cat.includes('house') || cat.includes('kuća'))
+      return '🏘️';
+    if (cat.includes('комнат') || cat.includes('room') || cat.includes('soba'))
+      return '🛏️';
     // Электроника
-    if (cat.includes('телефон') || cat.includes('phone') || cat.includes('telefon')) return '📱';
-    if (cat.includes('компьютер') || cat.includes('computer') || cat.includes('računar')) return '💻';
+    if (
+      cat.includes('телефон') ||
+      cat.includes('phone') ||
+      cat.includes('telefon')
+    )
+      return '📱';
+    if (
+      cat.includes('компьютер') ||
+      cat.includes('computer') ||
+      cat.includes('računar')
+    )
+      return '💻';
     // Работа
-    if (cat.includes('работ') || cat.includes('job') || cat.includes('posao')) return '💼';
+    if (cat.includes('работ') || cat.includes('job') || cat.includes('posao'))
+      return '💼';
     // Услуги
-    if (cat.includes('услуг') || cat.includes('service') || cat.includes('usluga')) return '🔧';
-    
+    if (
+      cat.includes('услуг') ||
+      cat.includes('service') ||
+      cat.includes('usluga')
+    )
+      return '🔧';
+
     return '📦';
   };
 
@@ -74,7 +102,8 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
         {/* Заголовок */}
         <div className="mb-3 pb-3 border-b border-gray-200">
           <h3 className="text-lg font-bold text-gray-900">
-            {totalCount} объявлени{totalCount === 1 ? 'е' : totalCount < 5 ? 'я' : 'й'}
+            {totalCount} объявлени
+            {totalCount === 1 ? 'е' : totalCount < 5 ? 'я' : 'й'}
           </h3>
           <p className="text-sm text-gray-600 mt-1">
             Приблизьте карту для просмотра
@@ -156,7 +185,8 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
         {remainingCount > 0 && (
           <div className="mt-3 pt-3 border-t border-gray-200">
             <p className="text-sm text-gray-600 text-center">
-              и еще {remainingCount} объявлени{remainingCount === 1 ? 'е' : remainingCount < 5 ? 'я' : 'й'}
+              и еще {remainingCount} объявлени
+              {remainingCount === 1 ? 'е' : remainingCount < 5 ? 'я' : 'й'}
             </p>
           </div>
         )}
@@ -164,9 +194,7 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
         {/* CTA */}
         <div className="mt-4 pt-3 border-t border-gray-200">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              Нажмите на кластер
-            </p>
+            <p className="text-sm text-gray-600">Нажмите на кластер</p>
             <div className="flex items-center gap-1 text-primary">
               <span className="text-sm font-medium">Приблизить</span>
               <svg
