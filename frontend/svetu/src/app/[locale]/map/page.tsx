@@ -446,25 +446,75 @@ const MapPage: React.FC = () => {
   // Функция для получения иконки по категории
   const getCategoryIcon = (categoryName: string | undefined): string => {
     if (!categoryName) return '🏠';
-    
+
     const category = categoryName.toLowerCase();
-    
+
     // Автомобили
-    if (category.includes('автомобил') || category.includes('car') || category.includes('vozilo')) return '🚗';
+    if (
+      category.includes('автомобил') ||
+      category.includes('car') ||
+      category.includes('vozilo')
+    )
+      return '🚗';
     // Недвижимость
-    if (category.includes('квартир') || category.includes('apartment') || category.includes('stan')) return '🏠';
-    if (category.includes('дом') || category.includes('house') || category.includes('kuća')) return '🏘️';
-    if (category.includes('комнат') || category.includes('room') || category.includes('soba')) return '🛏️';
+    if (
+      category.includes('квартир') ||
+      category.includes('apartment') ||
+      category.includes('stan')
+    )
+      return '🏠';
+    if (
+      category.includes('дом') ||
+      category.includes('house') ||
+      category.includes('kuća')
+    )
+      return '🏘️';
+    if (
+      category.includes('комнат') ||
+      category.includes('room') ||
+      category.includes('soba')
+    )
+      return '🛏️';
     // Электроника
-    if (category.includes('телефон') || category.includes('phone') || category.includes('telefon')) return '📱';
-    if (category.includes('компьютер') || category.includes('computer') || category.includes('računar')) return '💻';
-    if (category.includes('телевизор') || category.includes('tv') || category.includes('televizor')) return '📺';
+    if (
+      category.includes('телефон') ||
+      category.includes('phone') ||
+      category.includes('telefon')
+    )
+      return '📱';
+    if (
+      category.includes('компьютер') ||
+      category.includes('computer') ||
+      category.includes('računar')
+    )
+      return '💻';
+    if (
+      category.includes('телевизор') ||
+      category.includes('tv') ||
+      category.includes('televizor')
+    )
+      return '📺';
     // Работа
-    if (category.includes('работ') || category.includes('job') || category.includes('posao')) return '💼';
+    if (
+      category.includes('работ') ||
+      category.includes('job') ||
+      category.includes('posao')
+    )
+      return '💼';
     // Услуги
-    if (category.includes('услуг') || category.includes('service') || category.includes('usluga')) return '🔧';
+    if (
+      category.includes('услуг') ||
+      category.includes('service') ||
+      category.includes('usluga')
+    )
+      return '🔧';
     // Одежда
-    if (category.includes('одежд') || category.includes('cloth') || category.includes('odeća')) return '👕';
+    if (
+      category.includes('одежд') ||
+      category.includes('cloth') ||
+      category.includes('odeća')
+    )
+      return '👕';
     // Спорт
     if (category.includes('спорт') || category.includes('sport')) return '⚽';
     // По умолчанию
