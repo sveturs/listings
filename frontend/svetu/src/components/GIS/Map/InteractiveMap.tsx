@@ -42,6 +42,7 @@ import MapControls from './MapControls';
 import MapboxClusterLayer from './MapboxClusterLayer';
 import MarkerHoverPopup from './MarkerHoverPopup';
 import ClusterHoverPopup from './ClusterHoverPopup';
+import MarkerClickPopup from './MarkerClickPopup';
 // import NativeSliderControl from './NativeSliderControl';
 import CompactSliderControl from './CompactSliderControl';
 import FloatingSliderControl from './FloatingSliderControl';
@@ -170,6 +171,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   // Ref для таймера скрытия popup
   const hidePopupTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Состояние для детального popup
+  const [selectedMarker, setSelectedMarker] = useState<MapMarkerData | null>(null);
 
   // Получение токена Mapbox из переменных окружения
   const accessToken =
@@ -730,8 +734,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             marker={hoveredMarker}
             onClose={() => setHoveredMarker(null)}
             onClick={() => {
-              // TODO: Открыть детальный popup
-              console.log('Clicked on hover popup for:', hoveredMarker);
+              // Открываем детальный popup
+              setSelectedMarker(hoveredMarker);
+              setHoveredMarker(null); // Скрываем hover popup
             }}
             onMouseEnter={() => {
               // Отменяем скрытие popup при наведении на него
@@ -760,7 +765,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               // Находим полную информацию о маркере
               const marker = markers.find((m) => m.id === listingId);
               if (marker) {
-                handleMarkerClick(marker);
+                // Открываем наш детальный popup напрямую
+                setSelectedMarker(marker);
                 setHoveredCluster(null);
               }
             }}
@@ -891,6 +897,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             isFullscreen={isFullscreen}
             isMobile={isMobile}
             translations={controlTranslations}
+          />
+        )}
+
+        {/* Детальный popup при клике */}
+        {selectedMarker && (
+          <MarkerClickPopup
+            marker={selectedMarker}
+            onClose={() => setSelectedMarker(null)}
           />
         )}
       </Map>

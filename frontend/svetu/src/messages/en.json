@@ -1430,7 +1430,13 @@
     "termsLink": "Terms of Service",
     "cannotBuyOwnListing": "You cannot buy your own listing",
     "errorLoadingListing": "Error loading listing",
-    "purchaseError": "Purchase failed. Please try again."
+    "purchaseError": "Purchase failed. Please try again.",
+    "contactSeller": "Contact Seller",
+    "viewDetails": "View Details",
+    "published": "Published",
+    "characteristics": "Characteristics",
+    "andMore": "and {count} more",
+    "seller": "Seller"
   },
   "reviews": {
     "create": {

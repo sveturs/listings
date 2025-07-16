@@ -19,6 +19,8 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
   onMouseEnter,
   onMouseLeave,
 }) => {
+  // Отладка: посмотрим данные маркера в hover popup
+  console.log('MarkerHoverPopup marker data:', marker);
   // Форматирование цены
   const formatPrice = (price?: number) => {
     if (!price) return '';

@@ -1348,7 +1348,13 @@
     "termsLink": "Uslove korišćenja",
     "cannotBuyOwnListing": "Ne možete kupiti svoj oglas",
     "errorLoadingListing": "Greška pri učitavanju oglasa",
-    "purchaseError": "Kupovina neuspešna. Pokušajte ponovo."
+    "purchaseError": "Kupovina neuspešna. Pokušajte ponovo.",
+    "contactSeller": "Kontaktiraj prodavca",
+    "viewDetails": "Pogledaj detalje",
+    "published": "Objavljeno",
+    "characteristics": "Karakteristike",
+    "andMore": "i još {count}",
+    "seller": "Prodavac"
   },
   "reviews": {
     "create": {

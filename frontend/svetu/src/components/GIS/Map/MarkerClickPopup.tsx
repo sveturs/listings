@@ -4,6 +4,7 @@ import React from 'react';
 import { Popup } from 'react-map-gl';
 import type { MapMarkerData } from '../types/gis';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface MarkerClickPopupProps {
   marker: MapMarkerData;
@@ -15,6 +16,28 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
   onClose,
 }) => {
   const router = useRouter();
+  const t = useTranslations('marketplace');
+
+  // Парсим JSON данные
+  const parsedData = React.useMemo(() => {
+    try {
+      return typeof marker.data === 'string' ? JSON.parse(marker.data) : marker.data;
+    } catch {
+      return marker.data || {};
+    }
+  }, [marker.data]);
+
+  const parsedMetadata = React.useMemo(() => {
+    try {
+      return typeof marker.metadata === 'string' ? JSON.parse(marker.metadata) : marker.metadata;
+    } catch {
+      return marker.metadata || {};
+    }
+  }, [marker.metadata]);
+
+  // Отладка: посмотрим распарсенные данные
+  console.log('Parsed data:', parsedData);
+  console.log('Parsed metadata:', parsedMetadata);
 
   // Форматирование цены
   const formatPrice = (price?: number) => {
@@ -23,8 +46,8 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
   };
 
   const handleViewDetails = () => {
-    if (marker.data?.id) {
-      router.push(`/marketplace/${marker.data.id}`);
+    if (parsedData?.id || marker.id) {
+      router.push(`/marketplace/${parsedData?.id || marker.id}`);
     }
   };
 
@@ -52,10 +75,10 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
             />
 
             {/* Категория */}
-            {marker.metadata?.category && (
+            {(parsedMetadata?.category || parsedData?.category) && (
               <div className="absolute top-3 left-3">
                 <span className="text-sm px-3 py-1.5 bg-white/90 text-gray-800 rounded-full backdrop-blur-sm font-medium">
-                  {marker.metadata.category}
+                  {parsedMetadata?.category || parsedData?.category}
                 </span>
               </div>
             )}
@@ -70,31 +93,41 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
         {/* Контент */}
         <div className="space-y-3 p-4">
           {/* Название */}
-          <h3 className="font-bold text-lg text-gray-900 line-clamp-2">
+          <h3 className="font-bold text-lg text-gray-900" style={{
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          }}>
             {marker.title}
           </h3>
 
           {/* Цена */}
-          {marker.metadata?.price && (
+          {(parsedMetadata?.price || parsedData?.price) && (
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold text-primary">
-                {formatPrice(marker.metadata.price)}
+                {formatPrice(parsedMetadata?.price || parsedData?.price)}
               </span>
               <span className="text-base text-gray-500">
-                {marker.metadata.currency || 'RSD'}
+                {parsedMetadata?.currency || parsedData?.currency || 'RSD'}
               </span>
             </div>
           )}
 
           {/* Описание */}
           {marker.description && (
-            <p className="text-sm text-gray-600 line-clamp-3">
+            <p className="text-sm text-gray-600" style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}>
               {marker.description}
             </p>
           )}
 
           {/* Адрес */}
-          {marker.data?.address && (
+          {(parsedData?.address || parsedData?.location || parsedMetadata?.address) && (
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <svg
                 className="w-4 h-4"
@@ -115,60 +148,145 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span>{marker.data.address}</span>
+              <span>{parsedData?.address || parsedData?.location || parsedMetadata?.address}</span>
+            </div>
+          )}
+
+          {/* Атрибуты и характеристики */}
+          {(parsedData?.attributes || parsedMetadata || parsedData) && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-gray-900">{t('characteristics')}</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {/* Показываем атрибуты из data.attributes или основные поля */}
+                {parsedData?.attributes ?
+                  Object.entries(parsedData.attributes).slice(0, 4).map(([key, value]) => (
+                    <div key={key} className="flex justify-between">
+                      <span className="text-gray-600">{key}:</span>
+                      <span className="font-medium">{String(value)}</span>
+                    </div>
+                  )) :
+                  // Если нет attributes, показываем основные поля
+                  [
+                    (parsedMetadata?.category || parsedData?.category) && ['Категория', parsedMetadata?.category || parsedData?.category],
+                    parsedData?.area && ['Площадь', `${parsedData.area} м²`],
+                    parsedData?.rooms && ['Комнат', parsedData.rooms],
+                    parsedData?.condition && ['Состояние', parsedData.condition],
+                    parsedData?.type && ['Тип', parsedData.type],
+                    parsedData?.year && ['Год', parsedData.year]
+                  ].filter(Boolean).slice(0, 4).map(([key, value], index) => (
+                    <div key={index} className="flex justify-between">
+                      <span className="text-gray-600">{key}:</span>
+                      <span className="font-medium">{String(value)}</span>
+                    </div>
+                  ))
+                }
+                {/* Показываем "еще X" если есть больше атрибутов */}
+                {parsedData?.attributes && Object.keys(parsedData.attributes).length > 4 && (
+                  <div className="col-span-2 text-center text-xs text-gray-500">
+                    {t('andMore', { count: Object.keys(parsedData.attributes).length - 4 })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {/* Дополнительная информация */}
-          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+          <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-100">
             <div className="text-center">
               <p className="text-xs text-gray-500">Просмотров</p>
-              <p className="font-semibold text-gray-900">1,234</p>
+              <p className="font-semibold text-gray-900">
+                {parsedData?.views || parsedData?.view_count || parsedMetadata?.views || '—'}
+              </p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-gray-500">Добавлено</p>
-              <p className="font-semibold text-gray-900">2 дня назад</p>
+              <p className="text-xs text-gray-500">Рейтинг</p>
+              <p className="font-semibold text-gray-900">
+                {(parsedData?.rating || parsedMetadata?.rating) ?
+                  `⭐ ${parsedData?.rating || parsedMetadata?.rating}` : '—'}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-500">{t('published')}</p>
+              <p className="font-semibold text-gray-900">
+                {(parsedData?.created_at || parsedData?.createdAt || parsedMetadata?.created_at) ?
+                  new Date(parsedData?.created_at || parsedData?.createdAt || parsedMetadata?.created_at).toLocaleDateString('sr-RS') : '—'}
+              </p>
             </div>
           </div>
 
+          {/* Информация о продавце */}
+          {parsedData?.seller && (
+            <div className="pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                  {parsedData.seller.avatar ? (
+                    <img
+                      src={parsedData.seller.avatar}
+                      alt={parsedData.seller.name}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-gray-600 text-lg">👤</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{parsedData.seller.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {t('seller')} • {parsedData.seller.rating ? `⭐ ${parsedData.seller.rating}` : 'Новый'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Действия */}
-          <div className="flex gap-2 pt-3">
-            <button
-              onClick={handleViewDetails}
-              className="flex-1 btn btn-primary btn-sm"
-            >
-              Подробнее
-            </button>
-            <button className="btn btn-outline btn-sm">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div className="space-y-2 pt-3">
+            {/* Основные кнопки */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleViewDetails}
+                className="flex-1 btn btn-primary btn-sm"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                />
-              </svg>
-            </button>
-            <button className="btn btn-outline btn-sm">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                {t('viewDetails')}
+              </button>
+              <button
+                onClick={() => {
+                  // TODO: Открыть чат с продавцом
+                  console.log('Open chat with seller');
+                }}
+                className="flex-1 btn btn-outline btn-sm"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 010-5.368m0 5.368a9.003 9.003 0 01-7.432 3.268 9.003 9.003 0 01-7.432-3.268m14.864 0a9.003 9.003 0 00-7.432-3.268 9.003 9.003 0 00-7.432 3.268"
-                />
-              </svg>
-            </button>
+                💬 {t('contactSeller')}
+              </button>
+            </div>
+
+            {/* Дополнительные действия */}
+            <div className="flex gap-2">
+              <button
+                className="btn btn-outline btn-sm flex-1"
+                onClick={() => {
+                  // TODO: Добавить в избранное
+                  console.log('Add to favorites');
+                }}
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                В избранное
+              </button>
+              <button
+                className="btn btn-outline btn-sm flex-1"
+                onClick={() => {
+                  // TODO: Поделиться
+                  console.log('Share listing');
+                }}
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 010-5.368m0 5.368a9.003 9.003 0 01-7.432 3.268 9.003 9.003 0 01-7.432-3.268m14.864 0a9.003 9.003 0 00-7.432-3.268 9.003 9.003 0 00-7.432 3.268" />
+                </svg>
+                Поделиться
+              </button>
+            </div>
           </div>
         </div>
       </div>
