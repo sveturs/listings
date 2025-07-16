@@ -26,6 +26,14 @@ interface MapboxClusterLayerProps {
   ) => void;
   /** Обработчик ухода курсора с маркера */
   onMarkerLeave?: () => void;
+  /** Обработчик наведения на кластер */
+  onClusterHover?: (
+    clusterId: number,
+    coordinates: [number, number],
+    event: { x: number; y: number }
+  ) => void;
+  /** Обработчик ухода курсора с кластера */
+  onClusterLeave?: () => void;
   /** Показывать ли цены на маркерах объявлений */
   showPrices?: boolean;
   /** Настройки стилей кластеров */
@@ -57,6 +65,8 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
   onMarkerClick,
   onMarkerHover,
   onMarkerLeave,
+  onClusterHover,
+  onClusterLeave,
   showPrices = false,
   clusterStyles = {},
 }) => {
@@ -163,19 +173,32 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
   );
 
   // Обработчик наведения на кластер
-  const handleClusterMouseEnter = useCallback(
+  const handleClusterMouseMove = useCallback(
     (event: any) => {
       const features = event.features;
       if (!features || features.length === 0) return;
 
       const feature = features[0];
-      if (feature.properties?.cluster) {
-        if (mapRef.current) {
-          mapRef.current.getCanvas().style.cursor = 'pointer';
-        }
+      if (!feature.properties?.cluster) return;
+
+      const clusterId = feature.properties.cluster_id;
+      const coordinates = (feature.geometry as any).coordinates as [
+        number,
+        number,
+      ];
+
+      if (mapRef.current) {
+        mapRef.current.getCanvas().style.cursor = 'pointer';
+      }
+
+      if (onClusterHover) {
+        onClusterHover(clusterId, coordinates, {
+          x: event.point.x,
+          y: event.point.y,
+        });
       }
     },
-    [mapRef]
+    [mapRef, onClusterHover]
   );
 
   // Обработчик ухода курсора с кластера
@@ -183,7 +206,10 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
     if (mapRef.current) {
       mapRef.current.getCanvas().style.cursor = '';
     }
-  }, [mapRef]);
+    if (onClusterLeave) {
+      onClusterLeave();
+    }
+  }, [mapRef, onClusterLeave]);
 
   // Обработчик наведения на маркер
   const handleMarkerMouseMove = useCallback(
@@ -461,7 +487,7 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
     // Добавляем обработчики событий
     map.on('click', 'clusters', handleClusterClick);
     map.on('click', 'unclustered-point', handleMarkerClick);
-    map.on('mouseenter', 'clusters', handleClusterMouseEnter);
+    map.on('mousemove', 'clusters', handleClusterMouseMove);
     map.on('mouseleave', 'clusters', handleClusterMouseLeave);
     map.on('mousemove', 'unclustered-point', handleMarkerMouseMove);
     map.on('mouseleave', 'unclustered-point', handleMarkerMouseLeave);
@@ -470,7 +496,7 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
       // Удаляем обработчики событий
       map.off('click', 'clusters', handleClusterClick);
       map.off('click', 'unclustered-point', handleMarkerClick);
-      map.off('mouseenter', 'clusters', handleClusterMouseEnter);
+      map.off('mousemove', 'clusters', handleClusterMouseMove);
       map.off('mouseleave', 'clusters', handleClusterMouseLeave);
       map.off('mousemove', 'unclustered-point', handleMarkerMouseMove);
       map.off('mouseleave', 'unclustered-point', handleMarkerMouseLeave);
@@ -479,7 +505,7 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
     mapRef,
     handleClusterClick,
     handleMarkerClick,
-    handleClusterMouseEnter,
+    handleClusterMouseMove,
     handleClusterMouseLeave,
     handleMarkerMouseMove,
     handleMarkerMouseLeave,

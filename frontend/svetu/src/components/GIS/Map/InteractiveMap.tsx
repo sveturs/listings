@@ -41,6 +41,7 @@ import MapPopup from './MapPopup';
 import MapControls from './MapControls';
 import MapboxClusterLayer from './MapboxClusterLayer';
 import MarkerHoverPopup from './MarkerHoverPopup';
+import ClusterHoverPopup from './ClusterHoverPopup';
 // import NativeSliderControl from './NativeSliderControl';
 import CompactSliderControl from './CompactSliderControl';
 import FloatingSliderControl from './FloatingSliderControl';
@@ -152,6 +153,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [hoveredMarker, setHoveredMarker] = useState<MapMarkerData | null>(
     null
   );
+  
+  // Состояние для hover кластера
+  const [hoveredCluster, setHoveredCluster] = useState<{
+    clusterId: number;
+    coordinates: [number, number];
+    listings: any[];
+    totalCount: number;
+  } | null>(null);
 
   // Состояние для маркера покупателя
   const [internalBuyerLocation, setInternalBuyerLocation] = useState({
@@ -415,10 +424,78 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // Обработчики для hover
   const handleMarkerHover = useCallback((marker: MapMarkerData) => {
     setHoveredMarker(marker);
+    setHoveredCluster(null); // Очищаем hover кластера
   }, []);
 
   const handleMarkerLeave = useCallback(() => {
     setHoveredMarker(null);
+  }, []);
+
+  // Обработчики для hover кластеров
+  const handleClusterHover = useCallback(
+    async (clusterId: number, coordinates: [number, number]) => {
+      if (!mapRef.current) return;
+      
+      const map = mapRef.current.getMap();
+      const source = map.getSource('markers') as mapboxgl.GeoJSONSource;
+      
+      if (source) {
+        try {
+          // Получаем маркеры из кластера
+          const features = await new Promise<any[]>((resolve) => {
+            source.getClusterLeaves(clusterId, 10, 0, (err, features) => {
+              if (err) {
+                console.error('Error getting cluster leaves:', err);
+                resolve([]);
+              } else {
+                resolve(features || []);
+              }
+            });
+          });
+
+          // Преобразуем features в формат для отображения
+          const listings = features
+            .filter((f) => f.properties?.type === 'listing')
+            .map((f) => ({
+              id: f.properties.id,
+              title: f.properties.title || 'Без названия',
+              price: f.properties.metadata?.price || f.properties.data?.price || 0,
+              imageUrl: f.properties.imageUrl,
+              category: f.properties.metadata?.category,
+              address: f.properties.data?.address,
+            }))
+            .sort((a, b) => b.price - a.price) // Сортируем по цене (убывание)
+            .slice(0, 4); // Берем топ-4
+
+          // Получаем общее количество объявлений в кластере
+          const pointCount = await new Promise<number>((resolve) => {
+            source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+              // Используем point_count из первого feature кластера
+              const clusterFeatures = map.querySourceFeatures('markers', {
+                filter: ['==', 'cluster_id', clusterId],
+              });
+              const count = clusterFeatures[0]?.properties?.point_count || listings.length;
+              resolve(count);
+            });
+          });
+
+          setHoveredCluster({
+            clusterId,
+            coordinates,
+            listings,
+            totalCount: pointCount,
+          });
+          setHoveredMarker(null); // Очищаем hover маркера
+        } catch (error) {
+          console.error('Error handling cluster hover:', error);
+        }
+      }
+    },
+    []
+  );
+
+  const handleClusterLeave = useCallback(() => {
+    setHoveredCluster(null);
   }, []);
 
   // Состояние для отслеживания перетаскивания
@@ -613,6 +690,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             onMarkerClick={handleMarkerClick}
             onMarkerHover={handleMarkerHover}
             onMarkerLeave={handleMarkerLeave}
+            onClusterHover={handleClusterHover}
+            onClusterLeave={handleClusterLeave}
             clusterRadius={50}
             clusterMaxZoom={14}
             clusterMinPoints={2}
@@ -628,6 +707,24 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <MarkerHoverPopup
             marker={hoveredMarker}
             onClose={() => setHoveredMarker(null)}
+          />
+        )}
+        
+        {/* Hover popup для кластеров */}
+        {hoveredCluster && (
+          <ClusterHoverPopup
+            coordinates={hoveredCluster.coordinates}
+            listings={hoveredCluster.listings}
+            totalCount={hoveredCluster.totalCount}
+            onClose={() => setHoveredCluster(null)}
+            onListingClick={(listingId) => {
+              // Находим полную информацию о маркере
+              const marker = markers.find((m) => m.id === listingId);
+              if (marker) {
+                handleMarkerClick(marker);
+                setHoveredCluster(null);
+              }
+            }}
           />
         )}
 
