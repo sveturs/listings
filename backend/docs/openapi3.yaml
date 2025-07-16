@@ -4051,53 +4051,20 @@ paths:
       summary: Обратное геокодирование
       tags:
         - geocode
-  /api/v1/gis/clusters:
-    get:
-      description: Получение кластеризованных объявлений для отображения на карте
-      parameters:
-        - description: "Границы видимой области карты в формате: north,south,east,west"
-          in: query
-          name: bounds
-          required: true
-          schema:
-            type: string
-        - description: Уровень зума карты (0-20)
-          in: query
-          name: zoom_level
-          required: true
-          schema:
-            type: integer
-        - description: Категории объявлений
-          in: query
-          name: categories
-          style: form
-          explode: false
-          schema:
-            type: array
-            items: {}
-        - description: Минимальная цена
-          in: query
-          name: min_price
-          schema:
-            type: number
-        - description: Максимальная цена
-          in: query
-          name: max_price
-          schema:
-            type: number
-        - description: Валюта
-          in: query
-          name: currency
-          schema:
-            type: string
-        - description: Размер сетки для кластеризации
-          in: query
-          name: grid_size
-          schema:
-            type: integer
+  /api/v1/gis/advanced/apply-filters:
+    post:
+      description: Apply travel time, POI, and density filters to listings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_gis_types.ApplyAdvancedFilter\
+                sRequest"
+        description: Advanced filters request
+        required: true
       responses:
         "200":
-          description: Кластеры и объявления
+          description: OK
           content:
             application/json:
               schema:
@@ -4105,23 +4072,672 @@ paths:
                   - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/backend_internal_proj_gis_types.ClusterResponse"
+                        additionalProperties: true
+                        type: object
                     type: object
         "400":
-          description: Некорректные параметры
+          description: validation.failed
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
-          description: Внутренняя ошибка сервера
+          description: gis.filterError
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-      summary: Получение кластеров объявлений
+      summary: Apply advanced geo filters
       tags:
-        - GIS
+        - gis-advanced
+  /api/v1/gis/advanced/density/analyze:
+    post:
+      description: Analyze listing density in a given area
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_gis_types.BoundingBox"
+        description: Bounding box for analysis
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_gis_types.DensityAnalysisResu\
+                            lt"
+                        type: array
+                    type: object
+        "400":
+          description: validation.failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: gis.densityAnalysisError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Analyze listing density
+      tags:
+        - gis-advanced
+  /api/v1/gis/advanced/density/heatmap:
+    get:
+      description: Get point data for density heatmap visualization
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          additionalProperties: true
+                          type: object
+                        type: array
+                    type: object
+        "400":
+          description: validation.failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: gis.heatmapError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get density heatmap data
+      tags:
+        - gis-advanced
+  /api/v1/gis/advanced/isochrone:
+    post:
+      description: Returns isochrone polygon for travel time analysis
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_gis_types.TravelTimeFilter"
+        description: Travel time filter parameters
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.IsohronResponse"
+                    type: object
+        "400":
+          description: validation.failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: gis.isochroneError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get isochrone polygon
+      tags:
+        - gis-advanced
+  /api/v1/gis/advanced/poi/search:
+    get:
+      description: Search for POIs like schools, hospitals, metro stations
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_gis_types.POISearchResult"
+                        type: array
+                    type: object
+        "400":
+          description: validation.failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: gis.poiSearchError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Search points of interest
+      tags:
+        - gis-advanced
+  /api/v1/gis/cities:
+    get:
+      description: Get all cities with optional filtering by viewport bounds
+      parameters:
+        - description: Country code (e.g., RS)
+          in: query
+          name: country_code
+          schema:
+            type: string
+        - description: Filter cities with districts
+          in: query
+          name: has_districts
+          schema:
+            type: boolean
+        - description: Viewport north boundary
+          in: query
+          name: bounds_north
+          schema:
+            type: number
+        - description: Viewport south boundary
+          in: query
+          name: bounds_south
+          schema:
+            type: number
+        - description: Viewport east boundary
+          in: query
+          name: bounds_east
+          schema:
+            type: number
+        - description: Viewport west boundary
+          in: query
+          name: bounds_west
+          schema:
+            type: number
+      responses:
+        "200":
+          description: List of cities
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_gis_types.City"
+                        type: array
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get cities
+      tags:
+        - gis
+  /api/v1/gis/cities/visible:
+    post:
+      description: Get cities visible in viewport bounds with distance to center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_gis_types.VisibleCitiesReques\
+                t"
+        description: Viewport bounds and center
+        required: true
+      responses:
+        "200":
+          description: Visible cities with distances
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.VisibleCitiesRespon\
+                          se"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get visible cities
+      tags:
+        - gis
+  /api/v1/gis/districts:
+    get:
+      description: Get all districts with optional filtering
+      parameters:
+        - description: Country code (e.g., RS)
+          in: query
+          name: country_code
+          schema:
+            type: string
+        - description: City ID
+          in: query
+          name: city_id
+          schema:
+            type: string
+        - description: City IDs (comma-separated)
+          in: query
+          name: city_ids
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: District name (partial match)
+          in: query
+          name: name
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of districts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_gis_types.District"
+                        type: array
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get districts
+      tags:
+        - gis
+  "/api/v1/gis/districts/{id}":
+    get:
+      description: Get a single district by its ID
+      parameters:
+        - description: District ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: District details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.District"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: District not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get district by ID
+      tags:
+        - gis
+  "/api/v1/gis/districts/{id}/boundary":
+    get:
+      description: Get district boundary as GeoJSON polygon for map visualization
+      parameters:
+        - description: District ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: District boundary
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.DistrictBoundaryRes\
+                          ponse"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: District not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get district boundary
+      tags:
+        - gis
+  /api/v1/gis/geocode/cache/cleanup:
+    post:
+      description: Удаляет устаревшие записи из кэша геокодирования
+      responses:
+        "200":
+          description: Количество удаленных записей
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties:
+                          type: integer
+                        type: object
+                    type: object
+        "500":
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Очистка устаревшего кэша
+      tags:
+        - gis
+  /api/v1/gis/geocode/cache/stats:
+    get:
+      description: Возвращает статистику использования кэша геокодирования
+      responses:
+        "200":
+          description: Статистика кэша
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "500":
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Статистика кэша геокодирования
+      tags:
+        - gis
+  /api/v1/gis/geocode/reverse:
+    get:
+      description: Получает адрес по координатам
+      parameters:
+        - description: Широта
+          in: query
+          name: lat
+          required: true
+          schema:
+            type: number
+            minimum: -90
+            maximum: 90
+        - description: Долгота
+          in: query
+          name: lng
+          required: true
+          schema:
+            type: number
+            minimum: -180
+            maximum: 180
+        - description: Язык ответа
+          in: query
+          name: language
+          schema:
+            type: string
+            default: '"en"'
+      responses:
+        "200":
+          description: Найденный адрес
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.AddressSuggestion"
+                    type: object
+        "400":
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Обратное геокодирование
+      tags:
+        - gis
+  /api/v1/gis/geocode/suggestions:
+    get:
+      description: Возвращает список предложений адресов для автодополнения
+      parameters:
+        - description: Поисковый запрос
+          in: query
+          name: q
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - description: Лимит результатов
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 5
+        - description: Язык ответа
+          in: query
+          name: language
+          schema:
+            type: string
+            default: '"en"'
+        - description: Код страны для фильтрации
+          in: query
+          name: country_code
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Список предложений
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_gis_types.AddressSuggestion"
+                        type: array
+                    type: object
+        "400":
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Поиск предложений адресов
+      tags:
+        - gis
+  /api/v1/gis/geocode/validate:
+    post:
+      description: Проверяет и возвращает геокодированные данные для указанного адреса
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_gis_types.GeocodeValidateRequ\
+                est"
+        description: Запрос валидации
+        required: true
+      responses:
+        "200":
+          description: Результат валидации
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.GeocodeValidateResp\
+                          onse"
+                    type: object
+        "400":
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Валидация геокодирования адреса
+      tags:
+        - gis
+  "/api/v1/gis/listings/{id}/address":
+    put:
+      description: Обновляет геолокацию и адрес объявления с полной валидацией и
+        логированием
+      parameters:
+        - description: ID объявления
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_gis_types.UpdateAddressReques\
+                t"
+        description: Данные для обновления
+        required: true
+      responses:
+        "200":
+          description: Обновленные геоданные
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.EnhancedListingGeo"
+                    type: object
+        "400":
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "403":
+          description: Нет прав доступа
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Объявление не найдено
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Обновление адреса объявления с валидацией
+      tags:
+        - gis
   "/api/v1/gis/listings/{id}/location":
     get:
       description: Получение координат и адреса объявления
@@ -4223,6 +4839,97 @@ paths:
       summary: Обновление геолокации объявления
       tags:
         - GIS
+  /api/v1/gis/municipalities:
+    get:
+      description: Get all municipalities with optional filtering
+      parameters:
+        - description: Country code (e.g., RS)
+          in: query
+          name: country_code
+          schema:
+            type: string
+        - description: District ID
+          in: query
+          name: district_id
+          schema:
+            type: string
+        - description: Municipality name (partial match)
+          in: query
+          name: name
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of municipalities
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_gis_types.Municipality"
+                        type: array
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get municipalities
+      tags:
+        - gis
+  "/api/v1/gis/municipalities/{id}":
+    get:
+      description: Get a single municipality by its ID
+      parameters:
+        - description: Municipality ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Municipality details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.Municipality"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Municipality not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get municipality by ID
+      tags:
+        - gis
   /api/v1/gis/nearby:
     get:
       description: Получение объявлений в радиусе от заданной точки
@@ -4368,6 +5075,252 @@ paths:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Пространственный поиск объявлений
+      tags:
+        - GIS
+  "/api/v1/gis/search/by-district/{district_id}":
+    get:
+      description: Search for listings within a specific district
+      parameters:
+        - description: District ID
+          in: path
+          name: district_id
+          required: true
+          schema:
+            type: string
+        - description: Category ID
+          in: query
+          name: category_id
+          schema:
+            type: string
+        - description: Minimum price
+          in: query
+          name: min_price
+          schema:
+            type: number
+        - description: Maximum price
+          in: query
+          name: max_price
+          schema:
+            type: number
+        - description: "Limit results (default: 50, max: 200)"
+          in: query
+          name: limit
+          schema:
+            type: integer
+        - description: Offset for pagination
+          in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_gis_types.GeoListing"
+                        type: array
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: District not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Search listings by district
+      tags:
+        - gis
+  "/api/v1/gis/search/by-municipality/{municipality_id}":
+    get:
+      description: Search for listings within a specific municipality
+      parameters:
+        - description: Municipality ID
+          in: path
+          name: municipality_id
+          required: true
+          schema:
+            type: string
+        - description: Category ID
+          in: query
+          name: category_id
+          schema:
+            type: string
+        - description: Minimum price
+          in: query
+          name: min_price
+          schema:
+            type: number
+        - description: Maximum price
+          in: query
+          name: max_price
+          schema:
+            type: number
+        - description: "Limit results (default: 50, max: 200)"
+          in: query
+          name: limit
+          schema:
+            type: integer
+        - description: Offset for pagination
+          in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_gis_types.GeoListing"
+                        type: array
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Municipality not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Search listings by municipality
+      tags:
+        - gis
+  /api/v1/gis/search/radius:
+    get:
+      description: Поиск объявлений в заданном радиусе от точки с детальными фильтрами
+      parameters:
+        - description: Широта центра поиска
+          in: query
+          name: latitude
+          required: true
+          schema:
+            type: number
+        - description: Долгота центра поиска
+          in: query
+          name: longitude
+          required: true
+          schema:
+            type: number
+        - description: Радиус поиска в метрах
+          in: query
+          name: radius
+          required: true
+          schema:
+            type: number
+        - description: Категории объявлений
+          in: query
+          name: categories
+          style: form
+          explode: false
+          schema:
+            type: array
+            items: {}
+        - description: ID категорий
+          in: query
+          name: category_ids
+          style: form
+          explode: false
+          schema:
+            type: array
+            items: {}
+        - description: Минимальная цена
+          in: query
+          name: min_price
+          schema:
+            type: number
+        - description: Максимальная цена
+          in: query
+          name: max_price
+          schema:
+            type: number
+        - description: Валюта
+          in: query
+          name: currency
+          schema:
+            type: string
+        - description: Текстовый поиск
+          in: query
+          name: q
+          schema:
+            type: string
+        - description: Поле сортировки (distance, price, created_at)
+          in: query
+          name: sort_by
+          schema:
+            type: string
+        - description: Порядок сортировки (asc, desc)
+          in: query
+          name: sort_order
+          schema:
+            type: string
+        - description: Количество результатов (по умолчанию 50, максимум 1000)
+          in: query
+          name: limit
+          schema:
+            type: integer
+        - description: Смещение
+          in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Результаты радиусного поиска
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.RadiusSearchRespons\
+                          e"
+                    type: object
+        "400":
+          description: Некорректные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Радиусный поиск объявлений
       tags:
         - GIS
   "/api/v1/import/jobs/{jobId}":
@@ -5192,6 +6145,11 @@ paths:
           required: true
           schema:
             type: integer
+        - description: Language code (e.g., 'sr', 'en', 'ru')
+          in: query
+          name: lang
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -6440,6 +7398,11 @@ paths:
           name: max_price
           schema:
             type: number
+        - description: JSON object with attribute filters
+          in: query
+          name: attributes
+          schema:
+            type: string
       responses:
         "200":
           description: Listings within bounds
@@ -6516,6 +7479,11 @@ paths:
           name: max_price
           schema:
             type: number
+        - description: JSON object with attribute filters
+          in: query
+          name: attributes
+          schema:
+            type: string
       responses:
         "200":
           description: Map clusters or markers data
@@ -7037,12 +8005,27 @@ paths:
     get:
       description: Performs advanced search with filters, facets, and suggestions
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/backend_internal_domain_search.ServiceParams"
-        description: Search parameters
-        required: true
+        $ref: "#/components/requestBodies/backend_internal_domain_search.ServiceParams"
+      responses:
+        "200":
+          description: Search results with metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/internal_proj_marketplace_handler.SearchResponse"
+        "500":
+          description: marketplace.searchError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Advanced search for listings
+      tags:
+        - marketplace-search
+    post:
+      description: Performs advanced search with filters, facets, and suggestions
+      requestBody:
+        $ref: "#/components/requestBodies/backend_internal_domain_search.ServiceParams"
       responses:
         "200":
           description: Search results with metadata
@@ -12894,6 +13877,13 @@ components:
             $ref: "#/components/schemas/backend_internal_domain_models.CategoryAttribute"
       description: Attribute data
       required: true
+    backend_internal_domain_search.ServiceParams:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/backend_internal_domain_search.ServiceParams"
+      description: Search parameters
+      required: true
     postApiV1Reviews_id_photos:
       content:
         multipart/form-data:
@@ -13514,6 +14504,10 @@ components:
           type: boolean
         sort_order:
           type: integer
+        translated_options:
+          items:
+            type: integer
+          type: array
         translations:
           additionalProperties:
             type: string
@@ -16088,6 +17082,21 @@ components:
         user_id:
           type: integer
       type: object
+    backend_internal_domain_search.AdvancedGeoFilters:
+      properties:
+        density_filter:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_search.DensityFilter"
+          description: Фильтр по плотности объявлений
+        poi_filter:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_search.POIFilter"
+          description: Фильтр по точкам интереса
+        travel_time:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_search.TravelTimeFilter"
+          description: Фильтр по времени пути
+      type: object
     backend_internal_domain_search.Bucket:
       properties:
         count:
@@ -16097,8 +17106,30 @@ components:
           description: Ключ бакета
           type: string
       type: object
+    backend_internal_domain_search.DensityFilter:
+      properties:
+        avoid_crowded:
+          type: boolean
+        max_density:
+          type: number
+        min_density:
+          type: number
+      type: object
+    backend_internal_domain_search.POIFilter:
+      properties:
+        max_distance:
+          type: integer
+        min_count:
+          type: integer
+        poi_type:
+          type: string
+      type: object
     backend_internal_domain_search.ServiceParams:
       properties:
+        advanced_geo_filters:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_search.AdvancedGeoFilters"
+          description: Расширенные геофильтры
         aggregations:
           description: Запрашиваемые агрегации
           items:
@@ -16169,6 +17200,101 @@ components:
           description: Использовать расширение запроса синонимами
           type: boolean
       type: object
+    backend_internal_domain_search.TravelTimeFilter:
+      properties:
+        center_lat:
+          type: number
+        center_lng:
+          type: number
+        max_minutes:
+          type: integer
+        transport_mode:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.AddressComponents:
+      properties:
+        city:
+          type: string
+        country:
+          type: string
+        country_code:
+          type: string
+        district:
+          type: string
+        formatted:
+          type: string
+        house_number:
+          type: string
+        postal_code:
+          type: string
+        street:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.AddressSuggestion:
+      properties:
+        address_components:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.AddressComponents"
+        confidence:
+          type: number
+        id:
+          type: string
+        location:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+        place_name:
+          type: string
+        place_types:
+          items:
+            type: string
+          type: array
+        text:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.AdvancedGeoFilters:
+      properties:
+        bounding_box:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_gis_types.BoundingBox"
+          description: Базовые геофильтры
+        density_filter:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_gis_types.DensityFilter"
+          description: Фильтр по плотности объявлений
+        poi_filter:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_gis_types.POIFilter"
+          description: Фильтр по точкам интереса
+        radius:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.RadiusFilter"
+        travel_time:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_gis_types.TravelTimeFilter"
+          description: Фильтр по времени пути
+      type: object
+    backend_internal_proj_gis_types.ApplyAdvancedFiltersRequest:
+      properties:
+        filters:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.AdvancedGeoFilters"
+        listing_ids:
+          items:
+            type: string
+          type: array
+      type: object
+    backend_internal_proj_gis_types.BoundingBox:
+      properties:
+        max_lat:
+          type: number
+        max_lng:
+          type: number
+        min_lat:
+          type: number
+        min_lng:
+          type: number
+      required:
+        - max_lat
+        - max_lng
+        - min_lat
+        - min_lng
+      type: object
     backend_internal_proj_gis_types.Bounds:
       properties:
         east:
@@ -16193,31 +17319,148 @@ components:
         - south
         - west
       type: object
-    backend_internal_proj_gis_types.Cluster:
+    backend_internal_proj_gis_types.City:
       properties:
-        bounds:
-          $ref: "#/components/schemas/backend_internal_proj_gis_types.Bounds"
-        center:
+        area_km2:
+          type: number
+        boundary:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Polygon"
+        center_point:
           $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
-        count:
+        country_code:
+          type: string
+        created_at:
+          type: string
+        has_districts:
+          type: boolean
+        id:
+          type: string
+        name:
+          type: string
+        population:
           type: integer
-        zoom_expand:
-          description: Уровень зума для раскрытия кластера
+        postal_codes:
+          items:
+            type: string
+          type: array
+        priority:
+          type: integer
+        slug:
+          type: string
+        updated_at:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.CityWithDistance:
+      properties:
+        city:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.City"
+        distance:
+          description: расстояние в метрах
+          type: number
+      type: object
+    backend_internal_proj_gis_types.DensityAnalysisResult:
+      properties:
+        area_km2:
+          type: number
+        center_lat:
+          type: number
+        center_lng:
+          type: number
+        density:
+          type: number
+        grid_cell_id:
+          type: string
+        listing_count:
           type: integer
       type: object
-    backend_internal_proj_gis_types.ClusterResponse:
+    backend_internal_proj_gis_types.DensityFilter:
       properties:
-        clusters:
-          items:
-            $ref: "#/components/schemas/backend_internal_proj_gis_types.Cluster"
-          type: array
-        listings:
-          description: Некластеризованные объявления
-          items:
-            $ref: "#/components/schemas/backend_internal_proj_gis_types.GeoListing"
-          type: array
-        total_count:
+        avoid_crowded:
+          description: Избегать переполненных районов
+          type: boolean
+        max_density:
+          description: Максимальное количество объявлений на км²
+          minimum: 0
+          type: number
+        min_density:
+          description: Минимальное количество объявлений на км²
+          minimum: 0
+          type: number
+      type: object
+    backend_internal_proj_gis_types.District:
+      properties:
+        area_km2:
+          type: number
+        boundary:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Polygon"
+        center_point:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+        city_id:
+          type: string
+        country_code:
+          type: string
+        created_at:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        population:
           type: integer
+        postal_codes:
+          items:
+            type: string
+          type: array
+        updated_at:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.DistrictBoundaryResponse:
+      properties:
+        boundary:
+          description: GeoJSON polygon as JSON object
+          items:
+            type: integer
+          type: array
+        city_id:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.EnhancedListingGeo:
+      properties:
+        address_components:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.AddressComponents"
+        address_verified:
+          type: boolean
+        blur_radius:
+          type: number
+        blurred_location:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+        created_at:
+          type: string
+        formatted_address:
+          type: string
+        geocoding_confidence:
+          type: number
+        geohash:
+          type: string
+        id:
+          type: integer
+        input_method:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.InputMethod"
+        is_precise:
+          type: boolean
+        listing_id:
+          type: integer
+        location:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+        location_privacy:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.LocationPrivacyLeve\
+            l"
+        updated_at:
+          type: string
       type: object
     backend_internal_proj_gis_types.GeoListing:
       properties:
@@ -16226,8 +17469,6 @@ components:
         category:
           type: string
         created_at:
-          type: string
-        currency:
           type: string
         description:
           type: string
@@ -16253,6 +17494,189 @@ components:
         user_id:
           type: integer
       type: object
+    backend_internal_proj_gis_types.GeocodeContext:
+      properties:
+        bounds:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Bounds"
+        place_types:
+          items:
+            type: string
+          type: array
+        proximity_to:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+      type: object
+    backend_internal_proj_gis_types.GeocodeValidateRequest:
+      properties:
+        address:
+          minLength: 5
+          type: string
+        context:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.GeocodeContext"
+        country_code:
+          type: string
+        language:
+          type: string
+      required:
+        - address
+      type: object
+    backend_internal_proj_gis_types.GeocodeValidateResponse:
+      properties:
+        address_components:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.AddressComponents"
+        confidence:
+          type: number
+        formatted_address:
+          type: string
+        location:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+        success:
+          type: boolean
+        suggestions:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_gis_types.AddressSuggestion"
+          type: array
+        warnings:
+          items:
+            type: string
+          type: array
+      type: object
+    backend_internal_proj_gis_types.InputMethod:
+      enum:
+        - manual
+        - geocoded
+        - map_click
+        - current_location
+      type: string
+      x-enum-varnames:
+        - InputManual
+        - InputGeocoded
+        - InputMapClick
+        - InputCurrentLocation
+    backend_internal_proj_gis_types.IsohronResponse:
+      properties:
+        features:
+          items:
+            properties:
+              geometry:
+                properties:
+                  coordinates:
+                    items:
+                      items:
+                        items:
+                          type: number
+                        type: array
+                      type: array
+                    type: array
+                  type:
+                    type: string
+                type: object
+              properties:
+                properties:
+                  contour:
+                    type: integer
+                type: object
+            type: object
+          type: array
+      type: object
+    backend_internal_proj_gis_types.LocationPrivacyLevel:
+      enum:
+        - exact
+        - street
+        - district
+        - city
+      type: string
+      x-enum-comments:
+        PrivacyCity: Только город
+        PrivacyDistrict: Размытие ±500-1000м
+        PrivacyExact: Точный адрес
+        PrivacyStreet: Размытие ±100-200м
+      x-enum-varnames:
+        - PrivacyExact
+        - PrivacyStreet
+        - PrivacyDistrict
+        - PrivacyCity
+    backend_internal_proj_gis_types.Municipality:
+      properties:
+        area_km2:
+          type: number
+        boundary:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Polygon"
+        center_point:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+        country_code:
+          type: string
+        created_at:
+          type: string
+        district_id:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        population:
+          type: integer
+        postal_codes:
+          items:
+            type: string
+          type: array
+        updated_at:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.POIFilter:
+      properties:
+        max_distance:
+          description: Максимальное расстояние в метрах
+          maximum: 5000
+          minimum: 100
+          type: integer
+        min_count:
+          description: Минимальное количество POI в радиусе
+          maximum: 10
+          minimum: 0
+          type: integer
+        poi_type:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_gis_types.POIType"
+          description: Тип точки интереса
+      required:
+        - max_distance
+        - poi_type
+      type: object
+    backend_internal_proj_gis_types.POISearchResult:
+      properties:
+        distance:
+          type: number
+        id:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.POIType"
+      type: object
+    backend_internal_proj_gis_types.POIType:
+      enum:
+        - school
+        - hospital
+        - metro
+        - supermarket
+        - park
+        - bank
+        - pharmacy
+        - bus_stop
+      type: string
+      x-enum-varnames:
+        - POISchool
+        - POIHospital
+        - POIMetro
+        - POISupermarket
+        - POIPark
+        - POIBank
+        - POIPharmacy
+        - POIBusStop
     backend_internal_proj_gis_types.Point:
       properties:
         lat:
@@ -16267,6 +17691,52 @@ components:
         - lat
         - lng
       type: object
+    backend_internal_proj_gis_types.Polygon:
+      properties:
+        coordinates:
+          items:
+            items:
+              items:
+                type: number
+              type: array
+            type: array
+          type: array
+        type:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.RadiusFilter:
+      properties:
+        center_lat:
+          type: number
+        center_lng:
+          type: number
+        radius_km:
+          maximum: 50
+          minimum: 0.1
+          type: number
+      required:
+        - center_lat
+        - center_lng
+        - radius_km
+      type: object
+    backend_internal_proj_gis_types.RadiusSearchResponse:
+      properties:
+        has_more:
+          type: boolean
+        listings:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_gis_types.GeoListing"
+          type: array
+        search_center:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+          description: центр поиска
+        search_radius:
+          description: радиус в метрах
+          type: number
+        total_count:
+          type: integer
+      type: object
     backend_internal_proj_gis_types.SearchResponse:
       properties:
         has_more:
@@ -16277,6 +17747,67 @@ components:
           type: array
         total_count:
           type: integer
+      type: object
+    backend_internal_proj_gis_types.TransportMode:
+      enum:
+        - walking
+        - driving
+        - cycling
+        - transit
+      type: string
+      x-enum-varnames:
+        - TransportWalking
+        - TransportDriving
+        - TransportCycling
+        - TransportTransit
+    backend_internal_proj_gis_types.TravelTimeFilter:
+      properties:
+        center_lat:
+          description: Центральная точка для расчета изохрон
+          type: number
+        center_lng:
+          type: number
+        max_minutes:
+          description: Максимальное время пути в минутах (5-60)
+          maximum: 60
+          minimum: 5
+          type: integer
+        transport_mode:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_gis_types.TransportMode"
+          description: Тип транспорта
+          enum:
+            - walking
+            - driving
+            - cycling
+            - transit
+      required:
+        - center_lat
+        - center_lng
+        - max_minutes
+        - transport_mode
+      type: object
+    backend_internal_proj_gis_types.UpdateAddressRequest:
+      properties:
+        address:
+          minLength: 5
+          type: string
+        address_components:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.AddressComponents"
+        input_method:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.InputMethod"
+        location:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+        location_privacy:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.LocationPrivacyLeve\
+            l"
+        verified:
+          type: boolean
+      required:
+        - address
+        - input_method
+        - location
+        - location_privacy
       type: object
     backend_internal_proj_gis_types.UpdateLocationRequest:
       properties:
@@ -16296,6 +17827,25 @@ components:
         - address
         - lat
         - lng
+      type: object
+    backend_internal_proj_gis_types.VisibleCitiesRequest:
+      properties:
+        bounds:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Bounds"
+        center:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
+      required:
+        - bounds
+        - center
+      type: object
+    backend_internal_proj_gis_types.VisibleCitiesResponse:
+      properties:
+        closest_city:
+          $ref: "#/components/schemas/backend_internal_proj_gis_types.CityWithDistance"
+        visible_cities:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_gis_types.CityWithDistance"
+          type: array
       type: object
     backend_internal_proj_marketplace_service.CategorySearchResult:
       properties:

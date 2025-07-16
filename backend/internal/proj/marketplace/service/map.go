@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -12,7 +13,7 @@ import (
 )
 
 // GetListingsInBounds возвращает маркеры объявлений в указанных границах
-func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapMarker, error) {
+func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64, attributesFilter string) ([]models.MapMarker, error) {
 	// Строим SQL запрос для получения объявлений в границах
 	query := `
 		SELECT DISTINCT
@@ -74,6 +75,68 @@ func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neL
 		argCounter++
 	}
 
+	// Добавляем фильтры по атрибутам
+	if attributesFilter != "" {
+		// Парсим JSON с фильтрами атрибутов
+		var filters map[string]interface{}
+		if err := json.Unmarshal([]byte(attributesFilter), &filters); err == nil {
+			for attrID, value := range filters {
+				// Добавляем JOIN для каждого атрибута
+				query += fmt.Sprintf(`
+					AND EXISTS (
+						SELECT 1 FROM listing_attribute_values lav
+						WHERE lav.listing_id = ml.id 
+						AND lav.attribute_id = $%d
+				`, argCounter)
+				args = append(args, attrID)
+				argCounter++
+
+				// В зависимости от типа значения добавляем соответствующее условие
+				switch v := value.(type) {
+				case string:
+					query += fmt.Sprintf(" AND lav.text_value = $%d", argCounter)
+					args = append(args, v)
+					argCounter++
+				case float64:
+					query += fmt.Sprintf(" AND lav.numeric_value = $%d", argCounter)
+					args = append(args, v)
+					argCounter++
+				case bool:
+					query += fmt.Sprintf(" AND lav.boolean_value = $%d", argCounter)
+					args = append(args, v)
+					argCounter++
+				case map[string]interface{}:
+					// Для range фильтров
+					if min, ok := v["min"].(float64); ok {
+						query += fmt.Sprintf(" AND lav.numeric_value >= $%d", argCounter)
+						args = append(args, min)
+						argCounter++
+					}
+					if max, ok := v["max"].(float64); ok {
+						query += fmt.Sprintf(" AND lav.numeric_value <= $%d", argCounter)
+						args = append(args, max)
+						argCounter++
+					}
+				case []interface{}:
+					// Для multiselect
+					if len(v) > 0 {
+						values := make([]string, len(v))
+						for i, item := range v {
+							if str, ok := item.(string); ok {
+								values[i] = str
+							}
+						}
+						if len(values) > 0 {
+							query += fmt.Sprintf(" AND lav.json_value ?| ARRAY[%s]", strings.Join(values, ","))
+						}
+					}
+				}
+
+				query += ")"
+			}
+		}
+	}
+
 	// Для больших масштабов ограничиваем количество результатов
 	limit := s.calculateLimit(zoom)
 	query += fmt.Sprintf(" ORDER BY ml.created_at DESC LIMIT %d", limit)
@@ -119,7 +182,7 @@ func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neL
 }
 
 // GetMapClusters возвращает кластеризованные данные для карты
-func (s *MarketplaceService) GetMapClusters(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64) ([]models.MapCluster, error) {
+func (s *MarketplaceService) GetMapClusters(ctx context.Context, neLat, neLng, swLat, swLng float64, zoom int, categoryIDs, condition string, minPrice, maxPrice *float64, attributesFilter string) ([]models.MapCluster, error) {
 	// Для серверной кластеризации используем простую сетку
 	gridSize := s.calculateGridSize(zoom)
 
@@ -175,6 +238,68 @@ func (s *MarketplaceService) GetMapClusters(ctx context.Context, neLat, neLng, s
 		query += fmt.Sprintf(" AND ml.price <= $%d", argCounter)
 		args = append(args, *maxPrice)
 		argCounter++
+	}
+
+	// Добавляем фильтры по атрибутам
+	if attributesFilter != "" {
+		// Парсим JSON с фильтрами атрибутов
+		var filters map[string]interface{}
+		if err := json.Unmarshal([]byte(attributesFilter), &filters); err == nil {
+			for attrID, value := range filters {
+				// Добавляем JOIN для каждого атрибута
+				query += fmt.Sprintf(`
+					AND EXISTS (
+						SELECT 1 FROM listing_attribute_values lav
+						WHERE lav.listing_id = ml.id 
+						AND lav.attribute_id = $%d
+				`, argCounter)
+				args = append(args, attrID)
+				argCounter++
+
+				// В зависимости от типа значения добавляем соответствующее условие
+				switch v := value.(type) {
+				case string:
+					query += fmt.Sprintf(" AND lav.text_value = $%d", argCounter)
+					args = append(args, v)
+					argCounter++
+				case float64:
+					query += fmt.Sprintf(" AND lav.numeric_value = $%d", argCounter)
+					args = append(args, v)
+					argCounter++
+				case bool:
+					query += fmt.Sprintf(" AND lav.boolean_value = $%d", argCounter)
+					args = append(args, v)
+					argCounter++
+				case map[string]interface{}:
+					// Для range фильтров
+					if min, ok := v["min"].(float64); ok {
+						query += fmt.Sprintf(" AND lav.numeric_value >= $%d", argCounter)
+						args = append(args, min)
+						argCounter++
+					}
+					if max, ok := v["max"].(float64); ok {
+						query += fmt.Sprintf(" AND lav.numeric_value <= $%d", argCounter)
+						args = append(args, max)
+						argCounter++
+					}
+				case []interface{}:
+					// Для multiselect
+					if len(v) > 0 {
+						values := make([]string, len(v))
+						for i, item := range v {
+							if str, ok := item.(string); ok {
+								values[i] = str
+							}
+						}
+						if len(values) > 0 {
+							query += fmt.Sprintf(" AND lav.json_value ?| ARRAY[%s]", strings.Join(values, ","))
+						}
+					}
+				}
+
+				query += ")"
+			}
+		}
 	}
 
 	query += " GROUP BY cluster_lat, cluster_lng HAVING COUNT(*) > 1"

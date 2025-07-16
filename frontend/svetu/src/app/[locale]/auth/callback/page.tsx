@@ -13,8 +13,8 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       // Получаем токен из URL
-      const authToken = searchParams.get('auth_token');
-      const returnUrl = searchParams.get('returnUrl') || '/';
+      const authToken = searchParams?.get('auth_token');
+      const returnUrl = searchParams?.get('returnUrl') || '/';
 
       if (authToken) {
         console.log('[AuthCallback] Received auth token from OAuth callback');

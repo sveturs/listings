@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
-  const paymentId = searchParams.get('id');
+  const paymentId = searchParams?.get('id');
 
   const [orderData, setOrderData] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);

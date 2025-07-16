@@ -1,37 +1,59 @@
-# Current Task Status
+# Текущая задача: Анализ компонентов поиска на странице карты
 
-## Completed Task: Fix automatic chat list refresh after sending first message
+## Описание
+Найти все компоненты поиска на странице карты в проекте. Особенно интересуют три поля ввода текста для поиска.
 
-### Problem
-When a new user sends their first message, the chat list doesn't automatically update - they need to manually refresh the page to see the new chat.
+## Прогресс
+Проанализированы основные компоненты поиска на странице карты:
 
-### Solution Implemented
-1. **Updated sendMessage thunk** to:
-   - Check if the message creates a new chat (no chat_id in payload)
-   - Set pendingChatId before loading the chat list
-   - Await the loadChats dispatch to ensure proper sequencing
+### Найденные компоненты поиска:
 
-2. **Added pendingChatId mechanism**:
-   - Added pendingChatId to chat state
-   - Created setPendingChatId action
-   - Added selector for pendingChatId
-   - Updated loadChats fulfilled handler to auto-select chat when pendingChatId matches
+1. **AddressSearch** (`/src/components/storefronts/Map/AddressSearch.tsx`)
+   - Поиск по адресу с автодополнением
+   - Использует Nominatim (OpenStreetMap) для геокодирования
+   - Поддерживает получение текущего местоположения
+   - Используется в StorefrontMapContainer
 
-3. **Updated Chat page component**:
-   - Added effect to watch for pendingChatId changes
-   - Automatically selects the new chat when it appears in the list
+2. **MapFilters** (`/src/components/storefronts/Map/MapFilters.tsx`)
+   - Содержит поле поиска по названию витрины
+   - Поле поиска по городу
+   - Фильтры по рейтингу, статусу, способам оплаты
+   - Настройка радиуса поиска
 
-### Technical Changes
-- Modified `/store/slices/chatSlice.ts`
-- Updated `/app/[locale]/chat/page.tsx`
-- Enhanced `/hooks/useChat.ts` to expose pendingChatId
+3. **RadiusSearchControl** (`/src/components/GIS/RadiusSearchControl.tsx`)
+   - Поиск по адресу с радиусом
+   - Переключение между радиусным поиском и поиском по районам
+   - Настройка радиуса или времени ходьбы
+   - Интеграция с DistrictFilter для поиска по районам
 
-### Result
-Now when a new user sends their first message:
-1. The message is sent successfully
-2. The chat list automatically refreshes
-3. The new chat is automatically selected
-4. User sees their conversation without manual refresh
+4. **DistrictMapSelector** (`/src/components/search/DistrictMapSelector.tsx`)
+   - Выбор района и муниципалитета
+   - Загрузка объявлений по выбранному району
+   - Отображение информации о районе (население, площадь)
 
-## Task completed successfully!
-All code changes pass linting and build checks.
+5. **SearchBar** (`/src/components/SearchBar/SearchBar.tsx`)
+   - Основная поисковая строка на странице карты
+   - Используется для поиска адресов на карте
+
+### Страницы с картой:
+
+1. **/map/page.tsx** - Основная страница карты маркетплейса
+   - Использует SearchBar для поиска адресов
+   - Фильтры по категории, цене, радиусу
+   - Поддержка режимов радиусного поиска и ходьбы
+
+2. **/map/districts/page.tsx** - Страница поиска по районам
+   - Использует DistrictMapSearch компонент
+   - Панель выбора района слева
+   - Отображение объявлений на карте
+
+### Три основных поля поиска:
+
+1. **Поиск по адресу** - основное поле для ввода адреса с автодополнением
+2. **Поиск по названию** - в фильтрах для поиска витрин/объявлений по названию
+3. **Поиск по городу** - в фильтрах для ограничения поиска конкретным городом
+
+## Следующие шаги
+- Проверить интеграцию компонентов
+- Изучить API endpoints для поиска
+- Проанализировать мобильную версию интерфейса

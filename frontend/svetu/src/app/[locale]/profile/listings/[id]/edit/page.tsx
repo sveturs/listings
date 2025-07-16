@@ -36,7 +36,7 @@ export default function EditListingPage() {
   const t = useTranslations('profile.listings.editListing');
   const router = useRouter();
   const params = useParams();
-  const listingId = params.id as string;
+  const listingId = params?.id as string;
 
   const [mounted, setMounted] = useState(false);
   const [listing, setListing] = useState<Listing | null>(null);

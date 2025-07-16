@@ -37,8 +37,8 @@ export default function Header() {
   };
 
   // Определяем активную витрину из URL
-  const currentStorefrontId = searchParams.get('storefront')
-    ? Number(searchParams.get('storefront'))
+  const currentStorefrontId = searchParams?.get('storefront')
+    ? Number(searchParams?.get('storefront'))
     : pathname?.includes('/storefronts/')
       ? extractStorefrontIdFromPath(pathname)
       : null;

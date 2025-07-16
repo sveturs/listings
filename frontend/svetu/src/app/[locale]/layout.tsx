@@ -9,6 +9,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ReduxProvider } from '@/components/ReduxProvider';
 import WebSocketManager from '@/components/WebSocketManager';
 import AuthStateManager from '@/components/AuthStateManager';
+import { VisibleCitiesProvider } from '@/components/GIS/contexts/VisibleCitiesContext';
 import '../globals.css';
 
 const geistSans = Geist({
@@ -89,10 +90,12 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ReduxProvider>
             <AuthProvider>
-              <AuthStateManager />
-              <WebSocketManager />
-              <Header />
-              <main className="min-h-screen pt-28 lg:pt-16">{children}</main>
+              <VisibleCitiesProvider>
+                <AuthStateManager />
+                <WebSocketManager />
+                <Header />
+                <main className="min-h-screen pt-28 lg:pt-16">{children}</main>
+              </VisibleCitiesProvider>
             </AuthProvider>
           </ReduxProvider>
         </NextIntlClientProvider>

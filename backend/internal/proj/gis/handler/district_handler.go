@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -30,8 +31,9 @@ func NewDistrictHandler(service *service.DistrictService) *DistrictHandler {
 // @Produce json
 // @Param country_code query string false "Country code (e.g., RS)"
 // @Param city_id query string false "City ID"
+// @Param city_ids query []string false "City IDs (comma-separated)"
 // @Param name query string false "District name (partial match)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_gis_types.District} "List of districts"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.District} "List of districts"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/districts [get]
@@ -50,8 +52,24 @@ func (h *DistrictHandler) GetDistricts(c *fiber.Ctx) error {
 		params.CityID = &cityID
 	}
 
+	// Parse city_ids[] if provided
+	cityIDStrs := c.Context().QueryArgs().PeekMulti("city_ids[]")
+	if len(cityIDStrs) > 0 {
+		var cityIDs []uuid.UUID
+		for _, cityIDBytes := range cityIDStrs {
+			cityID, err := uuid.Parse(string(cityIDBytes))
+			if err != nil {
+				return utils.ErrorResponse(c, http.StatusBadRequest, "api.invalidCityId")
+			}
+			cityIDs = append(cityIDs, cityID)
+		}
+		params.CityIDs = cityIDs
+	}
+
 	districts, err := h.service.GetDistricts(c.Context(), params)
 	if err != nil {
+		// Log the actual error for debugging
+		fmt.Printf("ERROR: Failed to get districts: %+v\n", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "api.failedToGetDistricts")
 	}
 
@@ -82,6 +100,32 @@ func (h *DistrictHandler) GetDistrictByID(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, district)
+}
+
+// GetDistrictBoundary returns district boundary as GeoJSON
+// @Summary Get district boundary
+// @Description Get district boundary as GeoJSON polygon for map visualization
+// @Tags gis
+// @Accept json
+// @Produce json
+// @Param id path string true "District ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.DistrictBoundaryResponse} "District boundary"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "District not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/gis/districts/{id}/boundary [get]
+func (h *DistrictHandler) GetDistrictBoundary(c *fiber.Ctx) error {
+	districtID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "api.invalidDistrictId")
+	}
+
+	boundary, err := h.service.GetDistrictBoundary(c.Context(), districtID)
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusNotFound, "api.districtNotFound")
+	}
+
+	return utils.SuccessResponse(c, boundary)
 }
 
 // GetMunicipalities returns all municipalities
@@ -209,6 +253,8 @@ func (h *DistrictHandler) SearchByDistrict(c *fiber.Ctx) error {
 
 	results, err := h.service.SearchListingsByDistrict(c.Context(), districtID, params)
 	if err != nil {
+		// Temporary debug logging
+		fmt.Printf("ERROR: SearchListingsByDistrict failed: %+v\n", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "api.failedToSearchListings")
 	}
 
@@ -282,4 +328,103 @@ func (h *DistrictHandler) SearchByMunicipality(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, results)
+}
+
+// GetCities returns all cities
+// @Summary Get cities
+// @Description Get all cities with optional filtering by viewport bounds
+// @Tags gis
+// @Accept json
+// @Produce json
+// @Param country_code query string false "Country code (e.g., RS)"
+// @Param has_districts query bool false "Filter cities with districts"
+// @Param bounds_north query number false "Viewport north boundary"
+// @Param bounds_south query number false "Viewport south boundary"
+// @Param bounds_east query number false "Viewport east boundary"
+// @Param bounds_west query number false "Viewport west boundary"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.City} "List of cities"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/gis/cities [get]
+func (h *DistrictHandler) GetCities(c *fiber.Ctx) error {
+	params := types.CitySearchParams{
+		CountryCode: c.Query("country_code", "RS"),
+		SearchQuery: c.Query("q"),
+		Limit:       50,
+		Offset:      0,
+	}
+
+	// Parse has_districts filter
+	if hasDistrictsStr := c.Query("has_districts"); hasDistrictsStr != "" {
+		hasDistricts := hasDistrictsStr == "true"
+		params.HasDistricts = &hasDistricts
+	}
+
+	// Parse bounds if provided
+	if northStr := c.Query("bounds_north"); northStr != "" {
+		var bounds types.Bounds
+		var err error
+
+		if bounds.North, err = strconv.ParseFloat(northStr, 64); err != nil {
+			return utils.ErrorResponse(c, http.StatusBadRequest, "api.invalidBounds")
+		}
+		if bounds.South, err = strconv.ParseFloat(c.Query("bounds_south"), 64); err != nil {
+			return utils.ErrorResponse(c, http.StatusBadRequest, "api.invalidBounds")
+		}
+		if bounds.East, err = strconv.ParseFloat(c.Query("bounds_east"), 64); err != nil {
+			return utils.ErrorResponse(c, http.StatusBadRequest, "api.invalidBounds")
+		}
+		if bounds.West, err = strconv.ParseFloat(c.Query("bounds_west"), 64); err != nil {
+			return utils.ErrorResponse(c, http.StatusBadRequest, "api.invalidBounds")
+		}
+
+		params.Bounds = &bounds
+	}
+
+	cities, err := h.service.GetCities(c.Context(), params)
+	if err != nil {
+		fmt.Printf("ERROR: Failed to get cities: %+v\n", err)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "api.failedToGetCities")
+	}
+
+	return utils.SuccessResponse(c, cities)
+}
+
+// GetVisibleCities returns cities visible in viewport with distance calculation
+// @Summary Get visible cities
+// @Description Get cities visible in viewport bounds with distance to center
+// @Tags gis
+// @Accept json
+// @Produce json
+// @Param request body types.VisibleCitiesRequest true "Viewport bounds and center"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.VisibleCitiesResponse} "Visible cities with distances"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/gis/cities/visible [post]
+func (h *DistrictHandler) GetVisibleCities(c *fiber.Ctx) error {
+	var req types.VisibleCitiesRequest
+
+	// Логирование сырого тела запроса
+	fmt.Printf("DEBUG: GetVisibleCities raw body: %s\n", string(c.Body()))
+
+	if err := c.BodyParser(&req); err != nil {
+		fmt.Printf("ERROR: Failed to parse request body: %+v\n", err)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "api.invalidRequestBody")
+	}
+
+	// Логирование распарсенного запроса
+	fmt.Printf("DEBUG: Parsed request: bounds=%+v, center=%+v\n", req.Bounds, req.Center)
+
+	if err := req.Validate(); err != nil {
+		fmt.Printf("ERROR: Request validation failed: %+v\n", err)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "api.invalidRequestData")
+	}
+
+	response, err := h.service.GetVisibleCities(c.Context(), req)
+	if err != nil {
+		fmt.Printf("ERROR: Failed to get visible cities: %+v\n", err)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "api.failedToGetVisibleCities")
+	}
+
+	return utils.SuccessResponse(c, response)
 }

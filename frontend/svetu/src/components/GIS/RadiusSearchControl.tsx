@@ -10,6 +10,7 @@ import {
 } from './hooks/useRadiusSearch';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useGeoSearch } from './hooks/useGeoSearch';
+import DistrictFilter from './DistrictFilter';
 
 interface RadiusSearchControlProps {
   config?: Partial<RadiusSearchControlConfig>;
@@ -57,6 +58,7 @@ export default function RadiusSearchControl({
     GeoSearchResult[]
   >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeTab, setActiveTab] = useState<'radius' | 'district'>('radius');
 
   // Хуки
   const {
@@ -169,6 +171,103 @@ export default function RadiusSearchControl({
     [handleAddressSearch]
   );
 
+  // Обработчики фильтров по районам
+  const handleDistrictSelect = useCallback(
+    async (district: any) => {
+      if (!district) return;
+
+      try {
+        // Выполняем поиск по району
+        const response = await fetch(
+          `/api/v1/gis/search/by-district/${district.id}?limit=50`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const listings = data.data || [];
+
+        // Преобразуем в формат RadiusSearchResult
+        const results = listings.map((listing: any) => ({
+          id: listing.id,
+          title: listing.title,
+          description: listing.description,
+          latitude: listing.location.lat,
+          longitude: listing.location.lng,
+          distance: 0, // Для фильтра по району расстояние не применимо
+          category: listing.category,
+          price: listing.price,
+          currency: listing.currency,
+          imageUrl: listing.images?.[0] || '',
+          metadata: listing,
+        }));
+
+        // Используем центр района как center
+        const center = {
+          latitude:
+            parseFloat(district.center_point?.coordinates?.[1]) || 44.8176,
+          longitude:
+            parseFloat(district.center_point?.coordinates?.[0]) || 20.4649,
+        };
+
+        onSearch?.(results, center, 0); // radius = 0 для районного поиска
+        onCenterChange?.(center);
+      } catch (error) {
+        console.error('District search failed:', error);
+      }
+    },
+    [onSearch, onCenterChange]
+  );
+
+  const handleMunicipalitySelect = useCallback(
+    async (municipality: any) => {
+      if (!municipality) return;
+
+      try {
+        // Выполняем поиск по муниципалитету
+        const response = await fetch(
+          `/api/v1/gis/search/by-municipality/${municipality.id}?limit=50`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const listings = data.data || [];
+
+        // Преобразуем в формат RadiusSearchResult
+        const results = listings.map((listing: any) => ({
+          id: listing.id,
+          title: listing.title,
+          description: listing.description,
+          latitude: listing.location.lat,
+          longitude: listing.location.lng,
+          distance: 0, // Для фильтра по муниципалитету расстояние не применимо
+          category: listing.category,
+          price: listing.price,
+          currency: listing.currency,
+          imageUrl: listing.images?.[0] || '',
+          metadata: listing,
+        }));
+
+        // Используем центр муниципалитета как center
+        const center = {
+          latitude:
+            parseFloat(municipality.center_point?.coordinates?.[1]) || 44.8176,
+          longitude:
+            parseFloat(municipality.center_point?.coordinates?.[0]) || 20.4649,
+        };
+
+        onSearch?.(results, center, 0); // radius = 0 для муниципального поиска
+        onCenterChange?.(center);
+      } catch (error) {
+        console.error('Municipality search failed:', error);
+      }
+    },
+    [onSearch, onCenterChange]
+  );
+
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -222,146 +321,239 @@ export default function RadiusSearchControl({
       {/* Основной контент */}
       {isExpanded && (
         <div className="p-4 space-y-4">
-          {/* Слайдер радиуса */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-base-content">
-                {t('radius')}
-              </label>
-              <span className="text-sm font-mono bg-base-200 px-2 py-1 rounded">
-                {formatRadius(radius)}
-              </span>
-            </div>
-            <input
-              type="range"
-              min={mergedConfig.minRadius}
-              max={mergedConfig.maxRadius}
-              step={mergedConfig.step}
-              value={radius}
-              onChange={(e) => handleRadiusChange(parseFloat(e.target.value))}
-              className="range range-primary range-sm"
-              disabled={disabled || isLoading}
-            />
-            <div className="flex justify-between text-xs text-base-content/60">
-              <span>{formatRadius(mergedConfig.minRadius)}</span>
-              <span>{formatRadius(mergedConfig.maxRadius)}</span>
-            </div>
+          {/* Табы для переключения между режимами поиска */}
+          <div className="tabs tabs-boxed tabs-sm">
+            <button
+              className={`tab ${activeTab === 'radius' ? 'tab-active' : ''}`}
+              onClick={() => setActiveTab('radius')}
+              disabled={disabled}
+            >
+              {t('radius_search_tab')}
+            </button>
+            <button
+              className={`tab ${activeTab === 'district' ? 'tab-active' : ''}`}
+              onClick={() => setActiveTab('district')}
+              disabled={disabled}
+            >
+              {t('district_search_tab')}
+            </button>
           </div>
 
-          {/* Поиск по адресу */}
-          {mergedConfig.showAddressInput && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-base-content">
-                {t('address')}
-              </label>
-              <form onSubmit={handleSubmit} className="relative">
-                <div className="flex space-x-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={searchAddress}
-                      onChange={(e) => handleAddressInputChange(e.target.value)}
-                      placeholder={t('address_placeholder')}
-                      className="input input-bordered input-sm w-full pr-10"
-                      disabled={disabled || isLoading}
-                    />
-                    {geoLoading && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <div className="loading loading-spinner loading-xs"></div>
+          {/* Контент радиусного поиска */}
+          {activeTab === 'radius' && (
+            <div className="space-y-4">
+              {/* Слайдер радиуса */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-base-content">
+                    {t('radius')}
+                  </label>
+                  <span className="text-sm font-mono bg-base-200 px-2 py-1 rounded">
+                    {formatRadius(radius)}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={mergedConfig.minRadius}
+                  max={mergedConfig.maxRadius}
+                  step={mergedConfig.step}
+                  value={radius}
+                  onChange={(e) =>
+                    handleRadiusChange(parseFloat(e.target.value))
+                  }
+                  className="range range-primary range-sm"
+                  disabled={disabled || isLoading}
+                />
+                <div className="flex justify-between text-xs text-base-content/60">
+                  <span>{formatRadius(mergedConfig.minRadius)}</span>
+                  <span>{formatRadius(mergedConfig.maxRadius)}</span>
+                </div>
+              </div>
+
+              {/* Поиск по адресу */}
+              {mergedConfig.showAddressInput && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-base-content">
+                    {t('address')}
+                  </label>
+                  <form onSubmit={handleSubmit} className="relative">
+                    <div className="flex space-x-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          value={searchAddress}
+                          onChange={(e) =>
+                            handleAddressInputChange(e.target.value)
+                          }
+                          placeholder={t('address_placeholder')}
+                          className="input input-bordered input-sm w-full pr-10"
+                          disabled={disabled || isLoading}
+                        />
+                        {geoLoading && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <div className="loading loading-spinner loading-xs"></div>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="submit"
+                        className="btn btn-primary btn-sm"
+                        disabled={
+                          disabled || isLoading || !searchAddress.trim()
+                        }
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Предложения адресов */}
+                    {showSuggestions && addressSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {addressSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            type="button"
+                            onClick={() => handleSuggestionSelect(suggestion)}
+                            className="w-full text-left px-3 py-2 hover:bg-base-200 first:rounded-t-lg last:rounded-b-lg"
+                          >
+                            <div className="text-sm text-base-content">
+                              {suggestion.display_name}
+                            </div>
+                          </button>
+                        ))}
                       </div>
                     )}
+                  </form>
+                </div>
+              )}
+
+              {/* Кнопка "Мое местоположение" */}
+              {mergedConfig.showMyLocation &&
+                mergedConfig.enableGeolocation && (
+                  <button
+                    type="button"
+                    onClick={handleCurrentLocationSearch}
+                    className="btn btn-outline btn-sm w-full"
+                    disabled={disabled || isLoading}
+                  >
+                    {locationLoading ? (
+                      <div className="loading loading-spinner loading-xs"></div>
+                    ) : (
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    )}
+                    {t('use_my_location')}
+                  </button>
+                )}
+
+              {/* Переключатель показа круга */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-base-content">
+                  {t('show_search_area')}
+                </label>
+                <input
+                  type="checkbox"
+                  checked={showCircle}
+                  onChange={handleShowCircleToggle}
+                  className="checkbox checkbox-primary checkbox-sm"
+                  disabled={disabled}
+                />
+              </div>
+
+              {/* Индикатор загрузки */}
+              {isLoading && (
+                <div className="flex items-center justify-center space-x-2 p-2">
+                  <div className="loading loading-spinner loading-sm"></div>
+                  <span className="text-sm text-base-content/70">
+                    {t('searching')}
+                  </span>
+                </div>
+              )}
+
+              {/* Ошибки */}
+              {hasError && (
+                <div className="alert alert-error alert-sm">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="stroke-current shrink-0 h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="text-xs">
+                    {searchError || locationError?.message}
+                  </span>
+                </div>
+              )}
+
+              {/* Результаты поиска */}
+              {total > 0 && searchCenter && (
+                <div className="space-y-2">
+                  <div className="text-sm text-base-content/70">
+                    {t('results_found', {
+                      count: total,
+                      radius: formatRadius(radius),
+                    })}
                   </div>
                   <button
-                    type="submit"
-                    className="btn btn-primary btn-sm"
-                    disabled={disabled || isLoading || !searchAddress.trim()}
+                    type="button"
+                    onClick={clearResults}
+                    className="btn btn-ghost btn-xs"
                   >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
+                    {t('clear_results')}
                   </button>
                 </div>
-
-                {/* Предложения адресов */}
-                {showSuggestions && addressSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {addressSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion.id}
-                        type="button"
-                        onClick={() => handleSuggestionSelect(suggestion)}
-                        className="w-full text-left px-3 py-2 hover:bg-base-200 first:rounded-t-lg last:rounded-b-lg"
-                      >
-                        <div className="text-sm text-base-content">
-                          {suggestion.display_name}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </form>
+              )}
             </div>
           )}
 
-          {/* Кнопка "Мое местоположение" */}
-          {mergedConfig.showMyLocation && mergedConfig.enableGeolocation && (
-            <button
-              type="button"
-              onClick={handleCurrentLocationSearch}
-              className="btn btn-outline btn-sm w-full"
-              disabled={disabled || isLoading}
-            >
-              {locationLoading ? (
-                <div className="loading loading-spinner loading-xs"></div>
-              ) : (
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              )}
-              {t('use_my_location')}
-            </button>
+          {/* Контент районного поиска */}
+          {activeTab === 'district' && (
+            <div className="space-y-4">
+              <DistrictFilter
+                onDistrictSelect={handleDistrictSelect}
+                onMunicipalitySelect={handleMunicipalitySelect}
+                disabled={disabled || isLoading}
+              />
+            </div>
           )}
 
-          {/* Переключатель показа круга */}
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-base-content">
-              {t('show_search_area')}
-            </label>
-            <input
-              type="checkbox"
-              checked={showCircle}
-              onChange={handleShowCircleToggle}
-              className="checkbox checkbox-primary checkbox-sm"
-              disabled={disabled}
-            />
-          </div>
-
+          {/* Общие элементы для всех табов */}
           {/* Индикатор загрузки */}
           {isLoading && (
             <div className="flex items-center justify-center space-x-2 p-2">
@@ -398,10 +590,12 @@ export default function RadiusSearchControl({
           {total > 0 && searchCenter && (
             <div className="space-y-2">
               <div className="text-sm text-base-content/70">
-                {t('results_found', {
-                  count: total,
-                  radius: formatRadius(radius),
-                })}
+                {activeTab === 'radius'
+                  ? t('results_found', {
+                      count: total,
+                      radius: formatRadius(radius),
+                    })
+                  : t('district_results_found', { count: total })}
               </div>
               <button
                 type="button"

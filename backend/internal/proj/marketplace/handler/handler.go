@@ -382,10 +382,13 @@ func (h *Handler) GetListingsInBounds(c *fiber.Ctx) error {
 		}
 	}
 
+	// Получаем атрибуты из запроса
+	attributes := c.Query("attributes", "")
+
 	// Получаем объявления в указанных границах
 	listings, err := h.service.Marketplace().GetListingsInBounds(c.Context(),
 		neLat64, neLng64, swLat64, swLng64, zoom,
-		categoryIDs, condition, minPriceFloat, maxPriceFloat)
+		categoryIDs, condition, minPriceFloat, maxPriceFloat, attributes)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
@@ -479,9 +482,12 @@ func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
 		}
 	}
 
+	// Получаем атрибуты из запроса
+	attributes := c.Query("attributes", "")
+
 	clusters, err := h.service.Marketplace().GetListingsInBounds(c.Context(),
 		neLat64, neLng64, swLat64, swLng64, zoom,
-		categoryIDs, condition, minPriceFloat, maxPriceFloat)
+		categoryIDs, condition, minPriceFloat, maxPriceFloat, attributes)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}

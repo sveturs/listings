@@ -24,6 +24,7 @@ import (
 // @Param condition query string false "Item condition filter"
 // @Param min_price query number false "Minimum price filter"
 // @Param max_price query number false "Maximum price filter"
+// @Param attributes query string false "JSON object with attribute filters"
 // @Success 200 {object} MapBoundsResponse "Listings within bounds"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
@@ -72,6 +73,7 @@ func (h *MarketplaceHandler) GetListingsInBounds(c *fiber.Ctx) error {
 	condition := c.Query("condition", "")
 	minPrice := c.Query("min_price", "")
 	maxPrice := c.Query("max_price", "")
+	attributesFilter := c.Query("attributes", "")
 
 	// Парсим цены
 	var minPriceFloat, maxPriceFloat *float64
@@ -89,7 +91,7 @@ func (h *MarketplaceHandler) GetListingsInBounds(c *fiber.Ctx) error {
 	// Получаем объявления в указанных границах
 	listings, err := h.service.GetListingsInBounds(c.Context(),
 		neLat64, neLng64, swLat64, swLng64, zoom,
-		categoryIDs, condition, minPriceFloat, maxPriceFloat)
+		categoryIDs, condition, minPriceFloat, maxPriceFloat, attributesFilter)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
@@ -124,6 +126,7 @@ func (h *MarketplaceHandler) GetListingsInBounds(c *fiber.Ctx) error {
 // @Param condition query string false "Item condition filter"
 // @Param min_price query number false "Minimum price filter"
 // @Param max_price query number false "Maximum price filter"
+// @Param attributes query string false "JSON object with attribute filters"
 // @Success 200 {object} MapClustersResponse "Map clusters or markers data"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
@@ -172,6 +175,7 @@ func (h *MarketplaceHandler) GetMapClusters(c *fiber.Ctx) error {
 	condition := c.Query("condition", "")
 	minPrice := c.Query("min_price", "")
 	maxPrice := c.Query("max_price", "")
+	attributesFilter := c.Query("attributes", "")
 
 	// Парсим цены
 	var minPriceFloat, maxPriceFloat *float64
@@ -190,7 +194,7 @@ func (h *MarketplaceHandler) GetMapClusters(c *fiber.Ctx) error {
 	if zoom >= 15 {
 		listings, err := h.service.GetListingsInBounds(c.Context(),
 			neLat64, neLng64, swLat64, swLng64, zoom,
-			categoryIDs, condition, minPriceFloat, maxPriceFloat)
+			categoryIDs, condition, minPriceFloat, maxPriceFloat, attributesFilter)
 		if err != nil {
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 		}
@@ -207,7 +211,7 @@ func (h *MarketplaceHandler) GetMapClusters(c *fiber.Ctx) error {
 	// Для меньших zoom уровней возвращаем кластеры
 	clusters, err := h.service.GetMapClusters(c.Context(),
 		neLat64, neLng64, swLat64, swLng64, zoom,
-		categoryIDs, condition, minPriceFloat, maxPriceFloat)
+		categoryIDs, condition, minPriceFloat, maxPriceFloat, attributesFilter)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}

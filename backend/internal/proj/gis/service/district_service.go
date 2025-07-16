@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"sort"
 
 	"backend/internal/proj/gis/repository"
 	"backend/internal/proj/gis/types"
@@ -160,4 +162,87 @@ func (s *DistrictService) GetMunicipalityByPoint(ctx context.Context, lat, lng f
 	}
 
 	return &municipalities[0], nil
+}
+
+// GetDistrictBoundary returns district boundary as GeoJSON
+func (s *DistrictService) GetDistrictBoundary(ctx context.Context, districtID uuid.UUID) (*types.DistrictBoundaryResponse, error) {
+	district, err := s.repo.GetDistrictByID(ctx, districtID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get district for boundary")
+	}
+	if district == nil {
+		return nil, errors.New("district not found")
+	}
+
+	// Get boundary from repository as GeoJSON string
+	boundaryGeoJSON, err := s.repo.GetDistrictBoundaryGeoJSON(ctx, districtID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get district boundary")
+	}
+
+	response := &types.DistrictBoundaryResponse{
+		ID:       district.ID.String(),
+		Name:     district.Name,
+		Boundary: json.RawMessage(boundaryGeoJSON),
+	}
+
+	if district.CityID != nil {
+		cityIDStr := district.CityID.String()
+		response.CityID = &cityIDStr
+	}
+
+	return response, nil
+}
+
+// GetCities returns all cities with optional filtering
+func (s *DistrictService) GetCities(ctx context.Context, params types.CitySearchParams) ([]types.City, error) {
+	cities, err := s.repo.GetCities(ctx, params)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get cities")
+	}
+	return cities, nil
+}
+
+// GetVisibleCities returns cities visible in viewport with distance calculation
+func (s *DistrictService) GetVisibleCities(ctx context.Context, req types.VisibleCitiesRequest) (*types.VisibleCitiesResponse, error) {
+	// Get cities that intersect with the viewport bounds
+	params := types.CitySearchParams{
+		Bounds:       req.Bounds,
+		HasDistricts: nil, // Get all cities, not just those with districts
+		Limit:        100,
+		Offset:       0,
+	}
+
+	allCities, err := s.repo.GetCities(ctx, params)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get cities in viewport")
+	}
+
+	// Calculate distances and sort
+	var citiesWithDistance []types.CityWithDistance
+	for _, city := range allCities {
+		if city.CenterPoint != nil {
+			distance := city.CenterPoint.Distance(*req.Center)
+			citiesWithDistance = append(citiesWithDistance, types.CityWithDistance{
+				City:     city,
+				Distance: distance,
+			})
+		}
+	}
+
+	// Sort by distance
+	sort.Slice(citiesWithDistance, func(i, j int) bool {
+		return citiesWithDistance[i].Distance < citiesWithDistance[j].Distance
+	})
+
+	response := &types.VisibleCitiesResponse{
+		VisibleCities: citiesWithDistance,
+	}
+
+	// Set closest city (first in sorted list)
+	if len(citiesWithDistance) > 0 {
+		response.ClosestCity = &citiesWithDistance[0]
+	}
+
+	return response, nil
 }

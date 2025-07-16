@@ -81,9 +81,11 @@ SELECT
         ELSE 0
     END as density
 FROM grid_cells g
+LEFT JOIN listings_geo lg ON 
+    lg.location IS NOT NULL 
+    AND ST_Within(lg.location::geometry, g.cell::geometry)
 LEFT JOIN marketplace_listings l ON 
-    l.location IS NOT NULL 
-    AND ST_Within(l.location::geometry, g.cell::geometry)
+    l.id = lg.listing_id 
     AND l.status = 'active'
 GROUP BY grid_x, grid_y, cell;
 

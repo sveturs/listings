@@ -43,4 +43,27 @@ var (
 
 	// ErrInvalidAddressComponents ошибка некорректных компонентов адреса
 	ErrInvalidAddressComponents = errors.New("invalid address components")
+
+	// ========== PHASE 2.5: Ошибки для городов и контекстного поиска ==========
+
+	// ErrMissingBounds ошибка отсутствия границ
+	ErrMissingBounds = errors.New("bounds are required")
+
+	// ErrMissingCenter ошибка отсутствия центра
+	ErrMissingCenter = errors.New("center point is required")
+
+	// ErrCityNotFound ошибка отсутствия города
+	ErrCityNotFound = errors.New("city not found")
+
+	// ErrDistrictNotFound ошибка отсутствия района
+	ErrDistrictNotFound = errors.New("district not found")
+
+	// ErrMunicipalityNotFound ошибка отсутствия муниципалитета
+	ErrMunicipalityNotFound = errors.New("municipality not found")
+
+	// ErrNoCitiesInViewport ошибка отсутствия городов в области просмотра
+	ErrNoCitiesInViewport = errors.New("no cities found in viewport")
+
+	// ErrNoDistrictsAvailable ошибка отсутствия доступных районов
+	ErrNoDistrictsAvailable = errors.New("no districts available for this city")
 )

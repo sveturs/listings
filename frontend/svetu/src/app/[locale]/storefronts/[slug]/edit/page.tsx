@@ -32,7 +32,7 @@ export default function EditStorefrontPage() {
   const dispatch = useAppDispatch();
   const t = useTranslations();
   const locale = useLocale();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   const { currentStorefront, isLoading, error } = useAppSelector(
     (state) => state.storefronts

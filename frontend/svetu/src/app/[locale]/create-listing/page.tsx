@@ -43,7 +43,7 @@ export default function CreateListingPage() {
   const [isClient, setIsClient] = useState(false);
 
   // Получаем ID черновика из URL параметров
-  const draftId = searchParams.get('draft') || undefined;
+  const draftId = searchParams?.get('draft') || undefined;
 
   useEffect(() => {
     setIsClient(true);

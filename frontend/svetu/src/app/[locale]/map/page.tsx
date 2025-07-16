@@ -5,7 +5,11 @@ import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
 import MarkerClickPopup from '@/components/GIS/Map/MarkerClickPopup';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
-import { MapViewState, MapMarkerData } from '@/components/GIS/types/gis';
+import {
+  MapViewState,
+  MapMarkerData,
+  MapBounds,
+} from '@/components/GIS/types/gis';
 import { useDebounce } from '@/hooks/useDebounce';
 import { SearchBar } from '@/components/SearchBar';
 import { useRouter } from '@/i18n/routing';
@@ -16,6 +20,29 @@ import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
 // import WalkingAccessibilityControl from '@/components/GIS/Map/WalkingAccessibilityControl'; // Заменен на NativeSliderControl
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
+// import { DistrictMapSelector } from '@/components/search';
+import { SmartFilters } from '@/components/marketplace/SmartFilters';
+import { QuickFilters } from '@/components/marketplace/QuickFilters';
+
+// Функция для проверки, находится ли точка внутри полигона (Ray Casting Algorithm)
+function isPointInPolygon(
+  point: [number, number],
+  polygon: [number, number][]
+): boolean {
+  const [x, y] = point;
+  let inside = false;
+
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i];
+    const [xj, yj] = polygon[j];
+
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+
+  return inside;
+}
 
 interface ListingData {
   id: number;
@@ -41,6 +68,7 @@ interface MapFilters {
   priceFrom: number;
   priceTo: number;
   radius: number;
+  attributes?: Record<string, any>;
 }
 
 const MapPage: React.FC = () => {
@@ -49,21 +77,43 @@ const MapPage: React.FC = () => {
   const searchParams = useSearchParams();
   const { search: geoSearch } = useGeoSearch();
 
+  // Получаем язык из URL безопасно для SSR
+  const [currentLang, setCurrentLang] = useState('sr');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const lang = window.location.pathname.split('/')[1] || 'sr';
+      setCurrentLang(lang);
+    }
+  }, []);
+
   // Функция для получения начальных значений из URL
   const getInitialFiltersFromURL = (): MapFilters => {
+    const attributesStr = searchParams?.get('attributes');
+    let attributes: Record<string, any> = {};
+
+    if (attributesStr) {
+      try {
+        attributes = JSON.parse(decodeURIComponent(attributesStr));
+      } catch (e) {
+        console.error('Failed to parse attributes from URL', e);
+      }
+    }
+
     return {
-      category: searchParams.get('category') || '',
-      priceFrom: parseInt(searchParams.get('priceFrom') || '0') || 0,
-      priceTo: parseInt(searchParams.get('priceTo') || '0') || 0,
-      radius: parseInt(searchParams.get('radius') || '10000') || 10000,
+      category: searchParams?.get('category') || '',
+      priceFrom: parseInt(searchParams?.get('priceFrom') || '0') || 0,
+      priceTo: parseInt(searchParams?.get('priceTo') || '0') || 0,
+      radius: parseInt(searchParams?.get('radius') || '5000') || 5000,
+      attributes,
     };
   };
 
   // Функция для получения начального состояния карты из URL
   const getInitialViewStateFromURL = (): MapViewState => {
-    const lat = parseFloat(searchParams.get('lat') || '44.8176');
-    const lng = parseFloat(searchParams.get('lng') || '20.4649');
-    const zoom = parseFloat(searchParams.get('zoom') || '10');
+    const lat = parseFloat(searchParams?.get('lat') || '44.8176');
+    const lng = parseFloat(searchParams?.get('lng') || '20.4649');
+    const zoom = parseFloat(searchParams?.get('zoom') || '10');
 
     return {
       longitude: lng,
@@ -80,11 +130,14 @@ const MapPage: React.FC = () => {
   );
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Состояние маркера покупателя
+  // Состояние маркера покупателя - инициализируем с фиксированными координатами
   const [buyerLocation, setBuyerLocation] = useState({
-    longitude: viewState.longitude,
-    latitude: viewState.latitude,
+    longitude: 20.457273, // Центр Белграда
+    latitude: 44.787197,
   });
+
+  // Дебаунсированная позиция покупателя
+  const debouncedBuyerLocation = useDebounce(buyerLocation, 1000);
 
   // Данные и фильтры
   const [listings, setListings] = useState<ListingData[]>([]);
@@ -94,7 +147,8 @@ const MapPage: React.FC = () => {
   );
 
   // Поиск
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') || '');
+  const [isSearchFromUser, setIsSearchFromUser] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   // Создаем debounced версию фильтров для оптимизации запросов
@@ -124,6 +178,18 @@ const MapPage: React.FC = () => {
   const [currentIsochrone, setCurrentIsochrone] =
     useState<Feature<Polygon> | null>(null);
 
+  // Состояние для границ районов
+  const [districtBoundary, setDistrictBoundary] =
+    useState<Feature<Polygon> | null>(null);
+
+  // Состояние для типа поиска (адрес или район)
+  const [searchType, setSearchType] = useState<'address' | 'district'>(
+    'address'
+  );
+
+  // Включить поиск по районам
+  const _enableDistrictSearch = searchType === 'district';
+
   // Функция для обновления URL без перезагрузки страницы
   const updateURL = useCallback(
     (newFilters: MapFilters, newViewState: MapViewState, query?: string) => {
@@ -135,8 +201,16 @@ const MapPage: React.FC = () => {
         params.set('priceFrom', newFilters.priceFrom.toString());
       if (newFilters.priceTo > 0)
         params.set('priceTo', newFilters.priceTo.toString());
-      if (newFilters.radius !== 10000)
+      if (newFilters.radius !== 5000)
         params.set('radius', newFilters.radius.toString());
+      if (
+        newFilters.attributes &&
+        Object.keys(newFilters.attributes).length > 0
+      )
+        params.set(
+          'attributes',
+          encodeURIComponent(JSON.stringify(newFilters.attributes))
+        );
 
       // Координаты карты
       params.set('lat', newViewState.latitude.toFixed(6));
@@ -172,96 +246,162 @@ const MapPage: React.FC = () => {
 
   // Загрузка объявлений для карты
   const loadListings = useCallback(async () => {
+    // Проверяем, есть ли активный районный поиск без радиуса/изохрона
+    const hasDistrictOnly =
+      typeof window !== 'undefined' &&
+      ((window as any).__DISTRICT_MARKERS_SET__ ||
+        (window as any).__DISTRICT_PAGE_ACTIVE__) &&
+      !debouncedBuyerLocation.latitude &&
+      !debouncedBuyerLocation.longitude;
+
+    if (hasDistrictOnly) {
+      console.log('🚫 loadListings blocked: District-only search is active');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        limit: '100',
-        page: '1',
-        sort_by: 'date',
-        sort_order: 'desc',
-        ...(debouncedFilters.category && {
-          categories: debouncedFilters.category,
-        }),
-        ...(debouncedFilters.priceFrom > 0 && {
-          min_price: debouncedFilters.priceFrom.toString(),
-        }),
-        ...(debouncedFilters.priceTo > 0 && {
-          max_price: debouncedFilters.priceTo.toString(),
-        }),
+      // Определяем тип поиска
+      const hasRadiusSearch =
+        debouncedBuyerLocation.latitude && debouncedBuyerLocation.longitude;
+      const hasDistrictBoundary = districtBoundary !== null;
+      const isCombinedSearch = hasRadiusSearch && hasDistrictBoundary;
+
+      console.log('🔍 Search type analysis:', {
+        hasRadiusSearch,
+        hasDistrictBoundary,
+        isCombinedSearch,
+        searchType,
       });
 
-      // Используем позицию покупателя для географического поиска
-      if (buyerLocation.latitude && buyerLocation.longitude) {
-        params.append('latitude', buyerLocation.latitude.toString());
-        params.append('longitude', buyerLocation.longitude.toString());
+      // Используем специализированный радиусный поиск если есть координаты покупателя, иначе обычный search
+      const useRadiusSearch = hasRadiusSearch;
+      const endpoint = useRadiusSearch
+        ? '/api/v1/gis/search/radius'
+        : '/api/v1/search';
 
-        // Преобразуем радиус из метров в формат для backend (например, "10km")
-        if (debouncedFilters.radius) {
-          const radiusKm = Math.round(debouncedFilters.radius / 1000);
-          params.append('distance', `${radiusKm}km`);
+      let response;
+
+      if (useRadiusSearch) {
+        // Для радиусного поиска используем GET с query параметрами
+        const params = new URLSearchParams({
+          latitude: debouncedBuyerLocation.latitude.toString(),
+          longitude: debouncedBuyerLocation.longitude.toString(),
+          radius: debouncedFilters.radius.toString(), // в метрах
+          limit: '100',
+          ...(debouncedFilters.category && {
+            category: debouncedFilters.category,
+          }),
+          ...(debouncedFilters.priceFrom > 0 && {
+            min_price: debouncedFilters.priceFrom.toString(),
+          }),
+          ...(debouncedFilters.priceTo > 0 && {
+            max_price: debouncedFilters.priceTo.toString(),
+          }),
+          ...(debouncedFilters.attributes &&
+            Object.keys(debouncedFilters.attributes).length > 0 && {
+              attributes: JSON.stringify(debouncedFilters.attributes),
+            }),
+        });
+
+        const fullUrl = `${endpoint}?${params}`;
+
+        // Добавляем заголовок для комбинированного поиска
+        const headers: Record<string, string> = {};
+        if (isCombinedSearch) {
+          headers['X-Combined-Search'] = 'true';
+          console.log(
+            '🔍 Adding combined search header for district+radius search'
+          );
         }
-      }
 
-      // Используем GIS API если есть координаты покупателя, иначе обычный search
-      const endpoint =
-        buyerLocation.latitude && buyerLocation.longitude
-          ? '/api/v1/gis/search'
-          : '/api/v1/search';
+        response = await apiClient.get(fullUrl, { headers });
+      } else {
+        // Для обычного поиска используем GET с параметрами
+        const params = new URLSearchParams({
+          limit: '100',
+          page: '1',
+          sort_by: 'date',
+          sort_order: 'desc',
+          ...(debouncedFilters.category && {
+            categories: debouncedFilters.category,
+          }),
+          ...(debouncedFilters.priceFrom > 0 && {
+            min_price: debouncedFilters.priceFrom.toString(),
+          }),
+          ...(debouncedFilters.priceTo > 0 && {
+            max_price: debouncedFilters.priceTo.toString(),
+          }),
+          ...(debouncedFilters.attributes &&
+            Object.keys(debouncedFilters.attributes).length > 0 && {
+              attributes: JSON.stringify(debouncedFilters.attributes),
+            }),
+        });
 
-      // Логируем полный URL запроса и параметры
-      const fullUrl = `${endpoint}?${params}`;
-      console.log(
-        '[Map] Using endpoint:',
-        endpoint,
-        'with params:',
-        Object.fromEntries(params)
-      );
-
-      const response = await apiClient.get(fullUrl);
-      console.log('[Map] API response:', response.data);
-      console.log(
-        '[Map] Listings count:',
-        response.data?.data?.listings?.length ||
-          response.data?.data?.length ||
-          0
-      );
-
-      // Логируем цены объявлений для отладки
-      if (response.data?.data?.listings) {
-        const prices = response.data.data.listings.map((l: any) => ({
-          id: l.id,
-          price: l.price,
-          title: l.title,
-        }));
-        console.log('[Map] Listings prices:', prices);
+        const fullUrl = `${endpoint}?${params}`;
+        response = await apiClient.get(fullUrl);
       }
 
       // Обрабатываем ответ в зависимости от используемого API
-      if (endpoint === '/api/v1/gis/search' && response.data?.data?.listings) {
+      if (useRadiusSearch && response.data?.data?.listings) {
         // GIS API возвращает data.listings
-        const transformedListings = response.data.data.listings
-          .filter(
-            (item: any) =>
-              item.location && item.location.lat && item.location.lng
-          )
-          .map((item: any) => ({
-            id: item.id,
-            name: item.title,
-            price: item.price,
-            location: {
-              lat: item.location.lat,
-              lng: item.location.lng,
-              city: item.address || '',
-              country: 'Serbia',
-            },
-            category: {
-              id: 0,
-              name: item.category || 'Unknown',
-              slug: '',
-            },
-            images: [],
-            created_at: item.created_at,
-          }));
+        let filteredListings = response.data.data.listings.filter(
+          (item: any) => item.location && item.location.lat && item.location.lng
+        );
+
+        // Если есть границы района, фильтруем по ним (комбинированный поиск)
+        if (isCombinedSearch && districtBoundary) {
+          console.log(
+            '🔍 Applying district boundary filter to radius search results'
+          );
+          console.log(
+            '📍 Before district filter:',
+            filteredListings.length,
+            'listings'
+          );
+
+          filteredListings = filteredListings.filter((item: any) => {
+            const point: [number, number] = [
+              item.location.lng,
+              item.location.lat,
+            ];
+            const isInside = isPointInPolygon(
+              point,
+              districtBoundary.geometry.coordinates[0] as [number, number][]
+            );
+            return isInside;
+          });
+
+          console.log(
+            '📍 After district filter:',
+            filteredListings.length,
+            'listings'
+          );
+        }
+
+        const transformedListings = filteredListings.map((item: any) => ({
+          id: item.id,
+          name: item.title,
+          price: item.price,
+          location: {
+            lat: item.location.lat,
+            lng: item.location.lng,
+            city: item.address || '',
+            country: 'Serbia',
+          },
+          category: {
+            id: 0,
+            name: item.category || 'Unknown',
+            slug: '',
+          },
+          images: [],
+          created_at: item.created_at,
+        }));
+
+        console.log(
+          '🗺️ Setting combined search results:',
+          transformedListings.length
+        );
         setListings(transformedListings);
       } else if (response.data?.items) {
         // Обычный search API возвращает items
@@ -295,7 +435,91 @@ const MapPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedFilters, buyerLocation, t]);
+  }, [
+    debouncedFilters,
+    debouncedBuyerLocation,
+    districtBoundary,
+    searchType,
+    t,
+  ]);
+
+  // Функция для получения иконки по категории
+  const getCategoryIcon = (categoryName: string | undefined): string => {
+    if (!categoryName) return '🏠';
+
+    const category = categoryName.toLowerCase();
+
+    // Автомобили
+    if (
+      category.includes('автомобил') ||
+      category.includes('car') ||
+      category.includes('vozilo')
+    )
+      return '🚗';
+    // Недвижимость
+    if (
+      category.includes('квартир') ||
+      category.includes('apartment') ||
+      category.includes('stan')
+    )
+      return '🏠';
+    if (
+      category.includes('дом') ||
+      category.includes('house') ||
+      category.includes('kuća')
+    )
+      return '🏘️';
+    if (
+      category.includes('комнат') ||
+      category.includes('room') ||
+      category.includes('soba')
+    )
+      return '🛏️';
+    // Электроника
+    if (
+      category.includes('телефон') ||
+      category.includes('phone') ||
+      category.includes('telefon')
+    )
+      return '📱';
+    if (
+      category.includes('компьютер') ||
+      category.includes('computer') ||
+      category.includes('računar')
+    )
+      return '💻';
+    if (
+      category.includes('телевизор') ||
+      category.includes('tv') ||
+      category.includes('televizor')
+    )
+      return '📺';
+    // Работа
+    if (
+      category.includes('работ') ||
+      category.includes('job') ||
+      category.includes('posao')
+    )
+      return '💼';
+    // Услуги
+    if (
+      category.includes('услуг') ||
+      category.includes('service') ||
+      category.includes('usluga')
+    )
+      return '🔧';
+    // Одежда
+    if (
+      category.includes('одежд') ||
+      category.includes('cloth') ||
+      category.includes('odeća')
+    )
+      return '👕';
+    // Спорт
+    if (category.includes('спорт') || category.includes('sport')) return '⚽';
+    // По умолчанию
+    return '📦';
+  };
 
   // Преобразование объявлений в маркеры
   const createMarkers = useCallback(
@@ -317,6 +541,7 @@ const MapPage: React.FC = () => {
             price: listing.price,
             currency: 'RSD',
             category: listing.category?.name || 'Unknown',
+            icon: getCategoryIcon(listing.category?.name),
           },
           data: {
             title: listing.name,
@@ -328,6 +553,7 @@ const MapPage: React.FC = () => {
                 .trim()
                 .replace(/^,\s*|,\s*$/, ''),
             id: listing.id,
+            icon: getCategoryIcon(listing.category?.name),
           },
         }));
     },
@@ -357,6 +583,7 @@ const MapPage: React.FC = () => {
       if (!query.trim()) return;
 
       setIsSearching(true);
+      setIsSearchFromUser(true);
       setSearchQuery(query);
 
       try {
@@ -375,6 +602,13 @@ const MapPage: React.FC = () => {
             zoom: 14,
           };
           setViewState(newViewState);
+
+          // Обновляем позицию покупателя на найденную локацию
+          setBuyerLocation({
+            longitude: parseFloat(result.lon),
+            latitude: parseFloat(result.lat),
+          });
+
           toast.success(t('search.found'));
         } else {
           toast.error(t('search.notFound'));
@@ -384,6 +618,7 @@ const MapPage: React.FC = () => {
         toast.error(t('search.error'));
       } finally {
         setIsSearching(false);
+        setIsSearchFromUser(false);
       }
     },
     [geoSearch, viewState, t]
@@ -391,10 +626,10 @@ const MapPage: React.FC = () => {
 
   // Обработка поиска
   useEffect(() => {
-    if (debouncedSearchQuery) {
+    if (debouncedSearchQuery && isSearchFromUser) {
       handleAddressSearch(debouncedSearchQuery);
     }
-  }, [debouncedSearchQuery, handleAddressSearch]);
+  }, [debouncedSearchQuery, handleAddressSearch, isSearchFromUser]);
 
   // Обработка изменений фильтров и позиции покупателя
   useEffect(() => {
@@ -405,17 +640,24 @@ const MapPage: React.FC = () => {
     debouncedFilters.priceFrom,
     debouncedFilters.priceTo,
     debouncedFilters.radius,
-    buyerLocation.latitude,
-    buyerLocation.longitude,
+    debouncedFilters.attributes,
+    debouncedBuyerLocation.latitude,
+    debouncedBuyerLocation.longitude,
   ]);
 
   // Создание маркеров при изменении объявлений с фильтрацией по изохрону
   useEffect(() => {
     let newMarkers = createMarkers(listings);
+    console.log(
+      '🗺️ Creating markers from listings:',
+      listings.length,
+      '→',
+      newMarkers.length
+    );
 
     // Фильтруем маркеры по изохрону если включен режим walking и есть изохрон
     if (walkingMode === 'walking' && currentIsochrone) {
-      console.log('[Map] Filtering markers by isochrone');
+      console.log('🚶 Applying isochrone filter, mode:', walkingMode);
       const filteredMarkers = newMarkers.filter((marker) => {
         const isInside = isPointInIsochrone(
           [marker.longitude, marker.latitude],
@@ -424,12 +666,15 @@ const MapPage: React.FC = () => {
         return isInside;
       });
       console.log(
-        `[Map] Filtered ${newMarkers.length} markers to ${filteredMarkers.length} within isochrone`
+        '🚶 After isochrone filter:',
+        newMarkers.length,
+        '→',
+        filteredMarkers.length
       );
       newMarkers = filteredMarkers;
     }
 
-    console.log('[Map] Setting markers:', newMarkers);
+    console.log('🗺️ Final markers count:', newMarkers.length);
     setMarkers(newMarkers);
   }, [listings, createMarkers, walkingMode, currentIsochrone]);
 
@@ -439,10 +684,125 @@ const MapPage: React.FC = () => {
     setSelectedMarker(marker);
   }, []);
 
+  // Обработчик результатов поиска по районам
+  const handleDistrictSearchResults = useCallback((results: any[]) => {
+    console.log(
+      '🔍 District search results received:',
+      results.length,
+      'items'
+    );
+    console.log('First result example:', results[0]);
+
+    // Устанавливаем флаг, что активен районный поиск
+    if (typeof window !== 'undefined') {
+      (window as any).__DISTRICT_MARKERS_SET__ = true;
+      (window as any).__DISTRICT_PAGE_ACTIVE__ = true;
+      setTimeout(() => {
+        delete (window as any).__DISTRICT_MARKERS_SET__;
+      }, 3000); // Защита на 3 секунды
+    }
+
+    // Преобразуем результаты в формат ListingData
+    const transformedListings = results
+      .filter((item: any) => item.location?.lat && item.location?.lng)
+      .map((item: any) => ({
+        id: parseInt(item.id),
+        name: item.title || 'Untitled',
+        price: item.price || 0,
+        location: {
+          lat: item.location.lat,
+          lng: item.location.lng,
+          city: item.location.address || '',
+          country: 'Serbia',
+        },
+        category: {
+          id: 0,
+          name: item.category || 'Unknown',
+          slug: '',
+        },
+        images: item.images || [],
+        created_at: item.created_at || new Date().toISOString(),
+      }));
+
+    console.log('📍 Transformed listings:', transformedListings.length);
+    console.log(
+      '🗺️ Setting district listings on main page:',
+      transformedListings.length
+    );
+    setListings(transformedListings);
+  }, []);
+
+  // Обработчик изменения границ района
+  const handleDistrictBoundsChange = useCallback(
+    (bounds: [number, number, number, number] | null) => {
+      if (bounds) {
+        const [minLng, minLat, maxLng, maxLat] = bounds;
+        const centerLng = (minLng + maxLng) / 2;
+        const centerLat = (minLat + maxLat) / 2;
+
+        // Рассчитываем уровень зума чтобы вместить весь район
+        const lngDiff = maxLng - minLng;
+        const latDiff = maxLat - minLat;
+        const maxDiff = Math.max(lngDiff, latDiff);
+
+        let zoom = 12;
+        if (maxDiff < 0.05) zoom = 14;
+        else if (maxDiff < 0.1) zoom = 13;
+        else if (maxDiff < 0.2) zoom = 12;
+        else if (maxDiff < 0.4) zoom = 11;
+        else zoom = 10;
+
+        setViewState({
+          ...viewState,
+          longitude: centerLng,
+          latitude: centerLat,
+          zoom: zoom,
+        });
+
+        // Также обновляем позицию покупателя на центр района
+        setBuyerLocation({
+          longitude: centerLng,
+          latitude: centerLat,
+        });
+      }
+    },
+    [viewState]
+  );
+
+  // Текущий viewport для передачи в DistrictMapSelector
+  const [currentMapViewport, setCurrentMapViewport] = useState<{
+    bounds: MapBounds;
+    center: { lat: number; lng: number };
+  } | null>(null);
+
   // Обработка изменения области просмотра
   const handleViewStateChange = useCallback((newViewState: MapViewState) => {
     setViewState(newViewState);
   }, []);
+
+  // Дебаунсированное обновление viewport для DistrictMapSelector
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Вычисляем bounds из viewport
+      const zoomFactor = Math.pow(2, 14 - viewState.zoom) * 0.01;
+      const bounds: MapBounds = {
+        north: viewState.latitude + zoomFactor,
+        south: viewState.latitude - zoomFactor,
+        east: viewState.longitude + zoomFactor,
+        west: viewState.longitude - zoomFactor,
+      };
+
+      setCurrentMapViewport({
+        bounds,
+        center: {
+          lat: viewState.latitude,
+          lng: viewState.longitude,
+        },
+      });
+    }, 500); // Дебаунс в 500мс
+
+    return () => clearTimeout(timer);
+  }, [viewState.latitude, viewState.longitude, viewState.zoom]);
 
   // Обработчик изменения позиции покупателя
   const handleBuyerLocationChange = useCallback(
@@ -456,6 +816,28 @@ const MapPage: React.FC = () => {
   const handleFiltersChange = useCallback((newFilters: Partial<MapFilters>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   }, []);
+
+  // Обработчик для быстрых фильтров
+  const handleQuickFilterSelect = useCallback(
+    (quickFilters: Record<string, any>) => {
+      setFilters((prev) => ({
+        ...prev,
+        attributes: {
+          ...prev.attributes,
+          ...quickFilters,
+        },
+      }));
+    },
+    []
+  );
+
+  // Обработчик изменения радиуса поиска
+  const handleSearchRadiusChange = useCallback(
+    (radius: number) => {
+      handleFiltersChange({ radius });
+    },
+    [handleFiltersChange]
+  );
 
   // Обновление URL при изменении фильтров, viewState или searchQuery
   useEffect(() => {
@@ -485,17 +867,21 @@ const MapPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-base-100">
       {/* Контейнер с картой и фильтрами */}
-      <div className="relative h-screen md:h-[calc(100vh-140px)]">
+      <div className="relative h-[100dvh] md:h-[calc(100vh-140px)]">
         {/* Десктопная боковая панель с фильтрами */}
         <div className="absolute left-4 top-4 z-10 w-80 bg-white rounded-lg shadow-lg hidden md:block">
           {/* Поиск по адресу */}
           <div className="p-4 border-b border-base-300">
+            {/* Поиск по адресу - всегда показываем, так как районы отключены */}
             <label className="block text-sm font-medium text-base-content mb-2">
               {t('search.address')}
             </label>
             <SearchBar
               initialQuery={searchQuery}
-              onSearch={handleAddressSearch}
+              onSearch={(query) => {
+                setIsSearchFromUser(true);
+                handleAddressSearch(query);
+              }}
               placeholder={t('search.addressPlaceholder')}
               className="w-full"
               geoLocation={
@@ -574,6 +960,20 @@ const MapPage: React.FC = () => {
               />
             </div>
 
+            {/* Динамические фильтры по атрибутам категории */}
+            {filters.category && (
+              <div className="mb-4">
+                <SmartFilters
+                  categoryId={parseInt(filters.category) || null}
+                  onChange={(attributeFilters) =>
+                    handleFiltersChange({ attributes: attributeFilters })
+                  }
+                  lang={currentLang}
+                  className="space-y-3"
+                />
+              </div>
+            )}
+
             {/* Контроль радиуса поиска */}
             <div className="mb-4 space-y-3">
               <label className="block text-sm font-medium text-base-content">
@@ -612,7 +1012,7 @@ const MapPage: React.FC = () => {
                   <span>
                     {walkingMode === 'walking'
                       ? `5 ${t('controls.minUnit')}`
-                      : `0.5 ${t('controls.kmUnit')}`}
+                      : `0.1 ${t('controls.kmUnit')}`}
                   </span>
                   <span className="font-medium">
                     {walkingMode === 'walking'
@@ -622,15 +1022,15 @@ const MapPage: React.FC = () => {
                   <span>
                     {walkingMode === 'walking'
                       ? `60 ${t('controls.minUnit')}`
-                      : `10 ${t('controls.kmUnit')}`}
+                      : `50 ${t('controls.kmUnit')}`}
                   </span>
                 </div>
                 <input
                   type="range"
                   className="range range-primary range-sm"
-                  min={walkingMode === 'walking' ? 5 : 500}
-                  max={walkingMode === 'walking' ? 60 : 10000}
-                  step={walkingMode === 'walking' ? 5 : 500}
+                  min={walkingMode === 'walking' ? 5 : 100}
+                  max={walkingMode === 'walking' ? 60 : 50000}
+                  step={walkingMode === 'walking' ? 5 : 100}
                   value={
                     walkingMode === 'walking' ? walkingTime : filters.radius
                   }
@@ -645,6 +1045,29 @@ const MapPage: React.FC = () => {
                 />
               </div>
             </div>
+
+            {/* Быстрые фильтры для категории */}
+            {filters.category && (
+              <div className="mb-4">
+                <QuickFilters
+                  categoryId={filters.category}
+                  onSelectFilter={handleQuickFilterSelect}
+                />
+              </div>
+            )}
+
+            {/* Умные фильтры по атрибутам категории */}
+            {filters.category && (
+              <div className="mb-4 border-t pt-4">
+                <SmartFilters
+                  categoryId={parseInt(filters.category) || null}
+                  onChange={(attributeFilters) =>
+                    handleFiltersChange({ attributes: attributeFilters })
+                  }
+                  lang={currentLang}
+                />
+              </div>
+            )}
 
             {/* Статистика */}
             <div className="text-sm text-base-content-secondary">
@@ -694,7 +1117,10 @@ const MapPage: React.FC = () => {
         <div className="absolute top-4 right-4 left-20 z-[1000] md:hidden">
           <SearchBar
             initialQuery={searchQuery}
-            onSearch={handleAddressSearch}
+            onSearch={(query) => {
+              setIsSearchFromUser(true);
+              handleAddressSearch(query);
+            }}
             placeholder={t('search.addressPlaceholder')}
             className="w-full"
           />
@@ -725,9 +1151,10 @@ const MapPage: React.FC = () => {
             onIsochroneChange={setCurrentIsochrone}
             onWalkingModeChange={setWalkingMode}
             onWalkingTimeChange={setWalkingTime}
-            onSearchRadiusChange={(radius) => handleFiltersChange({ radius })}
+            onSearchRadiusChange={handleSearchRadiusChange}
             useNativeControl={true} // Используем нативный контрол по умолчанию
             controlTranslations={controlTranslations}
+            districtBoundary={districtBoundary}
           />
 
           {/* Расширенный popup при клике */}
@@ -750,11 +1177,20 @@ const MapPage: React.FC = () => {
           onSearch={handleAddressSearch}
           isSearching={isSearching}
           markersCount={markers.length}
+          enableDistrictSearch={searchType === 'district'}
+          onDistrictSearchResults={handleDistrictSearchResults}
+          onDistrictBoundsChange={handleDistrictBoundsChange}
+          onDistrictBoundaryChange={setDistrictBoundary}
+          currentViewport={currentMapViewport}
+          searchType={searchType}
+          onSearchTypeChange={setSearchType}
           translations={{
             title: t('filters.title'),
             search: {
               address: t('search.address'),
               placeholder: t('search.addressPlaceholder'),
+              byAddress: t('search.byAddress'),
+              byDistrict: t('search.byDistrict'),
             },
             filters: {
               category: t('filters.category'),

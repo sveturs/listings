@@ -1,0 +1,80 @@
+# Page snapshot
+
+```yaml
+- banner:
+    - link "SveTu":
+        - /url: /ru
+    - list:
+        - listitem:
+            - link "Блог":
+                - /url: /ru/blog
+        - listitem:
+            - link "Новости":
+                - /url: /ru/news
+        - listitem:
+            - link "Карта":
+                - /url: /ru/map
+        - listitem:
+            - link "Контакты":
+                - /url: /ru/contacts
+    - textbox "Поиск товаров и услуг..."
+    - button [disabled]:
+        - img
+    - checkbox "Нечеткий поиск Нечеткий поиск помогает найти товары даже если вы допустили опечатку в запросе" [checked]
+    - text: Нечеткий поиск Нечеткий поиск помогает найти товары даже если вы допустили опечатку в запросе
+    - img
+    - button "RU":
+        - text: RU
+        - img
+    - button "Войти"
+- main:
+    - button "По адресу"
+    - button "По району"
+    - text: Поиск по адресу
+    - textbox "Введите адрес или название места"
+    - button [disabled]:
+        - img
+    - heading "Фильтры" [level=3]
+    - text: Категория
+    - combobox:
+        - option "Все категории" [selected]
+        - option "Квартира"
+        - option "Комната"
+        - option "Дом, дача, коттедж"
+        - option "Автомобили"
+        - option "Электроника"
+        - option "Работа"
+    - text: Цена от
+    - spinbutton
+    - text: Цена до
+    - spinbutton
+    - text: Радиус поиска
+    - button "🚶 Пешком"
+    - button "📏 На транспорте"
+    - text: 0.1 км 5.0 км 50 км
+    - slider: '5000'
+    - text: 'Показано: 11 объявлений'
+    - region "Map"
+    - img "Map marker":
+        - img
+    - button "Zoom in"
+    - button "Zoom out"
+    - button "Reset bearing to north"
+    - button "Find my location"
+    - button "Enter fullscreen"
+    - button "📏 5км"
+    - link "Mapbox homepage":
+        - /url: https://www.mapbox.com/
+    - button "Streets"
+    - button "Satellite"
+    - button "Outdoors"
+    - button "Light"
+    - button "Dark"
+    - button "Показать мое местоположение":
+        - img
+    - button "📍 Где я?"
+    - button "🔍 Показать все"
+- alert
+- button "Open Next.js Dev Tools":
+    - img
+```

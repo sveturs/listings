@@ -18,8 +18,8 @@ export default function DepositSuccessPage() {
 
   useEffect(() => {
     // Получаем параметры из URL
-    const txId = searchParams.get('transaction_id');
-    const amountParam = searchParams.get('amount');
+    const txId = searchParams?.get('transaction_id');
+    const amountParam = searchParams?.get('amount');
 
     if (txId) setTransactionId(txId);
     if (amountParam) setAmount(amountParam);

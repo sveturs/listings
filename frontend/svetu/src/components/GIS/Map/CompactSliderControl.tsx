@@ -45,7 +45,6 @@ class CompactSliderControlClass implements IControl {
   }
 
   onAdd(map: MapboxMap): HTMLElement {
-    console.log('[CompactSliderControlClass] onAdd called');
     this.map = map;
     // Добавляем классы как у нативных контролов
     this.container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
@@ -61,7 +60,6 @@ class CompactSliderControlClass implements IControl {
     this.updateContainerStyle();
     this.render();
 
-    console.log('[CompactSliderControlClass] Container created and styled');
     return this.container;
   }
 
@@ -333,15 +331,10 @@ class CompactSliderControlClass implements IControl {
 
   private addEventListeners(): void {
     // Добавляем слушатель на контейнер для отладки
-    this.container.addEventListener(
-      'touchstart',
-      (e) => {
-        console.log('[CompactSliderControl] Container touchstart detected!');
-        console.log('Event target:', e.target);
-        console.log('Current target:', e.currentTarget);
-      },
-      { capture: true }
-    );
+    this.container.addEventListener('touchstart', () => {}, {
+      passive: true,
+      capture: true,
+    });
 
     if (!this.isExpanded) {
       this.addCompactListeners();
@@ -357,12 +350,6 @@ class CompactSliderControlClass implements IControl {
     // Обработка одиночного клика/тапа - переключение режима
     const handleSingleTap = () => {
       const newMode = this.props.mode === 'walking' ? 'radius' : 'walking';
-      console.log(
-        '[CompactSliderControl] Single tap - switching mode from',
-        this.props.mode,
-        'to',
-        newMode
-      );
       this.props.onModeChange(newMode);
 
       // Визуальная обратная связь
@@ -374,9 +361,6 @@ class CompactSliderControlClass implements IControl {
 
     // Обработка двойного тапа
     const handleDoubleTap = () => {
-      console.log(
-        '[CompactSliderControl] Double tap - toggling expanded state'
-      );
       this.toggleExpanded();
     };
 
@@ -389,10 +373,6 @@ class CompactSliderControlClass implements IControl {
       e.stopPropagation();
 
       mouseClickCount++;
-      console.log(
-        '[CompactSliderControl] Mouse click detected, count:',
-        mouseClickCount
-      );
 
       if (mouseClickTimer) {
         clearTimeout(mouseClickTimer);
@@ -402,18 +382,12 @@ class CompactSliderControlClass implements IControl {
         mouseClickTimer = setTimeout(() => {
           if (mouseClickCount === 1) {
             // Одиночный клик - переключение режима
-            console.log(
-              '[CompactSliderControl] Single mouse click - switching mode'
-            );
             handleSingleTap();
           }
           mouseClickCount = 0;
         }, 250);
       } else if (mouseClickCount === 2) {
         // Двойной клик - открытие/закрытие слайдера
-        console.log(
-          '[CompactSliderControl] Double mouse click - toggling expanded'
-        );
         handleDoubleTap();
         mouseClickCount = 0;
         if (mouseClickTimer) {
@@ -429,7 +403,6 @@ class CompactSliderControlClass implements IControl {
 
     // Используем pointerdown вместо touchstart для лучшей совместимости
     icon.addEventListener('pointerdown', (e) => {
-      console.log('[CompactSliderControl] Pointer down detected');
       e.preventDefault();
       e.stopPropagation();
       touchStartTime = Date.now();
@@ -440,9 +413,6 @@ class CompactSliderControlClass implements IControl {
 
       touchTimer = setTimeout(() => {
         // Long press detected
-        console.log(
-          '[CompactSliderControl] Long press detected - toggling expanded'
-        );
         this.toggleExpanded();
 
         // Вибрация на мобильных (если поддерживается)
@@ -457,7 +427,6 @@ class CompactSliderControlClass implements IControl {
     });
 
     icon.addEventListener('pointerup', (e) => {
-      console.log('[CompactSliderControl] Pointer up detected');
       e.preventDefault();
       e.stopPropagation();
 
@@ -475,14 +444,10 @@ class CompactSliderControlClass implements IControl {
       if (touchDuration < 500) {
         // Проверка на двойной тап
         if (currentTime - lastTouchTime < 300) {
-          console.log(
-            '[CompactSliderControl] Double tap detected - toggling expanded'
-          );
           this.toggleExpanded();
           lastTouchTime = 0; // Сбрасываем для избежания тройного тапа
         } else {
           // Короткое касание - переключаем режим
-          console.log('[CompactSliderControl] Short tap - switching mode');
           handleSingleTap();
           lastTouchTime = currentTime;
         }
@@ -532,19 +497,9 @@ class CompactSliderControlClass implements IControl {
         if (this.props.mode === 'walking') {
           const minutes = Math.round(5 + (percent / 100) * (60 - 5));
           this.tempWalkingTime = minutes;
-          console.log(
-            '[CompactSliderControl] Slider input - temp walking time:',
-            minutes,
-            'min'
-          );
         } else {
           const meters = Math.round(500 + (percent / 100) * (50000 - 500));
           this.tempSearchRadius = meters;
-          console.log(
-            '[CompactSliderControl] Slider input - temp radius:',
-            meters,
-            'm'
-          );
         }
 
         this.updateSliderBackground(percent);
@@ -555,22 +510,12 @@ class CompactSliderControlClass implements IControl {
       // Обработка окончания движения слайдера - применяем изменения
       const handleSliderEnd = () => {
         if (this.props.mode === 'walking' && this.tempWalkingTime !== null) {
-          console.log(
-            '[CompactSliderControl] Applying walking time:',
-            this.tempWalkingTime,
-            'min'
-          );
           this.props.onWalkingTimeChange(this.tempWalkingTime);
           this.tempWalkingTime = null;
         } else if (
           this.props.mode === 'radius' &&
           this.tempSearchRadius !== null
         ) {
-          console.log(
-            '[CompactSliderControl] Applying radius:',
-            this.tempSearchRadius,
-            'm'
-          );
           this.props.onRadiusChange(this.tempSearchRadius);
           this.tempSearchRadius = null;
         }
@@ -587,9 +532,13 @@ class CompactSliderControlClass implements IControl {
         e.stopPropagation();
       });
 
-      slider.addEventListener('touchstart', (e) => {
-        e.stopPropagation();
-      });
+      slider.addEventListener(
+        'touchstart',
+        (e) => {
+          e.stopPropagation();
+        },
+        { passive: false }
+      );
     }
 
     // Клик по заголовку для переключения режима
@@ -656,8 +605,6 @@ class CompactSliderControlClass implements IControl {
       this.updateContainerStyle();
       this.render();
     }, 10);
-
-    console.log('[CompactSliderControl] Toggled expanded:', this.isExpanded);
   }
 
   private outsideClickHandler = (e: MouseEvent) => {
@@ -698,40 +645,22 @@ const CompactSliderControl: React.FC<CompactSliderControlComponentProps> = ({
 
   useEffect(() => {
     if (!map) {
-      console.log('[CompactSliderControl] Map not ready yet');
       return;
     }
 
-    console.log('[CompactSliderControl] Creating control with props:', {
-      mode: props.mode,
-      walkingTime: props.walkingTime,
-      searchRadius: props.searchRadius,
-      position: adaptivePosition,
-      isFullscreen,
-      isMobile,
-    });
-
     const control = new CompactSliderControlClass(
       { ...props, isMobile, isFullscreen },
-      (newProps) => {
-        console.log(
-          '[CompactSliderControl] Props update from control:',
-          newProps
-        );
-      }
+      () => {}
     );
 
     map.addControl(control, adaptivePosition);
     controlRef.current = control;
     setIsAdded(true);
 
-    console.log('[CompactSliderControl] Control added to map successfully');
-
     return () => {
       if (controlRef.current && map) {
         try {
           map.removeControl(controlRef.current);
-          console.log('[CompactSliderControl] Control removed from map');
         } catch (error) {
           console.warn('[CompactSliderControl] Error removing control:', error);
         }
@@ -739,7 +668,8 @@ const CompactSliderControl: React.FC<CompactSliderControlComponentProps> = ({
       controlRef.current = null;
       setIsAdded(false);
     };
-  }, [map, adaptivePosition, isFullscreen, isMobile, props]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, adaptivePosition, isFullscreen, isMobile]);
 
   useEffect(() => {
     if (controlRef.current && isAdded) {

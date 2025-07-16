@@ -41,7 +41,7 @@ func NewCategoriesHandler(services globalService.ServicesInterface) *CategoriesH
 // @Tags marketplace-categories
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
 // @Router /api/v1/marketplace/categories [get]
 func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
@@ -60,7 +60,7 @@ func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 // @Tags marketplace-categories
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryTreeNode}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryTreeNode}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoryTreeError"
 // @Router /api/v1/marketplace/category-tree [get]
 func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
@@ -97,7 +97,8 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttribute}
+// @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttribute}
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.attributesError"
 // @Router /api/v1/marketplace/categories/{id}/attributes [get]
@@ -108,10 +109,13 @@ func (h *CategoriesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
 	}
 
-	// Получаем атрибуты категории
-	attributes, err := h.marketplaceService.GetCategoryAttributes(c.Context(), categoryID)
+	// Получаем язык из query параметров
+	lang := c.Query("lang", "en") // По умолчанию английский
+
+	// Получаем атрибуты категории с указанным языком
+	attributes, err := h.marketplaceService.GetCategoryAttributesWithLang(c.Context(), categoryID, lang)
 	if err != nil {
-		logger.Error().Err(err).Int("categoryId", categoryID).Msg("Failed to get attributes for category")
+		logger.Error().Err(err).Int("categoryId", categoryID).Str("lang", lang).Msg("Failed to get attributes for category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.attributesError")
 	}
 

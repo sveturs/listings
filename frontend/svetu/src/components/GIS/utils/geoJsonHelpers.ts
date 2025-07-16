@@ -58,7 +58,10 @@ export function markersToGeoJSON(
         // Добавляем дополнительные свойства для стилизации
         color: getMarkerColor(marker.type),
         size: getMarkerSize(marker.type),
-        icon: getMarkerIcon(marker.type),
+        icon:
+          marker.data?.icon ||
+          marker.metadata?.icon ||
+          getMarkerIcon(marker.type),
       },
     })),
   };

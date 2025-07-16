@@ -139,3 +139,9 @@ type FilterAnalytics struct {
 	ResponseTimeMs int64       `json:"response_time_ms"`
 	CreatedAt      time.Time   `json:"created_at"`
 }
+
+// ApplyAdvancedFiltersRequest запрос для применения расширенных фильтров
+type ApplyAdvancedFiltersRequest struct {
+	Filters    AdvancedGeoFilters `json:"filters"`
+	ListingIDs []string           `json:"listing_ids"`
+}

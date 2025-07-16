@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -680,6 +681,75 @@ func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, category
 		}
 
 		attributes = append(attributes, attribute)
+	}
+
+	return attributes, nil
+}
+
+// GetCategoryAttributesWithLang получает все атрибуты для указанной категории с переводами на указанный язык
+func (s *MarketplaceService) GetCategoryAttributesWithLang(ctx context.Context, categoryID int, lang string) ([]models.CategoryAttribute, error) {
+	// Получаем базовые атрибуты
+	attributes, err := s.GetCategoryAttributes(ctx, categoryID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Применяем переводы для указанного языка
+	for i := range attributes {
+		// Если есть перевод display_name для запрошенного языка, используем его
+		if translation, ok := attributes[i].Translations[lang]; ok && translation != "" {
+			attributes[i].DisplayName = translation
+		}
+
+		// Если у атрибута есть опции и переводы для них
+		if attributes[i].AttributeType == "select" || attributes[i].AttributeType == "multiselect" {
+			// Парсим опции если они есть
+			var options []map[string]interface{}
+			if len(attributes[i].Options) > 0 {
+				if err := json.Unmarshal(attributes[i].Options, &options); err == nil {
+					// Применяем переводы к опциям
+					if optionTranslations, ok := attributes[i].OptionTranslations[lang]; ok {
+						for j := range options {
+							if value, ok := options[j]["value"].(string); ok {
+								if translatedLabel, ok := optionTranslations[value]; ok {
+									options[j]["label"] = translatedLabel
+								}
+							}
+						}
+						// Обновляем Options с переведенными значениями
+						if updatedOptions, err := json.Marshal(options); err == nil {
+							attributes[i].Options = updatedOptions
+						}
+					}
+				}
+			}
+		}
+
+		// Добавляем translated_options для удобства frontend
+		if attributes[i].AttributeType == "select" || attributes[i].AttributeType == "multiselect" {
+			var options []map[string]interface{}
+			if len(attributes[i].Options) > 0 {
+				if err := json.Unmarshal(attributes[i].Options, &options); err == nil {
+					translatedOptions := make([]map[string]string, 0, len(options))
+					for _, opt := range options {
+						if value, ok := opt["value"].(string); ok {
+							label := value // По умолчанию используем value как label
+							if l, ok := opt["label"].(string); ok {
+								label = l
+							}
+							translatedOptions = append(translatedOptions, map[string]string{
+								"value": value,
+								"label": label,
+							})
+						}
+					}
+					// Сохраняем в новое поле для удобства
+					if translatedJSON, err := json.Marshal(translatedOptions); err == nil {
+						attributes[i].TranslatedOptions = translatedJSON
+					}
+				}
+			}
+		}
 	}
 
 	return attributes, nil

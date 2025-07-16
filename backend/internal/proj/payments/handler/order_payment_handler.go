@@ -123,7 +123,7 @@ func (h *OrderPaymentHandler) CreateOrderPayment(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "Order ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PaymentSession} "Payment status"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.PaymentSession} "Payment status"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid order ID"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 404 {object} utils.ErrorResponseSwag "Order or payment not found"

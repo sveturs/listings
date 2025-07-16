@@ -244,6 +244,8 @@ export interface RadiusSearchParams {
   category?: string;
   limit?: number;
   query?: string;
+  min_price?: number;
+  max_price?: number;
 }
 
 export interface RadiusSearchResult {

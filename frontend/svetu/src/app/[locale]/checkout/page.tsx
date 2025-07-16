@@ -64,7 +64,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('allsecure');
   const [customerNotes, setCustomerNotes] = useState('');
 
-  const storefrontId = searchParams.get('storefront');
+  const storefrontId = searchParams?.get('storefront');
 
   useEffect(() => {
     if (storefrontId) {

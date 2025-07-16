@@ -89,16 +89,25 @@ export const useGeoSearch = (): UseGeoSearchResult => {
 
         const data = await response.json();
 
-        const searchResults: GeoSearchResult[] = data.map((item: any) => ({
-          id: item.place_id?.toString() || `${item.lat}-${item.lon}`,
-          display_name: item.display_name,
-          lat: item.lat,
-          lon: item.lon,
-          boundingbox: item.boundingbox,
-          type: item.type,
-          class: item.class,
-          importance: item.importance || 0,
-        }));
+        // API возвращает объект с полем data, содержащим массив результатов
+        const items = data.data || data || [];
+        const itemsArray = Array.isArray(items) ? items : [];
+
+        const searchResults: GeoSearchResult[] = itemsArray.map(
+          (item: any) => ({
+            id:
+              item.id ||
+              item.place_id?.toString() ||
+              `${item.lat || item.location?.lat}-${item.lon || item.location?.lng}`,
+            display_name: item.place_name || item.display_name || item.text,
+            lat: item.location?.lat || item.lat,
+            lon: item.location?.lng || item.lon || item.lng,
+            boundingbox: item.boundingbox,
+            type: item.type || item.place_types?.[0],
+            class: item.class,
+            importance: item.importance || item.confidence || 0,
+          })
+        );
 
         setResults(searchResults);
         return searchResults;

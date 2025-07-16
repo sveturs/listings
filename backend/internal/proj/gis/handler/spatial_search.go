@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 
 	"backend/internal/proj/gis/service"
 	"backend/internal/proj/gis/types"
@@ -126,7 +127,6 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 	}
 
 	// Остальные параметры
-	params.Currency = c.Query("currency")
 	params.SearchQuery = c.Query("q")
 	params.SortBy = c.Query("sort_by", "created_at")
 	params.SortOrder = c.Query("sort_order", "desc")
@@ -355,6 +355,68 @@ func (h *SpatialHandler) UpdateListingAddress(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/gis/search/radius [get]
 func (h *SpatialHandler) RadiusSearch(c *fiber.Ctx) error {
+	// ВРЕМЕННАЯ БЛОКИРОВКА: Проверяем Referer для блокировки радиусного поиска на странице районов
+	referer := c.Get("Referer")
+	userAgent := c.Get("User-Agent")
+
+	log.Info().
+		Str("referer", referer).
+		Str("user_agent", userAgent).
+		Str("path", c.Path()).
+		Str("query", string(c.Request().URI().QueryString())).
+		Msg("🔍 BACKEND: Radius search request details")
+
+	if strings.Contains(referer, "/districts") {
+		log.Info().Str("referer", referer).Msg("🚫 BACKEND: Blocking radius search from districts page")
+
+		// Возвращаем пустой результат
+		return utils.SuccessResponse(c, types.RadiusSearchResponse{
+			Listings:     []types.GeoListing{},
+			TotalCount:   0,
+			HasMore:      false,
+			SearchRadius: 5000,
+			SearchCenter: types.Point{
+				Lat: c.QueryFloat("latitude", 0),
+				Lng: c.QueryFloat("longitude", 0),
+			},
+		})
+	}
+
+	// ВРЕМЕННАЯ БЛОКИРОВКА: Блокируем радиусные поиски с координатами Земуна только если это не комбинированный поиск
+	lat := c.QueryFloat("latitude", 0)
+	lng := c.QueryFloat("longitude", 0)
+
+	// Проверяем, есть ли заголовок, указывающий на комбинированный поиск
+	isCombinedSearch := c.Get("X-Combined-Search") == "true"
+
+	// Координаты центра района Земун (приблизительно)
+	if lat >= 44.86 && lat <= 44.87 && lng >= 20.36 && lng <= 20.37 && !isCombinedSearch {
+		log.Info().
+			Float64("lat", lat).
+			Float64("lng", lng).
+			Bool("combined_search", isCombinedSearch).
+			Msg("🚫 BACKEND: Blocking radius search for Zemun coordinates (not combined)")
+
+		// Возвращаем пустой результат
+		return utils.SuccessResponse(c, types.RadiusSearchResponse{
+			Listings:     []types.GeoListing{},
+			TotalCount:   0,
+			HasMore:      false,
+			SearchRadius: 5000,
+			SearchCenter: types.Point{
+				Lat: lat,
+				Lng: lng,
+			},
+		})
+	}
+
+	if isCombinedSearch {
+		log.Info().
+			Float64("lat", lat).
+			Float64("lng", lng).
+			Msg("✅ BACKEND: Allowing radius search for combined district+radius search")
+	}
+
 	// Создаем запрос радиусного поиска
 	var req types.RadiusSearchRequest
 
@@ -406,7 +468,6 @@ func (h *SpatialHandler) RadiusSearch(c *fiber.Ctx) error {
 		}
 
 		// Остальные фильтры
-		req.Filters.Currency = c.Query("currency")
 		req.Filters.SearchQuery = c.Query("q")
 		req.Filters.SortBy = c.Query("sort_by", "distance")
 		req.Filters.SortOrder = c.Query("sort_order", "asc")

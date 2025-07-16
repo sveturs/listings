@@ -8,8 +8,8 @@ export default function PaymentErrorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const paymentId = searchParams.get('id');
-  const reason = searchParams.get('reason') || 'unknown';
+  const paymentId = searchParams?.get('id');
+  const reason = searchParams?.get('reason') || 'unknown';
 
   const getErrorInfo = () => {
     const errorMap: Record<

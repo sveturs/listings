@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import WalkingAccessibilityControl from '../Map/WalkingAccessibilityControl';
+// import { DistrictMapSelector } from '@/components/search';
+import type { Feature, Polygon } from 'geojson';
+import type { MapBounds } from '@/components/GIS/types/gis';
+import { SmartFilters } from '@/components/marketplace/SmartFilters';
+import { QuickFilters } from '@/components/marketplace/QuickFilters';
 
 interface MapFilters {
   category: string;
@@ -9,6 +14,7 @@ interface MapFilters {
   radius: number;
   accessibilityMode?: 'radius' | 'walking';
   walkingTime?: number;
+  attributes?: Record<string, any>;
 }
 
 interface MobileFiltersDrawerProps {
@@ -21,11 +27,26 @@ interface MobileFiltersDrawerProps {
   onSearch: (query: string) => void;
   isSearching?: boolean;
   markersCount: number;
+  // Props для DistrictMapSelector
+  enableDistrictSearch?: boolean;
+  onDistrictSearchResults?: (results: any[]) => void;
+  onDistrictBoundsChange?: (
+    bounds: [number, number, number, number] | null
+  ) => void;
+  onDistrictBoundaryChange?: (boundary: Feature<Polygon> | null) => void;
+  currentViewport?: {
+    bounds: MapBounds;
+    center: { lat: number; lng: number };
+  } | null;
+  searchType?: 'address' | 'district';
+  onSearchTypeChange?: (type: 'address' | 'district') => void;
   translations: {
     title: string;
     search: {
       address: string;
       placeholder: string;
+      byAddress?: string;
+      byDistrict?: string;
     };
     filters: {
       category: string;
@@ -63,6 +84,13 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
   onSearch,
   isSearching: _isSearching,
   markersCount,
+  enableDistrictSearch: _enableDistrictSearch,
+  onDistrictSearchResults: _onDistrictSearchResults,
+  onDistrictBoundsChange: _onDistrictBoundsChange,
+  onDistrictBoundaryChange: _onDistrictBoundaryChange,
+  currentViewport: _currentViewport,
+  searchType: _searchType = 'address',
+  onSearchTypeChange: _onSearchTypeChange,
   translations: t,
 }) => {
   const [localFilters, setLocalFilters] = useState<MapFilters>({
@@ -89,6 +117,16 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
     setLocalFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
+  const handleQuickFilterSelect = (quickFilters: Record<string, any>) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      attributes: {
+        ...prev.attributes,
+        ...quickFilters,
+      },
+    }));
+  };
+
   const handleApplyFilters = () => {
     onFiltersChange(localFilters);
     onSearchChange(localSearchQuery);
@@ -106,6 +144,7 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
       radius: 10000,
       accessibilityMode: 'radius' as const,
       walkingTime: 15,
+      attributes: {},
     };
     setLocalFilters(resetFilters);
     setLocalSearchQuery('');
@@ -166,6 +205,7 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
           <div className="flex-1 overflow-y-auto overscroll-contain">
             {/* Поиск по адресу */}
             <div className="p-4 border-b border-base-300">
+              {/* Поиск по адресу - всегда показываем, так как районы отключены */}
               <label className="block text-sm font-medium text-base-content mb-2">
                 {t.search.address}
               </label>
@@ -236,6 +276,35 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
                   placeholder="∞"
                 />
               </div>
+
+              {/* Быстрые фильтры */}
+              {localFilters.category && (
+                <div className="mb-4">
+                  <QuickFilters
+                    categoryId={localFilters.category}
+                    onSelectFilter={handleQuickFilterSelect}
+                    className="mb-4"
+                  />
+                </div>
+              )}
+
+              {/* Динамические фильтры по атрибутам категории */}
+              {localFilters.category && (
+                <div>
+                  <SmartFilters
+                    categoryId={parseInt(localFilters.category) || null}
+                    onChange={(attributeFilters) =>
+                      handleLocalFiltersChange({ attributes: attributeFilters })
+                    }
+                    lang={
+                      typeof window !== 'undefined'
+                        ? window.location.pathname.split('/')[1] || 'sr'
+                        : 'sr'
+                    }
+                    className="space-y-3"
+                  />
+                </div>
+              )}
 
               {/* Радиус поиска с WalkingAccessibilityControl */}
               <div>

@@ -53,8 +53,14 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			strings.HasSuffix(path, "/municipalities") ||
 			strings.Contains(path, "/municipalities/") ||
 			strings.Contains(path, "/search/by-district/") ||
-			strings.Contains(path, "/search/by-municipality/")) {
+			strings.Contains(path, "/search/by-municipality/") ||
+			strings.HasSuffix(path, "/cities")) {
 			logger.Info().Str("path", path).Msg("Skipping auth for public GIS routes")
+			return c.Next()
+		}
+		// Публичные POST routes для cities
+		if method == "POST" && strings.HasSuffix(path, "/cities/visible") {
+			logger.Info().Str("path", path).Msg("Skipping auth for public GIS cities routes")
 			return c.Next()
 		}
 		// Публичные Geocoding API routes (Phase 2)

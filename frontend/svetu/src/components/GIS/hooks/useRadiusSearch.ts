@@ -72,18 +72,46 @@ export const useRadiusSearch = (): UseRadiusSearchResult => {
     async (
       params: RadiusSearchParams
     ): Promise<RadiusSearchResponse | null> => {
+      console.log('🔍 RADIUS SEARCH TRIGGERED:', params);
+      console.trace('🔍 RADIUS SEARCH CALL STACK');
+
+      // Проверяем, не активен ли поиск по району
+      if (
+        typeof window !== 'undefined' &&
+        (window.location.pathname.includes('/districts') ||
+          localStorage.getItem('blockRadiusSearch') === 'true' ||
+          (window as any).__BLOCK_RADIUS_SEARCH__)
+      ) {
+        console.log('🚫 RADIUS SEARCH BLOCKED: District search is active');
+        setLoading(false);
+        setResults([]); // Очищаем результаты
+        setTotal(0);
+        setSearchCenter(null);
+        setSearchRadius(0);
+        return null;
+      }
+
       setLoading(true);
       setError(null);
 
       try {
+        const queryParams = new URLSearchParams({
+          latitude: params.latitude.toString(),
+          longitude: params.longitude.toString(),
+          radius: params.radius.toString(),
+          ...(params.limit && { limit: params.limit.toString() }),
+          ...(params.category && { category: params.category }),
+          ...(params.min_price && { min_price: params.min_price.toString() }),
+          ...(params.max_price && { max_price: params.max_price.toString() }),
+        });
+
         const response = await fetchWithTimeout(
-          '/api/v1/gis/search/radius',
+          `/api/v1/gis/search/radius?${queryParams}`,
           {
-            method: 'POST',
+            method: 'GET',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(params),
           },
           15000
         );
@@ -98,9 +126,24 @@ export const useRadiusSearch = (): UseRadiusSearchResult => {
           throw new Error(result.error);
         }
 
+        // Преобразуем listings в items формат для RadiusSearchResponse
+        const items = (result.data?.listings || []).map((listing: any) => ({
+          id: listing.id,
+          title: listing.title,
+          description: listing.description || '',
+          latitude: listing.location?.lat || 0,
+          longitude: listing.location?.lng || 0,
+          distance: listing.distance || 0,
+          category: listing.category,
+          price: listing.price,
+          currency: listing.currency || 'RSD',
+          imageUrl: listing.images?.[0] || '',
+          metadata: listing,
+        }));
+
         const searchResponse: RadiusSearchResponse = {
-          items: result.data?.items || [],
-          total: result.data?.total || 0,
+          items: items,
+          total: result.data?.total_count || items.length,
           center: {
             latitude: params.latitude,
             longitude: params.longitude,
@@ -148,6 +191,18 @@ export const useRadiusSearch = (): UseRadiusSearchResult => {
       radius: number,
       category?: string
     ): Promise<RadiusSearchResponse | null> => {
+      // Проверяем, не активен ли поиск по району
+      if (
+        typeof window !== 'undefined' &&
+        (window.location.pathname.includes('/districts') ||
+          localStorage.getItem('blockRadiusSearch') === 'true')
+      ) {
+        console.log(
+          '🚫 RADIUS SEARCH BY ADDRESS BLOCKED: District search is active'
+        );
+        return null;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -185,6 +240,18 @@ export const useRadiusSearch = (): UseRadiusSearchResult => {
       radius: number,
       category?: string
     ): Promise<RadiusSearchResponse | null> => {
+      // Проверяем, не активен ли поиск по району
+      if (
+        typeof window !== 'undefined' &&
+        (window.location.pathname.includes('/districts') ||
+          localStorage.getItem('blockRadiusSearch') === 'true')
+      ) {
+        console.log(
+          '🚫 RADIUS SEARCH BY LOCATION BLOCKED: District search is active'
+        );
+        return null;
+      }
+
       try {
         setLoading(true);
         setError(null);
