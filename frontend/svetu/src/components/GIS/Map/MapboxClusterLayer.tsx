@@ -241,6 +241,10 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
         listings: ['+', ['case', ['==', ['get', 'type'], 'listing'], 1, 0]],
         users: ['+', ['case', ['==', ['get', 'type'], 'user'], 1, 0]],
         pois: ['+', ['case', ['==', ['get', 'type'], 'poi'], 1, 0]],
+        // Агрегация цен в кластере
+        minPrice: ['min', ['case', ['==', ['get', 'type'], 'listing'], ['get', 'data.price'], 999999]],
+        maxPrice: ['max', ['case', ['==', ['get', 'type'], 'listing'], ['get', 'data.price'], 0]],
+        totalListings: ['+', ['case', ['==', ['get', 'type'], 'listing'], 1, 0]],
       },
     }),
     [clusterMaxZoom, clusterRadius, clusterMinPoints]
@@ -304,6 +308,63 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
     []
   );
 
+  // Слой для отображения диапазона цен под кластерами
+  const clusterPriceLayer: LayerProps = useMemo(
+    () => ({
+      id: 'cluster-price',
+      type: 'symbol',
+      source: 'markers',
+      filter: ['all', ['has', 'point_count'], ['>', ['get', 'totalListings'], 0]],
+      layout: {
+        'text-field': [
+          'case',
+          ['==', ['get', 'minPrice'], ['get', 'maxPrice']],
+          ['concat', ['get', 'minPrice'], '€'],
+          ['concat', ['get', 'minPrice'], '-', ['get', 'maxPrice'], '€']
+        ],
+        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+        'text-size': 11,
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+        'text-anchor': 'top',
+        'text-offset': [0, 2.5],
+      },
+      paint: {
+        'text-color': '#1f2937',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 3,
+        'text-halo-blur': 1,
+      },
+    }),
+    []
+  );
+
+  // Слой для отображения цен под индивидуальными маркерами объявлений
+  const unclusteredPriceLayer: LayerProps = useMemo(
+    () => ({
+      id: 'unclustered-price',
+      type: 'symbol',
+      source: 'markers',
+      filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'type'], 'listing']],
+      layout: {
+        'text-field': ['concat', ['get', 'data.price'], '€'],
+        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+        'text-size': 10,
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+        'text-anchor': 'top',
+        'text-offset': [0, 1.8],
+      },
+      paint: {
+        'text-color': '#1f2937',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 3,
+        'text-halo-blur': 1,
+      },
+    }),
+    []
+  );
+
   // Слой для индивидуальных маркеров
   const unclusteredPointLayer: LayerProps = useMemo(
     () => ({
@@ -341,7 +402,7 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
     []
   );
 
-  // Слой для иконок/текста индивидуальных маркеров
+  // Слой для иконок индивидуальных маркеров
   const unclusteredPointTextLayer: LayerProps = useMemo(
     () => ({
       id: 'unclustered-point-text',
@@ -349,11 +410,9 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
       source: 'markers',
       filter: ['!', ['has', 'point_count']],
       layout: {
-        'text-field': showPrices && ['==', ['get', 'type'], 'listing']
-          ? ['concat', ['get', 'data.price'], '€']
-          : ['get', 'icon'],
+        'text-field': ['get', 'icon'],
         'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-        'text-size': showPrices && ['==', ['get', 'type'], 'listing'] ? 10 : 12,
+        'text-size': 12,
         'text-allow-overlap': true,
         'text-ignore-placement': true,
       },
@@ -363,7 +422,7 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
         'text-halo-width': 1,
       },
     }),
-    [showPrices]
+    []
   );
 
   // Эффект для обработки кликов по кластерам
@@ -408,8 +467,10 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
     >
       <Layer {...clusterLayer} />
       <Layer {...clusterCountLayer} />
+      <Layer {...clusterPriceLayer} />
       <Layer {...unclusteredPointLayer} />
       <Layer {...unclusteredPointTextLayer} />
+      <Layer {...unclusteredPriceLayer} />
     </Source>
   );
 };

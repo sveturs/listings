@@ -616,7 +616,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             clusterRadius={50}
             clusterMaxZoom={14}
             clusterMinPoints={2}
-            showPrices={false}
+            showPrices={true}
           />
         )}
 
