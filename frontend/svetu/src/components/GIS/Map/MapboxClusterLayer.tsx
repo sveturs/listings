@@ -242,9 +242,28 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
         users: ['+', ['case', ['==', ['get', 'type'], 'user'], 1, 0]],
         pois: ['+', ['case', ['==', ['get', 'type'], 'poi'], 1, 0]],
         // Агрегация цен в кластере
-        minPrice: ['min', ['case', ['==', ['get', 'type'], 'listing'], ['get', 'data.price'], 999999]],
-        maxPrice: ['max', ['case', ['==', ['get', 'type'], 'listing'], ['get', 'data.price'], 0]],
-        totalListings: ['+', ['case', ['==', ['get', 'type'], 'listing'], 1, 0]],
+        minPrice: [
+          'min',
+          [
+            'case',
+            ['==', ['get', 'type'], 'listing'],
+            ['get', 'price', ['get', 'metadata']],
+            999999,
+          ],
+        ],
+        maxPrice: [
+          'max',
+          [
+            'case',
+            ['==', ['get', 'type'], 'listing'],
+            ['get', 'price', ['get', 'metadata']],
+            0,
+          ],
+        ],
+        totalListings: [
+          '+',
+          ['case', ['==', ['get', 'type'], 'listing'], 1, 0],
+        ],
       },
     }),
     [clusterMaxZoom, clusterRadius, clusterMinPoints]
@@ -314,13 +333,17 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
       id: 'cluster-price',
       type: 'symbol',
       source: 'markers',
-      filter: ['all', ['has', 'point_count'], ['>', ['get', 'totalListings'], 0]],
+      filter: [
+        'all',
+        ['has', 'point_count'],
+        ['>', ['get', 'totalListings'], 0],
+      ],
       layout: {
         'text-field': [
           'case',
           ['==', ['get', 'minPrice'], ['get', 'maxPrice']],
-          ['concat', ['get', 'minPrice'], '€'],
-          ['concat', ['get', 'minPrice'], '-', ['get', 'maxPrice'], '€']
+          ['concat', ['number-format', ['get', 'minPrice'], {"min-fraction-digits": 0, "max-fraction-digits": 0}], ' RSD'],
+          ['concat', ['number-format', ['get', 'minPrice'], {"min-fraction-digits": 0, "max-fraction-digits": 0}], '-', ['number-format', ['get', 'maxPrice'], {"min-fraction-digits": 0, "max-fraction-digits": 0}], ' RSD'],
         ],
         'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
         'text-size': 11,
@@ -345,9 +368,13 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
       id: 'unclustered-price',
       type: 'symbol',
       source: 'markers',
-      filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'type'], 'listing']],
+      filter: [
+        'all',
+        ['!', ['has', 'point_count']],
+        ['==', ['get', 'type'], 'listing'],
+      ],
       layout: {
-        'text-field': ['concat', ['get', 'data.price'], '€'],
+        'text-field': ['concat', ['number-format', ['get', 'price', ['get', 'metadata']], {"min-fraction-digits": 0, "max-fraction-digits": 0}], ' RSD'],
         'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
         'text-size': 10,
         'text-allow-overlap': false,

@@ -43,9 +43,10 @@ const PriceMarker: React.FC<PriceMarkerProps> = ({
             border-2 border-white
             shadow-lg cursor-pointer
             transition-all duration-200
-            ${selected 
-              ? 'bg-green-500 border-green-600 scale-110 shadow-xl' 
-              : 'bg-blue-500 border-blue-600 hover:scale-105'
+            ${
+              selected
+                ? 'bg-green-500 border-green-600 scale-110 shadow-xl'
+                : 'bg-blue-500 border-blue-600 hover:scale-105'
             }
           `}
         >
@@ -64,7 +65,9 @@ const PriceMarker: React.FC<PriceMarkerProps> = ({
               ${selected ? 'border-green-300 bg-green-50' : ''}
             `}
           >
-            {typeof price === 'number' ? `${price.toLocaleString()}€` : `${price}€`}
+            {typeof price === 'number'
+              ? `${price.toLocaleString()} RSD`
+              : `${price} RSD`}
           </div>
         )}
 

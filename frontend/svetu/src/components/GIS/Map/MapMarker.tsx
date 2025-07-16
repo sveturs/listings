@@ -114,7 +114,7 @@ const MapMarker: React.FC<MapMarkerProps> = ({
         title={marker.title}
       >
         {marker.type === 'listing' && marker.data?.price ? (
-          <span className="text-xs font-bold">{marker.data.price}€</span>
+          <span className="text-xs font-bold">{marker.data.price} RSD</span>
         ) : (
           <span>{markerIcon}</span>
         )}

@@ -48,12 +48,12 @@ const PriceCluster: React.FC<PriceClusterProps> = ({
   // Форматируем диапазон цен
   const formatPriceRange = (): string => {
     if (!minPrice || !maxPrice || listingsCount === 0) return '';
-    
+
     if (minPrice === maxPrice) {
-      return `${minPrice.toLocaleString()}€`;
+      return `${minPrice.toLocaleString()} RSD`;
     }
-    
-    return `${minPrice.toLocaleString()}-${maxPrice.toLocaleString()}€`;
+
+    return `${minPrice.toLocaleString()}-${maxPrice.toLocaleString()} RSD`;
   };
 
   const priceRange = formatPriceRange();
@@ -67,11 +67,11 @@ const PriceCluster: React.FC<PriceClusterProps> = ({
     >
       <div className={`relative ${className}`}>
         {/* Пульсирующий фон */}
-        <div 
+        <div
           className={`absolute inset-0 ${colorClass} rounded-full opacity-20 animate-pulse`}
           style={{ width: `${size}px`, height: `${size}px` }}
         />
-        
+
         {/* Основной кластер */}
         <div
           className={`
