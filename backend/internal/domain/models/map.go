@@ -15,6 +15,8 @@ type MapMarker struct {
 	City       string  `json:"city"`
 	Country    string  `json:"country"`
 	CreatedAt  string  `json:"created_at"`
+	ViewsCount int     `json:"views_count"`
+	Rating     float64 `json:"rating,omitempty"`
 	IsFavorite bool    `json:"is_favorite,omitempty"`
 }
 

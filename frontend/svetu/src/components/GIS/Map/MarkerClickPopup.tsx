@@ -35,9 +35,9 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
     }
   }, [marker.metadata]);
 
-  // Отладка: посмотрим распарсенные данные
-  console.log('Parsed data:', parsedData);
-  console.log('Parsed metadata:', parsedMetadata);
+
+
+
 
   // Форматирование цены
   const formatPrice = (price?: number) => {
@@ -167,12 +167,12 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   )) :
                   // Если нет attributes, показываем основные поля
                   [
-                    (parsedMetadata?.category || parsedData?.category) && ['Категория', parsedMetadata?.category || parsedData?.category],
-                    parsedData?.area && ['Площадь', `${parsedData.area} м²`],
-                    parsedData?.rooms && ['Комнат', parsedData.rooms],
-                    parsedData?.condition && ['Состояние', parsedData.condition],
-                    parsedData?.type && ['Тип', parsedData.type],
-                    parsedData?.year && ['Год', parsedData.year]
+                    (parsedMetadata?.category || parsedData?.category) && [t('category'), parsedMetadata?.category || parsedData?.category],
+                    parsedData?.area && [t('area'), `${parsedData.area} м²`],
+                    parsedData?.rooms && [t('rooms'), parsedData.rooms],
+                    parsedData?.condition && [t('condition'), parsedData.condition],
+                    parsedData?.type && [t('type'), parsedData.type],
+                    parsedData?.year && [t('year'), parsedData.year]
                   ].filter(Boolean).slice(0, 4).map(([key, value], index) => (
                     <div key={index} className="flex justify-between">
                       <span className="text-gray-600">{key}:</span>
@@ -193,21 +193,29 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
           {/* Дополнительная информация */}
           <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-100">
             <div className="text-center">
-              <p className="text-xs text-gray-500">Просмотров</p>
+              <p className="text-xs text-gray-500">{t('views')}</p>
               <p className="font-semibold text-gray-900">
-                {parsedData?.views || parsedData?.view_count || parsedMetadata?.views || '—'}
+                {/* Ищем views_count в разных местах */}
+                {parsedData?.views_count ||
+                 parsedData?.views ||
+                 parsedData?.view_count ||
+                 parsedMetadata?.views_count ||
+                 parsedMetadata?.views ||
+                 '—'}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-gray-500">Рейтинг</p>
+              <p className="text-xs text-gray-500">{t('rating')}</p>
               <p className="font-semibold text-gray-900">
+                {/* Ищем rating в разных местах */}
                 {(parsedData?.rating || parsedMetadata?.rating) ?
-                  `⭐ ${parsedData?.rating || parsedMetadata?.rating}` : '—'}
+                  `⭐ ${Number(parsedData?.rating || parsedMetadata?.rating).toFixed(1)}` : '—'}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-gray-500">{t('published')}</p>
               <p className="font-semibold text-gray-900">
+                {/* Ищем created_at в разных местах */}
                 {(parsedData?.created_at || parsedData?.createdAt || parsedMetadata?.created_at) ?
                   new Date(parsedData?.created_at || parsedData?.createdAt || parsedMetadata?.created_at).toLocaleDateString('sr-RS') : '—'}
               </p>
@@ -232,7 +240,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{parsedData.seller.name}</p>
                   <p className="text-xs text-gray-500">
-                    {t('seller')} • {parsedData.seller.rating ? `⭐ ${parsedData.seller.rating}` : 'Новый'}
+                    {t('seller')} • {parsedData.seller.rating ? `⭐ ${parsedData.seller.rating}` : t('newSeller')}
                   </p>
                 </div>
               </div>
@@ -272,7 +280,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                В избранное
+                {t('addToFavorites')}
               </button>
               <button
                 className="btn btn-outline btn-sm flex-1"
@@ -284,7 +292,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 010-5.368m0 5.368a9.003 9.003 0 01-7.432 3.268 9.003 9.003 0 01-7.432-3.268m14.864 0a9.003 9.003 0 00-7.432-3.268 9.003 9.003 0 00-7.432 3.268" />
                 </svg>
-                Поделиться
+                {t('share')}
               </button>
             </div>
           </div>

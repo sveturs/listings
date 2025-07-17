@@ -28,9 +28,12 @@ func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neL
 			ml.city,
 			ml.country,
 			ml.created_at,
+			ml.views_count,
+			COALESCE(rc.average_rating, 0) as rating,
 			COALESCE(mi.file_path, '') as main_image
 		FROM marketplace_listings ml
 		LEFT JOIN marketplace_images mi ON ml.id = mi.listing_id AND mi.is_main = true
+		LEFT JOIN rating_cache rc ON rc.entity_type = 'listing' AND rc.entity_id = ml.id
 		WHERE ml.status = 'active'
 		AND ml.show_on_map = true
 		AND ml.latitude IS NOT NULL
@@ -85,7 +88,7 @@ func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neL
 				query += fmt.Sprintf(`
 					AND EXISTS (
 						SELECT 1 FROM listing_attribute_values lav
-						WHERE lav.listing_id = ml.id 
+						WHERE lav.listing_id = ml.id
 						AND lav.attribute_id = $%d
 				`, argCounter)
 				args = append(args, attrID)
@@ -164,6 +167,8 @@ func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neL
 			&marker.City,
 			&marker.Country,
 			&createdAt,
+			&marker.ViewsCount,
+			&marker.Rating,
 			&marker.MainImage,
 		)
 		if err != nil {
@@ -187,7 +192,7 @@ func (s *MarketplaceService) GetMapClusters(ctx context.Context, neLat, neLng, s
 	gridSize := s.calculateGridSize(zoom)
 
 	query := `
-		SELECT 
+		SELECT
 			FLOOR(ml.latitude / $5) * $5 as cluster_lat,
 			FLOOR(ml.longitude / $6) * $6 as cluster_lng,
 			COUNT(*) as count,
@@ -250,7 +255,7 @@ func (s *MarketplaceService) GetMapClusters(ctx context.Context, neLat, neLng, s
 				query += fmt.Sprintf(`
 					AND EXISTS (
 						SELECT 1 FROM listing_attribute_values lav
-						WHERE lav.listing_id = ml.id 
+						WHERE lav.listing_id = ml.id
 						AND lav.attribute_id = $%d
 				`, argCounter)
 				args = append(args, attrID)

@@ -1436,7 +1436,18 @@
     "published": "Published",
     "characteristics": "Characteristics",
     "andMore": "and {count} more",
-    "seller": "Seller"
+    "seller": "Seller",
+    "views": "Views",
+    "rating": "Rating",
+    "category": "Category",
+    "area": "Area",
+    "rooms": "Rooms",
+    "condition": "Condition",
+    "type": "Type",
+    "year": "Year",
+    "addToFavorites": "Add to Favorites",
+    "share": "Share",
+    "newSeller": "New"
   },
   "reviews": {
     "create": {

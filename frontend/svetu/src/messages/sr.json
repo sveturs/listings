@@ -1354,7 +1354,18 @@
     "published": "Objavljeno",
     "characteristics": "Karakteristike",
     "andMore": "i još {count}",
-    "seller": "Prodavac"
+    "seller": "Prodavac",
+    "views": "Pregledi",
+    "rating": "Ocena",
+    "category": "Kategorija",
+    "area": "Površina",
+    "rooms": "Sobe",
+    "condition": "Stanje",
+    "type": "Tip",
+    "year": "Godina",
+    "addToFavorites": "Dodaj u omiljene",
+    "share": "Podeli",
+    "newSeller": "Novi"
   },
   "reviews": {
     "create": {

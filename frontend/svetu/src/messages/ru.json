@@ -1418,7 +1418,18 @@
     "published": "Опубликовано",
     "characteristics": "Характеристики",
     "andMore": "и еще {count}",
-    "seller": "Продавец"
+    "seller": "Продавец",
+    "views": "Просмотры",
+    "rating": "Рейтинг",
+    "category": "Категория",
+    "area": "Площадь",
+    "rooms": "Комнаты",
+    "condition": "Состояние",
+    "type": "Тип",
+    "year": "Год",
+    "addToFavorites": "В избранное",
+    "share": "Поделиться",
+    "newSeller": "Новый"
   },
   "reviews": {
     "create": {

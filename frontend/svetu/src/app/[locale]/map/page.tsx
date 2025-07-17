@@ -61,6 +61,8 @@ interface ListingData {
   };
   images: string[];
   created_at: string;
+  views_count?: number;
+  rating?: number;
 }
 
 interface MapFilters {
@@ -394,8 +396,11 @@ const MapPage: React.FC = () => {
             name: item.category || 'Unknown',
             slug: '',
           },
-          images: [],
+          images: item.images || [],
           created_at: item.created_at,
+          // Добавляем новые поля
+          views_count: item.views_count || 0,
+          rating: item.rating || 0,
         }));
 
         console.log(
@@ -423,6 +428,9 @@ const MapPage: React.FC = () => {
             category: item.category,
             images: item.images || [],
             created_at: item.created_at,
+            // Добавляем новые поля
+            views_count: item.views_count || 0,
+            rating: item.rating || 0,
           }));
         setListings(transformedListings);
       } else {
@@ -547,13 +555,16 @@ const MapPage: React.FC = () => {
             title: listing.name,
             price: listing.price,
             category: listing.category?.name || 'Unknown',
-            image: listing.images?.[0],
+            image: (listing as any).images?.[0] || listing.images?.[0],
             address:
               `${listing.location.city || ''}, ${listing.location.country || ''}`
                 .trim()
                 .replace(/^,\s*|,\s*$/, ''),
             id: listing.id,
             icon: getCategoryIcon(listing.category?.name),
+            views_count: (listing as any).views_count || 0,
+            rating: (listing as any).rating || 0,
+            created_at: listing.created_at,
           },
         }));
     },
@@ -722,6 +733,9 @@ const MapPage: React.FC = () => {
         },
         images: item.images || [],
         created_at: item.created_at || new Date().toISOString(),
+        // Добавляем новые поля
+        views_count: item.views_count || 0,
+        rating: item.rating || 0,
       }));
 
     console.log('📍 Transformed listings:', transformedListings.length);
