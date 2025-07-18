@@ -20,7 +20,7 @@ type ImageInterface interface {
 	GetDisplayOrder() int
 	GetCreatedAt() time.Time
 	IsMainImage() bool
-	
+
 	SetID(int)
 	SetEntityID(int)
 	SetFilePath(string)

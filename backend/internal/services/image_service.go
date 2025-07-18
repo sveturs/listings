@@ -25,12 +25,12 @@ import (
 type ImageType string
 
 const (
-	ImageTypeMarketplaceListing    ImageType = "marketplace_listing"
-	ImageTypeStorefrontProduct     ImageType = "storefront_product"
-	ImageTypeStorefrontLogo        ImageType = "storefront_logo"
-	ImageTypeStorefrontBanner      ImageType = "storefront_banner"
-	ImageTypeChatFile              ImageType = "chat_file"
-	ImageTypeReviewPhoto           ImageType = "review_photo"
+	ImageTypeMarketplaceListing ImageType = "marketplace_listing"
+	ImageTypeStorefrontProduct  ImageType = "storefront_product"
+	ImageTypeStorefrontLogo     ImageType = "storefront_logo"
+	ImageTypeStorefrontBanner   ImageType = "storefront_banner"
+	ImageTypeChatFile           ImageType = "chat_file"
+	ImageTypeReviewPhoto        ImageType = "review_photo"
 )
 
 // ImageService - единый сервис для работы с изображениями
@@ -54,12 +54,12 @@ func NewImageService(fileStorage filestorage.FileStorageInterface, repo interfac
 
 // UploadImageRequest - запрос для загрузки изображения
 type UploadImageRequest struct {
-	EntityType   ImageType          // Тип сущности (marketplace_listing, storefront_product, etc.)
-	EntityID     int                // ID сущности
-	File         multipart.File     // Файл изображения
+	EntityType   ImageType             // Тип сущности (marketplace_listing, storefront_product, etc.)
+	EntityID     int                   // ID сущности
+	File         multipart.File        // Файл изображения
 	FileHeader   *multipart.FileHeader // Заголовок файла
-	IsMain       bool               // Является ли главным изображением
-	DisplayOrder int                // Порядок отображения
+	IsMain       bool                  // Является ли главным изображением
+	DisplayOrder int                   // Порядок отображения
 }
 
 // UploadImageResponse - ответ при загрузке изображения
@@ -81,7 +81,7 @@ func (s *ImageService) UploadImage(ctx context.Context, req *UploadImageRequest)
 
 	// Определение пути для сохранения
 	filePath := s.generateFilePath(req.EntityType, req.EntityID, req.FileHeader.Filename)
-	
+
 	// Чтение файла
 	fileBytes, err := io.ReadAll(req.File)
 	if err != nil {
@@ -96,7 +96,7 @@ func (s *ImageService) UploadImage(ctx context.Context, req *UploadImageRequest)
 
 	// Определение бакета
 	bucket := s.getBucketForImageType(req.EntityType)
-	
+
 	// Загрузка основного изображения
 	imageURL, err := s.fileStorage.UploadFile(ctx, filePath, bytes.NewReader(fileBytes), req.FileHeader.Size, req.FileHeader.Header.Get("Content-Type"))
 	if err != nil {
@@ -112,7 +112,7 @@ func (s *ImageService) UploadImage(ctx context.Context, req *UploadImageRequest)
 
 	// Создание записи в БД
 	imageRecord := s.createImageRecord(req, imageURL, thumbnailURL, bucket, filePath)
-	
+
 	// Сохранение в БД
 	savedImage, err := s.repo.CreateImage(ctx, imageRecord)
 	if err != nil {
@@ -143,11 +143,11 @@ func (s *ImageService) DeleteImage(ctx context.Context, imageID int, entityType 
 	// Получаем пути файлов из URL
 	imageURL := imageRecord.GetImageURL()
 	thumbnailURL := imageRecord.GetThumbnailURL()
-	
+
 	// Удаляем префикс /listings/ из URL для получения пути в MinIO
 	imagePath := strings.TrimPrefix(imageURL, "/listings/")
 	thumbnailPath := strings.TrimPrefix(thumbnailURL, "/listings/")
-	
+
 	// Удаление основного изображения из MinIO
 	if imagePath != "" && imagePath != imageURL {
 		if err := s.fileStorage.DeleteFile(ctx, imagePath); err != nil {
@@ -202,7 +202,7 @@ func (s *ImageService) validateImageFile(fileHeader *multipart.FileHeader) error
 	// Проверка расширения файла
 	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
 	allowedExts := []string{".jpg", ".jpeg", ".png", ".gif", ".webp"}
-	
+
 	isAllowed := false
 	for _, allowedExt := range allowedExts {
 		if ext == allowedExt {
@@ -210,7 +210,7 @@ func (s *ImageService) validateImageFile(fileHeader *multipart.FileHeader) error
 			break
 		}
 	}
-	
+
 	if !isAllowed {
 		return fmt.Errorf("unsupported file format: %s", ext)
 	}
@@ -223,7 +223,7 @@ func (s *ImageService) generateFilePath(entityType ImageType, entityID int, file
 	ext := filepath.Ext(filename)
 	uniqueID := uuid.New().String()
 	timestamp := time.Now().Format("20060102150405")
-	
+
 	switch entityType {
 	case ImageTypeMarketplaceListing:
 		return fmt.Sprintf("listings/%d/%s_%s%s", entityID, timestamp, uniqueID, ext)
@@ -248,7 +248,7 @@ func (s *ImageService) generateThumbnailPath(originalPath string) string {
 	filename := filepath.Base(originalPath)
 	ext := filepath.Ext(filename)
 	nameWithoutExt := strings.TrimSuffix(filename, ext)
-	
+
 	return fmt.Sprintf("%s/thumb_%s.jpg", dir, nameWithoutExt)
 }
 
@@ -310,26 +310,26 @@ func (s *ImageService) createImageRecord(req *UploadImageRequest, imageURL, thum
 	case ImageTypeStorefrontProduct:
 		return &models.StorefrontProductImage{
 			StorefrontProductID: req.EntityID,
-			ImageURL:           imageURL,
-			ThumbnailURL:       thumbnailURL,
-			DisplayOrder:       req.DisplayOrder,
-			IsDefault:          req.IsMain,
-			FilePath:           filePath,
-			FileName:           req.FileHeader.Filename,
-			FileSize:           int(req.FileHeader.Size),
-			ContentType:        req.FileHeader.Header.Get("Content-Type"),
-			StorageType:        "minio",
-			StorageBucket:      bucket,
-			PublicURL:          imageURL,
+			ImageURL:            imageURL,
+			ThumbnailURL:        thumbnailURL,
+			DisplayOrder:        req.DisplayOrder,
+			IsDefault:           req.IsMain,
+			FilePath:            filePath,
+			FileName:            req.FileHeader.Filename,
+			FileSize:            int(req.FileHeader.Size),
+			ContentType:         req.FileHeader.Header.Get("Content-Type"),
+			StorageType:         "minio",
+			StorageBucket:       bucket,
+			PublicURL:           imageURL,
 		}
 	default:
 		// Для других типов можно добавить обработку
 		return &models.StorefrontProductImage{
 			StorefrontProductID: req.EntityID,
-			ImageURL:           imageURL,
-			ThumbnailURL:       thumbnailURL,
-			DisplayOrder:       req.DisplayOrder,
-			IsDefault:          req.IsMain,
+			ImageURL:            imageURL,
+			ThumbnailURL:        thumbnailURL,
+			DisplayOrder:        req.DisplayOrder,
+			IsDefault:           req.IsMain,
 		}
 	}
 }

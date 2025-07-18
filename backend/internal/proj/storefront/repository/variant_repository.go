@@ -1,11 +1,12 @@
 package repository
 
 import (
-	"backend/internal/proj/storefront/types"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"backend/internal/proj/storefront/types"
 
 	"github.com/jmoiron/sqlx"
 )
