@@ -172,6 +172,8 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 		for i, p := range products {
 			productIDs[i] = p.ID
 			productMap[p.ID] = p
+			// Initialize empty slice for images
+			p.Images = []models.StorefrontProductImage{}
 		}
 
 		images, err := s.getProductImages(ctx, productIDs)
@@ -248,7 +250,12 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product images: %w", err)
 	}
-	p.Images = images
+	// Initialize empty slice if no images found
+	if images == nil {
+		p.Images = []models.StorefrontProductImage{}
+	} else {
+		p.Images = images
+	}
 
 	// Load variants
 	variants, err := s.getProductVariants(ctx, p.ID)
@@ -501,8 +508,23 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 		return []models.StorefrontProductImage{}, nil
 	}
 
-	// Get images from variant images (new system)
+	// Get images from both product images and variant images
 	query := `
+		-- Get images from product images table
+		SELECT
+			spi.id,
+			spi.storefront_product_id,
+			spi.image_url,
+			spi.thumbnail_url,
+			spi.display_order,
+			spi.is_default,
+			spi.created_at
+		FROM storefront_product_images spi
+		WHERE spi.storefront_product_id = ANY($1)
+		
+		UNION ALL
+		
+		-- Get images from variant images
 		SELECT
 			spvi.id,
 			spv.product_id as storefront_product_id,
@@ -514,7 +536,8 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 		FROM storefront_product_variants spv
 		JOIN storefront_product_variant_images spvi ON spv.id = spvi.variant_id
 		WHERE spv.product_id = ANY($1) AND spv.is_active = true
-		ORDER BY spv.is_default DESC, spvi.is_main DESC, spvi.display_order ASC`
+		
+		ORDER BY is_default DESC, display_order ASC`
 
 	rows, err := s.pool.Query(ctx, query, pq.Array(productIDs))
 	if err != nil {

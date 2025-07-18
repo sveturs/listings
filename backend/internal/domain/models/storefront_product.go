@@ -25,7 +25,7 @@ type StorefrontProduct struct {
 	UpdatedAt     time.Time              `json:"updated_at" db:"updated_at"`
 
 	// Relations
-	Images   []StorefrontProductImage   `json:"images,omitempty" db:"-"`
+	Images   []StorefrontProductImage   `json:"images" db:"-"`
 	Category *MarketplaceCategory       `json:"category,omitempty" db:"-"`
 	Variants []StorefrontProductVariant `json:"variants,omitempty" db:"-"`
 }
