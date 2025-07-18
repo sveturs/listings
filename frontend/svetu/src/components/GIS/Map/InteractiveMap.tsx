@@ -62,6 +62,8 @@ interface InteractiveMapProps {
   style?: React.CSSProperties;
   mapboxAccessToken?: string;
   isMobile?: boolean;
+  selectedMarker?: MapMarkerData | null;
+  onMarkerClose?: () => void;
   // Новые пропсы для маркера покупателя
   showBuyerMarker?: boolean;
   buyerLocation?: {
@@ -114,6 +116,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   style,
   mapboxAccessToken,
   isMobile = false,
+  selectedMarker,
+  onMarkerClose,
   showBuyerMarker = false,
   buyerLocation,
   searchRadius = 10000, // 10км по умолчанию
@@ -173,7 +177,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const hidePopupTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Состояние для детального popup
-  const [selectedMarker, setSelectedMarker] = useState<MapMarkerData | null>(null);
+  const [internalSelectedMarker, setInternalSelectedMarker] =
+    useState<MapMarkerData | null>(null);
 
   // Получение токена Mapbox из переменных окружения
   const accessToken =
@@ -721,7 +726,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             clusterRadius={50}
             clusterMaxZoom={14}
             clusterMinPoints={2}
-            showPrices={true}
           />
         )}
 
@@ -735,7 +739,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             onClose={() => setHoveredMarker(null)}
             onClick={() => {
               // Открываем детальный popup
-              setSelectedMarker(hoveredMarker);
+              setInternalSelectedMarker(hoveredMarker);
               setHoveredMarker(null); // Скрываем hover popup
             }}
             onMouseEnter={() => {
@@ -766,7 +770,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               const marker = markers.find((m) => m.id === listingId);
               if (marker) {
                 // Открываем наш детальный popup напрямую
-                setSelectedMarker(marker);
+                setInternalSelectedMarker(marker);
                 setHoveredCluster(null);
               }
             }}
@@ -901,10 +905,13 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         )}
 
         {/* Детальный popup при клике */}
-        {selectedMarker && (
+        {(selectedMarker || internalSelectedMarker) && (
           <MarkerClickPopup
-            marker={selectedMarker}
-            onClose={() => setSelectedMarker(null)}
+            marker={selectedMarker || internalSelectedMarker!}
+            onClose={() => {
+              setInternalSelectedMarker(null);
+              if (onMarkerClose) onMarkerClose();
+            }}
           />
         )}
       </Map>

@@ -29,13 +29,28 @@ interface VariantGeneratorProps {
   onCancel: () => void;
 }
 
-export default function VariantGenerator({ productId, basePrice, onGenerate, onCancel }: VariantGeneratorProps) {
+export default function VariantGenerator({
+  productId,
+  basePrice: _basePrice,
+  onGenerate,
+  onCancel,
+}: VariantGeneratorProps) {
   const t = useTranslations('storefront');
-  const [attributes, setAttributes] = useState<StorefrontProductAttribute[]>([]);
-  const [selectedValues, setSelectedValues] = useState<Record<string, string[]>>({});
-  const [priceModifiers, setPriceModifiers] = useState<Record<string, number>>({});
-  const [stockQuantities, setStockQuantities] = useState<Record<string, number>>({});
-  const [defaultAttributes, setDefaultAttributes] = useState<Record<string, string>>({});
+  const [attributes, setAttributes] = useState<StorefrontProductAttribute[]>(
+    []
+  );
+  const [selectedValues, setSelectedValues] = useState<
+    Record<string, string[]>
+  >({});
+  const [priceModifiers, setPriceModifiers] = useState<Record<string, number>>(
+    {}
+  );
+  const [stockQuantities, setStockQuantities] = useState<
+    Record<string, number>
+  >({});
+  const [defaultAttributes, setDefaultAttributes] = useState<
+    Record<string, string>
+  >({});
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
@@ -45,11 +60,13 @@ export default function VariantGenerator({ productId, basePrice, onGenerate, onC
 
   const loadProductAttributes = async () => {
     try {
-      const response = await fetch(`/api/v1/storefront/products/${productId}/attributes`);
+      const response = await fetch(
+        `/api/v1/storefront/products/${productId}/attributes`
+      );
       if (response.ok) {
         const attrs = await response.json();
         setAttributes(attrs);
-        
+
         // Initialize selected values
         const initialSelected: Record<string, string[]> = {};
         attrs.forEach((attr: StorefrontProductAttribute) => {
@@ -65,54 +82,54 @@ export default function VariantGenerator({ productId, basePrice, onGenerate, onC
   };
 
   const toggleValueSelection = (attributeName: string, value: string) => {
-    setSelectedValues(prev => ({
+    setSelectedValues((prev) => ({
       ...prev,
       [attributeName]: prev[attributeName]?.includes(value)
-        ? prev[attributeName].filter(v => v !== value)
-        : [...(prev[attributeName] || []), value]
+        ? prev[attributeName].filter((v) => v !== value)
+        : [...(prev[attributeName] || []), value],
     }));
   };
 
   const updatePriceModifier = (value: string, modifier: number) => {
-    setPriceModifiers(prev => ({
+    setPriceModifiers((prev) => ({
       ...prev,
-      [value]: modifier
+      [value]: modifier,
     }));
   };
 
   const updateStockQuantity = (combination: string, quantity: number) => {
-    setStockQuantities(prev => ({
+    setStockQuantities((prev) => ({
       ...prev,
-      [combination]: quantity
+      [combination]: quantity,
     }));
   };
 
   const setDefaultAttribute = (attributeName: string, value: string) => {
-    setDefaultAttributes(prev => ({
+    setDefaultAttributes((prev) => ({
       ...prev,
-      [attributeName]: value
+      [attributeName]: value,
     }));
   };
 
   const generateCombinations = () => {
     const attributeNames = Object.keys(selectedValues);
     const combinations: Record<string, string>[] = [];
-    
+
     const generate = (index: number, current: Record<string, string>) => {
       if (index === attributeNames.length) {
         combinations.push({ ...current });
         return;
       }
-      
+
       const attrName = attributeNames[index];
       const values = selectedValues[attrName] || [];
-      
+
       for (const value of values) {
         current[attrName] = value;
         generate(index + 1, current);
       }
     };
-    
+
     generate(0, {});
     return combinations;
   };
@@ -125,14 +142,14 @@ export default function VariantGenerator({ productId, basePrice, onGenerate, onC
 
   const handleGenerate = async () => {
     setGenerating(true);
-    
+
     try {
       const request = {
         product_id: productId,
         attribute_matrix: selectedValues,
         price_modifiers: priceModifiers,
         stock_quantities: stockQuantities,
-        default_attributes: defaultAttributes
+        default_attributes: defaultAttributes,
       };
 
       const response = await fetch('/api/v1/storefront/variants/generate', {
@@ -198,20 +215,29 @@ export default function VariantGenerator({ productId, basePrice, onGenerate, onC
       {/* Attribute Selection */}
       <div className="space-y-4">
         <h4 className="font-medium">{t('select_attribute_values')}</h4>
-        {attributes.map(attr => (
+        {attributes.map((attr) => (
           <div key={attr.id} className="border border-gray-200 rounded-lg p-4">
             <h5 className="font-medium mb-3">{attr.attribute.display_name}</h5>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              {attr.custom_values.map(value => (
-                <label key={value.value} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+              {attr.custom_values.map((value) => (
+                <label
+                  key={value.value}
+                  className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50"
+                >
                   <input
                     type="checkbox"
-                    checked={selectedValues[attr.attribute.name]?.includes(value.value) || false}
-                    onChange={() => toggleValueSelection(attr.attribute.name, value.value)}
+                    checked={
+                      selectedValues[attr.attribute.name]?.includes(
+                        value.value
+                      ) || false
+                    }
+                    onChange={() =>
+                      toggleValueSelection(attr.attribute.name, value.value)
+                    }
                     className="h-4 w-4 text-blue-600 rounded"
                   />
                   {attr.attribute.type === 'color' && value.color_hex && (
-                    <div 
+                    <div
                       className="w-4 h-4 rounded border"
                       style={{ backgroundColor: value.color_hex }}
                     />
@@ -225,7 +251,7 @@ export default function VariantGenerator({ productId, basePrice, onGenerate, onC
                 </label>
               ))}
             </div>
-            
+
             {/* Default Value Selection */}
             {selectedValues[attr.attribute.name]?.length > 0 && (
               <div className="mt-3">
@@ -234,12 +260,16 @@ export default function VariantGenerator({ productId, basePrice, onGenerate, onC
                 </label>
                 <select
                   value={defaultAttributes[attr.attribute.name] || ''}
-                  onChange={(e) => setDefaultAttribute(attr.attribute.name, e.target.value)}
+                  onChange={(e) =>
+                    setDefaultAttribute(attr.attribute.name, e.target.value)
+                  }
                   className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="">{t('no_default')}</option>
-                  {selectedValues[attr.attribute.name].map(value => {
-                    const valueObj = attr.custom_values.find(v => v.value === value);
+                  {selectedValues[attr.attribute.name].map((value) => {
+                    const valueObj = attr.custom_values.find(
+                      (v) => v.value === value
+                    );
                     return (
                       <option key={value} value={value}>
                         {valueObj?.display_name || value}
@@ -254,25 +284,41 @@ export default function VariantGenerator({ productId, basePrice, onGenerate, onC
       </div>
 
       {/* Price Modifiers */}
-      {Object.values(selectedValues).some(values => values.length > 0) && (
+      {Object.values(selectedValues).some((values) => values.length > 0) && (
         <div className="space-y-4">
           <h4 className="font-medium">{t('price_modifiers')}</h4>
-          <p className="text-sm text-gray-600">{t('price_modifiers_description')}</p>
+          <p className="text-sm text-gray-600">
+            {t('price_modifiers_description')}
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(selectedValues).flatMap(([attrName, values]) =>
-              values.map(value => {
-                const attr = attributes.find(a => a.attribute.name === attrName);
-                const valueObj = attr?.custom_values.find(v => v.value === value);
+              values.map((value) => {
+                const attr = attributes.find(
+                  (a) => a.attribute.name === attrName
+                );
+                const valueObj = attr?.custom_values.find(
+                  (v) => v.value === value
+                );
                 return (
-                  <div key={`${attrName}-${value}`} className="flex items-center space-x-2">
-                    <span className="text-sm flex-1">{valueObj?.display_name || value}</span>
+                  <div
+                    key={`${attrName}-${value}`}
+                    className="flex items-center space-x-2"
+                  >
+                    <span className="text-sm flex-1">
+                      {valueObj?.display_name || value}
+                    </span>
                     <div className="flex items-center space-x-1">
                       <span className="text-sm">+</span>
                       <input
                         type="number"
                         step="0.01"
                         value={priceModifiers[value] || 0}
-                        onChange={(e) => updatePriceModifier(value, parseFloat(e.target.value) || 0)}
+                        onChange={(e) =>
+                          updatePriceModifier(
+                            value,
+                            parseFloat(e.target.value) || 0
+                          )
+                        }
                         className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
                       />
                       <span className="text-sm">RSD</span>
@@ -294,12 +340,16 @@ export default function VariantGenerator({ productId, basePrice, onGenerate, onC
               const key = Object.values(combination).join('-');
               const displayName = Object.entries(combination)
                 .map(([attr, value]) => {
-                  const attrObj = attributes.find(a => a.attribute.name === attr);
-                  const valueObj = attrObj?.custom_values.find(v => v.value === value);
+                  const attrObj = attributes.find(
+                    (a) => a.attribute.name === attr
+                  );
+                  const valueObj = attrObj?.custom_values.find(
+                    (v) => v.value === value
+                  );
                   return valueObj?.display_name || value;
                 })
                 .join(' • ');
-              
+
               return (
                 <div key={index} className="flex items-center space-x-2">
                   <span className="text-sm flex-1">{displayName}</span>
@@ -307,7 +357,9 @@ export default function VariantGenerator({ productId, basePrice, onGenerate, onC
                     type="number"
                     min="0"
                     value={stockQuantities[key] || 10}
-                    onChange={(e) => updateStockQuantity(key, parseInt(e.target.value) || 0)}
+                    onChange={(e) =>
+                      updateStockQuantity(key, parseInt(e.target.value) || 0)
+                    }
                     className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
                   />
                 </div>

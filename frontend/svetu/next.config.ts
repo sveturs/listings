@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
         .split(',')
         .flatMap((host) => {
           const [protocol, hostname, port] = host.split(':');
-          const pathnames = ['/listings/**', '/chat-files/**'];
+          const pathnames = ['/listings/**', '/chat-files/**', '/uploads/**'];
 
           return pathnames.map((path) => {
             const config: any = {
@@ -68,6 +68,10 @@ const nextConfig: NextConfig = {
         {
           source: '/chat-files/:path*',
           destination: `${minioUrl}/chat-files/:path*`,
+        },
+        {
+          source: '/uploads/:path*',
+          destination: `${apiUrl}/uploads/:path*`,
         },
         // Проксируем все API запросы на backend
         {

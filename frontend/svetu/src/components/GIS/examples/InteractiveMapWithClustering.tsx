@@ -187,7 +187,6 @@ const InteractiveMapWithClustering: React.FC<
           clusterMinPoints={clusterOptions.minPoints}
           onClusterClick={handleClusterClick}
           onMarkerClick={handleMarkerClick}
-          showPrices={showPrices}
           clusterStyles={clusterStyles}
         />
       </Map>

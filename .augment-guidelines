@@ -1,0 +1,40 @@
+# Augment Guidelines for Hostel Booking System
+
+## Agent Mode Configuration
+- ALWAYS operate in agent mode for automatic file editing
+- Enable direct file manipulation without manual intervention
+- Use tools: edit, create, read, search, replace, command
+
+## Go Development
+- Follow Go idioms and best practices
+- Use meaningful variable and function names
+- Add comments for exported functions
+- Use error handling pattern: if err != nil
+- Prefer table-driven tests
+- Use gofumpt and goimports for formatting
+
+## Project Structure
+- Backend code in /backend directory
+- Frontend code in /frontend/svetu directory
+- Database migrations in /backend/migrations
+- API handlers in /backend/internal/proj/
+- Swagger docs in /backend/docs/
+
+## Code Style
+- Use gofumpt for Go formatting
+- Use Prettier for TypeScript/JavaScript
+- Follow existing patterns in the codebase
+- Maintain consistency with project conventions
+
+
+## Frontend Development
+- Use DaisyUI classes for UI components
+- Utilize Redux Toolkit for state management (not Zustand)
+- Run yarn format && yarn lint && yarn build before finishing
+- Follow React 19 and Next.js 15 best practices
+
+## Backend Development
+- Run make format && make lint before finishing
+- Update swagger docs with make generate-types when API changes
+- Follow Fiber framework conventions
+- Use proper error handling with translated placeholders

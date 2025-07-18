@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
-import MarkerClickPopup from '@/components/GIS/Map/MarkerClickPopup';
+// import MarkerClickPopup from '@/components/GIS/Map/MarkerClickPopup';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
 import {
   MapViewState,
@@ -46,7 +46,8 @@ function isPointInPolygon(
 
 interface ListingData {
   id: number;
-  name: string;
+  name?: string;
+  title?: string;
   price: number;
   location: {
     lat: number;
@@ -132,10 +133,13 @@ const MapPage: React.FC = () => {
   );
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Состояние маркера покупателя - инициализируем с фиксированными координатами
+  // Получаем начальные координаты из URL для buyerLocation
+  const initialViewState = getInitialViewStateFromURL();
+
+  // Состояние маркера покупателя - инициализируем с координатами из URL
   const [buyerLocation, setBuyerLocation] = useState({
-    longitude: 20.457273, // Центр Белграда
-    latitude: 44.787197,
+    longitude: initialViewState.longitude,
+    latitude: initialViewState.latitude,
   });
 
   // Дебаунсированная позиция покупателя
@@ -241,9 +245,13 @@ const MapPage: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Отмечаем, что компонент инициализирован
+  // Отмечаем, что компонент инициализирован после небольшой задержки
+  // чтобы избежать перезаписи URL параметров при первой загрузке
   useEffect(() => {
-    setIsInitialized(true);
+    const timer = setTimeout(() => {
+      setIsInitialized(true);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Загрузка объявлений для карты
@@ -274,6 +282,8 @@ const MapPage: React.FC = () => {
         hasDistrictBoundary,
         isCombinedSearch,
         searchType,
+        buyerLat: debouncedBuyerLocation.latitude,
+        buyerLng: debouncedBuyerLocation.longitude,
       });
 
       // Используем специализированный радиусный поиск если есть координаты покупателя, иначе обычный search
@@ -345,9 +355,16 @@ const MapPage: React.FC = () => {
       }
 
       // Обрабатываем ответ в зависимости от используемого API
-      if (useRadiusSearch && response.data?.data?.listings) {
-        // GIS API возвращает data.listings
-        let filteredListings = response.data.data.listings.filter(
+      if (useRadiusSearch && response.data?.data) {
+        // GIS API возвращает data.listings (может быть null)
+        console.log('[Map] GIS API response:', {
+          success: response.data.success,
+          totalCount: response.data.data.total_count,
+          hasListings: !!response.data.data.listings,
+          listingsCount: response.data.data.listings?.length || 0,
+        });
+        const apiListings = response.data.data.listings || [];
+        let filteredListings = apiListings.filter(
           (item: any) => item.location && item.location.lat && item.location.lng
         );
 
@@ -542,7 +559,7 @@ const MapPage: React.FC = () => {
           ],
           longitude: listing.location.lng,
           latitude: listing.location.lat,
-          title: listing.name,
+          title: listing.title || listing.name || 'Untitled',
           type: 'listing' as const,
           imageUrl: listing.images?.[0],
           metadata: {
@@ -552,7 +569,7 @@ const MapPage: React.FC = () => {
             icon: getCategoryIcon(listing.category?.name),
           },
           data: {
-            title: listing.name,
+            title: listing.title || listing.name || 'Untitled',
             price: listing.price,
             category: listing.category?.name || 'Unknown',
             image: (listing as any).images?.[0] || listing.images?.[0],
@@ -1156,6 +1173,8 @@ const MapPage: React.FC = () => {
               position: isMobile ? 'bottom-right' : 'top-right',
             }}
             isMobile={isMobile}
+            selectedMarker={selectedMarker}
+            onMarkerClose={() => setSelectedMarker(null)}
             showBuyerMarker={true}
             buyerLocation={buyerLocation}
             searchRadius={filters.radius}
@@ -1170,14 +1189,6 @@ const MapPage: React.FC = () => {
             controlTranslations={controlTranslations}
             districtBoundary={districtBoundary}
           />
-
-          {/* Расширенный popup при клике */}
-          {selectedMarker && (
-            <MarkerClickPopup
-              marker={selectedMarker}
-              onClose={() => setSelectedMarker(null)}
-            />
-          )}
         </div>
 
         {/* Мобильный drawer с фильтрами */}

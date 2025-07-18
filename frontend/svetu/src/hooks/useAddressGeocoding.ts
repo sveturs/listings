@@ -21,6 +21,12 @@ export interface AddressGeocodingResult {
   };
   confidence: number;
   place_types: string[];
+  // Дополнительные поля для совместимости
+  address?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  properties?: any;
 }
 
 export interface UseAddressGeocodingOptions {
@@ -159,6 +165,17 @@ export function useAddressGeocoding(
                 },
                 confidence: item.confidence || 0.5,
                 place_types: item.place_types || [],
+                // Дополнительные поля для совместимости
+                address:
+                  item.address_components?.formatted ||
+                  item.place_name ||
+                  item.text,
+                city: item.address_components?.city,
+                region:
+                  item.address_components?.district ||
+                  item.address_components?.region,
+                country: item.address_components?.country,
+                properties: item.properties,
               }));
 
             setSuggestions(convertedSuggestions);
@@ -231,6 +248,17 @@ export function useAddressGeocoding(
             },
             confidence: data.data.confidence || 0.5,
             place_types: data.data.place_types || [],
+            // Дополнительные поля для совместимости
+            address:
+              data.data.address_components?.formatted ||
+              data.data.place_name ||
+              data.data.text,
+            city: data.data.address_components?.city,
+            region:
+              data.data.address_components?.district ||
+              data.data.address_components?.region,
+            country: data.data.address_components?.country,
+            properties: data.data.properties,
           };
         }
 

@@ -35,11 +35,22 @@ interface AttributeSetupProps {
   onCancel: () => void;
 }
 
-export default function AttributeSetup({ productId, categoryId, onSave, onCancel }: AttributeSetupProps) {
+export default function AttributeSetup({
+  productId,
+  categoryId,
+  onSave,
+  onCancel,
+}: AttributeSetupProps) {
   const t = useTranslations('storefront');
-  const [availableAttributes, setAvailableAttributes] = useState<ProductVariantAttribute[]>([]);
-  const [attributeSetups, setAttributeSetups] = useState<ProductAttributeSetup[]>([]);
-  const [globalValues, setGlobalValues] = useState<Record<number, AttributeValue[]>>({});
+  const [availableAttributes, setAvailableAttributes] = useState<
+    ProductVariantAttribute[]
+  >([]);
+  const [attributeSetups, setAttributeSetups] = useState<
+    ProductAttributeSetup[]
+  >([]);
+  const [globalValues, setGlobalValues] = useState<
+    Record<number, AttributeValue[]>
+  >({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,11 +60,13 @@ export default function AttributeSetup({ productId, categoryId, onSave, onCancel
 
   const loadAvailableAttributes = async () => {
     try {
-      const response = await fetch(`/api/v1/storefront/categories/${categoryId}/attributes`);
+      const response = await fetch(
+        `/api/v1/storefront/categories/${categoryId}/attributes`
+      );
       if (response.ok) {
         const attributes = await response.json();
         setAvailableAttributes(attributes);
-        
+
         // Load global values for each attribute
         for (const attr of attributes) {
           loadGlobalValues(attr.id);
@@ -66,26 +79,33 @@ export default function AttributeSetup({ productId, categoryId, onSave, onCancel
 
   const loadCurrentSetup = async () => {
     try {
-      const response = await fetch(`/api/v1/storefront/products/${productId}/attributes`);
+      const response = await fetch(
+        `/api/v1/storefront/products/${productId}/attributes`
+      );
       if (response.ok) {
         const currentAttributes = await response.json();
-        const setups = availableAttributes.map(attr => {
-          const existing = currentAttributes.find((ca: any) => ca.attribute_id === attr.id);
-          return existing ? {
-            attribute_id: attr.id,
-            is_enabled: existing.is_enabled,
-            is_required: existing.is_required,
-            custom_values: existing.custom_values || [],
-            selected_global_values: existing.custom_values
-              ?.filter((v: AttributeValue) => !v.is_custom)
-              ?.map((v: AttributeValue) => v.value) || []
-          } : {
-            attribute_id: attr.id,
-            is_enabled: false,
-            is_required: false,
-            custom_values: [],
-            selected_global_values: []
-          };
+        const setups = availableAttributes.map((attr) => {
+          const existing = currentAttributes.find(
+            (ca: any) => ca.attribute_id === attr.id
+          );
+          return existing
+            ? {
+                attribute_id: attr.id,
+                is_enabled: existing.is_enabled,
+                is_required: existing.is_required,
+                custom_values: existing.custom_values || [],
+                selected_global_values:
+                  existing.custom_values
+                    ?.filter((v: AttributeValue) => !v.is_custom)
+                    ?.map((v: AttributeValue) => v.value) || [],
+              }
+            : {
+                attribute_id: attr.id,
+                is_enabled: false,
+                is_required: false,
+                custom_values: [],
+                selected_global_values: [],
+              };
         });
         setAttributeSetups(setups);
       }
@@ -98,65 +118,76 @@ export default function AttributeSetup({ productId, categoryId, onSave, onCancel
 
   const loadGlobalValues = async (attributeId: number) => {
     try {
-      const response = await fetch(`/api/v1/storefront/variants/attributes/${attributeId}/values`);
+      const response = await fetch(
+        `/api/v1/storefront/variants/attributes/${attributeId}/values`
+      );
       if (response.ok) {
         const values = await response.json();
-        setGlobalValues(prev => ({
+        setGlobalValues((prev) => ({
           ...prev,
           [attributeId]: values.map((v: any) => ({
             value: v.value,
             display_name: v.display_name,
             color_hex: v.color_hex,
             image_url: v.image_url,
-            is_custom: false
-          }))
+            is_custom: false,
+          })),
         }));
       }
     } catch (error) {
-      console.error(`Failed to load global values for attribute ${attributeId}:`, error);
+      console.error(
+        `Failed to load global values for attribute ${attributeId}:`,
+        error
+      );
     }
   };
 
-  const updateAttributeSetup = (attributeId: number, updates: Partial<ProductAttributeSetup>) => {
-    setAttributeSetups(prev => prev.map(setup => 
-      setup.attribute_id === attributeId 
-        ? { ...setup, ...updates }
-        : setup
-    ));
+  const updateAttributeSetup = (
+    attributeId: number,
+    updates: Partial<ProductAttributeSetup>
+  ) => {
+    setAttributeSetups((prev) =>
+      prev.map((setup) =>
+        setup.attribute_id === attributeId ? { ...setup, ...updates } : setup
+      )
+    );
   };
 
   const addCustomValue = (attributeId: number, value: AttributeValue) => {
     updateAttributeSetup(attributeId, {
       custom_values: [
-        ...attributeSetups.find(s => s.attribute_id === attributeId)?.custom_values || [],
-        { ...value, is_custom: true }
-      ]
+        ...(attributeSetups.find((s) => s.attribute_id === attributeId)
+          ?.custom_values || []),
+        { ...value, is_custom: true },
+      ],
     });
   };
 
   const removeCustomValue = (attributeId: number, valueIndex: number) => {
-    const setup = attributeSetups.find(s => s.attribute_id === attributeId);
+    const setup = attributeSetups.find((s) => s.attribute_id === attributeId);
     if (setup) {
       updateAttributeSetup(attributeId, {
-        custom_values: setup.custom_values.filter((_, index) => index !== valueIndex)
+        custom_values: setup.custom_values.filter(
+          (_, index) => index !== valueIndex
+        ),
       });
     }
   };
 
   const toggleGlobalValue = (attributeId: number, value: string) => {
-    const setup = attributeSetups.find(s => s.attribute_id === attributeId);
+    const setup = attributeSetups.find((s) => s.attribute_id === attributeId);
     if (setup) {
       const isSelected = setup.selected_global_values.includes(value);
       updateAttributeSetup(attributeId, {
         selected_global_values: isSelected
-          ? setup.selected_global_values.filter(v => v !== value)
-          : [...setup.selected_global_values, value]
+          ? setup.selected_global_values.filter((v) => v !== value)
+          : [...setup.selected_global_values, value],
       });
     }
   };
 
   const handleSave = () => {
-    const enabledSetups = attributeSetups.filter(setup => setup.is_enabled);
+    const enabledSetups = attributeSetups.filter((setup) => setup.is_enabled);
     onSave(enabledSetups);
   };
 
@@ -171,7 +202,9 @@ export default function AttributeSetup({ productId, categoryId, onSave, onCancel
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{t('setup_product_attributes')}</h3>
+        <h3 className="text-lg font-semibold">
+          {t('setup_product_attributes')}
+        </h3>
         <div className="space-x-2">
           <button
             onClick={onCancel}
@@ -189,23 +222,34 @@ export default function AttributeSetup({ productId, categoryId, onSave, onCancel
       </div>
 
       <div className="space-y-4">
-        {availableAttributes.map(attribute => {
-          const setup = attributeSetups.find(s => s.attribute_id === attribute.id);
+        {availableAttributes.map((attribute) => {
+          const setup = attributeSetups.find(
+            (s) => s.attribute_id === attribute.id
+          );
           const globalVals = globalValues[attribute.id] || [];
 
           return (
-            <div key={attribute.id} className="border border-gray-200 rounded-lg p-4">
+            <div
+              key={attribute.id}
+              className="border border-gray-200 rounded-lg p-4"
+            >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <input
                     type="checkbox"
                     checked={setup?.is_enabled || false}
-                    onChange={(e) => updateAttributeSetup(attribute.id, { is_enabled: e.target.checked })}
+                    onChange={(e) =>
+                      updateAttributeSetup(attribute.id, {
+                        is_enabled: e.target.checked,
+                      })
+                    }
                     className="h-4 w-4 text-blue-600 rounded"
                   />
                   <div>
                     <h4 className="font-medium">{attribute.display_name}</h4>
-                    <p className="text-sm text-gray-500">{attribute.name} • {attribute.type}</p>
+                    <p className="text-sm text-gray-500">
+                      {attribute.name} • {attribute.type}
+                    </p>
                   </div>
                 </div>
                 {setup?.is_enabled && (
@@ -213,10 +257,16 @@ export default function AttributeSetup({ productId, categoryId, onSave, onCancel
                     <input
                       type="checkbox"
                       checked={setup.is_required}
-                      onChange={(e) => updateAttributeSetup(attribute.id, { is_required: e.target.checked })}
+                      onChange={(e) =>
+                        updateAttributeSetup(attribute.id, {
+                          is_required: e.target.checked,
+                        })
+                      }
                       className="h-4 w-4 text-red-600 rounded"
                     />
-                    <span className="text-sm text-red-600">{t('required')}</span>
+                    <span className="text-sm text-red-600">
+                      {t('required')}
+                    </span>
                   </label>
                 )}
               </div>
@@ -228,21 +278,30 @@ export default function AttributeSetup({ productId, categoryId, onSave, onCancel
                     <div>
                       <h5 className="font-medium mb-2">{t('global_values')}</h5>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                        {globalVals.map(value => (
-                          <label key={value.value} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                        {globalVals.map((value) => (
+                          <label
+                            key={value.value}
+                            className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50"
+                          >
                             <input
                               type="checkbox"
-                              checked={setup.selected_global_values.includes(value.value)}
-                              onChange={() => toggleGlobalValue(attribute.id, value.value)}
+                              checked={setup.selected_global_values.includes(
+                                value.value
+                              )}
+                              onChange={() =>
+                                toggleGlobalValue(attribute.id, value.value)
+                              }
                               className="h-4 w-4 text-blue-600 rounded"
                             />
                             {attribute.type === 'color' && value.color_hex && (
-                              <div 
+                              <div
                                 className="w-4 h-4 rounded border"
                                 style={{ backgroundColor: value.color_hex }}
                               />
                             )}
-                            <span className="text-sm">{value.display_name}</span>
+                            <span className="text-sm">
+                              {value.display_name}
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -254,16 +313,21 @@ export default function AttributeSetup({ productId, categoryId, onSave, onCancel
                     <h5 className="font-medium mb-2">{t('custom_values')}</h5>
                     <div className="space-y-2">
                       {setup.custom_values.map((value, index) => (
-                        <div key={index} className="flex items-center space-x-2 p-2 bg-blue-50 rounded">
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 p-2 bg-blue-50 rounded"
+                        >
                           {attribute.type === 'color' && value.color_hex && (
-                            <div 
+                            <div
                               className="w-4 h-4 rounded border"
                               style={{ backgroundColor: value.color_hex }}
                             />
                           )}
                           <span className="flex-1">{value.display_name}</span>
                           <button
-                            onClick={() => removeCustomValue(attribute.id, index)}
+                            onClick={() =>
+                              removeCustomValue(attribute.id, index)
+                            }
                             className="text-red-600 hover:text-red-800"
                           >
                             ×
@@ -305,7 +369,7 @@ function CustomValueInput({ attributeType, onAdd }: CustomValueInputProps) {
       value: value.trim(),
       display_name: displayName.trim(),
       color_hex: attributeType === 'color' ? colorHex : undefined,
-      is_custom: true
+      is_custom: true,
     });
 
     setValue('');

@@ -21,7 +21,9 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
   // Парсим JSON данные
   const parsedData = React.useMemo(() => {
     try {
-      return typeof marker.data === 'string' ? JSON.parse(marker.data) : marker.data;
+      return typeof marker.data === 'string'
+        ? JSON.parse(marker.data)
+        : marker.data;
     } catch {
       return marker.data || {};
     }
@@ -29,15 +31,13 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
 
   const parsedMetadata = React.useMemo(() => {
     try {
-      return typeof marker.metadata === 'string' ? JSON.parse(marker.metadata) : marker.metadata;
+      return typeof marker.metadata === 'string'
+        ? JSON.parse(marker.metadata)
+        : marker.metadata;
     } catch {
       return marker.metadata || {};
     }
   }, [marker.metadata]);
-
-
-
-
 
   // Форматирование цены
   const formatPrice = (price?: number) => {
@@ -93,12 +93,15 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
         {/* Контент */}
         <div className="space-y-3 p-4">
           {/* Название */}
-          <h3 className="font-bold text-lg text-gray-900" style={{
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
-          }}>
+          <h3
+            className="font-bold text-lg text-gray-900"
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
             {marker.title}
           </h3>
 
@@ -116,18 +119,23 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
 
           {/* Описание */}
           {marker.description && (
-            <p className="text-sm text-gray-600" style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden'
-            }}>
+            <p
+              className="text-sm text-gray-600"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
               {marker.description}
             </p>
           )}
 
           {/* Адрес */}
-          {(parsedData?.address || parsedData?.location || parsedMetadata?.address) && (
+          {(parsedData?.address ||
+            parsedData?.location ||
+            parsedMetadata?.address) && (
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <svg
                 className="w-4 h-4"
@@ -148,44 +156,63 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span>{parsedData?.address || parsedData?.location || parsedMetadata?.address}</span>
+              <span>
+                {parsedData?.address ||
+                  parsedData?.location ||
+                  parsedMetadata?.address}
+              </span>
             </div>
           )}
 
           {/* Атрибуты и характеристики */}
           {(parsedData?.attributes || parsedMetadata || parsedData) && (
             <div className="space-y-2">
-              <h4 className="font-medium text-gray-900">{t('characteristics')}</h4>
+              <h4 className="font-medium text-gray-900">
+                {t('characteristics')}
+              </h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 {/* Показываем атрибуты из data.attributes или основные поля */}
-                {parsedData?.attributes ?
-                  Object.entries(parsedData.attributes).slice(0, 4).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-gray-600">{key}:</span>
-                      <span className="font-medium">{String(value)}</span>
-                    </div>
-                  )) :
-                  // Если нет attributes, показываем основные поля
-                  [
-                    (parsedMetadata?.category || parsedData?.category) && [t('category'), parsedMetadata?.category || parsedData?.category],
-                    parsedData?.area && [t('area'), `${parsedData.area} м²`],
-                    parsedData?.rooms && [t('rooms'), parsedData.rooms],
-                    parsedData?.condition && [t('condition'), parsedData.condition],
-                    parsedData?.type && [t('type'), parsedData.type],
-                    parsedData?.year && [t('year'), parsedData.year]
-                  ].filter(Boolean).slice(0, 4).map(([key, value], index) => (
-                    <div key={index} className="flex justify-between">
-                      <span className="text-gray-600">{key}:</span>
-                      <span className="font-medium">{String(value)}</span>
-                    </div>
-                  ))
-                }
+                {parsedData?.attributes
+                  ? Object.entries(parsedData.attributes)
+                      .slice(0, 4)
+                      .map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span className="text-gray-600">{key}:</span>
+                          <span className="font-medium">{String(value)}</span>
+                        </div>
+                      ))
+                  : // Если нет attributes, показываем основные поля
+                    [
+                      (parsedMetadata?.category || parsedData?.category) && [
+                        t('category'),
+                        parsedMetadata?.category || parsedData?.category,
+                      ],
+                      parsedData?.area && [t('area'), `${parsedData.area} м²`],
+                      parsedData?.rooms && [t('rooms'), parsedData.rooms],
+                      parsedData?.condition && [
+                        t('condition'),
+                        parsedData.condition,
+                      ],
+                      parsedData?.type && [t('type'), parsedData.type],
+                      parsedData?.year && [t('year'), parsedData.year],
+                    ]
+                      .filter(Boolean)
+                      .slice(0, 4)
+                      .map(([key, value], index) => (
+                        <div key={index} className="flex justify-between">
+                          <span className="text-gray-600">{key}:</span>
+                          <span className="font-medium">{String(value)}</span>
+                        </div>
+                      ))}
                 {/* Показываем "еще X" если есть больше атрибутов */}
-                {parsedData?.attributes && Object.keys(parsedData.attributes).length > 4 && (
-                  <div className="col-span-2 text-center text-xs text-gray-500">
-                    {t('andMore', { count: Object.keys(parsedData.attributes).length - 4 })}
-                  </div>
-                )}
+                {parsedData?.attributes &&
+                  Object.keys(parsedData.attributes).length > 4 && (
+                    <div className="col-span-2 text-center text-xs text-gray-500">
+                      {t('andMore', {
+                        count: Object.keys(parsedData.attributes).length - 4,
+                      })}
+                    </div>
+                  )}
               </div>
             </div>
           )}
@@ -197,27 +224,35 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
               <p className="font-semibold text-gray-900">
                 {/* Ищем views_count в разных местах */}
                 {parsedData?.views_count ||
-                 parsedData?.views ||
-                 parsedData?.view_count ||
-                 parsedMetadata?.views_count ||
-                 parsedMetadata?.views ||
-                 '—'}
+                  parsedData?.views ||
+                  parsedData?.view_count ||
+                  parsedMetadata?.views_count ||
+                  parsedMetadata?.views ||
+                  '—'}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-gray-500">{t('rating')}</p>
               <p className="font-semibold text-gray-900">
                 {/* Ищем rating в разных местах */}
-                {(parsedData?.rating || parsedMetadata?.rating) ?
-                  `⭐ ${Number(parsedData?.rating || parsedMetadata?.rating).toFixed(1)}` : '—'}
+                {parsedData?.rating || parsedMetadata?.rating
+                  ? `⭐ ${Number(parsedData?.rating || parsedMetadata?.rating).toFixed(1)}`
+                  : '—'}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-gray-500">{t('published')}</p>
               <p className="font-semibold text-gray-900">
                 {/* Ищем created_at в разных местах */}
-                {(parsedData?.created_at || parsedData?.createdAt || parsedMetadata?.created_at) ?
-                  new Date(parsedData?.created_at || parsedData?.createdAt || parsedMetadata?.created_at).toLocaleDateString('sr-RS') : '—'}
+                {parsedData?.created_at ||
+                parsedData?.createdAt ||
+                parsedMetadata?.created_at
+                  ? new Date(
+                      parsedData?.created_at ||
+                        parsedData?.createdAt ||
+                        parsedMetadata?.created_at
+                    ).toLocaleDateString('sr-RS')
+                  : '—'}
               </p>
             </div>
           </div>
@@ -238,9 +273,14 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   )}
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">{parsedData.seller.name}</p>
+                  <p className="font-medium text-gray-900">
+                    {parsedData.seller.name}
+                  </p>
                   <p className="text-xs text-gray-500">
-                    {t('seller')} • {parsedData.seller.rating ? `⭐ ${parsedData.seller.rating}` : t('newSeller')}
+                    {t('seller')} •{' '}
+                    {parsedData.seller.rating
+                      ? `⭐ ${parsedData.seller.rating}`
+                      : t('newSeller')}
                   </p>
                 </div>
               </div>
@@ -277,8 +317,18 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   console.log('Add to favorites');
                 }}
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
                 </svg>
                 {t('addToFavorites')}
               </button>
@@ -289,8 +339,18 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   console.log('Share listing');
                 }}
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 010-5.368m0 5.368a9.003 9.003 0 01-7.432 3.268 9.003 9.003 0 01-7.432-3.268m14.864 0a9.003 9.003 0 00-7.432-3.268 9.003 9.003 0 00-7.432 3.268" />
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 010-5.368m0 5.368a9.003 9.003 0 01-7.432 3.268 9.003 9.003 0 01-7.432-3.268m14.864 0a9.003 9.003 0 00-7.432-3.268 9.003 9.003 0 00-7.432 3.268"
+                  />
                 </svg>
                 {t('share')}
               </button>

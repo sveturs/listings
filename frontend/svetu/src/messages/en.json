@@ -1811,8 +1811,22 @@
     }
   },
   "payment": {
+    "setup_title": "Payment and delivery setup",
+    "setup_description": "Choose payment and delivery methods for your listing",
     "selectMethod": "Select Payment Method",
     "selectMethodRequired": "Please select a payment method",
+    "cod": "Cash on Delivery",
+    "cod_desc": "Payment upon receipt of goods",
+    "cash": "Cash",
+    "cash_desc": "Cash payment at meeting",
+    "bank_transfer": "Bank Transfer",
+    "bank_transfer_desc": "Transfer to bank account",
+    "cod_calculator": "Cash on Delivery calculator",
+    "cod_fee": "Cash on Delivery fee",
+    "example": "Example",
+    "negotiable_price": "Negotiable price",
+    "bundle_deals": "Bundle deals",
+    "methods_title": "Payment methods",
     "methods": {
       "card": "Credit/Debit Card",
       "cardDescription": "Pay securely with your credit or debit card",

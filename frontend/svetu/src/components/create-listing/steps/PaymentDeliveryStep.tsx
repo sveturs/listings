@@ -83,7 +83,7 @@ export default function PaymentDeliveryStep({
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">
-                  💳 {t('payment.methods')}
+                  💳 {t('payment.methods_title')}
                 </span>
                 <span className="label-text-alt text-error">*</span>
               </label>

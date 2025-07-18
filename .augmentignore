@@ -1,0 +1,73 @@
+# Augment ignore file
+# Игнорируем временные и сгенерированные файлы
+
+# Зависимости
+node_modules/
+vendor/
+.venv/
+venv/
+
+# Логи и временные файлы
+*.log
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# Сборка и артефакты
+dist/
+build/
+out/
+bin/
+.next/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Большие файлы и данные
+data/
+uploads/
+*.db
+*.sqlite
+*.sql
+
+# IDE и редакторы
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Тестовые данные
+test-results/
+coverage/
+*.test
+*.spec
+
+# Docker и контейнеры
+docker-compose.override.yml
+.docker/
+
+# Сгенерированные файлы
+*.generated.*
+docs/swagger.json
+docs/openapi*.json
+docs/openapi*.yaml
+frontend/svetu/src/types/generated/
+
+# Специфичные для проекта
+backend/docs/
+backend/uploads/
+frontend/svetu/node_modules/
+memory-bank/
+fixtures/
+migrations/
+geodata/
+certs/
+
+# Минимизируем индексацию больших директорий
+backend/internal/proj/
+backend/cmd/utils/
+frontend/svetu/public/

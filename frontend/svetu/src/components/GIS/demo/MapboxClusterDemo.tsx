@@ -261,7 +261,6 @@ const MapboxClusterDemo: React.FC<MapboxClusterDemoProps> = ({
           clusterMinPoints={2}
           onClusterClick={handleClusterClick}
           onMarkerClick={handleMarkerClick}
-          showPrices={showPrices}
           clusterStyles={clusterStyles}
         />
       </Map>

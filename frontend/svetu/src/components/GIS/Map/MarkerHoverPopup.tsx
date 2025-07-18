@@ -4,7 +4,7 @@ import React from 'react';
 import { Popup } from 'react-map-gl';
 import { useTranslations } from 'next-intl';
 import type { MapMarkerData } from '../types/gis';
-import { getCategoryIcon } from '../../../utils/categoryIcons';
+// import { getCategoryIcon } from '../../../utils/categoryIcons';
 import SafeImage from '../../SafeImage';
 
 interface MarkerHoverPopupProps {
@@ -27,7 +27,9 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
   // Парсим JSON данные
   const parsedData = React.useMemo(() => {
     try {
-      return typeof marker.data === 'string' ? JSON.parse(marker.data) : marker.data;
+      return typeof marker.data === 'string'
+        ? JSON.parse(marker.data)
+        : marker.data;
     } catch {
       return marker.data || {};
     }
@@ -35,7 +37,9 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
 
   const parsedMetadata = React.useMemo(() => {
     try {
-      return typeof marker.metadata === 'string' ? JSON.parse(marker.metadata) : marker.metadata;
+      return typeof marker.metadata === 'string'
+        ? JSON.parse(marker.metadata)
+        : marker.metadata;
     } catch {
       return marker.metadata || {};
     }
@@ -55,7 +59,11 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
     }
 
     // Ищем в parsedData.images (массив)
-    if (parsedData?.images && Array.isArray(parsedData.images) && parsedData.images.length > 0) {
+    if (
+      parsedData?.images &&
+      Array.isArray(parsedData.images) &&
+      parsedData.images.length > 0
+    ) {
       return parsedData.images[0];
     }
 
@@ -136,7 +144,10 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
                 <div className="absolute top-3 left-3">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-full shadow-lg">
                     <span className="text-base">
-                      {parsedData?.icon || getCategoryIcon(parsedMetadata?.category || parsedData?.category)}
+                      {parsedData?.icon ||
+                        getCategoryIcon(
+                          parsedMetadata?.category || parsedData?.category
+                        )}
                     </span>
                     <span className="text-xs font-medium text-gray-800">
                       {parsedMetadata?.category || parsedData?.category}
@@ -203,35 +214,36 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
               {/* Быстрые характеристики, если есть */}
               <div className="flex items-center gap-3">
                 {/* Просмотры */}
-                {(parsedData?.views_count !== undefined && parsedData?.views_count > 0) && (
-                  <div className="flex items-center gap-1">
-                    <svg
-                      className="w-4 h-4 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                    <span className="text-xs text-gray-500">
-                      {parsedData.views_count} {t('views')}
-                    </span>
-                  </div>
-                )}
+                {parsedData?.views_count !== undefined &&
+                  parsedData?.views_count > 0 && (
+                    <div className="flex items-center gap-1">
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                      <span className="text-xs text-gray-500">
+                        {parsedData.views_count} {t('views')}
+                      </span>
+                    </div>
+                  )}
 
                 {/* Рейтинг */}
-                {(parsedData?.rating !== undefined && parsedData?.rating > 0) && (
+                {parsedData?.rating !== undefined && parsedData?.rating > 0 && (
                   <div className="flex items-center gap-1">
                     <svg
                       className="w-4 h-4 text-yellow-400"
@@ -263,7 +275,9 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
                       />
                     </svg>
                     <span className="text-xs text-gray-500">
-                      {new Date(parsedData.created_at).toLocaleDateString('sr-RS')}
+                      {new Date(parsedData.created_at).toLocaleDateString(
+                        'sr-RS'
+                      )}
                     </span>
                   </div>
                 )}
