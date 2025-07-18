@@ -35,7 +35,7 @@ export default function OrderDetailsPage({ params }: Props) {
     if (isAuthenticated && orderId) {
       fetchOrderDetails();
     }
-  }, [isAuthenticated, orderId]);
+  }, [isAuthenticated, orderId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchOrderDetails = async () => {
     try {

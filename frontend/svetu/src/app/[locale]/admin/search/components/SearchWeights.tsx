@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import WeightOptimization from './WeightOptimization';
 import { tokenManager } from '@/utils/tokenManager';
 
@@ -31,11 +31,7 @@ export default function SearchWeights() {
   const [editingWeight, setEditingWeight] = useState<SearchWeight | null>(null);
   const [newWeight, setNewWeight] = useState<number>(0);
 
-  useEffect(() => {
-    loadWeights();
-  }, [selectedItemType]);
-
-  const loadWeights = async () => {
+  const loadWeights = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -58,7 +54,11 @@ export default function SearchWeights() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedItemType]);
+
+  useEffect(() => {
+    loadWeights();
+  }, [loadWeights]);
 
   const updateWeight = async (weightId: number, newWeight: number) => {
     try {
