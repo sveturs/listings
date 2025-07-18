@@ -1368,6 +1368,55 @@ func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *model
 	if err != nil {
 		return nil, err
 	}
+
+	// Создаем запись в unified_geo для поддержки GIS поиска витрин
+	if storefront.Latitude != nil && storefront.Longitude != nil {
+		// Calculate geohash from coordinates
+		geohashStr := fmt.Sprintf("%.6f,%.6f", *storefront.Latitude, *storefront.Longitude)
+
+		addressComponents := map[string]interface{}{
+			"city":        storefront.City,
+			"postal_code": storefront.PostalCode,
+			"country":     storefront.Country,
+		}
+		addressComponentsJSON, _ := json.Marshal(addressComponents)
+
+		_, err = db.pool.Exec(ctx, `
+			INSERT INTO unified_geo (
+				source_type, source_id, location, geohash,
+				formatted_address, address_components,
+				geocoding_confidence, address_verified,
+				input_method, location_privacy, blur_radius,
+				is_precise
+			) VALUES (
+				'storefront', $1, ST_SetSRID(ST_MakePoint($2, $3), 4326), $4,
+				$5, $6,
+				0.9, true,
+				'manual', 'exact', 0,
+				true
+			)
+			ON CONFLICT (source_type, source_id) 
+			DO UPDATE SET
+				location = EXCLUDED.location,
+				geohash = EXCLUDED.geohash,
+				formatted_address = EXCLUDED.formatted_address,
+				address_components = EXCLUDED.address_components,
+				updated_at = CURRENT_TIMESTAMP
+		`, storefront.ID, *storefront.Longitude, *storefront.Latitude, geohashStr,
+			storefront.Address, addressComponentsJSON)
+
+		if err != nil {
+			log.Printf("Error creating unified_geo entry for storefront %d: %v", storefront.ID, err)
+			// Не прерываем создание витрины из-за ошибки с geo
+		} else {
+			// Обновляем materialized view после успешного создания geo записи
+			_, err = db.pool.Exec(ctx, "SELECT refresh_map_items_cache()")
+			if err != nil {
+				log.Printf("Error refreshing map_items_cache: %v", err)
+			}
+		}
+	}
+
 	return storefront, nil
 }
 

@@ -7,6 +7,7 @@ import (
 	"backend/internal/proj/storefront/repository"
 	"backend/internal/proj/storefront/types"
 
+	"github.com/gofiber/fiber"
 )
 
 type VariantHandler struct {
@@ -25,7 +26,7 @@ func NewVariantHandler(variantRepo *repository.VariantRepository) *VariantHandle
 // @Tags variants
 // @Accept json
 // @Produce json
-// @Success 200 {array} types.ProductVariantAttribute
+// @Success 200 {array} interface{}
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/variants/attributes [get]
 func (h *VariantHandler) GetVariantAttributes(c *fiber.Ctx) error {
@@ -46,7 +47,7 @@ func (h *VariantHandler) GetVariantAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param attribute_id path int true "Attribute ID"
-// @Success 200 {array} types.ProductVariantAttributeValue
+// @Success 200 {array} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/variants/attributes/{attribute_id}/values [get]
@@ -74,8 +75,8 @@ func (h *VariantHandler) GetVariantAttributeValues(c *fiber.Ctx) error {
 // @Tags variants
 // @Accept json
 // @Produce json
-// @Param variant body types.CreateVariantRequest true "Variant data"
-// @Success 201 {object} types.ProductVariant
+// @Param variant body interface{} true "Variant data"
+// @Success 201 {object} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/variants [post]
@@ -104,7 +105,7 @@ func (h *VariantHandler) CreateVariant(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param product_id path int true "Product ID"
-// @Success 200 {array} types.ProductVariant
+// @Success 200 {array} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/products/{product_id}/variants [get]
@@ -133,7 +134,7 @@ func (h *VariantHandler) GetVariantsByProductID(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param variant_id path int true "Variant ID"
-// @Success 200 {object} types.ProductVariant
+// @Success 200 {object} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -162,8 +163,8 @@ func (h *VariantHandler) GetVariantByID(c *fiber.Ctx) error {
 // @Tags variants
 // @Accept json
 // @Produce json
-// @Param request body types.GenerateVariantsRequest true "Generation parameters"
-// @Success 201 {array} types.ProductVariant
+// @Param request body interface{} true "Generation parameters"
+// @Success 201 {array} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/variants/generate [post]
@@ -202,8 +203,8 @@ func (h *VariantHandler) GenerateVariants(c *fiber.Ctx) error {
 // @Tags variants
 // @Accept json
 // @Produce json
-// @Param request body types.BulkCreateVariantsRequest true "Bulk creation data"
-// @Success 201 {array} types.ProductVariant
+// @Param request body interface{} true "Bulk creation data"
+// @Success 201 {array} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/variants/bulk [post]
@@ -246,7 +247,7 @@ func (h *VariantHandler) BulkCreateVariants(c *fiber.Ctx) error {
 // @Tags variants
 // @Accept json
 // @Produce json
-// @Param request body types.SetupProductAttributesRequest true "Attribute configuration"
+// @Param request body interface{} true "Attribute configuration"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -278,7 +279,7 @@ func (h *VariantHandler) SetupProductAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param product_id path int true "Product ID"
-// @Success 200 {array} types.StorefrontProductAttribute
+// @Success 200 {array} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/products/{product_id}/attributes [get]
@@ -307,7 +308,7 @@ func (h *VariantHandler) GetProductAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param category_id path int true "Category ID"
-// @Success 200 {array} types.ProductVariantAttribute
+// @Success 200 {array} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/categories/{category_id}/attributes [get]

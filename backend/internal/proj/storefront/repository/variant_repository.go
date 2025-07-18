@@ -1,15 +1,13 @@
 package repository
 
 import (
+	"backend/internal/proj/storefront/types"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
 
-	"backend/internal/proj/st
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 type VariantRepository struct {

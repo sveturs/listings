@@ -77,7 +77,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
-            city, country, show_on_map, original_language,
+            address_city, address_country, show_on_map, original_language,
             storefront_id, external_id
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING id
@@ -125,6 +125,38 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		if err := s.SaveListingAttributes(ctx, listingID, listing.Attributes); err != nil {
 			log.Printf("Error saving attributes for listing %d: %v", listingID, err)
 			// Не прерываем создание объявления из-за ошибки с атрибутами
+		}
+	}
+
+	// Создаем запись в unified_geo для поддержки GIS поиска
+	if listing.Latitude != nil && listing.Longitude != nil {
+		_, err = s.pool.Exec(ctx, `
+			INSERT INTO unified_geo (
+				source_type, source_id, location, geohash,
+				formatted_address
+			) VALUES (
+				'marketplace_listing', $1, 
+				ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography, 
+				substring(ST_GeoHash(ST_SetSRID(ST_MakePoint($2, $3), 4326)) from 1 for 12),
+				$4
+			)
+			ON CONFLICT (source_type, source_id) 
+			DO UPDATE SET
+				location = EXCLUDED.location,
+				geohash = EXCLUDED.geohash,
+				formatted_address = EXCLUDED.formatted_address,
+				updated_at = CURRENT_TIMESTAMP
+		`, listingID, listing.Longitude, listing.Latitude, listing.Location)
+
+		if err != nil {
+			log.Printf("Error creating unified_geo entry for listing %d: %v", listingID, err)
+			// Не прерываем создание объявления из-за ошибки с geo
+		} else {
+			// Обновляем materialized view после успешного создания geo записи
+			_, err = s.pool.Exec(ctx, "SELECT refresh_map_items_cache()")
+			if err != nil {
+				log.Printf("Error refreshing map_items_cache: %v", err)
+			}
 		}
 	}
 
@@ -315,8 +347,8 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         l.location,
         l.latitude,
         l.longitude,
-        l.city,
-        l.country,
+        l.address_city as city,
+        l.address_country as country,
         l.views_count,
         l.created_at,
         l.updated_at,
@@ -824,8 +856,8 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
             l.location,
             l.latitude,
             l.longitude,
-            l.city,
-            l.country,
+            l.address_city as city,
+            l.address_country as country,
             l.views_count,
             l.created_at,
             l.updated_at,
@@ -1999,7 +2031,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
         SELECT
             l.id, l.user_id, l.category_id, l.title, l.description,
             l.price, l.condition, l.status, l.location, l.latitude,
-            l.longitude, l.city, l.country, l.views_count,
+            l.longitude, l.address_city as city, l.address_country as country, l.views_count,
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
             u.name, u.email, u.created_at as user_created_at,
             u.picture_url, u.phone,

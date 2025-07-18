@@ -83,9 +83,9 @@ func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) 
 func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
 	err := s.pool.QueryRow(ctx, `
-        SELECT id, name, email, google_id, picture_url, phone, password, provider, created_at
+        SELECT id, name, email, google_id, picture_url, phone, created_at
         FROM users WHERE email = $1
-    `, email).Scan(&user.ID, &user.Name, &user.Email, &user.GoogleID, &user.PictureURL, &user.Phone, &user.Password, &user.Provider, &user.CreatedAt)
+    `, email).Scan(&user.ID, &user.Name, &user.Email, &user.GoogleID, &user.PictureURL, &user.Phone, &user.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (s *Storage) GetUserByID(ctx context.Context, id int) (*models.User, error)
 	var googleID, pictureURL sql.NullString
 
 	err := s.pool.QueryRow(ctx, `
-        SELECT id, name, email, google_id, picture_url, phone, password, provider, created_at
+        SELECT id, name, email, google_id, picture_url, phone, created_at
         FROM users WHERE id = $1
     `, id).Scan(
 		&user.ID,
@@ -107,9 +107,7 @@ func (s *Storage) GetUserByID(ctx context.Context, id int) (*models.User, error)
 		&user.Email,
 		&googleID,
 		&pictureURL,
-		&user.Phone,    // phone уже *string в модели, может принимать nil
-		&user.Password, // password уже *string в модели, может принимать nil
-		&user.Provider,
+		&user.Phone, // phone уже *string в модели, может принимать nil
 		&user.CreatedAt,
 	)
 	if err != nil {
@@ -125,31 +123,16 @@ func (s *Storage) GetUserByID(ctx context.Context, id int) (*models.User, error)
 		user.PictureURL = pictureURL.String
 	}
 
-	s.logger.Info("GetUserByID successful for id=%d, provider=%s", id, user.Provider)
+	s.logger.Info("GetUserByID successful for id=%d", id)
 	return user, nil
 }
 
 func (s *Storage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
-	// Установить provider по умолчанию, если не указан
-	if user.Provider == "" {
-		if user.GoogleID != "" {
-			user.Provider = "google"
-		} else {
-			user.Provider = "email"
-		}
-	}
-
-	// Для SQL запроса преобразуем *string в интерфейс, который может быть nil
-	var passwordValue interface{}
-	if user.Password != nil {
-		passwordValue = *user.Password
-	}
-
 	err := s.pool.QueryRow(ctx, `
-        INSERT INTO users (name, email, google_id, picture_url, phone, password, provider)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO users (name, email, google_id, picture_url, phone)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING id, created_at
-    `, user.Name, user.Email, user.GoogleID, user.PictureURL, user.Phone, passwordValue, user.Provider).Scan(&user.ID, &user.CreatedAt)
+    `, user.Name, user.Email, user.GoogleID, user.PictureURL, user.Phone).Scan(&user.ID, &user.CreatedAt)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			return nil, errors.New("email already exists")

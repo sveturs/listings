@@ -18144,6 +18144,632 @@
                 }
             }
         },
+        "/api/v1/storefront/categories/{category_id}/attributes": {
+            "get": {
+                "description": "Returns all attributes that can be used for products in a specific category",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Get available attributes for a category",
+                "parameters": [
+                    {
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/products/attributes/setup": {
+            "post": {
+                "description": "Allows seller to configure which attributes to use and add custom values",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Configure attributes for a product",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {}
+                        }
+                    },
+                    "description": "Attribute configuration",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/products/{product_id}/attributes": {
+            "get": {
+                "description": "Returns all configured attributes for a seller's product",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Get configured attributes for a product",
+                "parameters": [
+                    {
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/products/{product_id}/variants": {
+            "get": {
+                "description": "Returns all variants for a specific product",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Get variants for a product",
+                "parameters": [
+                    {
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/variants": {
+            "post": {
+                "description": "Creates a new variant for an existing product",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Create a new product variant",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {}
+                        }
+                    },
+                    "description": "Variant data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/variants/attributes": {
+            "get": {
+                "description": "Returns all available variant attributes (color, size, etc.)",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Get all variant attributes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/variants/attributes/{attribute_id}/values": {
+            "get": {
+                "description": "Returns all possible values for a specific variant attribute",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Get values for a variant attribute",
+                "parameters": [
+                    {
+                        "description": "Attribute ID",
+                        "name": "attribute_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/variants/bulk": {
+            "post": {
+                "description": "Creates multiple variants for a product in a single request",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Create multiple variants at once",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {}
+                        }
+                    },
+                    "description": "Bulk creation data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/variants/generate": {
+            "post": {
+                "description": "Automatically generates all possible variants based on attribute matrix",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Auto-generate variants for a product",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {}
+                        }
+                    },
+                    "description": "Generation parameters",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/variants/{variant_id}": {
+            "get": {
+                "description": "Returns a specific variant with all details including images",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Get variant by ID",
+                "parameters": [
+                    {
+                        "description": "Variant ID",
+                        "name": "variant_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Soft deletes a variant by setting is_active to false",
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Delete a variant",
+                "parameters": [
+                    {
+                        "description": "Variant ID",
+                        "name": "variant_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts": {
             "get": {
                 "description": "Returns paginated list of storefronts with filters",
@@ -25371,10 +25997,16 @@
                     "price": {
                         "type": "number"
                     },
+                    "rating": {
+                        "type": "number"
+                    },
                     "title": {
                         "type": "string"
                     },
                     "user_id": {
+                        "type": "integer"
+                    },
+                    "views_count": {
                         "type": "integer"
                     }
                 }
@@ -28736,6 +29368,9 @@
                     "address": {
                         "type": "string"
                     },
+                    "blur_radius_meters": {
+                        "type": "integer"
+                    },
                     "category": {
                         "type": "string"
                     },
@@ -28743,6 +29378,10 @@
                         "type": "string"
                     },
                     "description": {
+                        "type": "string"
+                    },
+                    "display_strategy": {
+                        "description": "individual, storefront_grouped",
                         "type": "string"
                     },
                     "distance": {
@@ -28758,14 +29397,27 @@
                             "type": "string"
                         }
                     },
+                    "item_type": {
+                        "description": "marketplace_listing, storefront_product, storefront",
+                        "type": "string"
+                    },
                     "location": {
                         "$ref": "#/components/schemas/backend_internal_proj_gis_types.Point"
                     },
                     "price": {
                         "type": "number"
                     },
+                    "privacy_level": {
+                        "type": "string"
+                    },
+                    "rating": {
+                        "type": "number"
+                    },
                     "status": {
                         "type": "string"
+                    },
+                    "storefront_id": {
+                        "type": "integer"
                     },
                     "title": {
                         "type": "string"
@@ -28774,6 +29426,9 @@
                         "type": "string"
                     },
                     "user_id": {
+                        "type": "integer"
+                    },
+                    "views_count": {
                         "type": "integer"
                     }
                 }
