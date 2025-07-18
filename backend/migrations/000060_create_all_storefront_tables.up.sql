@@ -367,13 +367,12 @@ COMMENT ON COLUMN storefront_products.stock_status IS 'Calculated based on stock
 COMMENT ON COLUMN storefront_inventory_movements.type IS 'Type of movement: in, out, adjustment';
 COMMENT ON COLUMN storefront_inventory_movements.reason IS 'Reason: sale, return, damage, restock, adjustment';
 
--- DROP TRIGGER IF EXISTS to ON update_import_tables_updated_at;
-CREATE TRIGGER to update updated_at timestamp
+-- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_import_tables_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 

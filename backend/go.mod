@@ -9,6 +9,7 @@ require (
 	github.com/cloudinary/cloudinary-go/v2 v2.9.1
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+	github.com/gofiber/fiber v1.14.6
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/gofiber/swagger v1.1.1
 	github.com/gofiber/websocket/v2 v2.2.1
@@ -29,6 +30,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/stripe/stripe-go/v72 v72.122.0
 	github.com/swaggo/swag v1.16.4
+	github.com/twpayne/go-geom v1.6.1
 	golang.org/x/crypto v0.36.0
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/time v0.8.0
@@ -64,6 +66,7 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/gofiber/utils v0.0.10 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
@@ -103,7 +106,6 @@ require (
 	github.com/swaggo/files/v2 v2.0.2 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/tinylib/msgp v1.2.5 // indirect
-	github.com/twpayne/go-geom v1.6.1 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect

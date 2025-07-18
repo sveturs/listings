@@ -1,0 +1,1 @@
+SELECT column_name FROM information_schema.columns WHERE table_name = 'marketplace_listings' AND column_name IN ('city', 'country');

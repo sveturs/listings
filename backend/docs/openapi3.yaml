@@ -10678,6 +10678,400 @@ paths:
       summary: Get popular searches
       tags:
         - search-config
+  "/api/v1/storefront/categories/{category_id}/attributes":
+    get:
+      description: Returns all attributes that can be used for products in a specific
+        category
+      parameters:
+        - description: Category ID
+          in: path
+          name: category_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                items: {}
+                type: array
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Get available attributes for a category
+      tags:
+        - variants
+  "/api/v1/storefront/products/{product_id}/attributes":
+    get:
+      description: Returns all configured attributes for a seller's product
+      parameters:
+        - description: Product ID
+          in: path
+          name: product_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                items: {}
+                type: array
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Get configured attributes for a product
+      tags:
+        - variants
+  "/api/v1/storefront/products/{product_id}/variants":
+    get:
+      description: Returns all variants for a specific product
+      parameters:
+        - description: Product ID
+          in: path
+          name: product_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                items: {}
+                type: array
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Get variants for a product
+      tags:
+        - variants
+  /api/v1/storefront/products/attributes/setup:
+    post:
+      description: Allows seller to configure which attributes to use and add custom values
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+        description: Attribute configuration
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Configure attributes for a product
+      tags:
+        - variants
+  /api/v1/storefront/variants:
+    post:
+      description: Creates a new variant for an existing product
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+        description: Variant data
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Create a new product variant
+      tags:
+        - variants
+  "/api/v1/storefront/variants/{variant_id}":
+    delete:
+      description: Soft deletes a variant by setting is_active to false
+      parameters:
+        - description: Variant ID
+          in: path
+          name: variant_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Delete a variant
+      tags:
+        - variants
+    get:
+      description: Returns a specific variant with all details including images
+      parameters:
+        - description: Variant ID
+          in: path
+          name: variant_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Get variant by ID
+      tags:
+        - variants
+  /api/v1/storefront/variants/attributes:
+    get:
+      description: Returns all available variant attributes (color, size, etc.)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                items: {}
+                type: array
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Get all variant attributes
+      tags:
+        - variants
+  "/api/v1/storefront/variants/attributes/{attribute_id}/values":
+    get:
+      description: Returns all possible values for a specific variant attribute
+      parameters:
+        - description: Attribute ID
+          in: path
+          name: attribute_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                items: {}
+                type: array
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Get values for a variant attribute
+      tags:
+        - variants
+  /api/v1/storefront/variants/bulk:
+    post:
+      description: Creates multiple variants for a product in a single request
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+        description: Bulk creation data
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                items: {}
+                type: array
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Create multiple variants at once
+      tags:
+        - variants
+  /api/v1/storefront/variants/generate:
+    post:
+      description: Automatically generates all possible variants based on attribute matrix
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+        description: Generation parameters
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                items: {}
+                type: array
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+      summary: Auto-generate variants for a product
+      tags:
+        - variants
   /api/v1/storefronts:
     get:
       description: Returns paginated list of storefronts with filters
@@ -15212,9 +15606,13 @@ components:
           type: string
         price:
           type: number
+        rating:
+          type: number
         title:
           type: string
         user_id:
+          type: integer
+        views_count:
           type: integer
       type: object
     backend_internal_domain_models.MarkAsReadRequest:
@@ -17466,11 +17864,16 @@ components:
       properties:
         address:
           type: string
+        blur_radius_meters:
+          type: integer
         category:
           type: string
         created_at:
           type: string
         description:
+          type: string
+        display_strategy:
+          description: individual, storefront_grouped
           type: string
         distance:
           description: Расстояние от точки поиска (в метрах)
@@ -17481,17 +17884,28 @@ components:
           items:
             type: string
           type: array
+        item_type:
+          description: marketplace_listing, storefront_product, storefront
+          type: string
         location:
           $ref: "#/components/schemas/backend_internal_proj_gis_types.Point"
         price:
           type: number
+        privacy_level:
+          type: string
+        rating:
+          type: number
         status:
           type: string
+        storefront_id:
+          type: integer
         title:
           type: string
         updated_at:
           type: string
         user_id:
+          type: integer
+        views_count:
           type: integer
       type: object
     backend_internal_proj_gis_types.GeocodeContext:

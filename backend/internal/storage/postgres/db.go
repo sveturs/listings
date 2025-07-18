@@ -811,7 +811,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		// Для авторизованных пользователей проверяем по ID
 		err = db.pool.QueryRow(ctx, `
 			SELECT EXISTS (
-				SELECT 1 FROM listing_views 
+				SELECT 1 FROM listing_views
 				WHERE listing_id = $1 AND user_id = $2
 			)
 		`, id, userID).Scan(&viewExists)
@@ -820,7 +820,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		// убедившись, что user_id IS NULL (чтобы не конфликтовать с ограничением уникальности)
 		err = db.pool.QueryRow(ctx, `
 			SELECT EXISTS (
-				SELECT 1 FROM listing_views 
+				SELECT 1 FROM listing_views
 				WHERE listing_id = $1 AND ip_hash = $2 AND user_id IS NULL
 			)
 		`, id, userIdentifier).Scan(&viewExists)
@@ -1029,17 +1029,17 @@ func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, selle
 	// Проверяем наличие чата и получаем статистику
 	query := `
 		WITH chat_info AS (
-			SELECT 
+			SELECT
 				c.id as chat_id,
 				c.created_at as chat_created
 			FROM marketplace_chats c
-			WHERE c.buyer_id = $1 
-				AND c.seller_id = $2 
+			WHERE c.buyer_id = $1
+				AND c.seller_id = $2
 				AND c.listing_id = $3
 			LIMIT 1
 		),
 		message_stats AS (
-			SELECT 
+			SELECT
 				COUNT(*) as total_messages,
 				COUNT(*) FILTER (WHERE m.sender_id = $1) as buyer_messages,
 				COUNT(*) FILTER (WHERE m.sender_id = $2) as seller_messages,
@@ -1048,22 +1048,22 @@ func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, selle
 			FROM marketplace_messages m
 			INNER JOIN chat_info ci ON m.chat_id = ci.chat_id
 		)
-		SELECT 
+		SELECT
 			CASE WHEN ci.chat_id IS NOT NULL THEN true ELSE false END as chat_exists,
 			COALESCE(ms.total_messages, 0) as total_messages,
 			COALESCE(ms.buyer_messages, 0) as buyer_messages,
 			COALESCE(ms.seller_messages, 0) as seller_messages,
 			ms.first_message_date,
 			ms.last_message_date,
-			CASE 
-				WHEN ms.first_message_date IS NOT NULL 
-				THEN EXTRACT(DAY FROM NOW() - ms.first_message_date)::int 
-				ELSE 0 
+			CASE
+				WHEN ms.first_message_date IS NOT NULL
+				THEN EXTRACT(DAY FROM NOW() - ms.first_message_date)::int
+				ELSE 0
 			END as days_since_first_msg,
-			CASE 
-				WHEN ms.last_message_date IS NOT NULL 
-				THEN EXTRACT(DAY FROM NOW() - ms.last_message_date)::int 
-				ELSE 0 
+			CASE
+				WHEN ms.last_message_date IS NOT NULL
+				THEN EXTRACT(DAY FROM NOW() - ms.last_message_date)::int
+				ELSE 0
 			END as days_since_last_msg
 		FROM chat_info ci
 		LEFT JOIN message_stats ms ON true
@@ -1095,9 +1095,9 @@ func (db *Database) GetUserAggregatedRating(ctx context.Context, userID int) (*m
 	rating := &models.UserAggregatedRating{UserID: userID}
 
 	query := `
-		SELECT 
-			total_reviews, average_rating, direct_reviews, listing_reviews, 
-			storefront_reviews, verified_reviews, rating_1, rating_2, rating_3, 
+		SELECT
+			total_reviews, average_rating, direct_reviews, listing_reviews,
+			storefront_reviews, verified_reviews, rating_1, rating_2, rating_3,
 			rating_4, rating_5, recent_rating, recent_reviews, last_review_at
 		FROM user_ratings
 		WHERE user_id = $1
@@ -1125,9 +1125,9 @@ func (db *Database) GetStorefrontAggregatedRating(ctx context.Context, storefron
 	rating := &models.StorefrontAggregatedRating{StorefrontID: storefrontID}
 
 	query := `
-		SELECT 
-			total_reviews, average_rating, direct_reviews, listing_reviews, 
-			verified_reviews, rating_1, rating_2, rating_3, rating_4, rating_5, 
+		SELECT
+			total_reviews, average_rating, direct_reviews, listing_reviews,
+			verified_reviews, rating_1, rating_2, rating_3, rating_4, rating_5,
 			recent_rating, recent_reviews, last_review_at, owner_id
 		FROM storefront_ratings
 		WHERE storefront_id = $1
@@ -1158,7 +1158,7 @@ func (db *Database) RefreshRatingViews(ctx context.Context) error {
 // CreateReviewConfirmation создает подтверждение отзыва
 func (db *Database) CreateReviewConfirmation(ctx context.Context, confirmation *models.ReviewConfirmation) error {
 	query := `
-		INSERT INTO review_confirmations 
+		INSERT INTO review_confirmations
 		(review_id, confirmed_by, confirmation_status, notes)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, confirmed_at
@@ -1198,7 +1198,7 @@ func (db *Database) GetReviewConfirmation(ctx context.Context, reviewID int) (*m
 // CreateReviewDispute создает спор по отзыву
 func (db *Database) CreateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error {
 	query := `
-		INSERT INTO review_disputes 
+		INSERT INTO review_disputes
 		(review_id, disputed_by, dispute_reason, dispute_description, status)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at
@@ -1255,7 +1255,7 @@ func (db *Database) GetReviewDispute(ctx context.Context, reviewID int) (*models
 func (db *Database) UpdateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error {
 	query := `
 		UPDATE review_disputes
-		SET status = $2, admin_id = $3, admin_notes = $4, 
+		SET status = $2, admin_id = $3, admin_notes = $4,
 			updated_at = NOW(), resolved_at = $5
 		WHERE id = $1
 	`
@@ -1290,8 +1290,8 @@ func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityT
 	// Проверяем существующий отзыв
 	var existingReviewID *int
 	query := `
-		SELECT id FROM reviews 
-		WHERE user_id = $1 AND entity_type = $2 AND entity_id = $3 
+		SELECT id FROM reviews
+		WHERE user_id = $1 AND entity_type = $2 AND entity_id = $3
 		AND status != 'deleted'
 		LIMIT 1
 	`
@@ -1368,6 +1368,55 @@ func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *model
 	if err != nil {
 		return nil, err
 	}
+
+	// Создаем запись в unified_geo для поддержки GIS поиска витрин
+	if storefront.Latitude != nil && storefront.Longitude != nil {
+		// Calculate geohash from coordinates
+		geohashStr := fmt.Sprintf("%.6f,%.6f", *storefront.Latitude, *storefront.Longitude)
+
+		addressComponents := map[string]interface{}{
+			"city":        storefront.City,
+			"postal_code": storefront.PostalCode,
+			"country":     storefront.Country,
+		}
+		addressComponentsJSON, _ := json.Marshal(addressComponents)
+
+		_, err = db.pool.Exec(ctx, `
+			INSERT INTO unified_geo (
+				source_type, source_id, location, geohash,
+				formatted_address, address_components,
+				geocoding_confidence, address_verified,
+				input_method, location_privacy, blur_radius,
+				is_precise
+			) VALUES (
+				'storefront', $1, ST_SetSRID(ST_MakePoint($2, $3), 4326), $4,
+				$5, $6,
+				0.9, true,
+				'manual', 'exact', 0,
+				true
+			)
+			ON CONFLICT (source_type, source_id) 
+			DO UPDATE SET
+				location = EXCLUDED.location,
+				geohash = EXCLUDED.geohash,
+				formatted_address = EXCLUDED.formatted_address,
+				address_components = EXCLUDED.address_components,
+				updated_at = CURRENT_TIMESTAMP
+		`, storefront.ID, *storefront.Longitude, *storefront.Latitude, geohashStr,
+			storefront.Address, addressComponentsJSON)
+
+		if err != nil {
+			log.Printf("Error creating unified_geo entry for storefront %d: %v", storefront.ID, err)
+			// Не прерываем создание витрины из-за ошибки с geo
+		} else {
+			// Обновляем materialized view после успешного создания geo записи
+			_, err = db.pool.Exec(ctx, "SELECT refresh_map_items_cache()")
+			if err != nil {
+				log.Printf("Error refreshing map_items_cache: %v", err)
+			}
+		}
+	}
+
 	return storefront, nil
 }
 
@@ -1414,13 +1463,13 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 	var theme, settings, seoMeta, aiConfig json.RawMessage
 
 	err := db.pool.QueryRow(ctx, `
-		SELECT id, user_id, slug, name, description, logo_url, banner_url, 
+		SELECT id, user_id, slug, name, description, logo_url, banner_url,
 			COALESCE(theme, '{}')::jsonb,
 			phone, email, website, address, city, postal_code, country, latitude, longitude,
-			COALESCE(settings, '{}')::jsonb, COALESCE(seo_meta, '{}')::jsonb, 
+			COALESCE(settings, '{}')::jsonb, COALESCE(seo_meta, '{}')::jsonb,
 			is_active, is_verified, verification_date, rating, reviews_count,
 			products_count, sales_count, views_count, subscription_plan, subscription_expires_at,
-			commission_rate, ai_agent_enabled, COALESCE(ai_agent_config, '{}')::jsonb, 
+			commission_rate, ai_agent_enabled, COALESCE(ai_agent_config, '{}')::jsonb,
 			live_shopping_enabled, group_buying_enabled, created_at, updated_at
 		FROM storefronts
 		WHERE id = $1

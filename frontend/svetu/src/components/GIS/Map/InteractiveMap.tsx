@@ -41,6 +41,8 @@ import MapPopup from './MapPopup';
 import MapControls from './MapControls';
 import MapboxClusterLayer from './MapboxClusterLayer';
 import MarkerHoverPopup from './MarkerHoverPopup';
+import ClusterHoverPopup from './ClusterHoverPopup';
+import MarkerClickPopup from './MarkerClickPopup';
 // import NativeSliderControl from './NativeSliderControl';
 import CompactSliderControl from './CompactSliderControl';
 import FloatingSliderControl from './FloatingSliderControl';
@@ -60,6 +62,8 @@ interface InteractiveMapProps {
   style?: React.CSSProperties;
   mapboxAccessToken?: string;
   isMobile?: boolean;
+  selectedMarker?: MapMarkerData | null;
+  onMarkerClose?: () => void;
   // Новые пропсы для маркера покупателя
   showBuyerMarker?: boolean;
   buyerLocation?: {
@@ -112,6 +116,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   style,
   mapboxAccessToken,
   isMobile = false,
+  selectedMarker,
+  onMarkerClose,
   showBuyerMarker = false,
   buyerLocation,
   searchRadius = 10000, // 10км по умолчанию
@@ -153,11 +159,26 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     null
   );
 
+  // Состояние для hover кластера
+  const [hoveredCluster, setHoveredCluster] = useState<{
+    clusterId: number;
+    coordinates: [number, number];
+    listings: any[];
+    totalCount: number;
+  } | null>(null);
+
   // Состояние для маркера покупателя
   const [internalBuyerLocation, setInternalBuyerLocation] = useState({
     longitude: buyerLocation?.longitude || viewState.longitude,
     latitude: buyerLocation?.latitude || viewState.latitude,
   });
+
+  // Ref для таймера скрытия popup
+  const hidePopupTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Состояние для детального popup
+  const [internalSelectedMarker, setInternalSelectedMarker] =
+    useState<MapMarkerData | null>(null);
 
   // Получение токена Mapbox из переменных окружения
   const accessToken =
@@ -414,11 +435,98 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   // Обработчики для hover
   const handleMarkerHover = useCallback((marker: MapMarkerData) => {
+    // Отменяем таймер скрытия если он есть
+    if (hidePopupTimer.current) {
+      clearTimeout(hidePopupTimer.current);
+      hidePopupTimer.current = null;
+    }
     setHoveredMarker(marker);
+    setHoveredCluster(null); // Очищаем hover кластера
   }, []);
 
   const handleMarkerLeave = useCallback(() => {
-    setHoveredMarker(null);
+    // Добавляем задержку перед скрытием popup
+    hidePopupTimer.current = setTimeout(() => {
+      setHoveredMarker(null);
+    }, 300); // 300ms задержка
+  }, []);
+
+  // Обработчики для hover кластеров
+  const handleClusterHover = useCallback(
+    async (clusterId: number, coordinates: [number, number]) => {
+      // Отменяем таймер скрытия если он есть
+      if (hidePopupTimer.current) {
+        clearTimeout(hidePopupTimer.current);
+        hidePopupTimer.current = null;
+      }
+
+      if (!mapRef.current) return;
+
+      const map = mapRef.current.getMap();
+      const source = map.getSource('markers') as mapboxgl.GeoJSONSource;
+
+      if (source) {
+        try {
+          // Получаем маркеры из кластера
+          const features = await new Promise<any[]>((resolve) => {
+            source.getClusterLeaves(clusterId, 10, 0, (err, features) => {
+              if (err) {
+                console.error('Error getting cluster leaves:', err);
+                resolve([]);
+              } else {
+                resolve(features || []);
+              }
+            });
+          });
+
+          // Преобразуем features в формат для отображения
+          const listings = features
+            .filter((f) => f.properties?.type === 'listing')
+            .map((f) => ({
+              id: f.properties.id,
+              title: f.properties.title || 'Без названия',
+              price:
+                f.properties.metadata?.price || f.properties.data?.price || 0,
+              imageUrl: f.properties.imageUrl,
+              category: f.properties.metadata?.category,
+              address: f.properties.data?.address,
+            }))
+            .sort((a, b) => b.price - a.price) // Сортируем по цене (убывание)
+            .slice(0, 4); // Берем топ-4
+
+          // Получаем общее количество объявлений в кластере
+          const pointCount = await new Promise<number>((resolve) => {
+            source.getClusterExpansionZoom(clusterId, (_err, _zoom) => {
+              // Используем point_count из первого feature кластера
+              const clusterFeatures = map.querySourceFeatures('markers', {
+                filter: ['==', 'cluster_id', clusterId],
+              });
+              const count =
+                clusterFeatures[0]?.properties?.point_count || listings.length;
+              resolve(count);
+            });
+          });
+
+          setHoveredCluster({
+            clusterId,
+            coordinates,
+            listings,
+            totalCount: pointCount,
+          });
+          setHoveredMarker(null); // Очищаем hover маркера
+        } catch (error) {
+          console.error('Error handling cluster hover:', error);
+        }
+      }
+    },
+    []
+  );
+
+  const handleClusterLeave = useCallback(() => {
+    // Добавляем задержку перед скрытием popup кластера
+    hidePopupTimer.current = setTimeout(() => {
+      setHoveredCluster(null);
+    }, 300);
   }, []);
 
   // Состояние для отслеживания перетаскивания
@@ -613,10 +721,11 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             onMarkerClick={handleMarkerClick}
             onMarkerHover={handleMarkerHover}
             onMarkerLeave={handleMarkerLeave}
+            onClusterHover={handleClusterHover}
+            onClusterLeave={handleClusterLeave}
             clusterRadius={50}
             clusterMaxZoom={14}
             clusterMinPoints={2}
-            showPrices={true}
           />
         )}
 
@@ -628,6 +737,56 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <MarkerHoverPopup
             marker={hoveredMarker}
             onClose={() => setHoveredMarker(null)}
+            onClick={() => {
+              // Открываем детальный popup
+              setInternalSelectedMarker(hoveredMarker);
+              setHoveredMarker(null); // Скрываем hover popup
+            }}
+            onMouseEnter={() => {
+              // Отменяем скрытие popup при наведении на него
+              if (hidePopupTimer.current) {
+                clearTimeout(hidePopupTimer.current);
+                hidePopupTimer.current = null;
+              }
+            }}
+            onMouseLeave={() => {
+              // Скрываем popup при уходе курсора
+              hidePopupTimer.current = setTimeout(() => {
+                setHoveredMarker(null);
+              }, 100); // Короткая задержка для плавности
+            }}
+          />
+        )}
+
+        {/* Hover popup для кластеров */}
+        {hoveredCluster && (
+          <ClusterHoverPopup
+            coordinates={hoveredCluster.coordinates}
+            listings={hoveredCluster.listings}
+            totalCount={hoveredCluster.totalCount}
+            onClose={() => setHoveredCluster(null)}
+            onListingClick={(listingId) => {
+              // Находим полную информацию о маркере
+              const marker = markers.find((m) => m.id === listingId);
+              if (marker) {
+                // Открываем наш детальный popup напрямую
+                setInternalSelectedMarker(marker);
+                setHoveredCluster(null);
+              }
+            }}
+            onMouseEnter={() => {
+              // Отменяем скрытие popup при наведении на него
+              if (hidePopupTimer.current) {
+                clearTimeout(hidePopupTimer.current);
+                hidePopupTimer.current = null;
+              }
+            }}
+            onMouseLeave={() => {
+              // Скрываем popup при уходе курсора
+              hidePopupTimer.current = setTimeout(() => {
+                setHoveredCluster(null);
+              }, 100);
+            }}
           />
         )}
 
@@ -742,6 +901,17 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             isFullscreen={isFullscreen}
             isMobile={isMobile}
             translations={controlTranslations}
+          />
+        )}
+
+        {/* Детальный popup при клике */}
+        {(selectedMarker || internalSelectedMarker) && (
+          <MarkerClickPopup
+            marker={selectedMarker || internalSelectedMarker!}
+            onClose={() => {
+              setInternalSelectedMarker(null);
+              if (onMarkerClose) onMarkerClose();
+            }}
           />
         )}
       </Map>

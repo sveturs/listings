@@ -3,36 +3,45 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCreateListing } from '@/contexts/CreateListingContext';
-import SmartAddressInput from '@/components/GIS/SmartAddressInput';
-import AddressConfirmationMap from '@/components/GIS/AddressConfirmationMap';
+import LocationPicker from '@/components/GIS/LocationPicker';
 import LocationPrivacySettings from '@/components/GIS/LocationPrivacySettings';
-import { AddressGeocodingResult } from '@/hooks/useAddressGeocoding';
 
 interface LocationStepProps {
   onNext: () => void;
   onBack: () => void;
 }
 
+interface LocationData {
+  latitude: number;
+  longitude: number;
+  address: string;
+  city: string;
+  region: string;
+  country: string;
+  confidence: number;
+}
+
 export default function LocationStep({ onNext, onBack }: LocationStepProps) {
   const t = useTranslations();
   const { state, dispatch } = useCreateListing();
-  const [step, setStep] = useState<'input' | 'confirm' | 'privacy'>('input');
-  const [address, setAddress] = useState(state.location?.address || '');
-  const [location, setLocation] = useState<
-    { lat: number; lng: number } | undefined
-  >(
+  const [step, setStep] = useState<'select' | 'privacy'>('select');
+  const [location, setLocation] = useState<LocationData | undefined>(
     state.location?.latitude && state.location?.longitude
-      ? { lat: state.location.latitude, lng: state.location.longitude }
+      ? {
+          latitude: state.location.latitude,
+          longitude: state.location.longitude,
+          address: state.location.address || '',
+          city: state.location.city || '',
+          region: state.location.region || '',
+          country: state.location.country || 'Србија',
+          confidence: 0.9,
+        }
       : undefined
   );
-  const [confidence, setConfidence] = useState(0);
   const [privacyLevel, setPrivacyLevel] = useState<
     'exact' | 'street' | 'district' | 'city'
   >('street');
-  const [formData, setFormData] = useState({
-    country: state.location?.country || 'Србија',
-    safeMeetingPlaces: [] as string[],
-  });
+  const [safeMeetingPlaces, setSafeMeetingPlaces] = useState<string[]>([]);
 
   const safeMeetingOptions = [
     'Тржни центар',
@@ -46,76 +55,38 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
     'Бензинска пумпа',
   ];
 
+  // Обновляем данные в контексте при изменении location
   useEffect(() => {
-    if (location && address) {
-      const locationData = {
-        latitude: location.lat,
-        longitude: location.lng,
-        address: address,
-        city: '', // Будет извлечено из адреса через геокодирование
-        region: '',
-        country: formData.country,
-        privacyLevel: privacyLevel,
-        confidence: confidence,
-      };
-
-      dispatch({ type: 'SET_LOCATION', payload: locationData });
+    if (location) {
+      dispatch({
+        type: 'SET_LOCATION',
+        payload: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          address: location.address,
+          city: location.city,
+          region: location.region,
+          country: location.country,
+        },
+      });
     }
-  }, [location, address, formData.country, privacyLevel, confidence, dispatch]);
+  }, [location, dispatch]);
+
+  const handleLocationChange = (locationData: LocationData) => {
+    setLocation(locationData);
+    // Автоматически переходим к настройкам приватности после выбора
+    if (locationData && step === 'select') {
+      setTimeout(() => setStep('privacy'), 500);
+    }
+  };
 
   const toggleSafeMeetingPlace = (place: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      safeMeetingPlaces: prev.safeMeetingPlaces.includes(place)
-        ? prev.safeMeetingPlaces.filter((p) => p !== place)
-        : [...prev.safeMeetingPlaces, place],
-    }));
+    setSafeMeetingPlaces((prev) =>
+      prev.includes(place) ? prev.filter((p) => p !== place) : [...prev, place]
+    );
   };
 
-  const canProceed = address && location && step === 'privacy';
-
-  const handleAddressChange = (
-    value: string,
-    result?: AddressGeocodingResult
-  ) => {
-    setAddress(value);
-
-    if (result) {
-      setLocation({
-        lat: result.location.lat,
-        lng: result.location.lng,
-      });
-      setConfidence(result.confidence);
-    }
-  };
-
-  const handleLocationSelect = (locationData: {
-    lat: number;
-    lng: number;
-    address: string;
-    confidence: number;
-  }) => {
-    setLocation({ lat: locationData.lat, lng: locationData.lng });
-    setAddress(locationData.address);
-    setConfidence(locationData.confidence);
-    setStep('confirm');
-  };
-
-  const handleLocationConfirm = (locationData: {
-    lat: number;
-    lng: number;
-    address: string;
-    confidence: number;
-  }) => {
-    setLocation({ lat: locationData.lat, lng: locationData.lng });
-    setAddress(locationData.address);
-    setConfidence(locationData.confidence);
-    setStep('privacy');
-  };
-
-  const handleLocationChange = (newLocation: { lat: number; lng: number }) => {
-    setLocation(newLocation);
-  };
+  const canProceed = location && step === 'privacy';
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -124,7 +95,8 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
           📍 {t('create_listing.location.title')}
         </h2>
         <p className="text-base-content/70">
-          Используйте умный ввод адресов для точного указания местоположения
+          Выберите местоположение объявления - введите адрес или укажите точку
+          на карте
         </p>
       </div>
 
@@ -133,22 +105,16 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
         <div className="flex justify-center">
           <div className="steps">
             <div
-              className={`step ${step === 'input' ? 'step-primary' : ''} ${location ? 'step-success' : ''}`}
-              onClick={() => setStep('input')}
+              className={`step ${step === 'select' ? 'step-primary' : ''} ${location ? 'step-success' : ''}`}
+              onClick={() => setStep('select')}
             >
-              Ввод адреса
-            </div>
-            <div
-              className={`step ${step === 'confirm' ? 'step-primary' : ''} ${step === 'privacy' ? 'step-success' : ''}`}
-              onClick={() => location && setStep('confirm')}
-            >
-              Подтверждение
+              Выбор местоположения
             </div>
             <div
               className={`step ${step === 'privacy' ? 'step-primary' : ''}`}
               onClick={() => location && setStep('privacy')}
             >
-              Приватность
+              Настройки приватности
             </div>
           </div>
         </div>
@@ -156,125 +122,49 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
 
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
-          {/* Шаг 1: Ввод адреса */}
-          {step === 'input' && (
+          {/* Шаг 1: Выбор местоположения */}
+          {step === 'select' && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center">
                 <span className="text-2xl mr-2">📍</span>
-                Шаг 1: Введите адрес
+                Шаг 1: Выберите местоположение
               </h3>
 
-              <SmartAddressInput
-                value={address}
-                onChange={handleAddressChange}
-                onLocationSelect={handleLocationSelect}
+              <LocationPicker
+                value={location}
+                onChange={handleLocationChange}
                 placeholder="Начните вводить адрес (например: Београд, Кнез Михаилова)"
-                showCurrentLocation={true}
-                country={['rs', 'hr', 'ba', 'me']}
-                language="ru"
-              />
-
-              {location && (
-                <div className="mt-4 p-4 bg-success/10 border border-success/20 rounded-lg">
-                  <h4 className="font-medium text-success-content mb-2">
-                    ✅ Адрес найден!
-                  </h4>
-                  <div className="text-sm text-success-content/80 space-y-1">
-                    <p>
-                      <strong>Адрес:</strong> {address}
-                    </p>
-                    <p>
-                      <strong>Координаты:</strong> {location.lat.toFixed(6)},{' '}
-                      {location.lng.toFixed(6)}
-                    </p>
-                    <p>
-                      <strong>Точность:</strong> {Math.round(confidence * 100)}%
-                    </p>
-                  </div>
-
-                  <div className="mt-3">
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => setStep('confirm')}
-                    >
-                      Перейти к подтверждению
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Страна */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">🌍 Страна</span>
-                </label>
-                <select
-                  className="select select-bordered"
-                  value={formData.country}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      country: e.target.value,
-                    }))
-                  }
-                >
-                  <option value="Србија">🇷🇸 Србија</option>
-                  <option value="Хрватска">🇭🇷 Хрватска</option>
-                  <option value="Босна и Херцеговина">
-                    🇧🇦 Босна и Херцеговина
-                  </option>
-                  <option value="Црна Гора">🇲🇪 Црна Гора</option>
-                  <option value="Словенија">🇸🇮 Словенија</option>
-                  <option value="Македонија">🇲🇰 Македонија</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Шаг 2: Подтверждение на карте */}
-          {step === 'confirm' && location && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
-                <span className="text-2xl mr-2">🗺️</span>
-                Шаг 2: Подтвердите местоположение на карте
-              </h3>
-
-              <AddressConfirmationMap
-                address={address}
-                initialLocation={location}
-                onLocationConfirm={handleLocationConfirm}
-                onLocationChange={handleLocationChange}
-                editable={true}
-                zoom={16}
                 height="500px"
+                showCurrentLocation={true}
+                defaultCountry={state.location?.country || 'Србија'}
               />
             </div>
           )}
 
-          {/* Шаг 3: Настройки приватности */}
+          {/* Шаг 2: Настройки приватности */}
           {step === 'privacy' && location && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center">
                 <span className="text-2xl mr-2">🛡️</span>
-                Шаг 3: Настройки приватности
+                Шаг 2: Настройки приватности
               </h3>
 
               <LocationPrivacySettings
                 selectedLevel={privacyLevel}
                 onLevelChange={setPrivacyLevel}
-                location={location}
+                location={{ lat: location.latitude, lng: location.longitude }}
                 showPreview={true}
               />
 
-              {/* Безбедна места за састанак */}
+              {/* Безопасные места для встречи */}
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-medium">
-                    🛡️ Безбедна места за састанак
+                    🛡️ Безопасные места для встречи
                   </span>
                 </label>
                 <p className="text-sm text-base-content/60 mb-3">
-                  Препоручите безбедна места за састанак у вашој близини
+                  Рекомендуйте безопасные места для встречи в вашей близости
                 </p>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -286,7 +176,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                       className={`
                         btn btn-sm text-xs
                         ${
-                          formData.safeMeetingPlaces.includes(place)
+                          safeMeetingPlaces.includes(place)
                             ? 'btn-primary'
                             : 'btn-outline'
                         }
@@ -295,6 +185,37 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                       {place}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Информация о выбранном местоположении */}
+              <div className="p-4 bg-info/10 border border-info/20 rounded-lg">
+                <h4 className="font-medium text-info-content mb-2">
+                  📍 Выбранное местоположение
+                </h4>
+                <div className="text-sm text-info-content/80 space-y-1">
+                  <p>
+                    <strong>Адрес:</strong> {location.address}
+                  </p>
+                  {location.city && (
+                    <p>
+                      <strong>Город:</strong> {location.city}
+                    </p>
+                  )}
+                  <p>
+                    <strong>Координаты:</strong> {location.latitude.toFixed(6)},{' '}
+                    {location.longitude.toFixed(6)}
+                  </p>
+                  <p>
+                    <strong>Уровень приватности:</strong>{' '}
+                    {privacyLevel === 'exact'
+                      ? 'Точный адрес'
+                      : privacyLevel === 'street'
+                        ? 'Улица'
+                        : privacyLevel === 'district'
+                          ? 'Район'
+                          : 'Город'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -306,21 +227,12 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
               ← {t('common.back')}
             </button>
 
-            {step === 'confirm' && (
-              <button
-                className="btn btn-outline"
-                onClick={() => setStep('input')}
-              >
-                ← Назад к вводу
-              </button>
-            )}
-
             {step === 'privacy' && (
               <button
                 className="btn btn-outline"
-                onClick={() => setStep('confirm')}
+                onClick={() => setStep('select')}
               >
-                ← Назад к карте
+                ← Изменить местоположение
               </button>
             )}
 

@@ -1,0 +1,90 @@
+{
+  "projectName": "Hostel Booking System - Sve Tu Platform",
+  "description": "Marketplace platform with React frontend and Go backend",
+  "language": ["typescript", "go", "javascript"],
+  "framework": ["nextjs", "react", "fiber"],
+  "agent": {
+    "mode": "enabled",
+    "autoEdit": true,
+    "confirmBeforeEdit": false,
+    "maxEditsPerTurn": 10,
+    "capabilities": {
+      "fileEditing": true,
+      "fileCreation": true,
+      "fileReading": true,
+      "commandExecution": true
+    }
+  },
+  "tools": {
+    "enabled": true,
+    "allowedTools": [
+      "edit",
+      "create",
+      "read",
+      "search",
+      "replace",
+      "command"
+    ],
+    "editSettings": {
+      "autoApply": true,
+      "showDiff": true,
+      "confirmThreshold": 0
+    }
+  },
+  "contextWindow": {
+    "maxTokens": 8000,
+    "includeImports": true,
+    "includeComments": true
+  },
+  "indexing": {
+    "enabled": true,
+    "refreshInterval": 300,
+    "maxFileSize": "500KB",
+    "excludePatterns": [
+      "**/node_modules/**",
+      "**/vendor/**",
+      "**/*.log",
+      "**/dist/**",
+      "**/build/**",
+      "**/.next/**",
+      "**/uploads/**",
+      "**/data/**"
+    ]
+  },
+  "codeCompletion": {
+    "enabled": true,
+    "contextLines": 50,
+    "debounceMs": 300
+  },
+  "chat": {
+    "enabled": true,
+    "defaultContext": [
+      "CLAUDE.md",
+      ".ai/*.md",
+      "README.md",
+      ".augment-guidelines"
+    ],
+    "useAgentMode": true
+  },
+  "goSpecific": {
+    "goModPath": "backend/go.mod",
+    "testPatterns": ["**/*_test.go"],
+    "buildTags": [],
+    "includeVendor": false,
+    "goplsSettings": {
+      "staticcheck": true,
+      "usePlaceholders": true,
+      "deepCompletion": true
+    }
+  },
+  "projectSpecific": {
+    "backendPath": "backend/",
+    "frontendPath": "frontend/svetu/",
+    "apiDocsPath": "backend/docs/swagger.json",
+    "migrationsPath": "backend/migrations/",
+    "primaryLanguages": {
+      "backend": "go",
+      "frontend": "typescript"
+    }
+  }
+}

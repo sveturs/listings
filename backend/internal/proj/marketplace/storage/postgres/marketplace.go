@@ -77,7 +77,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
-            city, country, show_on_map, original_language, 
+            address_city, address_country, show_on_map, original_language,
             storefront_id, external_id
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING id
@@ -94,7 +94,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 	// Сохраняем оригинальный текст как перевод для исходного языка
 	_, err = s.pool.Exec(ctx, `
         INSERT INTO translations (
-            entity_type, entity_id, language, field_name, 
+            entity_type, entity_id, language, field_name,
             translated_text, is_machine_translated, is_verified
         ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     `,
@@ -106,7 +106,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 
 	_, err = s.pool.Exec(ctx, `
         INSERT INTO translations (
-            entity_type, entity_id, language, field_name, 
+            entity_type, entity_id, language, field_name,
             translated_text, is_machine_translated, is_verified
         ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     `,
@@ -128,15 +128,47 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		}
 	}
 
+	// Создаем запись в unified_geo для поддержки GIS поиска
+	if listing.Latitude != nil && listing.Longitude != nil {
+		_, err = s.pool.Exec(ctx, `
+			INSERT INTO unified_geo (
+				source_type, source_id, location, geohash,
+				formatted_address
+			) VALUES (
+				'marketplace_listing', $1, 
+				ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography, 
+				substring(ST_GeoHash(ST_SetSRID(ST_MakePoint($2, $3), 4326)) from 1 for 12),
+				$4
+			)
+			ON CONFLICT (source_type, source_id) 
+			DO UPDATE SET
+				location = EXCLUDED.location,
+				geohash = EXCLUDED.geohash,
+				formatted_address = EXCLUDED.formatted_address,
+				updated_at = CURRENT_TIMESTAMP
+		`, listingID, listing.Longitude, listing.Latitude, listing.Location)
+
+		if err != nil {
+			log.Printf("Error creating unified_geo entry for listing %d: %v", listingID, err)
+			// Не прерываем создание объявления из-за ошибки с geo
+		} else {
+			// Обновляем materialized view после успешного создания geo записи
+			_, err = s.pool.Exec(ctx, "SELECT refresh_map_items_cache()")
+			if err != nil {
+				log.Printf("Error refreshing map_items_cache: %v", err)
+			}
+		}
+	}
+
 	return listingID, nil
 }
 
 func (s *Storage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
 	var id int
 	err := s.pool.QueryRow(ctx, `
-        INSERT INTO marketplace_images 
-        (listing_id, file_path, file_name, file_size, content_type, is_main, storage_type, storage_bucket, public_url, created_at) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) 
+        INSERT INTO marketplace_images
+        (listing_id, file_path, file_name, file_size, content_type, is_main, storage_type, storage_bucket, public_url, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
         RETURNING id
     `, image.ListingID, image.FilePath, image.FileName, image.FileSize, image.ContentType, image.IsMain,
 		image.StorageType, image.StorageBucket, image.PublicURL).Scan(&id)
@@ -149,9 +181,9 @@ func (s *Storage) AddListingImage(ctx context.Context, image *models.Marketplace
 
 func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
 	query := `
-        SELECT 
-            id, listing_id, file_path, file_name, file_size, 
-            content_type, is_main, created_at, 
+        SELECT
+            id, listing_id, file_path, file_name, file_size,
+            content_type, is_main, created_at,
             storage_type, storage_bucket, public_url  -- Эти поля обязательно должны быть в запросе
         FROM marketplace_images
         WHERE listing_id = $1
@@ -237,8 +269,8 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 	var hasStorefrontID bool
 	err := s.pool.QueryRow(ctx, `
         SELECT EXISTS (
-            SELECT 1 
-            FROM information_schema.columns 
+            SELECT 1
+            FROM information_schema.columns
             WHERE table_name = 'marketplace_listings' AND column_name = 'storefront_id'
         )
     `).Scan(&hasStorefrontID)
@@ -251,7 +283,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         -- Базовый случай: корневые категории или конкретная категория
         SELECT c.id, c.parent_id, c.name
         FROM marketplace_categories c
-        WHERE CASE 
+        WHERE CASE
             WHEN $1::text = '' OR $1::text IS NULL THEN parent_id IS NULL
             ELSE id = CAST($1 AS INT)
         END
@@ -264,7 +296,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         INNER JOIN category_tree ct ON c.parent_id = ct.id
     ),
     translations_agg AS (
-        SELECT 
+        SELECT
             entity_id,
             jsonb_object_agg(
                 t2.language || '_' || t2.field_name,
@@ -273,15 +305,15 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         FROM translations t1
         CROSS JOIN LATERAL (
             SELECT language, field_name, translated_text
-            FROM translations t2 
-            WHERE t2.entity_type = 'listing' 
+            FROM translations t2
+            WHERE t2.entity_type = 'listing'
             AND t2.entity_id = t1.entity_id
         ) t2
         WHERE t1.entity_type = 'listing'
         GROUP BY entity_id
     ),
     listing_images AS (
-        SELECT 
+        SELECT
             listing_id,
             COALESCE(
                 jsonb_agg(
@@ -303,7 +335,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         FROM marketplace_images
         GROUP BY listing_id
     )
-    SELECT 
+    SELECT
         l.id,
         l.user_id,
         l.category_id,
@@ -315,8 +347,8 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         l.location,
         l.latitude,
         l.longitude,
-        l.city,
-        l.country,
+        l.address_city as city,
+        l.address_country as country,
         l.views_count,
         l.created_at,
         l.updated_at,
@@ -337,18 +369,18 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
     l.metadata,`
 
 	baseQuery += `
-    u.name as user_name, 
+    u.name as user_name,
         u.email as user_email,
         u.created_at as user_created_at,
         u.picture_url as user_picture_url,
-        c.name as category_name, 
+        c.name as category_name,
         c.slug as category_slug,
         COALESCE(t.translations, '{}'::jsonb) as translations,
         COALESCE(li.images, '[]'::jsonb) as images,
         EXISTS (
-            SELECT 1 
-            FROM marketplace_favorites mf 
-            WHERE mf.listing_id = l.id 
+            SELECT 1
+            FROM marketplace_favorites mf
+            WHERE mf.listing_id = l.id
             AND mf.user_id = $2
         ) as is_favorite,
         COUNT(*) OVER() as total_count
@@ -358,7 +390,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
     LEFT JOIN translations_agg t ON t.entity_id = l.id
     LEFT JOIN listing_images li ON li.listing_id = l.id
     WHERE 1=1
-        AND CASE 
+        AND CASE
             WHEN $1::text = '' OR $1::text IS NULL THEN true
             ELSE l.category_id IN (SELECT id FROM category_tree)
         END`
@@ -376,13 +408,13 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		argCount++
 		conditions = append(conditions, fmt.Sprintf(`
         AND (
-            LOWER(l.title) LIKE LOWER($%d) 
+            LOWER(l.title) LIKE LOWER($%d)
             OR LOWER(l.description) LIKE LOWER($%d)
             OR EXISTS (
-                SELECT 1 
-                FROM translations t 
-                WHERE t.entity_type = 'listing' 
-                AND t.entity_id = l.id 
+                SELECT 1
+                FROM translations t
+                WHERE t.entity_type = 'listing'
+                AND t.entity_id = l.id
                 AND t.field_name IN ('title', 'description')
                 AND LOWER(t.translated_text) LIKE LOWER($%d)
             )
@@ -610,7 +642,7 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
 
 	query := `
 WITH RECURSIVE category_tree AS (
-    SELECT 
+    SELECT
         c.id,
         c.name,
         c.slug,
@@ -627,7 +659,7 @@ WITH RECURSIVE category_tree AS (
 
     UNION ALL
 
-    SELECT 
+    SELECT
         c.id,
         c.name,
         c.slug,
@@ -644,26 +676,26 @@ WITH RECURSIVE category_tree AS (
     WHERE ct.level < 10
 ),
 categories_with_translations AS (
-    SELECT 
+    SELECT
         ct.*,
         COALESCE(
             jsonb_object_agg(
-                t.language, 
+                t.language,
                 t.translated_text
             ) FILTER (WHERE t.language IS NOT NULL),
             '{}'::jsonb
         ) as translations
     FROM category_tree ct
-    LEFT JOIN translations t ON 
-        t.entity_type = 'category' 
-        AND t.entity_id = ct.id 
+    LEFT JOIN translations t ON
+        t.entity_type = 'category'
+        AND t.entity_id = ct.id
         AND t.field_name = 'name'
-    GROUP BY 
-        ct.id, ct.name, ct.slug, ct.icon, ct.parent_id, 
-        ct.created_at, ct.category_path, ct.level, ct.listing_count, 
+    GROUP BY
+        ct.id, ct.name, ct.slug, ct.icon, ct.parent_id,
+        ct.created_at, ct.category_path, ct.level, ct.listing_count,
         ct.children_count
 )
-SELECT 
+SELECT
     c1.id,
     c1.name,
     c1.slug,
@@ -695,8 +727,8 @@ SELECT
     ) as children
 FROM categories_with_translations c1
 LEFT JOIN categories_with_translations c2 ON c2.parent_id = c1.id
-GROUP BY 
-    c1.id, c1.name, c1.slug, c1.icon, c1.parent_id, 
+GROUP BY
+    c1.id, c1.name, c1.slug, c1.icon, c1.parent_id,
     c1.created_at, c1.level, c1.category_path, c1.listing_count,
     c1.children_count, c1.translations
 ORDER BY c1.name ASC;
@@ -792,7 +824,7 @@ func (s *Storage) RemoveFromFavorites(ctx context.Context, userID int, listingID
 func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
 	query := `
         WITH listing_images AS (
-            SELECT 
+            SELECT
                 listing_id,
                 jsonb_agg(
                     jsonb_build_object(
@@ -812,28 +844,28 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
             FROM marketplace_images
             GROUP BY listing_id
         )
-        SELECT 
-            l.id, 
-            l.user_id, 
-            l.category_id, 
-            l.title, 
+        SELECT
+            l.id,
+            l.user_id,
+            l.category_id,
+            l.title,
             l.description,
-            l.price, 
-            l.condition, 
-            l.status, 
-            l.location, 
+            l.price,
+            l.condition,
+            l.status,
+            l.location,
             l.latitude,
-            l.longitude, 
-            l.city, 
-            l.country, 
+            l.longitude,
+            l.address_city as city,
+            l.address_country as country,
             l.views_count,
-            l.created_at, 
+            l.created_at,
             l.updated_at,
-            u.name, 
-            u.email, 
-			u.created_at as user_created_at, 
+            u.name,
+            u.email,
+			u.created_at as user_created_at,
             COALESCE(u.picture_url, ''),
-            c.name as category_name, 
+            c.name as category_name,
             c.slug as category_slug,
             true as is_favorite,
             COALESCE(li.images, '[]'::jsonb) as listing_images
@@ -916,8 +948,8 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 
 func (s *Storage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	query := `
-        SELECT user_id 
-        FROM marketplace_favorites 
+        SELECT user_id
+        FROM marketplace_favorites
         WHERE listing_id = $1
     `
 	rows, err := s.pool.Query(ctx, query, listingID)
@@ -985,7 +1017,7 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 
 	result, err := s.pool.Exec(ctx, `
         UPDATE marketplace_listings
-        SET 
+        SET
             title = $1,
             description = $2,
             price = $3,
@@ -1288,7 +1320,7 @@ func (s *Storage) GetFormattedAttributeValue(ctx context.Context, attr models.Li
 		// Получаем перевод единицы измерения
 		var displayFormat string
 		err := s.pool.QueryRow(ctx, `
-            SELECT display_format FROM unit_translations 
+            SELECT display_format FROM unit_translations
             WHERE unit = $1 AND language = $2
         `, attr.Unit, language).Scan(&displayFormat)
 
@@ -1308,7 +1340,7 @@ func (s *Storage) GetFormattedAttributeValue(ctx context.Context, attr models.Li
 // GetListingAttributes получает значения атрибутов для объявления
 func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
 	query := `
-        SELECT DISTINCT ON (a.id) 
+        SELECT DISTINCT ON (a.id)
             v.listing_id,
             v.attribute_id,
             a.name AS attribute_name,
@@ -1325,18 +1357,18 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             COALESCE(cam.show_in_list, a.show_in_list) as show_in_list,
             COALESCE(
                 jsonb_object_agg(
-                    t.language, 
+                    t.language,
                     t.translated_text
                 ) FILTER (WHERE t.language IS NOT NULL),
                 '{}'::jsonb
             ) as translations,
             COALESCE(
                 (SELECT jsonb_object_agg(
-                    o.language, 
+                    o.language,
                     o.field_translations
-                ) 
+                )
                 FROM (
-                    SELECT 
+                    SELECT
                         language,
                         jsonb_object_agg(field_name, translated_text) as field_translations
                     FROM translations
@@ -1349,17 +1381,17 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
         FROM listing_attribute_values v
         JOIN category_attributes a ON v.attribute_id = a.id
         JOIN marketplace_listings ml ON ml.id = v.listing_id
-        LEFT JOIN category_attribute_mapping cam ON 
-            cam.category_id = ml.category_id AND 
+        LEFT JOIN category_attribute_mapping cam ON
+            cam.category_id = ml.category_id AND
             cam.attribute_id = a.id
-        LEFT JOIN translations t ON 
-            t.entity_type = 'attribute' 
-            AND t.entity_id = a.id 
+        LEFT JOIN translations t ON
+            t.entity_type = 'attribute'
+            AND t.entity_id = a.id
             AND t.field_name = 'display_name'
         WHERE v.listing_id = $1
-        GROUP BY 
-            v.listing_id, v.attribute_id, a.id, a.name, a.display_name, 
-            a.attribute_type, v.text_value, v.numeric_value, v.boolean_value, 
+        GROUP BY
+            v.listing_id, v.attribute_id, a.id, a.name, a.display_name,
+            a.attribute_type, v.text_value, v.numeric_value, v.boolean_value,
             v.json_value, v.unit, a.is_required, a.show_in_card, a.show_in_list,
             cam.is_required, cam.show_in_card, cam.show_in_list
         ORDER BY a.id, a.sort_order, a.display_name
@@ -1552,7 +1584,7 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
 
 	// Запрос для получения границ числовых атрибутов
 	rangesQuery := `
-    SELECT 
+    SELECT
         a.name,
         MIN(v.numeric_value) as min_value,
         MAX(v.numeric_value) as max_value,
@@ -1560,7 +1592,7 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
     FROM listing_attribute_values v
     JOIN category_attributes a ON v.attribute_id = a.id
     JOIN marketplace_listings l ON v.listing_id = l.id
-    WHERE 
+    WHERE
         l.category_id IN (` + categoryIDs + `)
         AND l.status = 'active'
         AND v.numeric_value IS NOT NULL
@@ -1687,9 +1719,9 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
             SELECT id, parent_id
             FROM marketplace_categories
             WHERE id = $1
-            
+
             UNION
-            
+
             SELECT c.id, c.parent_id
             FROM marketplace_categories c
             INNER JOIN parents p ON c.id = p.parent_id
@@ -1697,16 +1729,16 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
         SELECT id FROM parents
     ),
     attribute_translations AS (
-        SELECT 
+        SELECT
             entity_id,
             jsonb_object_agg(language, translated_text) as translations
         FROM translations
-        WHERE entity_type = 'attribute' 
+        WHERE entity_type = 'attribute'
         AND field_name = 'display_name'
         GROUP BY entity_id
     ),
     option_translations AS (
-        SELECT 
+        SELECT
             entity_id,
             language,
             jsonb_object_agg(field_name, translated_text) as field_translations
@@ -1722,15 +1754,15 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
         GROUP BY entity_id
     )
     SELECT DISTINCT ON (a.id)
-        a.id, 
-        a.name, 
-        a.display_name, 
+        a.id,
+        a.name,
+        a.display_name,
         a.icon,
-        a.attribute_type, 
-        a.options, 
+        a.attribute_type,
+        a.options,
         a.validation_rules,
-        a.is_searchable, 
-        a.is_filterable, 
+        a.is_searchable,
+        a.is_filterable,
         COALESCE(m.is_required, a.is_required) as is_required,
         a.sort_order,
         a.created_at,
@@ -1880,18 +1912,18 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 
 	query := `
         WITH category_translations AS (
-            SELECT 
+            SELECT
                 t.entity_id,
                 jsonb_object_agg(
                     t.language,  -- Изменено: убираем конкатенацию с field_name
                     t.translated_text
                 ) as translations
             FROM translations t
-            WHERE t.entity_type = 'category' 
+            WHERE t.entity_type = 'category'
             AND t.field_name = 'name'
             GROUP BY t.entity_id
         )
-        SELECT 
+        SELECT
             c.id, c.name, c.slug, c.parent_id, c.icon, c.created_at,
             COALESCE(ct.translations, '{}'::jsonb) as translations
         FROM marketplace_categories c
@@ -1951,7 +1983,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
 	cat := &models.MarketplaceCategory{}
 	err := s.pool.QueryRow(ctx, `
-        SELECT 
+        SELECT
             id, name, slug, parent_id, icon, created_at
         FROM marketplace_categories
         WHERE id = $1
@@ -1987,7 +2019,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		city           sql.NullString
 		country        sql.NullString
 		originalLang   sql.NullString
-		storefrontID   sql.NullInt32
 		userName       sql.NullString
 		userEmail      sql.NullString
 		userPictureURL sql.NullString
@@ -2000,9 +2031,8 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
         SELECT
             l.id, l.user_id, l.category_id, l.title, l.description,
             l.price, l.condition, l.status, l.location, l.latitude,
-            l.longitude, l.city, l.country, l.views_count,
+            l.longitude, l.address_city as city, l.address_country as country, l.views_count,
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
-            l.storefront_id, -- Добавляем поле storefront_id
             u.name, u.email, u.created_at as user_created_at,
             u.picture_url, u.phone,
             c.name as category_name, c.slug as category_slug, l.metadata
@@ -2015,7 +2045,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&description, &listing.Price, &condition, &status,
 		&location, &latitude, &longitude, &city,
 		&country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
-		&listing.ShowOnMap, &originalLang, &storefrontID,
+		&listing.ShowOnMap, &originalLang,
 		&userName, &userEmail, &listing.User.CreatedAt,
 		&userPictureURL, &userPhone,
 		&categoryName, &categorySlug, &listing.Metadata,
@@ -2057,10 +2087,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	}
 	if originalLang.Valid {
 		listing.OriginalLanguage = originalLang.String
-	}
-	if storefrontID.Valid {
-		intValue := int(storefrontID.Int32)
-		listing.StorefrontID = &intValue
 	}
 	if userName.Valid {
 		listing.User.Name = userName.String
@@ -2269,8 +2295,8 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 	err := s.pool.QueryRow(ctx, `
         SELECT
             sp.id, sp.storefront_id, 0 as user_id, sp.category_id, sp.name, sp.description,
-            sp.price, 'new' as condition, 'active' as status, '' as location, 
-            0 as latitude, 0 as longitude, '' as city, '' as country, 
+            sp.price, 'new' as condition, 'active' as status, '' as location,
+            0 as latitude, 0 as longitude, '' as city, '' as country,
             sp.view_count, sp.created_at, sp.updated_at, false as show_on_map, 'sr' as original_language,
             '' as user_name, '' as user_email, sp.created_at as user_created_at,
             '' as user_picture_url, '' as user_phone,
@@ -2313,7 +2339,7 @@ func (s *Storage) GetPopularSearchQueries(ctx context.Context, query string, lim
 	normalizedQuery := strings.ToLower(strings.TrimSpace(query))
 
 	sqlQuery := `
-		SELECT 
+		SELECT
 			id,
 			query,
 			normalized_query,
@@ -2366,10 +2392,10 @@ func (s *Storage) SaveSearchQuery(ctx context.Context, query, normalizedQuery st
 	// Используем UPSERT для обновления существующих записей
 	sqlQuery := `
 		INSERT INTO search_queries (
-			query, normalized_query, search_count, last_searched, 
+			query, normalized_query, search_count, last_searched,
 			language, results_count
 		) VALUES ($1, $2, 1, NOW(), $3, $4)
-		ON CONFLICT (normalized_query, language) 
+		ON CONFLICT (normalized_query, language)
 		DO UPDATE SET
 			query = EXCLUDED.query,
 			search_count = search_queries.search_count + 1,
@@ -2391,26 +2417,26 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 
 	sqlQuery := `
 		WITH category_counts AS (
-			SELECT 
-				category_id, 
+			SELECT
+				category_id,
 				COUNT(*) as listing_count
 			FROM marketplace_listings
 			WHERE status = 'active'
 			GROUP BY category_id
 		),
 		category_translations AS (
-			SELECT 
+			SELECT
 				entity_id,
 				jsonb_object_agg(
 					language,
 					translated_text
 				) as translations
 			FROM translations
-			WHERE entity_type = 'category' 
+			WHERE entity_type = 'category'
 			AND field_name = 'name'
 			GROUP BY entity_id
 		)
-		SELECT 
+		SELECT
 			c.id,
 			c.name,
 			c.slug,
@@ -2424,14 +2450,14 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 		LEFT JOIN category_translations ct ON c.id = ct.entity_id
 		WHERE LOWER(c.name) LIKE $1
 			OR EXISTS (
-				SELECT 1 
-				FROM translations t 
-				WHERE t.entity_type = 'category' 
-				AND t.entity_id = c.id 
+				SELECT 1
+				FROM translations t
+				WHERE t.entity_type = 'category'
+				AND t.entity_id = c.id
 				AND t.field_name = 'name'
 				AND LOWER(t.translated_text) LIKE $1
 			)
-		ORDER BY 
+		ORDER BY
 			CASE WHEN LOWER(c.name) = LOWER($2) THEN 0 ELSE 1 END,
 			cc.listing_count DESC NULLS LAST,
 			c.name

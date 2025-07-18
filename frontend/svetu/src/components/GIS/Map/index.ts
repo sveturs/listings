@@ -6,3 +6,4 @@ export { MapCluster } from './MapCluster';
 export { default as MapboxClusterLayer } from './MapboxClusterLayer';
 export { default as PriceMarker } from './PriceMarker';
 export { default as PriceCluster } from './PriceCluster';
+export { default as ClusterHoverPopup } from './ClusterHoverPopup';

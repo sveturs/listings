@@ -20,7 +20,7 @@ func (s *Database) GetBySlug(ctx context.Context, slug string) (*models.Storefro
 // GetStorefrontProducts retrieves products for a storefront with filters
 func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.ProductFilter) ([]*models.StorefrontProduct, error) {
 	query := `
-		SELECT 
+		SELECT
 			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
 			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
 			p.is_active, p.attributes, p.view_count, p.sold_count,
@@ -192,7 +192,7 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 // GetStorefrontProduct retrieves a single product by ID
 func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, productID int) (*models.StorefrontProduct, error) {
 	query := `
-		SELECT 
+		SELECT
 			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
 			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
 			p.is_active, p.attributes, p.view_count, p.sold_count,
@@ -376,7 +376,7 @@ func (s *Database) UpdateStorefrontProduct(ctx context.Context, storefrontID, pr
 	args = append(args, productID, storefrontID)
 
 	query := fmt.Sprintf(`
-		UPDATE storefront_products 
+		UPDATE storefront_products
 		SET %s, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $%d AND storefront_id = $%d`,
 		strings.Join(setClauses, ", "), argIndex, argIndex+1)
@@ -468,7 +468,7 @@ func (s *Database) UpdateProductInventory(ctx context.Context, storefrontID, pro
 // GetProductStats returns statistics for storefront products
 func (s *Database) GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error) {
 	query := `
-		SELECT 
+		SELECT
 			COUNT(*) as total_products,
 			COUNT(*) FILTER (WHERE is_active = true) as active_products,
 			COUNT(*) FILTER (WHERE stock_status = 'out_of_stock') as out_of_stock,
@@ -501,11 +501,20 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 		return []models.StorefrontProductImage{}, nil
 	}
 
+	// Get images from variant images (new system)
 	query := `
-		SELECT id, storefront_product_id, image_url, thumbnail_url, display_order, is_default, created_at
-		FROM storefront_product_images
-		WHERE storefront_product_id = ANY($1)
-		ORDER BY display_order, id`
+		SELECT
+			spvi.id,
+			spv.product_id as storefront_product_id,
+			spvi.image_url,
+			COALESCE(spvi.thumbnail_url, spvi.image_url) as thumbnail_url,
+			spvi.display_order,
+			spvi.is_main as is_default,
+			spvi.created_at
+		FROM storefront_product_variants spv
+		JOIN storefront_product_variant_images spvi ON spv.id = spvi.variant_id
+		WHERE spv.product_id = ANY($1) AND spv.is_active = true
+		ORDER BY spv.is_default DESC, spvi.is_main DESC, spvi.display_order ASC`
 
 	rows, err := s.pool.Query(ctx, query, pq.Array(productIDs))
 	if err != nil {
@@ -531,10 +540,20 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 
 func (s *Database) getProductVariants(ctx context.Context, productID int) ([]models.StorefrontProductVariant, error) {
 	query := `
-		SELECT id, storefront_product_id, name, sku, price, stock_quantity, attributes, is_active, created_at, updated_at
+		SELECT
+			id,
+			product_id as storefront_product_id,
+			COALESCE(sku, '') as name,
+			sku,
+			COALESCE(price, 0) as price,
+			stock_quantity,
+			variant_attributes as attributes,
+			is_active,
+			created_at,
+			updated_at
 		FROM storefront_product_variants
-		WHERE storefront_product_id = $1
-		ORDER BY id`
+		WHERE product_id = $1 AND is_active = true
+		ORDER BY is_default DESC, id ASC`
 
 	rows, err := s.pool.Query(ctx, query, productID)
 	if err != nil {
@@ -750,8 +769,8 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 
 	// Delete products that belong to the storefront
 	rows, err := tx.Query(ctx,
-		`DELETE FROM storefront_products 
-		WHERE id = ANY($1) AND storefront_id = $2 
+		`DELETE FROM storefront_products
+		WHERE id = ANY($1) AND storefront_id = $2
 		RETURNING id`,
 		pq.Array(productIDs), storefrontID,
 	)
@@ -798,9 +817,9 @@ func (s *Database) BulkUpdateStatus(ctx context.Context, storefrontID int, produ
 	}
 
 	rows, err := s.pool.Query(ctx,
-		`UPDATE storefront_products 
-		SET is_active = $1, updated_at = CURRENT_TIMESTAMP 
-		WHERE id = ANY($2) AND storefront_id = $3 
+		`UPDATE storefront_products
+		SET is_active = $1, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ANY($2) AND storefront_id = $3
 		RETURNING id`,
 		isActive, pq.Array(productIDs), storefrontID,
 	)

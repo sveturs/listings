@@ -22,19 +22,26 @@ type Bounds struct {
 
 // GeoListing представляет объявление с геоданными
 type GeoListing struct {
-	ID          int       `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description,omitempty"`
-	Price       float64   `json:"price"`
-	Category    string    `json:"category"`
-	Location    Point     `json:"location"`
-	Address     string    `json:"address,omitempty"`
-	Images      []string  `json:"images,omitempty"`
-	UserID      int       `json:"user_id"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	Distance    *float64  `json:"distance,omitempty"` // Расстояние от точки поиска (в метрах)
+	ID              int       `json:"id"`
+	Title           string    `json:"title"`
+	Description     string    `json:"description,omitempty"`
+	Price           float64   `json:"price"`
+	Category        string    `json:"category"`
+	Location        Point     `json:"location"`
+	Address         string    `json:"address,omitempty"`
+	Images          []string  `json:"images,omitempty"`
+	UserID          int       `json:"user_id"`
+	StorefrontID    *int      `json:"storefront_id,omitempty"`
+	Status          string    `json:"status"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	ViewsCount      int       `json:"views_count"`
+	Rating          float64   `json:"rating,omitempty"`
+	Distance        *float64  `json:"distance,omitempty"` // Расстояние от точки поиска (в метрах)
+	ItemType        string    `json:"item_type"`          // marketplace_listing, storefront_product, storefront
+	DisplayStrategy string    `json:"display_strategy"`   // individual, storefront_grouped
+	PrivacyLevel    string    `json:"privacy_level,omitempty"`
+	BlurRadius      int       `json:"blur_radius_meters,omitempty"`
 }
 
 // SearchParams параметры пространственного поиска

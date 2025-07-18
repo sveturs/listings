@@ -21,15 +21,237 @@ func NewPostGISRepository(db *sqlx.DB) *PostGISRepository {
 	return &PostGISRepository{db: db}
 }
 
-// SearchListings поиск объявлений в заданной области
+// SearchListings поиск объявлений в заданной области (обновлено для unified_geo)
 func (r *PostGISRepository) SearchListings(ctx context.Context, params types.SearchParams) ([]types.GeoListing, int64, error) {
+	// Проверяем, существует ли таблица unified_geo
+	var tableExists bool
+	err := r.db.QueryRowContext(ctx,
+		"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'unified_geo')").Scan(&tableExists)
+	if err == nil && tableExists {
+		return r.searchUnifiedGeo(ctx, params)
+	}
+
+	// Fallback к старому методу
+	return r.searchLegacy(ctx, params)
+}
+
+// searchUnifiedGeo новый метод поиска с unified geo system
+func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.SearchParams) ([]types.GeoListing, int64, error) {
+	query := `
+		SELECT
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN ml.id
+				WHEN ug.source_type = 'storefront_product' THEN sp.id
+			END as id,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN ml.title
+				WHEN ug.source_type = 'storefront_product' THEN sp.name
+			END as title,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN COALESCE(ml.description, '')
+				WHEN ug.source_type = 'storefront_product' THEN COALESCE(sp.description, '')
+			END as description,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN ml.price
+				WHEN ug.source_type = 'storefront_product' THEN sp.price
+			END as price,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN COALESCE(mc1.name, '')
+				WHEN ug.source_type = 'storefront_product' THEN COALESCE(mc2.name, '')
+			END as category,
+			ST_Y(ug.location::geometry) as lat,
+			ST_X(ug.location::geometry) as lng,
+			COALESCE(ug.formatted_address, '') as address,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN ml.user_id
+				WHEN ug.source_type = 'storefront_product' THEN s.user_id
+			END as user_id,
+			CASE
+				WHEN ug.source_type = 'storefront_product' THEN sp.storefront_id
+				ELSE NULL
+			END as storefront_id,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN ml.status
+				WHEN ug.source_type = 'storefront_product' THEN CASE WHEN sp.is_active THEN 'active' ELSE 'inactive' END
+			END as status,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN ml.created_at
+				WHEN ug.source_type = 'storefront_product' THEN sp.created_at
+			END as created_at,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN ml.updated_at
+				WHEN ug.source_type = 'storefront_product' THEN sp.updated_at
+			END as updated_at,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN ml.views_count
+				WHEN ug.source_type = 'storefront_product' THEN sp.view_count
+			END as views_count,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN COALESCE(rc.average_rating, 0)
+				ELSE 0
+			END as rating,
+			ug.source_type::text as item_type`
+
+	// Добавляем расчет расстояния если есть центр поиска
+	if params.Center != nil {
+		query += fmt.Sprintf(`,
+				ST_Distance(
+					ug.location,
+					ST_SetSRID(ST_MakePoint(%f, %f), 4326)::geography
+				) as distance`, params.Center.Lng, params.Center.Lat)
+	}
+
+	query += `
+			FROM unified_geo ug
+			LEFT JOIN marketplace_listings ml ON ug.source_type = 'marketplace_listing' AND ug.source_id = ml.id
+			LEFT JOIN storefront_products sp ON ug.source_type = 'storefront_product' AND ug.source_id = sp.id
+			LEFT JOIN storefronts s ON sp.storefront_id = s.id
+			LEFT JOIN marketplace_categories mc1 ON ml.category_id = mc1.id
+			LEFT JOIN marketplace_categories mc2 ON sp.category_id = mc2.id
+			LEFT JOIN rating_cache rc ON rc.entity_type = 'listing' AND rc.entity_id = ml.id
+			WHERE (
+				(ug.source_type = 'marketplace_listing' AND ml.status = 'active') OR
+				(ug.source_type = 'storefront_product' AND sp.is_active = true)
+			)`
+
+	var args []interface{}
+	argIndex := 1
+
+	// Добавляем фильтры
+	if params.Center != nil && params.RadiusKm > 0 {
+		query += fmt.Sprintf(` AND ST_DWithin(
+			ug.location,
+			ST_SetSRID(ST_MakePoint($%d, $%d), 4326)::geography,
+			$%d)`, argIndex, argIndex+1, argIndex+2)
+		args = append(args, params.Center.Lng, params.Center.Lat, params.RadiusKm*1000)
+		argIndex += 3
+	}
+
+	// Подсчет общего количества
+	countQuery := "SELECT COUNT(*) " + strings.Replace(query, query[:strings.Index(query, "FROM")], "", 1)
+	var totalCount int64
+	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count listings: %w", err)
+	}
+
+	// Добавляем сортировку и лимит
+	query += " ORDER BY created_at DESC"
+	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
+	args = append(args, params.Limit, params.Offset)
+
+	// Выполняем запрос
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to execute search query: %w", err)
+	}
+	defer rows.Close()
+
+	var listings []types.GeoListing
+	for rows.Next() {
+		var listing types.GeoListing
+		var lat, lng float64
+		var distance sql.NullFloat64
+		var storefrontID sql.NullInt64
+
+		scanArgs := []interface{}{
+			&listing.ID,
+			&listing.Title,
+			&listing.Description,
+			&listing.Price,
+			&listing.Category,
+			&lat,
+			&lng,
+			&listing.Address,
+			&listing.UserID,
+			&storefrontID,
+			&listing.Status,
+			&listing.CreatedAt,
+			&listing.UpdatedAt,
+			&listing.ViewsCount,
+			&listing.Rating,
+			&listing.ItemType,
+		}
+
+		if params.Center != nil {
+			scanArgs = append(scanArgs, &distance)
+		}
+
+		err = rows.Scan(scanArgs...)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to scan listing: %w", err)
+		}
+
+		listing.Location = types.Point{
+			Lat: lat,
+			Lng: lng,
+		}
+
+		if distance.Valid {
+			listing.Distance = &distance.Float64
+		}
+
+		if storefrontID.Valid {
+			storefrontIDInt := int(storefrontID.Int64)
+			listing.StorefrontID = &storefrontIDInt
+		}
+
+		// Загружаем изображения
+		images, err := r.getListingImages(ctx, listing.ID, listing.ItemType)
+		if err != nil {
+			// Игнорируем ошибки загрузки изображений
+			images = []string{}
+		}
+		listing.Images = images
+
+		listings = append(listings, listing)
+	}
+
+	return listings, totalCount, nil
+}
+
+// getListingImages загружает изображения в зависимости от типа элемента
+func (r *PostGISRepository) getListingImages(ctx context.Context, itemID int, itemType string) ([]string, error) {
+	var query string
+
+	switch itemType {
+	case "marketplace_listing":
+		query = `
+			SELECT public_url
+			FROM marketplace_images
+			WHERE listing_id = $1 AND public_url IS NOT NULL AND public_url != ''
+			ORDER BY is_main DESC, created_at
+			LIMIT 5`
+	case "storefront_product":
+		query = `
+			SELECT spvi.image_url
+			FROM storefront_product_variants spv
+			JOIN storefront_product_variant_images spvi ON spv.id = spvi.variant_id
+			WHERE spv.product_id = $1 AND spv.is_active = true AND spvi.image_url IS NOT NULL
+			ORDER BY spv.is_default DESC, spvi.is_main DESC, spvi.display_order
+			LIMIT 5`
+	default:
+		return []string{}, nil
+	}
+
+	var images []string
+	err := r.db.SelectContext(ctx, &images, query, itemID)
+	if err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}
+
+// searchLegacy старый метод поиска (для совместимости)
+func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.SearchParams) ([]types.GeoListing, int64, error) {
 	var listings []types.GeoListing
 	var totalCount int64
 
 	// Базовый запрос
 	query := `
 		WITH filtered_listings AS (
-			SELECT 
+			SELECT
 				ml.id,
 				ml.title,
 				ml.description,
@@ -41,7 +263,9 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 				ml.user_id,
 				ml.status,
 				ml.created_at,
-				ml.updated_at`
+				ml.updated_at,
+				ml.views_count,
+				COALESCE(rc.average_rating, 0) as rating`
 
 	// Добавляем расчет расстояния если есть центр поиска
 	if params.Center != nil {
@@ -53,10 +277,8 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 	}
 
 	query += `
-			FROM marketplace_listings ml
-			LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
-			LEFT JOIN listings_geo lg ON ml.id = lg.listing_id
-			WHERE ml.status = 'active' AND lg.location IS NOT NULL`
+			FROM map_items_cache mic
+			WHERE mic.status = 'active' AND mic.latitude IS NOT NULL AND mic.longitude IS NOT NULL`
 
 	// Применяем фильтры
 	var conditions []string
@@ -227,6 +449,8 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 			&listing.Status,
 			&listing.CreatedAt,
 			&listing.UpdatedAt,
+			&listing.ViewsCount,
+			&listing.Rating,
 		}
 
 		if params.Center != nil {
@@ -244,7 +468,7 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 		}
 
 		// Загружаем изображения
-		listing.Images, _ = r.getListingImages(ctx, listing.ID)
+		listing.Images, _ = r.getListingImages(ctx, listing.ID, "marketplace_listing")
 
 		listings = append(listings, listing)
 	}
@@ -255,7 +479,7 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 // GetListingByID получение объявления по ID с геоданными
 func (r *PostGISRepository) GetListingByID(ctx context.Context, id int) (*types.GeoListing, error) {
 	query := `
-		SELECT 
+		SELECT
 			ml.id,
 			ml.title,
 			ml.description,
@@ -267,10 +491,13 @@ func (r *PostGISRepository) GetListingByID(ctx context.Context, id int) (*types.
 			ml.user_id,
 			ml.status,
 			ml.created_at,
-			ml.updated_at
+			ml.updated_at,
+			ml.views_count,
+			COALESCE(rc.average_rating, 0) as rating
 		FROM marketplace_listings ml
 		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
 		LEFT JOIN listings_geo lg ON ml.id = lg.listing_id
+		LEFT JOIN rating_cache rc ON rc.entity_type = 'listing' AND rc.entity_id = ml.id
 		WHERE ml.id = $1 AND lg.location IS NOT NULL`
 
 	var listing types.GeoListing
@@ -289,6 +516,8 @@ func (r *PostGISRepository) GetListingByID(ctx context.Context, id int) (*types.
 		&listing.Status,
 		&listing.CreatedAt,
 		&listing.UpdatedAt,
+		&listing.ViewsCount,
+		&listing.Rating,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -298,7 +527,7 @@ func (r *PostGISRepository) GetListingByID(ctx context.Context, id int) (*types.
 	}
 
 	listing.Location = types.Point{Lat: lat, Lng: lng}
-	listing.Images, _ = r.getListingImages(ctx, listing.ID)
+	listing.Images, _ = r.getListingImages(ctx, listing.ID, "marketplace_listing")
 
 	return &listing, nil
 }
@@ -331,21 +560,4 @@ func (r *PostGISRepository) UpdateListingLocation(ctx context.Context, id int, l
 	}
 
 	return nil
-}
-
-// getListingImages получение изображений объявления
-func (r *PostGISRepository) getListingImages(ctx context.Context, listingID int) ([]string, error) {
-	query := `
-		SELECT image_url
-		FROM marketplace_images
-		WHERE listing_id = $1
-		ORDER BY display_order, created_at`
-
-	var images []string
-	err := r.db.SelectContext(ctx, &images, query, listingID)
-	if err != nil {
-		return nil, err
-	}
-
-	return images, nil
 }
