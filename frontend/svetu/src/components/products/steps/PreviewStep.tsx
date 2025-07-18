@@ -30,6 +30,26 @@ export default function PreviewStep({
     CategoryAttribute[]
   >([]);
 
+  const uploadImages = async (productId: number, images: File[]) => {
+    const uploadPromises = images.map(async (image, index) => {
+      const formData = new FormData();
+      formData.append('image', image);
+
+      // Первое изображение делаем главным
+      if (index === 0) {
+        formData.append('is_main', 'true');
+      }
+      formData.append('display_order', String(index));
+
+      return apiClient.post(
+        `/api/v1/storefronts/slug/${storefrontSlug}/products/${productId}/images`,
+        formData
+      );
+    });
+
+    await Promise.all(uploadPromises);
+  };
+
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
@@ -41,10 +61,20 @@ export default function PreviewStep({
       );
 
       if (productResponse.data) {
-        // TODO: Загрузка изображений
-        // if (state.images.length > 0) {
-        //   await uploadImages(productResponse.data.id, state.images);
-        // }
+        const productData = productResponse.data.data || productResponse.data;
+
+        // Загрузка изображений
+        if (state.images.length > 0 && productData.id) {
+          try {
+            await uploadImages(productData.id, state.images);
+          } catch (imageError) {
+            console.error('Failed to upload images:', imageError);
+            // Продолжаем даже если не удалось загрузить изображения
+            toast.warning(
+              t('storefronts.products.productCreatedButImagesError')
+            );
+          }
+        }
 
         toast.success(t('storefronts.products.productCreated'));
         router.push(`/${locale}/storefronts/${storefrontSlug}/products`);
