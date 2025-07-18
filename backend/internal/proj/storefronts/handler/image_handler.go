@@ -204,6 +204,12 @@ func (h *ImageHandler) SetMainProductImage(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, nil)
 }
 
+// ImageOrderUpdate структура для обновления порядка изображений
+type ImageOrderUpdate struct {
+	ID           int `json:"id"`
+	DisplayOrder int `json:"display_order"`
+}
+
 // UpdateImageOrder обновляет порядок отображения изображений
 // @Summary Update image display order
 // @Description Updates the display order of product images
@@ -212,7 +218,7 @@ func (h *ImageHandler) SetMainProductImage(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param product_id path int true "Product ID"
-// @Param request body []struct{ID int `json:"id"`; DisplayOrder int `json:"display_order"`} true "Image order updates"
+// @Param request body []handler.ImageOrderUpdate true "Image order updates"
 // @Security Bearer
 // @Success 200 {object} utils.SuccessResponseSwag "Image order updated successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
@@ -220,12 +226,6 @@ func (h *ImageHandler) SetMainProductImage(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug}/products/{product_id}/images/order [put]
 func (h *ImageHandler) UpdateImageOrder(c *fiber.Ctx) error {
-	// Структура для обновления порядка изображений
-	type ImageOrderUpdate struct {
-		ID           int `json:"id"`
-		DisplayOrder int `json:"display_order"`
-	}
-
 	var updates []ImageOrderUpdate
 	if err := c.BodyParser(&updates); err != nil {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "storefronts.invalid_request")

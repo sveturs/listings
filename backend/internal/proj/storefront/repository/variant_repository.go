@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -50,7 +51,11 @@ func (r *VariantRepository) CreateVariant(ctx context.Context, req *types.Create
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			// Transaction was already committed or rolled back, ignore
+		}
+	}()
 
 	// If this is set as default, unset other defaults for this product
 	if req.IsDefault {
@@ -400,7 +405,11 @@ func (r *VariantRepository) SetupProductAttributes(ctx context.Context, req *typ
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			// Transaction was already committed or rolled back, ignore
+		}
+	}()
 
 	// Delete existing attribute configurations for this product
 	_, err = tx.ExecContext(ctx, "DELETE FROM storefront_product_attributes WHERE product_id = $1", req.ProductID)

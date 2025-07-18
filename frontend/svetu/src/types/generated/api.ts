@@ -19549,6 +19549,399 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/slug/{slug}/products/{product_id}/images': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get product images
+     * @description Returns all images for a specific product
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product images */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_services.UploadImageResponse'][];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Upload image for storefront product
+     * @description Uploads a new image for a storefront product
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Image file
+             */
+            image: string;
+            /** @description Set as main image */
+            is_main?: boolean;
+            /** @description Display order */
+            display_order?: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Image uploaded successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_services.UploadImageResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description File too large */
+        413: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete product image
+     * @description Deletes a specific image of a product
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+          /** @description Image ID */
+          image_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Image deleted successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Image not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id}/main': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Set main product image
+     * @description Sets a specific image as the main image for a product
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+          /** @description Image ID */
+          image_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Main image set successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Image not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/slug/{slug}/products/{product_id}/images/order': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update image display order
+     * @description Updates the display order of product images
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Image order updates */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_storefronts_handler.ImageOrderUpdate'][];
+        };
+      };
+      responses: {
+        /** @description Image order updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/translation/limits': {
     parameters: {
       query?: never;
@@ -21347,6 +21740,8 @@ export interface components {
       /** @description MIME-тип файла */
       content_type?: string;
       created_at?: string;
+      /** @description Порядок отображения */
+      display_order?: number;
       /** @description Оригинальное имя файла */
       file_name?: string;
       /** @description Путь к файлу в хранилище */
@@ -21354,6 +21749,8 @@ export interface components {
       /** @description Размер файла в байтах */
       file_size?: number;
       id?: number;
+      /** @description URL изображения для API */
+      image_url?: string;
       /** @description Является ли изображение основным */
       is_main?: boolean;
       listing_id?: number;
@@ -21363,6 +21760,8 @@ export interface components {
       storage_bucket?: string;
       /** @description Тип хранилища: "local" или "minio" */
       storage_type?: string;
+      /** @description URL миниатюры для API */
+      thumbnail_url?: string;
     };
     'backend_internal_domain_models.MarketplaceListing': {
       attributes?: components['schemas']['backend_internal_domain_models.ListingAttributeValue'][];
@@ -22045,11 +22444,18 @@ export interface components {
       view_count?: number;
     };
     'backend_internal_domain_models.StorefrontProductImage': {
+      content_type?: string;
       created_at?: string;
       display_order?: number;
+      file_name?: string;
+      file_path?: string;
+      file_size?: number;
       id?: number;
       image_url?: string;
       is_default?: boolean;
+      public_url?: string;
+      storage_bucket?: string;
+      storage_type?: string;
       storefront_product_id?: number;
       thumbnail_url?: string;
     };
@@ -22698,6 +23104,14 @@ export interface components {
     'backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult': {
       storefronts?: components['schemas']['backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem'][];
       total?: number;
+    };
+    'backend_internal_services.UploadImageResponse': {
+      display_order?: number;
+      id?: number;
+      image_url?: string;
+      is_main?: boolean;
+      public_url?: string;
+      thumbnail_url?: string;
     };
     'backend_pkg_utils.ErrorResponseSwag': {
       /** @example Описание ошибки */
@@ -23455,6 +23869,10 @@ export interface components {
     'internal_proj_storefronts_handler.AddStaffRequest': {
       role: components['schemas']['backend_internal_domain_models.StaffRole'];
       user_id: number;
+    };
+    'internal_proj_storefronts_handler.ImageOrderUpdate': {
+      display_order?: number;
+      id?: number;
     };
     'internal_proj_storefronts_handler.StaffListResponse': {
       staff?: components['schemas']['backend_internal_domain_models.StorefrontStaff'][];
