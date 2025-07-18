@@ -15,10 +15,12 @@ import (
 	notificationService "backend/internal/proj/notifications/service"
 	paymentService "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
+	"backend/internal/services"
 	storefrontService "backend/internal/proj/storefronts/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
+	"backend/internal/storage/interfaces"
 )
 
 // SearchLogsServiceInterface интерфейс для логирования поисковых запросов
@@ -59,4 +61,7 @@ type ServicesInterface interface {
 
 	// SearchLogs возвращает сервис для логирования поисковых запросов
 	SearchLogs() SearchLogsServiceInterface
+
+	// NewImageService создает новый ImageService
+	NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface) *services.ImageService
 }

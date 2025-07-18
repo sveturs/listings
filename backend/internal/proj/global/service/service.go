@@ -16,10 +16,12 @@ import (
 	notificationService "backend/internal/proj/notifications/service"
 	payment "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
+	"backend/internal/services"
 	storefrontService "backend/internal/proj/storefronts/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
+	"backend/internal/storage/interfaces"
 )
 
 type Service struct {
@@ -221,4 +223,9 @@ func (s *Service) BehaviorTracking() behaviorTrackingService.BehaviorTrackingSer
 func (s *Service) SearchLogs() SearchLogsServiceInterface {
 	// Временно возвращаем nil, пока не реализован сервис логирования поиска
 	return nil
+}
+
+// NewImageService создает новый ImageService
+func (s *Service) NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface) *services.ImageService {
+	return services.NewImageService(fileStorage, repo)
 }
