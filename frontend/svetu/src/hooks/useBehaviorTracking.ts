@@ -251,6 +251,26 @@ export function useBehaviorTracking(
   );
 
   /**
+   * Отправляет все накопленные события
+   */
+  const flushEvents = useCallback(async () => {
+    if (state.pendingEvents.length === 0) return;
+
+    const eventsToSend = [...state.pendingEvents];
+
+    setState((prev) => ({
+      ...prev,
+      pendingEvents: [],
+    }));
+
+    if (batchTimeoutRef.current) {
+      clearTimeout(batchTimeoutRef.current);
+    }
+
+    await sendEventsWithRetry(eventsToSend);
+  }, [state.pendingEvents, sendEventsWithRetry]);
+
+  /**
    * Добавляет событие в очередь
    */
   const addEvent = useCallback(
@@ -289,28 +309,10 @@ export function useBehaviorTracking(
       config.batchTimeout,
       state.isInitialized,
       state.pendingEvents.length,
+      sendEventsWithRetry,
+      flushEvents,
     ]
   );
-
-  /**
-   * Отправляет все накопленные события
-   */
-  const flushEvents = useCallback(async () => {
-    if (state.pendingEvents.length === 0) return;
-
-    const eventsToSend = [...state.pendingEvents];
-
-    setState((prev) => ({
-      ...prev,
-      pendingEvents: [],
-    }));
-
-    if (batchTimeoutRef.current) {
-      clearTimeout(batchTimeoutRef.current);
-    }
-
-    await sendEventsWithRetry(eventsToSend);
-  }, [state.pendingEvents, sendEventsWithRetry]);
 
   /**
    * Очищает контекст трекинга

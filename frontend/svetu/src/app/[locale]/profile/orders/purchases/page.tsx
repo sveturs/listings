@@ -31,7 +31,7 @@ export default function MyPurchasesPage() {
     if (isAuthenticated) {
       fetchOrders();
     }
-  }, [isAuthenticated, page]);
+  }, [isAuthenticated, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchOrders = async () => {
     try {

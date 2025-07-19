@@ -166,7 +166,9 @@ func main() {
 					p.Images = append(p.Images, img)
 				}
 			}
-			imgRows.Close()
+			if err := imgRows.Close(); err != nil {
+				fmt.Printf("Warning: failed to close image rows: %v\n", err)
+			}
 		}
 
 		// Get product variants
@@ -185,7 +187,9 @@ func main() {
 					p.Variants = append(p.Variants, v)
 				}
 			}
-			varRows.Close()
+			if err := varRows.Close(); err != nil {
+				fmt.Printf("Warning: failed to close variant rows: %v\n", err)
+			}
 		}
 
 		products = append(products, &p)

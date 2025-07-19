@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 // import { MapMouseEvent } from 'react-map-gl';
 
 interface DraggableLocationIconProps {
@@ -42,25 +42,28 @@ export default function DraggableLocationIcon({
   };
 
   // Обработка окончания перетаскивания
-  const handleDrop = (e: DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
+  const handleDrop = useCallback(
+    (e: DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
 
-    if (!mapRef.current) return;
+      if (!mapRef.current) return;
 
-    const map = mapRef.current;
-    const rect = map.getContainer().getBoundingClientRect();
+      const map = mapRef.current;
+      const rect = map.getContainer().getBoundingClientRect();
 
-    // Вычисляем позицию относительно карты
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+      // Вычисляем позицию относительно карты
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-    // Конвертируем пиксели в координаты
-    const lngLat = map.unproject([x, y]);
+      // Конвертируем пиксели в координаты
+      const lngLat = map.unproject([x, y]);
 
-    // Вызываем callback с новыми координатами
-    onDropLocation(lngLat.lng, lngLat.lat);
-  };
+      // Вызываем callback с новыми координатами
+      onDropLocation(lngLat.lng, lngLat.lat);
+    },
+    [mapRef, onDropLocation]
+  );
 
   // Обработка окончания перетаскивания
   const handleDragEnd = () => {
@@ -92,7 +95,7 @@ export default function DraggableLocationIcon({
       mapContainer.removeEventListener('dragover', handleMapDragOver);
       mapContainer.removeEventListener('drop', handleMapDrop);
     };
-  }, [isDragging, mapRef]);
+  }, [isDragging, mapRef, handleDrop]);
 
   // Обработка для мобильных устройств
   const handleTouchStart = (e: React.TouchEvent) => {

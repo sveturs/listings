@@ -68,6 +68,11 @@
     "free_above": "Бесплатно от",
     "viewGrid": "Сеткой",
     "viewList": "Списком",
+    "all": "Все",
+    "clear": "Очистить",
+    "images": "Изображения",
+    "address": "Адрес",
+    "max": "Макс",
     "days": {
       "monday": "Понедельник",
       "tuesday": "Вторник",
@@ -122,7 +127,13 @@
     "platformFee": "Комиссия платформы",
     "codFee": "Комиссия за наложенный платеж",
     "agreeToTerms": "Я согласен с условиями использования",
-    "securePayment": "Безопасная оплата"
+    "securePayment": "Безопасная оплата",
+    "acceptedPaymentMethods": "Принимаемые способы оплаты",
+    "confirmAndPay": "Подтвердить и оплатить",
+    "depositNow": "Внести средства",
+    "depositPrompt": "Хотите пополнить баланс?",
+    "messageToSeller": "Сообщение продавцу",
+    "messagePlaceholder": "Добавить сообщение продавцу (необязательно)"
   },
   "orders": {
     "history": "История заказов",
@@ -675,6 +686,7 @@
       "users": "Пользователи",
       "attributesDescription": "Управление атрибутами для категорий маркетплейса",
       "attributeGroupsDescription": "Управление группами атрибутов для лучшей организации",
+      "categoriesDescription": "Настройка категорий и атрибутов",
       "analytics": "Аналитика",
       "search": "Аналитика поиска",
       "system": "Система"
@@ -1429,7 +1441,63 @@
     "year": "Год",
     "addToFavorites": "В избранное",
     "share": "Поделиться",
-    "newSeller": "Новый"
+    "newSeller": "Новый",
+    "seller": {
+      "title": "Продавец",
+      "noReviews": "Нет отзывов",
+      "memberSince": "На сайте с",
+      "responseRate": "Процент ответов",
+      "responseTime": "Время ответа",
+      "verified": "Проверен",
+      "experienced": "Опытный продавец",
+      "sendMessage": "Написать сообщение",
+      "showPhone": "Показать телефон",
+      "allItems": "Все товары продавца",
+      "yourListing": "Это ваше объявление",
+      "edit": "Редактировать",
+      "signInToContact": "Войдите, чтобы связаться с продавцом",
+      "signIn": "Войти",
+      "platformProtection": "Все сделки защищены правилами платформы"
+    },
+    "iconPicker": {
+      "placeholder": "Выберите иконку",
+      "close": "Закрыть",
+      "categories": {
+        "transport": "Транспорт",
+        "electronics": "Электроника",
+        "home": "Дом и быт",
+        "clothing": "Одежда",
+        "food": "Еда и напитки",
+        "sports": "Спорт и отдых",
+        "beauty": "Красота и здоровье",
+        "books": "Книги и обучение",
+        "nature": "Природа и животные",
+        "tools": "Инструменты",
+        "numbers": "Числа и символы",
+        "attributes": "Атрибуты"
+      }
+    },
+    "listingActions": {
+      "signInToAddFavorites": "Войдите, чтобы добавить в избранное",
+      "removedFromFavorites": "Удалено из избранного",
+      "addedToFavorites": "Добавлено в избранное",
+      "removedFromComparison": "Удалено из сравнения",
+      "addedToComparison": "Добавлено к сравнению",
+      "linkCopied": "Ссылка скопирована",
+      "failedToCopyLink": "Не удалось скопировать ссылку",
+      "copyNotSupported": "Копирование не поддерживается в вашем браузере",
+      "error": "Произошла ошибка",
+      "addToFavorites": "Добавить в избранное",
+      "addToComparison": "Добавить к сравнению",
+      "share": "Поделиться",
+      "copyLink": "Копировать ссылку",
+      "report": "Пожаловаться"
+    },
+    "similarListings": {
+      "title": "Похожие объявления",
+      "buy": "Купить",
+      "chat": "Чат"
+    }
   },
   "reviews": {
     "create": {
@@ -1510,6 +1578,13 @@
     "rating": {
       "error": {
         "fetch_failed": "Не удалось загрузить рейтинг"
+      },
+      "labels": {
+        "terrible": "Ужасно",
+        "bad": "Плохо",
+        "normal": "Нормально",
+        "good": "Хорошо",
+        "excellent": "Отлично"
       }
     },
     "photos": {
@@ -2085,10 +2160,10 @@
       },
       "filters": "Фильтры",
       "bulk": {
+        "selectMode": "Режим выбора",
         "selected": "{count, plural, =0 {Не выбрано} one {# товар выбран} few {# товара выбрано} many {# товаров выбрано} other {# товаров выбрано}}",
         "clearSelection": "Снять выделение",
         "selectAll": "Выбрать все",
-        "selectMode": "Режим выбора",
         "status": "Статус",
         "activate": "Активировать",
         "deactivate": "Деактивировать",
@@ -2368,7 +2443,18 @@
       "invalid_user_id": "Неверный идентификатор пользователя",
       "remove_staff_failed": "Не удалось удалить сотрудника",
       "get_staff_failed": "Не удалось получить список сотрудников"
-    }
+    },
+    "loadError": "Не удалось загрузить витрину",
+    "settings": "Настройки",
+    "basicInfo": "Основная информация",
+    "storeName": "Название магазина",
+    "description": "Описание",
+    "logo": "Логотип",
+    "uploadLogo": "Загрузить логотип",
+    "logoRequirements": "Рекомендуемый размер: 256x256px, Макс. размер: 2МБ",
+    "banner": "Баннер",
+    "uploadBanner": "Загрузить баннер",
+    "bannerRequirements": "Рекомендуемый размер: 1200x400px, Макс. размер: 5МБ"
   },
   "import": {
     "title": "Импорт товаров",
@@ -2888,5 +2974,9 @@
       "desktopHint": "R/W - смена режима",
       "updatingIsochrone": "Обновление зоны доступности..."
     }
+  },
+  "listing": {
+    "listingDetails": "Детали объявления",
+    "delivery": "Доставка"
   }
 }

@@ -157,3 +157,74 @@ func (s *Server) ProxyChatFiles(c *fiber.Ctx) error {
 	_, err = io.Copy(c.Response().BodyWriter(), resp.Body)
 	return err
 }
+
+// ProxyStorefrontProducts проксирует запросы к MinIO для изображений товаров витрин
+func (s *Server) ProxyStorefrontProducts(c *fiber.Ctx) error {
+	// Получаем путь после /storefront-products/
+	path := c.Params("*")
+	if path == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid path",
+		})
+	}
+
+	// Формируем URL для MinIO
+	minioURL := fmt.Sprintf("http://%s/storefront-products/%s", s.cfg.FileStorage.MinioEndpoint, path)
+
+	log.Debug().
+		Str("path", path).
+		Str("minio_url", minioURL).
+		Msg("Proxying storefront product image request to MinIO")
+
+	// Используем тот же механизм проксирования
+	req, err := http.NewRequest("GET", minioURL, nil)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create request",
+		})
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch file",
+		})
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return c.Status(resp.StatusCode).JSON(fiber.Map{
+			"error": "File not found",
+		})
+	}
+
+	// Копируем заголовки и тело
+	if ct := resp.Header.Get("Content-Type"); ct != "" {
+		c.Set("Content-Type", ct)
+	}
+	if cl := resp.Header.Get("Content-Length"); cl != "" {
+		c.Set("Content-Length", cl)
+	}
+	c.Set("Cache-Control", "public, max-age=604800") // 7 дней
+
+	// Определяем тип контента по расширению файла, если Content-Type не установлен
+	if resp.Header.Get("Content-Type") == "" {
+		ext := strings.ToLower(path[strings.LastIndex(path, ".")+1:])
+		switch ext {
+		case "jpg", "jpeg":
+			c.Set("Content-Type", "image/jpeg")
+		case "png":
+			c.Set("Content-Type", "image/png")
+		case "gif":
+			c.Set("Content-Type", "image/gif")
+		case "webp":
+			c.Set("Content-Type", "image/webp")
+		default:
+			c.Set("Content-Type", "application/octet-stream")
+		}
+	}
+
+	_, err = io.Copy(c.Response().BodyWriter(), resp.Body)
+	return err
+}

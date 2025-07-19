@@ -267,6 +267,7 @@ func (s *Server) setupRoutes() {
 	// Эти маршруты должны быть после всех API маршрутов
 	s.app.Get("/listings/*", s.ProxyMinIO)
 	s.app.Get("/chat-files/*", s.ProxyChatFiles)
+	s.app.Get("/storefront-products/*", s.ProxyStorefrontProducts)
 }
 
 // registerProjectRoutes регистрирует роуты проектов через новую систему

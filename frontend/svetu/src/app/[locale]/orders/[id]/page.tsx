@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/api-client';
 import { balanceService } from '@/services/balance';
@@ -169,10 +170,12 @@ export default function OrderDetailsPage({ params }: Props) {
                             setGalleryOpen(true);
                           }}
                         >
-                          <img
+                          <Image
                             src={order.listing.images[0].url}
                             alt={order.listing.title}
-                            className="w-full h-full object-cover hover:scale-110 transition-transform duration-200"
+                            fill
+                            className="object-cover hover:scale-110 transition-transform duration-200"
+                            sizes="(max-width: 768px) 100vw, 300px"
                           />
                           {order.listing.images.length > 1 && (
                             <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">

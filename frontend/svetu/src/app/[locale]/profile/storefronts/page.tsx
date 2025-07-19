@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
+import Image from 'next/image';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchMyStorefronts } from '@/store/slices/storefrontSlice';
 import { Link } from '@/i18n/routing';
@@ -267,10 +268,11 @@ export default function MyStorefrontsPage() {
                 {/* Card Header with Banner */}
                 <figure className="relative h-48 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden">
                   {storefront.banner_url ? (
-                    <img
+                    <Image
                       src={storefront.banner_url}
                       alt={storefront.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -298,9 +300,11 @@ export default function MyStorefrontsPage() {
                     <div className="avatar shadow-xl">
                       <div className="w-24 rounded-2xl ring-4 ring-base-100 bg-base-100">
                         {storefront.logo_url ? (
-                          <img
+                          <Image
                             src={storefront.logo_url}
                             alt={`${storefront.name} logo`}
+                            fill
+                            className="object-cover"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">

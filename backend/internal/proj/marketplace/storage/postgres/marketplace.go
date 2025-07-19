@@ -2025,6 +2025,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		userPhone      sql.NullString
 		categoryName   sql.NullString
 		categorySlug   sql.NullString
+		storefrontID   sql.NullInt32
 	)
 
 	err := s.pool.QueryRow(ctx, `
@@ -2035,7 +2036,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
             u.name, u.email, u.created_at as user_created_at,
             u.picture_url, u.phone,
-            c.name as category_name, c.slug as category_slug, l.metadata
+            c.name as category_name, c.slug as category_slug, l.metadata, l.storefront_id
         FROM marketplace_listings l
         LEFT JOIN users u ON l.user_id = u.id
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
@@ -2048,9 +2049,10 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&listing.ShowOnMap, &originalLang,
 		&userName, &userEmail, &listing.User.CreatedAt,
 		&userPictureURL, &userPhone,
-		&categoryName, &categorySlug, &listing.Metadata,
+		&categoryName, &categorySlug, &listing.Metadata, &storefrontID,
 	)
 	log.Printf("999 DEBUG: Listing %d metadata: %+v", id, listing.Metadata)
+	log.Printf("DEBUG: err after query = %v", err)
 
 	if err != nil {
 		// Если не найдено в marketplace_listings, попробуем найти в storefront_products
@@ -2106,6 +2108,10 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	if categorySlug.Valid {
 		listing.Category.Slug = categorySlug.String
 	}
+	if storefrontID.Valid {
+		sfID := int(storefrontID.Int32)
+		listing.StorefrontID = &sfID
+	}
 
 	// Обработка метаданных и скидок для согласованного отображения
 	if listing.Metadata != nil {
@@ -2154,10 +2160,32 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	}
 
 	// Получаем изображения
-	images, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
-	if err != nil {
-		log.Printf("Error loading images: %v", err) // Добавляем лог
-		return nil, err
+	var images []models.MarketplaceImage
+	log.Printf("DEBUG GetListingByID: listing.ID=%d, StorefrontID=%v", listing.ID, listing.StorefrontID)
+	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+		log.Printf("DEBUG GetListingByID: Loading storefront images for listing %d, storefront_id=%d", listing.ID, *listing.StorefrontID)
+		// Для storefront товаров загружаем изображения из storefront_product_images
+		storefrontImages, err := s.GetStorefrontProductImages(ctx, listing.ID)
+		if err != nil {
+			log.Printf("Error loading storefront images for listing %d: %v", listing.ID, err)
+			// Не прерываем выполнение, просто оставляем пустой массив изображений
+			images = []models.MarketplaceImage{}
+		} else {
+			log.Printf("DEBUG GetListingByID: Successfully loaded %d storefront images for listing %d", len(storefrontImages), listing.ID)
+			images = storefrontImages
+		}
+	} else {
+		log.Printf("DEBUG GetListingByID: Loading marketplace images for listing %d (no storefront_id)", listing.ID)
+		// Для обычных marketplace товаров загружаем изображения из marketplace_images
+		marketplaceImages, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
+		if err != nil {
+			log.Printf("Error loading marketplace images for listing %d: %v", listing.ID, err)
+			// Не прерываем выполнение, просто оставляем пустой массив изображений
+			images = []models.MarketplaceImage{}
+		} else {
+			log.Printf("DEBUG GetListingByID: Successfully loaded %d marketplace images for listing %d", len(marketplaceImages), listing.ID)
+			images = marketplaceImages
+		}
 	}
 
 	// Важно! Присваиваем изображения объявлению
@@ -2326,8 +2354,18 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 		listing.Category.Slug = categorySlug.String
 	}
 
-	// Для storefront продуктов нет изображений и атрибутов пока что
-	listing.Images = []models.MarketplaceImage{}
+	// Загружаем изображения для storefront продукта
+	log.Printf("DEBUG getStorefrontProductAsListing: Loading images for storefront product %d", listing.ID)
+	storefrontImages, err := s.GetStorefrontProductImages(ctx, listing.ID)
+	if err != nil {
+		log.Printf("Error loading storefront images for product %d: %v", listing.ID, err)
+		listing.Images = []models.MarketplaceImage{}
+	} else {
+		log.Printf("DEBUG getStorefrontProductAsListing: Successfully loaded %d images for storefront product %d", len(storefrontImages), listing.ID)
+		listing.Images = storefrontImages
+	}
+
+	// Для storefront продуктов нет атрибутов пока что
 	listing.Attributes = []models.ListingAttributeValue{}
 	listing.Translations = make(map[string]map[string]string)
 
@@ -2511,4 +2549,57 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 	}
 
 	return categories, nil
+}
+
+// GetStorefrontProductImages загружает изображения для storefront товара и конвертирует их в MarketplaceImage
+func (s *Storage) GetStorefrontProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
+	query := `
+        SELECT
+            id, storefront_product_id, image_url, thumbnail_url, 
+            display_order, is_default, created_at
+        FROM storefront_product_images
+        WHERE storefront_product_id = $1
+        ORDER BY display_order ASC, id ASC
+    `
+
+	rows, err := s.pool.Query(ctx, query, productID)
+	if err != nil {
+		return nil, fmt.Errorf("error querying storefront product images: %w", err)
+	}
+	defer rows.Close()
+
+	var images []models.MarketplaceImage
+	for rows.Next() {
+		var img struct {
+			ID                  int
+			StorefrontProductID int
+			ImageURL            string
+			ThumbnailURL        string
+			DisplayOrder        int
+			IsDefault           bool
+			CreatedAt           time.Time
+		}
+
+		err := rows.Scan(
+			&img.ID, &img.StorefrontProductID, &img.ImageURL, &img.ThumbnailURL,
+			&img.DisplayOrder, &img.IsDefault, &img.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning storefront product image: %w", err)
+		}
+
+		// Конвертируем в MarketplaceImage
+		marketplaceImage := models.MarketplaceImage{
+			ID:          img.ID,
+			ListingID:   img.StorefrontProductID,
+			PublicURL:   img.ImageURL,
+			IsMain:      img.IsDefault,
+			StorageType: "minio",
+			CreatedAt:   img.CreatedAt,
+		}
+
+		images = append(images, marketplaceImage)
+	}
+
+	return images, nil
 }

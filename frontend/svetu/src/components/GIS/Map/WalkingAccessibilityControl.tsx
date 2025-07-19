@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from 'react';
 import { useTranslations } from 'next-intl';
 
 interface WalkingAccessibilityControlProps {
@@ -24,8 +30,8 @@ const WalkingAccessibilityControl: React.FC<
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const walkingTimes = [5, 10, 15, 20, 30]; // минуты
-  const radiusOptions = [1000, 2000, 5000, 10000, 20000]; // метры
+  const walkingTimes = useMemo(() => [5, 10, 15, 20, 30], []); // минуты
+  const radiusOptions = useMemo(() => [1000, 2000, 5000, 10000, 20000], []); // метры
 
   // Закрытие меню при клике вне его
   useEffect(() => {

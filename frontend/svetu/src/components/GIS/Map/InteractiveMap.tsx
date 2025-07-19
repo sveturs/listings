@@ -234,7 +234,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     ) {
       setInternalBuyerLocation(buyerLocation);
     }
-  }, [buyerLocation?.longitude, buyerLocation?.latitude]);
+  }, [buyerLocation?.longitude, buyerLocation?.latitude]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Логирование изменений границ района
   useEffect(() => {

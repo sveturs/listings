@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { balanceService } from '@/services/balance';
 
@@ -105,9 +106,10 @@ export default function MarketplaceOrderCard({
               {order.listing?.images?.[0] && (
                 <div className="avatar">
                   <div className="w-20 h-20 rounded">
-                    <img
+                    <Image
                       src={order.listing.images[0].url}
                       alt={order.listing.title}
+                      fill
                       className="object-cover"
                     />
                   </div>

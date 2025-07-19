@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import SmartAddressInput from '@/components/GIS/SmartAddressInput';
 import { AddressGeocodingResult } from '@/hooks/useAddressGeocoding';
@@ -42,7 +41,6 @@ export default function LocationPicker({
   defaultCountry = 'Србија',
   mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
 }: LocationPickerProps) {
-  const t = useTranslations();
   const [mode, setMode] = useState<'search' | 'map'>('search');
   const [address, setAddress] = useState(value?.address || '');
   const [mapLocation, setMapLocation] = useState({

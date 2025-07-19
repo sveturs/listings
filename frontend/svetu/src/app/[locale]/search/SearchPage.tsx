@@ -320,16 +320,8 @@ export default function SearchPage() {
         item.images && item.images.length > 0
           ? item.images.map((img: any) => ({
               id: 0,
-              listing_id: item.product_id,
-              file_path: '',
-              file_name: img.alt_text || '',
-              file_size: 0,
-              content_type: 'image/jpeg',
+              public_url: img.url,
               is_main: img.is_main,
-              storage_type: 'minio',
-              storage_bucket: '',
-              public_url: img.public_url || img.url,
-              created_at: new Date().toISOString(),
             }))
           : [],
       category: item.category,
@@ -337,7 +329,7 @@ export default function SearchPage() {
       condition: 'good',
       status: 'active',
       views_count: 0,
-      created_at: new Date().toISOString(),
+      created_at: item.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
       // Добавляем информацию о типе товара и storefront
       product_type: item.product_type,

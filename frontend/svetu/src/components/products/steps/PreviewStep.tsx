@@ -7,6 +7,7 @@ import { useCreateProduct } from '@/contexts/CreateProductContext';
 import { apiClient } from '@/services/api-client';
 import { toast } from '@/utils/toast';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
+import Image from 'next/image';
 import type { components } from '@/types/generated/api';
 
 type CategoryAttribute =
@@ -30,6 +31,26 @@ export default function PreviewStep({
     CategoryAttribute[]
   >([]);
 
+  const uploadImages = async (productId: number, images: File[]) => {
+    const uploadPromises = images.map(async (image, index) => {
+      const formData = new FormData();
+      formData.append('image', image);
+
+      // Первое изображение делаем главным
+      if (index === 0) {
+        formData.append('is_main', 'true');
+      }
+      formData.append('display_order', String(index));
+
+      return apiClient.post(
+        `/api/v1/storefronts/slug/${storefrontSlug}/products/${productId}/images`,
+        formData
+      );
+    });
+
+    await Promise.all(uploadPromises);
+  };
+
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
@@ -41,10 +62,20 @@ export default function PreviewStep({
       );
 
       if (productResponse.data) {
-        // TODO: Загрузка изображений
-        // if (state.images.length > 0) {
-        //   await uploadImages(productResponse.data.id, state.images);
-        // }
+        const productData = productResponse.data.data || productResponse.data;
+
+        // Загрузка изображений
+        if (state.images.length > 0 && productData.id) {
+          try {
+            await uploadImages(productData.id, state.images);
+          } catch (imageError) {
+            console.error('Failed to upload images:', imageError);
+            // Продолжаем даже если не удалось загрузить изображения
+            toast.warning(
+              t('storefronts.products.productCreatedButImagesError')
+            );
+          }
+        }
 
         toast.success(t('storefronts.products.productCreated'));
         router.push(`/${locale}/storefronts/${storefrontSlug}/products`);
@@ -144,10 +175,11 @@ export default function PreviewStep({
             <div className="card bg-base-100 shadow-xl">
               <div className="card-body p-0">
                 <div className="aspect-square bg-base-200 rounded-t-2xl overflow-hidden">
-                  <img
+                  <Image
                     src={URL.createObjectURL(state.images[0])}
                     alt={state.productData.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
 
@@ -160,10 +192,11 @@ export default function PreviewStep({
                           key={index}
                           className="aspect-square bg-base-200 rounded-lg overflow-hidden"
                         >
-                          <img
+                          <Image
                             src={URL.createObjectURL(image)}
                             alt={`${state.productData.name} ${index + 2}`}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         </div>
                       ))}

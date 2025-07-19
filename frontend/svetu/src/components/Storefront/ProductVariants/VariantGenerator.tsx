@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 
 interface AttributeValue {
@@ -54,11 +54,7 @@ export default function VariantGenerator({
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
-  useEffect(() => {
-    loadProductAttributes();
-  }, [productId]);
-
-  const loadProductAttributes = async () => {
+  const loadProductAttributes = useCallback(async () => {
     try {
       const response = await fetch(
         `/api/v1/storefront/products/${productId}/attributes`
@@ -79,7 +75,11 @@ export default function VariantGenerator({
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    loadProductAttributes();
+  }, [productId, loadProductAttributes]);
 
   const toggleValueSelection = (attributeName: string, value: string) => {
     setSelectedValues((prev) => ({

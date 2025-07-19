@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import SafeImage from '@/components/SafeImage';
 import { getSafeImageUrl } from '@/utils/imageUtils';

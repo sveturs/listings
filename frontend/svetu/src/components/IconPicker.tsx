@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface IconPickerProps {
   value: string;
@@ -11,7 +12,6 @@ interface IconPickerProps {
 // Расширенный набор иконок для категорий и атрибутов
 const iconCategories = {
   transport: {
-    name: 'Транспорт',
     icons: [
       '🚗',
       '🚙',
@@ -36,7 +36,6 @@ const iconCategories = {
     ],
   },
   electronics: {
-    name: 'Электроника',
     icons: [
       '📱',
       '💻',
@@ -61,7 +60,6 @@ const iconCategories = {
     ],
   },
   home: {
-    name: 'Дом и быт',
     icons: [
       '🏠',
       '🏡',
@@ -86,7 +84,6 @@ const iconCategories = {
     ],
   },
   clothing: {
-    name: 'Одежда',
     icons: [
       '👕',
       '👔',
@@ -111,7 +108,6 @@ const iconCategories = {
     ],
   },
   food: {
-    name: 'Еда и напитки',
     icons: [
       '🍎',
       '🍌',
@@ -136,7 +132,6 @@ const iconCategories = {
     ],
   },
   sports: {
-    name: 'Спорт и отдых',
     icons: [
       '⚽',
       '🏀',
@@ -161,7 +156,6 @@ const iconCategories = {
     ],
   },
   beauty: {
-    name: 'Красота и здоровье',
     icons: [
       '💄',
       '💅',
@@ -186,7 +180,6 @@ const iconCategories = {
     ],
   },
   books: {
-    name: 'Книги и обучение',
     icons: [
       '📚',
       '📖',
@@ -211,7 +204,6 @@ const iconCategories = {
     ],
   },
   nature: {
-    name: 'Природа и животные',
     icons: [
       '🌱',
       '🌿',
@@ -236,7 +228,6 @@ const iconCategories = {
     ],
   },
   tools: {
-    name: 'Инструменты',
     icons: [
       '🔨',
       '🪓',
@@ -261,7 +252,6 @@ const iconCategories = {
     ],
   },
   numbers: {
-    name: 'Числа и символы',
     icons: [
       '🔢',
       '📊',
@@ -286,7 +276,6 @@ const iconCategories = {
     ],
   },
   attributes: {
-    name: 'Атрибуты',
     icons: [
       '📝',
       '🔤',
@@ -315,10 +304,11 @@ const iconCategories = {
 export default function IconPicker({
   value,
   onChange,
-  placeholder = 'Выберите иконку',
+  placeholder,
 }: IconPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('transport');
+  const t = useTranslations('marketplace.iconPicker');
 
   const handleIconSelect = (icon: string) => {
     onChange(icon);
@@ -337,7 +327,7 @@ export default function IconPicker({
           value={value}
           onChange={handleInputChange}
           className="input input-bordered flex-1"
-          placeholder={placeholder}
+          placeholder={placeholder || t('placeholder')}
         />
         <button
           type="button"
@@ -353,14 +343,14 @@ export default function IconPicker({
           {/* Category tabs */}
           <div className="tabs tabs-boxed mb-4">
             <div className="flex flex-wrap gap-1">
-              {Object.entries(iconCategories).map(([key, category]) => (
+              {Object.keys(iconCategories).map((key) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setActiveCategory(key)}
                   className={`tab tab-sm ${activeCategory === key ? 'tab-active' : ''}`}
                 >
-                  {category.name}
+                  {t(`categories.${key}`)}
                 </button>
               ))}
             </div>
@@ -391,7 +381,7 @@ export default function IconPicker({
               onClick={() => setIsOpen(false)}
               className="btn btn-sm btn-ghost"
             >
-              Закрыть
+              {t('close')}
             </button>
           </div>
         </div>

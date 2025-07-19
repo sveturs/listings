@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,6 +33,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [showPhone, setShowPhone] = useState(false);
+  const t = useTranslations('marketplace.seller');
 
   // Получаем статистику отзывов продавца
   const { data: statsData } = useReviewStats('user', listing.user_id);
@@ -73,7 +74,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
     <div className="bg-base-100 rounded-lg shadow-sm border border-base-200 overflow-hidden">
       <div className="p-4 lg:p-6">
         <h3 className="text-lg font-semibold mb-4 text-base-content">
-          {locale === 'ru' ? 'Продавец' : 'Seller'}
+          {t('title')}
         </h3>
 
         {/* Seller Avatar and Basic Info */}
@@ -103,11 +104,11 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
               <div className="mt-1">{renderStars(rating)}</div>
             ) : (
               <p className="text-sm text-base-content/60 mt-1">
-                {locale === 'ru' ? 'Нет отзывов' : 'No reviews yet'}
+                {t('noReviews')}
               </p>
             )}
             <p className="text-xs text-base-content/60 mt-2">
-              {locale === 'ru' ? 'На сайте с' : 'Member since'}{' '}
+              {t('memberSince')}{' '}
               {listing.user && formatDate(listing.user.created_at)}
             </p>
           </div>
@@ -120,7 +121,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
               {listing.seller_response_rate || 95}%
             </div>
             <div className="text-xs text-base-content/60">
-              {locale === 'ru' ? 'Процент ответов' : 'Response rate'}
+              {t('responseRate')}
             </div>
           </div>
           <div className="text-center p-3 bg-base-200/50 rounded-lg">
@@ -128,7 +129,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
               {listing.seller_response_time || '< 1ч'}
             </div>
             <div className="text-xs text-base-content/60">
-              {locale === 'ru' ? 'Время ответа' : 'Response time'}
+              {t('responseTime')}
             </div>
           </div>
         </div>
@@ -143,7 +144,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
                 clipRule="evenodd"
               />
             </svg>
-            {locale === 'ru' ? 'Проверен' : 'Verified'}
+            {t('verified')}
           </span>
           {(listing.seller_total_listings || 0) > 10 && (
             <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-info/10 text-info rounded-md">
@@ -155,7 +156,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
                   clipRule="evenodd"
                 />
               </svg>
-              {locale === 'ru' ? 'Опытный продавец' : 'Experienced'}
+              {t('experienced')}
             </span>
           )}
         </div>
@@ -181,7 +182,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                   />
                 </svg>
-                {locale === 'ru' ? 'Написать сообщение' : 'Send Message'}
+                {t('sendMessage')}
               </button>
 
               <button
@@ -201,11 +202,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
                     d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                   />
                 </svg>
-                {showPhone
-                  ? '+381 69 123 4567'
-                  : locale === 'ru'
-                    ? 'Показать телефон'
-                    : 'Show Phone'}
+                {showPhone ? '+381 69 123 4567' : t('showPhone')}
               </button>
 
               <Link
@@ -225,17 +222,12 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                   />
                 </svg>
-                {locale === 'ru' ? 'Все товары продавца' : 'All seller items'} (
-                {listing.seller_total_listings || 0})
+                {t('allItems')} ({listing.seller_total_listings || 0})
               </Link>
             </>
           ) : user && user.id === listing.user_id ? (
             <div className="text-center">
-              <p className="text-base-content/60 mb-3">
-                {locale === 'ru'
-                  ? 'Это ваше объявление'
-                  : 'This is your listing'}
-              </p>
+              <p className="text-base-content/60 mb-3">{t('yourListing')}</p>
               <Link
                 href={`/${locale}/profile/listings/${listing.id}/edit`}
                 className="btn btn-outline btn-sm"
@@ -253,21 +245,19 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                   />
                 </svg>
-                {locale === 'ru' ? 'Редактировать' : 'Edit'}
+                {t('edit')}
               </Link>
             </div>
           ) : (
             <div className="text-center">
               <p className="text-base-content/60 mb-3">
-                {locale === 'ru'
-                  ? 'Войдите, чтобы связаться с продавцом'
-                  : 'Sign in to contact seller'}
+                {t('signInToContact')}
               </p>
               <button
                 onClick={() => router.push('/')}
                 className="btn btn-primary btn-sm"
               >
-                {locale === 'ru' ? 'Войти' : 'Sign In'}
+                {t('signIn')}
               </button>
             </div>
           )}
@@ -291,9 +281,7 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
                 />
               </svg>
               <span className="text-xs text-base-content/70">
-                {locale === 'ru'
-                  ? 'Все сделки защищены правилами платформы'
-                  : 'All transactions are protected by platform rules'}
+                {t('platformProtection')}
               </span>
             </div>
           </div>

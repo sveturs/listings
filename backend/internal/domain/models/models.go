@@ -107,7 +107,135 @@ type MarketplaceImage struct {
 	StorageType   string    `json:"storage_type"`             // Тип хранилища: "local" или "minio"
 	StorageBucket string    `json:"storage_bucket,omitempty"` // Имя бакета для MinIO
 	PublicURL     string    `json:"public_url,omitempty"`     // Публичный URL для доступа к файлу
+	ImageURL      string    `json:"image_url,omitempty"`      // URL изображения для API
+	ThumbnailURL  string    `json:"thumbnail_url,omitempty"`  // URL миниатюры для API
+	DisplayOrder  int       `json:"display_order"`            // Порядок отображения
 	CreatedAt     time.Time `json:"created_at"`
+}
+
+// Реализация интерфейса ImageInterface для MarketplaceImage
+func (m *MarketplaceImage) GetID() int {
+	return m.ID
+}
+
+func (m *MarketplaceImage) GetEntityType() string {
+	return "marketplace"
+}
+
+func (m *MarketplaceImage) GetEntityID() int {
+	return m.ListingID
+}
+
+func (m *MarketplaceImage) GetFilePath() string {
+	return m.FilePath
+}
+
+func (m *MarketplaceImage) GetFileName() string {
+	return m.FileName
+}
+
+func (m *MarketplaceImage) GetFileSize() int {
+	return m.FileSize
+}
+
+func (m *MarketplaceImage) GetContentType() string {
+	return m.ContentType
+}
+
+func (m *MarketplaceImage) GetIsMain() bool {
+	return m.IsMain
+}
+
+func (m *MarketplaceImage) GetStorageType() string {
+	return m.StorageType
+}
+
+func (m *MarketplaceImage) GetStorageBucket() string {
+	return m.StorageBucket
+}
+
+func (m *MarketplaceImage) GetPublicURL() string {
+	return m.PublicURL
+}
+
+func (m *MarketplaceImage) GetImageURL() string {
+	return m.ImageURL
+}
+
+func (m *MarketplaceImage) GetThumbnailURL() string {
+	return m.ThumbnailURL
+}
+
+func (m *MarketplaceImage) GetDisplayOrder() int {
+	return m.DisplayOrder
+}
+
+func (m *MarketplaceImage) GetCreatedAt() time.Time {
+	return m.CreatedAt
+}
+
+func (m *MarketplaceImage) SetID(id int) {
+	m.ID = id
+}
+
+func (m *MarketplaceImage) SetEntityID(entityID int) {
+	m.ListingID = entityID
+}
+
+func (m *MarketplaceImage) SetFilePath(filePath string) {
+	m.FilePath = filePath
+}
+
+func (m *MarketplaceImage) SetFileName(fileName string) {
+	m.FileName = fileName
+}
+
+func (m *MarketplaceImage) SetFileSize(fileSize int) {
+	m.FileSize = fileSize
+}
+
+func (m *MarketplaceImage) SetContentType(contentType string) {
+	m.ContentType = contentType
+}
+
+func (m *MarketplaceImage) SetIsMain(isMain bool) {
+	m.IsMain = isMain
+}
+
+func (m *MarketplaceImage) SetStorageType(storageType string) {
+	m.StorageType = storageType
+}
+
+func (m *MarketplaceImage) SetStorageBucket(bucket string) {
+	m.StorageBucket = bucket
+}
+
+func (m *MarketplaceImage) SetPublicURL(url string) {
+	m.PublicURL = url
+}
+
+func (m *MarketplaceImage) SetImageURL(url string) {
+	m.ImageURL = url
+}
+
+func (m *MarketplaceImage) SetThumbnailURL(url string) {
+	m.ThumbnailURL = url
+}
+
+func (m *MarketplaceImage) SetDisplayOrder(order int) {
+	m.DisplayOrder = order
+}
+
+func (m *MarketplaceImage) SetCreatedAt(createdAt time.Time) {
+	m.CreatedAt = createdAt
+}
+
+func (m *MarketplaceImage) IsMainImage() bool {
+	return m.IsMain
+}
+
+func (m *MarketplaceImage) SetMainImage(isMain bool) {
+	m.IsMain = isMain
 }
 
 type CategoryTreeNode struct {

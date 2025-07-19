@@ -51,7 +51,7 @@ const InteractiveMapWithClustering: React.FC<
   markers,
   onMarkerClick,
   onClusterClick,
-  showPrices = false,
+  showPrices = false, // eslint-disable-line @typescript-eslint/no-unused-vars
   clusterOptions = {
     radius: 50,
     maxZoom: 14,

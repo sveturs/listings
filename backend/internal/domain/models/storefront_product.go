@@ -25,7 +25,7 @@ type StorefrontProduct struct {
 	UpdatedAt     time.Time              `json:"updated_at" db:"updated_at"`
 
 	// Relations
-	Images   []StorefrontProductImage   `json:"images,omitempty" db:"-"`
+	Images   []StorefrontProductImage   `json:"images" db:"-"`
 	Category *MarketplaceCategory       `json:"category,omitempty" db:"-"`
 	Variants []StorefrontProductVariant `json:"variants,omitempty" db:"-"`
 }
@@ -38,7 +38,139 @@ type StorefrontProductImage struct {
 	ThumbnailURL        string    `json:"thumbnail_url" db:"thumbnail_url"`
 	DisplayOrder        int       `json:"display_order" db:"display_order"`
 	IsDefault           bool      `json:"is_default" db:"is_default"`
+	FilePath            string    `json:"file_path" db:"file_path"`
+	FileName            string    `json:"file_name" db:"file_name"`
+	FileSize            int       `json:"file_size" db:"file_size"`
+	ContentType         string    `json:"content_type" db:"content_type"`
+	StorageType         string    `json:"storage_type" db:"storage_type"`
+	StorageBucket       string    `json:"storage_bucket" db:"storage_bucket"`
+	PublicURL           string    `json:"public_url" db:"public_url"`
 	CreatedAt           time.Time `json:"created_at" db:"created_at"`
+}
+
+// Реализация ImageInterface для StorefrontProductImage
+func (s *StorefrontProductImage) GetID() int {
+	return s.ID
+}
+
+func (s *StorefrontProductImage) GetEntityType() string {
+	return "storefront_product"
+}
+
+func (s *StorefrontProductImage) GetEntityID() int {
+	return s.StorefrontProductID
+}
+
+func (s *StorefrontProductImage) GetFilePath() string {
+	return s.FilePath
+}
+
+func (s *StorefrontProductImage) GetFileName() string {
+	return s.FileName
+}
+
+func (s *StorefrontProductImage) GetFileSize() int {
+	return s.FileSize
+}
+
+func (s *StorefrontProductImage) GetContentType() string {
+	return s.ContentType
+}
+
+func (s *StorefrontProductImage) GetIsMain() bool {
+	return s.IsDefault
+}
+
+func (s *StorefrontProductImage) GetStorageType() string {
+	return s.StorageType
+}
+
+func (s *StorefrontProductImage) GetStorageBucket() string {
+	return s.StorageBucket
+}
+
+func (s *StorefrontProductImage) GetPublicURL() string {
+	return s.PublicURL
+}
+
+func (s *StorefrontProductImage) GetImageURL() string {
+	return s.ImageURL
+}
+
+func (s *StorefrontProductImage) GetThumbnailURL() string {
+	return s.ThumbnailURL
+}
+
+func (s *StorefrontProductImage) GetDisplayOrder() int {
+	return s.DisplayOrder
+}
+
+func (s *StorefrontProductImage) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+func (s *StorefrontProductImage) IsMainImage() bool {
+	return s.IsDefault
+}
+
+func (s *StorefrontProductImage) SetID(id int) {
+	s.ID = id
+}
+
+func (s *StorefrontProductImage) SetEntityID(entityID int) {
+	s.StorefrontProductID = entityID
+}
+
+func (s *StorefrontProductImage) SetFilePath(filePath string) {
+	s.FilePath = filePath
+}
+
+func (s *StorefrontProductImage) SetFileName(fileName string) {
+	s.FileName = fileName
+}
+
+func (s *StorefrontProductImage) SetFileSize(fileSize int) {
+	s.FileSize = fileSize
+}
+
+func (s *StorefrontProductImage) SetContentType(contentType string) {
+	s.ContentType = contentType
+}
+
+func (s *StorefrontProductImage) SetIsMain(isMain bool) {
+	s.IsDefault = isMain
+}
+
+func (s *StorefrontProductImage) SetStorageType(storageType string) {
+	s.StorageType = storageType
+}
+
+func (s *StorefrontProductImage) SetStorageBucket(bucket string) {
+	s.StorageBucket = bucket
+}
+
+func (s *StorefrontProductImage) SetPublicURL(url string) {
+	s.PublicURL = url
+}
+
+func (s *StorefrontProductImage) SetImageURL(url string) {
+	s.ImageURL = url
+}
+
+func (s *StorefrontProductImage) SetThumbnailURL(url string) {
+	s.ThumbnailURL = url
+}
+
+func (s *StorefrontProductImage) SetDisplayOrder(order int) {
+	s.DisplayOrder = order
+}
+
+func (s *StorefrontProductImage) SetCreatedAt(createdAt time.Time) {
+	s.CreatedAt = createdAt
+}
+
+func (s *StorefrontProductImage) SetMainImage(isMain bool) {
+	s.IsDefault = isMain
 }
 
 // StorefrontProductVariant represents a variant of a product (e.g., size, color)

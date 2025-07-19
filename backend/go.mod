@@ -22,6 +22,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/minio/minio-go/v7 v7.0.65
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0

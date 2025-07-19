@@ -138,7 +138,7 @@ export default function SmartAddressInput({
           break;
       }
     },
-    [isOpen, suggestions, highlightedIndex]
+    [isOpen, suggestions, highlightedIndex, selectSuggestion]
   );
 
   // Выбор предложения

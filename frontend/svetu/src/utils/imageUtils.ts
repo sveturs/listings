@@ -8,6 +8,8 @@ const ALLOWED_DOMAINS = [
   'svetu.rs',
   '100.88.44.15',
   'lh3.googleusercontent.com',
+  'images.unsplash.com',
+  'unsplash.com',
 ];
 
 // Список разрешенных протоколов

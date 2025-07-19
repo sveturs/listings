@@ -4,7 +4,9 @@ package balance
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"backend/internal/domain/models"
@@ -13,11 +15,13 @@ import (
 
 type BalanceService struct {
 	storage storage.Storage
+	logger  *slog.Logger
 }
 
 func NewBalanceService(storage storage.Storage) *BalanceService {
 	return &BalanceService{
 		storage: storage,
+		logger:  slog.Default(),
 	}
 }
 
@@ -89,7 +93,11 @@ func (s *BalanceService) CreateDeposit(ctx context.Context, userID int, amount f
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			s.logger.Error("Failed to rollback transaction", "error", err)
+		}
+	}()
 
 	// Рассчитываем комиссию
 	fee := paymentMethod.FixedFee + (amount * paymentMethod.FeePercentage / 100)
@@ -157,7 +165,11 @@ func (s *BalanceService) ProcessDeposit(ctx context.Context, transactionID int) 
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			s.logger.Error("Failed to rollback transaction", "error", err)
+		}
+	}()
 
 	// Получаем транзакцию
 	var transaction models.BalanceTransaction

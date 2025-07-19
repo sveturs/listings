@@ -51,6 +51,12 @@ const nextConfig: NextConfig = {
         hostname: '*.googleusercontent.com',
         pathname: '/**',
       },
+      // Unsplash images для тестовых данных
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
     ],
   },
   async rewrites() {

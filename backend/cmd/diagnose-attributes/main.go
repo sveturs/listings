@@ -32,7 +32,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Failed to close database connection: %v", err)
+		}
+	}()
 
 	// Проверяем подключение
 	if err := db.Ping(); err != nil {
@@ -126,7 +130,11 @@ func checkCategoryAttributes(db *sql.DB, categoryID int) {
 		fmt.Printf("Категория %d: ОШИБКА при проверке атрибутов - %v\n", categoryID, err)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Warning: failed to close rows: %v\n", err)
+		}
+	}()
 
 	var count int
 	for rows.Next() {
@@ -187,7 +195,11 @@ func runGetCategoryAttributesQuery(db *sql.DB, categoryID int) {
 		fmt.Printf("Категория %d: ОШИБКА при выполнении запроса - %v\n", categoryID, err)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Warning: failed to close rows: %v\n", err)
+		}
+	}()
 
 	var count int
 	for rows.Next() {
@@ -253,7 +265,11 @@ func diagnoseCategoryHierarchy(db *sql.DB, categoryID int) {
 		fmt.Printf("  Диагностика: ОШИБКА при построении иерархии - %v\n", err)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Warning: failed to close rows: %v\n", err)
+		}
+	}()
 
 	fmt.Printf("  Диагностика: иерархия категорий:\n")
 	var hierarchyCount int
@@ -299,7 +315,11 @@ func diagnoseCategoryHierarchy(db *sql.DB, categoryID int) {
 		fmt.Printf("  Диагностика: ОШИБКА при проверке связей - %v\n", err)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Warning: failed to close rows: %v\n", err)
+		}
+	}()
 
 	fmt.Printf("  Диагностика: связи с атрибутами:\n")
 	var hasLinks bool

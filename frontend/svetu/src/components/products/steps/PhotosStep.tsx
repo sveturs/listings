@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCreateProduct } from '@/contexts/CreateProductContext';
+import Image from 'next/image';
 import { toast } from '@/utils/toast';
 
 interface PhotosStepProps {
@@ -234,10 +235,11 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
               {previews.map((preview, index) => (
                 <div key={index} className="relative group">
                   <div className="aspect-square bg-base-200 rounded-xl overflow-hidden">
-                    <img
+                    <Image
                       src={preview}
                       alt={`Preview ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   </div>
 

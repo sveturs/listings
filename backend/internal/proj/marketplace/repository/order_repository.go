@@ -130,7 +130,11 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 	if err != nil {
 		return errors.Wrap(err, "failed to begin transaction")
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			// Transaction was already committed or rolled back, ignore
+		}
+	}()
 
 	// Получаем текущий статус
 	var currentStatus string

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 
 interface AttributeValue {
@@ -53,12 +53,7 @@ export default function AttributeSetup({
   >({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadAvailableAttributes();
-    loadCurrentSetup();
-  }, [productId, categoryId]);
-
-  const loadAvailableAttributes = async () => {
+  const loadAvailableAttributes = useCallback(async () => {
     try {
       const response = await fetch(
         `/api/v1/storefront/categories/${categoryId}/attributes`
@@ -75,9 +70,9 @@ export default function AttributeSetup({
     } catch (error) {
       console.error('Failed to load available attributes:', error);
     }
-  };
+  }, [categoryId]);
 
-  const loadCurrentSetup = async () => {
+  const loadCurrentSetup = useCallback(async () => {
     try {
       const response = await fetch(
         `/api/v1/storefront/products/${productId}/attributes`
@@ -114,7 +109,12 @@ export default function AttributeSetup({
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId, availableAttributes]);
+
+  useEffect(() => {
+    loadAvailableAttributes();
+    loadCurrentSetup();
+  }, [productId, categoryId, loadAvailableAttributes, loadCurrentSetup]);
 
   const loadGlobalValues = async (attributeId: number) => {
     try {

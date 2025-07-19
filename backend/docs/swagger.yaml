@@ -1393,6 +1393,9 @@ definitions:
         type: string
       created_at:
         type: string
+      display_order:
+        description: Порядок отображения
+        type: integer
       file_name:
         description: Оригинальное имя файла
         type: string
@@ -1404,6 +1407,9 @@ definitions:
         type: integer
       id:
         type: integer
+      image_url:
+        description: URL изображения для API
+        type: string
       is_main:
         description: Является ли изображение основным
         type: boolean
@@ -1417,6 +1423,9 @@ definitions:
         type: string
       storage_type:
         description: 'Тип хранилища: "local" или "minio"'
+        type: string
+      thumbnail_url:
+        description: URL миниатюры для API
         type: string
     type: object
   backend_internal_domain_models.MarketplaceListing:
@@ -2729,9 +2738,17 @@ definitions:
     type: object
   backend_internal_domain_models.StorefrontProductImage:
     properties:
+      content_type:
+        type: string
       created_at:
         type: string
       display_order:
+        type: integer
+      file_name:
+        type: string
+      file_path:
+        type: string
+      file_size:
         type: integer
       id:
         type: integer
@@ -2739,6 +2756,12 @@ definitions:
         type: string
       is_default:
         type: boolean
+      public_url:
+        type: string
+      storage_bucket:
+        type: string
+      storage_type:
+        type: string
       storefront_product_id:
         type: integer
       thumbnail_url:
@@ -4049,6 +4072,21 @@ definitions:
       total:
         type: integer
     type: object
+  backend_internal_services.UploadImageResponse:
+    properties:
+      display_order:
+        type: integer
+      id:
+        type: integer
+      image_url:
+        type: string
+      is_main:
+        type: boolean
+      public_url:
+        type: string
+      thumbnail_url:
+        type: string
+    type: object
   backend_pkg_utils.ErrorResponseSwag:
     properties:
       error:
@@ -5322,6 +5360,13 @@ definitions:
     required:
     - role
     - user_id
+    type: object
+  internal_proj_storefronts_handler.ImageOrderUpdate:
+    properties:
+      display_order:
+        type: integer
+      id:
+        type: integer
     type: object
   internal_proj_storefronts_handler.StaffListResponse:
     properties:
@@ -18306,6 +18351,258 @@ paths:
       summary: Get storefront by slug
       tags:
       - storefronts
+  /api/v1/storefronts/slug/{slug}/products/{product_id}/images:
+    get:
+      consumes:
+      - application/json
+      description: Returns all images for a specific product
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product images
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_services.UploadImageResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get product images
+      tags:
+      - storefront-images
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a new image for a storefront product
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      - description: Set as main image
+        in: formData
+        name: is_main
+        type: boolean
+      - description: Display order
+        in: formData
+        name: display_order
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Image uploaded successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_services.UploadImageResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "413":
+          description: File too large
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Upload image for storefront product
+      tags:
+      - storefront-images
+  /api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a specific image of a product
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Image ID
+        in: path
+        name: image_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Image deleted successfully
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Image not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Delete product image
+      tags:
+      - storefront-images
+  /api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id}/main:
+    post:
+      consumes:
+      - application/json
+      description: Sets a specific image as the main image for a product
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Image ID
+        in: path
+        name: image_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Main image set successfully
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Image not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Set main product image
+      tags:
+      - storefront-images
+  /api/v1/storefronts/slug/{slug}/products/{product_id}/images/order:
+    put:
+      consumes:
+      - application/json
+      description: Updates the display order of product images
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Image order updates
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/internal_proj_storefronts_handler.ImageOrderUpdate'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Image order updated successfully
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Update image display order
+      tags:
+      - storefront-images
   /api/v1/translation/limits:
     get:
       consumes:

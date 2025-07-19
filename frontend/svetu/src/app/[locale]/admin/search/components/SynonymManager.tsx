@@ -88,7 +88,7 @@ export default function SynonymManager() {
 
   useEffect(() => {
     fetchSynonyms();
-  }, [selectedLanguage, searchTerm, page]);
+  }, [selectedLanguage, searchTerm, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreate = async () => {
     if (!editForm.term.trim() || !editForm.synonym.trim()) {

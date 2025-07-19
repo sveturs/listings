@@ -56,6 +56,7 @@ export default function DebugMarketplacePage() {
                   <p>Original URL: {url}</p>
                   <p>Built URL: {builtUrl}</p>
                   <p>Direct test:</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={builtUrl}
                     alt="Test"

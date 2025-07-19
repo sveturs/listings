@@ -52,6 +52,7 @@ export default function DebugSearchPage() {
                   <p>Original URL: {url}</p>
                   <p>Built URL: {builtUrl}</p>
                   <p>Image test:</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={builtUrl}
                     alt="Test"

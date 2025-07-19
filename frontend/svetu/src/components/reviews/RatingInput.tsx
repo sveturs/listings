@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface RatingInputProps {
   value: number;
@@ -24,6 +25,7 @@ export const RatingInput: React.FC<RatingInputProps> = ({
   error,
 }) => {
   const [hoverRating, setHoverRating] = useState(0);
+  const t = useTranslations('reviews.rating.labels');
 
   const sizeClasses = {
     sm: 'w-6 h-6',
@@ -90,11 +92,11 @@ export const RatingInput: React.FC<RatingInputProps> = ({
   const getRatingText = () => {
     const rating = hoverRating || value;
     const texts = {
-      1: { text: 'Ужасно', color: 'text-error' },
-      2: { text: 'Плохо', color: 'text-warning' },
-      3: { text: 'Нормально', color: 'text-info' },
-      4: { text: 'Хорошо', color: 'text-success' },
-      5: { text: 'Отлично', color: 'text-success' },
+      1: { text: t('terrible'), color: 'text-error' },
+      2: { text: t('bad'), color: 'text-warning' },
+      3: { text: t('normal'), color: 'text-info' },
+      4: { text: t('good'), color: 'text-success' },
+      5: { text: t('excellent'), color: 'text-success' },
     };
     return texts[rating as keyof typeof texts] || null;
   };

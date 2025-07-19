@@ -172,6 +172,8 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 		for i, p := range products {
 			productIDs[i] = p.ID
 			productMap[p.ID] = p
+			// Initialize empty slice for images
+			p.Images = []models.StorefrontProductImage{}
 		}
 
 		images, err := s.getProductImages(ctx, productIDs)
@@ -248,7 +250,12 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product images: %w", err)
 	}
-	p.Images = images
+	// Initialize empty slice if no images found
+	if images == nil {
+		p.Images = []models.StorefrontProductImage{}
+	} else {
+		p.Images = images
+	}
 
 	// Load variants
 	variants, err := s.getProductVariants(ctx, p.ID)
@@ -501,8 +508,30 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 		return []models.StorefrontProductImage{}, nil
 	}
 
-	// Get images from variant images (new system)
+	// Get images from both product images and variant images
 	query := `
+		-- Get images from product images table
+		SELECT
+			spi.id,
+			spi.storefront_product_id,
+			spi.image_url,
+			spi.thumbnail_url,
+			spi.display_order,
+			spi.is_default,
+			spi.file_path,
+			spi.file_name,
+			spi.file_size,
+			spi.content_type,
+			spi.storage_type,
+			spi.storage_bucket,
+			spi.public_url,
+			spi.created_at
+		FROM storefront_product_images spi
+		WHERE spi.storefront_product_id = ANY($1)
+		
+		UNION ALL
+		
+		-- Get images from variant images
 		SELECT
 			spvi.id,
 			spv.product_id as storefront_product_id,
@@ -510,11 +539,19 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 			COALESCE(spvi.thumbnail_url, spvi.image_url) as thumbnail_url,
 			spvi.display_order,
 			spvi.is_main as is_default,
+			COALESCE(spvi.file_path, '') as file_path,
+			COALESCE(spvi.file_name, '') as file_name,
+			COALESCE(spvi.file_size, 0) as file_size,
+			COALESCE(spvi.content_type, '') as content_type,
+			COALESCE(spvi.storage_type, 'minio') as storage_type,
+			COALESCE(spvi.storage_bucket, 'storefronts') as storage_bucket,
+			COALESCE(spvi.public_url, spvi.image_url) as public_url,
 			spvi.created_at
 		FROM storefront_product_variants spv
 		JOIN storefront_product_variant_images spvi ON spv.id = spvi.variant_id
 		WHERE spv.product_id = ANY($1) AND spv.is_active = true
-		ORDER BY spv.is_default DESC, spvi.is_main DESC, spvi.display_order ASC`
+		
+		ORDER BY is_default DESC, display_order ASC`
 
 	rows, err := s.pool.Query(ctx, query, pq.Array(productIDs))
 	if err != nil {
@@ -527,7 +564,9 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 		var img models.StorefrontProductImage
 		err := rows.Scan(
 			&img.ID, &img.StorefrontProductID, &img.ImageURL, &img.ThumbnailURL,
-			&img.DisplayOrder, &img.IsDefault, &img.CreatedAt,
+			&img.DisplayOrder, &img.IsDefault, &img.FilePath, &img.FileName,
+			&img.FileSize, &img.ContentType, &img.StorageType, &img.StorageBucket,
+			&img.PublicURL, &img.CreatedAt,
 		)
 		if err != nil {
 			return nil, err

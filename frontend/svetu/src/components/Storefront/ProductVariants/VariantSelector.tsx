@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import SafeImage from '../../SafeImage';
 
@@ -51,18 +51,7 @@ export default function VariantSelector({
   >({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadVariants();
-  }, [productId]);
-
-  useEffect(() => {
-    // Find matching variant when attributes change
-    const matchingVariant = findMatchingVariant(selectedAttributes);
-    setSelectedVariant(matchingVariant);
-    onVariantChange(matchingVariant);
-  }, [selectedAttributes, variants]);
-
-  const loadVariants = async () => {
+  const loadVariants = useCallback(async () => {
     try {
       const response = await fetch(
         `/api/v1/storefront/products/${productId}/variants`
@@ -102,19 +91,20 @@ export default function VariantSelector({
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
 
-  const findMatchingVariant = (
-    attributes: Record<string, string>
-  ): ProductVariant | null => {
-    return (
-      variants.find((variant) => {
-        return Object.entries(attributes).every(
-          ([key, value]) => variant.variant_attributes[key] === value
-        );
-      }) || null
-    );
-  };
+  const findMatchingVariant = useCallback(
+    (attributes: Record<string, string>): ProductVariant | null => {
+      return (
+        variants.find((variant) => {
+          return Object.entries(attributes).every(
+            ([key, value]) => variant.variant_attributes[key] === value
+          );
+        }) || null
+      );
+    },
+    [variants]
+  );
 
   const updateAttribute = (attributeName: string, value: string) => {
     setSelectedAttributes((prev) => ({
@@ -161,6 +151,17 @@ export default function VariantSelector({
     }
     return null;
   };
+
+  useEffect(() => {
+    loadVariants();
+  }, [productId, loadVariants]);
+
+  useEffect(() => {
+    // Find matching variant when attributes change
+    const matchingVariant = findMatchingVariant(selectedAttributes);
+    setSelectedVariant(matchingVariant);
+    onVariantChange(matchingVariant);
+  }, [selectedAttributes, variants, findMatchingVariant, onVariantChange]);
 
   if (loading) {
     return (

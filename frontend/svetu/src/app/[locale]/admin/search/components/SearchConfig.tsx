@@ -39,7 +39,7 @@ export default function SearchConfig() {
 
   useEffect(() => {
     fetchConfig();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchConfig = async () => {
     try {

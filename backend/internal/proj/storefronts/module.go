@@ -16,6 +16,7 @@ type Module struct {
 	storefrontHandler *handler.StorefrontHandler
 	productHandler    *handler.ProductHandler
 	importHandler     *handler.ImportHandler
+	imageHandler      *handler.ImageHandler
 }
 
 // NewModule создает новый модуль витрин
@@ -38,11 +39,17 @@ func NewModule(services service.ServicesInterface) *Module {
 	// Создаем сервис импорта
 	importSvc := storefrontService.NewImportService(productSvc)
 
+	// Создаем единый ImageService
+	db := services.Storage().(*postgres.Database)
+	imageRepo := postgres.NewImageRepository(db.GetSQLXDB())
+	imageService := services.NewImageService(services.FileStorage(), imageRepo)
+
 	return &Module{
 		services:          services,
 		storefrontHandler: handler.NewStorefrontHandler(storefrontSvc),
 		productHandler:    handler.NewProductHandler(productSvc),
 		importHandler:     handler.NewImportHandler(importSvc),
+		imageHandler:      handler.NewImageHandler(imageService),
 	}
 }
 
@@ -121,6 +128,13 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Delete("/slug/:slug/products/:id", m.deleteProductBySlug)
 		protected.Post("/slug/:slug/products/:id/inventory", m.updateInventoryBySlug)
 		protected.Get("/slug/:slug/products/stats", m.getProductStatsBySlug)
+
+		// Маршруты для изображений товаров
+		protected.Post("/slug/:slug/products/:product_id/images", m.uploadProductImageBySlug)
+		protected.Get("/slug/:slug/products/:product_id/images", m.getProductImagesBySlug)
+		protected.Delete("/slug/:slug/products/:product_id/images/:image_id", m.deleteProductImageBySlug)
+		protected.Post("/slug/:slug/products/:product_id/images/:image_id/main", m.setMainProductImageBySlug)
+		protected.Put("/slug/:slug/products/:product_id/images/order", m.updateImageOrderBySlug)
 
 		// Bulk операции с товарами
 		protected.Post("/slug/:slug/products/bulk/create", m.bulkCreateProductsBySlug)
@@ -552,4 +566,66 @@ func (m *Module) withStorefrontAccess() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		return m.checkStorefrontAccess(c)
 	}
+}
+
+// Функции-обертки для изображений товаров
+func (m *Module) uploadProductImageBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	return m.imageHandler.UploadProductImage(c)
+}
+
+func (m *Module) getProductImagesBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Для получения изображений не требуется авторизация - это публичный API
+	return m.imageHandler.GetProductImages(c)
+}
+
+func (m *Module) deleteProductImageBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	return m.imageHandler.DeleteProductImage(c)
+}
+
+func (m *Module) setMainProductImageBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	return m.imageHandler.SetMainProductImage(c)
+}
+
+func (m *Module) updateImageOrderBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	return m.imageHandler.UpdateImageOrder(c)
 }

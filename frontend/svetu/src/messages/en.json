@@ -1447,7 +1447,63 @@
     "year": "Year",
     "addToFavorites": "Add to Favorites",
     "share": "Share",
-    "newSeller": "New"
+    "newSeller": "New",
+    "seller": {
+      "title": "Seller",
+      "noReviews": "No reviews yet",
+      "memberSince": "Member since",
+      "responseRate": "Response rate",
+      "responseTime": "Response time",
+      "verified": "Verified",
+      "experienced": "Experienced",
+      "sendMessage": "Send Message",
+      "showPhone": "Show Phone",
+      "allItems": "All seller items",
+      "yourListing": "This is your listing",
+      "edit": "Edit",
+      "signInToContact": "Sign in to contact seller",
+      "signIn": "Sign In",
+      "platformProtection": "All transactions protected by platform rules"
+    },
+    "iconPicker": {
+      "placeholder": "Select an icon",
+      "close": "Close",
+      "categories": {
+        "transport": "Transport",
+        "electronics": "Electronics",
+        "home": "Home & Life",
+        "clothing": "Clothing",
+        "food": "Food & Drinks",
+        "sports": "Sports & Leisure",
+        "beauty": "Beauty & Health",
+        "books": "Books & Education",
+        "nature": "Nature & Animals",
+        "tools": "Tools",
+        "numbers": "Numbers & Symbols",
+        "attributes": "Attributes"
+      }
+    },
+    "listingActions": {
+      "signInToAddFavorites": "Sign in to add to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "addedToFavorites": "Added to favorites",
+      "removedFromComparison": "Removed from comparison",
+      "addedToComparison": "Added to comparison",
+      "linkCopied": "Link copied",
+      "failedToCopyLink": "Failed to copy link",
+      "copyNotSupported": "Copy to clipboard is not supported in this browser",
+      "error": "An error occurred",
+      "addToFavorites": "Add to favorites",
+      "addToComparison": "Add to comparison",
+      "share": "Share",
+      "copyLink": "Copy link",
+      "report": "Report"
+    },
+    "similarListings": {
+      "title": "Similar listings",
+      "buy": "Buy",
+      "chat": "Chat"
+    }
   },
   "reviews": {
     "create": {
@@ -1528,6 +1584,13 @@
     "rating": {
       "error": {
         "fetch_failed": "Failed to load rating"
+      },
+      "labels": {
+        "terrible": "Terrible",
+        "bad": "Bad",
+        "normal": "Normal",
+        "good": "Good",
+        "excellent": "Excellent"
       }
     },
     "photos": {

@@ -1530,7 +1530,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			"memory^3",
 			"ram^3",
 			"storage_capacity^3",
-			"screen_size^3",
+			// удалил screen_size^3, т.к. оно числовое и не поддерживает fuzzy
 			"attr_make_text^5",
 			"attr_model_text^4",
 			"attr_color_text^3",
