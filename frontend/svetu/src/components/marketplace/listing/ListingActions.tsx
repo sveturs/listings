@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,19 +15,15 @@ interface ListingActionsProps {
 }
 
 export default function ListingActions({ listing }: ListingActionsProps) {
-  const locale = useLocale();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(listing.is_favorite || false);
   const [isInComparison, setIsInComparison] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const t = useTranslations('marketplace.listingActions');
 
   const handleFavoriteToggle = async () => {
     if (!user) {
-      toast.error(
-        locale === 'ru'
-          ? 'Войдите, чтобы добавить в избранное'
-          : 'Sign in to add to favorites'
-      );
+      toast.error(t('signInToAddFavorites'));
       return;
     }
 
@@ -35,17 +31,11 @@ export default function ListingActions({ listing }: ListingActionsProps) {
       setIsFavorite(!isFavorite);
       // TODO: API call to toggle favorite
       toast.success(
-        isFavorite
-          ? locale === 'ru'
-            ? 'Удалено из избранного'
-            : 'Removed from favorites'
-          : locale === 'ru'
-            ? 'Добавлено в избранное'
-            : 'Added to favorites'
+        isFavorite ? t('removedFromFavorites') : t('addedToFavorites')
       );
     } catch {
       setIsFavorite(!isFavorite); // Revert on error
-      toast.error(locale === 'ru' ? 'Произошла ошибка' : 'An error occurred');
+      toast.error(t('error'));
     }
   };
 
@@ -53,13 +43,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
     setIsInComparison(!isInComparison);
     // TODO: Add to comparison store
     toast.success(
-      isInComparison
-        ? locale === 'ru'
-          ? 'Удалено из сравнения'
-          : 'Removed from comparison'
-        : locale === 'ru'
-          ? 'Добавлено к сравнению'
-          : 'Added to comparison'
+      isInComparison ? t('removedFromComparison') : t('addedToComparison')
     );
   };
 
@@ -77,21 +61,13 @@ export default function ListingActions({ listing }: ListingActionsProps) {
     try {
       const successful = document.execCommand('copy');
       if (successful) {
-        toast.success(locale === 'ru' ? 'Ссылка скопирована' : 'Link copied');
+        toast.success(t('linkCopied'));
       } else {
-        toast.error(
-          locale === 'ru'
-            ? 'Не удалось скопировать ссылку'
-            : 'Failed to copy link'
-        );
+        toast.error(t('failedToCopyLink'));
       }
     } catch (err) {
       console.error('Fallback: Oops, unable to copy', err);
-      toast.error(
-        locale === 'ru'
-          ? 'Копирование не поддерживается в вашем браузере'
-          : 'Copy to clipboard is not supported in this browser'
-      );
+      toast.error(t('copyNotSupported'));
     }
 
     document.body.removeChild(textArea);
@@ -116,9 +92,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
         navigator.clipboard
           .writeText(url)
           .then(() => {
-            toast.success(
-              locale === 'ru' ? 'Ссылка скопирована' : 'Link copied'
-            );
+            toast.success(t('linkCopied'));
             setShareMenuOpen(false);
           })
           .catch(() => {
@@ -141,9 +115,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
       <button
         onClick={handleFavoriteToggle}
         className={`btn btn-circle ${isFavorite ? 'btn-error' : 'btn-ghost'}`}
-        aria-label={
-          locale === 'ru' ? 'Добавить в избранное' : 'Add to favorites'
-        }
+        aria-label={t('addToFavorites')}
       >
         <svg
           className="w-6 h-6"
@@ -164,9 +136,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
       <button
         onClick={handleComparisonToggle}
         className={`btn btn-circle ${isInComparison ? 'btn-info' : 'btn-ghost'}`}
-        aria-label={
-          locale === 'ru' ? 'Добавить к сравнению' : 'Add to comparison'
-        }
+        aria-label={t('addToComparison')}
       >
         <svg
           className="w-6 h-6"
@@ -189,7 +159,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
           tabIndex={0}
           onClick={() => setShareMenuOpen(!shareMenuOpen)}
           className="btn btn-circle btn-ghost"
-          aria-label={locale === 'ru' ? 'Поделиться' : 'Share'}
+          aria-label={t('share')}
         >
           <svg
             className="w-6 h-6"
@@ -287,7 +257,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
                     d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                   />
                 </svg>
-                {locale === 'ru' ? 'Копировать ссылку' : 'Copy link'}
+                {t('copyLink')}
               </a>
             </li>
           </ul>
@@ -297,7 +267,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
       {/* Report Button */}
       <button
         className="btn btn-circle btn-ghost text-error"
-        aria-label={locale === 'ru' ? 'Пожаловаться' : 'Report'}
+        aria-label={t('report')}
       >
         <svg
           className="w-6 h-6"

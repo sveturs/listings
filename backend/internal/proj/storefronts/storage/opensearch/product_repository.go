@@ -164,9 +164,16 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 	if product.Images != nil && len(product.Images) > 0 {
 		imagesArray := make([]map[string]interface{}, 0, len(product.Images))
 		for _, img := range product.Images {
+			// Используем PublicURL для правильного отображения изображений
+			imageURL := img.PublicURL
+			if imageURL == "" {
+				// Fallback на ImageURL если PublicURL пустой
+				imageURL = img.ImageURL
+			}
+
 			imgDoc := map[string]interface{}{
 				"id":            img.ID,
-				"url":           img.ImageURL,
+				"url":           imageURL,
 				"thumbnail_url": img.ThumbnailURL,
 				"is_default":    img.IsDefault,
 				"display_order": img.DisplayOrder,

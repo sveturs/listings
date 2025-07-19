@@ -83,7 +83,6 @@ export default function MarketplaceCard({
   const mainImage = item.images?.find((img) => img.is_main) || item.images?.[0];
   const imageUrl = getImageUrl(mainImage);
 
-
   const handleChatClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();

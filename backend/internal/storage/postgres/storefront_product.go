@@ -518,6 +518,13 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 			spi.thumbnail_url,
 			spi.display_order,
 			spi.is_default,
+			spi.file_path,
+			spi.file_name,
+			spi.file_size,
+			spi.content_type,
+			spi.storage_type,
+			spi.storage_bucket,
+			spi.public_url,
 			spi.created_at
 		FROM storefront_product_images spi
 		WHERE spi.storefront_product_id = ANY($1)
@@ -532,6 +539,13 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 			COALESCE(spvi.thumbnail_url, spvi.image_url) as thumbnail_url,
 			spvi.display_order,
 			spvi.is_main as is_default,
+			COALESCE(spvi.file_path, '') as file_path,
+			COALESCE(spvi.file_name, '') as file_name,
+			COALESCE(spvi.file_size, 0) as file_size,
+			COALESCE(spvi.content_type, '') as content_type,
+			COALESCE(spvi.storage_type, 'minio') as storage_type,
+			COALESCE(spvi.storage_bucket, 'storefronts') as storage_bucket,
+			COALESCE(spvi.public_url, spvi.image_url) as public_url,
 			spvi.created_at
 		FROM storefront_product_variants spv
 		JOIN storefront_product_variant_images spvi ON spv.id = spvi.variant_id
@@ -550,7 +564,9 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 		var img models.StorefrontProductImage
 		err := rows.Scan(
 			&img.ID, &img.StorefrontProductID, &img.ImageURL, &img.ThumbnailURL,
-			&img.DisplayOrder, &img.IsDefault, &img.CreatedAt,
+			&img.DisplayOrder, &img.IsDefault, &img.FilePath, &img.FileName,
+			&img.FileSize, &img.ContentType, &img.StorageType, &img.StorageBucket,
+			&img.PublicURL, &img.CreatedAt,
 		)
 		if err != nil {
 			return nil, err

@@ -21,6 +21,7 @@ interface SimilarListingsProps {
 export default function SimilarListings({ listingId }: SimilarListingsProps) {
   const locale = useLocale();
   const tCommon = useTranslations('common');
+  const t = useTranslations('marketplace.similarListings');
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const [allListings, setAllListings] = useState<MarketplaceItem[]>([]);
@@ -130,9 +131,7 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
   if (loading) {
     return (
       <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-6">
-          {locale === 'ru' ? 'Похожие объявления' : 'Similar listings'}
-        </h2>
+        <h2 className="text-2xl font-bold mb-6">{t('title')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="animate-pulse">
@@ -153,9 +152,7 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
   return (
     <div className="mt-12">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">
-          {locale === 'ru' ? 'Похожие объявления' : 'Similar listings'}
-        </h2>
+        <h2 className="text-2xl font-bold">{t('title')}</h2>
         <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
       </div>
 
@@ -251,14 +248,14 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                     onClick={(e) => handleBuyClick(e, listing)}
                     className="btn btn-primary btn-sm flex-1 text-xs"
                   >
-                    💳 {locale === 'ru' ? 'Купить' : 'Buy'}
+                    💳 {t('buy')}
                   </button>
                 )}
                 <button
                   onClick={(e) => handleChatClick(e, listing)}
                   className="btn btn-outline btn-sm flex-1 text-xs"
                 >
-                  💬 {locale === 'ru' ? 'Чат' : 'Chat'}
+                  💬 {t('chat')}
                 </button>
               </div>
             </div>
@@ -343,14 +340,14 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                           onClick={(e) => handleBuyClick(e, listing)}
                           className="btn btn-primary btn-sm"
                         >
-                          💳 {locale === 'ru' ? 'Купить' : 'Buy'}
+                          💳 {t('buy')}
                         </button>
                       )}
                       <button
                         onClick={(e) => handleChatClick(e, listing)}
                         className="btn btn-outline btn-sm"
                       >
-                        💬 {locale === 'ru' ? 'Чат' : 'Chat'}
+                        💬 {t('chat')}
                       </button>
                     </div>
                   </div>
