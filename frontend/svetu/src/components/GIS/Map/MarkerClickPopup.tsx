@@ -5,6 +5,7 @@ import { Popup } from 'react-map-gl';
 import type { MapMarkerData } from '../types/gis';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 
 interface MarkerClickPopupProps {
   marker: MapMarkerData;
@@ -67,11 +68,11 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
         {/* Изображение с галереей */}
         {marker.imageUrl && (
           <div className="relative h-48 -m-3 mb-3">
-            <img
+            <Image
               src={marker.imageUrl}
               alt={marker.title}
-              className="w-full h-full object-cover"
-              loading="lazy"
+              fill
+              className="object-cover"
             />
 
             {/* Категория */}
@@ -263,10 +264,11 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                   {parsedData.seller.avatar ? (
-                    <img
+                    <Image
                       src={parsedData.seller.avatar}
                       alt={parsedData.seller.name}
-                      className="w-full h-full rounded-full object-cover"
+                      fill
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <span className="text-gray-600 text-lg">👤</span>

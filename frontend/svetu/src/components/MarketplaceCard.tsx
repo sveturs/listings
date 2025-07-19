@@ -83,14 +83,6 @@ export default function MarketplaceCard({
   const mainImage = item.images?.find((img) => img.is_main) || item.images?.[0];
   const imageUrl = getImageUrl(mainImage);
 
-  // Отладка для объявления 177
-  if (item.id === 177) {
-    console.log('MarketplaceCard - Item 177 debug:', {
-      item,
-      mainImage,
-      imageUrl,
-    });
-  }
 
   const handleChatClick = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -22,6 +22,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/minio/minio-go/v7 v7.0.65
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
@@ -93,7 +94,6 @@ require (
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
+import Image from 'next/image';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   fetchStorefrontBySlug,
@@ -600,7 +601,12 @@ export default function EditStorefrontPage() {
                     <div className="avatar">
                       <div className="w-32 rounded-xl bg-base-200">
                         {currentStorefront.logo_url ? (
-                          <img src={currentStorefront.logo_url} alt="Logo" />
+                          <Image
+                            src={currentStorefront.logo_url}
+                            alt="Logo"
+                            fill
+                            className="object-cover"
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <PhotoIcon className="w-12 h-12 text-base-content/20" />
@@ -628,10 +634,11 @@ export default function EditStorefrontPage() {
                   <div className="space-y-4">
                     <div className="aspect-[3/1] bg-base-200 rounded-xl overflow-hidden">
                       {currentStorefront.banner_url ? (
-                        <img
+                        <Image
                           src={currentStorefront.banner_url}
                           alt="Banner"
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">

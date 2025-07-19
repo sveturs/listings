@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { components } from '@/types/generated/api';
 
 type CategoryAttribute =
@@ -26,7 +26,7 @@ export function useCategoryFilters(
 
   const { lang = 'sr', onError } = options;
 
-  const fetchAttributes = async () => {
+  const fetchAttributes = useCallback(async () => {
     if (!categoryId) {
       setAttributes([]);
       return;
@@ -70,11 +70,11 @@ export function useCategoryFilters(
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoryId, lang, onError]);
 
   useEffect(() => {
     fetchAttributes();
-  }, [categoryId, lang]);
+  }, [categoryId, lang, fetchAttributes]);
 
   return {
     attributes,

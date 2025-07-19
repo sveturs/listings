@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import type { MapMarkerData } from '../types/gis';
 
 interface MapTooltipProps {
@@ -54,9 +55,10 @@ const MapTooltip: React.FC<MapTooltipProps> = ({
           {marker.imageUrl && (
             <div className="avatar">
               <div className="w-16 h-16 rounded">
-                <img
+                <Image
                   src={marker.imageUrl}
                   alt={marker.title}
+                  fill
                   className="object-cover"
                 />
               </div>

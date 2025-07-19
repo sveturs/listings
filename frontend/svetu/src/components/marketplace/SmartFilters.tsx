@@ -35,7 +35,7 @@ export function SmartFilters({
   useEffect(() => {
     setFilterValues({});
     onChange({});
-  }, [categoryId]);
+  }, [categoryId, onChange]);
 
   const handleFilterChange = (attributeId: string, value: any) => {
     const newFilters = {

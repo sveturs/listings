@@ -32,11 +32,24 @@ export default function HomePage({
   const [showMap, setShowMap] = useState(false);
   const [selectedListing, setSelectedListing] =
     useState<RadiusSearchResult | null>(null);
+  const [productTypes, setProductTypes] = useState<
+    ('marketplace' | 'storefront')[]
+  >(['marketplace', 'storefront']);
+  const [showOnlyMarketplace, setShowOnlyMarketplace] = useState(false);
 
   const _handleListingSelect = (listing: RadiusSearchResult) => {
     setSelectedListing(listing);
     // Можно добавить логику для показа детальной информации
     console.log('Selected listing:', listing);
+  };
+
+  const handleProductTypeFilter = (onlyMarketplace: boolean) => {
+    setShowOnlyMarketplace(onlyMarketplace);
+    if (onlyMarketplace) {
+      setProductTypes(['marketplace']);
+    } else {
+      setProductTypes(['marketplace', 'storefront']);
+    }
   };
 
   return (
@@ -78,6 +91,27 @@ export default function HomePage({
           <span>{t('errorLoadingData')}</span>
         </div>
       )}
+
+      {/* Фильтр типов товаров */}
+      <div className="mb-4">
+        <div className="form-control">
+          <label className="label cursor-pointer justify-start gap-3">
+            <input
+              type="checkbox"
+              className="checkbox checkbox-primary"
+              checked={showOnlyMarketplace}
+              onChange={(e) => handleProductTypeFilter(e.target.checked)}
+            />
+            <span className="label-text">
+              Только частные объявления (маркетплейс)
+            </span>
+          </label>
+          <p className="text-xs text-base-content/60 ml-8">
+            Когда включено - показывает только товары маркетплейса. Когда
+            выключено - показывает всё (маркетплейс + витрины)
+          </p>
+        </div>
+      </div>
 
       {/* Переключатель между списком и картой */}
       <div className="flex items-center justify-between mb-6">
@@ -175,7 +209,11 @@ export default function HomePage({
           )}
         </div>
       ) : (
-        <MarketplaceList initialData={initialData} locale={locale} />
+        <MarketplaceList
+          initialData={initialData}
+          locale={locale}
+          productTypes={productTypes}
+        />
       )}
     </>
   );

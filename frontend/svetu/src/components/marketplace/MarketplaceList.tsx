@@ -24,15 +24,8 @@ function convertToMarketplaceItem(
     price: unifiedItem.price,
     images: unifiedItem.images.map((img) => ({
       id: 0,
-      listing_id: unifiedItem.product_id,
-      file_path: img.url,
-      file_name: img.alt_text || '',
-      file_size: 0,
-      content_type: '',
-      is_main: img.is_main,
-      storage_type: 'minio',
       public_url: img.url,
-      created_at: '',
+      is_main: img.is_main,
     })),
     user: {
       id: 0,
@@ -47,8 +40,8 @@ function convertToMarketplaceItem(
     },
     city: unifiedItem.location?.city || '',
     country: unifiedItem.location?.country || '',
-    location: '',
-    created_at: '',
+    location: unifiedItem.location?.city || '',
+    created_at: unifiedItem.created_at || '',
     updated_at: '',
     user_id: 0,
     // Добавляем поля для определения типа товара и витрины
@@ -66,11 +59,13 @@ interface MarketplaceListProps {
     has_more: boolean;
   } | null;
   locale: string;
+  productTypes?: ('marketplace' | 'storefront')[];
 }
 
 export default function MarketplaceList({
   initialData,
   locale,
+  productTypes = ['marketplace', 'storefront'],
 }: MarketplaceListProps) {
   // console.log('MarketplaceList render:', {
   //   initialData: !!initialData,
@@ -94,11 +89,12 @@ export default function MarketplaceList({
   //   initialized,
   // });
 
-  const manualLoad = () => {
+  const manualLoad = useCallback(() => {
     // console.log('Manual load clicked!');
     setLoading(true);
     UnifiedSearchService.search({
       query: '',
+      product_types: productTypes,
       sort_by: 'date',
       sort_order: 'desc',
       page: 1,
@@ -121,14 +117,24 @@ export default function MarketplaceList({
       .finally(() => {
         setLoading(false);
       });
-  };
+  }, [t, productTypes]);
 
   // Начальная загрузка данных, если они не были переданы через SSR
   useEffect(() => {
     if (!initialized && !loading) {
       manualLoad();
     }
-  }, [initialized, loading]);
+  }, [initialized, loading, manualLoad]);
+
+  // Перезагрузка данных при изменении типов товаров
+  useEffect(() => {
+    if (initialized) {
+      setPage(1);
+      setItems([]);
+      setHasMore(true);
+      manualLoad();
+    }
+  }, [productTypes, initialized, manualLoad]);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -140,6 +146,7 @@ export default function MarketplaceList({
       const nextPage = page + 1;
       const response = await UnifiedSearchService.search({
         query: '',
+        product_types: productTypes,
         sort_by: 'date',
         sort_order: 'desc',
         page: nextPage,
@@ -166,7 +173,7 @@ export default function MarketplaceList({
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, page, t]);
+  }, [loading, hasMore, page, t, productTypes]);
 
   const loadMoreRef = useInfiniteScroll({
     loading,

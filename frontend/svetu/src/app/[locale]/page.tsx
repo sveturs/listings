@@ -31,6 +31,7 @@ export default async function Home({
       // SSR загрузка данных через унифицированный поиск с таймаутом и обработкой ошибок
       marketplaceData = await UnifiedSearchService.search({
         query: '',
+        product_types: ['marketplace', 'storefront'],
         sort_by: 'date',
         sort_order: 'desc',
         page: 1,

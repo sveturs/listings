@@ -274,9 +274,16 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	var totalCount int
 	var tookMs int64
 
+	// Рассчитываем нужное количество записей для получения достаточного количества данных
+	// Запрашиваем больше записей чтобы после объединения и сортировки получить нужную страницу
+	searchLimit := params.Limit * int(math.Max(float64(params.Page), 3)) // Минимум утроенный лимит для больших страниц
+	if searchLimit > 1000 {
+		searchLimit = 1000 // Ограничиваем максимальный запрос
+	}
+
 	// Поиск в marketplace (если включен)
 	if h.containsProductType(params.ProductTypes, "marketplace") {
-		marketplaceItems, count, took, err := h.searchMarketplace(ctx, params)
+		marketplaceItems, count, took, err := h.searchMarketplaceWithLimit(ctx, params, searchLimit)
 		if err != nil {
 			logger.Error().Err(err).Msg("Marketplace search failed")
 		} else {
@@ -288,7 +295,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 
 	// Поиск в storefront (если включен)
 	if h.containsProductType(params.ProductTypes, "storefront") {
-		storefrontItems, count, took, err := h.searchStorefront(ctx, params)
+		storefrontItems, count, took, err := h.searchStorefrontWithLimit(ctx, params, searchLimit)
 		if err != nil {
 			logger.Error().Err(err).Msg("Storefront search failed")
 		} else {
@@ -314,13 +321,15 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 		pagedItems = rankedItems[offset:end]
 	}
 
-	// Вычисляем метаданные
-	totalPages := int(math.Ceil(float64(totalCount) / float64(params.Limit)))
-	hasMore := params.Page < totalPages
+	// Вычисляем метаданные на основе реальных объединенных результатов
+	// Используем длину rankedItems для более точного расчета
+	effectiveTotal := int(math.Max(float64(len(rankedItems)), float64(totalCount)))
+	totalPages := int(math.Ceil(float64(effectiveTotal) / float64(params.Limit)))
+	hasMore := params.Page < totalPages && len(pagedItems) == params.Limit
 
 	return &UnifiedSearchResult{
 		Items:      pagedItems,
-		Total:      totalCount,
+		Total:      effectiveTotal,
 		Page:       params.Page,
 		Limit:      params.Limit,
 		TotalPages: totalPages,
@@ -331,11 +340,16 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 
 // searchMarketplace поиск в marketplace
 func (h *UnifiedSearchHandler) searchMarketplace(ctx context.Context, params *UnifiedSearchParams) ([]UnifiedSearchItem, int, int64, error) {
+	return h.searchMarketplaceWithLimit(ctx, params, params.Limit*2)
+}
+
+// searchMarketplaceWithLimit поиск в marketplace с указанным лимитом
+func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, params *UnifiedSearchParams, limit int) ([]UnifiedSearchItem, int, int64, error) {
 	// Конвертируем параметры в формат для marketplace поиска
 	searchParams := &search.ServiceParams{
 		Query:         params.Query,
-		Page:          params.Page,
-		Size:          params.Limit * 2, // Берем больше для лучшего смешивания результатов
+		Page:          1, // Всегда запрашиваем с первой страницы, так как пагинация будет после объединения
+		Size:          limit,
 		CategoryID:    params.CategoryID,
 		PriceMin:      params.PriceMin,
 		PriceMax:      params.PriceMax,
@@ -381,6 +395,11 @@ func (h *UnifiedSearchHandler) searchMarketplace(ctx context.Context, params *Un
 
 // searchStorefront поиск в storefront
 func (h *UnifiedSearchHandler) searchStorefront(ctx context.Context, params *UnifiedSearchParams) ([]UnifiedSearchItem, int, int64, error) {
+	return h.searchStorefrontWithLimit(ctx, params, params.Limit*2)
+}
+
+// searchStorefrontWithLimit поиск в storefront с указанным лимитом
+func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, params *UnifiedSearchParams, limit int) ([]UnifiedSearchItem, int, int64, error) {
 	// Получаем репозиторий поиска товаров витрин
 	searchRepo := h.services.Storage().StorefrontProductSearch()
 	if searchRepo == nil {
@@ -410,8 +429,8 @@ func (h *UnifiedSearchHandler) searchStorefront(ctx context.Context, params *Uni
 		PriceMin:     params.PriceMin,
 		PriceMax:     params.PriceMax,
 		City:         params.City,
-		Limit:        params.Limit * 2, // Берем больше для лучшего смешивания результатов
-		Offset:       (params.Page - 1) * params.Limit * 2,
+		Limit:        limit,
+		Offset:       0, // Всегда запрашиваем с начала, так как пагинация будет после объединения
 		SortBy:       params.SortBy,
 		SortOrder:    params.SortOrder,
 	}

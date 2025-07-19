@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Popup } from 'react-map-gl';
+import Image from 'next/image';
 
 interface ClusterListing {
   id: string;
@@ -129,11 +130,11 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
               {/* Изображение */}
               {listing.imageUrl ? (
                 <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                  <img
+                  <Image
                     src={listing.imageUrl}
                     alt={listing.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               ) : (

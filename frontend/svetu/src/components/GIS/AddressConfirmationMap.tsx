@@ -36,11 +36,12 @@ export default function AddressConfirmationMap({
   const marker = useRef<mapboxgl.Marker | null>(null);
 
   const [currentLocation, setCurrentLocation] = useState(initialLocation);
-  const [isReversing, setIsReversing] = useState(false);
-  const [confidence, setConfidence] = useState(0);
-  const [reverseAddress, setReverseAddress] = useState('');
+  const [_isReversing, _setIsReversing] = useState(false);
+  const [_confidence, _setConfidence] = useState(0);
+  const [_reverseAddress, _setReverseAddress] = useState('');
 
-  const { reverseGeocode, validateAddress } = useAddressGeocoding();
+  const { reverseGeocode: _reverseGeocode, validateAddress } =
+    useAddressGeocoding();
 
   // Инициализация карты
   useEffect(() => {
@@ -80,7 +81,7 @@ export default function AddressConfirmationMap({
         map.current = null;
       }
     };
-  }, []);
+  }, [currentLocation, zoom]);
 
   // Обновление маркера при изменении локации
   useEffect(() => {
@@ -123,8 +124,8 @@ export default function AddressConfirmationMap({
         setCurrentLocation(newLocation);
         onLocationChange?.(newLocation);
 
-        // Обратное геокодирование при перетаскивании
-        handleReverseGeocode(newLocation);
+        // TODO: Обратное геокодирование при перетаскивании
+        // handleReverseGeocode(newLocation);
       });
     }
 
@@ -135,32 +136,6 @@ export default function AddressConfirmationMap({
       duration: 1000,
     });
   }, [currentLocation, editable, zoom, onLocationChange]);
-
-  // Обратное геокодирование
-  const handleReverseGeocode = useCallback(
-    async (location: { lat: number; lng: number }) => {
-      setIsReversing(true);
-
-      try {
-        const result = await reverseGeocode(location.lat, location.lng);
-
-        if (result) {
-          setReverseAddress(result.address_components.formatted);
-          setConfidence(result.confidence);
-        } else {
-          setReverseAddress('Адрес не найден');
-          setConfidence(0);
-        }
-      } catch (error) {
-        console.error('Reverse geocoding error:', error);
-        setReverseAddress('Ошибка определения адреса');
-        setConfidence(0);
-      } finally {
-        setIsReversing(false);
-      }
-    },
-    [reverseGeocode]
-  );
 
   // Обновление локации при изменении адреса
   useEffect(() => {
@@ -177,8 +152,8 @@ export default function AddressConfirmationMap({
           };
 
           setCurrentLocation(newLocation);
-          setReverseAddress(result.formatted_address || address);
-          setConfidence(result.confidence || 0.5);
+          _setReverseAddress(result.formatted_address || address);
+          _setConfidence(result.confidence || 0.5);
           onLocationChange?.(newLocation);
         }
       } catch (error) {
@@ -201,7 +176,7 @@ export default function AddressConfirmationMap({
 
       setCurrentLocation(newLocation);
       onLocationChange?.(newLocation);
-      handleReverseGeocode(newLocation);
+      // TODO: handleReverseGeocode(newLocation);
     };
 
     map.current.on('click', handleMapClick);
@@ -209,7 +184,7 @@ export default function AddressConfirmationMap({
     return () => {
       map.current?.off('click', handleMapClick);
     };
-  }, [editable, onLocationChange, handleReverseGeocode]);
+  }, [editable, onLocationChange]);
 
   // Подтверждение локации
   const handleConfirmLocation = useCallback(() => {
@@ -218,10 +193,16 @@ export default function AddressConfirmationMap({
     onLocationConfirm({
       lat: currentLocation.lat,
       lng: currentLocation.lng,
-      address: reverseAddress || address,
-      confidence: confidence,
+      address: _reverseAddress || address,
+      confidence: _confidence,
     });
-  }, [currentLocation, reverseAddress, address, confidence, onLocationConfirm]);
+  }, [
+    currentLocation,
+    _reverseAddress,
+    address,
+    _confidence,
+    onLocationConfirm,
+  ]);
 
   // Определение цвета по уровню доверия
   const _getConfidenceColor = (conf: number) => {
@@ -255,8 +236,8 @@ export default function AddressConfirmationMap({
             </h3>
 
             {/* Показатель доверия */}
-            <div className={`badge ${getConfidenceBadgeClass(confidence)}`}>
-              Точность: {Math.round(confidence * 100)}%
+            <div className={`badge ${getConfidenceBadgeClass(_confidence)}`}>
+              Точность: {Math.round(_confidence * 100)}%
             </div>
           </div>
 
@@ -269,15 +250,15 @@ export default function AddressConfirmationMap({
               <p className="text-sm mt-1">{address}</p>
             </div>
 
-            {reverseAddress && reverseAddress !== address && (
+            {_reverseAddress && _reverseAddress !== address && (
               <div>
                 <span className="text-sm font-medium text-base-content/70">
                   Адрес по координатам:
-                  {isReversing && (
+                  {_isReversing && (
                     <span className="loading loading-spinner loading-xs ml-2"></span>
                   )}
                 </span>
-                <p className="text-sm mt-1">{reverseAddress}</p>
+                <p className="text-sm mt-1">{_reverseAddress}</p>
               </div>
             )}
           </div>
@@ -305,7 +286,7 @@ export default function AddressConfirmationMap({
           )}
 
           {/* Предупреждения */}
-          {confidence < 0.7 && (
+          {_confidence < 0.7 && (
             <div className="mt-3 p-3 bg-warning/10 border border-warning/20 rounded-lg">
               <p className="text-sm text-warning-content">
                 ⚠️ <strong>Низкая точность:</strong> Рекомендуется проверить и
@@ -342,8 +323,8 @@ export default function AddressConfirmationMap({
                 // Сброс к исходному состоянию
                 if (initialLocation) {
                   setCurrentLocation(initialLocation);
-                  setReverseAddress('');
-                  setConfidence(0);
+                  _setReverseAddress('');
+                  _setConfidence(0);
                 }
               }}
               className="btn btn-ghost"

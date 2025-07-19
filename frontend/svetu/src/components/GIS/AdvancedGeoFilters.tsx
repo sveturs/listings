@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   MapIcon,
@@ -96,41 +96,43 @@ export default function AdvancedGeoFilters({
   ];
 
   // Debounced filter update
-  const debouncedUpdate = useCallback(
-    debounce(() => {
-      const filters: AdvancedGeoFilters = {};
+  const debouncedUpdate = useMemo(
+    () =>
+      debounce(() => {
+        const filters: AdvancedGeoFilters = {};
 
-      if (travelTimeEnabled && currentLocation) {
-        filters.travelTime = {
-          centerLat: currentLocation.lat,
-          centerLng: currentLocation.lng,
-          maxMinutes: travelMinutes,
-          transportMode,
-        };
-      }
+        if (travelTimeEnabled && currentLocation) {
+          filters.travelTime = {
+            centerLat: currentLocation.lat,
+            centerLng: currentLocation.lng,
+            maxMinutes: travelMinutes,
+            transportMode,
+          };
+        }
 
-      if (poiEnabled) {
-        filters.poiFilter = {
-          poiType: selectedPOI,
-          maxDistance: poiDistance,
-          ...(poiMinCount > 0 && { minCount: poiMinCount }),
-        };
-      }
+        if (poiEnabled) {
+          filters.poiFilter = {
+            poiType: selectedPOI,
+            maxDistance: poiDistance,
+            ...(poiMinCount > 0 && { minCount: poiMinCount }),
+          };
+        }
 
-      if (densityEnabled) {
-        filters.densityFilter = {
-          avoidCrowded,
-          ...(maxDensity && { maxDensity }),
-        };
-      }
+        if (densityEnabled) {
+          filters.densityFilter = {
+            avoidCrowded,
+            ...(maxDensity && { maxDensity }),
+          };
+        }
 
-      onFiltersChange(filters);
-    }, 500),
+        onFiltersChange(filters);
+      }, 500),
     [
+      onFiltersChange,
       travelTimeEnabled,
+      currentLocation,
       travelMinutes,
       transportMode,
-      currentLocation,
       poiEnabled,
       selectedPOI,
       poiDistance,
@@ -145,14 +147,7 @@ export default function AdvancedGeoFilters({
     debouncedUpdate();
   }, [debouncedUpdate]);
 
-  // Search POIs when enabled
-  useEffect(() => {
-    if (poiEnabled && currentLocation) {
-      searchPOIs();
-    }
-  }, [poiEnabled, selectedPOI, currentLocation]);
-
-  const searchPOIs = async () => {
+  const searchPOIs = useCallback(async () => {
     if (!currentLocation) return;
 
     try {
@@ -178,10 +173,17 @@ export default function AdvancedGeoFilters({
     } catch (error) {
       console.error('Failed to search POIs:', error);
     }
-  };
+  }, [currentLocation, selectedPOI]);
+
+  // Search POIs when enabled
+  useEffect(() => {
+    if (poiEnabled && currentLocation) {
+      searchPOIs();
+    }
+  }, [poiEnabled, selectedPOI, currentLocation, searchPOIs]);
 
   // Save filters to localStorage
-  const saveFilters = () => {
+  const saveFilters = useCallback(() => {
     const savedFilters = {
       travelTimeEnabled,
       travelMinutes,
@@ -195,7 +197,18 @@ export default function AdvancedGeoFilters({
       maxDensity,
     };
     localStorage.setItem('advancedGeoFilters', JSON.stringify(savedFilters));
-  };
+  }, [
+    travelTimeEnabled,
+    travelMinutes,
+    transportMode,
+    poiEnabled,
+    selectedPOI,
+    poiDistance,
+    poiMinCount,
+    densityEnabled,
+    avoidCrowded,
+    maxDensity,
+  ]);
 
   // Load filters from localStorage
   useEffect(() => {
@@ -232,6 +245,7 @@ export default function AdvancedGeoFilters({
     densityEnabled,
     avoidCrowded,
     maxDensity,
+    saveFilters,
   ]);
 
   return (

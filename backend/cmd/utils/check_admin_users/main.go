@@ -52,7 +52,10 @@ func main() {
 
 	for rows.Next() {
 		var colName, dataType string
-		rows.Scan(&colName, &dataType)
+		if err := rows.Scan(&colName, &dataType); err != nil {
+			log.Printf("Warning: failed to scan row: %v", err)
+			continue
+		}
 		fmt.Printf("- %s: %s\n", colName, dataType)
 	}
 	rows.Close()

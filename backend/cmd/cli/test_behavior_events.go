@@ -144,7 +144,11 @@ func sendEvent(apiURL string, event BehaviorEvent) error {
 	if err != nil {
 		return fmt.Errorf("error sending request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Warning: failed to close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)

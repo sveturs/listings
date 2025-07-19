@@ -7,6 +7,7 @@ import { useCreateProduct } from '@/contexts/CreateProductContext';
 import { apiClient } from '@/services/api-client';
 import { toast } from '@/utils/toast';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
+import Image from 'next/image';
 import type { components } from '@/types/generated/api';
 
 type CategoryAttribute =
@@ -174,10 +175,11 @@ export default function PreviewStep({
             <div className="card bg-base-100 shadow-xl">
               <div className="card-body p-0">
                 <div className="aspect-square bg-base-200 rounded-t-2xl overflow-hidden">
-                  <img
+                  <Image
                     src={URL.createObjectURL(state.images[0])}
                     alt={state.productData.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
 
@@ -190,10 +192,11 @@ export default function PreviewStep({
                           key={index}
                           className="aspect-square bg-base-200 rounded-lg overflow-hidden"
                         >
-                          <img
+                          <Image
                             src={URL.createObjectURL(image)}
                             alt={`${state.productData.name} ${index + 2}`}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         </div>
                       ))}
