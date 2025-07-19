@@ -60,12 +60,14 @@ interface MarketplaceListProps {
   } | null;
   locale: string;
   productTypes?: ('marketplace' | 'storefront')[];
+  selectedCategoryId?: number | null;
 }
 
 export default function MarketplaceList({
   initialData,
   locale,
   productTypes = ['marketplace', 'storefront'],
+  selectedCategoryId,
 }: MarketplaceListProps) {
   // console.log('MarketplaceList render:', {
   //   initialData: !!initialData,
@@ -95,6 +97,7 @@ export default function MarketplaceList({
     UnifiedSearchService.search({
       query: '',
       product_types: productTypes,
+      category_id: selectedCategoryId?.toString(),
       sort_by: 'date',
       sort_order: 'desc',
       page: 1,
@@ -117,7 +120,7 @@ export default function MarketplaceList({
       .finally(() => {
         setLoading(false);
       });
-  }, [t, productTypes]);
+  }, [t, productTypes, selectedCategoryId]);
 
   // Начальная загрузка данных, если они не были переданы через SSR
   useEffect(() => {
@@ -126,7 +129,7 @@ export default function MarketplaceList({
     }
   }, [initialized, loading, manualLoad]);
 
-  // Перезагрузка данных при изменении типов товаров
+  // Перезагрузка данных при изменении типов товаров или категории
   useEffect(() => {
     if (initialized) {
       setPage(1);
@@ -134,7 +137,7 @@ export default function MarketplaceList({
       setHasMore(true);
       manualLoad();
     }
-  }, [productTypes, initialized, manualLoad]);
+  }, [productTypes, selectedCategoryId, initialized, manualLoad]);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -147,6 +150,7 @@ export default function MarketplaceList({
       const response = await UnifiedSearchService.search({
         query: '',
         product_types: productTypes,
+        category_id: selectedCategoryId?.toString(),
         sort_by: 'date',
         sort_order: 'desc',
         page: nextPage,
@@ -173,7 +177,7 @@ export default function MarketplaceList({
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, page, t, productTypes]);
+  }, [loading, hasMore, page, t, productTypes, selectedCategoryId]);
 
   const loadMoreRef = useInfiniteScroll({
     loading,
