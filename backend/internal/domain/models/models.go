@@ -85,6 +85,8 @@ type MarketplaceCategory struct {
 	Slug              string            `json:"slug"`
 	ParentID          *int              `json:"parent_id,omitempty"`
 	Icon              string            `json:"icon,omitempty"`
+	Description       string            `json:"description,omitempty"`
+	IsActive          bool              `json:"is_active"`
 	CreatedAt         time.Time         `json:"created_at"`
 	Translations      map[string]string `json:"translations,omitempty"`
 	ListingCount      int               `json:"listing_count"`
@@ -94,6 +96,9 @@ type MarketplaceCategory struct {
 	Level             int               `json:"level"`
 	Count             int               `json:"count"`
 	ExternalID        string            `json:"external_id,omitempty"`
+	SEOTitle          string            `json:"seo_title,omitempty"`
+	SEODescription    string            `json:"seo_description,omitempty"`
+	SEOKeywords       string            `json:"seo_keywords,omitempty"`
 }
 
 type MarketplaceImage struct {

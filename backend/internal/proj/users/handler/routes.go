@@ -33,18 +33,21 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	users.Put("/profile", h.User.UpdateProfile)
 	users.Get("/:id/profile", h.User.GetProfileByID)
 
-	adminRoutes := app.Group("/api/v1/admin", mw.AuthRequiredJWT, mw.AdminRequired, mw.CSRFProtection())
-	adminRoutes.Get("/users", h.User.GetAllUsers)
-	adminRoutes.Get("/users/:id", h.User.GetUserByIDAdmin)
-	adminRoutes.Put("/users/:id", h.User.UpdateUserAdmin)
-	adminRoutes.Put("/users/:id/status", h.User.UpdateUserStatus)
-	adminRoutes.Delete("/users/:id", h.User.DeleteUser)
-	adminRoutes.Get("/users/:id/balance", h.User.GetUserBalance)
-	adminRoutes.Get("/users/:id/transactions", h.User.GetUserTransactions)
-	adminRoutes.Get("/admins", h.User.GetAllAdmins)
-	adminRoutes.Post("/admins", h.User.AddAdmin)
-	adminRoutes.Delete("/admins/:email", h.User.RemoveAdmin)
-	adminRoutes.Get("/admins/check/:email", h.User.IsAdmin)
+	// Use specific route groups to avoid conflicts with marketplace admin routes
+	adminUsersRoutes := app.Group("/api/v1/admin/users", mw.AuthRequiredJWT, mw.AdminRequired, mw.CSRFProtection())
+	adminUsersRoutes.Get("/", h.User.GetAllUsers)
+	adminUsersRoutes.Get("/:id", h.User.GetUserByIDAdmin)
+	adminUsersRoutes.Put("/:id", h.User.UpdateUserAdmin)
+	adminUsersRoutes.Put("/:id/status", h.User.UpdateUserStatus)
+	adminUsersRoutes.Delete("/:id", h.User.DeleteUser)
+	adminUsersRoutes.Get("/:id/balance", h.User.GetUserBalance)
+	adminUsersRoutes.Get("/:id/transactions", h.User.GetUserTransactions)
+
+	adminRolesRoutes := app.Group("/api/v1/admin/admins", mw.AuthRequiredJWT, mw.AdminRequired, mw.CSRFProtection())
+	adminRolesRoutes.Get("/", h.User.GetAllAdmins)
+	adminRolesRoutes.Post("/", h.User.AddAdmin)
+	adminRolesRoutes.Delete("/:email", h.User.RemoveAdmin)
+	adminRolesRoutes.Get("/check/:email", h.User.IsAdmin)
 
 	return nil
 }

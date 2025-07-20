@@ -1,4 +1,4 @@
-import { config } from '@/config';
+import { BaseApiService } from './baseApi';
 
 export interface ListingCardData {
   id: number;
@@ -36,55 +36,7 @@ export interface MarketplaceFilters {
   offset?: number;
 }
 
-class MarketplaceApiService {
-  private baseUrl: string;
-
-  constructor() {
-    this.baseUrl = config.api.url;
-  }
-
-  private createUrl(endpoint: string, params?: Record<string, any>): string {
-    const url = new URL(`${this.baseUrl}${endpoint}`);
-
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          url.searchParams.append(key, String(value));
-        }
-      });
-    }
-
-    return url.toString();
-  }
-
-  private async request<T>(url: string, options?: RequestInit): Promise<T> {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        },
-        ...options,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          error: `HTTP error! status: ${response.status}`,
-        }));
-        throw new Error(
-          errorData.error || errorData.message || 'Network error'
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Unknown error occurred');
-    }
-  }
-
+class MarketplaceApiService extends BaseApiService {
   /**
    * Get marketplace listings with filters
    */

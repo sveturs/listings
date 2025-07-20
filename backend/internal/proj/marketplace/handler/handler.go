@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/storage/postgres"
@@ -47,6 +48,7 @@ type Handler struct {
 	Chat               *ChatHandler
 	AdminCategories    *AdminCategoriesHandler
 	AdminAttributes    *AdminAttributesHandler
+	AdminTranslations  *AdminTranslationsHandler
 	CustomComponents   *CustomComponentHandler
 	MarketplaceHandler *MarketplaceHandler
 	Orders             *OrderHandler
@@ -81,6 +83,9 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			orderHandler = NewOrderHandler(orderService)
 		}
 
+		adminCategoriesHandler := NewAdminCategoriesHandler(categoriesHandler)
+		logger.Info().Interface("adminCategoriesHandler", adminCategoriesHandler).Msg("Created AdminCategoriesHandler")
+
 		return &Handler{
 			Listings:           NewListingsHandler(services),
 			Images:             NewImagesHandler(services),
@@ -90,8 +95,9 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			Favorites:          NewFavoritesHandler(services),
 			Indexing:           NewIndexingHandler(services),
 			Chat:               NewChatHandler(services, services.Config()),
-			AdminCategories:    NewAdminCategoriesHandler(categoriesHandler),
+			AdminCategories:    adminCategoriesHandler,
 			AdminAttributes:    NewAdminAttributesHandler(services),
+			AdminTranslations:  NewAdminTranslationsHandler(services),
 			CustomComponents:   customComponentHandler,
 			MarketplaceHandler: marketplaceHandler,
 			Orders:             orderHandler,
@@ -100,6 +106,9 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 	}
 
 	// Возвращаем handler без CustomComponents, если приведение не удалось
+	adminCategoriesHandler := NewAdminCategoriesHandler(categoriesHandler)
+	logger.Info().Interface("adminCategoriesHandler", adminCategoriesHandler).Msg("Created AdminCategoriesHandler (fallback)")
+
 	return &Handler{
 		Listings:           NewListingsHandler(services),
 		Images:             NewImagesHandler(services),
@@ -109,8 +118,9 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		Favorites:          NewFavoritesHandler(services),
 		Indexing:           NewIndexingHandler(services),
 		Chat:               NewChatHandler(services, services.Config()),
-		AdminCategories:    NewAdminCategoriesHandler(categoriesHandler),
+		AdminCategories:    adminCategoriesHandler,
 		AdminAttributes:    NewAdminAttributesHandler(services),
+		AdminTranslations:  NewAdminTranslationsHandler(services),
 		CustomComponents:   nil,
 		MarketplaceHandler: nil,
 		Orders:             nil,
@@ -178,8 +188,18 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes := app.Group("/api/v1/admin", mw.AuthRequiredJWT, mw.AdminRequired)
 
 	// Регистрируем маршруты администрирования категорий
+	logger.Info().Msg("Registering admin categories routes")
+	logger.Info().Interface("AdminCategories", h.AdminCategories).Msg("AdminCategories handler")
+	if h.AdminCategories == nil {
+		logger.Error().Msg("🚨🚨🚨 AdminCategories is NIL! 🚨🚨🚨")
+	} else {
+		logger.Info().Msg("✅ AdminCategories is NOT nil")
+	}
+	logger.Info().Str("route", "POST /categories").Msg("Registering CreateCategory route")
+
 	adminRoutes.Post("/categories", h.AdminCategories.CreateCategory)
 	adminRoutes.Get("/categories", h.AdminCategories.GetCategories)
+	adminRoutes.Get("/categories/all", h.AdminCategories.GetAllCategories)
 	adminRoutes.Get("/categories/:id", h.AdminCategories.GetCategoryByID)
 	adminRoutes.Put("/categories/:id", h.AdminCategories.UpdateCategory)
 	adminRoutes.Delete("/categories/:id", h.AdminCategories.DeleteCategory)
@@ -188,6 +208,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Post("/categories/:id/attributes", h.AdminCategories.AddAttributeToCategory)
 	adminRoutes.Delete("/categories/:id/attributes/:attr_id", h.AdminCategories.RemoveAttributeFromCategory)
 	adminRoutes.Put("/categories/:id/attributes/:attr_id", h.AdminCategories.UpdateAttributeCategory)
+	adminRoutes.Get("/categories/:id/groups", h.AdminCategories.GetCategoryAttributeGroups)
+	adminRoutes.Post("/categories/:id/groups", h.AdminCategories.AttachAttributeGroupToCategory)
+	adminRoutes.Delete("/categories/:id/groups/:group_id", h.AdminCategories.DetachAttributeGroupFromCategory)
+	adminRoutes.Post("/categories/:id/translate", h.AdminCategories.TranslateCategory)
 
 	// Регистрируем маршруты администрирования атрибутов
 	adminRoutes.Post("/attributes", h.AdminAttributes.CreateAttribute)
@@ -237,6 +261,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Delete("/categories/:id/attribute-groups/:groupId", h.MarketplaceHandler.DetachGroupFromCategory)
 
 	// Использовать реальный обработчик из UserHandler
+
+	// Маршруты для админских переводов
+	adminRoutes.Post("/translations/batch-categories", h.AdminTranslations.BatchTranslateCategories)
+	adminRoutes.Post("/translations/batch-attributes", h.AdminTranslations.BatchTranslateAttributes)
+	adminRoutes.Get("/translations/status", h.AdminTranslations.GetTranslationStatus)
+	adminRoutes.Put("/translations/:entity_type/:entity_id/:field_name", h.AdminTranslations.UpdateFieldTranslation)
 
 	// Управление администраторами
 

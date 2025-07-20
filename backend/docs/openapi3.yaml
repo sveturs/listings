@@ -56,12 +56,22 @@ paths:
           application/json:
             schema:
               properties:
+                description:
+                  type: string
                 icon:
                   type: string
+                is_active:
+                  type: boolean
                 name:
                   type: string
                 parent_id:
                   type: integer
+                seo_description:
+                  type: string
+                seo_keywords:
+                  type: string
+                seo_title:
+                  type: string
                 slug:
                   type: string
               type: object
@@ -240,12 +250,22 @@ paths:
           application/json:
             schema:
               properties:
+                description:
+                  type: string
                 icon:
                   type: string
+                is_active:
+                  type: boolean
                 name:
                   type: string
                 parent_id:
                   type: integer
+                seo_description:
+                  type: string
+                seo_keywords:
+                  type: string
+                seo_title:
+                  type: string
                 slug:
                   type: string
               type: object
@@ -433,6 +453,142 @@ paths:
       summary: Update attribute category settings
       tags:
         - marketplace-admin-categories
+  "/api/admin/categories/{id}/groups":
+    get:
+      description: Returns attribute groups attached to a category
+      parameters:
+        - description: Category ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Category groups
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.AttributeGroup"
+                        type: array
+                    type: object
+        "400":
+          description: marketplace.invalidCategoryId
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.getCategoryGroupsError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get category attribute groups
+      tags:
+        - marketplace-admin-categories
+    post:
+      description: Attaches an attribute group to a category
+      parameters:
+        - description: Category ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                group_id:
+                  type: integer
+                sort_order:
+                  type: integer
+              type: object
+        description: Group attachment data
+        required: true
+      responses:
+        "201":
+          description: Group attached successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_marketplace_handler.IDMessageResponse"
+                    type: object
+        "400":
+          description: marketplace.invalidCategoryId or marketplace.invalidData
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.attachGroupError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Attach attribute group to category
+      tags:
+        - marketplace-admin-categories
+  "/api/admin/categories/{id}/groups/{group_id}":
+    delete:
+      description: Detaches an attribute group from a category
+      parameters:
+        - description: Category ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Group ID
+          in: path
+          name: group_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Group detached successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_marketplace_handler.MessageResponse"
+                    type: object
+        "400":
+          description: marketplace.invalidCategoryId or marketplace.invalidGroupId
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.detachGroupError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Detach attribute group from category
+      tags:
+        - marketplace-admin-categories
   "/api/admin/categories/{id}/move":
     put:
       description: Moves a category to a different parent in the hierarchy
@@ -531,6 +687,35 @@ paths:
       security:
         - BearerAuth: []
       summary: Reorder categories
+      tags:
+        - marketplace-admin-categories
+  /api/admin/categories/all:
+    get:
+      description: Returns all marketplace categories including inactive ones for
+        admin panel
+      responses:
+        "200":
+          description: Categories list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.MarketplaceCategory"
+                        type: array
+                    type: object
+        "500":
+          description: marketplace.getCategoriesError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get all categories including inactive
       tags:
         - marketplace-admin-categories
   /api/admin/custom-components:
@@ -896,6 +1081,195 @@ paths:
       summary: Remove component usage
       tags:
         - marketplace-admin-custom-components
+  "/api/admin/translations/{entity_type}/{entity_id}/{field_name}":
+    put:
+      description: Updates translation for a specific field of an entity
+      parameters:
+        - description: Entity type (category, attribute)
+          in: path
+          name: entity_type
+          required: true
+          schema:
+            type: string
+        - description: Entity ID
+          in: path
+          name: entity_id
+          required: true
+          schema:
+            type: integer
+        - description: Field name
+          in: path
+          name: field_name
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_marketplace_handler.UpdateFieldTransl\
+                ationRequest"
+        description: Translation update request
+        required: true
+      responses:
+        "200":
+          description: Translation updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_marketplace_handler.TranslationFieldS\
+                          tatus"
+                    type: object
+        "400":
+          description: marketplace.invalidData
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.updateTranslationError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Update field translation
+      tags:
+        - marketplace-admin-translations
+  /api/admin/translations/batch-attributes:
+    post:
+      description: Translates multiple attributes and their options to specified languages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_marketplace_handler.BatchTranslateAtt\
+                ributesRequest"
+        description: Batch translation request
+        required: true
+      responses:
+        "200":
+          description: Batch translation started successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_marketplace_handler.BatchTranslateRes\
+                          ponse"
+                    type: object
+        "400":
+          description: marketplace.invalidData
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.batchTranslateError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Batch translate attributes
+      tags:
+        - marketplace-admin-translations
+  /api/admin/translations/batch-categories:
+    post:
+      description: Translates multiple categories to specified languages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_marketplace_handler.BatchTranslateCat\
+                egoriesRequest"
+        description: Batch translation request
+        required: true
+      responses:
+        "200":
+          description: Batch translation started successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_marketplace_handler.BatchTranslateRes\
+                          ponse"
+                    type: object
+        "400":
+          description: marketplace.invalidData
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.batchTranslateError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Batch translate categories
+      tags:
+        - marketplace-admin-translations
+  /api/admin/translations/status:
+    get:
+      description: Gets translation status for categories or attributes
+      parameters:
+        - description: Entity type (category, attribute)
+          in: query
+          name: entity_type
+          required: true
+          schema:
+            type: string
+        - description: Comma-separated entity IDs
+          in: query
+          name: entity_ids
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Translation status retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/internal_proj_marketplace_handler.TranslationStatus\
+                            Item"
+                        type: array
+                    type: object
+        "400":
+          description: marketplace.invalidEntityType
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.getTranslationStatusError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get translation status
+      tags:
+        - marketplace-admin-translations
   "/api/v1/admin-check/{email}":
     get:
       description: Checks if user with specified email is an administrator (no
@@ -1103,6 +1477,55 @@ paths:
       summary: Check administrator status
       tags:
         - admin-management
+  "/api/v1/admin/categories/{id}/translate":
+    post:
+      description: Automatically translates category name, description, seo_title and
+        seo_description to all supported languages using Google Translate
+      parameters:
+        - description: Category ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        $ref: "#/components/requestBodies/Languages"
+      responses:
+        "200":
+          description: Translation results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_marketplace_handler.CategoryTranslati\
+                          onResult"
+                    type: object
+        "400":
+          description: Invalid category ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Translation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Auto-translate category
+      tags:
+        - marketplace-admin-categories
   /api/v1/admin/marketplace/attributes:
     get:
       description: Returns paginated list of all category attributes sorted by
@@ -1293,18 +1716,7 @@ paths:
           schema:
             type: integer
       requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                source_language:
-                  type: string
-                target_languages:
-                  items:
-                    type: string
-                  type: array
-              type: object
-        description: Translation settings
+        $ref: "#/components/requestBodies/Languages"
       responses:
         "200":
           description: Translation results
@@ -14568,6 +14980,19 @@ components:
             $ref: "#/components/schemas/backend_internal_domain_models.CategoryAttribute"
       description: Attribute data
       required: true
+    Languages:
+      content:
+        application/json:
+          schema:
+            properties:
+              source_language:
+                type: string
+              target_languages:
+                items:
+                  type: string
+                type: array
+            type: object
+      description: Translation settings
     backend_internal_domain_search.ServiceParams:
       content:
         application/json:
@@ -15929,6 +16354,8 @@ components:
           type: string
         custom_ui_component:
           type: string
+        description:
+          type: string
         external_id:
           type: string
         has_custom_ui:
@@ -15937,6 +16364,8 @@ components:
           type: string
         id:
           type: integer
+        is_active:
+          type: boolean
         level:
           type: integer
         listing_count:
@@ -15945,6 +16374,12 @@ components:
           type: string
         parent_id:
           type: integer
+        seo_description:
+          type: string
+        seo_keywords:
+          type: string
+        seo_title:
+          type: string
         slug:
           type: string
         sort_order:
@@ -19085,6 +19520,10 @@ components:
           example: true
           type: boolean
       type: object
+    internal_proj_marketplace_handler.BatchTranslateAttributesRequest:
+      type: object
+    internal_proj_marketplace_handler.BatchTranslateCategoriesRequest:
+      type: object
     internal_proj_marketplace_handler.BatchTranslateData:
       properties:
         listing_count:
@@ -19096,8 +19535,30 @@ components:
         target_lang:
           example: en
           type: string
+        target_languages:
+          example:
+            - '["en"'
+            - '"ru"]'
+          items:
+            type: string
+          type: array
+        total_count:
+          example: 5
+          type: integer
       type: object
     internal_proj_marketplace_handler.BatchTranslateRequest:
+      type: object
+    internal_proj_marketplace_handler.BatchTranslateResponse:
+      properties:
+        data:
+          $ref: "#/components/schemas/internal_proj_marketplace_handler.BatchTranslateDat\
+            a"
+        message:
+          example: marketplace.translationProcessStarted
+          type: string
+        success:
+          example: true
+          type: boolean
       type: object
     internal_proj_marketplace_handler.BulkUpdateResult:
       properties:
@@ -19111,6 +19572,19 @@ components:
         total_count:
           example: 10
           type: integer
+      type: object
+    internal_proj_marketplace_handler.CategoryTranslationResult:
+      properties:
+        category_id:
+          example: 123
+          type: integer
+        errors:
+          items:
+            type: string
+          type: array
+        translations:
+          additionalProperties: true
+          type: object
       type: object
     internal_proj_marketplace_handler.ChatMessagesResponse:
       properties:
@@ -19534,6 +20008,17 @@ components:
           example: Привет мир
           type: string
       type: object
+    internal_proj_marketplace_handler.TranslationFieldStatus:
+      properties:
+        is_machine_translated:
+          type: boolean
+        is_translated:
+          type: boolean
+        is_verified:
+          type: boolean
+        language:
+          type: string
+      type: object
     internal_proj_marketplace_handler.TranslationLimitsData:
       properties:
         daily_limit:
@@ -19562,6 +20047,18 @@ components:
           additionalProperties: true
           type: object
       type: object
+    internal_proj_marketplace_handler.TranslationStatusItem:
+      properties:
+        entity_id:
+          type: integer
+        entity_type:
+          type: string
+        languages:
+          additionalProperties:
+            $ref: "#/components/schemas/internal_proj_marketplace_handler.TranslationFieldS\
+              tatus"
+          type: object
+      type: object
     internal_proj_marketplace_handler.TranslationUpdateRequest:
       properties:
         is_verified:
@@ -19583,6 +20080,20 @@ components:
         count:
           example: 5
           type: integer
+      type: object
+    internal_proj_marketplace_handler.UpdateFieldTranslationRequest:
+      properties:
+        provider:
+          example: manual
+          type: string
+        translations:
+          additionalProperties:
+            type: string
+          example:
+            '"ru"': '"Привет"'
+            '"sr"': '"Здраво"}'
+            "{\"en\"": '"Hello"'
+          type: object
       type: object
     internal_proj_notifications_handler.NotificationMarkReadResponse:
       description: Ответ при изменении статуса уведомления

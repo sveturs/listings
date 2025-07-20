@@ -1,6 +1,19 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
+function getCurrentLocale(): string {
+  // Проверяем URL для получения локали (Next.js i18n)
+  if (typeof window !== 'undefined') {
+    const pathSegments = window.location.pathname.split('/');
+    const locale = pathSegments[1];
+    if (['en', 'ru', 'sr'].includes(locale)) {
+      return locale;
+    }
+  }
+  // По умолчанию возвращаем сербский
+  return 'sr';
+}
+
 async function getAuthHeaders(): Promise<Record<string, string>> {
   // Helper function to get headers with auth and CSRF tokens
   const headers: Record<string, string> = {
@@ -51,6 +64,7 @@ export interface Attribute {
     | 'text'
     | 'number'
     | 'select'
+    | 'multiselect'
     | 'boolean'
     | 'date'
     | 'range'
@@ -60,6 +74,7 @@ export interface Attribute {
   icon?: string;
   options?: string[];
   validation_rules?: Record<string, unknown>;
+  custom_component?: string;
   is_searchable?: boolean;
   is_filterable?: boolean;
   is_required?: boolean;
@@ -120,6 +135,7 @@ export interface CategoryAttributeMapping {
   is_required?: boolean;
   sort_order?: number;
   custom_component?: string;
+  group_id?: number;
 }
 
 // Admin API Service
@@ -149,11 +165,17 @@ export const adminApi = {
           }
         }
 
-        const response = await fetch('/api/v1/admin/categories', {
-          method: 'GET',
-          headers,
-          credentials: 'include',
-        });
+        // Получаем текущий язык
+        const currentLocale = getCurrentLocale();
+
+        const response = await fetch(
+          `/api/v1/admin/categories/all?lang=${currentLocale}`,
+          {
+            method: 'GET',
+            headers,
+            credentials: 'include',
+          }
+        );
 
         console.log('Response status:', response.status);
 
@@ -307,8 +329,9 @@ export const adminApi = {
         }
       }
 
+      const currentLocale = getCurrentLocale();
       const response = await fetch(
-        `/api/v1/marketplace/categories/${categoryId}/attributes`,
+        `/api/v1/marketplace/categories/${categoryId}/attributes?lang=${currentLocale}`,
         {
           method: 'GET',
           headers,
@@ -358,6 +381,62 @@ export const adminApi = {
       const response = await apiClient.put(
         `/api/v1/admin/categories/${categoryId}/attributes/${attributeId}`,
         settings
+      );
+      return response.data as any;
+    },
+
+    // Category groups
+    async getGroups(categoryId: number): Promise<AttributeGroup[]> {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (typeof window !== 'undefined') {
+        try {
+          const { tokenManager } = await import('@/utils/tokenManager');
+          const token = await tokenManager.getAccessToken();
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+        } catch {
+          console.log('No token available, proceeding without auth');
+        }
+      }
+
+      const response = await fetch(
+        `/api/v1/admin/categories/${categoryId}/groups`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.data || [];
+    },
+
+    async attachGroup(
+      categoryId: number,
+      groupId: number,
+      sortOrder: number = 0
+    ): Promise<any> {
+      const response = await apiClient.post(
+        `/api/v1/admin/categories/${categoryId}/groups`,
+        {
+          group_id: groupId,
+          sort_order: sortOrder,
+        }
+      );
+      return response.data as any;
+    },
+
+    async detachGroup(categoryId: number, groupId: number): Promise<any> {
+      const response = await apiClient.delete(
+        `/api/v1/admin/categories/${categoryId}/groups/${groupId}`
       );
       return response.data as any;
     },
@@ -727,5 +806,107 @@ export const adminApi = {
       }
     );
     return response.data as any;
+  },
+
+  // Get Translation Status
+  async getTranslationStatus(
+    entityType: 'category' | 'attribute',
+    entityIds?: number[]
+  ): Promise<
+    components['schemas']['internal_proj_marketplace_handler.TranslationStatusItem'][]
+  > {
+    const params = new URLSearchParams();
+    params.append('entity_type', entityType);
+    if (entityIds && entityIds.length > 0) {
+      params.append('entity_ids', entityIds.join(','));
+    }
+
+    const response = await apiClient.get(
+      `/api/v1/admin/translations/status?${params.toString()}`
+    );
+    return (response.data as any).data || [];
+  },
+
+  // Batch Translate Categories
+  async batchTranslateCategories(
+    categoryIds: number[],
+    sourceLanguage: string = 'ru',
+    targetLanguages: string[] = ['en', 'sr']
+  ): Promise<{
+    translations: Record<string, any>;
+    errors?: string[];
+  }> {
+    const response = await apiClient.post(
+      '/api/v1/admin/translations/batch-categories',
+      {
+        category_ids: categoryIds,
+        source_language: sourceLanguage,
+        target_languages: targetLanguages,
+      }
+    );
+    return response.data as any;
+  },
+
+  // Batch Translate Attributes
+  async batchTranslateAttributes(
+    attributeIds: number[],
+    sourceLanguage: string = 'ru',
+    targetLanguages: string[] = ['en', 'sr']
+  ): Promise<{
+    translations: Record<string, any>;
+    errors?: string[];
+  }> {
+    const response = await apiClient.post(
+      '/api/v1/admin/translations/batch-attributes',
+      {
+        attribute_ids: attributeIds,
+        source_language: sourceLanguage,
+        target_languages: targetLanguages,
+      }
+    );
+    return response.data as any;
+  },
+
+  // Translate Category (single)
+  async translateCategory(
+    categoryId: number,
+    sourceLanguage: string = 'ru',
+    targetLanguages: string[] = ['en', 'sr']
+  ): Promise<{
+    category_id: number;
+    translations: Record<string, any>;
+    errors?: string[];
+  }> {
+    const response = await apiClient.post(
+      `/api/v1/admin/categories/${categoryId}/translate`,
+      {
+        source_language: sourceLanguage,
+        target_languages: targetLanguages,
+      }
+    );
+    return response.data as any;
+  },
+
+  // Update Field Translation
+  async updateFieldTranslation(
+    entityType: 'category' | 'attribute',
+    entityId: number,
+    fieldName: string,
+    translations: Record<string, string>,
+    provider: string = 'manual'
+  ): Promise<
+    Record<
+      string,
+      components['schemas']['internal_proj_marketplace_handler.TranslationFieldStatus']
+    >
+  > {
+    const response = await apiClient.put(
+      `/api/v1/admin/translations/${entityType}/${entityId}/${fieldName}`,
+      {
+        translations,
+        provider,
+      }
+    );
+    return (response.data as any).data || {};
   },
 };

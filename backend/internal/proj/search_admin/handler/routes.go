@@ -38,34 +38,34 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	statsGroup.Get("/", h.GetSearchStatistics)
 	statsGroup.Get("/popular", h.GetPopularSearches)
 
-	// Защищенные admin маршруты
-	adminRoutes := app.Group("/api/v1/admin", mw.AuthRequiredJWT, mw.AdminRequired)
+	// Защищенные admin маршруты для поиска (специфичная группа)
+	adminSearchRoutes := app.Group("/api/v1/admin/search", mw.AuthRequiredJWT, mw.AdminRequired)
 
 	// Аналитика поиска
-	adminRoutes.Get("/search/analytics", h.GetSearchAnalytics)
+	adminSearchRoutes.Get("/analytics", h.GetSearchAnalytics)
 
 	// Конфигурация поиска
-	adminRoutes.Put("/search/config", h.UpdateConfig)
+	adminSearchRoutes.Put("/config", h.UpdateConfig)
 
 	// Веса
-	adminRoutes.Get("/search/weights", h.GetWeights)
-	adminRoutes.Post("/search/weights", h.CreateWeight)
-	adminRoutes.Put("/search/weights/:id", h.UpdateWeight)
-	adminRoutes.Delete("/search/weights/:id", h.DeleteWeight)
+	adminSearchRoutes.Get("/weights", h.GetWeights)
+	adminSearchRoutes.Post("/weights", h.CreateWeight)
+	adminSearchRoutes.Put("/weights/:id", h.UpdateWeight)
+	adminSearchRoutes.Delete("/weights/:id", h.DeleteWeight)
 
 	// Синонимы
-	adminRoutes.Get("/search/synonyms", h.GetSynonyms)
-	adminRoutes.Post("/search/synonyms", func(c *fiber.Ctx) error {
+	adminSearchRoutes.Get("/synonyms", h.GetSynonyms)
+	adminSearchRoutes.Post("/synonyms", func(c *fiber.Ctx) error {
 		log.Printf("POST /search/synonyms - middleware reached")
 		return h.CreateSynonym(c)
 	})
-	adminRoutes.Put("/search/synonyms/:id", h.UpdateSynonym)
-	adminRoutes.Delete("/search/synonyms/:id", h.DeleteSynonym)
+	adminSearchRoutes.Put("/synonyms/:id", h.UpdateSynonym)
+	adminSearchRoutes.Delete("/synonyms/:id", h.DeleteSynonym)
 
 	// Транслитерация
-	adminRoutes.Post("/search/transliteration", h.CreateTransliterationRule)
-	adminRoutes.Put("/search/transliteration/:id", h.UpdateTransliterationRule)
-	adminRoutes.Delete("/search/transliteration/:id", h.DeleteTransliterationRule)
+	adminSearchRoutes.Post("/transliteration", h.CreateTransliterationRule)
+	adminSearchRoutes.Put("/transliteration/:id", h.UpdateTransliterationRule)
+	adminSearchRoutes.Delete("/transliteration/:id", h.DeleteTransliterationRule)
 
 	return nil
 }

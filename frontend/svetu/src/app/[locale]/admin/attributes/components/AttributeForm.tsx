@@ -5,6 +5,8 @@ import { Attribute, adminApi } from '@/services/admin';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
 import IconPicker from '@/components/IconPicker';
+import ValidationRulesEditor from '@/components/attributes/ValidationRulesEditor';
+import CustomComponentSelector from '@/components/attributes/CustomComponentSelector';
 
 interface AttributeFormProps {
   attribute?: Attribute | null;
@@ -45,6 +47,8 @@ export default function AttributeForm({
     max_length: undefined,
     pattern: '',
     default_value: '',
+    validation_rules: {},
+    custom_component: '',
   });
 
   const [options, setOptions] = useState<SelectOption[]>([]);
@@ -75,10 +79,16 @@ export default function AttributeForm({
         max_length: attribute.max_length,
         pattern: attribute.pattern || '',
         default_value: attribute.default_value || '',
+        validation_rules: attribute.validation_rules || {},
+        custom_component: attribute.custom_component || '',
       });
 
-      // Parse options if select type
-      if (attribute.attribute_type === 'select' && attribute.options) {
+      // Parse options if select or multiselect type
+      if (
+        (attribute.attribute_type === 'select' ||
+          attribute.attribute_type === 'multiselect') &&
+        attribute.options
+      ) {
         try {
           const parsedOptions =
             typeof attribute.options === 'string'
@@ -233,8 +243,12 @@ export default function AttributeForm({
           display_name: translations,
         }));
 
-        // Translate options if select type
-        if (formData.attribute_type === 'select' && options.length > 0) {
+        // Translate options if select or multiselect type
+        if (
+          (formData.attribute_type === 'select' ||
+            formData.attribute_type === 'multiselect') &&
+          options.length > 0
+        ) {
           const optionTranslations: Record<string, Record<string, string>> = {};
 
           for (const option of options) {
@@ -279,8 +293,11 @@ export default function AttributeForm({
     // Prepare data
     const dataToSave = { ...formData };
 
-    // Add options for select type
-    if (formData.attribute_type === 'select') {
+    // Add options for select/multiselect type
+    if (
+      formData.attribute_type === 'select' ||
+      formData.attribute_type === 'multiselect'
+    ) {
       dataToSave.options = options
         .filter((opt) => opt.value)
         .map((opt) => opt.value);
@@ -307,8 +324,10 @@ export default function AttributeForm({
   const showNumberFields = ['number', 'range'].includes(
     formData.attribute_type || ''
   );
-  const showTextFields = formData.attribute_type === 'text';
-  const showSelectOptions = formData.attribute_type === 'select';
+  const showSelectOptions =
+    formData.attribute_type === 'select' ||
+    formData.attribute_type === 'multiselect';
+  const showRangeFields = formData.attribute_type === 'range';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -355,6 +374,7 @@ export default function AttributeForm({
           <option value="text">{t('types.text')}</option>
           <option value="number">{t('types.number')}</option>
           <option value="select">{t('types.select')}</option>
+          <option value="multiselect">{t('types.multiselect')}</option>
           <option value="boolean">{t('types.boolean')}</option>
           <option value="date">{t('types.date')}</option>
           <option value="range">{t('types.range')}</option>
@@ -413,7 +433,7 @@ export default function AttributeForm({
         </div>
       )}
 
-      {/* Unit field for numbers */}
+      {/* Unit field for numbers and range */}
       {showNumberFields && (
         <div className="form-control">
           <label className="label">
@@ -430,83 +450,51 @@ export default function AttributeForm({
         </div>
       )}
 
-      {/* Validation Fields */}
-      {showValidationFields && <div className="divider">{t('validation')}</div>}
-
-      {showNumberFields && (
+      {/* Range specific fields */}
+      {showRangeFields && (
         <>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">{t('minValue')}</span>
-              </label>
-              <input
-                type="number"
-                name="min_value"
-                value={formData.min_value || ''}
-                onChange={handleChange}
-                className="input input-bordered"
-              />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">{t('maxValue')}</span>
-              </label>
-              <input
-                type="number"
-                name="max_value"
-                value={formData.max_value || ''}
-                onChange={handleChange}
-                className="input input-bordered"
-              />
-            </div>
+          <div className="divider">{t('rangeSettings')}</div>
+          <div className="alert alert-info">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="stroke-current shrink-0 w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <span>{t('rangeDescription')}</span>
           </div>
         </>
       )}
 
-      {showTextFields && (
+      {/* Validation Rules Editor */}
+      {showValidationFields && (
         <>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">{t('minLength')}</span>
-              </label>
-              <input
-                type="number"
-                name="min_length"
-                value={formData.min_length || ''}
-                onChange={handleChange}
-                className="input input-bordered"
-              />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">{t('maxLength')}</span>
-              </label>
-              <input
-                type="number"
-                name="max_length"
-                value={formData.max_length || ''}
-                onChange={handleChange}
-                className="input input-bordered"
-              />
-            </div>
-          </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">{t('pattern')}</span>
-            </label>
-            <input
-              type="text"
-              name="pattern"
-              value={formData.pattern}
-              onChange={handleChange}
-              className="input input-bordered"
-              placeholder="^[A-Z][0-9]+$"
-            />
-          </div>
+          <div className="divider">{t('validation')}</div>
+          <ValidationRulesEditor
+            value={formData.validation_rules as any}
+            onChange={(rules) =>
+              setFormData((prev) => ({ ...prev, validation_rules: rules }))
+            }
+            attributeType={formData.attribute_type}
+          />
         </>
       )}
+
+      {/* Custom Component Selector */}
+      <CustomComponentSelector
+        value={formData.custom_component}
+        onChange={(component) =>
+          setFormData((prev) => ({ ...prev, custom_component: component }))
+        }
+        attributeType={formData.attribute_type}
+      />
 
       <div className="form-control">
         <label className="label">

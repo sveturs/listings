@@ -33,6 +33,8 @@ const (
 	GoogleTranslate TranslationProvider = "google"
 	// OpenAI провайдер перевода OpenAI
 	OpenAI TranslationProvider = "openai"
+	// Manual ручной перевод
+	Manual TranslationProvider = "manual"
 )
 
 // GoogleTranslationService предоставляет функционал перевода через Google Translate API

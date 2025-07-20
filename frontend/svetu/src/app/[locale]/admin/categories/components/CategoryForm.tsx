@@ -5,6 +5,7 @@ import { Category, adminApi } from '@/services/admin';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
 import IconPicker from '@/components/IconPicker';
+import { TranslationStatus } from '@/components/attributes/TranslationStatus';
 
 interface CategoryFormProps {
   category?: Category | null;
@@ -157,7 +158,7 @@ export default function CategoryForm({
           value={formData.slug}
           onChange={handleChange}
           className="input input-bordered"
-          pattern="[a-z0-9-]+"
+          pattern="^[a-z0-9\-]+$"
           required
         />
       </div>
@@ -260,23 +261,49 @@ export default function CategoryForm({
         />
       </div>
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={handleTranslate}
-          className="btn btn-secondary"
-          disabled={isTranslating || !formData.name}
-        >
-          {isTranslating ? (
-            <>
-              <span className="loading loading-spinner loading-sm"></span>
-              {t('translating')}
-            </>
-          ) : (
-            <>🌍 {t('translate')}</>
-          )}
-        </button>
-      </div>
+      {category?.id && (
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">{t('translationStatus')}</span>
+          </label>
+          <TranslationStatus
+            entityType="category"
+            entityId={category.id}
+            onTranslateClick={async () => {
+              try {
+                await adminApi.translateCategory(category.id);
+                toast.success(t('translationSuccess'));
+                // Обновляем форму после перевода
+                if (onSave) {
+                  onSave(formData);
+                }
+              } catch {
+                toast.error(t('translationError'));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {!category?.id && (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleTranslate}
+            className="btn btn-secondary"
+            disabled={isTranslating || !formData.name}
+          >
+            {isTranslating ? (
+              <>
+                <span className="loading loading-spinner loading-sm"></span>
+                {t('translating')}
+              </>
+            ) : (
+              <>🌍 {t('translate')}</>
+            )}
+          </button>
+        </div>
+      )}
 
       <div className="flex gap-2 pt-4">
         <button type="submit" className="btn btn-primary flex-1">

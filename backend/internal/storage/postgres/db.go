@@ -488,6 +488,10 @@ func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCate
 	return db.marketplaceDB.GetCategories(ctx)
 }
 
+func (db *Database) GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
+	return db.marketplaceDB.GetAllCategories(ctx)
+}
+
 func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
 	return db.marketplaceDB.GetCategoryByID(ctx, id)
 }

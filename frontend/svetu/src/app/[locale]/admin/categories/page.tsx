@@ -6,7 +6,7 @@ import { adminApi, Category } from '@/services/admin';
 import { toast } from '@/utils/toast';
 import CategoryTree from './components/CategoryTree';
 import CategoryForm from './components/CategoryForm';
-import CategoryAttributes from './components/CategoryAttributes';
+import CategoryAttributesOptimized from './components/CategoryAttributesOptimized';
 
 export default function CategoriesPage() {
   const t = useTranslations('admin');
@@ -205,7 +205,7 @@ export default function CategoriesPage() {
                 <h2 className="card-title">
                   {t('sections.attributes')}: {selectedCategory.name}
                 </h2>
-                <CategoryAttributes
+                <CategoryAttributesOptimized
                   category={selectedCategory}
                   onUpdate={loadCategories}
                 />

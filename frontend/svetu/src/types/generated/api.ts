@@ -87,9 +87,14 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            description?: string;
             icon?: string;
+            is_active?: boolean;
             name?: string;
             parent_id?: number;
+            seo_description?: string;
+            seo_keywords?: string;
+            seo_title?: string;
             slug?: string;
           };
         };
@@ -278,9 +283,14 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            description?: string;
             icon?: string;
+            is_active?: boolean;
             name?: string;
             parent_id?: number;
+            seo_description?: string;
+            seo_keywords?: string;
+            seo_title?: string;
             slug?: string;
           };
         };
@@ -560,6 +570,186 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/admin/categories/{id}/groups': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get category attribute groups
+     * @description Returns attribute groups attached to a category
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Category groups */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.AttributeGroup'][];
+            };
+          };
+        };
+        /** @description marketplace.invalidCategoryId */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.getCategoryGroupsError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Attach attribute group to category
+     * @description Attaches an attribute group to a category
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Group attachment data */
+      requestBody: {
+        content: {
+          'application/json': {
+            group_id?: number;
+            sort_order?: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Group attached successfully */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.IDMessageResponse'];
+            };
+          };
+        };
+        /** @description marketplace.invalidCategoryId or marketplace.invalidData */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.attachGroupError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/categories/{id}/groups/{group_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Detach attribute group from category
+     * @description Detaches an attribute group from a category
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          id: number;
+          /** @description Group ID */
+          group_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Group detached successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            };
+          };
+        };
+        /** @description marketplace.invalidCategoryId or marketplace.invalidGroupId */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.detachGroupError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/admin/categories/{id}/move': {
     parameters: {
       query?: never;
@@ -692,6 +882,56 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/categories/all': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all categories including inactive
+     * @description Returns all marketplace categories including inactive ones for admin panel
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Categories list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'][];
+            };
+          };
+        };
+        /** @description marketplace.getCategoriesError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1206,6 +1446,269 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/admin/translations/{entity_type}/{entity_id}/{field_name}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update field translation
+     * @description Updates translation for a specific field of an entity
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Entity type (category, attribute) */
+          entity_type: string;
+          /** @description Entity ID */
+          entity_id: number;
+          /** @description Field name */
+          field_name: string;
+        };
+        cookie?: never;
+      };
+      /** @description Translation update request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_marketplace_handler.UpdateFieldTranslationRequest'];
+        };
+      };
+      responses: {
+        /** @description Translation updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.TranslationFieldStatus'];
+            };
+          };
+        };
+        /** @description marketplace.invalidData */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.updateTranslationError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/translations/batch-attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Batch translate attributes
+     * @description Translates multiple attributes and their options to specified languages
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Batch translation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_marketplace_handler.BatchTranslateAttributesRequest'];
+        };
+      };
+      responses: {
+        /** @description Batch translation started successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.BatchTranslateResponse'];
+            };
+          };
+        };
+        /** @description marketplace.invalidData */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.batchTranslateError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/translations/batch-categories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Batch translate categories
+     * @description Translates multiple categories to specified languages
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Batch translation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_marketplace_handler.BatchTranslateCategoriesRequest'];
+        };
+      };
+      responses: {
+        /** @description Batch translation started successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.BatchTranslateResponse'];
+            };
+          };
+        };
+        /** @description marketplace.invalidData */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.batchTranslateError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/translations/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get translation status
+     * @description Gets translation status for categories or attributes
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Entity type (category, attribute) */
+          entity_type: string;
+          /** @description Comma-separated entity IDs */
+          entity_ids?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Translation status retrieved */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.TranslationStatusItem'][];
+            };
+          };
+        };
+        /** @description marketplace.invalidEntityType */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.getTranslationStatusError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin-check/{email}': {
     parameters: {
       query?: never;
@@ -1526,6 +2029,77 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/categories/{id}/translate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Auto-translate category
+     * @description Automatically translates category name, description, seo_title and seo_description to all supported languages using Google Translate
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: components['requestBodies']['Languages'];
+      responses: {
+        /** @description Translation results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.CategoryTranslationResult'];
+            };
+          };
+        };
+        /** @description Invalid category ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Category not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Translation error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/marketplace/attributes': {
     parameters: {
       query?: never;
@@ -1780,15 +2354,7 @@ export interface paths {
         };
         cookie?: never;
       };
-      /** @description Translation settings */
-      requestBody?: {
-        content: {
-          'application/json': {
-            source_language?: string;
-            target_languages?: string[];
-          };
-        };
-      };
+      requestBody?: components['requestBodies']['Languages'];
       responses: {
         /** @description Translation results */
         200: {
@@ -21705,14 +22271,19 @@ export interface components {
       count?: number;
       created_at?: string;
       custom_ui_component?: string;
+      description?: string;
       external_id?: string;
       has_custom_ui?: boolean;
       icon?: string;
       id?: number;
+      is_active?: boolean;
       level?: number;
       listing_count?: number;
       name?: string;
       parent_id?: number;
+      seo_description?: string;
+      seo_keywords?: string;
+      seo_title?: string;
       slug?: string;
       sort_order?: number;
       translations?: {
@@ -23346,6 +23917,14 @@ export interface components {
       /** @example true */
       success?: boolean;
     };
+    'internal_proj_marketplace_handler.BatchTranslateAttributesRequest': Record<
+      string,
+      never
+    >;
+    'internal_proj_marketplace_handler.BatchTranslateCategoriesRequest': Record<
+      string,
+      never
+    >;
     'internal_proj_marketplace_handler.BatchTranslateData': {
       /** @example 3 */
       listing_count?: number;
@@ -23353,17 +23932,39 @@ export interface components {
       provider?: string;
       /** @example en */
       target_lang?: string;
+      /** @example [
+       *       "[\"en\"",
+       *       "\"ru\"]"
+       *     ] */
+      target_languages?: string[];
+      /** @example 5 */
+      total_count?: number;
     };
     'internal_proj_marketplace_handler.BatchTranslateRequest': Record<
       string,
       never
     >;
+    'internal_proj_marketplace_handler.BatchTranslateResponse': {
+      data?: components['schemas']['internal_proj_marketplace_handler.BatchTranslateData'];
+      /** @example marketplace.translationProcessStarted */
+      message?: string;
+      /** @example true */
+      success?: boolean;
+    };
     'internal_proj_marketplace_handler.BulkUpdateResult': {
       errors?: string[];
       /** @example 5 */
       success_count?: number;
       /** @example 10 */
       total_count?: number;
+    };
+    'internal_proj_marketplace_handler.CategoryTranslationResult': {
+      /** @example 123 */
+      category_id?: number;
+      errors?: string[];
+      translations?: {
+        [key: string]: unknown;
+      };
     };
     'internal_proj_marketplace_handler.ChatMessagesResponse': {
       limit?: number;
@@ -23614,6 +24215,12 @@ export interface components {
       /** @example Привет мир */
       translated_text?: string;
     };
+    'internal_proj_marketplace_handler.TranslationFieldStatus': {
+      is_machine_translated?: boolean;
+      is_translated?: boolean;
+      is_verified?: boolean;
+      language?: string;
+    };
     'internal_proj_marketplace_handler.TranslationLimitsData': {
       /** @example 10000 */
       daily_limit?: number;
@@ -23632,6 +24239,15 @@ export interface components {
         [key: string]: unknown;
       };
     };
+    'internal_proj_marketplace_handler.TranslationStatusItem': {
+      entity_id?: number;
+      entity_type?: string;
+      languages?: {
+        [
+          key: string
+        ]: components['schemas']['internal_proj_marketplace_handler.TranslationFieldStatus'];
+      };
+    };
     'internal_proj_marketplace_handler.TranslationUpdateRequest': {
       /** @example false */
       is_verified?: boolean;
@@ -23646,6 +24262,18 @@ export interface components {
     'internal_proj_marketplace_handler.UnreadCountData': {
       /** @example 5 */
       count?: number;
+    };
+    'internal_proj_marketplace_handler.UpdateFieldTranslationRequest': {
+      /** @example manual */
+      provider?: string;
+      /** @example {
+       *       "\"ru\"": "\"Привет\"",
+       *       "\"sr\"": "\"Здраво\"}",
+       *       "{\"en\"": "\"Hello\""
+       *     } */
+      translations?: {
+        [key: string]: string;
+      };
     };
     /** @description Ответ при изменении статуса уведомления */
     'internal_proj_notifications_handler.NotificationMarkReadResponse': {
@@ -24403,6 +25031,15 @@ export interface components {
     'backend_internal_domain_models.CategoryAttribute': {
       content: {
         'application/json': components['schemas']['backend_internal_domain_models.CategoryAttribute'];
+      };
+    };
+    /** @description Translation settings */
+    Languages: {
+      content: {
+        'application/json': {
+          source_language?: string;
+          target_languages?: string[];
+        };
       };
     };
     /** @description Search parameters */

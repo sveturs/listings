@@ -111,6 +111,31 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 				}
 			}
 
+			// Обрабатываем переводы display_name
+			if translations, ok := requestData["translations"].(map[string]interface{}); ok {
+				attribute.Translations = make(map[string]string)
+				for lang, trans := range translations {
+					if transStr, ok := trans.(string); ok {
+						attribute.Translations[lang] = transStr
+					}
+				}
+			}
+
+			// Обрабатываем переводы опций
+			if optionTranslations, ok := requestData["option_translations"].(map[string]interface{}); ok {
+				attribute.OptionTranslations = make(map[string]map[string]string)
+				for lang, options := range optionTranslations {
+					if optionsMap, ok := options.(map[string]interface{}); ok {
+						attribute.OptionTranslations[lang] = make(map[string]string)
+						for optKey, optValue := range optionsMap {
+							if optStr, ok := optValue.(string); ok {
+								attribute.OptionTranslations[lang][optKey] = optStr
+							}
+						}
+					}
+				}
+			}
+
 			// Преобразуем validation_rules в JSON, если есть правила
 			if len(validationRules) > 0 {
 				validRulesJSON, err := json.Marshal(validationRules)
@@ -482,6 +507,31 @@ func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 			if icon, ok := requestData["icon"]; ok && icon != nil {
 				if val, ok := icon.(string); ok {
 					attribute.Icon = val
+				}
+			}
+
+			// Обрабатываем переводы display_name
+			if translations, ok := requestData["translations"].(map[string]interface{}); ok {
+				attribute.Translations = make(map[string]string)
+				for lang, trans := range translations {
+					if transStr, ok := trans.(string); ok {
+						attribute.Translations[lang] = transStr
+					}
+				}
+			}
+
+			// Обрабатываем переводы опций
+			if optionTranslations, ok := requestData["option_translations"].(map[string]interface{}); ok {
+				attribute.OptionTranslations = make(map[string]map[string]string)
+				for lang, options := range optionTranslations {
+					if optionsMap, ok := options.(map[string]interface{}); ok {
+						attribute.OptionTranslations[lang] = make(map[string]string)
+						for optKey, optValue := range optionsMap {
+							if optStr, ok := optValue.(string); ok {
+								attribute.OptionTranslations[lang][optKey] = optStr
+							}
+						}
+					}
 				}
 			}
 

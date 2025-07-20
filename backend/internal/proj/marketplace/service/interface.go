@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"mime/multipart"
+	"time"
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
@@ -18,6 +19,7 @@ type MarketplaceServiceInterface interface {
 	ProcessImage(file *multipart.FileHeader) (string, error)
 	AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
 	GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error)
+	GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error)
 	AddToFavorites(ctx context.Context, userID int, listingID int) error
 	RemoveFromFavorites(ctx context.Context, userID int, listingID int) error
 	GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error)
@@ -84,6 +86,11 @@ type MarketplaceServiceInterface interface {
 	// Методы перевода
 	TranslateText(ctx context.Context, text, sourceLanguage, targetLanguage string) (string, error)
 	SaveTranslation(ctx context.Context, entityType string, entityID int, language, fieldName, translatedText string, metadata map[string]any) error
+
+	// Методы для работы с группами атрибутов
+	GetCategoryAttributeGroups(ctx context.Context, categoryID int) ([]*models.AttributeGroup, error)
+	AttachAttributeGroupToCategory(ctx context.Context, categoryID int, groupID int, sortOrder int) (int, error)
+	DetachAttributeGroupFromCategory(ctx context.Context, categoryID int, groupID int) error
 }
 
 type ContactsServiceInterface interface {
@@ -127,4 +134,13 @@ type OrderServiceInterface interface {
 	ConfirmDelivery(ctx context.Context, orderID int64, buyerID int64) error
 	OpenDispute(ctx context.Context, orderID int64, userID int64, reason string) error
 	ConfirmPayment(ctx context.Context, orderID int64) error
+}
+
+// CacheInterface определяет интерфейс для работы с кешем
+type CacheInterface interface {
+	Get(ctx context.Context, key string, dest interface{}) error
+	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
+	Delete(ctx context.Context, keys ...string) error
+	DeletePattern(ctx context.Context, pattern string) error
+	GetOrSet(ctx context.Context, key string, dest interface{}, ttl time.Duration, loader func() (interface{}, error)) error
 }

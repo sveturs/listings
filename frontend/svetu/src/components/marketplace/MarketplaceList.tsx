@@ -41,7 +41,7 @@ function convertToMarketplaceItem(
     city: unifiedItem.location?.city || '',
     country: unifiedItem.location?.country || '',
     location: unifiedItem.location?.city || '',
-    created_at: unifiedItem.created_at || '',
+    created_at: (unifiedItem as any).created_at || '',
     updated_at: '',
     user_id: 0,
     // Добавляем поля для определения типа товара и витрины

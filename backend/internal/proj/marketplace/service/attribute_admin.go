@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"backend/internal/cache"
 	"backend/internal/domain/models"
 )
 
@@ -75,6 +76,78 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 				return id, fmt.Errorf("не удалось сохранить перевод для %s: %w", lang, err)
 			}
 		}
+	} else {
+		// Если переводы не предоставлены, создаем автоматические переводы
+		languages := []string{"en", "ru", "sr"}
+		for _, targetLang := range languages {
+			// Пропускаем, если название уже на целевом языке
+			if targetLang == "en" && isLikelyEnglish(attribute.DisplayName) {
+				continue
+			}
+			if targetLang == "ru" && isLikelyCyrillic(attribute.DisplayName) {
+				continue
+			}
+
+			// Переводим display_name атрибута
+			translatedText, err := s.TranslateText(ctx, attribute.DisplayName, "auto", targetLang)
+			if err != nil {
+				// Логируем ошибку, но не прерываем создание атрибута
+				fmt.Printf("Не удалось перевести на %s: %v\n", targetLang, err)
+				continue
+			}
+
+			translation := &models.Translation{
+				EntityType:          "attribute",
+				EntityID:            id,
+				Language:            targetLang,
+				FieldName:           "display_name",
+				TranslatedText:      translatedText,
+				IsMachineTranslated: true,
+				IsVerified:          false,
+			}
+			if err := s.UpdateTranslation(ctx, translation); err != nil {
+				fmt.Printf("Не удалось сохранить перевод для %s: %v\n", targetLang, err)
+			}
+		}
+
+		// Автоматически переводим опции, если они есть
+		if attribute.Options != nil && len(attribute.Options) > 0 {
+			var options []map[string]interface{}
+			if err := json.Unmarshal(attribute.Options, &options); err == nil {
+				for _, option := range options {
+					if value, ok := option["value"].(string); ok {
+						for _, targetLang := range languages {
+							// Пропускаем, если текст уже на целевом языке
+							if targetLang == "en" && isLikelyEnglish(value) {
+								continue
+							}
+							if targetLang == "ru" && isLikelyCyrillic(value) {
+								continue
+							}
+
+							translatedOption, err := s.TranslateText(ctx, value, "auto", targetLang)
+							if err != nil {
+								fmt.Printf("Не удалось перевести опцию '%s' на %s: %v\n", value, targetLang, err)
+								continue
+							}
+
+							translation := &models.Translation{
+								EntityType:          "attribute_option",
+								EntityID:            id,
+								Language:            targetLang,
+								FieldName:           value,
+								TranslatedText:      translatedOption,
+								IsMachineTranslated: true,
+								IsVerified:          false,
+							}
+							if err := s.UpdateTranslation(ctx, translation); err != nil {
+								fmt.Printf("Не удалось сохранить перевод опции для %s: %v\n", targetLang, err)
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// Сохраняем переводы для опций атрибута
@@ -94,6 +167,13 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 				}
 			}
 		}
+	}
+
+	// Инвалидируем кеш атрибутов
+	if s.cache != nil {
+		_ = s.cache.DeletePattern(ctx, cache.BuildAttributeInvalidationPattern(int64(id)))
+		// Также инвалидируем кеш категорий, к которым может быть привязан атрибут
+		_ = s.cache.DeletePattern(ctx, fmt.Sprintf("%s*", cache.PrefixCategoryAttrs))
 	}
 
 	return id, nil
@@ -490,8 +570,13 @@ func (s *MarketplaceService) UpdateAttributeCategoryExtended(
 
 // InvalidateAttributeCache инвалидирует кеш атрибутов для указанной категории
 func (s *MarketplaceService) InvalidateAttributeCache(ctx context.Context, categoryID int) error {
-	// В текущей реализации кеш не используется,
-	// но метод оставлен для будущих расширений
+	// Инвалидируем кеш атрибутов категории
+	if s.cache != nil {
+		// Удаляем кеш атрибутов для конкретной категории
+		_ = s.cache.DeletePattern(ctx, fmt.Sprintf("%s%d:*", cache.PrefixCategoryAttrs, categoryID))
+		// Удаляем кеш групп атрибутов для категории
+		_ = s.cache.DeletePattern(ctx, fmt.Sprintf("%scategory:%d:*", cache.PrefixAttributeGroups, categoryID))
+	}
 	return nil
 }
 
@@ -551,6 +636,29 @@ func (s *MarketplaceService) GetCategoryByID(ctx context.Context, id int) (*mode
 
 // GetCategoryAttributes получает все атрибуты для указанной категории
 func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
+	// Если кеш не настроен, работаем напрямую
+	if s.cache == nil {
+		return s.getCategoryAttributesFromDB(ctx, categoryID)
+	}
+
+	// Формируем ключ кеша
+	cacheKey := cache.BuildCategoryAttributesKey(int64(categoryID), "")
+
+	// Пытаемся получить из кеша
+	var result []models.CategoryAttribute
+	err := s.cache.GetOrSet(ctx, cacheKey, &result, 4*time.Hour, func() (interface{}, error) {
+		// Загружаем данные из БД
+		return s.getCategoryAttributesFromDB(ctx, categoryID)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// getCategoryAttributesFromDB получает атрибуты категории из БД
+func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
 	// Обновленный запрос, который получает атрибуты из обоих источников:
 	// 1. Из прямого маппинга (category_attribute_mapping)
 	// 2. Из групп атрибутов (через category_attribute_groups -> attribute_group_items)
@@ -688,8 +796,31 @@ func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, category
 
 // GetCategoryAttributesWithLang получает все атрибуты для указанной категории с переводами на указанный язык
 func (s *MarketplaceService) GetCategoryAttributesWithLang(ctx context.Context, categoryID int, lang string) ([]models.CategoryAttribute, error) {
+	// Если кеш не настроен, работаем напрямую
+	if s.cache == nil {
+		return s.getCategoryAttributesWithLangFromDB(ctx, categoryID, lang)
+	}
+
+	// Формируем ключ кеша с учетом языка
+	cacheKey := cache.BuildCategoryAttributesKey(int64(categoryID), lang)
+
+	// Пытаемся получить из кеша
+	var result []models.CategoryAttribute
+	err := s.cache.GetOrSet(ctx, cacheKey, &result, 4*time.Hour, func() (interface{}, error) {
+		// Загружаем данные из БД
+		return s.getCategoryAttributesWithLangFromDB(ctx, categoryID, lang)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// getCategoryAttributesWithLangFromDB получает атрибуты с переводами из БД
+func (s *MarketplaceService) getCategoryAttributesWithLangFromDB(ctx context.Context, categoryID int, lang string) ([]models.CategoryAttribute, error) {
 	// Получаем базовые атрибуты
-	attributes, err := s.GetCategoryAttributes(ctx, categoryID)
+	attributes, err := s.getCategoryAttributesFromDB(ctx, categoryID)
 	if err != nil {
 		return nil, err
 	}

@@ -266,7 +266,12 @@
     "loading": "Učitavanje...",
     "createListing": "Kreiraj oglas",
     "paymentsNowAvailable": "Plaćanja su sada dostupna!",
-    "description": "Pronađite najbolje ponude od pojedinaca i prodavnica"
+    "description": "Pronađite najbolje ponude od pojedinaca i prodavnica",
+    "latestListings": "Najnoviji oglasi",
+    "listView": "Prikaz liste",
+    "mapView": "Prikaz mape",
+    "switchToListView": "Prebaci na prikaz liste",
+    "switchToMapView": "Prebaci na prikaz mape"
   },
   "header": {
     "nav": {
@@ -661,7 +666,28 @@
     "title": "Admin Panel",
     "manage": "Manage",
     "common": {
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "total": "Ukupno",
+      "filters": "Filteri",
+      "showInactive": "Prikaži neaktivne",
+      "active": "Aktivno",
+      "inactive": "Neaktivno",
+      "collapse": "Sakrij",
+      "add": "Dodaj",
+      "edit": "Izmeni",
+      "deactivate": "Deaktiviraj",
+      "activate": "Aktiviraj",
+      "delete": "Obriši",
+      "save": "Sačuvaj",
+      "cancel": "Otkaži",
+      "saveSuccess": "Uspešno sačuvano",
+      "selectAll": "Izaberi sve",
+      "deselectAll": "Poništi izbor",
+      "selected": "Izabrano",
+      "expand": "Proširi",
+      "noData": "Nema podataka",
+      "actions": "Akcije",
+      "search": "Pretraži"
     },
     "sections": {
       "dashboard": "Dashboard",
@@ -674,10 +700,13 @@
       "users": "Users",
       "analytics": "Analitika",
       "search": "Analitika pretrage",
+      "system": "Sistem",
       "usersDescription": "Manage user accounts and permissions",
       "listingsDescription": "Moderate and manage marketplace listings",
       "categoriesDescription": "Configure categories and attributes",
-      "searchDescription": "Analiza performansi pretrage i ponašanja korisnika"
+      "searchDescription": "Analiza performansi pretrage i ponašanja korisnika",
+      "attributesDescription": "Upravljanje atributima za kategorije tržišta",
+      "attributeGroupsDescription": "Upravljanje grupama atributa za bolju organizaciju"
     },
     "categories": {
       "title": "Categories",
@@ -756,6 +785,213 @@
       "attributes": "Atributi u grupi",
       "availableAttributes": "Dostupni atributi",
       "selectedAttributes": "Izabrani atributi"
+    },
+    "translations": {
+      "status": "Status prevoda",
+      "notTranslated": "Nije prevedeno",
+      "verified": "Verifikovani prevod",
+      "machineTranslated": "Mašinski prevod",
+      "manualTranslated": "Ručni prevod",
+      "allTranslated": "Prevedeno na sve jezike",
+      "translate": "Prevedi",
+      "translateSelected": "Prevedi izabrane",
+      "batchTranslate": "Grupno prevođenje",
+      "sourceLanguage": "Izvorni jezik",
+      "targetLanguages": "Ciljni jezici",
+      "translating": "Prevođenje...",
+      "translationSuccess": "Prevod je uspešno završen",
+      "translationError": "Greška pri prevođenju",
+      "selectItems": "Izaberite stavke za prevođenje",
+      "edit": "Izmeni",
+      "save": "Sačuvaj",
+      "cancel": "Otkaži",
+      "saving": "Čuvanje...",
+      "saveFailed": "Neuspešno čuvanje prevoda",
+      "enterTranslation": "Unesite prevod",
+      "batchTranslation": "Grupno prevođenje",
+      "categories": "Kategorije",
+      "attributes": "Atributi",
+      "selected": "Izabrano",
+      "successful": "Uspešno",
+      "failed": "Neuspešno",
+      "startTranslation": "Započni prevođenje",
+      "retryFailed": "Pokušaj ponovo neuspešne",
+      "close": "Zatvori",
+      "languages": {
+        "en": "Engleski",
+        "ru": "Ruski",
+        "sr": "Srpski"
+      }
+    },
+    "listings": {
+      "title": "Upravljanje oglasima",
+      "description": "Moderacija i upravljanje oglasima na tržištu",
+      "comingSoon": "Ova funkcija uskoro stiže"
+    },
+    "search": {
+      "title": "Analitika pretrage",
+      "description": "Analizirajte performanse pretrage i ponašanje korisnika",
+      "tabs": {
+        "analytics": "Analitika",
+        "behavior": "Ponašanje",
+        "weights": "Težinski faktori pretrage",
+        "synonyms": "Sinonimi",
+        "optimization": "Optimizacija",
+        "transliteration": "Transliteracija"
+      },
+      "analytics": {
+        "title": "Pregled analitike pretrage",
+        "description": "Opšte metrike performansi pretrage i statistika",
+        "loadError": "Neuspešno učitavanje podataka analitike",
+        "timeRange": "Vremenski period",
+        "exportCSV": "Izvezi CSV",
+        "ranges": {
+          "24h": "Poslednja 24 sata",
+          "7d": "Poslednjih 7 dana",
+          "30d": "Poslednjih 30 dana",
+          "90d": "Poslednjih 90 dana"
+        },
+        "metrics": {
+          "totalSearches": "Ukupno pretrage",
+          "uniqueQueries": "Jedinstveni upiti",
+          "avgResponseTime": "Prosečno vreme odgovora",
+          "zeroResults": "Bez rezultata",
+          "avgCTR": "Prosečan CTR",
+          "conversionRate": "Stopa konverzije"
+        },
+        "charts": {
+          "searchTrends": "Trendovi pretrage",
+          "ctrTrends": "CTR trendovi",
+          "topQueries": "Distribucija top upita"
+        },
+        "topQueries": {
+          "title": "Top upiti pretrage sa analizom relevantnosti",
+          "query": "Upit",
+          "count": "Broj",
+          "ctr": "CTR",
+          "avgPosition": "Prosečna pozicija",
+          "avgResults": "Prosečno rezultata",
+          "relevance": "Ocena relevantnosti"
+        }
+      },
+      "weights": {
+        "title": "Konfiguracija težinskih faktora pretrage",
+        "description": "Konfiguriši težinske faktore i parametre algoritma pretrage"
+      },
+      "behavior": {
+        "title": "Analitika ponašanja",
+        "loadError": "Neuspešno učitavanje podataka analitike",
+        "filters": {
+          "title": "Filteri",
+          "period": "Period",
+          "periods": {
+            "day": "Poslednji dan",
+            "week": "Poslednja nedelja",
+            "month": "Poslednji mesec"
+          },
+          "limit": "Ograničenje rezultata"
+        },
+        "metrics": {
+          "totalClicks": "Ukupno klikova",
+          "avgCTR": "Prosečan CTR",
+          "avgPosition": "Prosečna pozicija klika",
+          "conversionRate": "Stopa konverzije"
+        },
+        "ctr": {
+          "title": "Stopa prolaska kroz vreme",
+          "label": "CTR %",
+          "chartTitle": "Analiza trenda CTR-a"
+        },
+        "searchClicks": {
+          "title": "Pretrage vs Klikovi",
+          "chartTitle": "Volumen pretrage i aktivnost klikova"
+        },
+        "searches": "Pretrage",
+        "clicks": "Klikovi",
+        "topQueries": {
+          "title": "Najbolji upiti pretrage",
+          "query": "Upit",
+          "searches": "Pretrage",
+          "ctr": "CTR",
+          "avgPosition": "Prosečna pozicija",
+          "avgResults": "Prosečno rezultata"
+        },
+        "itemPerformance": {
+          "title": "Analitika performansi stavki",
+          "item": "Stavka",
+          "impressions": "Prikazi",
+          "clicks": "Klikovi",
+          "ctr": "CTR",
+          "avgPosition": "Prosečna pozicija",
+          "conversions": "Konverzije"
+        }
+      },
+      "synonyms": {
+        "title": "Upravljanje sinonimima",
+        "description": "Upravljajte sinonimima pretrage za poboljšanje rezultata",
+        "addSynonym": "Dodaj sinonim",
+        "editSynonym": "Izmeni sinonim",
+        "term": "Termin",
+        "synonyms": "Sinonimi",
+        "bidirectional": "Dvosmerno",
+        "language": "Jezik",
+        "actions": "Akcije",
+        "noSynonyms": "Nema definisanih sinonima",
+        "enterTerm": "Unesite termin",
+        "enterSynonyms": "Unesite sinonime (odvojeno zarezom)",
+        "save": "Sačuvaj",
+        "cancel": "Otkaži",
+        "delete": "Obriši",
+        "confirmDelete": "Da li ste sigurni da želite da obrišete ovaj sinonim?",
+        "validation": {
+          "termRequired": "Termin je obavezan",
+          "synonymsRequired": "Najmanje jedan sinonim je obavezan"
+        }
+      },
+      "transliteration": {
+        "title": "Pravila transliteracije",
+        "description": "Upravljajte pravilima transliteracije za različite jezike",
+        "addRule": "Dodaj pravilo",
+        "editRule": "Izmeni pravilo",
+        "sourceChar": "Izvorni karakter",
+        "targetChar": "Ciljni karakter",
+        "language": "Jezik",
+        "isActive": "Aktivno",
+        "actions": "Akcije",
+        "noRules": "Nema definisanih pravila",
+        "enterSourceChar": "Unesite izvorni karakter",
+        "enterTargetChar": "Unesite ciljni karakter",
+        "save": "Sačuvaj",
+        "cancel": "Otkaži",
+        "delete": "Obriši",
+        "confirmDelete": "Da li ste sigurni da želite da obrišete ovo pravilo?",
+        "testRules": "Testiraj pravila",
+        "inputText": "Unesite tekst",
+        "outputText": "Rezultat",
+        "test": "Testiraj",
+        "builtInRules": "Ugrađena pravila",
+        "customRules": "Prilagođena pravila",
+        "validation": {
+          "sourceCharRequired": "Izvorni karakter je obavezan",
+          "targetCharRequired": "Ciljni karakter je obavezan"
+        }
+      },
+      "optimization": {
+        "title": "Optimizacija pretrage",
+        "description": "Optimizujte performanse i relevantnost pretrage",
+        "startSession": "Započni sesiju",
+        "endSession": "Završi sesiju",
+        "activeSession": "Aktivna sesija",
+        "sessionStatus": "Status sesije",
+        "lastOptimization": "Poslednja optimizacija",
+        "recommendations": "Preporuke",
+        "applyRecommendations": "Primeni preporuke",
+        "metrics": {
+          "beforeOptimization": "Pre optimizacije",
+          "afterOptimization": "Posle optimizacije",
+          "improvement": "Poboljšanje"
+        }
+      }
     },
     "users": {
       "error": {
@@ -839,7 +1075,8 @@
         "behavior": "Понашање",
         "weights": "Тежине претраге",
         "synonyms": "Синоними",
-        "optimization": "Оптимизација"
+        "optimization": "Оптимизација",
+        "transliteration": "Транслитерација"
       },
       "analytics": {
         "title": "Преглед аналитике претраге",
@@ -882,7 +1119,51 @@
       },
       "behavior": {
         "title": "Аналитика понашања",
-        "loadError": "Грешка учитавања аналитичких података"
+        "loadError": "Грешка учитавања аналитичких података",
+        "filters": {
+          "title": "Филтери",
+          "period": "Период",
+          "periods": {
+            "day": "Последњи дан",
+            "week": "Последња недеља",
+            "month": "Последњи месец"
+          },
+          "limit": "Лимит резултата"
+        },
+        "metrics": {
+          "totalClicks": "Укупно кликова",
+          "avgCTR": "Просечни CTR",
+          "avgPosition": "Просечна позиција клика",
+          "conversionRate": "Стопа конверзије"
+        },
+        "ctr": {
+          "title": "Стопа кликова током времена",
+          "label": "CTR %",
+          "chartTitle": "Анализа тренда CTR"
+        },
+        "searchClicks": {
+          "title": "Претраге против кликова",
+          "chartTitle": "Обим претрага и активност кликова"
+        },
+        "searches": "Претраге",
+        "clicks": "Кликови",
+        "topQueries": {
+          "title": "Најуспешнији упити за претрагу",
+          "query": "Упит",
+          "searches": "Претраге",
+          "ctr": "CTR",
+          "avgPosition": "Просечна позиција",
+          "avgResults": "Просечни резултати"
+        },
+        "itemPerformance": {
+          "title": "Аналитика перформанси ставки",
+          "item": "Ставка",
+          "impressions": "Прикази",
+          "clicks": "Кликови",
+          "ctr": "CTR",
+          "avgPosition": "Просечна позиција",
+          "conversions": "Конверзије"
+        }
       },
       "optimization": {
         "title": "Аутоматска оптимизација тежина",
@@ -936,25 +1217,25 @@
           "weightsApplied": "Изабране тежине успешно примењене!",
           "weightsApplyError": "Грешка при примени тежина"
         }
-      }
-    },
-    "admins": {
-      "error": {
-        "unauthorized": "Potrebna je autorizacija",
-        "fetch_failed": "Neuspešno dobijanje liste administratora",
-        "invalid_format": "Neispravan format podataka",
-        "email_required": "Email je obavezan",
-        "add_failed": "Neuspešno dodavanje administratora",
-        "remove_failed": "Neuspešno uklanjanje administratora",
-        "check_failed": "Neuspešna provera statusa administratora"
       },
-      "success": {
-        "removed": "Administrator uspešno uklonjen"
-      }
-    },
-    "search": {
-      "tabs": {
-        "synonyms": "Синоними"
+      "transliteration": {
+        "title": "Правила транслитерације",
+        "info": "Конфигурисање правила замене карактера за претрагу",
+        "rules": "Правила",
+        "add": "Додај правило",
+        "edit": "Уреди",
+        "sourceChar": "Изворни карактер",
+        "targetChar": "Циљни карактер",
+        "languageSelect": "Изабери језик",
+        "status": "Статус",
+        "type": "Тип",
+        "builtin": "Уграђено",
+        "builtinNotEditable": "Уграђена правила се не могу мењати",
+        "actions": "Акције",
+        "testing": "Тестирај правила",
+        "inputText": "Унос текста",
+        "result": "Резултат",
+        "resultPlaceholder": "Резултат транслитерације ће се појавити овде"
       },
       "synonyms": {
         "title": "Управљање синонимима",
@@ -981,6 +1262,20 @@
         "total": "Укупно",
         "noSynonyms": "Синоними нису пронађени",
         "confirmDelete": "Да ли сте сигурни да желите да обришете овај синоним?"
+      }
+    },
+    "admins": {
+      "error": {
+        "unauthorized": "Potrebna je autorizacija",
+        "fetch_failed": "Neuspešno dobijanje liste administratora",
+        "invalid_format": "Neispravan format podataka",
+        "email_required": "Email je obavezan",
+        "add_failed": "Neuspešno dodavanje administratora",
+        "remove_failed": "Neuspešno uklanjanje administratora",
+        "check_failed": "Neuspešna provera statusa administratora"
+      },
+      "success": {
+        "removed": "Administrator uspešno uklonjen"
       }
     }
   },

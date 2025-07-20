@@ -175,7 +175,8 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 				"id":            img.ID,
 				"url":           imageURL,
 				"thumbnail_url": img.ThumbnailURL,
-				"is_default":    img.IsDefault,
+				"is_main":       img.IsDefault, // Use is_main for consistency with unified search
+				"is_default":    img.IsDefault, // Keep for backward compatibility
 				"display_order": img.DisplayOrder,
 			}
 			imagesArray = append(imagesArray, imgDoc)
@@ -1030,7 +1031,10 @@ const storefrontProductMapping = `{
           "url": {"type": "keyword"},
           "alt_text": {"type": "text"},
           "is_main": {"type": "boolean"},
-          "position": {"type": "integer"}
+          "is_default": {"type": "boolean"},
+          "position": {"type": "integer"},
+          "display_order": {"type": "integer"},
+          "thumbnail_url": {"type": "keyword"}
         }
       },
       "has_images": {"type": "boolean"},

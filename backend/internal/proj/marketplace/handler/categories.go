@@ -45,7 +45,7 @@ func NewCategoriesHandler(services globalService.ServicesInterface) *CategoriesH
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
 // @Router /api/v1/marketplace/categories [get]
 func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
-	categories, err := h.marketplaceService.GetCategories(c.Context())
+	categories, err := h.marketplaceService.GetCategories(c.UserContext())
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get categories")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categoriesError")
@@ -75,7 +75,7 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 	}
 
 	// Если кеш устарел или пуст, загружаем дерево категорий из хранилища
-	categoryTree, err := h.marketplaceService.GetCategoryTree(c.Context())
+	categoryTree, err := h.marketplaceService.GetCategoryTree(c.UserContext())
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get category tree")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categoryTreeError")

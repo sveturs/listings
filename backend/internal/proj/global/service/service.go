@@ -5,7 +5,9 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/sirupsen/logrus"
 
+	"backend/internal/cache"
 	"backend/internal/config"
 	balance "backend/internal/proj/balance/service"
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
@@ -68,11 +70,33 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc tran
 	// Создаем сервис витрин (временно без services, передадим позже)
 	var storefrontSvc storefrontService.StorefrontService
 
+	// Создаем Redis кеш если настроен
+	var cacheAdapter marketplaceService.CacheInterface
+	if cfg.Redis.URL != "" {
+		logger := logrus.New()
+		redisCache, err := cache.NewRedisCache(
+			cfg.Redis.URL,
+			cfg.Redis.Password,
+			cfg.Redis.DB,
+			cfg.Redis.PoolSize,
+			logger,
+		)
+		if err != nil {
+			log.Printf("Warning: Failed to initialize Redis cache: %v", err)
+			// Продолжаем работу без кеша
+		} else {
+			cacheAdapter = cache.NewAdapter(redisCache)
+			log.Println("Redis cache initialized successfully")
+		}
+	} else {
+		log.Println("Redis not configured, running without cache")
+	}
+
 	// Создаем mock сервис платежей для разработки
 	// В продакшене здесь будет AllSecure сервис
 	paymentSvc := payment.NewMockPaymentService(cfg.FrontendURL)
 	// Create services
-	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification, cfg.SearchWeights)
+	marketplaceSvc := marketplaceService.NewService(storage, notificationSvc.Notification, cfg.SearchWeights, cacheAdapter)
 	contactsSvc := marketplaceService.NewContactsService(storage)
 
 	// Here we need to set the real translation service to the marketplace service

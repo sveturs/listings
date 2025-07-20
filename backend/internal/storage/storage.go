@@ -104,6 +104,7 @@ type Storage interface {
 
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
 	GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error)
+	GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error)
 	GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error)
 
 	AddToFavorites(ctx context.Context, userID int, listingID int) error

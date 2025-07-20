@@ -252,6 +252,10 @@ func (m *MockStorage) GetCategories(ctx context.Context) ([]models.MarketplaceCa
 	return nil, nil
 }
 
+func (m *MockStorage) GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
+	return nil, nil
+}
+
 func (m *MockStorage) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
 	return nil, nil
 }
@@ -492,6 +496,7 @@ func createTestService() *MarketplaceService {
 	mockStorage := &MockStorage{}
 	return &MarketplaceService{
 		storage: mockStorage,
+		cache:   nil, // В тестах работаем без кеша
 	}
 }
 
