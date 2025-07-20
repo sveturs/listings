@@ -1,0 +1,7 @@
+-- Drop table: search_optimization_sessions
+DROP SEQUENCE IF EXISTS public.search_optimization_sessions_id_seq;
+DROP TABLE IF EXISTS public.search_optimization_sessions;
+DROP INDEX IF EXISTS public.idx_search_optimization_sessions_created_by;
+DROP INDEX IF EXISTS public.idx_search_optimization_sessions_start_time;
+DROP INDEX IF EXISTS public.idx_search_optimization_sessions_status;
+DROP TRIGGER IF EXISTS trigger_update_search_optimization_sessions_updated_at ON public.search_optimization_sessions;

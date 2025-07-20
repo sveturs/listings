@@ -69,8 +69,10 @@ describe('useAllSecurePayment', () => {
     createdAt: '2025-06-27T00:00:00.000Z',
     completedAt: '2025-06-27T00:05:00.000Z',
     card: {
-      last4: '1111',
+      lastFour: '1111',
       brand: 'visa',
+      expiryMonth: 12,
+      expiryYear: 2025,
     },
   };
 

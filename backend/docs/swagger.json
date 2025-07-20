@@ -108,14 +108,29 @@
                         "schema": {
                             "type": "object",
                             "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
                                 "icon": {
                                     "type": "string"
+                                },
+                                "is_active": {
+                                    "type": "boolean"
                                 },
                                 "name": {
                                     "type": "string"
                                 },
                                 "parent_id": {
                                     "type": "integer"
+                                },
+                                "seo_description": {
+                                    "type": "string"
+                                },
+                                "seo_keywords": {
+                                    "type": "string"
+                                },
+                                "seo_title": {
+                                    "type": "string"
                                 },
                                 "slug": {
                                     "type": "string"
@@ -151,6 +166,55 @@
                     },
                     "500": {
                         "description": "marketplace.createCategoryError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/categories/all": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all marketplace categories including inactive ones for admin panel",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Get all categories including inactive",
+                "responses": {
+                    "200": {
+                        "description": "Categories list",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.MarketplaceCategory"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.getCategoriesError",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -324,14 +388,29 @@
                         "schema": {
                             "type": "object",
                             "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
                                 "icon": {
                                     "type": "string"
+                                },
+                                "is_active": {
+                                    "type": "boolean"
                                 },
                                 "name": {
                                     "type": "string"
                                 },
                                 "parent_id": {
                                     "type": "integer"
+                                },
+                                "seo_description": {
+                                    "type": "string"
+                                },
+                                "seo_keywords": {
+                                    "type": "string"
+                                },
+                                "seo_title": {
+                                    "type": "string"
                                 },
                                 "slug": {
                                     "type": "string"
@@ -655,6 +734,214 @@
                     },
                     "500": {
                         "description": "marketplace.removeAttributeFromCategoryError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/categories/{id}/groups": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns attribute groups attached to a category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Get category attribute groups",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category groups",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.AttributeGroup"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidCategoryId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.getCategoryGroupsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Attaches an attribute group to a category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Attach attribute group to category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Group attachment data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "group_id": {
+                                    "type": "integer"
+                                },
+                                "sort_order": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Group attached successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.IDMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidCategoryId or marketplace.invalidData",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.attachGroupError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/categories/{id}/groups/{group_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Detaches an attribute group from a category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Detach attribute group from category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Group ID",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Group detached successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidCategoryId or marketplace.invalidGroupId",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.detachGroupError",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -1362,6 +1649,286 @@
                 }
             }
         },
+        "/api/admin/translations/batch-attributes": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Translates multiple attributes and their options to specified languages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-translations"
+                ],
+                "summary": "Batch translate attributes",
+                "parameters": [
+                    {
+                        "description": "Batch translation request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.BatchTranslateAttributesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Batch translation started successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.BatchTranslateResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidData",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.batchTranslateError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/translations/batch-categories": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Translates multiple categories to specified languages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-translations"
+                ],
+                "summary": "Batch translate categories",
+                "parameters": [
+                    {
+                        "description": "Batch translation request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.BatchTranslateCategoriesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Batch translation started successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.BatchTranslateResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidData",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.batchTranslateError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/translations/status": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets translation status for categories or attributes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-translations"
+                ],
+                "summary": "Get translation status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Entity type (category, attribute)",
+                        "name": "entity_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated entity IDs",
+                        "name": "entity_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Translation status retrieved",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/internal_proj_marketplace_handler.TranslationStatusItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidEntityType",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.getTranslationStatusError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/translations/{entity_type}/{entity_id}/{field_name}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates translation for a specific field of an entity",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-translations"
+                ],
+                "summary": "Update field translation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Entity type (category, attribute)",
+                        "name": "entity_type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Entity ID",
+                        "name": "entity_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Field name",
+                        "name": "field_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Translation update request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.UpdateFieldTranslationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Translation updated successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.TranslationFieldStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidData",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.updateTranslationError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin-check/{email}": {
             "get": {
                 "description": "Checks if user with specified email is an administrator (no authorization required)",
@@ -1667,6 +2234,92 @@
                     },
                     "500": {
                         "description": "admin.admins.error.remove_failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/categories/{id}/translate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Automatically translates category name, description, seo_title and seo_description to all supported languages using Google Translate",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Auto-translate category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Translation settings",
+                        "name": "languages",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "source_language": {
+                                    "type": "string"
+                                },
+                                "target_languages": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Translation results",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_marketplace_handler.CategoryTranslationResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid category ID",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Translation error",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -22842,6 +23495,9 @@
                 "custom_ui_component": {
                     "type": "string"
                 },
+                "description": {
+                    "type": "string"
+                },
                 "external_id": {
                     "type": "string"
                 },
@@ -22854,6 +23510,9 @@
                 "id": {
                     "type": "integer"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "level": {
                     "type": "integer"
                 },
@@ -22865,6 +23524,15 @@
                 },
                 "parent_id": {
                     "type": "integer"
+                },
+                "seo_description": {
+                    "type": "string"
+                },
+                "seo_keywords": {
+                    "type": "string"
+                },
+                "seo_title": {
+                    "type": "string"
                 },
                 "slug": {
                     "type": "string"
@@ -27515,6 +28183,12 @@
                 }
             }
         },
+        "internal_proj_marketplace_handler.BatchTranslateAttributesRequest": {
+            "type": "object"
+        },
+        "internal_proj_marketplace_handler.BatchTranslateCategoriesRequest": {
+            "type": "object"
+        },
         "internal_proj_marketplace_handler.BatchTranslateData": {
             "type": "object",
             "properties": {
@@ -27529,11 +28203,41 @@
                 "target_lang": {
                     "type": "string",
                     "example": "en"
+                },
+                "target_languages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"en\"",
+                        "\"ru\"]"
+                    ]
+                },
+                "total_count": {
+                    "type": "integer",
+                    "example": 5
                 }
             }
         },
         "internal_proj_marketplace_handler.BatchTranslateRequest": {
             "type": "object"
+        },
+        "internal_proj_marketplace_handler.BatchTranslateResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/internal_proj_marketplace_handler.BatchTranslateData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "marketplace.translationProcessStarted"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
         },
         "internal_proj_marketplace_handler.BulkUpdateResult": {
             "type": "object",
@@ -27551,6 +28255,25 @@
                 "total_count": {
                     "type": "integer",
                     "example": 10
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.CategoryTranslationResult": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "translations": {
+                    "type": "object",
+                    "additionalProperties": true
                 }
             }
         },
@@ -28170,6 +28893,23 @@
                 }
             }
         },
+        "internal_proj_marketplace_handler.TranslationFieldStatus": {
+            "type": "object",
+            "properties": {
+                "is_machine_translated": {
+                    "type": "boolean"
+                },
+                "is_translated": {
+                    "type": "boolean"
+                },
+                "is_verified": {
+                    "type": "boolean"
+                },
+                "language": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_proj_marketplace_handler.TranslationLimitsData": {
             "type": "object",
             "properties": {
@@ -28210,6 +28950,23 @@
                 }
             }
         },
+        "internal_proj_marketplace_handler.TranslationStatusItem": {
+            "type": "object",
+            "properties": {
+                "entity_id": {
+                    "type": "integer"
+                },
+                "entity_type": {
+                    "type": "string"
+                },
+                "languages": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/internal_proj_marketplace_handler.TranslationFieldStatus"
+                    }
+                }
+            }
+        },
         "internal_proj_marketplace_handler.TranslationUpdateRequest": {
             "type": "object",
             "properties": {
@@ -28239,6 +28996,26 @@
                 "count": {
                     "type": "integer",
                     "example": 5
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.UpdateFieldTranslationRequest": {
+            "type": "object",
+            "properties": {
+                "provider": {
+                    "type": "string",
+                    "example": "manual"
+                },
+                "translations": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "\"ru\"": "\"Привет\"",
+                        "\"sr\"": "\"Здраво\"}",
+                        "{\"en\"": "\"Hello\""
+                    }
                 }
             }
         },

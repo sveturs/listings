@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -24,24 +25,52 @@ func NewAdminCategoriesHandler(categoriesHandler *CategoriesHandler) *AdminCateg
 	}
 }
 
+// GetAllCategories возвращает все категории включая неактивные (для админки)
+// @Summary Get all categories including inactive
+// @Description Returns all marketplace categories including inactive ones for admin panel
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory} "Categories list"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
+// @Security BearerAuth
+// @Router /api/admin/categories/all [get]
+func (h *AdminCategoriesHandler) GetAllCategories(c *fiber.Ctx) error {
+	logger.Info().Str("method", c.Method()).Str("path", c.Path()).Msg("GetAllCategories handler called")
+
+	categories, err := h.marketplaceService.GetAllCategories(c.Context())
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get all categories")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getCategoriesError")
+	}
+
+	logger.Info().Int("count", len(categories)).Msg("Successfully retrieved all categories")
+	return utils.SuccessResponse(c, categories)
+}
+
 // CreateCategory создает новую категорию
 // @Summary Create category
 // @Description Creates a new marketplace category
 // @Tags marketplace-admin-categories
 // @Accept json
 // @Produce json
-// @Param body body object{name=string,slug=string,icon=string,parent_id=int} true "Category data"
+// @Param body body object{name=string,slug=string,icon=string,parent_id=int,description=string,is_active=bool,seo_title=string,seo_description=string,seo_keywords=string} true "Category data"
 // @Success 200 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Category created successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.categoryNameRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createCategoryError"
 // @Security BearerAuth
 // @Router /api/admin/categories [post]
 func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
+	logger.Info().Str("method", c.Method()).Str("path", c.Path()).Msg("CreateCategory handler called - START")
+
 	// Парсим JSON из запроса в map для гибкой обработки типов
 	var requestData map[string]interface{}
 	if err := c.BodyParser(&requestData); err != nil {
+		logger.Error().Err(err).Msg("Failed to parse request body")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
 	}
+
+	logger.Info().Interface("requestData", requestData).Msg("Parsed request data")
 
 	// Создаем структуру категории
 	var category models.MarketplaceCategory
@@ -55,6 +84,36 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 	}
 	if icon, ok := requestData["icon"].(string); ok {
 		category.Icon = icon
+	}
+	if description, ok := requestData["description"].(string); ok {
+		category.Description = description
+	}
+
+	// Обрабатываем is_active (по умолчанию true)
+	category.IsActive = true
+	if isActive, ok := requestData["is_active"].(bool); ok {
+		category.IsActive = isActive
+	}
+
+	// Обрабатываем SEO поля
+	if seoTitle, ok := requestData["seo_title"].(string); ok {
+		category.SEOTitle = seoTitle
+	}
+	if seoDescription, ok := requestData["seo_description"].(string); ok {
+		category.SEODescription = seoDescription
+	}
+	if seoKeywords, ok := requestData["seo_keywords"].(string); ok {
+		category.SEOKeywords = seoKeywords
+	}
+
+	// Обрабатываем переводы
+	if translations, ok := requestData["translations"].(map[string]interface{}); ok {
+		category.Translations = make(map[string]string)
+		for lang, trans := range translations {
+			if transStr, ok := trans.(string); ok {
+				category.Translations[lang] = transStr
+			}
+		}
 	}
 
 	// Обрабатываем parent_id - может прийти как строка или число
@@ -89,11 +148,14 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 	}
 
 	// Создаем категорию
+	logger.Info().Interface("category", category).Msg("About to create category via service")
 	id, err := h.marketplaceService.CreateCategory(c.Context(), &category)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to create category")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.createCategoryError")
 	}
+
+	logger.Info().Int("categoryId", id).Msg("Category created successfully")
 
 	// Инвалидируем кеш категорий
 	h.InvalidateCategoryCache()
@@ -157,7 +219,7 @@ func (h *AdminCategoriesHandler) GetCategoryByID(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Param body body object{name=string,slug=string,icon=string,parent_id=int} true "Updated category data"
+// @Param body body object{name=string,slug=string,icon=string,parent_id=int,description=string,is_active=bool,seo_title=string,seo_description=string,seo_keywords=string} true "Updated category data"
 // @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Category updated successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.categoryNameRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateCategoryError"
@@ -189,6 +251,33 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 	}
 	if icon, ok := requestData["icon"].(string); ok {
 		category.Icon = icon
+	}
+	if description, ok := requestData["description"].(string); ok {
+		category.Description = description
+	}
+	if isActive, ok := requestData["is_active"].(bool); ok {
+		category.IsActive = isActive
+	}
+
+	// Обрабатываем SEO поля
+	if seoTitle, ok := requestData["seo_title"].(string); ok {
+		category.SEOTitle = seoTitle
+	}
+	if seoDescription, ok := requestData["seo_description"].(string); ok {
+		category.SEODescription = seoDescription
+	}
+	if seoKeywords, ok := requestData["seo_keywords"].(string); ok {
+		category.SEOKeywords = seoKeywords
+	}
+
+	// Обрабатываем переводы
+	if translations, ok := requestData["translations"].(map[string]interface{}); ok {
+		category.Translations = make(map[string]string)
+		for lang, trans := range translations {
+			if transStr, ok := trans.(string); ok {
+				category.Translations[lang] = transStr
+			}
+		}
 	}
 
 	// Обрабатываем parent_id - может прийти как строка или число
@@ -482,4 +571,231 @@ func (h *AdminCategoriesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, MessageResponse{
 		Message: "marketplace.attributeCategoryUpdated",
 	})
+}
+
+// GetCategoryAttributeGroups получает группы атрибутов, привязанные к категории
+// @Summary Get category attribute groups
+// @Description Returns attribute groups attached to a category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.AttributeGroup} "Category groups"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoryGroupsError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id}/groups [get]
+func (h *AdminCategoriesHandler) GetCategoryAttributeGroups(c *fiber.Ctx) error {
+	// Получаем ID категории из параметров URL
+	categoryID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
+	}
+
+	// Получаем группы через MarketplaceHandler
+	// Поскольку AdminCategoriesHandler включает CategoriesHandler, но не имеет прямого доступа к storage.AttributeGroups,
+	// мы можем добавить метод в CategoriesHandler или использовать прямой вызов к сервису
+	groups, err := h.marketplaceService.GetCategoryAttributeGroups(c.Context(), categoryID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get category attribute groups")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getCategoryGroupsError")
+	}
+
+	return utils.SuccessResponse(c, groups)
+}
+
+// AttachAttributeGroupToCategory привязывает группу атрибутов к категории
+// @Summary Attach attribute group to category
+// @Description Attaches an attribute group to a category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param body body object{group_id=int,sort_order=int} true "Group attachment data"
+// @Success 201 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Group attached successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.attachGroupError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id}/groups [post]
+func (h *AdminCategoriesHandler) AttachAttributeGroupToCategory(c *fiber.Ctx) error {
+	// Получаем ID категории из параметров URL
+	categoryID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
+	}
+
+	// Получаем входные данные
+	var input struct {
+		GroupID   int `json:"group_id"`
+		SortOrder int `json:"sort_order"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
+	}
+
+	// Привязываем группу к категории
+	id, err := h.marketplaceService.AttachAttributeGroupToCategory(c.Context(), categoryID, input.GroupID, input.SortOrder)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to attach attribute group to category")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.attachGroupError")
+	}
+
+	return utils.SuccessResponse(c, IDMessageResponse{
+		ID:      id,
+		Message: "marketplace.groupAttachedToCategory",
+	})
+}
+
+// DetachAttributeGroupFromCategory отвязывает группу атрибутов от категории
+// @Summary Detach attribute group from category
+// @Description Detaches an attribute group from a category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param group_id path int true "Group ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Group detached successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidGroupId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.detachGroupError"
+// @Security BearerAuth
+// @Router /api/admin/categories/{id}/groups/{group_id} [delete]
+func (h *AdminCategoriesHandler) DetachAttributeGroupFromCategory(c *fiber.Ctx) error {
+	// Получаем ID категории и ID группы из параметров URL
+	categoryID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
+	}
+
+	groupID, err := strconv.Atoi(c.Params("group_id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidGroupId")
+	}
+
+	// Отвязываем группу от категории
+	err = h.marketplaceService.DetachAttributeGroupFromCategory(c.Context(), categoryID, groupID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to detach attribute group from category")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.detachGroupError")
+	}
+
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.groupDetachedFromCategory",
+	})
+}
+
+// TranslateCategory automatically translates category name, description and SEO fields
+// @Summary Auto-translate category
+// @Description Automatically translates category name, description, seo_title and seo_description to all supported languages using Google Translate
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param languages body object{source_language=string,target_languages=[]string} false "Translation settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=CategoryTranslationResult} "Translation results"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
+// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Translation error"
+// @Security BearerAuth
+// @Router /api/v1/admin/categories/{id}/translate [post]
+func (h *AdminCategoriesHandler) TranslateCategory(c *fiber.Ctx) error {
+	logger.Info().Msg("TranslateCategory method called")
+
+	// Получаем ID категории из параметров URL
+	categoryID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
+	}
+
+	// Получаем категорию по ID
+	category, err := h.marketplaceService.GetCategoryByID(c.Context(), categoryID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get category by ID")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getCategoryError")
+	}
+
+	if category == nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.categoryNotFound")
+	}
+
+	// Парсим настройки перевода
+	var input struct {
+		SourceLanguage  string   `json:"source_language"`
+		TargetLanguages []string `json:"target_languages"`
+	}
+
+	// Значения по умолчанию
+	input.SourceLanguage = "en"
+	input.TargetLanguages = []string{"ru", "sr"}
+
+	// Если есть тело запроса, парсим его
+	if err := c.BodyParser(&input); err == nil {
+		// Проверяем валидность языков
+		if input.SourceLanguage == "" {
+			input.SourceLanguage = "en"
+		}
+		if len(input.TargetLanguages) == 0 {
+			input.TargetLanguages = []string{"ru", "sr"}
+		}
+	}
+
+	// Результаты перевода
+	translationResults := make(map[string]any)
+	errors := make([]string, 0)
+
+	// Поля для перевода
+	fieldsToTranslate := map[string]string{
+		"name":            category.Name,
+		"description":     category.Description,
+		"seo_title":       category.SEOTitle,
+		"seo_description": category.SEODescription,
+	}
+
+	// Переводим каждое поле
+	for fieldName, fieldValue := range fieldsToTranslate {
+		if fieldValue == "" {
+			continue
+		}
+
+		fieldTranslations := make(map[string]string)
+		for _, targetLang := range input.TargetLanguages {
+			if targetLang == input.SourceLanguage {
+				continue
+			}
+
+			translatedText, err := h.marketplaceService.TranslateText(c.Context(), fieldValue, input.SourceLanguage, targetLang)
+			if err != nil {
+				logger.Error().Err(err).Str("field", fieldName).Str("text", fieldValue).Str("target_lang", targetLang).Msg("Failed to translate field")
+				errors = append(errors, fmt.Sprintf("Failed to translate %s to %s", fieldName, targetLang))
+				continue
+			}
+			fieldTranslations[targetLang] = translatedText
+		}
+
+		// Сохраняем переводы для поля
+		for lang, text := range fieldTranslations {
+			err := h.marketplaceService.SaveTranslation(c.Context(), "category", categoryID, lang, fieldName, text, nil)
+			if err != nil {
+				logger.Error().Err(err).Str("field", fieldName).Msg("Failed to save translation")
+				errors = append(errors, fmt.Sprintf("Failed to save %s translation for %s", fieldName, lang))
+			}
+		}
+
+		if len(fieldTranslations) > 0 {
+			translationResults[fieldName] = fieldTranslations
+		}
+	}
+
+	// Формируем результат
+	result := CategoryTranslationResult{
+		CategoryID:   categoryID,
+		Translations: translationResults,
+		Errors:       errors,
+	}
+
+	if len(errors) > 0 {
+		c.Status(fiber.StatusPartialContent)
+	}
+
+	return utils.SuccessResponse(c, result)
 }

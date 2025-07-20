@@ -640,6 +640,13 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
 	log.Printf("GetCategoryTree in storage called")
 
+	// Получаем язык из контекста (по умолчанию "sr")
+	locale := "sr"
+	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+		locale = lang
+	}
+	log.Printf("GetCategoryTree: using locale: %s", locale)
+
 	query := `
 WITH RECURSIVE category_tree AS (
     SELECT
@@ -782,11 +789,26 @@ ORDER BY c1.name ASC;
 			node.Translations = make(map[string]string)
 		}
 
+		// Применяем перевод к названию категории если он есть для запрашиваемого языка
+		if translatedName, ok := node.Translations[locale]; ok && translatedName != "" {
+			log.Printf("GetCategoryTree: Applying translation for category %d: %s -> %s (locale: %s)",
+				node.ID, node.Name, translatedName, locale)
+			node.Name = translatedName
+		}
+
 		var children []models.CategoryTreeNode
 		if err := json.Unmarshal(childrenJson, &children); err != nil {
 			log.Printf("Error unmarshaling children for category %d: %v", node.ID, err)
 			node.Children = make([]models.CategoryTreeNode, 0)
 		} else {
+			// Применяем переводы к дочерним категориям рекурсивно
+			for i := range children {
+				if translatedName, ok := children[i].Translations[locale]; ok && translatedName != "" {
+					log.Printf("GetCategoryTree: Applying translation for child category %d: %s -> %s (locale: %s)",
+						children[i].ID, children[i].Name, translatedName, locale)
+					children[i].Name = translatedName
+				}
+			}
 			node.Children = children
 			//			log.Printf("Category %d has %d children", node.ID, len(children))
 		}
@@ -1903,6 +1925,13 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
 func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
 	log.Printf("GetCategories: starting to fetch categories")
 
+	// Получаем язык из контекста (по умолчанию "sr")
+	locale := "sr"
+	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+		locale = lang
+	}
+	log.Printf("GetCategories: using locale: %s", locale)
+
 	// Сначала проверим подключение к базе данных
 	if err := s.pool.Ping(ctx); err != nil {
 		log.Printf("GetCategories: Database ping failed: %v", err)
@@ -1924,10 +1953,12 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
             GROUP BY t.entity_id
         )
         SELECT
-            c.id, c.name, c.slug, c.parent_id, c.icon, c.created_at,
+            c.id, c.name, c.slug, c.parent_id, c.icon, c.description, c.is_active, c.created_at,
+            c.seo_title, c.seo_description, c.seo_keywords,
             COALESCE(ct.translations, '{}'::jsonb) as translations
         FROM marketplace_categories c
         LEFT JOIN category_translations ct ON c.id = ct.entity_id
+        WHERE c.is_active = true
     `
 
 	log.Printf("GetCategories: Executing query")
@@ -1942,7 +1973,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 	for rows.Next() {
 		var cat models.MarketplaceCategory
 		var translationsJson []byte
-		var icon sql.NullString
+		var icon, description, seoTitle, seoDescription, seoKeywords sql.NullString
 
 		err := rows.Scan(
 			&cat.ID,
@@ -1950,7 +1981,12 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 			&cat.Slug,
 			&cat.ParentID,
 			&icon,
+			&description,
+			&cat.IsActive,
 			&cat.CreatedAt,
+			&seoTitle,
+			&seoDescription,
+			&seoKeywords,
 			&translationsJson,
 		)
 		if err != nil {
@@ -1958,9 +1994,21 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 			continue
 		}
 
-		// Обрабатываем NULL значение для icon
+		// Обрабатываем NULL значения
 		if icon.Valid {
 			cat.Icon = icon.String
+		}
+		if description.Valid {
+			cat.Description = description.String
+		}
+		if seoTitle.Valid {
+			cat.SEOTitle = seoTitle.String
+		}
+		if seoDescription.Valid {
+			cat.SEODescription = seoDescription.String
+		}
+		if seoKeywords.Valid {
+			cat.SEOKeywords = seoKeywords.String
 		}
 
 		//    log.Printf("Raw translations for category %d: %s", cat.ID, string(translationsJson))
@@ -1970,7 +2018,13 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 			log.Printf("GetCategories: Error unmarshaling translations for category %d: %v", cat.ID, err)
 		} else {
 			cat.Translations = translations
-			//     log.Printf("Processed translations for category %d: %+v", cat.ID, translations)
+
+			// Применяем перевод к названию категории если он есть для запрашиваемого языка
+			if translatedName, ok := translations[locale]; ok && translatedName != "" {
+				log.Printf("GetCategories: Applying translation for category %d: %s -> %s (locale: %s)",
+					cat.ID, cat.Name, translatedName, locale)
+				cat.Name = translatedName
+			}
 		}
 
 		categories = append(categories, cat)
@@ -1980,11 +2034,121 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 	return categories, rows.Err()
 }
 
+// GetAllCategories returns all categories including inactive ones (for admin panel)
+func (s *Storage) GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
+	log.Printf("GetAllCategories: Starting to fetch all categories (including inactive)")
+
+	// Получаем язык из контекста (по умолчанию "sr")
+	locale := "sr"
+	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+		locale = lang
+	}
+	log.Printf("GetAllCategories: using locale: %s", locale)
+
+	query := `
+        WITH category_translations AS (
+            SELECT
+                c.id AS entity_id,
+                jsonb_object_agg(
+                    COALESCE(t.language, 'ru'),
+                    t.translated_text
+                ) AS translations
+            FROM marketplace_categories c
+            LEFT JOIN translations t ON t.entity_id = c.id AND t.entity_type = 'category' AND t.field_name = 'name'
+            GROUP BY c.id
+        )
+        SELECT
+            c.id, c.name, c.slug, c.parent_id, c.icon, c.description, c.is_active, c.created_at,
+            c.seo_title, c.seo_description, c.seo_keywords,
+            COALESCE(ct.translations, '{}'::jsonb) as translations
+        FROM marketplace_categories c
+        LEFT JOIN category_translations ct ON c.id = ct.entity_id
+    `
+
+	log.Printf("GetAllCategories: Executing query")
+	rows, err := s.pool.Query(ctx, query)
+	if err != nil {
+		log.Printf("GetAllCategories: Error querying categories: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var categories []models.MarketplaceCategory
+	for rows.Next() {
+		var cat models.MarketplaceCategory
+		var parentID sql.NullInt32
+		var icon, description, seoTitle, seoDescription, seoKeywords sql.NullString
+		var translationsJson []byte
+
+		err := rows.Scan(
+			&cat.ID,
+			&cat.Name,
+			&cat.Slug,
+			&parentID,
+			&icon,
+			&description,
+			&cat.IsActive,
+			&cat.CreatedAt,
+			&seoTitle,
+			&seoDescription,
+			&seoKeywords,
+			&translationsJson,
+		)
+		if err != nil {
+			log.Printf("GetAllCategories: Error scanning row: %v", err)
+			return nil, err
+		}
+
+		if parentID.Valid {
+			pid := int(parentID.Int32)
+			cat.ParentID = &pid
+		}
+		if icon.Valid {
+			cat.Icon = icon.String
+		}
+		if description.Valid {
+			cat.Description = description.String
+		}
+		if seoTitle.Valid {
+			cat.SEOTitle = seoTitle.String
+		}
+		if seoDescription.Valid {
+			cat.SEODescription = seoDescription.String
+		}
+		if seoKeywords.Valid {
+			cat.SEOKeywords = seoKeywords.String
+		}
+
+		translations := make(map[string]string)
+		if err := json.Unmarshal(translationsJson, &translations); err != nil {
+			log.Printf("GetAllCategories: Error unmarshaling translations for category %d: %v", cat.ID, err)
+		} else {
+			cat.Translations = translations
+
+			// Применяем перевод к названию категории если он есть для запрашиваемого языка
+			if translatedName, ok := translations[locale]; ok && translatedName != "" {
+				log.Printf("GetAllCategories: Applying translation for category %d: %s -> %s (locale: %s)",
+					cat.ID, cat.Name, translatedName, locale)
+				cat.Name = translatedName
+			}
+		}
+
+		categories = append(categories, cat)
+	}
+
+	log.Printf("GetAllCategories: returning %d categories (including inactive)", len(categories))
+	return categories, rows.Err()
+}
+
 func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
 	cat := &models.MarketplaceCategory{}
+	var icon, description sql.NullString
+
+	var seoTitle, seoDescription, seoKeywords sql.NullString
 	err := s.pool.QueryRow(ctx, `
         SELECT
-            id, name, slug, parent_id, icon, created_at
+            id, name, slug, parent_id, icon, description, is_active, created_at,
+            seo_title, seo_description, seo_keywords
         FROM marketplace_categories
         WHERE id = $1
     `, id).Scan(
@@ -1992,11 +2156,33 @@ func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.Marketpl
 		&cat.Name,
 		&cat.Slug,
 		&cat.ParentID,
-		&cat.Icon,
+		&icon,
+		&description,
+		&cat.IsActive,
 		&cat.CreatedAt,
+		&seoTitle,
+		&seoDescription,
+		&seoKeywords,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Обрабатываем NULL значения
+	if icon.Valid {
+		cat.Icon = icon.String
+	}
+	if description.Valid {
+		cat.Description = description.String
+	}
+	if seoTitle.Valid {
+		cat.SEOTitle = seoTitle.String
+	}
+	if seoDescription.Valid {
+		cat.SEODescription = seoDescription.String
+	}
+	if seoKeywords.Valid {
+		cat.SEOKeywords = seoKeywords.String
 	}
 
 	return cat, nil
@@ -2453,6 +2639,13 @@ func (s *Storage) SaveSearchQuery(ctx context.Context, query, normalizedQuery st
 func (s *Storage) SearchCategories(ctx context.Context, query string, limit int) ([]models.MarketplaceCategory, error) {
 	searchPattern := "%" + strings.ToLower(strings.TrimSpace(query)) + "%"
 
+	// Получаем язык из контекста (по умолчанию "sr")
+	locale := "sr"
+	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+		locale = lang
+	}
+	log.Printf("SearchCategories: using locale: %s", locale)
+
 	sqlQuery := `
 		WITH category_counts AS (
 			SELECT
@@ -2540,6 +2733,13 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 			log.Printf("Error unmarshaling translations for category %d: %v", cat.ID, err)
 		} else {
 			cat.Translations = translations
+
+			// Применяем перевод к названию категории если он есть для запрашиваемого языка
+			if translatedName, ok := translations[locale]; ok && translatedName != "" {
+				log.Printf("SearchCategories: Applying translation for category %d: %s -> %s (locale: %s)",
+					cat.ID, cat.Name, translatedName, locale)
+				cat.Name = translatedName
+			}
 		}
 
 		// Добавляем количество объявлений

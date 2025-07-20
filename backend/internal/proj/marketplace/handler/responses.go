@@ -154,9 +154,11 @@ type BatchTranslateResponse struct {
 
 // BatchTranslateData данные пакетного перевода
 type BatchTranslateData struct {
-	ListingCount int    `json:"listing_count" example:"3"`
-	TargetLang   string `json:"target_lang" example:"en"`
-	Provider     string `json:"provider" example:"google"`
+	ListingCount    int      `json:"listing_count,omitempty" example:"3"`
+	TotalCount      int      `json:"total_count,omitempty" example:"5"`
+	TargetLang      string   `json:"target_lang,omitempty" example:"en"`
+	TargetLanguages []string `json:"target_languages,omitempty" example:"[\"en\",\"ru\"]"`
+	Provider        string   `json:"provider" example:"google"`
 }
 
 // AttributeGroupsResponse ответ со списком групп атрибутов
@@ -471,6 +473,13 @@ type PartialOperationResponse struct {
 // TranslationResult результат автоматического перевода атрибута
 type TranslationResult struct {
 	AttributeID  int                    `json:"attribute_id" example:"123"`
+	Translations map[string]interface{} `json:"translations"`
+	Errors       []string               `json:"errors,omitempty"`
+}
+
+// CategoryTranslationResult результат автоматического перевода категории
+type CategoryTranslationResult struct {
+	CategoryID   int                    `json:"category_id" example:"123"`
 	Translations map[string]interface{} `json:"translations"`
 	Errors       []string               `json:"errors,omitempty"`
 }

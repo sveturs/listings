@@ -270,7 +270,7 @@ export default function MyStorefrontsPage() {
                   {storefront.banner_url ? (
                     <Image
                       src={storefront.banner_url}
-                      alt={storefront.name}
+                      alt={storefront.name || ''}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />

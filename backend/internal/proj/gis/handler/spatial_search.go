@@ -382,39 +382,18 @@ func (h *SpatialHandler) RadiusSearch(c *fiber.Ctx) error {
 		})
 	}
 
-	// ВРЕМЕННАЯ БЛОКИРОВКА: Блокируем радиусные поиски с координатами Земуна только если это не комбинированный поиск
+	// Получаем основные параметры
 	lat := c.QueryFloat("latitude", 0)
 	lng := c.QueryFloat("longitude", 0)
 
 	// Проверяем, есть ли заголовок, указывающий на комбинированный поиск
 	isCombinedSearch := c.Get("X-Combined-Search") == "true"
 
-	// Координаты центра района Земун (приблизительно)
-	if lat >= 44.86 && lat <= 44.87 && lng >= 20.36 && lng <= 20.37 && !isCombinedSearch {
-		log.Info().
-			Float64("lat", lat).
-			Float64("lng", lng).
-			Bool("combined_search", isCombinedSearch).
-			Msg("🚫 BACKEND: Blocking radius search for Zemun coordinates (not combined)")
-
-		// Возвращаем пустой результат
-		return utils.SuccessResponse(c, types.RadiusSearchResponse{
-			Listings:     []types.GeoListing{},
-			TotalCount:   0,
-			HasMore:      false,
-			SearchRadius: 5000,
-			SearchCenter: types.Point{
-				Lat: lat,
-				Lng: lng,
-			},
-		})
-	}
-
 	if isCombinedSearch {
 		log.Info().
 			Float64("lat", lat).
 			Float64("lng", lng).
-			Msg("✅ BACKEND: Allowing radius search for combined district+radius search")
+			Msg("✅ BACKEND: Combined district+radius search detected")
 	}
 
 	// Создаем запрос радиусного поиска

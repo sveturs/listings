@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import { MarketplaceService } from '@/services/marketplace';
 import type { components } from '@/types/generated/api';
 
@@ -22,6 +23,7 @@ export default function CategorySidebar({
   selectedCategoryId,
   className = '',
 }: CategorySidebarProps) {
+  const locale = useLocale();
   const [categories, setCategories] = useState<CategoryTreeNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,12 +74,21 @@ export default function CategorySidebar({
       try {
         setLoading(true);
         setError(null);
-        const response = await MarketplaceService.getCategories();
+        const response = await MarketplaceService.getCategories(locale);
 
         if (response.success && response.data) {
-          // Фильтруем только активные категории
-          const activeCategories = response.data.filter((cat) => cat.is_active);
-          const tree = buildCategoryTree(activeCategories);
+          // TODO: Фильтруем только активные категории когда будет добавлено поле is_active
+          // const activeCategories = response.data.filter((cat) => cat.is_active);
+
+          // Приводим типы к MarketplaceCategory
+          const mappedCategories: MarketplaceCategory[] = response.data.map(
+            (cat) => ({
+              ...cat,
+              parent_id: cat.parent_id === null ? undefined : cat.parent_id,
+            })
+          );
+
+          const tree = buildCategoryTree(mappedCategories);
           setCategories(tree);
         } else {
           setError('Ошибка загрузки категорий');
@@ -91,7 +102,7 @@ export default function CategorySidebar({
     };
 
     fetchCategories();
-  }, []);
+  }, [locale]);
 
   // Переключение раскрытия категории
   const toggleExpanded = (categoryId: number) => {

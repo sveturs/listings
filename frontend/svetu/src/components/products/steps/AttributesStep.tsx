@@ -6,6 +6,8 @@ import { useCreateProduct } from '@/contexts/CreateProductContext';
 import { apiClient } from '@/services/api-client';
 import { toast } from '@/utils/toast';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
+import MultiSelectAttribute from '@/components/attributes/MultiSelectAttribute';
+import RangeAttribute from '@/components/attributes/RangeAttribute';
 import type { components } from '@/types/generated/api';
 
 type CategoryAttribute =
@@ -345,51 +347,44 @@ export default function AttributesStep({
           </div>
         )}
 
-        {/* Multiselect checkboxes */}
-        {attribute.attribute_type === 'multiselect' && attrOptions?.values && (
-          <div className="space-y-2">
-            {attrOptions.values.map((option: string) => {
-              const currentValues = (value as string[]) || [];
-              const isChecked = currentValues.includes(option);
-
-              return (
-                <label
-                  key={`${attribute.id}-multiselect-${option}`}
-                  className="label cursor-pointer justify-start gap-3 bg-base-200 rounded-lg p-3 hover:bg-base-300 transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    className="checkbox checkbox-primary checkbox-sm"
-                    checked={isChecked}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        handleAttributeChange(attribute.id!, [
-                          ...currentValues,
-                          option,
-                        ]);
-                      } else {
-                        handleAttributeChange(
-                          attribute.id!,
-                          currentValues.filter((v) => v !== option)
-                        );
-                      }
-                    }}
-                  />
-                  <span className="label-text">{getOptionLabel(option)}</span>
-                </label>
-              );
-            })}
-          </div>
+        {/* Multiselect */}
+        {attribute.attribute_type === 'multiselect' && (
+          <MultiSelectAttribute
+            attribute={attribute as any}
+            value={value}
+            onChange={(values) => handleAttributeChange(attribute.id!, values)}
+            error={
+              hasError ? state.errors[`attribute_${attribute.id}`] : undefined
+            }
+            locale={locale}
+          />
         )}
 
-        {/* Error message */}
-        {hasError && (
-          <label className="label">
-            <span className="label-text-alt text-error">
-              {state.errors[`attribute_${attribute.id}`]}
-            </span>
-          </label>
+        {/* Range */}
+        {attribute.attribute_type === 'range' && (
+          <RangeAttribute
+            attribute={attribute as any}
+            value={value}
+            onChange={(rangeValue) =>
+              handleAttributeChange(attribute.id!, rangeValue)
+            }
+            error={
+              hasError ? state.errors[`attribute_${attribute.id}`] : undefined
+            }
+            locale={locale}
+          />
         )}
+
+        {/* Error message for other attribute types */}
+        {hasError &&
+          attribute.attribute_type !== 'multiselect' &&
+          attribute.attribute_type !== 'range' && (
+            <label className="label">
+              <span className="label-text-alt text-error">
+                {state.errors[`attribute_${attribute.id}`]}
+              </span>
+            </label>
+          )}
       </div>
     );
   };

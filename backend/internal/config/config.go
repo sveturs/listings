@@ -31,6 +31,7 @@ type Config struct {
 	Docs                  DocsConfig      `yaml:"docs"`
 	AllSecure             AllSecureConfig `yaml:"allsecure"`
 	SearchWeights         *SearchWeights  `yaml:"search_weights"`
+	Redis                 RedisConfig     `yaml:"redis"`
 }
 
 type FileStorageConfig struct {
@@ -55,6 +56,18 @@ type AllSecureConfig struct {
 	MarketplaceCommissionRate float64 `yaml:"marketplace_commission_rate"`
 	EscrowReleaseDays         int     `yaml:"escrow_release_days"`
 	SandboxMode               bool    `yaml:"sandbox_mode"`
+}
+
+type RedisConfig struct {
+	URL               string        `yaml:"url"`
+	Password          string        `yaml:"password"`
+	DB                int           `yaml:"db"`
+	MaxRetries        int           `yaml:"max_retries"`
+	PoolSize          int           `yaml:"pool_size"`
+	CacheTTL          time.Duration `yaml:"cache_ttl"`
+	CategoriesTTL     time.Duration `yaml:"categories_ttl"`
+	AttributesTTL     time.Duration `yaml:"attributes_ttl"`
+	AttributeGroupTTL time.Duration `yaml:"attribute_group_ttl"`
 }
 
 type OpenSearchConfig struct {
@@ -289,6 +302,55 @@ func NewConfig() (*Config, error) {
 	// Загружаем веса поиска (используем дефолтные значения)
 	searchWeights := GetDefaultSearchWeights()
 
+	// Настройки Redis
+	redisConfig := RedisConfig{
+		URL:               os.Getenv("REDIS_URL"),
+		Password:          os.Getenv("REDIS_PASSWORD"),
+		DB:                0,
+		MaxRetries:        3,
+		PoolSize:          10,
+		CacheTTL:          24 * time.Hour, // По умолчанию 24 часа
+		CategoriesTTL:     6 * time.Hour,  // Категории кешируем на 6 часов
+		AttributesTTL:     4 * time.Hour,  // Атрибуты на 4 часа
+		AttributeGroupTTL: 4 * time.Hour,  // Группы атрибутов на 4 часа
+	}
+
+	// Если Redis URL не указан, используем локальный по умолчанию
+	if redisConfig.URL == "" {
+		redisConfig.URL = "localhost:6379"
+	}
+
+	// Парсим настройки TTL из переменных окружения
+	if ttl := os.Getenv("REDIS_CATEGORIES_TTL"); ttl != "" {
+		if duration, err := time.ParseDuration(ttl); err == nil {
+			redisConfig.CategoriesTTL = duration
+		}
+	}
+	if ttl := os.Getenv("REDIS_ATTRIBUTES_TTL"); ttl != "" {
+		if duration, err := time.ParseDuration(ttl); err == nil {
+			redisConfig.AttributesTTL = duration
+		}
+	}
+	if ttl := os.Getenv("REDIS_ATTRIBUTE_GROUP_TTL"); ttl != "" {
+		if duration, err := time.ParseDuration(ttl); err == nil {
+			redisConfig.AttributeGroupTTL = duration
+		}
+	}
+
+	// Парсим настройки пула соединений
+	if poolSize := os.Getenv("REDIS_POOL_SIZE"); poolSize != "" {
+		if size, err := strconv.Atoi(poolSize); err == nil && size > 0 {
+			redisConfig.PoolSize = size
+		}
+	}
+
+	// Парсим настройки базы данных
+	if db := os.Getenv("REDIS_DB"); db != "" {
+		if dbNum, err := strconv.Atoi(db); err == nil && dbNum >= 0 {
+			redisConfig.DB = dbNum
+		}
+	}
+
 	return &Config{
 		Port:                  port,
 		DatabaseURL:           dbURL,
@@ -311,6 +373,7 @@ func NewConfig() (*Config, error) {
 		Docs:                  docsConfig,
 		AllSecure:             allSecureConfig,
 		SearchWeights:         searchWeights,
+		Redis:                 redisConfig,
 	}, nil
 }
 

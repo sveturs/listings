@@ -97,6 +97,27 @@ export default function SmartAddressInput({
     [onChange, search, clearSuggestions, clearError]
   );
 
+  // Выбор предложения
+  const selectSuggestion = useCallback(
+    (suggestion: AddressGeocodingResult) => {
+      onChange(suggestion.address_components.formatted, suggestion);
+
+      if (onLocationSelect) {
+        onLocationSelect({
+          lat: suggestion.location.lat,
+          lng: suggestion.location.lng,
+          address: suggestion.address_components.formatted,
+          confidence: suggestion.confidence,
+        });
+      }
+
+      setIsOpen(false);
+      setHighlightedIndex(-1);
+      inputRef.current?.blur();
+    },
+    [onChange, onLocationSelect]
+  );
+
   // Обработка клавиш
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -139,27 +160,6 @@ export default function SmartAddressInput({
       }
     },
     [isOpen, suggestions, highlightedIndex, selectSuggestion]
-  );
-
-  // Выбор предложения
-  const selectSuggestion = useCallback(
-    (suggestion: AddressGeocodingResult) => {
-      onChange(suggestion.address_components.formatted, suggestion);
-
-      if (onLocationSelect) {
-        onLocationSelect({
-          lat: suggestion.location.lat,
-          lng: suggestion.location.lng,
-          address: suggestion.address_components.formatted,
-          confidence: suggestion.confidence,
-        });
-      }
-
-      setIsOpen(false);
-      setHighlightedIndex(-1);
-      inputRef.current?.blur();
-    },
-    [onChange, onLocationSelect]
   );
 
   // Получение текущего местоположения

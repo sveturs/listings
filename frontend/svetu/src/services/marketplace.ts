@@ -128,8 +128,13 @@ export class MarketplaceService {
     }
   }
 
-  static async getCategories(): Promise<CategoryResponse> {
-    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/categories`;
+  static async getCategories(locale?: string): Promise<CategoryResponse> {
+    const params = new URLSearchParams();
+    if (locale) {
+      params.append('lang', locale);
+    }
+
+    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/categories${params.toString() ? `?${params.toString()}` : ''}`;
 
     try {
       const response = await fetch(url);

@@ -64,6 +64,7 @@ describe('MockAllSecureService', () => {
         name: 'Test User',
         email: 'test@example.com',
       },
+      return_url: 'https://example.com/return',
       locale: 'ru',
     };
 

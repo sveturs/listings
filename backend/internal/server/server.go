@@ -214,6 +214,10 @@ func (s *Server) setupMiddleware() {
 	s.app.Use(s.middleware.SecurityHeaders())
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
+
+	// Middleware для определения языка из запроса
+	s.app.Use(s.middleware.LocaleMiddleware())
+
 	// TODO: Добавить middleware для метрик
 
 	s.app.Use("/ws", s.middleware.AuthRequiredJWT)

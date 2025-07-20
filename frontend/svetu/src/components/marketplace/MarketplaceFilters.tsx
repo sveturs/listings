@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import { MarketplaceService } from '@/services/marketplace';
 import { useConfig } from '@/hooks/useConfig';
 import type { components } from '@/types/generated/api';
@@ -15,6 +16,7 @@ type Category =
 export function MarketplaceFilters({
   onFilterChange,
 }: MarketplaceFiltersProps) {
+  const locale = useLocale();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -25,7 +27,7 @@ export function MarketplaceFilters({
     const loadCategories = async () => {
       try {
         setLoading(true);
-        const response = await MarketplaceService.getCategories();
+        const response = await MarketplaceService.getCategories(locale);
         if (response.data) {
           setCategories(response.data as Category[]);
         }
@@ -38,7 +40,7 @@ export function MarketplaceFilters({
     };
 
     loadCategories();
-  }, []);
+  }, [locale]);
 
   return (
     <div className="card bg-base-100 shadow-xl">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useCreateListing } from '@/contexts/CreateListingContext';
 import { MarketplaceService } from '@/services/marketplace';
 import { toast } from '@/utils/toast';
@@ -25,6 +25,7 @@ export default function CategorySelectionStep({
   onNext,
 }: CategorySelectionStepProps) {
   const t = useTranslations();
+  const locale = useLocale();
   const { state, setCategory } = useCreateListing();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,8 +45,8 @@ export default function CategorySelectionStep({
         setLoading(true);
         setError(null);
 
-        // Загружаем категории из API
-        const response = await MarketplaceService.getCategories();
+        // Загружаем категории из API с текущей локалью
+        const response = await MarketplaceService.getCategories(locale);
 
         // Преобразуем категории для отображения
         const processedCategories: Category[] = response.data.map((cat) => ({
@@ -75,7 +76,7 @@ export default function CategorySelectionStep({
     };
 
     loadCategories();
-  }, [t]);
+  }, [t, locale]);
 
   const handleCategorySelect = (category: Category) => {
     console.log('CategorySelectionStep - Selecting category:', category);

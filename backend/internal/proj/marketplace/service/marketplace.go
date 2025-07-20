@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"backend/internal/cache"
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
@@ -30,13 +31,15 @@ type MarketplaceService struct {
 	translationService TranslationServiceInterface
 	OrderService       OrderServiceInterface
 	searchWeights      *config.SearchWeights
+	cache              CacheInterface
 }
 
-func NewMarketplaceService(storage storage.Storage, translationService TranslationServiceInterface, searchWeights *config.SearchWeights) MarketplaceServiceInterface {
+func NewMarketplaceService(storage storage.Storage, translationService TranslationServiceInterface, searchWeights *config.SearchWeights, cache CacheInterface) MarketplaceServiceInterface {
 	ms := &MarketplaceService{
 		storage:            storage,
 		translationService: translationService,
 		searchWeights:      searchWeights,
+		cache:              cache,
 	}
 
 	// Создаем сервис заказов напрямую, избегая циклической зависимости
@@ -797,7 +800,31 @@ func abs(x int) int {
 }
 
 func (s *MarketplaceService) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
-	return s.storage.GetCategoryTree(ctx)
+	// Если кеш не настроен, работаем напрямую со storage
+	if s.cache == nil {
+		return s.storage.GetCategoryTree(ctx)
+	}
+
+	// Получаем язык из контекста (по умолчанию "en")
+	locale := "en"
+	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+		locale = lang
+	}
+
+	// Формируем ключ кеша
+	cacheKey := cache.BuildCategoryTreeKey(locale, true)
+
+	// Пытаемся получить из кеша
+	var result []models.CategoryTreeNode
+	err := s.cache.GetOrSet(ctx, cacheKey, &result, 6*time.Hour, func() (interface{}, error) {
+		// Загружаем данные из БД
+		return s.storage.GetCategoryTree(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (s *MarketplaceService) RefreshCategoryListingCounts(ctx context.Context) error {
@@ -1037,7 +1064,59 @@ func (s *MarketplaceService) AddListingImage(ctx context.Context, image *models.
 }
 
 func (s *MarketplaceService) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	return s.storage.GetCategories(ctx)
+	// Если кеш не настроен, работаем напрямую со storage
+	if s.cache == nil {
+		return s.storage.GetCategories(ctx)
+	}
+
+	// Получаем язык из контекста (по умолчанию "en")
+	locale := "en"
+	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+		locale = lang
+	}
+
+	// Формируем ключ кеша
+	cacheKey := cache.BuildCategoriesKey(locale)
+
+	// Пытаемся получить из кеша
+	var result []models.MarketplaceCategory
+	err := s.cache.GetOrSet(ctx, cacheKey, &result, 6*time.Hour, func() (interface{}, error) {
+		// Загружаем данные из БД
+		return s.storage.GetCategories(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (s *MarketplaceService) GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
+	// Если кеш не настроен, работаем напрямую со storage
+	if s.cache == nil {
+		return s.storage.GetAllCategories(ctx)
+	}
+
+	// Получаем язык из контекста (по умолчанию "en")
+	locale := "en"
+	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+		locale = lang
+	}
+
+	// Формируем ключ кеша для всех категорий (включая неактивные)
+	cacheKey := cache.BuildCategoryTreeKey(locale, false)
+
+	// Пытаемся получить из кеша
+	var result []models.MarketplaceCategory
+	err := s.cache.GetOrSet(ctx, cacheKey, &result, 6*time.Hour, func() (interface{}, error) {
+		// Загружаем данные из БД
+		return s.storage.GetAllCategories(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (s *MarketplaceService) AddToFavorites(ctx context.Context, userID int, listingID int) error {
