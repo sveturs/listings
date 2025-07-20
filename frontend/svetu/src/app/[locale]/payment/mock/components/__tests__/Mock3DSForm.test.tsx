@@ -6,6 +6,19 @@ import { useForm } from 'react-hook-form';
 // Mock react-hook-form
 const mockRegister = jest.fn();
 const mockHandleSubmit = jest.fn();
+const mockWatch = jest.fn();
+const mockGetValues = jest.fn();
+const mockGetFieldState = jest.fn();
+const mockSetError = jest.fn();
+const mockClearErrors = jest.fn();
+const mockSetValue = jest.fn();
+const mockSetFocus = jest.fn();
+const mockReset = jest.fn();
+const mockResetField = jest.fn();
+const mockTrigger = jest.fn();
+const mockUnregister = jest.fn();
+const mockSubscribe = jest.fn();
+const mockControl = {};
 
 jest.mock('react-hook-form', () => ({
   useForm: jest.fn(),
@@ -17,7 +30,36 @@ beforeEach(() => {
   mockUseForm.mockReturnValue({
     register: mockRegister.mockReturnValue({}),
     handleSubmit: mockHandleSubmit.mockImplementation((fn) => fn),
-    formState: { errors: {} },
+    watch: mockWatch,
+    getValues: mockGetValues,
+    getFieldState: mockGetFieldState,
+    setError: mockSetError,
+    clearErrors: mockClearErrors,
+    setValue: mockSetValue,
+    setFocus: mockSetFocus,
+    reset: mockReset,
+    resetField: mockResetField,
+    trigger: mockTrigger,
+    unregister: mockUnregister,
+    subscribe: mockSubscribe,
+    control: mockControl as any,
+    formState: {
+      errors: {},
+      isDirty: false,
+      isLoading: false,
+      isSubmitted: false,
+      isSubmitSuccessful: false,
+      isSubmitting: false,
+      isValid: true,
+      isValidating: false,
+      submitCount: 0,
+      touchedFields: {},
+      dirtyFields: {},
+      validatingFields: {},
+      defaultValues: {},
+      disabled: false,
+      isReady: true,
+    },
   });
 });
 
@@ -149,10 +191,37 @@ describe('Mock3DSForm', () => {
       mockUseForm.mockReturnValue({
         register: mockRegister.mockReturnValue({}),
         handleSubmit: mockHandleSubmit,
+        watch: mockWatch,
+        getValues: mockGetValues,
+        getFieldState: mockGetFieldState,
+        setError: mockSetError,
+        clearErrors: mockClearErrors,
+        setValue: mockSetValue,
+        setFocus: mockSetFocus,
+        reset: mockReset,
+        resetField: mockResetField,
+        trigger: mockTrigger,
+        unregister: mockUnregister,
+        subscribe: mockSubscribe,
+        control: mockControl as any,
         formState: {
           errors: {
-            code: { message: 'Код је обавезан' },
+            code: { type: 'required', message: 'Код је обавезан' },
           },
+          isDirty: false,
+          isLoading: false,
+          isSubmitted: false,
+          isSubmitSuccessful: false,
+          isSubmitting: false,
+          isValid: false,
+          isValidating: false,
+          submitCount: 0,
+          touchedFields: {},
+          dirtyFields: {},
+          validatingFields: {},
+          defaultValues: {},
+          disabled: false,
+          isReady: true,
         },
       });
 
@@ -165,10 +234,37 @@ describe('Mock3DSForm', () => {
       mockUseForm.mockReturnValue({
         register: mockRegister.mockReturnValue({}),
         handleSubmit: mockHandleSubmit,
+        watch: mockWatch,
+        getValues: mockGetValues,
+        getFieldState: mockGetFieldState,
+        setError: mockSetError,
+        clearErrors: mockClearErrors,
+        setValue: mockSetValue,
+        setFocus: mockSetFocus,
+        reset: mockReset,
+        resetField: mockResetField,
+        trigger: mockTrigger,
+        unregister: mockUnregister,
+        subscribe: mockSubscribe,
+        control: mockControl as any,
         formState: {
           errors: {
-            code: { message: 'Error' },
+            code: { type: 'required', message: 'Error' },
           },
+          isDirty: false,
+          isLoading: false,
+          isSubmitted: false,
+          isSubmitSuccessful: false,
+          isSubmitting: false,
+          isValid: false,
+          isValidating: false,
+          submitCount: 0,
+          touchedFields: {},
+          dirtyFields: {},
+          validatingFields: {},
+          defaultValues: {},
+          disabled: false,
+          isReady: true,
         },
       });
 
@@ -181,7 +277,7 @@ describe('Mock3DSForm', () => {
   describe('отправка формы', () => {
     it('должен вызывать onSubmit с кодом при отправке формы', async () => {
       const user = userEvent.setup();
-      mockHandleSubmit.mockImplementation((fn) => (e) => {
+      mockHandleSubmit.mockImplementation((fn) => (e: any) => {
         e.preventDefault();
         fn({ code: '123' });
       });
@@ -204,7 +300,7 @@ describe('Mock3DSForm', () => {
       });
 
       mockOnSubmit.mockReturnValue(submitPromise);
-      mockHandleSubmit.mockImplementation((fn) => (e) => {
+      mockHandleSubmit.mockImplementation((fn) => (e: any) => {
         e.preventDefault();
         fn({ code: '123' });
       });
@@ -237,7 +333,7 @@ describe('Mock3DSForm', () => {
     it('должен восстанавливать состояние кнопок после ошибки', async () => {
       const user = userEvent.setup();
       mockOnSubmit.mockRejectedValue(new Error('Submission failed'));
-      mockHandleSubmit.mockImplementation((fn) => (e) => {
+      mockHandleSubmit.mockImplementation((fn) => (e: any) => {
         e.preventDefault();
         fn({ code: '123' });
       });
@@ -278,7 +374,7 @@ describe('Mock3DSForm', () => {
       });
 
       mockOnSubmit.mockReturnValue(submitPromise);
-      mockHandleSubmit.mockImplementation((fn) => (e) => {
+      mockHandleSubmit.mockImplementation((fn) => (e: any) => {
         e.preventDefault();
         fn({ code: '123' });
       });
@@ -420,10 +516,37 @@ describe('Mock3DSForm', () => {
       mockUseForm.mockReturnValue({
         register: mockRegister.mockReturnValue({}),
         handleSubmit: mockHandleSubmit,
+        watch: mockWatch,
+        getValues: mockGetValues,
+        getFieldState: mockGetFieldState,
+        setError: mockSetError,
+        clearErrors: mockClearErrors,
+        setValue: mockSetValue,
+        setFocus: mockSetFocus,
+        reset: mockReset,
+        resetField: mockResetField,
+        trigger: mockTrigger,
+        unregister: mockUnregister,
+        subscribe: mockSubscribe,
+        control: mockControl as any,
         formState: {
           errors: {
-            code: { message: '' },
+            code: { type: 'required', message: '' },
           },
+          isDirty: false,
+          isLoading: false,
+          isSubmitted: false,
+          isSubmitSuccessful: false,
+          isSubmitting: false,
+          isValid: false,
+          isValidating: false,
+          submitCount: 0,
+          touchedFields: {},
+          dirtyFields: {},
+          validatingFields: {},
+          defaultValues: {},
+          disabled: false,
+          isReady: true,
         },
       });
 
@@ -439,7 +562,7 @@ describe('Mock3DSForm', () => {
         () => new Promise((resolve) => setTimeout(resolve, 100))
       );
 
-      mockHandleSubmit.mockImplementation((fn) => (e) => {
+      mockHandleSubmit.mockImplementation((fn) => (e: any) => {
         e.preventDefault();
         fn({ code: '123' });
       });

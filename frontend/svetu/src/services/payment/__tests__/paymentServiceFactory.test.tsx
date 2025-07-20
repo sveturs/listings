@@ -36,6 +36,7 @@ describe('paymentServiceFactory', () => {
         const mockConfig: PaymentConfig = {
           mode: 'mock',
           mock: {
+            enabled: true,
             config: {
               successRate: 0.8,
               require3DSRate: 0.3,
@@ -43,13 +44,15 @@ describe('paymentServiceFactory', () => {
               webhookDelay: 2000,
               debugMode: true,
             },
+            testCards: [],
+            debugMode: true,
           },
         };
 
         const service = createPaymentService(mockConfig);
 
         expect(MockedMockAllSecureService).toHaveBeenCalledWith(
-          mockConfig.mock.config
+          mockConfig.mock?.config
         );
         expect(service).toBeInstanceOf(MockAllSecureService);
       });
@@ -66,7 +69,10 @@ describe('paymentServiceFactory', () => {
         const config: PaymentConfig = {
           mode: 'mock',
           mock: {
+            enabled: true,
             config: customMockConfig,
+            testCards: [],
+            debugMode: false,
           },
         };
 
@@ -104,8 +110,9 @@ describe('paymentServiceFactory', () => {
           mode: 'sandbox',
           allSecure: {
             merchantId: 'test-merchant',
+            apiUrl: 'https://sandbox.allsecure.com',
+            widgetUrl: 'https://sandbox.allsecure.com/widget',
             apiKey: 'test-key',
-            baseUrl: 'https://sandbox.allsecure.com',
           },
         };
 
@@ -121,8 +128,9 @@ describe('paymentServiceFactory', () => {
           mode: 'production',
           allSecure: {
             merchantId: 'prod-merchant',
+            apiUrl: 'https://api.allsecure.com',
+            widgetUrl: 'https://api.allsecure.com/widget',
             apiKey: 'prod-key',
-            baseUrl: 'https://api.allsecure.com',
           },
         };
 
@@ -215,6 +223,7 @@ describe('paymentServiceFactory', () => {
       const minimalConfig: PaymentConfig = {
         mode: 'mock',
         mock: {
+          enabled: true,
           config: {
             successRate: 1.0,
             require3DSRate: 0.0,
@@ -222,6 +231,8 @@ describe('paymentServiceFactory', () => {
             webhookDelay: 0,
             debugMode: false,
           },
+          testCards: [],
+          debugMode: false,
         },
       };
 
@@ -229,7 +240,7 @@ describe('paymentServiceFactory', () => {
 
       expect(service).toBeInstanceOf(MockAllSecureService);
       expect(MockedMockAllSecureService).toHaveBeenCalledWith(
-        minimalConfig.mock.config
+        minimalConfig.mock?.config
       );
     });
 
@@ -237,6 +248,7 @@ describe('paymentServiceFactory', () => {
       const maximalConfig: PaymentConfig = {
         mode: 'mock',
         mock: {
+          enabled: true,
           config: {
             successRate: 0.0,
             require3DSRate: 1.0,
@@ -244,6 +256,8 @@ describe('paymentServiceFactory', () => {
             webhookDelay: 10000,
             debugMode: true,
           },
+          testCards: [],
+          debugMode: true,
         },
       };
 
@@ -251,7 +265,7 @@ describe('paymentServiceFactory', () => {
 
       expect(service).toBeInstanceOf(MockAllSecureService);
       expect(MockedMockAllSecureService).toHaveBeenCalledWith(
-        maximalConfig.mock.config
+        maximalConfig.mock?.config
       );
     });
 
@@ -259,6 +273,7 @@ describe('paymentServiceFactory', () => {
       const floatConfig: PaymentConfig = {
         mode: 'mock',
         mock: {
+          enabled: true,
           config: {
             successRate: 0.123,
             require3DSRate: 0.456,
@@ -266,6 +281,8 @@ describe('paymentServiceFactory', () => {
             webhookDelay: 456.78,
             debugMode: true,
           },
+          testCards: [],
+          debugMode: true,
         },
       };
 
@@ -273,7 +290,7 @@ describe('paymentServiceFactory', () => {
 
       expect(service).toBeInstanceOf(MockAllSecureService);
       expect(MockedMockAllSecureService).toHaveBeenCalledWith(
-        floatConfig.mock.config
+        floatConfig.mock?.config
       );
     });
   });
@@ -354,6 +371,7 @@ describe('paymentServiceFactory', () => {
       const config: PaymentConfig = {
         mode: 'mock',
         mock: {
+          enabled: true,
           config: {
             successRate: 0.8,
             require3DSRate: 0.3,
@@ -361,6 +379,8 @@ describe('paymentServiceFactory', () => {
             webhookDelay: 2000,
             debugMode: true,
           },
+          testCards: [],
+          debugMode: true,
         },
       };
 

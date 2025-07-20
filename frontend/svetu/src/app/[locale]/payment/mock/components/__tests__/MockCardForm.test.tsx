@@ -7,6 +7,18 @@ import { useForm } from 'react-hook-form';
 const mockRegister = jest.fn();
 const mockHandleSubmit = jest.fn();
 const mockSetValue = jest.fn();
+const mockWatch = jest.fn();
+const mockGetValues = jest.fn();
+const mockGetFieldState = jest.fn();
+const mockSetError = jest.fn();
+const mockClearErrors = jest.fn();
+const mockSetFocus = jest.fn();
+const mockReset = jest.fn();
+const mockResetField = jest.fn();
+const mockTrigger = jest.fn();
+const mockUnregister = jest.fn();
+const mockSubscribe = jest.fn();
+const mockControl = {};
 
 jest.mock('react-hook-form', () => ({
   useForm: jest.fn(),
@@ -19,7 +31,35 @@ beforeEach(() => {
     register: mockRegister.mockReturnValue({}),
     handleSubmit: mockHandleSubmit.mockImplementation((fn) => fn),
     setValue: mockSetValue,
-    formState: { errors: {} },
+    watch: mockWatch,
+    getValues: mockGetValues,
+    getFieldState: mockGetFieldState,
+    setError: mockSetError,
+    clearErrors: mockClearErrors,
+    setFocus: mockSetFocus,
+    reset: mockReset,
+    resetField: mockResetField,
+    trigger: mockTrigger,
+    unregister: mockUnregister,
+    subscribe: mockSubscribe,
+    control: mockControl as any,
+    formState: {
+      errors: {},
+      isDirty: false,
+      isLoading: false,
+      isSubmitted: false,
+      isSubmitSuccessful: false,
+      isSubmitting: false,
+      isValid: true,
+      isValidating: false,
+      submitCount: 0,
+      touchedFields: {},
+      dirtyFields: {},
+      validatingFields: {},
+      defaultValues: {},
+      disabled: false,
+      isReady: true,
+    },
   });
 });
 
@@ -192,14 +232,43 @@ describe('MockCardForm', () => {
         register: mockRegister.mockReturnValue({}),
         handleSubmit: mockHandleSubmit,
         setValue: mockSetValue,
+        watch: mockWatch,
+        getValues: mockGetValues,
+        getFieldState: mockGetFieldState,
+        setError: mockSetError,
+        clearErrors: mockClearErrors,
+        setFocus: mockSetFocus,
+        reset: mockReset,
+        resetField: mockResetField,
+        trigger: mockTrigger,
+        unregister: mockUnregister,
+        subscribe: mockSubscribe,
+        control: mockControl as any,
         formState: {
           errors: {
-            cardNumber: { message: 'Invalid card number' },
-            cardHolder: { message: 'Cardholder name required' },
-            expiryMonth: { message: 'Invalid month' },
-            expiryYear: { message: 'Invalid year' },
-            cvv: { message: 'Invalid CVV' },
+            cardNumber: { type: 'required', message: 'Invalid card number' },
+            cardHolder: {
+              type: 'required',
+              message: 'Cardholder name required',
+            },
+            expiryMonth: { type: 'required', message: 'Invalid month' },
+            expiryYear: { type: 'required', message: 'Invalid year' },
+            cvv: { type: 'required', message: 'Invalid CVV' },
           },
+          isDirty: false,
+          isLoading: false,
+          isSubmitted: false,
+          isSubmitSuccessful: false,
+          isSubmitting: false,
+          isValid: false,
+          isValidating: false,
+          submitCount: 0,
+          touchedFields: {},
+          dirtyFields: {},
+          validatingFields: {},
+          defaultValues: {},
+          disabled: false,
+          isReady: true,
         },
       });
 
@@ -217,14 +286,40 @@ describe('MockCardForm', () => {
         register: mockRegister.mockReturnValue({}),
         handleSubmit: mockHandleSubmit,
         setValue: mockSetValue,
+        watch: mockWatch,
+        getValues: mockGetValues,
+        getFieldState: mockGetFieldState,
+        setError: mockSetError,
+        clearErrors: mockClearErrors,
+        setFocus: mockSetFocus,
+        reset: mockReset,
+        resetField: mockResetField,
+        trigger: mockTrigger,
+        unregister: mockUnregister,
+        subscribe: mockSubscribe,
+        control: mockControl as any,
         formState: {
           errors: {
-            cardNumber: { message: 'Error' },
-            cardHolder: { message: 'Error' },
-            expiryMonth: { message: 'Error' },
-            expiryYear: { message: 'Error' },
-            cvv: { message: 'Error' },
+            cardNumber: { type: 'required', message: 'Error' },
+            cardHolder: { type: 'required', message: 'Error' },
+            expiryMonth: { type: 'required', message: 'Error' },
+            expiryYear: { type: 'required', message: 'Error' },
+            cvv: { type: 'required', message: 'Error' },
           },
+          isDirty: false,
+          isLoading: false,
+          isSubmitted: false,
+          isSubmitSuccessful: false,
+          isSubmitting: false,
+          isValid: false,
+          isValidating: false,
+          submitCount: 0,
+          touchedFields: {},
+          dirtyFields: {},
+          validatingFields: {},
+          defaultValues: {},
+          disabled: false,
+          isReady: true,
         },
       });
 
@@ -245,7 +340,7 @@ describe('MockCardForm', () => {
   describe('отправка формы', () => {
     it('должен вызывать onSubmit при отправке формы', async () => {
       const user = userEvent.setup();
-      mockHandleSubmit.mockImplementation((fn) => (e) => {
+      mockHandleSubmit.mockImplementation((fn) => (e: any) => {
         e.preventDefault();
         fn({ cardNumber: '4111111111111111' });
       });
@@ -270,7 +365,7 @@ describe('MockCardForm', () => {
       });
 
       mockOnSubmit.mockReturnValue(submitPromise);
-      mockHandleSubmit.mockImplementation((fn) => (e) => {
+      mockHandleSubmit.mockImplementation((fn) => (e: any) => {
         e.preventDefault();
         fn({});
       });
@@ -302,7 +397,7 @@ describe('MockCardForm', () => {
       mockOnSubmit.mockImplementation(() =>
         Promise.reject(new Error('Submission failed'))
       );
-      mockHandleSubmit.mockImplementation((fn) => async (e) => {
+      mockHandleSubmit.mockImplementation((fn) => async (e: any) => {
         e.preventDefault();
         try {
           await fn({});

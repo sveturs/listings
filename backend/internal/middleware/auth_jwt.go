@@ -13,13 +13,6 @@ import (
 	"backend/pkg/utils"
 )
 
-// min helper function
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
 
 // AuthRequiredJWT - основной метод аутентификации через JWT
 // Поддерживает как Bearer токены в заголовке, так и fallback на session cookies
