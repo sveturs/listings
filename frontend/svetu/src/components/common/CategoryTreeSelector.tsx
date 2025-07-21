@@ -298,7 +298,7 @@ export function CategoryTreeSelector({
   );
 
   // Render category tree recursively
-  const renderTree = (items: Category[], level = 0): JSX.Element[] => {
+  const renderTree = (items: Category[], level = 0): React.ReactElement[] => {
     if (maxDepth && level >= maxDepth) return [];
 
     return items.map((item) => {
@@ -317,7 +317,9 @@ export function CategoryTreeSelector({
               ${!isSelectable ? 'opacity-60' : ''}
             `}
             style={{ paddingLeft: `${level * 20 + 8}px` }}
-            onClick={() => isSelectable && handleSelect(item.id, hasChildren)}
+            onClick={() =>
+              isSelectable && handleSelect(item.id, hasChildren || false)
+            }
           >
             {hasChildren && (
               <button
@@ -432,7 +434,9 @@ export function CategoryTreeSelector({
               <X size={16} />
             </button>
           )}
-          <ChevronDown size={16} className={showDropdown ? 'rotate-180' : ''} />
+          <div className={showDropdown ? 'rotate-180' : ''}>
+            <ChevronDown size={16} />
+          </div>
         </div>
       </div>
 

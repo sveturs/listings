@@ -263,7 +263,7 @@ export default function CategorySidebar({
           <button
             onClick={() => onCategorySelect(null)}
             className="btn btn-ghost btn-xs"
-            title={t('clearFilter')}
+            title={t('filters.clearFilter')}
           >
             <svg
               className="w-4 h-4"

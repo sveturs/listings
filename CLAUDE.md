@@ -5,7 +5,7 @@
 
 Для экономии контекста используй swagger.json через JSON MCP:
 
-1. Запусти HTTP сервер: `cd backend/docs && python3 -m http.server 8888`
+1. Запусти HTTP сервер: `cd /data/hostel-booking-system/backend/docs && python3 -m http.server 8888`
 2. Используй JSON MCP для поиска:
   - Эндпоинты: `$.paths["/api/v1/..."]`
   - Модели: `$.definitions["..."]`

@@ -225,7 +225,7 @@ export default function CategorySelectionStep({
     : categories;
 
   // Render category tree recursively
-  const renderTree = (items: Category[], level = 0): JSX.Element[] => {
+  const renderTree = (items: Category[], level = 0): React.ReactElement[] => {
     return items.map((item) => {
       const hasChildren = item.children && item.children.length > 0;
       const isExpanded = expanded.has(item.id);
@@ -242,7 +242,9 @@ export default function CategorySelectionStep({
               ${!isSelectable ? 'opacity-75' : ''}
             `}
             style={{ paddingLeft: `${level * 24 + 12}px` }}
-            onClick={() => handleSelect(item.id, item.name, hasChildren)}
+            onClick={() =>
+              handleSelect(item.id, item.name, hasChildren || false)
+            }
           >
             {hasChildren && (
               <button

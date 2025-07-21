@@ -287,7 +287,9 @@
     "switchToMapView": "Switch to map view",
     "switchToListView": "Switch to list view",
     "paymentsNowAvailable": "Payments are now available!",
-    "description": "Find the best deals from individuals and stores"
+    "description": "Find the best deals from individuals and stores",
+    "privateListingsOnly": "Private listings only",
+    "privateListingsOnlyDescription": "Show only marketplace products from private sellers"
   },
   "header": {
     "nav": {
@@ -1319,8 +1321,42 @@
     "connectionError": "Error connecting Telegram"
   },
   "marketplace": {
+    "filters": {
+      "title": "Filters",
+      "clearAll": "Clear all",
+      "priceRange": "Price range",
+      "priceFrom": "From",
+      "priceTo": "To",
+      "condition": "Condition",
+      "anyCondition": "Any condition",
+      "sellerType": "Seller type",
+      "anySeller": "Any seller",
+      "privateSeller": "Private sellers",
+      "companySeller": "Company sellers",
+      "withDelivery": "With delivery",
+      "categoryFilters": "Category filters",
+      "noAttributeFilters": "No additional filters for this category",
+      "clearFilter": "Clear filter",
+      "selectOption": "Select option",
+      "enterValue": "Enter value",
+      "enterNumber": "Enter number",
+      "min": "Min",
+      "max": "Max",
+      "any": "Any",
+      "yes": "Yes",
+      "no": "No",
+      "selectCategory": "Select category",
+      "loadError": "Error loading filters",
+      "noFilters": "No filters available"
+    },
     "imageGallery": {
       "clickToZoom": "Click to zoom"
+    },
+    "condition": {
+      "new": "New",
+      "used": "Used",
+      "refurbished": "Refurbished",
+      "damaged": "Damaged"
     },
     "invalidData": "Invalid data format",
     "duplicateTitle": "Listing with this title already exists",
@@ -1353,6 +1389,7 @@
     "categoriesSelected": "{count} categories selected",
     "apply": "Apply",
     "cancel": "Cancel",
+    "categories": "Categories",
     "similarListingsError": "Failed to get similar listings",
     "addedToFavorites": "Added to favorites",
     "alreadyInFavorites": "Already in favorites",
