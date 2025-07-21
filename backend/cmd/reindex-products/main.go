@@ -151,18 +151,21 @@ func main() {
 
 		// Get product images
 		imgQuery := `
-			SELECT id, image_url, thumbnail_url, alt_text, is_default, display_order
+			SELECT id, image_url, thumbnail_url, is_default, display_order
 			FROM storefront_product_images
-			WHERE product_id = $1
+			WHERE storefront_product_id = $1
 			ORDER BY display_order, id
 		`
 		imgRows, err := storage.Query(ctx, imgQuery, p.ID)
 		if err == nil {
 			for imgRows.Next() {
 				var img models.StorefrontProductImage
-				var altText *string
-				err := imgRows.Scan(&img.ID, &img.ImageURL, &img.ThumbnailURL, &altText, &img.IsDefault, &img.DisplayOrder)
+				err := imgRows.Scan(&img.ID, &img.ImageURL, &img.ThumbnailURL, &img.IsDefault, &img.DisplayOrder)
 				if err == nil {
+					img.StorefrontProductID = p.ID
+					// Set PublicURL to be the same as ImageURL for now
+					// TODO: Generate proper public URLs based on storage configuration
+					img.PublicURL = img.ImageURL
 					p.Images = append(p.Images, img)
 				}
 			}
@@ -175,7 +178,7 @@ func main() {
 		varQuery := `
 			SELECT id, name, sku, price, stock_quantity, attributes
 			FROM storefront_product_variants
-			WHERE product_id = $1
+			WHERE storefront_product_id = $1
 			ORDER BY id
 		`
 		varRows, err := storage.Query(ctx, varQuery, p.ID)

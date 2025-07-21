@@ -9606,6 +9606,14 @@ const docTemplate = `{
                     "marketplace-categories"
                 ],
                 "summary": "Get categories list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Language code (e.g., 'sr', 'en', 'ru')",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -9837,6 +9845,14 @@ const docTemplate = `{
                     "marketplace-categories"
                 ],
                 "summary": "Get category tree",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Language code (e.g., 'sr', 'en', 'ru')",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

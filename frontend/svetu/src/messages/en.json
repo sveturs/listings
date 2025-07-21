@@ -52,6 +52,7 @@
     "items": "items",
     "translate": "Translate",
     "continue": "Continue",
+    "required": "Required",
     "select": "Select",
     "accessDenied": "Access Denied",
     "minutes": "minutes",
@@ -339,6 +340,9 @@
     "noResultsTitle": "No results found for your query",
     "noResultsDescription": "Try changing search criteria or using different keywords",
     "categories": "Categories",
+    "categoriesLoadError": "Error loading categories",
+    "clearFilter": "Clear filter",
+    "noCategoriesFound": "No categories found",
     "priceMin": "Price from",
     "priceMax": "Price to",
     "loading": "Loading...",
@@ -348,6 +352,8 @@
     "hideFilters": "Hide filters",
     "clearFilters": "Clear filters",
     "loadingResults": "Loading results...",
+    "privateListingsOnly": "Private listings only (marketplace)",
+    "privateListingsOnlyDescription": "When enabled - shows only marketplace products. When disabled - shows everything (marketplace + storefronts)",
     "searchError": "Search error",
     "tryAgain": "Try again",
     "listings": "Listings",
@@ -1342,6 +1348,11 @@
     "suggestionsError": "Failed to get suggestions",
     "queryRequired": "Search query is required",
     "categorySuggestionsError": "Failed to get category suggestions",
+    "selectCategory": "Select category",
+    "searchCategories": "Search categories...",
+    "categoriesSelected": "{count} categories selected",
+    "apply": "Apply",
+    "cancel": "Cancel",
     "similarListingsError": "Failed to get similar listings",
     "addedToFavorites": "Added to favorites",
     "alreadyInFavorites": "Already in favorites",
@@ -1828,7 +1839,8 @@
       "tip_title": "Category selection tip",
       "tip_description": "Proper category selection helps buyers find your listing easier",
       "error_loading": "Failed to load categories. Please try again.",
-      "listings": "listings"
+      "listings": "listings",
+      "selected": "Selected category"
     },
     "basic_info": {
       "title": "Basic information",
@@ -2010,7 +2022,9 @@
     "used": "Used",
     "used_desc": "Used product in good condition",
     "refurbished": "Refurbished",
-    "refurbished_desc": "Professionally refurbished product"
+    "refurbished_desc": "Professionally refurbished product",
+    "damaged": "Damaged",
+    "damaged_desc": "Product with defects or damage"
   },
   "create_storefront": {
     "title": "Create Your Storefront",
@@ -2975,7 +2989,9 @@
         "warranty": "Warranty",
         "color": "Color",
         "material": "Material",
-        "size": "Size"
+        "size": "Size",
+        "operating_system": "Operating System",
+        "storage": "Storage"
       },
       "quickOptions": {
         "new": "New",

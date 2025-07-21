@@ -91,6 +91,8 @@ export default function AttributesStep({
             if (attr.attribute) {
               console.log(`Attribute ${attr.attribute.name}:`, {
                 display_name: attr.attribute.display_name,
+                attribute_type: attr.attribute.attribute_type,
+                options: attr.attribute.options,
                 translations: attr.attribute.translations,
                 option_translations: attr.attribute.option_translations,
               });
@@ -332,6 +334,17 @@ export default function AttributesStep({
   const getOptionValues = (options: any): string[] => {
     if (!options) return [];
 
+    // Если options это строка JSON, пытаемся распарсить
+    if (typeof options === 'string') {
+      try {
+        const parsed = JSON.parse(options);
+        return getOptionValues(parsed); // Рекурсивный вызов с распарсенным объектом
+      } catch (e) {
+        console.error('Failed to parse options:', e);
+        return [];
+      }
+    }
+
     // Если options это массив напрямую
     if (Array.isArray(options)) {
       return options;
@@ -342,6 +355,8 @@ export default function AttributesStep({
       return options.values;
     }
 
+    // Если options это объект с другой структурой, логируем для отладки
+    console.warn('Unknown options structure:', options);
     return [];
   };
 

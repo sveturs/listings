@@ -3,6 +3,7 @@ export interface MockConfig {
   require3DSRate: number; // Вероятность 3D Secure (0-1)
   apiDelay: number; // Задержка API в мс
   webhookDelay: number; // Задержка webhook в мс
+  debugMode?: boolean; // Режим отладки
 }
 
 export interface TestCard {
@@ -23,6 +24,7 @@ export interface PaymentConfig {
     merchantId: string;
     apiUrl: string;
     widgetUrl: string;
+    apiKey?: string;
   };
 }
 

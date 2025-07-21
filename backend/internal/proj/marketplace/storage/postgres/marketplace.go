@@ -694,7 +694,7 @@ categories_with_translations AS (
         ) as translations
     FROM category_tree ct
     LEFT JOIN translations t ON
-        t.entity_type = 'category'
+        t.entity_type = 'marketplace_category'
         AND t.entity_id = ct.id
         AND t.field_name = 'name'
     GROUP BY
@@ -1836,11 +1836,17 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
 		}
 
 		// Обработка опциональных JSON полей
-		if options.Valid {
+		if options.Valid && len(options.String) > 0 {
 			attr.Options = json.RawMessage(options.String)
+		} else {
+			// Если options пустой или не валидный, устанавливаем пустой JSON объект
+			attr.Options = json.RawMessage(`{}`)
 		}
-		if validRules.Valid {
+		
+		if validRules.Valid && len(validRules.String) > 0 {
 			attr.ValidRules = json.RawMessage(validRules.String)
+		} else {
+			attr.ValidRules = json.RawMessage(`{}`)
 		}
 		// Всегда инициализируем CustomComponent пустой строкой
 		attr.CustomComponent = ""
@@ -1948,7 +1954,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
                     t.translated_text
                 ) as translations
             FROM translations t
-            WHERE t.entity_type = 'category'
+            WHERE t.entity_type = 'marketplace_category'
             AND t.field_name = 'name'
             GROUP BY t.entity_id
         )
@@ -2054,7 +2060,7 @@ func (s *Storage) GetAllCategories(ctx context.Context) ([]models.MarketplaceCat
                     t.translated_text
                 ) AS translations
             FROM marketplace_categories c
-            LEFT JOIN translations t ON t.entity_id = c.id AND t.entity_type = 'category' AND t.field_name = 'name'
+            LEFT JOIN translations t ON t.entity_id = c.id AND t.entity_type = 'marketplace_category' AND t.field_name = 'name'
             GROUP BY c.id
         )
         SELECT
@@ -2663,7 +2669,7 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 					translated_text
 				) as translations
 			FROM translations
-			WHERE entity_type = 'category'
+			WHERE entity_type = 'marketplace_category'
 			AND field_name = 'name'
 			GROUP BY entity_id
 		)
@@ -2683,7 +2689,7 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 			OR EXISTS (
 				SELECT 1
 				FROM translations t
-				WHERE t.entity_type = 'category'
+				WHERE t.entity_type = 'marketplace_category'
 				AND t.entity_id = c.id
 				AND t.field_name = 'name'
 				AND LOWER(t.translated_text) LIKE $1

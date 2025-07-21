@@ -287,7 +287,7 @@
     }
   },
   "search": {
-    "placeholder": "Search products and services...",
+    "placeholder": "Pretražite proizvode i usluge...",
     "inCategory": "in category",
     "category": "Kategorija",
     "noResults": "No results found",
@@ -311,18 +311,23 @@
     "fuzzySearchHint": "pronađe reči sa greškama",
     "fuzzySearchTooltip": "Omogućava pronalaženje rezultata čak i kada imate greške u kucanju",
     "activeFilters": "Active filters",
-    "noResultsTitle": "No results found for your query",
-    "noResultsDescription": "Try changing search criteria or using different keywords",
-    "categories": "Categories",
-    "priceMin": "Price from",
-    "priceMax": "Price to",
-    "loading": "Loading...",
-    "error": "Error",
-    "retry": "Retry",
-    "showFilters": "Show filters",
-    "hideFilters": "Hide filters",
-    "clearFilters": "Clear filters",
-    "loadingResults": "Loading results...",
+    "noResultsTitle": "Nema rezultata za vašu pretragu",
+    "noResultsDescription": "Pokušajte da promenite kriterijume pretrage ili koristite druge ključne reči",
+    "categories": "Kategorije",
+    "categoriesLoadError": "Greška pri učitavanju kategorija",
+    "clearFilter": "Obriši filter",
+    "noCategoriesFound": "Nema pronađenih kategorija",
+    "priceMin": "Cena od",
+    "priceMax": "Cena do",
+    "loading": "Učitavanje...",
+    "error": "Greška",
+    "retry": "Pokušaj ponovo",
+    "showFilters": "Prikaži filtere",
+    "hideFilters": "Sakrij filtere",
+    "clearFilters": "Obriši filtere",
+    "loadingResults": "Učitavanje rezultata...",
+    "privateListingsOnly": "Samo privatni oglasi (tržnica)",
+    "privateListingsOnlyDescription": "Kada je uključeno - prikazuje samo proizvode tržnice. Kada je isključeno - prikazuje sve (tržnica + izlozi)",
     "searchError": "Search error",
     "tryAgain": "Try again",
     "listings": "oglasa",
@@ -589,9 +594,9 @@
           "loadError": "Failed to load listing"
         },
         "condition": {
-          "new": "New",
-          "used": "Used",
-          "refurbished": "Refurbished"
+          "new": "Novo",
+          "used": "Polovno",
+          "refurbished": "Obnovljeno"
         },
         "validation": {
           "titleRequired": "Title is required",
@@ -1498,6 +1503,11 @@
     "invalidRequest": "Nevažeći zahtev",
     "receiverRequired": "Primalac je obavezan",
     "sendMessageError": "Neuspešno slanje poruke",
+    "selectCategory": "Izaberite kategoriju",
+    "searchCategories": "Pretražite kategorije...",
+    "categoriesSelected": "Izabrano kategorija: {count}",
+    "apply": "Primeni",
+    "cancel": "Otkaži",
     "markAsReadError": "Neuspešno označavanje kao pročitano",
     "messagesMarkedAsRead": "Poruke označene kao pročitane",
     "archiveChatError": "Neuspešno arhiviranje razgovora",
@@ -1901,7 +1911,8 @@
       "tip_title": "Savet za izbor kategorije",
       "tip_description": "Pravilan izbor kategorije pomaže kupcima da lakše pronađu vaš oglas",
       "error_loading": "Neuspešno učitavanje kategorija. Pokušajte ponovo.",
-      "listings": "oglasa"
+      "listings": "oglasa",
+      "selected": "Izabrana kategorija"
     },
     "basic_info": {
       "title": "Osnovne informacije",
@@ -2064,12 +2075,14 @@
     "services": "Courier services"
   },
   "condition": {
-    "new": "New",
-    "new_desc": "New product, never used",
-    "used": "Used",
-    "used_desc": "Used product in good condition",
-    "refurbished": "Refurbished",
-    "refurbished_desc": "Professionally refurbished product"
+    "new": "Novo",
+    "new_desc": "Novi proizvod, nikad korišćen",
+    "used": "Polovno",
+    "used_desc": "Korišćen proizvod u dobrom stanju",
+    "refurbished": "Obnovljeno",
+    "refurbished_desc": "Profesionalno obnovljen proizvod",
+    "damaged": "Oštećeno",
+    "damaged_desc": "Proizvod sa defektima ili oštećenjima"
   },
   "create_storefront": {
     "title": "Create Your Storefront",
@@ -2315,7 +2328,7 @@
       "attributeGroups": {
         "basic": "Osnovne informacije",
         "technical": "Tehničke specifikacije",
-        "condition": "Condition & Warranty",
+        "condition": "Stanje i garancija",
         "accessories": "Included Accessories",
         "dimensions": "Dimensions & Weight",
         "other": "Other Attributes"
@@ -2904,7 +2917,9 @@
         "warranty": "Garancija",
         "color": "Boja",
         "material": "Materijal",
-        "size": "Veličina"
+        "size": "Veličina",
+        "operating_system": "Operativni sistem",
+        "storage": "Memorija"
       },
       "quickOptions": {
         "new": "Novo",

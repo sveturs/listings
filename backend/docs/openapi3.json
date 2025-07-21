@@ -11059,6 +11059,16 @@
                     "marketplace-categories"
                 ],
                 "summary": "Get categories list",
+                "parameters": [
+                    {
+                        "description": "Language code (e.g., 'sr', 'en', 'ru')",
+                        "name": "lang",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -11320,6 +11330,16 @@
                     "marketplace-categories"
                 ],
                 "summary": "Get category tree",
+                "parameters": [
+                    {
+                        "description": "Language code (e.g., 'sr', 'en', 'ru')",
+                        "name": "lang",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

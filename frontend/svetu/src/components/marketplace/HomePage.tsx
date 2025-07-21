@@ -123,13 +123,10 @@ export default function HomePage({
                   checked={showOnlyMarketplace}
                   onChange={(e) => handleProductTypeFilter(e.target.checked)}
                 />
-                <span className="label-text">
-                  Только частные объявления (маркетплейс)
-                </span>
+                <span className="label-text">{t('privateListingsOnly')}</span>
               </label>
               <p className="text-xs text-base-content/60 ml-8">
-                Когда включено - показывает только товары маркетплейса. Когда
-                выключено - показывает всё (маркетплейс + витрины)
+                {t('privateListingsOnlyDescription')}
               </p>
             </div>
           </div>

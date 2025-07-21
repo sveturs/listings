@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -38,7 +39,13 @@ func NewAdminCategoriesHandler(categoriesHandler *CategoriesHandler) *AdminCateg
 func (h *AdminCategoriesHandler) GetAllCategories(c *fiber.Ctx) error {
 	logger.Info().Str("method", c.Method()).Str("path", c.Path()).Msg("GetAllCategories handler called")
 
-	categories, err := h.marketplaceService.GetAllCategories(c.Context())
+	// Получаем язык из query параметра
+	lang := c.Query("lang", "en")
+	
+	// Создаем контекст с языком
+	ctx := context.WithValue(c.UserContext(), "locale", lang)
+	
+	categories, err := h.marketplaceService.GetAllCategories(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get all categories")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getCategoriesError")
