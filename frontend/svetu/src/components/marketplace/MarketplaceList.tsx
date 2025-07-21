@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   UnifiedSearchService,
@@ -12,6 +12,39 @@ import ViewToggle from '@/components/common/ViewToggle';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
+import { FilterValues } from './ListingFilters';
+
+// Функция для конвертации фильтров в формат API
+function convertFiltersToSearchParams(filters: FilterValues) {
+  const searchParams: Record<string, any> = {};
+
+  // Постоянные фильтры
+  if (filters.priceMin) {
+    searchParams.priceMin = filters.priceMin;
+  }
+  if (filters.priceMax) {
+    searchParams.priceMax = filters.priceMax;
+  }
+  if (filters.condition) {
+    searchParams.condition = filters.condition;
+  }
+  if (filters.sellerType) {
+    // Для приватных продавцов не указываем storefrontID
+    // Для компаний указываем, что нужны только товары из storefront
+    searchParams.storefrontID =
+      filters.sellerType === 'company' ? 'not_null' : null;
+  }
+
+  // Атрибуты категории
+  if (
+    filters.attributeFilters &&
+    Object.keys(filters.attributeFilters).length > 0
+  ) {
+    searchParams.attributeFilters = filters.attributeFilters;
+  }
+
+  return searchParams;
+}
 
 // Адаптер для преобразования UnifiedSearchItem в MarketplaceItem
 function convertToMarketplaceItem(
@@ -61,6 +94,7 @@ interface MarketplaceListProps {
   locale: string;
   productTypes?: ('marketplace' | 'storefront')[];
   selectedCategoryId?: number | null;
+  filters?: FilterValues;
 }
 
 export default function MarketplaceList({
@@ -68,6 +102,7 @@ export default function MarketplaceList({
   locale,
   productTypes = ['marketplace', 'storefront'],
   selectedCategoryId,
+  filters = {},
 }: MarketplaceListProps) {
   // console.log('MarketplaceList render:', {
   //   initialData: !!initialData,
@@ -94,6 +129,12 @@ export default function MarketplaceList({
   const manualLoad = useCallback(() => {
     // console.log('Manual load clicked!');
     setLoading(true);
+    setPage(1);
+    setItems([]);
+    setHasMore(true);
+
+    const searchParams = convertFiltersToSearchParams(filters);
+
     UnifiedSearchService.search({
       query: '',
       product_types: productTypes,
@@ -102,6 +143,7 @@ export default function MarketplaceList({
       sort_order: 'desc',
       page: 1,
       limit: 20,
+      ...searchParams,
     })
       .then((response) => {
         // console.log('UnifiedSearchService.search response:', response);
@@ -120,7 +162,7 @@ export default function MarketplaceList({
       .finally(() => {
         setLoading(false);
       });
-  }, [t, productTypes, selectedCategoryId]);
+  }, [t, productTypes, selectedCategoryId, filters]);
 
   // Начальная загрузка данных, если они не были переданы через SSR
   useEffect(() => {
@@ -129,15 +171,55 @@ export default function MarketplaceList({
     }
   }, [initialized, loading, manualLoad]);
 
+  // Создаем стабильный ключ для фильтров, чтобы избежать лишних рендеров
+  const filtersKey = useMemo(() => {
+    return JSON.stringify({
+      priceMin: filters.priceMin,
+      priceMax: filters.priceMax,
+      condition: filters.condition,
+      sellerType: filters.sellerType,
+      hasDelivery: filters.hasDelivery,
+      attributeFilters: filters.attributeFilters,
+    });
+  }, [filters]);
+
   // Перезагрузка данных при изменении типов товаров или категории
   useEffect(() => {
     if (initialized) {
       setPage(1);
       setItems([]);
       setHasMore(true);
-      manualLoad();
+      setLoading(true);
+
+      const searchParams = convertFiltersToSearchParams(filters);
+
+      UnifiedSearchService.search({
+        query: '',
+        product_types: productTypes,
+        category_id: selectedCategoryId?.toString(),
+        sort_by: 'date',
+        sort_order: 'desc',
+        page: 1,
+        limit: 20,
+        ...searchParams,
+      })
+        .then((response) => {
+          if (response && response.items) {
+            setItems(response.items);
+            setHasMore(response.has_more);
+            setPage(response.page);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to reload data:', err);
+          setError(t('errorLoadingData'));
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
-  }, [productTypes, selectedCategoryId, initialized, manualLoad]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productTypes, selectedCategoryId, filtersKey, initialized, t]);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -147,6 +229,8 @@ export default function MarketplaceList({
 
     try {
       const nextPage = page + 1;
+      const searchParams = convertFiltersToSearchParams(filters);
+
       const response = await UnifiedSearchService.search({
         query: '',
         product_types: productTypes,
@@ -155,6 +239,7 @@ export default function MarketplaceList({
         sort_order: 'desc',
         page: nextPage,
         limit: 20,
+        ...searchParams,
       });
 
       if (response && response.items) {
@@ -177,7 +262,7 @@ export default function MarketplaceList({
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, page, t, productTypes, selectedCategoryId]);
+  }, [loading, hasMore, page, t, productTypes, selectedCategoryId, filters]);
 
   const loadMoreRef = useInfiniteScroll({
     loading,

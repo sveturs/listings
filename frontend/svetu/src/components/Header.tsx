@@ -129,17 +129,6 @@ export default function Header() {
             </ul>
           </div>
 
-          {/* Поисковая строка */}
-          <div className="flex-1 hidden lg:flex justify-center px-4">
-            <div className="w-full max-w-md">
-              <SearchBar
-                className="w-full"
-                placeholder={t('search.placeholder')}
-                variant="minimal"
-              />
-            </div>
-          </div>
-
           {/* Правая часть */}
           <div className="flex-none flex items-center gap-2">
             {/* Корзина - показываем только если есть активная витрина */}

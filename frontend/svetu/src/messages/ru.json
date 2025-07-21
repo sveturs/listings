@@ -297,7 +297,9 @@
     "switchToMapView": "Переключить на вид карты",
     "switchToListView": "Переключить на вид списка",
     "paymentsNowAvailable": "Платежи теперь доступны!",
-    "description": "Находите лучшие предложения от частных лиц и магазинов"
+    "description": "Находите лучшие предложения от частных лиц и магазинов",
+    "privateListingsOnly": "Только частные объявления",
+    "privateListingsOnlyDescription": "Показывать только товары от частных продавцов"
   },
   "header": {
     "nav": {
@@ -1414,8 +1416,42 @@
     "connectionError": "Ошибка при подключении Telegram"
   },
   "marketplace": {
+    "filters": {
+      "title": "Фильтры",
+      "clearAll": "Очистить все",
+      "priceRange": "Диапазон цен",
+      "priceFrom": "От",
+      "priceTo": "До",
+      "condition": "Состояние",
+      "anyCondition": "Любое состояние",
+      "sellerType": "Тип продавца",
+      "anySeller": "Любой продавец",
+      "privateSeller": "Частные лица",
+      "companySeller": "Компании",
+      "withDelivery": "С доставкой",
+      "categoryFilters": "Фильтры категории",
+      "noAttributeFilters": "Нет дополнительных фильтров для этой категории",
+      "clearFilter": "Очистить фильтр",
+      "selectOption": "Выберите опцию",
+      "enterValue": "Введите значение",
+      "enterNumber": "Введите число",
+      "min": "Мин",
+      "max": "Макс",
+      "any": "Любой",
+      "yes": "Да",
+      "no": "Нет",
+      "selectCategory": "Выберите категорию",
+      "loadError": "Ошибка загрузки фильтров",
+      "noFilters": "Нет доступных фильтров"
+    },
     "imageGallery": {
       "clickToZoom": "Нажмите для увеличения"
+    },
+    "condition": {
+      "new": "Новое",
+      "used": "Б/у",
+      "refurbished": "Восстановленное",
+      "damaged": "Повреждённое"
     },
     "invalidData": "Некорректный формат данных",
     "duplicateTitle": "Объявление с таким заголовком уже существует",
@@ -1468,6 +1504,7 @@
     "categoriesSelected": "Выбрано категорий: {count}",
     "apply": "Применить",
     "cancel": "Отмена",
+    "categories": "Категории",
     "markAsReadError": "Не удалось отметить как прочитанное",
     "messagesMarkedAsRead": "Сообщения отмечены как прочитанные",
     "archiveChatError": "Не удалось архивировать чат",
@@ -1629,7 +1666,7 @@
     "category": "Категория",
     "area": "Площадь",
     "rooms": "Комнаты",
-    "condition": "Состояние",
+    "conditionLabel": "Состояние",
     "type": "Тип",
     "year": "Год",
     "addToFavorites": "В избранное",

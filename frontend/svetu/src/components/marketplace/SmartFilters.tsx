@@ -25,7 +25,7 @@ export function SmartFilters({
   lang = 'sr',
   className = '',
 }: SmartFiltersProps) {
-  const t = useTranslations('map');
+  const t = useTranslations('marketplace');
   const { attributes, loading, error } = useCategoryFilters(categoryId, {
     lang,
   });
@@ -34,8 +34,11 @@ export function SmartFilters({
   // Сброс фильтров при смене категории
   useEffect(() => {
     setFilterValues({});
-    onChange({});
-  }, [categoryId, onChange]);
+    // Вызываем onChange только если действительно были фильтры
+    if (Object.keys(filterValues).length > 0) {
+      onChange({});
+    }
+  }, [categoryId]); // Убираем onChange из зависимостей
 
   const handleFilterChange = (attributeId: string, value: any) => {
     const newFilters = {

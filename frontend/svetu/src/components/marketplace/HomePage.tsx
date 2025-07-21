@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import MarketplaceList from './MarketplaceList';
 import CategorySidebar from '@/components/categories/CategorySidebar';
+import ListingFilters, { FilterValues } from './ListingFilters';
 import { UnifiedSearchItem } from '@/services/unifiedSearch';
 import { RadiusSearchResult } from '@/components/GIS/types/gis';
 
@@ -40,6 +41,7 @@ export default function HomePage({
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null
   );
+  const [filters, setFilters] = useState<FilterValues>({});
 
   const _handleListingSelect = (listing: RadiusSearchResult) => {
     setSelectedListing(listing);
@@ -102,11 +104,18 @@ export default function HomePage({
 
       {/* Основной контент с сайдбаром */}
       <div className="flex gap-6">
-        {/* Сайдбар с категориями */}
-        <div className="w-80 flex-shrink-0">
+        {/* Сайдбар с категориями и фильтрами */}
+        <div className="w-80 flex-shrink-0 space-y-6">
           <CategorySidebar
             onCategorySelect={handleCategorySelect}
             selectedCategoryId={selectedCategoryId}
+            className="sticky top-4"
+          />
+
+          <ListingFilters
+            selectedCategoryId={selectedCategoryId}
+            filters={filters}
+            onFiltersChange={setFilters}
             className="sticky top-4"
           />
         </div>
@@ -237,6 +246,7 @@ export default function HomePage({
               locale={locale}
               productTypes={productTypes}
               selectedCategoryId={selectedCategoryId}
+              filters={filters}
             />
           )}
         </div>

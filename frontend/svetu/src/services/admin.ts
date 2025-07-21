@@ -54,6 +54,9 @@ export interface Category {
   updated_at?: string;
   children?: Category[];
   items_count?: number;
+  translations?: {
+    [key: string]: string;
+  };
 }
 
 export interface Attribute {
