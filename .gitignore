@@ -4912,3 +4912,8 @@ frontend/svetu/.next.backup/
 /database_full_dump.sql
 /database_schema_dump.sql
 dump2migrate/
+
+# Database dumps
+db_dumps_*/
+*.sql
+*.tar.gz
