@@ -23,6 +23,7 @@ import type { Feature, Polygon } from 'geojson';
 // import { DistrictMapSelector } from '@/components/search';
 import { SmartFilters } from '@/components/marketplace/SmartFilters';
 import { QuickFilters } from '@/components/marketplace/QuickFilters';
+import { CategoryTreeSelector } from '@/components/common/CategoryTreeSelector';
 
 // Функция для проверки, находится ли точка внутри полигона (Ray Casting Algorithm)
 function isPointInPolygon(
@@ -67,7 +68,7 @@ interface ListingData {
 }
 
 interface MapFilters {
-  category: string;
+  categories: number[];
   priceFrom: number;
   priceTo: number;
   radius: number;
@@ -103,8 +104,27 @@ const MapPage: React.FC = () => {
       }
     }
 
+    // Получаем категории из URL (поддерживаем как одну, так и несколько)
+    const categoriesParam =
+      searchParams?.get('categories') || searchParams?.get('category') || '';
+    let categories: number[] = [];
+    if (categoriesParam) {
+      // Если это строка с запятыми, разбиваем на массив
+      if (categoriesParam.includes(',')) {
+        categories = categoriesParam
+          .split(',')
+          .map((c) => parseInt(c))
+          .filter((c) => !isNaN(c));
+      } else {
+        const parsed = parseInt(categoriesParam);
+        if (!isNaN(parsed)) {
+          categories = [parsed];
+        }
+      }
+    }
+
     return {
-      category: searchParams?.get('category') || '',
+      categories,
       priceFrom: parseInt(searchParams?.get('priceFrom') || '0') || 0,
       priceTo: parseInt(searchParams?.get('priceTo') || '0') || 0,
       radius: parseInt(searchParams?.get('radius') || '5000') || 5000,
@@ -202,7 +222,9 @@ const MapPage: React.FC = () => {
       const params = new URLSearchParams();
 
       // Добавляем только непустые значения
-      if (newFilters.category) params.set('category', newFilters.category);
+      if (newFilters.categories && newFilters.categories.length > 0) {
+        params.set('categories', newFilters.categories.join(','));
+      }
       if (newFilters.priceFrom > 0)
         params.set('priceFrom', newFilters.priceFrom.toString());
       if (newFilters.priceTo > 0)
@@ -269,6 +291,14 @@ const MapPage: React.FC = () => {
       return;
     }
 
+    console.log('🔍 Loading listings with filters:', {
+      categories: debouncedFilters.categories,
+      priceFrom: debouncedFilters.priceFrom,
+      priceTo: debouncedFilters.priceTo,
+      radius: debouncedFilters.radius,
+      buyerLocation: debouncedBuyerLocation,
+    });
+
     setIsLoading(true);
     try {
       // Определяем тип поиска
@@ -284,6 +314,9 @@ const MapPage: React.FC = () => {
         searchType,
         buyerLat: debouncedBuyerLocation.latitude,
         buyerLng: debouncedBuyerLocation.longitude,
+        endpoint: hasRadiusSearch
+          ? '/api/v1/gis/search/radius'
+          : '/api/v1/search',
       });
 
       // Используем специализированный радиусный поиск если есть координаты покупателя, иначе обычный search
@@ -301,9 +334,10 @@ const MapPage: React.FC = () => {
           longitude: debouncedBuyerLocation.longitude.toString(),
           radius: debouncedFilters.radius.toString(), // в метрах
           limit: '100',
-          ...(debouncedFilters.category && {
-            category: debouncedFilters.category,
-          }),
+          ...(debouncedFilters.categories &&
+            debouncedFilters.categories.length > 0 && {
+              categories: debouncedFilters.categories.join(','),
+            }),
           ...(debouncedFilters.priceFrom > 0 && {
             min_price: debouncedFilters.priceFrom.toString(),
           }),
@@ -317,6 +351,7 @@ const MapPage: React.FC = () => {
         });
 
         const fullUrl = `${endpoint}?${params}`;
+        console.log('📡 GIS API Request:', fullUrl);
 
         // Добавляем заголовок для комбинированного поиска
         const headers: Record<string, string> = {};
@@ -335,9 +370,10 @@ const MapPage: React.FC = () => {
           page: '1',
           sort_by: 'date',
           sort_order: 'desc',
-          ...(debouncedFilters.category && {
-            categories: debouncedFilters.category,
-          }),
+          ...(debouncedFilters.categories &&
+            debouncedFilters.categories.length > 0 && {
+              categories: debouncedFilters.categories.join(','),
+            }),
           ...(debouncedFilters.priceFrom > 0 && {
             min_price: debouncedFilters.priceFrom.toString(),
           }),
@@ -351,6 +387,7 @@ const MapPage: React.FC = () => {
         });
 
         const fullUrl = `${endpoint}?${params}`;
+        console.log('📡 Search API Request:', fullUrl);
         response = await apiClient.get(fullUrl);
       }
 
@@ -421,8 +458,16 @@ const MapPage: React.FC = () => {
         }));
 
         console.log(
-          '🗺️ Setting combined search results:',
-          transformedListings.length
+          '🗺️ GIS API results:',
+          transformedListings.length,
+          'listings',
+          'First few listings:',
+          transformedListings.slice(0, 3).map((l: any) => ({
+            id: l.id,
+            name: l.name,
+            category: l.category,
+            location: l.location,
+          }))
         );
         setListings(transformedListings);
       } else if (response.data?.items) {
@@ -449,6 +494,20 @@ const MapPage: React.FC = () => {
             views_count: item.views_count || 0,
             rating: item.rating || 0,
           }));
+        console.log(
+          '🗺️ Search API results:',
+          transformedListings.length,
+          'listings',
+          'Requested categories:',
+          debouncedFilters.categories,
+          'First few listings:',
+          transformedListings.slice(0, 3).map((l: any) => ({
+            id: l.id,
+            name: l.name,
+            category: l.category,
+            location: l.location,
+          }))
+        );
         setListings(transformedListings);
       } else {
         console.warn('[Map] Unknown API response format:', response.data);
@@ -664,7 +723,8 @@ const MapPage: React.FC = () => {
     loadListings();
   }, [
     loadListings,
-    debouncedFilters.category,
+    // Используем JSON.stringify для массива категорий, чтобы правильно отслеживать изменения
+    JSON.stringify(debouncedFilters.categories),
     debouncedFilters.priceFrom,
     debouncedFilters.priceTo,
     debouncedFilters.radius,
@@ -938,21 +998,21 @@ const MapPage: React.FC = () => {
               <label className="block text-sm font-medium text-base-content mb-1">
                 {t('filters.category')}
               </label>
-              <select
-                className="select select-bordered w-full"
-                value={filters.category}
-                onChange={(e) =>
-                  handleFiltersChange({ category: e.target.value })
-                }
-              >
-                <option value="">{t('filters.allCategories')}</option>
-                <option value="1100">Квартира</option>
-                <option value="1200">Комната</option>
-                <option value="1300">Дом, дача, коттедж</option>
-                <option value="2000">Автомобили</option>
-                <option value="3000">Электроника</option>
-                <option value="9000">Работа</option>
-              </select>
+              <CategoryTreeSelector
+                value={filters.categories}
+                onChange={(value) => {
+                  const categories = Array.isArray(value)
+                    ? value
+                    : value
+                      ? [value]
+                      : [];
+                  handleFiltersChange({ categories });
+                }}
+                multiple={true}
+                placeholder={t('filters.allCategories')}
+                showPath={true}
+                className="w-full"
+              />
             </div>
 
             {/* Цена от */}
@@ -992,10 +1052,10 @@ const MapPage: React.FC = () => {
             </div>
 
             {/* Динамические фильтры по атрибутам категории */}
-            {filters.category && (
+            {filters.categories && filters.categories.length > 0 && (
               <div className="mb-4">
                 <SmartFilters
-                  categoryId={parseInt(filters.category) || null}
+                  categoryId={filters.categories[0]}
                   onChange={(attributeFilters) =>
                     handleFiltersChange({ attributes: attributeFilters })
                   }
@@ -1078,24 +1138,11 @@ const MapPage: React.FC = () => {
             </div>
 
             {/* Быстрые фильтры для категории */}
-            {filters.category && (
+            {filters.categories && filters.categories.length > 0 && (
               <div className="mb-4">
                 <QuickFilters
-                  categoryId={filters.category}
+                  categoryId={filters.categories[0].toString()}
                   onSelectFilter={handleQuickFilterSelect}
-                />
-              </div>
-            )}
-
-            {/* Умные фильтры по атрибутам категории */}
-            {filters.category && (
-              <div className="mb-4 border-t pt-4">
-                <SmartFilters
-                  categoryId={parseInt(filters.category) || null}
-                  onChange={(attributeFilters) =>
-                    handleFiltersChange({ attributes: attributeFilters })
-                  }
-                  lang={currentLang}
                 />
               </div>
             )}
@@ -1130,12 +1177,12 @@ const MapPage: React.FC = () => {
             <span className="text-sm font-medium text-gray-700">
               {t('filters.title')}
             </span>
-            {(filters.category ||
+            {(filters.categories.length > 0 ||
               filters.priceFrom > 0 ||
               filters.priceTo > 0) && (
               <span className="bg-primary text-white text-xs px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
                 {[
-                  filters.category ? 1 : 0,
+                  filters.categories.length > 0 ? 1 : 0,
                   filters.priceFrom > 0 ? 1 : 0,
                   filters.priceTo > 0 ? 1 : 0,
                 ].reduce((a, b) => a + b, 0)}

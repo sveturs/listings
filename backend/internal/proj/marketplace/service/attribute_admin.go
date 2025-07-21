@@ -661,7 +661,7 @@ func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, category
 // getCategoryAttributesFromDB получает атрибуты категории из БД
 func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
 	log.Printf("DEBUG getCategoryAttributesFromDB called for category %d", categoryID)
-	
+
 	// Обновленный запрос, который получает атрибуты из обоих источников:
 	// 1. Из прямого маппинга (category_attribute_mapping)
 	// 2. Из групп атрибутов (через category_attribute_groups -> attribute_group_items)
@@ -735,10 +735,10 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 			&customComponent,
 			&finalSortOrder,
 		)
-		
+
 		// Добавляем отладку сразу после сканирования
 		if attribute.AttributeType == "select" || attribute.AttributeType == "multiselect" {
-			log.Printf("DEBUG SCAN: Attribute %s (ID: %d) - raw options valid: %v, content: %s", 
+			log.Printf("DEBUG SCAN: Attribute %s (ID: %d) - raw options valid: %v, content: %s",
 				attribute.Name, attribute.ID, optionsJSON.Valid, optionsJSON.String)
 		}
 		if err != nil {
@@ -768,7 +768,7 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 				log.Printf("DEBUG: Attribute %s (ID: %d) has empty options, setting to {}", attribute.Name, attribute.ID)
 			}
 		}
-		
+
 		if validRulesJSON.Valid && len(validRulesJSON.String) > 0 {
 			attribute.ValidRules = json.RawMessage(validRulesJSON.String)
 		} else {

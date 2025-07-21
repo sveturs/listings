@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 
 	"backend/internal/proj/gis/types"
 )
@@ -37,6 +38,10 @@ func (r *PostGISRepository) SearchListings(ctx context.Context, params types.Sea
 
 // searchUnifiedGeo новый метод поиска с unified geo system
 func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.SearchParams) ([]types.GeoListing, int64, error) {
+	log.Info().
+		Strs("categories", params.Categories).
+		Ints("categoryIDs", params.CategoryIDs).
+		Msg("🔍 BACKEND PostGIS: searchUnifiedGeo called with params")
 	query := `
 		SELECT
 			CASE
@@ -125,6 +130,23 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 			$%d)`, argIndex, argIndex+1, argIndex+2)
 		args = append(args, params.Center.Lng, params.Center.Lat, params.RadiusKm*1000)
 		argIndex += 3
+	}
+
+	// Фильтр по категориям (по ID)
+	if len(params.CategoryIDs) > 0 {
+		placeholders := make([]string, len(params.CategoryIDs))
+		for i, catID := range params.CategoryIDs {
+			placeholders[i] = fmt.Sprintf("$%d", argIndex)
+			args = append(args, catID)
+			argIndex++
+		}
+		query += fmt.Sprintf(` AND (
+			(ug.source_type = 'marketplace_listing' AND ml.category_id IN (%s)) OR
+			(ug.source_type = 'storefront_product' AND sp.category_id IN (%s))
+		)`, strings.Join(placeholders, ","), strings.Join(placeholders, ","))
+		log.Info().
+			Ints("categoryIDs", params.CategoryIDs).
+			Msg("🔍 BACKEND PostGIS: Added category filter to unified query")
 	}
 
 	// Подсчет общего количества
@@ -248,30 +270,35 @@ func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.Searc
 	var listings []types.GeoListing
 	var totalCount int64
 
+	log.Info().
+		Strs("categories", params.Categories).
+		Ints("categoryIDs", params.CategoryIDs).
+		Msg("🔍 BACKEND PostGIS: searchLegacy called with params")
+
 	// Базовый запрос
 	query := `
 		WITH filtered_listings AS (
 			SELECT
-				ml.id,
-				ml.title,
-				ml.description,
-				ml.price,
-				mc.name as category,
-				ST_Y(lg.location::geometry) as lat,
-				ST_X(lg.location::geometry) as lng,
-				ml.location as address,
-				ml.user_id,
-				ml.status,
-				ml.created_at,
-				ml.updated_at,
-				ml.views_count,
-				COALESCE(rc.average_rating, 0) as rating`
+				mic.id,
+				mic.name as title,
+				mic.description,
+				mic.price,
+				mic.category_name as category,
+				mic.latitude as lat,
+				mic.longitude as lng,
+				'' as address,
+				mic.user_id,
+				mic.status,
+				mic.created_at,
+				mic.updated_at,
+				mic.views_count,
+				COALESCE(mic.rating, 0) as rating`
 
 	// Добавляем расчет расстояния если есть центр поиска
 	if params.Center != nil {
 		query += fmt.Sprintf(`,
 				ST_Distance(
-					lg.location::geography,
+					ST_SetSRID(ST_MakePoint(mic.longitude, mic.latitude), 4326)::geography,
 					ST_SetSRID(ST_MakePoint(%f, %f), 4326)::geography
 				) as distance`, params.Center.Lng, params.Center.Lat)
 	}
@@ -288,17 +315,17 @@ func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.Searc
 	// Фильтр по границам
 	if params.Bounds != nil {
 		conditions = append(conditions, fmt.Sprintf(
-			"lg.location && ST_MakeEnvelope($%d, $%d, $%d, $%d, 4326)",
+			"mic.longitude >= $%d AND mic.longitude <= $%d AND mic.latitude >= $%d AND mic.latitude <= $%d",
 			argCount, argCount+1, argCount+2, argCount+3,
 		))
-		args = append(args, params.Bounds.West, params.Bounds.South, params.Bounds.East, params.Bounds.North)
+		args = append(args, params.Bounds.West, params.Bounds.East, params.Bounds.South, params.Bounds.North)
 		argCount += 4
 	}
 
 	// Фильтр по радиусу
 	if params.Center != nil && params.RadiusKm > 0 {
 		conditions = append(conditions, fmt.Sprintf(
-			"ST_DWithin(lg.location::geography, ST_SetSRID(ST_MakePoint($%d, $%d), 4326)::geography, $%d)",
+			"ST_DWithin(ST_SetSRID(ST_MakePoint(mic.longitude, mic.latitude), 4326)::geography, ST_SetSRID(ST_MakePoint($%d, $%d), 4326)::geography, $%d)",
 			argCount, argCount+1, argCount+2,
 		))
 		args = append(args, params.Center.Lng, params.Center.Lat, params.RadiusKm*1000) // в метрах
@@ -313,7 +340,7 @@ func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.Searc
 			args = append(args, cat)
 			argCount++
 		}
-		conditions = append(conditions, fmt.Sprintf("mc.name IN (%s)", strings.Join(placeholders, ",")))
+		conditions = append(conditions, fmt.Sprintf("mic.category_name IN (%s)", strings.Join(placeholders, ",")))
 	}
 
 	// Фильтр по категориям (по ID)
@@ -324,39 +351,39 @@ func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.Searc
 			args = append(args, catID)
 			argCount++
 		}
-		conditions = append(conditions, fmt.Sprintf("mc.id IN (%s)", strings.Join(placeholders, ",")))
+		conditions = append(conditions, fmt.Sprintf("mic.category_id IN (%s)", strings.Join(placeholders, ",")))
 	}
 
 	// Фильтр по цене
 	if params.MinPrice != nil {
-		conditions = append(conditions, fmt.Sprintf("ml.price >= $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("mic.price >= $%d", argCount))
 		args = append(args, *params.MinPrice)
 		argCount++
 	}
 
 	if params.MaxPrice != nil {
-		conditions = append(conditions, fmt.Sprintf("ml.price <= $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("mic.price <= $%d", argCount))
 		args = append(args, *params.MaxPrice)
 		argCount++
 	}
 
 	// Фильтр по валюте (пропускаем, так как все объявления в RSD)
 	// if params.Currency != "" {
-	//	conditions = append(conditions, fmt.Sprintf("ml.currency = $%d", argCount))
+	//	conditions = append(conditions, fmt.Sprintf("mic.currency = $%d", argCount))
 	//	args = append(args, params.Currency)
 	//	argCount++
 	// }
 
 	// Фильтр по пользователю
 	if params.UserID != nil {
-		conditions = append(conditions, fmt.Sprintf("ml.user_id = $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("mic.user_id = $%d", argCount))
 		args = append(args, *params.UserID)
 		argCount++
 	}
 
 	// Фильтр по статусу
 	if params.Status != "" {
-		conditions = append(conditions, fmt.Sprintf("ml.status = $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("mic.status = $%d", argCount))
 		args = append(args, params.Status)
 		argCount++
 	}
@@ -364,7 +391,7 @@ func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.Searc
 	// Текстовый поиск
 	if params.SearchQuery != "" {
 		conditions = append(conditions, fmt.Sprintf(
-			"(ml.title ILIKE $%d OR ml.description ILIKE $%d)",
+			"(mic.name ILIKE $%d OR mic.description ILIKE $%d)",
 			argCount, argCount+1,
 		))
 		searchPattern := "%" + params.SearchQuery + "%"
@@ -378,6 +405,12 @@ func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.Searc
 	}
 
 	query += "\n)"
+
+	log.Info().
+		Int("conditions_count", len(conditions)).
+		Strs("conditions", conditions).
+		Interface("args", args).
+		Msg("🔍 BACKEND PostGIS: SQL conditions formed")
 
 	// Подсчет общего количества
 	countQuery := "SELECT COUNT(*) FROM filtered_listings"
