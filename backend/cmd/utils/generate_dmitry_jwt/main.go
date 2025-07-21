@@ -112,12 +112,3 @@ func main() {
 	fmt.Println("🔒 Тип авторизации: JWT Bearer")
 	fmt.Println(strings.Repeat("=", 80))
 }
-
-// Вспомогательная функция для форматирования
-func repeat(s string, count int) string {
-	result := ""
-	for i := 0; i < count; i++ {
-		result += s
-	}
-	return result
-}

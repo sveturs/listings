@@ -92,8 +92,9 @@ describe('mockDataGenerator', () => {
         );
 
         payments.forEach((payment) => {
-          expect(payment.card.lastFour).toMatch(/^\d{4}$/);
-          expect(payment.card.lastFour.length).toBe(4);
+          expect(payment.card).toBeDefined();
+          expect(payment.card?.lastFour).toMatch(/^\d{4}$/);
+          expect(payment.card?.lastFour.length).toBe(4);
         });
       });
 
@@ -104,11 +105,12 @@ describe('mockDataGenerator', () => {
         const validBrands = ['visa', 'mastercard', 'maestro'];
 
         payments.forEach((payment) => {
-          expect(validBrands).toContain(payment.card.brand);
+          expect(payment.card).toBeDefined();
+          expect(validBrands).toContain(payment.card?.brand);
         });
 
         // Проверяем что все бренды встречаются (статистически)
-        const brands = payments.map((p) => p.card.brand);
+        const brands = payments.map((p) => p.card?.brand).filter(Boolean);
         validBrands.forEach((brand) => {
           expect(brands).toContain(brand);
         });
@@ -120,9 +122,9 @@ describe('mockDataGenerator', () => {
         );
 
         payments.forEach((payment) => {
-          expect(payment.card.expiryMonth).toBeGreaterThanOrEqual(1);
-          expect(payment.card.expiryMonth).toBeLessThanOrEqual(12);
-          expect(Number.isInteger(payment.card.expiryMonth)).toBe(true);
+          expect(payment.card?.expiryMonth).toBeGreaterThanOrEqual(1);
+          expect(payment.card?.expiryMonth).toBeLessThanOrEqual(12);
+          expect(Number.isInteger(payment.card?.expiryMonth)).toBe(true);
         });
       });
 
@@ -133,9 +135,9 @@ describe('mockDataGenerator', () => {
         );
 
         payments.forEach((payment) => {
-          expect(payment.card.expiryYear).toBeGreaterThan(currentYear);
-          expect(payment.card.expiryYear).toBeLessThanOrEqual(currentYear + 6);
-          expect(Number.isInteger(payment.card.expiryYear)).toBe(true);
+          expect(payment.card?.expiryYear).toBeGreaterThan(currentYear);
+          expect(payment.card?.expiryYear).toBeLessThanOrEqual(currentYear + 6);
+          expect(Number.isInteger(payment.card?.expiryYear)).toBe(true);
         });
       });
 
@@ -146,7 +148,7 @@ describe('mockDataGenerator', () => {
 
         const payment = generateMockPayment();
 
-        expect(payment.card.lastFour).toMatch(/^0\d{3}$/);
+        expect(payment.card?.lastFour).toMatch(/^0\d{3}$/);
 
         Math.random = originalRandom;
       });

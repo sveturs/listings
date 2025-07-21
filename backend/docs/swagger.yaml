@@ -12187,6 +12187,11 @@ paths:
       consumes:
       - application/json
       description: Returns all marketplace categories
+      parameters:
+      - description: Language code (e.g., 'sr', 'en', 'ru')
+        in: query
+        name: lang
+        type: string
       produces:
       - application/json
       responses:
@@ -12328,6 +12333,11 @@ paths:
       consumes:
       - application/json
       description: Returns hierarchical tree of all categories with caching
+      parameters:
+      - description: Language code (e.g., 'sr', 'en', 'ru')
+        in: query
+        name: lang
+        type: string
       produces:
       - application/json
       responses:

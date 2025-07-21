@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { MarketplaceService } from '@/services/marketplace';
 import type { components } from '@/types/generated/api';
 
@@ -24,6 +24,7 @@ export default function CategorySidebar({
   className = '',
 }: CategorySidebarProps) {
   const locale = useLocale();
+  const t = useTranslations('marketplace');
   const [categories, setCategories] = useState<CategoryTreeNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +92,7 @@ export default function CategorySidebar({
           const tree = buildCategoryTree(mappedCategories);
           setCategories(tree);
         } else {
-          setError('Ошибка загрузки категорий');
+          setError(t('categoriesLoadError'));
         }
       } catch (err) {
         console.error('Error fetching categories:', err);
@@ -102,7 +103,7 @@ export default function CategorySidebar({
     };
 
     fetchCategories();
-  }, [locale]);
+  }, [locale, t]);
 
   // Переключение раскрытия категории
   const toggleExpanded = (categoryId: number) => {
@@ -200,7 +201,7 @@ export default function CategorySidebar({
               d="M19 11H5m14-7l2 2m0 0l2 2m-2-2l-2 2m-2-2l-2 2M5 20l14 0"
             />
           </svg>
-          <h3 className="font-semibold text-base-content">Категории</h3>
+          <h3 className="font-semibold text-base-content">{t('categories')}</h3>
         </div>
 
         <div className="space-y-2">
@@ -255,14 +256,14 @@ export default function CategorySidebar({
               d="M19 11H5m14-7l2 2m0 0l2 2m-2-2l-2 2m-2-2l-2 2M5 20l14 0"
             />
           </svg>
-          <h3 className="font-semibold text-base-content">Категории</h3>
+          <h3 className="font-semibold text-base-content">{t('categories')}</h3>
         </div>
 
         {selectedCategoryId && (
           <button
             onClick={() => onCategorySelect(null)}
             className="btn btn-ghost btn-xs"
-            title="Очистить фильтр"
+            title={t('clearFilter')}
           >
             <svg
               className="w-4 h-4"
@@ -284,7 +285,7 @@ export default function CategorySidebar({
       <div className="space-y-1 max-h-96 overflow-y-auto">
         {categories.length === 0 ? (
           <p className="text-sm text-base-content/60 text-center py-4">
-            Категории не найдены
+            {t('noCategoriesFound')}
           </p>
         ) : (
           categories.map((category) => renderCategory(category))

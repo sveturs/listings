@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"context"
 	"strconv"
 	"time"
 
@@ -41,11 +42,18 @@ func NewCategoriesHandler(services globalService.ServicesInterface) *CategoriesH
 // @Tags marketplace-categories
 // @Accept json
 // @Produce json
+// @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
 // @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
 // @Router /api/v1/marketplace/categories [get]
 func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
-	categories, err := h.marketplaceService.GetCategories(c.UserContext())
+	// Получаем язык из query параметра
+	lang := c.Query("lang", "en")
+
+	// Создаем контекст с языком
+	ctx := context.WithValue(c.UserContext(), "locale", lang)
+
+	categories, err := h.marketplaceService.GetCategories(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get categories")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categoriesError")
@@ -60,10 +68,15 @@ func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 // @Tags marketplace-categories
 // @Accept json
 // @Produce json
+// @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
 // @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryTreeNode}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoryTreeError"
 // @Router /api/v1/marketplace/category-tree [get]
 func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
+	// Получаем язык из query параметра
+	lang := c.Query("lang", "en")
+
+	// TODO: Кеш должен учитывать язык
 	// Оптимизация: используем кеш, если он актуален (не старше 5 минут)
 	categoryTreeMutex.RLock()
 	cacheValid := len(categoryTreeCache) > 0 && time.Since(categoryTreeLastUpdate) < 5*time.Minute
@@ -74,8 +87,11 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 		return utils.SuccessResponse(c, cachedTree)
 	}
 
+	// Создаем контекст с языком
+	ctx := context.WithValue(c.UserContext(), "locale", lang)
+
 	// Если кеш устарел или пуст, загружаем дерево категорий из хранилища
-	categoryTree, err := h.marketplaceService.GetCategoryTree(c.UserContext())
+	categoryTree, err := h.marketplaceService.GetCategoryTree(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get category tree")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categoryTreeError")

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface InlineTranslationEditorProps {
   entityType: 'category' | 'attribute';
@@ -30,6 +30,7 @@ export function InlineTranslationEditor({
   compact = false,
 }: InlineTranslationEditorProps) {
   const t = useTranslations('admin.translations');
+  const locale = useLocale();
   const [isEditing, setIsEditing] = useState(false);
   const [translations, setTranslations] = useState(initialTranslations);
   const [saving, setSaving] = useState(false);
@@ -81,7 +82,9 @@ export function InlineTranslationEditor({
           {compact ? (
             <div className="flex items-center gap-2">
               <span className="text-sm">
-                {translations[LANGUAGES[0]] || t('notTranslated')}
+                {translations[locale] ||
+                  translations[LANGUAGES[0]] ||
+                  t('notTranslated')}
               </span>
               <button
                 className="btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-opacity"

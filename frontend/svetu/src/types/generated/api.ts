@@ -9197,7 +9197,10 @@ export interface paths {
      */
     get: {
       parameters: {
-        query?: never;
+        query?: {
+          /** @description Language code (e.g., 'sr', 'en', 'ru') */
+          lang?: string;
+        };
         header?: never;
         path?: never;
         cookie?: never;
@@ -9438,7 +9441,10 @@ export interface paths {
      */
     get: {
       parameters: {
-        query?: never;
+        query?: {
+          /** @description Language code (e.g., 'sr', 'en', 'ru') */
+          lang?: string;
+        };
         header?: never;
         path?: never;
         cookie?: never;

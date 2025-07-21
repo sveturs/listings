@@ -19,6 +19,23 @@ services:
     stop_signal: SIGINT
     networks:
      - hostel_network
+  redis:
+    image: redis:7-alpine
+    container_name: hostel_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hostel_network
+    restart: unless-stopped
+
   opensearch:
     image: opensearchproject/opensearch:2.11.0
     container_name: opensearch
@@ -166,6 +183,7 @@ services:
 volumes:
   postgres_data:
   opensearch-data:
+  redis_data:
   minio_data:
     driver: local
     driver_opts:

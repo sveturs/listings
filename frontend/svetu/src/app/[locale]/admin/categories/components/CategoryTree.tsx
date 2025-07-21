@@ -39,9 +39,9 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(true);
   const [translations, setTranslations] = useState<Record<string, string>>({
-    en: category.name,
-    ru: category.name,
-    sr: category.name,
+    en: category.translations?.en || category.name,
+    ru: category.translations?.ru || category.name,
+    sr: category.translations?.sr || category.name,
   });
   const t = useTranslations('admin');
 
