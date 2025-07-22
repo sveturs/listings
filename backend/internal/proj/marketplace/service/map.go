@@ -148,7 +148,11 @@ func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neL
 	if err != nil {
 		return nil, fmt.Errorf("failed to query listings in bounds: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var markers []models.MapMarker
 	for rows.Next() {
@@ -313,7 +317,11 @@ func (s *MarketplaceService) GetMapClusters(ctx context.Context, neLat, neLng, s
 	if err != nil {
 		return nil, fmt.Errorf("failed to query clusters: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var clusters []models.MapCluster
 	for rows.Next() {
