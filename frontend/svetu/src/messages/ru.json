@@ -2513,6 +2513,7 @@
       "categorySelected": "Категория выбрана",
       "categoryAttributes": "Атрибуты категории",
       "categoryAttributesDescription": "Укажите специфичные для категории характеристики товара",
+      "noAttributesForCategory": "Для этой категории нет специальных атрибутов",
       "specifications": "Характеристики",
       "productPhotos": "Фотографии товара",
       "productPhotosDescription": "Добавьте качественные фотографии для привлечения покупателей",

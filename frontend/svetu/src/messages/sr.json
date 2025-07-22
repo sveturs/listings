@@ -2353,6 +2353,7 @@
       "maxImagesError": "You can upload maximum 5 images",
       "addImage": "Add Image",
       "categoryAttributes": "Category Attributes",
+      "categoryAttributesDescription": "Unesite specifične atribute za ovu kategoriju",
       "noAttributesForCategory": "No specific attributes for this category",
       "addProductDescription": "Add new products to your storefront catalog",
       "productNamePlaceholder": "Enter product name",
