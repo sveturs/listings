@@ -196,7 +196,9 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		if err != nil {
 			// Откатываем все резервирования
 			for _, res := range reservations {
-				s.inventoryMgr.ReleaseReservation(ctx, res.ID)
+				if releaseErr := s.inventoryMgr.ReleaseReservation(ctx, res.ID); releaseErr != nil {
+					// Логируем ошибку, но продолжаем откат остальных
+				}
 			}
 			// TODO: использовать транзакции для отката
 			return nil, fmt.Errorf("failed to reserve stock for product %d: %w", item.ProductID, err)
@@ -233,7 +235,9 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 	if err := s.orderRepo.Update(ctx, createdOrder); err != nil {
 		// Откатываем резервирования
 		for _, res := range reservations {
-			s.inventoryMgr.ReleaseReservation(ctx, res.ID)
+			if releaseErr := s.inventoryMgr.ReleaseReservation(ctx, res.ID); releaseErr != nil {
+				// Логируем ошибку, но продолжаем откат остальных
+			}
 		}
 		return nil, fmt.Errorf("failed to update order totals: %w", err)
 	}
@@ -763,6 +767,9 @@ func isValidStatusTransition(from, to models.OrderStatus) bool {
 func convertToJSONB(v interface{}) models.JSONB {
 	data, _ := json.Marshal(v)
 	var result models.JSONB
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		// В случае ошибки возвращаем пустой JSONB
+		return models.JSONB{}
+	}
 	return result
 }

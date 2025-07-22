@@ -235,8 +235,12 @@ func (g *geocodingService) ValidateAddress(ctx context.Context, address string) 
 func (g *geocodingService) parseNominatimResponse(resp *nominatimResponse) *models.Location {
 	lat := 0.0
 	lng := 0.0
-	fmt.Sscanf(resp.Lat, "%f", &lat)
-	fmt.Sscanf(resp.Lon, "%f", &lng)
+	if _, err := fmt.Sscanf(resp.Lat, "%f", &lat); err != nil {
+		// Не удалось распарсить широту, оставляем 0.0
+	}
+	if _, err := fmt.Sscanf(resp.Lon, "%f", &lng); err != nil {
+		// Не удалось распарсить долготу, оставляем 0.0
+	}
 
 	// Определяем город (может быть в разных полях)
 	city := resp.Address.City

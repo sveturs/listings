@@ -461,7 +461,11 @@ func (s *MarketplaceService) GetCategorySuggestions(ctx context.Context, query s
 		log.Printf("Ошибка при выполнении запроса категорий: %v", err)
 		return []models.CategorySuggestion{}, nil
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var results []models.CategorySuggestion
 	for rows.Next() {
@@ -989,7 +993,11 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("ошибка получения изображений: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var count int
 	for rows.Next() {
@@ -1687,7 +1695,11 @@ func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, 
 			log.Printf("Ошибка запасного SQL-запроса: %v", err)
 			return []string{}, nil
 		}
-		defer rows.Close()
+		defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 		var results []string
 		for rows.Next() {

@@ -46,7 +46,11 @@ func (s *Server) ProxyMinIO(c *fiber.Ctx) error {
 			"error": "Failed to fetch file",
 		})
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	// Проверяем статус ответа
 	if resp.StatusCode != http.StatusOK {
@@ -137,7 +141,11 @@ func (s *Server) ProxyChatFiles(c *fiber.Ctx) error {
 			"error": "Failed to fetch file",
 		})
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return c.Status(resp.StatusCode).JSON(fiber.Map{
@@ -191,7 +199,11 @@ func (s *Server) ProxyStorefrontProducts(c *fiber.Ctx) error {
 			"error": "Failed to fetch file",
 		})
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return c.Status(resp.StatusCode).JSON(fiber.Map{

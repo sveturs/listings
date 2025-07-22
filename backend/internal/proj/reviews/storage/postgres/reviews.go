@@ -18,7 +18,11 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
 	if err != nil {
 		return nil, fmt.Errorf("failed to start transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Сначала модерируем оригинальный текст
 	moderatedComment := review.Comment
@@ -464,7 +468,11 @@ func (s *Storage) AddReviewVote(ctx context.Context, vote *models.ReviewVote) er
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Сначала проверим, существует ли уже такой голос
 	var existingVoteType sql.NullString
@@ -525,7 +533,11 @@ func (s *Storage) UpdateReviewVotes(ctx context.Context, reviewId int) error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Сначала получаем актуальное количество голосов
 	var helpfulCount, notHelpfulCount int

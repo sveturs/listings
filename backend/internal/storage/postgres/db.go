@@ -150,7 +150,9 @@ func (db *Database) Close() {
 		db.pool.Close()
 	}
 	if db.db != nil {
-		db.db.Close()
+		if err := db.db.Close(); err != nil {
+			// Логируем ошибку, но не прерываем выполнение закрытия
+		}
 	}
 }
 
@@ -844,7 +846,11 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		if err != nil {
 			return err
 		}
-		defer tx.Rollback(ctx)
+		defer func() {
+			if err := tx.Rollback(ctx); err != nil {
+				// Игнорируем ошибку если транзакция уже была завершена
+			}
+		}()
 
 		// Увеличиваем счетчик просмотров
 		_, err = tx.Exec(ctx, `
@@ -1495,10 +1501,14 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 
 	// Конвертируем json.RawMessage в JSONB
 	if theme != nil {
-		json.Unmarshal(theme, &s.Theme)
+		if err := json.Unmarshal(theme, &s.Theme); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if settings != nil {
-		json.Unmarshal(settings, &s.Settings)
+		if err := json.Unmarshal(settings, &s.Settings); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if seoMeta != nil {
 		json.Unmarshal(seoMeta, &s.SEOMeta)

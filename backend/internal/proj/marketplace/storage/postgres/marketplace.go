@@ -1159,7 +1159,11 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Удаляем старые атрибуты
 	_, err = tx.Exec(ctx, `DELETE FROM listing_attribute_values WHERE listing_id = $1`, listingID)

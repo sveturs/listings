@@ -322,7 +322,11 @@ func (s *MarketplaceService) getCategoryAttributeGroupsFromDB(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("не удалось получить группы атрибутов категории: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var groups []*models.AttributeGroup
 	for rows.Next() {

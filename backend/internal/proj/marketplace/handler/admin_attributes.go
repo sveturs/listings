@@ -236,7 +236,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 
 	// Получаем атрибуты с пагинацией и фильтрами
 	query := fmt.Sprintf(`
-		SELECT id, name, display_name, attribute_type, COALESCE(icon, '') as icon, options, validation_rules, 
+		SELECT id, name, display_name, attribute_type, COALESCE(icon, '') as icon, options, validation_rules,
 		is_searchable, is_filterable, is_required, sort_order, created_at
 		FROM category_attributes
 		%s
@@ -860,10 +860,10 @@ func (h *AdminAttributesHandler) ExportCategoryAttributes(c *fiber.Ctx) error {
 func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.Context, categoryID int) ([]models.CategoryAttributeMapping, error) {
 	// Запрос для получения атрибутов категории с их настройками
 	query := `
-		SELECT cam.category_id, cam.attribute_id, cam.is_enabled, cam.is_required, cam.sort_order, 
+		SELECT cam.category_id, cam.attribute_id, cam.is_enabled, cam.is_required, cam.sort_order,
 			   COALESCE(cam.custom_component, '') as mapping_custom_component,
 			   ca.id, ca.name, ca.display_name, ca.attribute_type, ca.options, ca.validation_rules,
-			   ca.is_searchable, ca.is_filterable, ca.is_required, ca.sort_order, ca.created_at, 
+			   ca.is_searchable, ca.is_filterable, ca.is_required, ca.sort_order, ca.created_at,
 			   COALESCE(ca.custom_component, '') as attribute_custom_component
 		FROM category_attribute_mapping cam
 		JOIN category_attributes ca ON cam.attribute_id = ca.id
