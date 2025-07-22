@@ -29,6 +29,11 @@ import (
 	//	"net/url"
 )
 
+const (
+	// Attribute names
+	attributeNameModel = "model"
+)
+
 type MarketplaceService struct {
 	storage            storage.Storage
 	translationService TranslationServiceInterface
@@ -324,7 +329,7 @@ func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.Marketpla
 		attributeFilters := make(map[string]string)
 
 		// Приоритетные атрибуты для разных категорий
-		priorityAttrs := []string{"make", "model", "brand", "type", "rooms", "property_type", "body_type"}
+		priorityAttrs := []string{"make", attributeNameModel, "brand", "type", "rooms", "property_type", "body_type"}
 
 		// В зависимости от попытки используем разное количество атрибутов
 		maxAttrs := 3
@@ -1369,7 +1374,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 
 							// Проверяем атрибуты
 							for _, attr := range result.Attributes {
-								if attr.AttributeName == "model" && attr.TextValue != nil {
+								if attr.AttributeName == attributeNameModel && attr.TextValue != nil {
 									attrValue := strings.ToLower(*attr.TextValue)
 									if strings.Contains(attrValue, modelWord) {
 										matched = true
@@ -1469,7 +1474,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 					if attr.AttributeName == "make" && attr.TextValue != nil {
 						makeValue = strings.ToLower(*attr.TextValue)
 					}
-					if attr.AttributeName == "model" && attr.TextValue != nil {
+					if attr.AttributeName == attributeNameModel && attr.TextValue != nil {
 						modelValue = strings.ToLower(*attr.TextValue)
 					}
 				}
@@ -1544,7 +1549,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 					if attr.AttributeName == "make" && attr.TextValue != nil {
 						makeValue = *attr.TextValue
 					}
-					if attr.AttributeName == "model" && attr.TextValue != nil {
+					if attr.AttributeName == attributeNameModel && attr.TextValue != nil {
 						modelValue = *attr.TextValue
 					}
 				}

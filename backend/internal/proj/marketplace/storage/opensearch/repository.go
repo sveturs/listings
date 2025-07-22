@@ -24,6 +24,19 @@ import (
 	"backend/pkg/transliteration"
 )
 
+const (
+	// Field names
+	fieldNamePrice     = "price"
+	fieldNameCreatedAt = "created_at"
+	
+	// Boolean values
+	boolValueTrue = "true"
+	
+	// Sort orders
+	sortOrderDesc = "desc"
+	sortOrderAsc  = "asc"
+)
+
 // Repository реализует интерфейс MarketplaceSearchRepository
 type Repository struct {
 	client         *osClient.OpenSearchClient
@@ -687,14 +700,14 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		"description":       listing.Description,
 		"title_suggest":     listing.Title,
 		"title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
-		"price":             listing.Price,
+		fieldNamePrice:      listing.Price,
 		"condition":         listing.Condition,
 		"status":            listing.Status,
 		"location":          listing.Location,
 		"city":              listing.City,
 		"country":           listing.Country,
 		"views_count":       listing.ViewsCount,
-		"created_at":        listing.CreatedAt.Format(time.RFC3339),
+		fieldNameCreatedAt:  listing.CreatedAt.Format(time.RFC3339),
 		"updated_at":        listing.UpdatedAt.Format(time.RFC3339),
 		"show_on_map":       listing.ShowOnMap,
 		"original_language": listing.OriginalLanguage,
@@ -967,7 +980,7 @@ func addRangesForAttribute(doc map[string]interface{}, attr models.ListingAttrib
 	numVal := *attr.NumericValue
 
 	switch attr.AttributeName {
-	case "price":
+	case fieldNamePrice:
 		doc["price_range"] = getPriceRange(int(numVal))
 	case "mileage":
 		doc["mileage_range"] = getMileageRange(int(numVal))
@@ -2216,8 +2229,8 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					})
 					logger.Info().Msgf("Added term filter for text real estate attribute %s = %s",
 						attrName, attrValue)
-				} else if attrValue == "true" || attrValue == "false" {
-					boolVal := attrValue == "true"
+				} else if attrValue == boolValueTrue || attrValue == "false" {
+					boolVal := attrValue == boolValueTrue
 					filter = append(filter, map[string]interface{}{
 						"term": map[string]interface{}{
 							attrName: boolVal,
@@ -2282,8 +2295,8 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 							})
 						}
 					}
-				} else if attrValue == "true" || attrValue == "false" {
-					boolVal := attrValue == "true"
+				} else if attrValue == boolValueTrue || attrValue == "false" {
+					boolVal := attrValue == boolValueTrue
 					innerMust = append(innerMust, map[string]interface{}{
 						"term": map[string]interface{}{
 							"attributes.boolean_value": boolVal,
@@ -2318,7 +2331,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		if params.SortDirection != "" {
 			sortOrder = params.SortDirection
 		} else {
-			sortOrder = "desc"
+			sortOrder = sortOrderDesc
 		}
 
 		switch params.Sort {
@@ -2338,23 +2351,23 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			}
 			return query
 		case "date":
-			sortField = "created_at"
+			sortField = fieldNameCreatedAt
 			// sortOrder уже установлен из params.SortDirection выше
 		case "date_desc":
-			sortField = "created_at"
-			sortOrder = "desc"
+			sortField = fieldNameCreatedAt
+			sortOrder = sortOrderDesc
 		case "date_asc":
-			sortField = "created_at"
-			sortOrder = "asc"
-		case "price":
+			sortField = fieldNameCreatedAt
+			sortOrder = sortOrderAsc
+		case fieldNamePrice:
 			sortField = "price"
 			// sortOrder уже установлен из params.SortDirection выше
 		case "price_desc":
 			sortField = "price"
-			sortOrder = "desc"
+			sortOrder = sortOrderDesc
 		case "price_asc":
 			sortField = "price"
-			sortOrder = "asc"
+			sortOrder = sortOrderAsc
 		case "rating_desc":
 			logger.Info().Msgf("Применяем сортировку рейтинга по УБЫВАНИЮ")
 			query["sort"] = []interface{}{

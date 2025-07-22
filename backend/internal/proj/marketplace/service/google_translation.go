@@ -36,6 +36,13 @@ const (
 	OpenAI TranslationProvider = "openai"
 	// Manual ручной перевод
 	Manual TranslationProvider = "manual"
+	
+	// Language detection
+	languageAuto = "auto"
+	
+	// Field names
+	fieldNameTitle = "title"
+	fieldNameName  = "name"
 )
 
 // GoogleTranslationService предоставляет функционал перевода через Google Translate API
@@ -107,12 +114,12 @@ func (s *GoogleTranslationService) Translate(ctx context.Context, text string, s
 	}
 
 	// Если исходный и целевой языки одинаковые, просто возвращаем текст
-	if sourceLanguage == targetLanguage || (sourceLanguage == "auto" && guessLanguage(text) == targetLanguage) {
+	if sourceLanguage == targetLanguage || (sourceLanguage == languageAuto && guessLanguage(text) == targetLanguage) {
 		return text, nil
 	}
 
 	// Исправление: если sourceLanguage указан как "auto", используем более конкретное определение
-	if sourceLanguage == "auto" {
+	if sourceLanguage == languageAuto {
 		// Простое предположение о языке на основе текста
 		sourceLanguage = guessLanguage(text)
 		log.Printf("Автоопределение языка для '%s': %s", text, sourceLanguage)
@@ -350,10 +357,10 @@ func (s *GoogleTranslationService) TranslateEntityFields(ctx context.Context, so
 	results := make(map[string]map[string]string)
 
 	// Если sourceLanguage указан как "auto", определяем его на основе поля title или первого имеющегося поля
-	if sourceLanguage == "auto" || sourceLanguage == "" {
+	if sourceLanguage == languageAuto || sourceLanguage == "" {
 		// Сначала проверяем поле title или name
 		for fieldName, text := range fields {
-			if (fieldName == "title" || fieldName == "name") && text != "" {
+			if (fieldName == fieldNameTitle || fieldName == fieldNameName) && text != "" {
 				sourceLanguage = guessLanguage(text)
 				log.Printf("Определен язык источника из поля %s: %s", fieldName, sourceLanguage)
 				break
@@ -361,7 +368,7 @@ func (s *GoogleTranslationService) TranslateEntityFields(ctx context.Context, so
 		}
 
 		// Если не нашли подходящее поле, используем первое непустое
-		if sourceLanguage == "auto" || sourceLanguage == "" {
+		if sourceLanguage == languageAuto || sourceLanguage == "" {
 			for _, text := range fields {
 				if text != "" {
 					sourceLanguage = guessLanguage(text)
@@ -372,7 +379,7 @@ func (s *GoogleTranslationService) TranslateEntityFields(ctx context.Context, so
 		}
 
 		// Если всё равно не определили, используем английский по умолчанию
-		if sourceLanguage == "auto" || sourceLanguage == "" {
+		if sourceLanguage == languageAuto || sourceLanguage == "" {
 			sourceLanguage = "en"
 			log.Printf("Не удалось определить язык источника, используем по умолчанию: %s", sourceLanguage)
 		}

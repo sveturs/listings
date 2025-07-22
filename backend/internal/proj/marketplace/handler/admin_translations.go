@@ -526,9 +526,9 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 	}
 
 	translationProvider := service.Manual
-	if strings.ToLower(provider) == "google" {
+	if strings.ToLower(provider) == providerGoogle {
 		translationProvider = service.GoogleTranslate
-	} else if strings.ToLower(provider) == "openai" {
+	} else if strings.ToLower(provider) == providerOpenAI {
 		translationProvider = service.OpenAI
 	}
 
@@ -540,7 +540,7 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 			Language:            lang,
 			FieldName:           fieldName,
 			TranslatedText:      translatedText,
-			IsMachineTranslated: provider != "manual",
+			IsMachineTranslated: provider != providerManual,
 			IsVerified:          provider == "manual",
 			Metadata:            map[string]interface{}{"provider": provider},
 		}
@@ -562,7 +562,7 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 		updatedStatus[lang] = TranslationFieldStatus{
 			Language:            lang,
 			IsTranslated:        true,
-			IsMachineTranslated: provider != "manual",
+			IsMachineTranslated: provider != providerManual,
 			IsVerified:          provider == "manual",
 		}
 	}
