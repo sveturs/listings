@@ -13,9 +13,6 @@ import (
 	"backend/pkg/utils"
 )
 
-const (
-	bearerScheme = "Bearer"
-)
 
 // AuthRequiredJWT - основной метод аутентификации через JWT
 // Поддерживает как Bearer токены в заголовке, так и fallback на session cookies
@@ -39,7 +36,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	if strings.HasPrefix(path, "/api/v1/gis") {
 		method := c.Method()
 		// Публичные GET routes
-		if method == "GET" && (strings.HasSuffix(path, "/search") ||
+		if method == httpMethodGet && (strings.HasSuffix(path, "/search") ||
 			strings.HasSuffix(path, "/search/radius") ||
 			strings.HasSuffix(path, "/clusters") ||
 			strings.HasSuffix(path, "/nearby") ||
@@ -55,16 +52,16 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			return c.Next()
 		}
 		// Публичные POST routes для cities
-		if method == "POST" && strings.HasSuffix(path, "/cities/visible") {
+		if method == httpMethodPost && strings.HasSuffix(path, "/cities/visible") {
 			logger.Info().Str("path", path).Msg("Skipping auth for public GIS cities routes")
 			return c.Next()
 		}
 		// Публичные Geocoding API routes (Phase 2)
-		if strings.Contains(path, "/geocode/") && ((method == "GET" && (strings.HasSuffix(path, "/suggestions") ||
+		if strings.Contains(path, "/geocode/") && ((method == httpMethodGet && (strings.HasSuffix(path, "/suggestions") ||
 			strings.HasSuffix(path, "/search") ||
 			strings.HasSuffix(path, "/reverse") ||
 			strings.HasSuffix(path, "/stats"))) ||
-			(method == "POST" && strings.HasSuffix(path, "/validate"))) {
+			(method == httpMethodPost && strings.HasSuffix(path, "/validate"))) {
 			logger.Info().Str("path", path).Msg("Skipping auth for public GIS geocoding routes")
 			return c.Next()
 		}

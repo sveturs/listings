@@ -8,11 +8,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-const (
-	httpMethodGet     = "GET"
-	httpMethodHead    = "HEAD"
-	httpMethodOptions = "OPTIONS"
-)
 
 const (
 	CSRFTokenLength = 32

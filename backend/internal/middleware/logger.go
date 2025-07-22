@@ -9,11 +9,6 @@ import (
 	"backend/internal/logger"
 )
 
-const (
-	httpMethodPost  = "POST"
-	httpMethodPut   = "PUT"
-	httpMethodPatch = "PATCH"
-)
 
 func (m *Middleware) Logger() fiber.Handler {
 	masker := NewSensitiveDataMasker()

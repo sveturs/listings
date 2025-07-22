@@ -12,10 +12,6 @@ import (
 	"backend/pkg/utils"
 )
 
-const (
-	envDev        = "dev"
-	localhostIPv4 = "127.0.0.1"
-)
 
 // AuthRateLimit создает rate limiter для аутентификации
 // Ограничивает количество попыток входа/регистрации для защиты от brute force атак
@@ -37,8 +33,8 @@ func (m *Middleware) AuthRateLimit() fiber.Handler {
 
 		// Пропускаем localhost в режиме разработки
 		Next: func(c *fiber.Ctx) bool {
-			if m.config.Environment == "development" || m.config.Environment == envDev {
-				return c.IP() == localhostIPv4 || c.IP() == "::1"
+			if m.config.Environment == envDevelopment || m.config.Environment == envDev {
+				return c.IP() == localhostIPv4 || c.IP() == localhostIPv6
 			}
 			return false
 		},
@@ -95,8 +91,8 @@ func (m *Middleware) RegistrationRateLimit() fiber.Handler {
 
 		// Пропускаем localhost в режиме разработки
 		Next: func(c *fiber.Ctx) bool {
-			if m.config.Environment == "development" || m.config.Environment == envDev {
-				return c.IP() == localhostIPv4 || c.IP() == "::1"
+			if m.config.Environment == envDevelopment || m.config.Environment == envDev {
+				return c.IP() == localhostIPv4 || c.IP() == localhostIPv6
 			}
 			return false
 		},
@@ -331,8 +327,8 @@ func (m *Middleware) RefreshTokenRateLimit() fiber.Handler {
 
 		// Не пропускаем localhost в продакшене
 		Next: func(c *fiber.Ctx) bool {
-			if m.config.Environment == "development" || m.config.Environment == envDev {
-				return c.IP() == localhostIPv4 || c.IP() == "::1"
+			if m.config.Environment == envDevelopment || m.config.Environment == envDev {
+				return c.IP() == localhostIPv4 || c.IP() == localhostIPv6
 			}
 			return false
 		},
