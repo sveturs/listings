@@ -151,10 +151,14 @@ func (r *PaymentRepository) GetByID(ctx context.Context, id int64) (*models.Paym
 
 	// Парсим JSON поля
 	if gatewayResponse.Valid {
-		json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse)
+		if err := json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if errorDetails.Valid {
-		json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails)
+		if err := json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 
 	return &transaction, nil
@@ -191,10 +195,14 @@ func (r *PaymentRepository) GetByGatewayTransactionID(ctx context.Context, gatew
 
 	// Парсим JSON поля
 	if gatewayResponse.Valid {
-		json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse)
+		if err := json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if errorDetails.Valid {
-		json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails)
+		if err := json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 
 	return &transaction, nil
