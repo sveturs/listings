@@ -225,7 +225,7 @@ func (s *BalanceService) GetTransactions(ctx context.Context, userID int, limit,
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			logger.Error().Err(err).Msg("Failed to close rows")
+			s.logger.Error("Failed to close rows", "error", err)
 		}
 	}()
 
@@ -259,7 +259,7 @@ func (s *BalanceService) GetPaymentMethods(ctx context.Context) ([]models.Paymen
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			logger.Error().Err(err).Msg("Failed to close rows")
+			s.logger.Error("Failed to close rows", "error", err)
 		}
 	}()
 

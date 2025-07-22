@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 
+	"backend/internal/logger"
 	"backend/internal/proj/gis/types"
 
 	"github.com/jmoiron/sqlx"
