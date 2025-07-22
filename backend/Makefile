@@ -77,6 +77,10 @@ lint-goconst:
 	@echo "Running goconst linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=goconst ./...
 
+lint-staticcheck:
+	@echo "Running staticcheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=staticcheck ./...
+
 pre-commit: format-check lint
 	@echo "✅ Pre-commit checks passed!"
 

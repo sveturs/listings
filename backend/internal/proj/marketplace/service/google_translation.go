@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -238,7 +238,7 @@ func (s *GoogleTranslationService) Translate(ctx context.Context, text string, s
 	}()
 
 	// Считываем тело ответа для логирования
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("ошибка чтения ответа: %w", err)
 	}
