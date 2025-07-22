@@ -535,7 +535,11 @@ func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
 			log.Printf("Error opening file: %v", err)
 			continue
 		}
-		defer src.Close()
+		defer func() {
+			if err := src.Close(); err != nil {
+				log.Printf("Error closing file: %v", err)
+			}
+		}()
 
 		// Загружаем файл в MinIO и получаем полный URL
 		imageURL, err := h.services.Storage().FileStorage().UploadFile(c.Context(), objectKey, src, file.Size, contentType)
@@ -622,7 +626,11 @@ func (h *ReviewHandler) UploadPhotosForNewReview(c *fiber.Ctx) error {
 			log.Printf("Error opening file: %v", err)
 			continue
 		}
-		defer src.Close()
+		defer func() {
+			if err := src.Close(); err != nil {
+				log.Printf("Error closing file: %v", err)
+			}
+		}()
 
 		// Пока используем основной FileStorage, позже добавим review-photos wrapper
 		// TODO: Создать отдельный бакет review-photos
