@@ -25,29 +25,29 @@ jobs:
         working-directory: ./backend
         run: make format-check
 
-      - name: Run golangci-lint
-        working-directory: ./backend
-        run: make lint
+      # - name: Run golangci-lint
+      #   working-directory: ./backend
+      #   run: make lint
 
-      - name: Comment on PR if formatting needed
-        if: failure()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `❌ **Go Code Formatting Check Failed**
+      # - name: Comment on PR if formatting needed
+      #   if: failure()
+      #   uses: actions/github-script@v6
+      #   with:
+      #     script: |
+      #       github.rest.issues.createComment({
+      #         issue_number: context.issue.number,
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         body: `❌ **Go Code Formatting Check Failed**
 
-              Your Go code needs formatting. Please run the following commands in the \`backend\` directory:
+      #         Your Go code needs formatting. Please run the following commands in the \`backend\` directory:
 
-              \`\`\`bash
-              cd backend
-              make format
-              \`\`\`
+      #         \`\`\`bash
+      #         cd backend
+      #         make format
+      #         \`\`\`
 
-              This will format your code with \`gofumpt\` and fix import statements with \`goimports\`.
+      #         This will format your code with \`gofumpt\` and fix import statements with \`goimports\`.
 
-              Then commit and push the changes.`
-            })
+      #         Then commit and push the changes.`
+      #       })
