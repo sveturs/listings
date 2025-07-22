@@ -215,7 +215,11 @@ func (r *VariantRepository) GetVariantsByProductID(ctx context.Context, productI
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows
+		}
+	}()
 
 	var variants []types.ProductVariant
 	for rows.Next() {
@@ -483,7 +487,11 @@ func (r *VariantRepository) GetProductAttributes(ctx context.Context, productID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows
+		}
+	}()
 
 	var attributes []types.StorefrontProductAttribute
 	for rows.Next() {

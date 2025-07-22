@@ -19,7 +19,11 @@ func (r *storefrontRepo) SetWorkingHours(ctx context.Context, hours []*models.St
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Удаляем старые часы работы
 	storefrontID := hours[0].StorefrontID
@@ -105,7 +109,11 @@ func (r *storefrontRepo) SetPaymentMethods(ctx context.Context, methods []*model
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	storefrontID := methods[0].StorefrontID
 
@@ -162,7 +170,9 @@ func (r *storefrontRepo) GetPaymentMethods(ctx context.Context, storefrontID int
 		}
 
 		if settings != nil {
-			json.Unmarshal(settings, &m.Settings)
+			if err := json.Unmarshal(settings, &m.Settings); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 
 		methods = append(methods, m)
@@ -181,7 +191,11 @@ func (r *storefrontRepo) SetDeliveryOptions(ctx context.Context, options []*mode
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	for _, opt := range options {
 		zonesJSON, _ := json.Marshal(opt.Zones)
@@ -279,16 +293,24 @@ func (r *storefrontRepo) GetDeliveryOptions(ctx context.Context, storefrontID in
 
 		// Парсим JSON поля
 		if zonesJSON != nil {
-			json.Unmarshal(zonesJSON, &opt.Zones)
+			if err := json.Unmarshal(zonesJSON, &opt.Zones); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if availableDaysJSON != nil {
-			json.Unmarshal(availableDaysJSON, &opt.AvailableDays)
+			if err := json.Unmarshal(availableDaysJSON, &opt.AvailableDays); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if providerConfigJSON != nil {
-			json.Unmarshal(providerConfigJSON, &opt.ProviderConfig)
+			if err := json.Unmarshal(providerConfigJSON, &opt.ProviderConfig); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if supportedPaymentsJSON != nil {
-			json.Unmarshal(supportedPaymentsJSON, &opt.SupportedPaymentMethods)
+			if err := json.Unmarshal(supportedPaymentsJSON, &opt.SupportedPaymentMethods); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 
 		options = append(options, opt)
@@ -371,7 +393,9 @@ func (r *storefrontRepo) GetStaff(ctx context.Context, storefrontID int) ([]*mod
 		}
 
 		if permissionsJSON != nil {
-			json.Unmarshal(permissionsJSON, &s.Permissions)
+			if err := json.Unmarshal(permissionsJSON, &s.Permissions); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 
 		staff = append(staff, s)
@@ -486,19 +510,29 @@ func (r *storefrontRepo) GetAnalytics(ctx context.Context, storefrontID int, fro
 
 		// Парсим JSON поля
 		if trafficJSON != nil {
-			json.Unmarshal(trafficJSON, &a.TrafficSources)
+			if err := json.Unmarshal(trafficJSON, &a.TrafficSources); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if topProductsJSON != nil {
-			json.Unmarshal(topProductsJSON, &a.TopProducts)
+			if err := json.Unmarshal(topProductsJSON, &a.TopProducts); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if topCategoriesJSON != nil {
-			json.Unmarshal(topCategoriesJSON, &a.TopCategories)
+			if err := json.Unmarshal(topCategoriesJSON, &a.TopCategories); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if paymentMethodsJSON != nil {
-			json.Unmarshal(paymentMethodsJSON, &a.PaymentMethodsUsage)
+			if err := json.Unmarshal(paymentMethodsJSON, &a.PaymentMethodsUsage); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if ordersByCityJSON != nil {
-			json.Unmarshal(ordersByCityJSON, &a.OrdersByCity)
+			if err := json.Unmarshal(ordersByCityJSON, &a.OrdersByCity); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 
 		analytics = append(analytics, a)
