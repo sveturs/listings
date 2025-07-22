@@ -1,4 +1,22 @@
 {
+  "countries": {
+    "Сербия": "Serbia",
+    "Serbia": "Serbia",
+    "Россия": "Russia",
+    "Russia": "Russia",
+    "США": "USA",
+    "USA": "USA",
+    "Германия": "Germany",
+    "Germany": "Germany",
+    "Франция": "France",
+    "France": "France",
+    "Италия": "Italy",
+    "Italy": "Italy",
+    "Испания": "Spain",
+    "Spain": "Spain",
+    "Великобритания": "United Kingdom",
+    "United Kingdom": "United Kingdom"
+  },
   "common": {
     "next": "Next",
     "back": "Back",
@@ -64,6 +82,7 @@
     "page": "Page",
     "processing": "Processing...",
     "optional": "Optional",
+    "progress": "Progress",
     "buy": "Buy",
     "comingSoon": "Coming Soon",
     "popular": "Popular",
@@ -2285,6 +2304,7 @@
       "maxImagesError": "You can upload maximum 5 images",
       "addImage": "Add Image",
       "categoryAttributes": "Category Attributes",
+      "categoryAttributesDescription": "Fill in the specific attributes for this category",
       "noAttributesForCategory": "No specific attributes for this category",
       "addProductDescription": "Add new products to your storefront catalog",
       "productNamePlaceholder": "Enter product name",
@@ -2315,6 +2335,7 @@
       "requiredFieldsInfo": "Fields marked with * are required",
       "noAttributesTitle": "No Additional Attributes",
       "noAttributesMessage": "This category doesn't have any specific attributes",
+      "specifications": "Specifications",
       "filters": "Filters",
       "bulk": {
         "selectMode": "Select Mode"

@@ -76,12 +76,21 @@ function productReducer(
       };
 
     case 'SET_CATEGORY':
+      // Clear completed steps after category (steps 2, 3, 4)
+      const newCompletedSteps = new Set(state.completedSteps);
+      newCompletedSteps.delete(2); // Attributes step
+      newCompletedSteps.delete(3); // Photos step
+      newCompletedSteps.delete(4); // Preview step
+      
       return {
         ...state,
         category: action.payload,
+        attributes: {}, // Clear attributes when category changes
+        completedSteps: newCompletedSteps,
         productData: {
           ...state.productData,
           category_id: action.payload.id || 0,
+          attributes: {}, // Clear attributes in productData too
         },
       };
 

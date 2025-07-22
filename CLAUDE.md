@@ -1,6 +1,28 @@
 # CLAUDE.md
 - НИКОГДА НЕ ДОБАВЛЯЙ Claude в авторы или соавторы. к примеру как ты сейчас захотел сделать: "Generated with [Claude Code](https://claude.ai/code)"
 
+## ⚠️ КРИТИЧЕСКИ ВАЖНОЕ ПРАВИЛО: Изменения в базе данных
+
+**ВСЕ изменения структуры и данных в базе данных должны производиться ТОЛЬКО через миграции!**
+
+- ❌ **ЗАПРЕЩЕНО** выполнять прямые SQL запросы для изменения схемы или данных
+- ✅ **ОБЯЗАТЕЛЬНО** создавать миграции в директории `backend/migrations/`
+- ✅ **ОБЯЗАТЕЛЬНО** создавать как up, так и down миграции
+- ✅ **ОБЯЗАТЕЛЬНО** тестировать откат миграций
+
+Пример: Если нужно изменить данные в таблице, создай миграцию:
+```bash
+# НЕ ДЕЛАЙ ТАК:
+psql -c "UPDATE table SET ..."
+
+# ДЕЛАЙ ТАК:
+# 1. Создай файлы миграции
+backend/migrations/000XXX_description.up.sql
+backend/migrations/000XXX_description.down.sql
+
+# 2. Примени миграцию через мигратор
+```
+
 ## Работа с API документацией
 
 Для экономии контекста используй swagger.json через JSON MCP:
@@ -21,6 +43,36 @@
 
 # Получить схему модели
 Извлеки схему модели MarketplaceListing из swagger.
+
+## ⚠️ КРИТИЧЕСКИ ВАЖНОЕ ПРАВИЛО: Управление процессами и screen сессиями
+
+**ВСЕГДА закрывайте старые процессы и screen сессии перед запуском новых!**
+
+PostgreSQL имеет лимит в 100 подключений, а каждый экземпляр backend создаёт пул до 50 подключений. 
+Множественные экземпляры быстро исчерпают лимит и вызовут ошибку "too many clients already".
+
+### Правильная последовательность запуска backend:
+```bash
+# 1. СНАЧАЛА останови все процессы на порту 3000
+/home/dim/.local/bin/kill-port-3000.sh
+
+# 2. Закрой ВСЕ старые screen сессии backend
+screen -ls | grep backend-3000 | awk '{print $1}' | xargs -I {} screen -S {} -X quit
+screen -wipe  # очистить мёртвые сессии
+
+# 3. ТОЛЬКО ПОТОМ запускай новый экземпляр
+screen -dmS backend-3000 bash -c 'cd /data/hostel-booking-system/backend && go run ./cmd/api/main.go 2>&1 | tee /tmp/backend.log'
+```
+
+### Мониторинг подключений к БД:
+```bash
+# Проверить количество текущих подключений
+psql "postgres://postgres:password@localhost:5432/svetubd?sslmode=disable" -c "SELECT COUNT(*) FROM pg_stat_activity;"
+
+# Если подключений больше 90 - это критично!
+# Перезапусти PostgreSQL для сброса всех подключений:
+sudo systemctl restart postgresql
+```
 
 ## Проект: Sve Tu Platform - Marketplace
 

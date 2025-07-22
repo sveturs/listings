@@ -143,9 +143,22 @@ type StorefrontServiceImpl struct {
 
 // NewStorefrontService создает новый сервис витрин
 func NewStorefrontService(services ServicesInterface) StorefrontService {
-	return &StorefrontServiceImpl{
+	service := &StorefrontServiceImpl{
 		services: services,
 	}
+	
+	// Инициализируем репозиторий сразу
+	if services != nil && services.Storage() != nil {
+		repoInterface := services.Storage().Storefront()
+		if storefrontRepo, ok := repoInterface.(postgres.StorefrontRepository); ok {
+			service.repo = storefrontRepo
+			logger.Info().Msg("Storefront repository initialized in NewStorefrontService")
+		} else {
+			logger.Error().Str("type", fmt.Sprintf("%T", repoInterface)).Msg("Failed to cast storefront repository in NewStorefrontService")
+		}
+	}
+	
+	return service
 }
 
 // SetServices устанавливает ссылку на services после инициализации
@@ -165,22 +178,34 @@ func (s *StorefrontServiceImpl) SetServices(services ServicesInterface) {
 
 // CreateStorefront создает новую витрину
 func (s *StorefrontServiceImpl) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
+	logger.Info().Int("userID", userID).Str("name", dto.Name).Msg("CreateStorefront: начало создания витрины")
+	
+	// Проверяем инициализацию репозитория
+	if s.repo == nil {
+		logger.Error().Msg("CreateStorefront: репозиторий не инициализирован")
+		return nil, ErrRepositoryNotInitialized
+	}
+	
 	// Проверяем может ли пользователь создать витрину
 	canCreate, err := s.canCreateStorefront(ctx, userID)
 	if err != nil {
+		logger.Error().Err(err).Int("userID", userID).Msg("CreateStorefront: ошибка проверки прав")
 		return nil, fmt.Errorf("ошибка проверки прав: %w", err)
 	}
 	if !canCreate {
-		return nil, errors.New("пользователь уже имеет максимальное количество витрин")
+		logger.Warn().Int("userID", userID).Msg("CreateStorefront: превышен лимит витрин")
+		return nil, ErrStorefrontLimitReached
 	}
 
 	// Дополняем DTO
 	dto.Slug = s.generateSlug(dto.Name)
 	dto.UserID = userID
+	logger.Info().Str("slug", dto.Slug).Msg("CreateStorefront: сгенерирован slug")
 
 	// Создаем витрину
 	storefront, err := s.repo.Create(ctx, dto)
 	if err != nil {
+		logger.Error().Err(err).Str("slug", dto.Slug).Msg("CreateStorefront: ошибка создания витрины в БД")
 		return nil, fmt.Errorf("ошибка создания витрины: %w", err)
 	}
 
@@ -514,26 +539,39 @@ func (s *StorefrontServiceImpl) CheckFeatureAvailability(ctx context.Context, st
 // Helper методы
 
 func (s *StorefrontServiceImpl) canCreateStorefront(ctx context.Context, userID int) (bool, error) {
+	logger.Info().Int("userID", userID).Msg("canCreateStorefront: проверка возможности создания витрины")
+	
 	// Получаем текущие витрины пользователя
 	currentStorefronts, err := s.ListUserStorefronts(ctx, userID)
 	if err != nil {
+		logger.Error().Err(err).Int("userID", userID).Msg("canCreateStorefront: ошибка получения списка витрин")
 		return false, err
 	}
+	logger.Info().Int("userID", userID).Int("count", len(currentStorefronts)).Msg("canCreateStorefront: текущее количество витрин")
 
 	// TODO: получить план пользователя
 	userPlan := models.SubscriptionPlanStarter
 
 	limits, ok := planLimits[userPlan]
 	if !ok {
+		logger.Error().Str("plan", string(userPlan)).Msg("canCreateStorefront: неизвестный план")
 		return false, nil
 	}
 
 	// Проверяем лимит
 	if limits.MaxStorefronts == -1 {
+		logger.Info().Msg("canCreateStorefront: безлимитный план")
 		return true, nil // Unlimited
 	}
 
-	return len(currentStorefronts) < limits.MaxStorefronts, nil
+	canCreate := len(currentStorefronts) < limits.MaxStorefronts
+	logger.Info().
+		Int("current", len(currentStorefronts)).
+		Int("limit", limits.MaxStorefronts).
+		Bool("canCreate", canCreate).
+		Msg("canCreateStorefront: результат проверки")
+		
+	return canCreate, nil
 }
 
 func (s *StorefrontServiceImpl) generateSlug(name string) string {

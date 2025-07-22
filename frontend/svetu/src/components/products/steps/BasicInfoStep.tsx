@@ -27,9 +27,23 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
   });
 
   useEffect(() => {
-    // Синхронизируем с глобальным состоянием
-    setProductData(formData);
-  }, [formData, setProductData]);
+    // Синхронизируем с глобальным состоянием при изменении отдельных полей
+    const timeoutId = setTimeout(() => {
+      setProductData(formData);
+    }, 500); // Debounce для предотвращения слишком частых обновлений
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    formData.name,
+    formData.description,
+    formData.price,
+    formData.currency,
+    formData.stock_quantity,
+    formData.sku,
+    formData.barcode,
+    formData.is_active,
+    setProductData,
+  ]);
 
   const handleChange = (
     e: React.ChangeEvent<
