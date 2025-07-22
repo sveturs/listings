@@ -20,22 +20,29 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
   const t = useTranslations('marketplace');
 
   // Форматирование адреса с учетом приватности
-  const formatAddressWithPrivacy = (address: string, privacyLevel?: string): string => {
+  const formatAddressWithPrivacy = (
+    address: string,
+    privacyLevel?: string
+  ): string => {
     if (!address) return '';
 
     if (privacyLevel === 'exact') {
       return address;
     }
 
-    const parts = address.split(',').map(part => part.trim());
+    const parts = address.split(',').map((part) => part.trim());
 
     switch (privacyLevel) {
       case 'approximate':
       case 'street':
         // Убираем номер дома
         if (parts.length > 2) {
-          const streetPart = parts[0].replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '').trim();
-          return streetPart ? [streetPart, ...parts.slice(1)].join(', ') : parts.slice(1).join(', ');
+          const streetPart = parts[0]
+            .replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '')
+            .trim();
+          return streetPart
+            ? [streetPart, ...parts.slice(1)].join(', ')
+            : parts.slice(1).join(', ');
         }
         return parts.slice(1).join(', ');
 
@@ -203,7 +210,9 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
               </svg>
               <span>
                 {formatAddressWithPrivacy(
-                  parsedData?.address || parsedData?.location || parsedMetadata?.address,
+                  parsedData?.address ||
+                    parsedData?.location ||
+                    parsedMetadata?.address,
                   parsedData?.locationPrivacy
                 )}
               </span>

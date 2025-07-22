@@ -2227,7 +2227,16 @@
       "slug_placeholder": "vash-magazin",
       "description": "Описание",
       "description_placeholder": "Опишите ваш бизнес, товары и услуги",
-      "business_type": "Тип бизнеса"
+      "business_type": "Тип бизнеса",
+      "logo": "Логотип",
+      "logo_hint": "Изображение вашего бренда",
+      "choose_logo": "Выбрать логотип",
+      "logo_requirements": "JPG, PNG или WebP. Макс. 5MB. Рекомендуется квадратное изображение.",
+      "banner": "Баннер",
+      "banner_hint": "Обложка вашей витрины",
+      "click_to_upload_banner": "Нажмите для загрузки баннера",
+      "change_banner": "Изменить баннер",
+      "banner_requirements": "JPG, PNG или WebP. Макс. 10MB. Рекомендуемый размер: 1200x400px."
     },
     "business_details": {
       "title": "Данные о бизнесе",
@@ -2300,6 +2309,8 @@
       "slug_required": "URL магазина должен быть не менее 3 символов",
       "slug_invalid": "URL магазина может содержать только строчные буквы, цифры и дефисы",
       "description_required": "Описание должно быть не менее 20 символов",
+      "logo_too_large": "Размер логотипа не должен превышать 5MB",
+      "banner_too_large": "Размер баннера не должен превышать 10MB",
       "email_invalid": "Пожалуйста, введите корректный email адрес",
       "email_required": "Email адрес обязателен",
       "email_duplicate": "Этот email уже добавлен",

@@ -103,22 +103,29 @@ export default function ListingPage({ params }: Props) {
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   // Форматирование адреса с учетом приватности
-  const formatAddressWithPrivacy = (address: string, privacyLevel?: string): string => {
+  const formatAddressWithPrivacy = (
+    address: string,
+    privacyLevel?: string
+  ): string => {
     if (!address) return '';
 
     if (privacyLevel === 'exact') {
       return address;
     }
 
-    const parts = address.split(',').map(part => part.trim());
+    const parts = address.split(',').map((part) => part.trim());
 
     switch (privacyLevel) {
       case 'approximate':
       case 'street':
         // Убираем номер дома
         if (parts.length > 2) {
-          const streetPart = parts[0].replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '').trim();
-          return streetPart ? [streetPart, ...parts.slice(1)].join(', ') : parts.slice(1).join(', ');
+          const streetPart = parts[0]
+            .replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '')
+            .trim();
+          return streetPart
+            ? [streetPart, ...parts.slice(1)].join(', ')
+            : parts.slice(1).join(', ');
         }
         return parts.slice(1).join(', ');
 
@@ -424,7 +431,10 @@ export default function ListingPage({ params }: Props) {
                         d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
-                    {formatAddressWithPrivacy(listing.location, listing.location_privacy)}
+                    {formatAddressWithPrivacy(
+                      listing.location,
+                      listing.location_privacy
+                    )}
                   </p>
                 )}
               </div>

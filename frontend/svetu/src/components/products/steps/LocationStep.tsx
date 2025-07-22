@@ -72,12 +72,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
 
     setLocation(locationData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    useStorefrontLocation,
-    individualLocation,  
-    privacyLevel,
-    showOnMap,
-  ]);
+  }, [useStorefrontLocation, individualLocation, privacyLevel, showOnMap]);
 
   const handleLocationTypeChange = (useStorefront: boolean) => {
     setUseStorefrontLocation(useStorefront);

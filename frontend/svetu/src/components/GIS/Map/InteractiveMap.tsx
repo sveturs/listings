@@ -459,7 +459,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         clearTimeout(hidePopupTimer.current);
         hidePopupTimer.current = null;
       }
-      
+
       // Закрываем попап выбранного маркера при наведении на кластер
       setInternalSelectedMarker(null);
 

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { useCreateStorefrontContext } from '@/contexts/CreateStorefrontContext';
 
 interface BasicInfoStepProps {
@@ -12,6 +13,10 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
   const t = useTranslations();
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-generate slug from name
   useEffect(() => {
@@ -23,6 +28,48 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
       updateFormData({ slug });
     }
   }, [formData.name, formData.slug, updateFormData]);
+
+  // Handle logo upload
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({
+          ...errors,
+          logo: t('create_storefront.errors.logo_too_large'),
+        });
+        return;
+      }
+      updateFormData({ logoFile: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setErrors({ ...errors, logo: '' });
+    }
+  };
+
+  // Handle banner upload
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setErrors({
+          ...errors,
+          banner: t('create_storefront.errors.banner_too_large'),
+        });
+        return;
+      }
+      updateFormData({ bannerFile: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBannerPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setErrors({ ...errors, banner: '' });
+    }
+  };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -162,6 +209,148 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
                 {t('create_storefront.business_types.other')}
               </option>
             </select>
+          </div>
+
+          {/* Logo Upload */}
+          <div className="form-control w-full mt-6">
+            <label className="label">
+              <span className="label-text">
+                {t('create_storefront.basic_info.logo')}
+              </span>
+              <span className="label-text-alt text-base-content/60">
+                {t('create_storefront.basic_info.logo_hint')}
+              </span>
+            </label>
+            <div className="flex items-center gap-4">
+              <div
+                className="avatar cursor-pointer group"
+                onClick={() => logoInputRef.current?.click()}
+              >
+                <div className="w-24 h-24 rounded-xl ring-2 ring-base-300 overflow-hidden bg-base-200 group-hover:ring-primary transition-all">
+                  {logoPreview ? (
+                    <Image
+                      src={logoPreview}
+                      alt="Logo preview"
+                      width={96}
+                      height={96}
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <svg
+                        className="w-8 h-8 text-base-content/40"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleLogoChange}
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline"
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  {t('create_storefront.basic_info.choose_logo')}
+                </button>
+                <p className="text-xs text-base-content/60 mt-1">
+                  {t('create_storefront.basic_info.logo_requirements')}
+                </p>
+              </div>
+            </div>
+            {errors.logo && (
+              <label className="label">
+                <span className="label-text-alt text-error">{errors.logo}</span>
+              </label>
+            )}
+          </div>
+
+          {/* Banner Upload */}
+          <div className="form-control w-full mt-6">
+            <label className="label">
+              <span className="label-text">
+                {t('create_storefront.basic_info.banner')}
+              </span>
+              <span className="label-text-alt text-base-content/60">
+                {t('create_storefront.basic_info.banner_hint')}
+              </span>
+            </label>
+            <div
+              className="relative h-32 bg-base-200 rounded-xl overflow-hidden cursor-pointer group"
+              onClick={() => bannerInputRef.current?.click()}
+            >
+              {bannerPreview ? (
+                <Image
+                  src={bannerPreview}
+                  alt="Banner preview"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <svg
+                    className="w-12 h-12 text-base-content/40 mb-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span className="text-sm text-base-content/60">
+                    {t('create_storefront.basic_info.click_to_upload_banner')}
+                  </span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="text-white text-sm font-medium">
+                  {t('create_storefront.basic_info.change_banner')}
+                </span>
+              </div>
+            </div>
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleBannerChange}
+            />
+            <p className="text-xs text-base-content/60 mt-2">
+              {t('create_storefront.basic_info.banner_requirements')}
+            </p>
+            {errors.banner && (
+              <label className="label">
+                <span className="label-text-alt text-error">
+                  {errors.banner}
+                </span>
+              </label>
+            )}
           </div>
 
           <div className="card-actions justify-end mt-6">

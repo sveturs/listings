@@ -197,6 +197,57 @@ class StorefrontApiService {
     });
   }
 
+  /**
+   * Загрузка логотипа витрины
+   */
+  async uploadLogo(storefrontId: number, file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    const response = await fetch(
+      `${config.api.baseUrl}/api/v1/storefronts/${storefrontId}/logo`,
+      {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to upload logo');
+    }
+
+    const data = await response.json();
+    return { url: data.logo_url || data.url };
+  }
+
+  /**
+   * Загрузка баннера витрины
+   */
+  async uploadBanner(
+    storefrontId: number,
+    file: File
+  ): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('banner', file);
+
+    const response = await fetch(
+      `${config.api.baseUrl}/api/v1/storefronts/${storefrontId}/banner`,
+      {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to upload banner');
+    }
+
+    const data = await response.json();
+    return { url: data.banner_url || data.url };
+  }
+
   // Поиск и фильтрация
 
   /**
