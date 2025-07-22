@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"backend/internal/proj/gis/types"
+	"backend/internal/logger"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
-
-	"backend/internal/proj/gis/types"
 )
 
 // PostGISRepository репозиторий для работы с пространственными данными
