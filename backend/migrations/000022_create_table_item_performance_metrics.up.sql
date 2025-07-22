@@ -20,7 +20,7 @@ CREATE TABLE public.item_performance_metrics (
     period_end timestamp with time zone NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT item_performance_metrics_item_type_check CHECK (((item_type)::text = ANY ((ARRAY['marketplace'::character varying, 'storefront'::character varying])::text[])))
+    CONSTRAINT item_performance_metrics_item_type_check CHECK (((item_type)::text = ANY (ARRAY[('marketplace'::character varying)::text, ('storefront'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.item_performance_metrics_id_seq OWNED BY public.item_performance_metrics.id;

@@ -18,7 +18,7 @@ CREATE TABLE public.user_behavior_events (
     "position" integer,
     metadata jsonb DEFAULT '{}'::jsonb,
     created_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT user_behavior_events_item_type_check CHECK (((item_type)::text = ANY ((ARRAY['marketplace'::character varying, 'storefront'::character varying, NULL::character varying])::text[])))
+    CONSTRAINT user_behavior_events_item_type_check CHECK (((item_type)::text = ANY (ARRAY[('marketplace'::character varying)::text, ('storefront'::character varying)::text, (NULL::character varying)::text])))
 );
 
 ALTER SEQUENCE public.user_behavior_events_id_seq OWNED BY public.user_behavior_events.id;

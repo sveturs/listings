@@ -82,3 +82,5 @@ CREATE TRIGGER refresh_category_counts_update AFTER UPDATE ON public.marketplace
 CREATE TRIGGER trg_new_listing_price_history AFTER INSERT ON public.marketplace_listings FOR EACH ROW EXECUTE FUNCTION public.update_price_history('create');
 
 CREATE TRIGGER trg_update_listing_price_history AFTER UPDATE OF price ON public.marketplace_listings FOR EACH ROW WHEN ((old.price IS DISTINCT FROM new.price)) EXECUTE FUNCTION public.update_price_history('update');
+
+CREATE TRIGGER trigger_marketplace_listings_cache_refresh AFTER INSERT OR DELETE OR UPDATE ON public.marketplace_listings FOR EACH ROW EXECUTE FUNCTION public.trigger_refresh_map_cache();

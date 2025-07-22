@@ -27,7 +27,7 @@ CREATE TABLE public.marketplace_orders (
     delivered_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT marketplace_orders_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'paid'::character varying, 'shipped'::character varying, 'delivered'::character varying, 'completed'::character varying, 'disputed'::character varying, 'cancelled'::character varying, 'refunded'::character varying])::text[])))
+    CONSTRAINT marketplace_orders_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('paid'::character varying)::text, ('shipped'::character varying)::text, ('delivered'::character varying)::text, ('completed'::character varying)::text, ('disputed'::character varying)::text, ('cancelled'::character varying)::text, ('refunded'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.marketplace_orders_id_seq OWNED BY public.marketplace_orders.id;
@@ -44,7 +44,7 @@ CREATE INDEX idx_marketplace_orders_listing_id ON public.marketplace_orders USIN
 
 CREATE INDEX idx_marketplace_orders_payment_transaction_id ON public.marketplace_orders USING btree (payment_transaction_id);
 
-CREATE INDEX idx_marketplace_orders_protection ON public.marketplace_orders USING btree (protection_expires_at) WHERE ((status)::text = ANY ((ARRAY['delivered'::character varying, 'shipped'::character varying])::text[]));
+CREATE INDEX idx_marketplace_orders_protection ON public.marketplace_orders USING btree (protection_expires_at) WHERE ((status)::text = ANY (ARRAY[('delivered'::character varying)::text, ('shipped'::character varying)::text]));
 
 CREATE INDEX idx_marketplace_orders_protection_expires_at ON public.marketplace_orders USING btree (protection_expires_at) WHERE (protection_expires_at IS NOT NULL);
 

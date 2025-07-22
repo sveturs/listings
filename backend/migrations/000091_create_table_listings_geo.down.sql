@@ -13,4 +13,5 @@ DROP INDEX IF EXISTS public.idx_listings_geo_location;
 DROP INDEX IF EXISTS public.idx_listings_geo_municipality;
 DROP INDEX IF EXISTS public.idx_listings_geo_privacy;
 DROP INDEX IF EXISTS public.idx_listings_geo_verified;
+DROP TRIGGER IF EXISTS trigger_listings_geo_updated_at ON public.listings_geo;
 DROP TRIGGER IF EXISTS trigger_update_listings_geo_updated_at ON public.listings_geo;

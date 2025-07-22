@@ -31,7 +31,7 @@ CREATE TABLE public.reviews (
     seller_confirmed boolean DEFAULT false,
     has_active_dispute boolean DEFAULT false,
     CONSTRAINT reviews_rating_check CHECK (((rating >= 1) AND (rating <= 5))),
-    CONSTRAINT reviews_status_check CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'published'::character varying, 'hidden'::character varying])::text[])))
+    CONSTRAINT reviews_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('published'::character varying)::text, ('hidden'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.reviews_id_seq OWNED BY public.reviews.id;

@@ -20,8 +20,8 @@ CREATE TABLE public.review_disputes (
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     updated_at timestamp without time zone DEFAULT now() NOT NULL,
     resolved_at timestamp without time zone,
-    CONSTRAINT review_disputes_dispute_reason_check CHECK (((dispute_reason)::text = ANY ((ARRAY['not_a_customer'::character varying, 'false_information'::character varying, 'deal_cancelled'::character varying, 'spam'::character varying, 'other'::character varying])::text[]))),
-    CONSTRAINT review_disputes_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'in_review'::character varying, 'resolved_keep_review'::character varying, 'resolved_remove_review'::character varying, 'resolved_remove_verification'::character varying, 'cancelled'::character varying])::text[])))
+    CONSTRAINT review_disputes_dispute_reason_check CHECK (((dispute_reason)::text = ANY (ARRAY[('not_a_customer'::character varying)::text, ('false_information'::character varying)::text, ('deal_cancelled'::character varying)::text, ('spam'::character varying)::text, ('other'::character varying)::text]))),
+    CONSTRAINT review_disputes_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('in_review'::character varying)::text, ('resolved_keep_review'::character varying)::text, ('resolved_remove_review'::character varying)::text, ('resolved_remove_verification'::character varying)::text, ('cancelled'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.review_disputes_id_seq OWNED BY public.review_disputes.id;

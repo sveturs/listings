@@ -22,7 +22,7 @@ CREATE TABLE public.chat_attachments (
     thumbnail_url text,
     metadata jsonb,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chat_attachments_file_type_check CHECK (((file_type)::text = ANY ((ARRAY['image'::character varying, 'video'::character varying, 'document'::character varying])::text[])))
+    CONSTRAINT chat_attachments_file_type_check CHECK (((file_type)::text = ANY (ARRAY[('image'::character varying)::text, ('video'::character varying)::text, ('document'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.chat_attachments_id_seq OWNED BY public.chat_attachments.id;

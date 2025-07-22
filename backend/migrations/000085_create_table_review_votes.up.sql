@@ -5,7 +5,7 @@ CREATE TABLE public.review_votes (
     user_id integer NOT NULL,
     vote_type character varying(20) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT review_votes_vote_type_check CHECK (((vote_type)::text = ANY ((ARRAY['helpful'::character varying, 'not_helpful'::character varying])::text[])))
+    CONSTRAINT review_votes_vote_type_check CHECK (((vote_type)::text = ANY (ARRAY[('helpful'::character varying)::text, ('not_helpful'::character varying)::text])))
 );
 
 ALTER TABLE ONLY public.review_votes

@@ -23,7 +23,7 @@ CREATE TABLE public.merchant_payouts (
     updated_at timestamp with time zone DEFAULT now(),
     processed_at timestamp with time zone,
     CONSTRAINT merchant_payouts_amount_positive CHECK ((amount > (0)::numeric)),
-    CONSTRAINT merchant_payouts_status_valid CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'processing'::character varying, 'completed'::character varying, 'failed'::character varying])::text[])))
+    CONSTRAINT merchant_payouts_status_valid CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('processing'::character varying)::text, ('completed'::character varying)::text, ('failed'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.merchant_payouts_id_seq OWNED BY public.merchant_payouts.id;

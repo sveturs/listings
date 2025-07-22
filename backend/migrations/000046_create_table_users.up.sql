@@ -27,7 +27,7 @@ CREATE TABLE public.users (
     country character varying(100),
     password character varying(255),
     provider character varying(50) DEFAULT 'email'::character varying,
-    CONSTRAINT users_account_status_check CHECK (((account_status)::text = ANY ((ARRAY['active'::character varying, 'inactive'::character varying, 'suspended'::character varying])::text[])))
+    CONSTRAINT users_account_status_check CHECK (((account_status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text, ('suspended'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;

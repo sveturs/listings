@@ -271,6 +271,16 @@ BEGIN
 END;
 $$;
 
+CREATE FUNCTION public.cleanup_unified_geo() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    DELETE FROM unified_geo 
+    WHERE source_type = 'storefront_product' AND source_id = OLD.id;
+    RETURN OLD;
+END;
+$$;
+
 CREATE FUNCTION public.expand_search_query(query_text text, query_language character varying DEFAULT 'ru'::character varying) RETURNS text
     LANGUAGE plpgsql
     AS $$
@@ -716,6 +726,16 @@ BEGIN
 END;
 $$;
 
+CREATE FUNCTION public.trigger_refresh_map_cache() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Use pg_notify to trigger async refresh
+    PERFORM pg_notify('refresh_map_cache', '');
+    RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
 CREATE FUNCTION public.trigger_update_listings_on_attribute_translation_change() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -1150,6 +1170,15 @@ CREATE FUNCTION public.update_transliteration_rules_updated_at() RETURNS trigger
     AS $$
 BEGIN
     NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+CREATE FUNCTION public.update_unified_geo_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$;

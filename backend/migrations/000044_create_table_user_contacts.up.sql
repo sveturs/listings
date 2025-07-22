@@ -17,7 +17,7 @@ CREATE TABLE public.user_contacts (
     added_from_chat_id integer,
     notes text,
     CONSTRAINT user_contacts_check CHECK ((user_id <> contact_user_id)),
-    CONSTRAINT user_contacts_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying, 'blocked'::character varying])::text[])))
+    CONSTRAINT user_contacts_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text, ('blocked'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.user_contacts_id_seq OWNED BY public.user_contacts.id;

@@ -10,7 +10,7 @@ CREATE TABLE public.rating_cache (
     verified_percentage integer DEFAULT 0,
     recent_trend character varying(10),
     calculated_at timestamp without time zone DEFAULT now(),
-    CONSTRAINT rating_cache_recent_trend_check CHECK (((recent_trend)::text = ANY ((ARRAY['up'::character varying, 'down'::character varying, 'stable'::character varying])::text[])))
+    CONSTRAINT rating_cache_recent_trend_check CHECK (((recent_trend)::text = ANY (ARRAY[('up'::character varying)::text, ('down'::character varying)::text, ('stable'::character varying)::text])))
 );
 
 CREATE INDEX idx_rating_cache_type_rating ON public.rating_cache USING btree (entity_type, average_rating DESC);

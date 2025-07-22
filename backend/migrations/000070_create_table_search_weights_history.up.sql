@@ -16,7 +16,7 @@ CREATE TABLE public.search_weights_history (
     change_metadata jsonb DEFAULT '{}'::jsonb,
     changed_by integer,
     changed_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT search_weights_history_change_reason_check CHECK (((change_reason)::text = ANY ((ARRAY['manual'::character varying, 'optimization'::character varying, 'rollback'::character varying, 'initialization'::character varying])::text[])))
+    CONSTRAINT search_weights_history_change_reason_check CHECK (((change_reason)::text = ANY (ARRAY[('manual'::character varying)::text, ('optimization'::character varying)::text, ('rollback'::character varying)::text, ('initialization'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.search_weights_history_id_seq OWNED BY public.search_weights_history.id;
