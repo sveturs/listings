@@ -1451,7 +1451,11 @@ func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float6
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("неверный статус ответа: %d", resp.StatusCode)

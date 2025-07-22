@@ -248,7 +248,9 @@ func (s *OrderService) CreateOrderFromRequest(ctx context.Context, req CreateOrd
 	paymentResult, err := s.paymentService.CreatePayment(ctx, paymentReq)
 	if err != nil {
 		// Отменяем заказ если платеж не создался
-		s.orderRepo.UpdateStatus(ctx, order.ID, models.MarketplaceOrderStatusCancelled, "Payment creation failed", nil)
+		if err := s.orderRepo.UpdateStatus(ctx, order.ID, models.MarketplaceOrderStatusCancelled, "Payment creation failed", nil); err != nil {
+			logger.Error().Err(err).Msg("Failed to update order status")
+		}
 		return nil, nil, errors.Wrap(err, "failed to create payment")
 	}
 
@@ -257,7 +259,11 @@ func (s *OrderService) CreateOrderFromRequest(ctx context.Context, req CreateOrd
 	// TODO: Обновить payment_transaction_id в БД
 
 	// 5. Отправляем уведомление продавцу
-	go s.notificationSvc.SendOrderCreated(ctx, order)
+	go func() {
+		if err := s.notificationSvc.SendOrderCreated(ctx, order); err != nil {
+			logger.Error().Err(err).Msg("Failed to send order created notification")
+		}
+	}()
 
 	return order, paymentResult, nil
 }
