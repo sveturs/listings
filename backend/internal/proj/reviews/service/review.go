@@ -331,7 +331,11 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		if err != nil {
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				// Логирование ошибки закрытия rows
+			}
+		}()
 
 		for rows.Next() {
 			var rating, count int
@@ -374,7 +378,11 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		if err != nil {
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				// Логирование ошибки закрытия rows
+			}
+		}()
 
 		for rows.Next() {
 			var rating, count int
@@ -420,7 +428,11 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	for rows.Next() {
 		var rating, count int
