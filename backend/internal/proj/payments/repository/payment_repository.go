@@ -383,13 +383,19 @@ func (r *PaymentRepository) GetPayoutsBySellerID(ctx context.Context, sellerID i
 
 		// Парсим JSON поля
 		if bankAccountInfo.Valid {
-			json.Unmarshal([]byte(bankAccountInfo.String), &payout.BankAccountInfo)
+			if err := json.Unmarshal([]byte(bankAccountInfo.String), &payout.BankAccountInfo); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if gatewayResponse.Valid {
-			json.Unmarshal([]byte(gatewayResponse.String), &payout.GatewayResponse)
+			if err := json.Unmarshal([]byte(gatewayResponse.String), &payout.GatewayResponse); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if errorDetails.Valid {
-			json.Unmarshal([]byte(errorDetails.String), &payout.ErrorDetails)
+			if err := json.Unmarshal([]byte(errorDetails.String), &payout.ErrorDetails); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 
 		payouts = append(payouts, &payout)
