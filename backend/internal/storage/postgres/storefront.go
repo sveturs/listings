@@ -92,6 +92,9 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 
 	// Создаем витрину
 	var storefront models.Storefront
+	// Преобразуем название страны в код
+	countryCode := getCountryCode(dto.Location.Country)
+	
 	err = tx.QueryRow(ctx, `
 		INSERT INTO storefronts (
 			user_id, slug, name, description,
@@ -110,11 +113,11 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 		)
 		RETURNING id, created_at, updated_at
 	`,
-		dto.UserID, generateSlug(dto.Name), dto.Name, dto.Description,
+		dto.UserID, dto.Slug, dto.Name, dto.Description,
 		"", "", dto.Theme,
 		dto.Phone, dto.Email, dto.Website,
-		dto.Location.FullAddress, dto.Location.City, dto.Location.PostalCode, dto.Location.Country,
-		dto.Location.BuildingLat, dto.Location.BuildingLng,
+		dto.Location.FullAddress, dto.Location.City, dto.Location.PostalCode, countryCode,
+		dto.Location.UserLat, dto.Location.UserLng,
 		dto.Settings, dto.SEOMeta,
 		false, models.SubscriptionPlanStarter, 3.00,
 	).Scan(&storefront.ID, &storefront.CreatedAt, &storefront.UpdatedAt)
@@ -711,4 +714,42 @@ func getOwnerPermissions() models.JSONB {
 
 func boolPtr(b bool) *bool {
 	return &b
+}
+
+// getCountryCode преобразует название страны в ISO код
+func getCountryCode(countryName string) string {
+	// Маппинг названий стран на ISO коды
+	countryMap := map[string]string{
+		"Сербия":         "RS",
+		"Serbia":         "RS",
+		"Россия":         "RU",
+		"Russia":         "RU",
+		"США":            "US",
+		"USA":            "US",
+		"United States":  "US",
+		"Германия":       "DE",
+		"Germany":        "DE",
+		"Франция":        "FR",
+		"France":         "FR",
+		"Италия":         "IT",
+		"Italy":          "IT",
+		"Испания":        "ES",
+		"Spain":          "ES",
+		"Великобритания": "GB",
+		"United Kingdom": "GB",
+		"UK":             "GB",
+	}
+	
+	// Пробуем найти код по названию
+	if code, ok := countryMap[countryName]; ok {
+		return code
+	}
+	
+	// Если уже передан код из 2 символов, возвращаем его
+	if len(countryName) == 2 {
+		return strings.ToUpper(countryName)
+	}
+	
+	// По умолчанию возвращаем код Сербии
+	return "RS"
 }
