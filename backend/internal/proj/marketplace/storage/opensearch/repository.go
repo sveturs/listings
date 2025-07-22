@@ -1142,7 +1142,7 @@ func processDiscountData(doc map[string]interface{}, listing *models.Marketplace
 
 		if len(matches) > 1 && len(priceMatches) > 1 {
 			discountPercent, _ := strconv.Atoi(matches[1])
-			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+			oldPriceStr := strings.ReplaceAll(priceMatches[1], ",", ".")
 			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
 
 			if listing.Metadata == nil {

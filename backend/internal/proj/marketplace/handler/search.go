@@ -455,17 +455,7 @@ func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 		}
 	}
 
-	// Получаем язык из контекста или из запроса
-	lang := c.Query("lang")
-	if lang == "" {
-		if ctxLang, ok := c.Locals("language").(string); ok && ctxLang != "" {
-			lang = ctxLang
-		} else {
-			lang = "ru" // Язык по умолчанию
-		}
-	}
-
-	// Получаем предложения для текущего языка
+	// Получаем предложения
 	suggestions, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, size)
 	if err != nil {
 		logger.Error().Err(err).Str("prefix", prefix).Msg("Failed to get suggestions")

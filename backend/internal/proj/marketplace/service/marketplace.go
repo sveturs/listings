@@ -629,7 +629,7 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
 			// Рассчитываем продолжительность действия цены
 			var duration time.Duration
 			if entry.EffectiveTo == nil {
-				duration = time.Now().Sub(entry.EffectiveFrom)
+				duration = time.Since(entry.EffectiveFrom)
 			} else {
 				duration = entry.EffectiveTo.Sub(entry.EffectiveFrom)
 			}
@@ -727,7 +727,7 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
 
 		if len(matches) > 1 && len(priceMatches) > 1 {
 			discountPercent, _ := strconv.Atoi(matches[1])
-			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+			oldPriceStr := strings.ReplaceAll(priceMatches[1], ",", ".")
 			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
 
 			// Проверяем реальность скидки

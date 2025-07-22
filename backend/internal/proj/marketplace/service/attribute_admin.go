@@ -120,7 +120,7 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 		}
 
 		// Автоматически переводим опции, если они есть
-		if attribute.Options != nil && len(attribute.Options) > 0 {
+		if len(attribute.Options) > 0 {
 			var options []map[string]interface{}
 			if err := json.Unmarshal(attribute.Options, &options); err == nil {
 				for _, option := range options {
@@ -160,7 +160,7 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 	}
 
 	// Сохраняем переводы для опций атрибута
-	if attribute.OptionTranslations != nil && len(attribute.OptionTranslations) > 0 {
+	if len(attribute.OptionTranslations) > 0 {
 		for lang, options := range attribute.OptionTranslations {
 			for optionKey, optionValue := range options {
 				translation := &models.Translation{
@@ -258,7 +258,7 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 	}
 
 	// Обновляем переводы для опций атрибута
-	if attribute.OptionTranslations != nil && len(attribute.OptionTranslations) > 0 {
+	if len(attribute.OptionTranslations) > 0 {
 		for lang, options := range attribute.OptionTranslations {
 			for optionKey, optionValue := range options {
 				translation := &models.Translation{
