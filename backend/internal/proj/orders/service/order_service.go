@@ -767,6 +767,9 @@ func isValidStatusTransition(from, to models.OrderStatus) bool {
 func convertToJSONB(v interface{}) models.JSONB {
 	data, _ := json.Marshal(v)
 	var result models.JSONB
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		// В случае ошибки возвращаем пустой JSONB
+		return models.JSONB{}
+	}
 	return result
 }
