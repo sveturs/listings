@@ -1696,10 +1696,10 @@ func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, 
 			return []string{}, nil
 		}
 		defer func() {
-		if err := rows.Close(); err != nil {
-			// Логирование ошибки закрытия rows
-		}
-	}()
+			if err := rows.Close(); err != nil {
+				// Логирование ошибки закрытия rows
+			}
+		}()
 
 		var results []string
 		for rows.Next() {

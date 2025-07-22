@@ -56,10 +56,10 @@ func (s *SpatialService) SearchListings(ctx context.Context, params types.Search
 			originalAddress := listings[i].Address
 			formattedAddress := utils.FormatAddressWithPrivacy(listings[i].Address, listings[i].PrivacyLevel)
 			listings[i].Address = formattedAddress
-			
+
 			// Логируем форматирование для отладки
 			if originalAddress != formattedAddress {
-				fmt.Printf("🔒 Address privacy applied: ID=%d, Privacy=%s, Original=%s, Formatted=%s\n", 
+				fmt.Printf("🔒 Address privacy applied: ID=%d, Privacy=%s, Original=%s, Formatted=%s\n",
 					listings[i].ID, listings[i].PrivacyLevel, originalAddress, formattedAddress)
 			}
 		}

@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"strings"
 	"regexp"
+	"strings"
 )
 
 // FormatAddressWithPrivacy форматирует адрес в соответствии с уровнем приватности
@@ -31,7 +31,7 @@ func FormatAddressWithPrivacy(address string, privacyLevel string) string {
 			re := regexp.MustCompile(`\b\d+[а-яА-Яa-zA-Z]?\b`)
 			parts[0] = re.ReplaceAllString(parts[0], "")
 			parts[0] = strings.TrimSpace(parts[0])
-			
+
 			// Если после удаления номера первая часть пустая, убираем её
 			if parts[0] == "" && len(parts) > 1 {
 				parts = parts[1:]
@@ -74,19 +74,19 @@ func GetCoordinatesPrivacy(lat, lng float64, privacyLevel string) (float64, floa
 	case "exact":
 		// Точные координаты
 		return lat, lng
-		
+
 	case "approximate":
 		// Округляем до ~100 метров
 		return roundToDecimalPlaces(lat, 3), roundToDecimalPlaces(lng, 3)
-		
+
 	case "city_only":
 		// Округляем до ~10 км
 		return roundToDecimalPlaces(lat, 1), roundToDecimalPlaces(lng, 1)
-		
+
 	case "hidden":
 		// Возвращаем 0,0 для скрытых координат
 		return 0, 0
-		
+
 	default:
 		return lat, lng
 	}

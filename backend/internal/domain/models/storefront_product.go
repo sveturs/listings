@@ -23,7 +23,7 @@ type StorefrontProduct struct {
 	SoldCount     int                    `json:"sold_count" db:"sold_count"`
 	CreatedAt     time.Time              `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time              `json:"updated_at" db:"updated_at"`
-	
+
 	// Location fields
 	HasIndividualLocation bool     `json:"has_individual_location" db:"has_individual_location"`
 	IndividualAddress     *string  `json:"individual_address,omitempty" db:"individual_address"`
@@ -238,7 +238,7 @@ type CreateProductRequest struct {
 	StockQuantity int                    `json:"stock_quantity" validate:"min=0"`
 	IsActive      bool                   `json:"is_active"`
 	Attributes    map[string]interface{} `json:"attributes,omitempty"`
-	
+
 	// Location fields
 	HasIndividualLocation *bool    `json:"has_individual_location,omitempty"`
 	IndividualAddress     *string  `json:"individual_address,omitempty"`
@@ -259,7 +259,7 @@ type UpdateProductRequest struct {
 	StockQuantity *int                   `json:"stock_quantity,omitempty" validate:"omitempty,min=0"`
 	IsActive      *bool                  `json:"is_active,omitempty"`
 	Attributes    map[string]interface{} `json:"attributes,omitempty"`
-	
+
 	// Location fields
 	HasIndividualLocation *bool    `json:"has_individual_location,omitempty"`
 	IndividualAddress     *string  `json:"individual_address,omitempty"`
