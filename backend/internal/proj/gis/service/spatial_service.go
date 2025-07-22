@@ -12,6 +12,7 @@ import (
 
 	"backend/internal/proj/gis/repository"
 	"backend/internal/proj/gis/types"
+	"backend/pkg/utils"
 )
 
 // SpatialService сервис для работы с пространственными данными
@@ -47,6 +48,21 @@ func (s *SpatialService) SearchListings(ctx context.Context, params types.Search
 	listings, totalCount, err := s.repo.SearchListings(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search listings: %w", err)
+	}
+
+	// Применяем форматирование адреса согласно приватности для каждого объявления
+	for i := range listings {
+		if listings[i].Address != "" && listings[i].PrivacyLevel != "" {
+			originalAddress := listings[i].Address
+			formattedAddress := utils.FormatAddressWithPrivacy(listings[i].Address, listings[i].PrivacyLevel)
+			listings[i].Address = formattedAddress
+			
+			// Логируем форматирование для отладки
+			if originalAddress != formattedAddress {
+				fmt.Printf("🔒 Address privacy applied: ID=%d, Privacy=%s, Original=%s, Formatted=%s\n", 
+					listings[i].ID, listings[i].PrivacyLevel, originalAddress, formattedAddress)
+			}
+		}
 	}
 
 	// Формируем ответ

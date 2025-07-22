@@ -15898,8 +15898,24 @@ components:
         description:
           minLength: 10
           type: string
+        has_individual_location:
+          description: Location fields
+          type: boolean
+        individual_address:
+          type: string
+        individual_latitude:
+          type: number
+        individual_longitude:
+          type: number
         is_active:
           type: boolean
+        location_privacy:
+          enum:
+            - exact
+            - street
+            - district
+            - city
+          type: string
         name:
           maxLength: 255
           minLength: 3
@@ -15907,6 +15923,8 @@ components:
         price:
           minimum: 0
           type: number
+        show_on_map:
+          type: boolean
         sku:
           type: string
         stock_quantity:
@@ -17755,6 +17773,9 @@ components:
           type: string
         description:
           type: string
+        has_individual_location:
+          description: Location fields
+          type: boolean
         id:
           type: integer
         images:
@@ -17763,12 +17784,22 @@ components:
             $ref: "#/components/schemas/backend_internal_domain_models.StorefrontProductIma\
               ge"
           type: array
+        individual_address:
+          type: string
+        individual_latitude:
+          type: number
+        individual_longitude:
+          type: number
         is_active:
           type: boolean
+        location_privacy:
+          type: string
         name:
           type: string
         price:
           type: number
+        show_on_map:
+          type: boolean
         sku:
           type: string
         sold_count:
@@ -18078,8 +18109,24 @@ components:
         description:
           minLength: 10
           type: string
+        has_individual_location:
+          description: Location fields
+          type: boolean
+        individual_address:
+          type: string
+        individual_latitude:
+          type: number
+        individual_longitude:
+          type: number
         is_active:
           type: boolean
+        location_privacy:
+          enum:
+            - exact
+            - street
+            - district
+            - city
+          type: string
         name:
           maxLength: 255
           minLength: 3
@@ -18087,6 +18134,8 @@ components:
         price:
           minimum: 0
           type: number
+        show_on_map:
+          type: boolean
         sku:
           type: string
         stock_quantity:

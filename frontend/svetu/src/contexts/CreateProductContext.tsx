@@ -19,6 +19,19 @@ interface ProductState {
   attributes: Record<number, any>;
   images: File[];
 
+  // Данные о местоположении
+  location?: {
+    useStorefrontLocation: boolean;
+    individualAddress?: string;
+    latitude?: number;
+    longitude?: number;
+    city?: string;
+    region?: string;
+    country?: string;
+    privacyLevel?: 'exact' | 'street' | 'district' | 'city';
+    showOnMap?: boolean;
+  };
+
   // Метаданные
   isDraft: boolean;
   isValid: boolean;
@@ -33,6 +46,7 @@ type ProductAction =
   | { type: 'SET_PRODUCT_DATA'; payload: Partial<CreateProductRequest> }
   | { type: 'SET_ATTRIBUTE'; payload: { id: number; value: any } }
   | { type: 'SET_IMAGES'; payload: File[] }
+  | { type: 'SET_LOCATION'; payload: ProductState['location'] }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: { field: string; message: string } }
   | { type: 'CLEAR_ERROR'; payload: string }
@@ -55,6 +69,11 @@ const initialState: ProductState = {
   },
   attributes: {},
   images: [],
+  location: {
+    useStorefrontLocation: true,
+    privacyLevel: 'exact',
+    showOnMap: true,
+  },
   isDraft: false,
   isValid: false,
   errors: {},
@@ -81,7 +100,7 @@ function productReducer(
       newCompletedSteps.delete(2); // Attributes step
       newCompletedSteps.delete(3); // Photos step
       newCompletedSteps.delete(4); // Preview step
-      
+
       return {
         ...state,
         category: action.payload,
@@ -118,6 +137,9 @@ function productReducer(
 
     case 'SET_IMAGES':
       return { ...state, images: action.payload };
+
+    case 'SET_LOCATION':
+      return { ...state, location: action.payload };
 
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
@@ -161,6 +183,7 @@ interface CreateProductContextType {
   setProductData: (data: Partial<CreateProductRequest>) => void;
   setAttribute: (id: number, value: any) => void;
   setImages: (images: File[]) => void;
+  setLocation: (location: ProductState['location']) => void;
   setError: (field: string, message: string) => void;
   clearError: (field: string) => void;
   clearAllErrors: () => void;
@@ -180,7 +203,7 @@ export function CreateProductProvider({ children }: { children: ReactNode }) {
   };
 
   const nextStep = () => {
-    const next = Math.min(state.currentStep + 1, 4); // Максимум 5 шагов (0-4)
+    const next = Math.min(state.currentStep + 1, 5); // Максимум 6 шагов (0-5)
     dispatch({ type: 'SET_STEP', payload: next });
   };
 
@@ -209,6 +232,10 @@ export function CreateProductProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_IMAGES', payload: images });
   };
 
+  const setLocation = (location: ProductState['location']) => {
+    dispatch({ type: 'SET_LOCATION', payload: location });
+  };
+
   const setError = (field: string, message: string) => {
     dispatch({ type: 'SET_ERROR', payload: { field, message } });
   };
@@ -231,11 +258,21 @@ export function CreateProductProvider({ children }: { children: ReactNode }) {
           state.productData.description &&
           state.productData.price > 0
         );
-      case 2: // Атрибуты
+      case 2: // Местоположение
+        if (state.location?.useStorefrontLocation) {
+          return true; // Если используется адрес витрины, дополнительная валидация не нужна
+        }
+        // Если индивидуальный адрес, проверяем наличие координат
+        return !!(
+          state.location?.latitude &&
+          state.location?.longitude &&
+          state.location?.individualAddress
+        );
+      case 3: // Атрибуты
         return true; // Атрибуты опциональны
-      case 3: // Фотографии
+      case 4: // Фотографии
         return state.images.length > 0;
-      case 4: // Превью
+      case 5: // Превью
         return true;
       default:
         return false;
@@ -263,6 +300,7 @@ export function CreateProductProvider({ children }: { children: ReactNode }) {
     setProductData,
     setAttribute,
     setImages,
+    setLocation,
     setError,
     clearError,
     clearAllErrors,

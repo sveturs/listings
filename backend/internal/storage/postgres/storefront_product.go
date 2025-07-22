@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 
 	"github.com/lib/pq"
 )
@@ -25,6 +26,8 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
 			p.is_active, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
+			p.has_individual_location, p.individual_address, p.individual_latitude,
+			p.individual_longitude, p.location_privacy, p.show_on_map,
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
 		LEFT JOIN marketplace_categories c ON p.category_id = c.id
@@ -136,6 +139,8 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			&p.CategoryID, &p.SKU, &p.Barcode, &p.StockQuantity, &p.StockStatus,
 			&p.IsActive, &attributesJSON, &p.ViewCount, &p.SoldCount,
 			&p.CreatedAt, &p.UpdatedAt,
+			&p.HasIndividualLocation, &p.IndividualAddress, &p.IndividualLatitude,
+			&p.IndividualLongitude, &p.LocationPrivacy, &p.ShowOnMap,
 			&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
 		)
 		if err != nil {
@@ -199,6 +204,8 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
 			p.is_active, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
+			p.has_individual_location, p.individual_address, p.individual_latitude,
+			p.individual_longitude, p.location_privacy, p.show_on_map,
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
 		LEFT JOIN marketplace_categories c ON p.category_id = c.id
@@ -216,6 +223,8 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 		&p.CategoryID, &p.SKU, &p.Barcode, &p.StockQuantity, &p.StockStatus,
 		&p.IsActive, &attributesJSON, &p.ViewCount, &p.SoldCount,
 		&p.CreatedAt, &p.UpdatedAt,
+		&p.HasIndividualLocation, &p.IndividualAddress, &p.IndividualLatitude,
+		&p.IndividualLongitude, &p.LocationPrivacy, &p.ShowOnMap,
 		&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
 	)
 
@@ -269,11 +278,21 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 
 // CreateStorefrontProduct creates a new product
 func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
+	// Log incoming request
+	logger.Info().
+		Int("storefront_id", storefrontID).
+		Str("name", req.Name).
+		Float64("price", req.Price).
+		Int("category_id", req.CategoryID).
+		Interface("attributes", req.Attributes).
+		Msg("Creating storefront product")
+
 	var attributesJSON []byte
 	if req.Attributes != nil {
 		var err error
 		attributesJSON, err = json.Marshal(req.Attributes)
 		if err != nil {
+			logger.Error().Err(err).Msg("Failed to marshal attributes")
 			return nil, fmt.Errorf("failed to marshal attributes: %w", err)
 		}
 	}
@@ -281,17 +300,45 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 	query := `
 		INSERT INTO storefront_products (
 			storefront_id, name, description, price, currency, category_id,
-			sku, barcode, stock_quantity, is_active, attributes
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			sku, barcode, stock_quantity, is_active, attributes,
+			has_individual_location, individual_address, individual_latitude, 
+			individual_longitude, location_privacy, show_on_map
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 		RETURNING id, stock_status, created_at, updated_at`
+
+	// Log query parameters
+	logger.Debug().
+		Int("storefront_id", storefrontID).
+		Str("name", req.Name).
+		Str("description", req.Description).
+		Float64("price", req.Price).
+		Str("currency", req.Currency).
+		Int("category_id", req.CategoryID).
+		Interface("sku", req.SKU).
+		Interface("barcode", req.Barcode).
+		Int("stock_quantity", req.StockQuantity).
+		Bool("is_active", req.IsActive).
+		Str("attributes_json", string(attributesJSON)).
+		Msg("Executing INSERT query")
+
+	// Prepare location values
+	hasIndividualLocation := req.HasIndividualLocation != nil && *req.HasIndividualLocation
+	showOnMap := req.ShowOnMap == nil || *req.ShowOnMap // Default true
 
 	var product models.StorefrontProduct
 	err := s.pool.QueryRow(
 		ctx, query,
 		storefrontID, req.Name, req.Description, req.Price, req.Currency, req.CategoryID,
 		req.SKU, req.Barcode, req.StockQuantity, req.IsActive, attributesJSON,
+		hasIndividualLocation, req.IndividualAddress, req.IndividualLatitude,
+		req.IndividualLongitude, req.LocationPrivacy, showOnMap,
 	).Scan(&product.ID, &product.StockStatus, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
+		logger.Error().
+			Err(err).
+			Int("storefront_id", storefrontID).
+			Str("name", req.Name).
+			Msg("Failed to create storefront product")
 		return nil, fmt.Errorf("failed to create storefront product: %w", err)
 	}
 
@@ -307,6 +354,12 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 	product.StockQuantity = req.StockQuantity
 	product.IsActive = req.IsActive
 	product.Attributes = req.Attributes
+	product.HasIndividualLocation = hasIndividualLocation
+	product.IndividualAddress = req.IndividualAddress
+	product.IndividualLatitude = req.IndividualLatitude
+	product.IndividualLongitude = req.IndividualLongitude
+	product.LocationPrivacy = req.LocationPrivacy
+	product.ShowOnMap = showOnMap
 
 	return &product, nil
 }
@@ -372,6 +425,42 @@ func (s *Database) UpdateStorefrontProduct(ctx context.Context, storefrontID, pr
 		}
 		setClauses = append(setClauses, fmt.Sprintf("attributes = $%d", argIndex))
 		args = append(args, attributesJSON)
+		argIndex++
+	}
+
+	if req.HasIndividualLocation != nil {
+		setClauses = append(setClauses, fmt.Sprintf("has_individual_location = $%d", argIndex))
+		args = append(args, *req.HasIndividualLocation)
+		argIndex++
+	}
+
+	if req.IndividualAddress != nil {
+		setClauses = append(setClauses, fmt.Sprintf("individual_address = $%d", argIndex))
+		args = append(args, req.IndividualAddress)
+		argIndex++
+	}
+
+	if req.IndividualLatitude != nil {
+		setClauses = append(setClauses, fmt.Sprintf("individual_latitude = $%d", argIndex))
+		args = append(args, req.IndividualLatitude)
+		argIndex++
+	}
+
+	if req.IndividualLongitude != nil {
+		setClauses = append(setClauses, fmt.Sprintf("individual_longitude = $%d", argIndex))
+		args = append(args, req.IndividualLongitude)
+		argIndex++
+	}
+
+	if req.LocationPrivacy != nil {
+		setClauses = append(setClauses, fmt.Sprintf("location_privacy = $%d", argIndex))
+		args = append(args, req.LocationPrivacy)
+		argIndex++
+	}
+
+	if req.ShowOnMap != nil {
+		setClauses = append(setClauses, fmt.Sprintf("show_on_map = $%d", argIndex))
+		args = append(args, *req.ShowOnMap)
 		argIndex++
 	}
 
@@ -508,9 +597,8 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 		return []models.StorefrontProductImage{}, nil
 	}
 
-	// Get images from both product images and variant images
+	// Get images from product images table
 	query := `
-		-- Get images from product images table
 		SELECT
 			spi.id,
 			spi.storefront_product_id,
@@ -528,29 +616,6 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 			spi.created_at
 		FROM storefront_product_images spi
 		WHERE spi.storefront_product_id = ANY($1)
-		
-		UNION ALL
-		
-		-- Get images from variant images
-		SELECT
-			spvi.id,
-			spv.product_id as storefront_product_id,
-			spvi.image_url,
-			COALESCE(spvi.thumbnail_url, spvi.image_url) as thumbnail_url,
-			spvi.display_order,
-			spvi.is_main as is_default,
-			'' as file_path,
-			'' as file_name,
-			0 as file_size,
-			'' as content_type,
-			'minio' as storage_type,
-			'storefronts' as storage_bucket,
-			spvi.image_url as public_url,
-			spvi.created_at
-		FROM storefront_product_variants spv
-		JOIN storefront_product_variant_images spvi ON spv.id = spvi.variant_id
-		WHERE spv.product_id = ANY($1) AND spv.is_active = true
-		
 		ORDER BY is_default DESC, display_order ASC`
 
 	rows, err := s.pool.Query(ctx, query, pq.Array(productIDs))

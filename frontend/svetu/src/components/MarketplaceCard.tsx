@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import config from '@/config';
 
 interface MarketplaceCardProps {
   item: MarketplaceItem;
@@ -76,8 +77,8 @@ export default function MarketplaceCard({
 
   const getImageUrl = (image?: MarketplaceImage) => {
     if (!image) return null;
-    // Возвращаем public_url как есть, SafeImage сам обработает путь
-    return image.public_url;
+    // Используем config.buildImageUrl для правильного формирования URL
+    return config.buildImageUrl(image.public_url);
   };
 
   const mainImage = item.images?.find((img) => img.is_main) || item.images?.[0];

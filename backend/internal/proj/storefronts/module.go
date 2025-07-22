@@ -1,6 +1,7 @@
 package storefronts
 
 import (
+	"backend/internal/logger"
 	"backend/internal/middleware"
 	"backend/internal/proj/global/service"
 	"backend/internal/proj/storefronts/handler"
@@ -49,7 +50,7 @@ func NewModule(services service.ServicesInterface) *Module {
 		storefrontHandler: handler.NewStorefrontHandler(storefrontSvc),
 		productHandler:    handler.NewProductHandler(productSvc),
 		importHandler:     handler.NewImportHandler(importSvc),
-		imageHandler:      handler.NewImageHandler(imageService),
+		imageHandler:      handler.NewImageHandler(imageService, productSvc),
 	}
 }
 
@@ -188,6 +189,11 @@ func (m *Module) getProductBySlug(c *fiber.Ctx) error {
 
 func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 	slug := c.Params("slug")
+	logger.Info().
+		Str("slug", slug).
+		Str("method", "createProductBySlug").
+		Msg("Starting product creation")
+
 	if slug == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Storefront slug is required",
@@ -197,6 +203,11 @@ func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 	// Получаем витрину через сервис по slug
 	storefront, err := m.services.Storefront().GetBySlug(c.Context(), slug)
 	if err != nil {
+		logger.Error().
+			Err(err).
+			Str("slug", slug).
+			Msg("Failed to get storefront")
+
 		if err == postgres.ErrNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "Storefront not found",
@@ -209,16 +220,29 @@ func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 		})
 	}
 
+	logger.Info().
+		Int("storefront_id", storefront.ID).
+		Int("owner_id", storefront.UserID).
+		Msg("Found storefront")
+
 	// Сохраняем ID в контекст
 	c.Locals("storefrontID", storefront.ID)
 
 	// Проверяем доступ
 	userID, ok := c.Locals("user_id").(int)
 	if !ok {
+		logger.Error().
+			Msg("User ID not found in context")
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "User ID not found in context",
 		})
 	}
+
+	logger.Info().
+		Int("user_id", userID).
+		Int("storefront_owner_id", storefront.UserID).
+		Bool("is_owner", storefront.UserID == userID).
+		Msg("Checking access")
 
 	// Проверяем, является ли пользователь владельцем или персоналом
 	if storefront.UserID != userID {

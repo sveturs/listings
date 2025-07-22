@@ -24,12 +24,69 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
 }) => {
   const t = useTranslations('map');
 
+  // Форматирование адреса с учетом приватности
+  const formatAddressWithPrivacy = (address: string, privacyLevel?: string): string => {
+    if (!address) return '';
+
+    if (privacyLevel === 'exact') {
+      return address;
+    }
+
+    const parts = address.split(',').map(part => part.trim());
+
+    switch (privacyLevel) {
+      case 'approximate':
+      case 'street':
+        // Убираем номер дома
+        if (parts.length > 2) {
+          const streetPart = parts[0].replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '').trim();
+          return streetPart ? [streetPart, ...parts.slice(1)].join(', ') : parts.slice(1).join(', ');
+        }
+        return parts.slice(1).join(', ');
+
+      case 'district':
+        // Оставляем только район и город
+        if (parts.length > 2) {
+          return parts.slice(-2).join(', ');
+        }
+        return address;
+
+      case 'city_only':
+      case 'city':
+        // Оставляем только город
+        if (parts.length > 1) {
+          return parts[parts.length - 1];
+        }
+        return address;
+
+      case 'hidden':
+        // Скрываем адрес полностью
+        return 'Адрес скрыт';
+
+      default:
+        return address;
+    }
+  };
+
   // Парсим JSON данные
   const parsedData = React.useMemo(() => {
     try {
-      return typeof marker.data === 'string'
+      const data = typeof marker.data === 'string'
         ? JSON.parse(marker.data)
         : marker.data;
+      
+      // Debug: логируем данные для проверки приватности
+      if (data?.address) {
+        console.log('🔍 MarkerHoverPopup debug:', {
+          address: data.address,
+          locationPrivacy: data.locationPrivacy,
+          location_privacy: data.location_privacy,
+          privacy_level: data.privacy_level,
+          allData: data
+        });
+      }
+      
+      return data;
     } catch {
       return marker.data || {};
     }
@@ -206,7 +263,10 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
                     />
                   </svg>
                   <span className="text-sm text-gray-600 line-clamp-1">
-                    {parsedData?.address || marker.data?.address}
+                    {formatAddressWithPrivacy(
+                      parsedData?.address || marker.data?.address,
+                      parsedData?.locationPrivacy || parsedData?.location_privacy || parsedData?.privacy_level
+                    )}
                   </span>
                 </div>
               )}

@@ -65,6 +65,8 @@ interface ListingData {
   created_at: string;
   views_count?: number;
   rating?: number;
+  individual_address?: string;
+  location_privacy?: string;
 }
 
 interface MapFilters {
@@ -455,6 +457,8 @@ const MapPage: React.FC = () => {
           // Добавляем новые поля
           views_count: item.views_count || 0,
           rating: item.rating || 0,
+          individual_address: item.individual_address || item.address,
+          location_privacy: item.privacy_level || item.location_privacy,
         }));
 
         console.log(
@@ -493,6 +497,8 @@ const MapPage: React.FC = () => {
             // Добавляем новые поля
             views_count: item.views_count || 0,
             rating: item.rating || 0,
+            individual_address: item.individual_address || item.address,
+            location_privacy: item.privacy_level || item.location_privacy,
           }));
         console.log(
           '🗺️ Search API results:',
@@ -632,10 +638,11 @@ const MapPage: React.FC = () => {
             price: listing.price,
             category: listing.category?.name || 'Unknown',
             image: (listing as any).images?.[0] || listing.images?.[0],
-            address:
+            address: listing.individual_address || listing.address ||
               `${listing.location.city || ''}, ${listing.location.country || ''}`
                 .trim()
                 .replace(/^,\s*|,\s*$/, ''),
+            locationPrivacy: listing.location_privacy,
             id: listing.id,
             icon: getCategoryIcon(listing.category?.name),
             views_count: (listing as any).views_count || 0,

@@ -51,14 +51,81 @@ export default function PreviewStep({
     await Promise.all(uploadPromises);
   };
 
+  // Маппинг значений privacy level из frontend в backend
+  const mapPrivacyLevel = (frontendLevel: string): string => {
+    const mapping: Record<string, string> = {
+      'exact': 'exact',
+      'street': 'approximate',
+      'district': 'approximate', 
+      'city': 'city_only'
+    };
+    return mapping[frontendLevel] || 'exact';
+  };
+
+  // Обработка адреса в соответствии с уровнем приватности
+  const formatAddressWithPrivacy = (address: string, privacyLevel?: string): string => {
+    if (!address) return '';
+    
+    // Для точного адреса возвращаем как есть
+    if (privacyLevel === 'exact') {
+      return address;
+    }
+
+    // Разбираем адрес на части
+    const parts = address.split(',').map(part => part.trim());
+    
+    switch (privacyLevel) {
+      case 'street':
+        // Убираем номер дома (первую часть), оставляем улицу и город
+        if (parts.length > 2) {
+          // Пытаемся найти улицу (обычно содержит слова как улица, ул., бульвар и т.д.)
+          const streetPart = parts[0].replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '').trim();
+          return streetPart ? [streetPart, ...parts.slice(1)].join(', ') : parts.slice(1).join(', ');
+        }
+        return parts.slice(1).join(', ');
+        
+      case 'district':
+        // Оставляем только район и город (убираем улицу и номер дома)
+        if (parts.length > 2) {
+          return parts.slice(-2).join(', ');
+        }
+        return address;
+        
+      case 'city':
+        // Оставляем только город
+        if (parts.length > 1) {
+          return parts[parts.length - 1];
+        }
+        return address;
+        
+      default:
+        return address;
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
 
+      // Подготавливаем данные для отправки, включая местоположение
+      const productDataWithLocation = {
+        ...state.productData,
+        ...(state.location && !state.location.useStorefrontLocation ? {
+          has_individual_location: true,
+          individual_address: state.location.individualAddress,
+          individual_latitude: state.location.latitude,
+          individual_longitude: state.location.longitude,
+          location_privacy: mapPrivacyLevel(state.location.privacyLevel || 'exact'),
+          show_on_map: state.location.showOnMap,
+        } : {
+          has_individual_location: false,
+        }),
+      };
+
       // Создаем товар
       const productResponse = await apiClient.post(
         `/api/v1/storefronts/slug/${storefrontSlug}/products`,
-        state.productData
+        productDataWithLocation
       );
 
       if (productResponse.data) {
@@ -349,6 +416,63 @@ export default function PreviewStep({
               </div>
             </div>
           )}
+          
+          {/* Местоположение */}
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h4 className="card-title text-lg mb-4 flex items-center gap-2">
+                <span className="text-xl">📍</span>
+                {t('storefronts.products.location')}
+              </h4>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-base-200">
+                  <span className="font-medium text-base-content/70">
+                    {t('storefronts.products.locationType')}:
+                  </span>
+                  <span className="text-base-content">
+                    {state.location?.useStorefrontLocation
+                      ? t('storefronts.products.storefrontLocation')
+                      : t('storefronts.products.individualLocation')}
+                  </span>
+                </div>
+                
+                {!state.location?.useStorefrontLocation && state.location?.individualAddress && (
+                  <>
+                    <div className="flex justify-between items-center py-2 border-b border-base-200">
+                      <span className="font-medium text-base-content/70">
+                        {t('storefronts.products.address')}:
+                      </span>
+                      <span className="text-base-content text-right max-w-[60%]">
+                        {formatAddressWithPrivacy(state.location.individualAddress || '', state.location.privacyLevel)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center py-2 border-b border-base-200">
+                      <span className="font-medium text-base-content/70">
+                        {t('storefronts.products.privacyLevel')}:
+                      </span>
+                      <span className="text-base-content">
+                        {state.location.privacyLevel === 'exact' && t('storefronts.products.privacy.exact')}
+                        {state.location.privacyLevel === 'street' && t('storefronts.products.privacy.street')}
+                        {state.location.privacyLevel === 'district' && t('storefronts.products.privacy.district')}
+                        {state.location.privacyLevel === 'city' && t('storefronts.products.privacy.city')}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center py-2">
+                      <span className="font-medium text-base-content/70">
+                        {t('storefronts.products.showOnMap')}:
+                      </span>
+                      <span className={`text-base-content ${state.location.showOnMap ? 'text-success' : 'text-error'}`}>
+                        {state.location.showOnMap ? t('common.yes') : t('common.no')}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

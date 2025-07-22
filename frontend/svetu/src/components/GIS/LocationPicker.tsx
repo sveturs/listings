@@ -1,16 +1,11 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import Map, { Marker } from 'react-map-gl';
 import SmartAddressInput from '@/components/GIS/SmartAddressInput';
 import { AddressGeocodingResult } from '@/hooks/useAddressGeocoding';
 import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
-
-// Динамически импортируем карту для избежания SSR проблем
-const Map = dynamic(() => import('react-map-gl'), { ssr: false });
-const Marker = dynamic(() => import('react-map-gl').then((mod) => mod.Marker), {
-  ssr: false,
-});
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface LocationData {
   latitude: number;
@@ -168,9 +163,22 @@ export default function LocationPicker({
   const handleMapClick = useCallback(
     (event: any) => {
       const { lng, lat } = event.lngLat;
+
+      // Сразу устанавливаем маркер для мгновенной обратной связи
+      const newLocation = {
+        latitude: lat,
+        longitude: lng,
+        address: 'Загрузка адреса...',
+        city: '',
+        region: '',
+        country: defaultCountry,
+        confidence: 0.5,
+      };
+
+      setSelectedLocation(newLocation);
       reverseGeocode(lat, lng);
     },
-    [reverseGeocode]
+    [reverseGeocode, defaultCountry]
   );
 
   return (
@@ -233,20 +241,28 @@ export default function LocationPicker({
               <div className="text-sm text-success-content/80 space-y-2">
                 <div>
                   <label className="font-medium">Адрес:</label>
-                  <input
-                    type="text"
-                    value={selectedLocation.address}
-                    onChange={(e) => {
-                      const updatedLocation = {
-                        ...selectedLocation,
-                        address: e.target.value,
-                      };
-                      setSelectedLocation(updatedLocation);
-                      onChange(updatedLocation);
-                    }}
-                    className="input input-sm input-bordered w-full mt-1"
-                    placeholder="Введите адрес"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={selectedLocation.address}
+                      onChange={(e) => {
+                        const updatedLocation = {
+                          ...selectedLocation,
+                          address: e.target.value,
+                        };
+                        setSelectedLocation(updatedLocation);
+                        onChange(updatedLocation);
+                      }}
+                      className="input input-sm input-bordered w-full mt-1"
+                      placeholder="Введите адрес"
+                      disabled={isReverseGeocoding}
+                    />
+                    {isReverseGeocoding && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        <div className="loading loading-spinner loading-xs"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="font-medium">Город:</label>
@@ -302,14 +318,19 @@ export default function LocationPicker({
                   latitude={selectedLocation.latitude}
                   anchor="bottom"
                 >
-                  <div className="relative">
-                    <MapPinIcon className="w-8 h-8 text-primary drop-shadow-lg" />
-                    {isReverseGeocoding && (
-                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
-                        <div className="loading loading-spinner loading-sm"></div>
-                      </div>
-                    )}
-                  </div>
+                  <svg
+                    width="40"
+                    height="40"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"
+                      fill="#DC2626"
+                    />
+                    <circle cx="12" cy="10" r="3" fill="white" />
+                  </svg>
                 </Marker>
               )}
             </Map>
@@ -323,20 +344,28 @@ export default function LocationPicker({
               <div className="text-sm text-success-content/80 space-y-2">
                 <div>
                   <label className="font-medium">Адрес:</label>
-                  <input
-                    type="text"
-                    value={selectedLocation.address}
-                    onChange={(e) => {
-                      const updatedLocation = {
-                        ...selectedLocation,
-                        address: e.target.value,
-                      };
-                      setSelectedLocation(updatedLocation);
-                      onChange(updatedLocation);
-                    }}
-                    className="input input-sm input-bordered w-full mt-1"
-                    placeholder="Введите адрес"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={selectedLocation.address}
+                      onChange={(e) => {
+                        const updatedLocation = {
+                          ...selectedLocation,
+                          address: e.target.value,
+                        };
+                        setSelectedLocation(updatedLocation);
+                        onChange(updatedLocation);
+                      }}
+                      className="input input-sm input-bordered w-full mt-1"
+                      placeholder="Введите адрес"
+                      disabled={isReverseGeocoding}
+                    />
+                    {isReverseGeocoding && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        <div className="loading loading-spinner loading-xs"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="font-medium">Город:</label>

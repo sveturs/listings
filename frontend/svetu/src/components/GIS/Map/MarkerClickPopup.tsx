@@ -19,6 +19,50 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
   const router = useRouter();
   const t = useTranslations('marketplace');
 
+  // Форматирование адреса с учетом приватности
+  const formatAddressWithPrivacy = (address: string, privacyLevel?: string): string => {
+    if (!address) return '';
+
+    if (privacyLevel === 'exact') {
+      return address;
+    }
+
+    const parts = address.split(',').map(part => part.trim());
+
+    switch (privacyLevel) {
+      case 'approximate':
+      case 'street':
+        // Убираем номер дома
+        if (parts.length > 2) {
+          const streetPart = parts[0].replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '').trim();
+          return streetPart ? [streetPart, ...parts.slice(1)].join(', ') : parts.slice(1).join(', ');
+        }
+        return parts.slice(1).join(', ');
+
+      case 'district':
+        // Оставляем только район и город
+        if (parts.length > 2) {
+          return parts.slice(-2).join(', ');
+        }
+        return address;
+
+      case 'city_only':
+      case 'city':
+        // Оставляем только город
+        if (parts.length > 1) {
+          return parts[parts.length - 1];
+        }
+        return address;
+
+      case 'hidden':
+        // Скрываем адрес полностью
+        return 'Адрес скрыт';
+
+      default:
+        return address;
+    }
+  };
+
   // Парсим JSON данные
   const parsedData = React.useMemo(() => {
     try {
@@ -158,9 +202,10 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                 />
               </svg>
               <span>
-                {parsedData?.address ||
-                  parsedData?.location ||
-                  parsedMetadata?.address}
+                {formatAddressWithPrivacy(
+                  parsedData?.address || parsedData?.location || parsedMetadata?.address,
+                  parsedData?.locationPrivacy
+                )}
               </span>
             </div>
           )}

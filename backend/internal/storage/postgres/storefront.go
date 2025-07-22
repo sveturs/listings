@@ -94,7 +94,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 	var storefront models.Storefront
 	// Преобразуем название страны в код
 	countryCode := getCountryCode(dto.Location.Country)
-	
+
 	err = tx.QueryRow(ctx, `
 		INSERT INTO storefronts (
 			user_id, slug, name, description,
@@ -739,17 +739,17 @@ func getCountryCode(countryName string) string {
 		"United Kingdom": "GB",
 		"UK":             "GB",
 	}
-	
+
 	// Пробуем найти код по названию
 	if code, ok := countryMap[countryName]; ok {
 		return code
 	}
-	
+
 	// Если уже передан код из 2 символов, возвращаем его
 	if len(countryName) == 2 {
 		return strings.ToUpper(countryName)
 	}
-	
+
 	// По умолчанию возвращаем код Сербии
 	return "RS"
 }
