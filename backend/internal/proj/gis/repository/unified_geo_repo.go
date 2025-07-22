@@ -13,6 +13,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+const (
+	orderByMicCreatedAt = " ORDER BY mic.created_at"
+)
+
 // UnifiedGeoRepository репозиторий для работы с unified geo system
 type UnifiedGeoRepository struct {
 	db *sqlx.DB
@@ -130,7 +134,7 @@ func (r *UnifiedGeoRepository) SearchListings(ctx context.Context, params types.
 		if params.Center != nil {
 			query += " ORDER BY distance"
 		} else {
-			query += " ORDER BY mic.created_at"
+			query += orderByMicCreatedAt
 		}
 	case "price":
 		query += " ORDER BY mic.price"

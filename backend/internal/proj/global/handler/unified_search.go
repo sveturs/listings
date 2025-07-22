@@ -21,6 +21,10 @@ import (
 	"backend/pkg/utils"
 )
 
+const (
+	sortOrderAsc = "asc"
+)
+
 // UnifiedSearchHandler обрабатывает унифицированные поисковые запросы
 type UnifiedSearchHandler struct {
 	services globalService.ServicesInterface
@@ -598,7 +602,7 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 	sort.Slice(items, func(i, j int) bool {
 		switch sortBy {
 		case "price":
-			if sortOrder == "asc" {
+			if sortOrder == sortOrderAsc {
 				return items[i].Price < items[j].Price
 			}
 			return items[i].Price > items[j].Price
@@ -607,13 +611,13 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 			if items[i].CreatedAt == nil || items[j].CreatedAt == nil {
 				return false
 			}
-			if sortOrder == "asc" {
+			if sortOrder == sortOrderAsc {
 				return items[i].CreatedAt.Before(*items[j].CreatedAt)
 			}
 			return items[i].CreatedAt.After(*items[j].CreatedAt)
 
 		case "popularity":
-			if sortOrder == "asc" {
+			if sortOrder == sortOrderAsc {
 				return items[i].ViewsCount < items[j].ViewsCount
 			}
 			return items[i].ViewsCount > items[j].ViewsCount

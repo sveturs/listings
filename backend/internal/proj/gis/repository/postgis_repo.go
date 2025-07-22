@@ -13,6 +13,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	orderByCreatedAtDesc = " ORDER BY created_at DESC"
+)
+
 // PostGISRepository репозиторий для работы с пространственными данными
 type PostGISRepository struct {
 	db *sqlx.DB
@@ -163,7 +167,7 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 	}
 
 	// Добавляем сортировку и лимит
-	query += " ORDER BY created_at DESC"
+	query += orderByCreatedAtDesc
 	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
 	args = append(args, params.Limit, params.Offset)
 

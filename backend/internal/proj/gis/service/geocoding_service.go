@@ -19,6 +19,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const (
+	mapboxGeocodingAPIURL = "https://api.mapbox.com/geocoding/v5/mapbox.places"
+)
+
 // GeocodingService сервис для геокодирования
 type GeocodingService struct {
 	db             *sqlx.DB
@@ -140,7 +144,7 @@ func (s *GeocodingService) SearchSuggestions(ctx context.Context, query string, 
 // ReverseGeocode обратное геокодирование
 func (s *GeocodingService) ReverseGeocode(ctx context.Context, point types.Point, language string) (*types.AddressSuggestion, error) {
 	// Формируем URL для обратного геокодирования
-	baseURL := "https://api.mapbox.com/geocoding/v5/mapbox.places"
+	baseURL := mapboxGeocodingAPIURL
 	params := url.Values{}
 	params.Set("access_token", s.mapboxToken)
 	params.Set("language", language)
@@ -227,7 +231,7 @@ func (s *GeocodingService) geocodeWithMapbox(ctx context.Context, req types.Geoc
 	}
 
 	// Формируем URL для MapBox Geocoding API
-	baseURL := "https://api.mapbox.com/geocoding/v5/mapbox.places"
+	baseURL := mapboxGeocodingAPIURL
 	params := url.Values{}
 	params.Set("access_token", s.mapboxToken)
 	params.Set("limit", "1")
@@ -333,7 +337,7 @@ func (s *GeocodingService) getFreshSuggestions(ctx context.Context, query string
 	}
 
 	// Формируем URL для MapBox Geocoding API
-	baseURL := "https://api.mapbox.com/geocoding/v5/mapbox.places"
+	baseURL := mapboxGeocodingAPIURL
 	params := url.Values{}
 	params.Set("access_token", s.mapboxToken)
 	params.Set("autocomplete", "true")
