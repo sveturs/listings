@@ -73,6 +73,10 @@ lint-errcheck:
 	@echo "Running errcheck linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=errcheck ./...
 
+lint-goconst:
+	@echo "Running goconst linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=goconst ./...
+
 pre-commit: format-check lint
 	@echo "✅ Pre-commit checks passed!"
 

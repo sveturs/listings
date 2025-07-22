@@ -13,6 +13,10 @@ import (
 	"backend/pkg/utils"
 )
 
+const (
+	bearerScheme = "Bearer"
+)
+
 // AuthRequiredJWT - основной метод аутентификации через JWT
 // Поддерживает как Bearer токены в заголовке, так и fallback на session cookies
 func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
@@ -100,7 +104,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	if authHeader != "" {
 		// Извлекаем токен из заголовка "Bearer <token>"
 		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && parts[0] == "Bearer" {
+		if len(parts) == 2 && parts[0] == bearerScheme {
 			tokenString := parts[1]
 
 			// Валидируем JWT токен
@@ -279,7 +283,7 @@ func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader != "" {
 		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && parts[0] == "Bearer" {
+		if len(parts) == 2 && parts[0] == bearerScheme {
 			claims, err := jwt.ValidateToken(parts[1], m.config.JWTSecret)
 			if err == nil {
 				c.Locals("user_id", claims.UserID)
@@ -314,7 +318,7 @@ func (m *Middleware) RefreshJWT(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader != "" {
 		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && parts[0] == "Bearer" {
+		if len(parts) == 2 && parts[0] == bearerScheme {
 			currentToken = parts[1]
 		}
 	}

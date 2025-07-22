@@ -9,6 +9,12 @@ import (
 )
 
 const (
+	httpMethodGet     = "GET"
+	httpMethodHead    = "HEAD"
+	httpMethodOptions = "OPTIONS"
+)
+
+const (
 	CSRFTokenLength = 32
 	CSRFCookieName  = "csrf_token"
 	CSRFHeaderName  = "X-CSRF-Token"
@@ -28,7 +34,7 @@ func (m *Middleware) CSRFProtection() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Пропускаем GET, HEAD, OPTIONS запросы
 		method := c.Method()
-		if method == "GET" || method == "HEAD" || method == "OPTIONS" {
+		if method == httpMethodGet || method == httpMethodHead || method == httpMethodOptions {
 			return c.Next()
 		}
 
