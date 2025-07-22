@@ -11,10 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"backend/internal/logger"
 	"backend/internal/proj/gis/repository"
 	"backend/internal/proj/gis/types"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
 )
 
 // GeocodingService сервис для геокодирования
@@ -25,6 +27,7 @@ type GeocodingService struct {
 	httpClient     *http.Client
 	maxSuggestions int
 	defaultTTL     time.Duration
+	logger         zerolog.Logger
 }
 
 // NewGeocodingService создает новый сервис геокодирования
@@ -56,6 +59,7 @@ func NewGeocodingService(db *sqlx.DB) *GeocodingService {
 		httpClient:     &http.Client{Timeout: 10 * time.Second},
 		maxSuggestions: maxSuggestions,
 		defaultTTL:     time.Duration(ttlHours) * time.Hour,
+		logger:         logger.Get().With().Str("service", "geocoding").Logger(),
 	}
 }
 

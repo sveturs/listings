@@ -22,7 +22,9 @@ import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
+	"backend/internal/logger"
 	"backend/internal/storage"
+	"github.com/rs/zerolog"
 	//	"net/url"
 )
 
@@ -32,6 +34,7 @@ type MarketplaceService struct {
 	OrderService       OrderServiceInterface
 	searchWeights      *config.SearchWeights
 	cache              CacheInterface
+	logger             zerolog.Logger
 }
 
 func NewMarketplaceService(storage storage.Storage, translationService TranslationServiceInterface, searchWeights *config.SearchWeights, cache CacheInterface) MarketplaceServiceInterface {
@@ -40,6 +43,7 @@ func NewMarketplaceService(storage storage.Storage, translationService Translati
 		translationService: translationService,
 		searchWeights:      searchWeights,
 		cache:              cache,
+		logger:             logger.Get().With().Str("service", "marketplace").Logger(),
 	}
 
 	// Создаем сервис заказов напрямую, избегая циклической зависимости

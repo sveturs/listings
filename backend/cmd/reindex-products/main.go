@@ -67,9 +67,7 @@ func main() {
 		logger.Fatal().Err(err).Msg("Failed to initialize storage")
 	}
 	defer func() {
-		if err := storage.Close(); err != nil {
-			logger.Error().Err(err).Msg("Failed to close storage")
-		}
+		storage.Close()
 	}()
 
 	// Get storefront product search repository
