@@ -315,7 +315,7 @@ func BenchmarkRedisCacheOperations(b *testing.B) {
 	}
 	defer func() {
 		if err := cache.Close(); err != nil {
-			t.Logf("Failed to close cache: %v", err)
+			b.Logf("Failed to close cache: %v", err)
 		}
 	}()
 

@@ -37,8 +37,8 @@ func (m *Migrator) Up() error {
 		return fmt.Errorf("error creating migrate instance: %w", err)
 	}
 	defer func() {
-		if err := migrator.Close(); err != nil {
-			logger.Warn().Err(err).Msg("Failed to close migrator")
+		if sourceErr, dbErr := migrator.Close(); sourceErr != nil || dbErr != nil {
+			logger.Warn().Interface("sourceErr", sourceErr).Interface("dbErr", dbErr).Msg("Failed to close migrator")
 		}
 	}()
 
@@ -59,8 +59,8 @@ func (m *Migrator) Down() error {
 		return fmt.Errorf("error creating migrate instance: %w", err)
 	}
 	defer func() {
-		if err := migrator.Close(); err != nil {
-			logger.Warn().Err(err).Msg("Failed to close migrator")
+		if sourceErr, dbErr := migrator.Close(); sourceErr != nil || dbErr != nil {
+			logger.Warn().Interface("sourceErr", sourceErr).Interface("dbErr", dbErr).Msg("Failed to close migrator")
 		}
 	}()
 
@@ -84,8 +84,8 @@ func (m *Migrator) UpTo(version string) error {
 		return fmt.Errorf("error creating migrate instance: %w", err)
 	}
 	defer func() {
-		if err := migrator.Close(); err != nil {
-			logger.Warn().Err(err).Msg("Failed to close migrator")
+		if sourceErr, dbErr := migrator.Close(); sourceErr != nil || dbErr != nil {
+			logger.Warn().Interface("sourceErr", sourceErr).Interface("dbErr", dbErr).Msg("Failed to close migrator")
 		}
 	}()
 
@@ -115,8 +115,8 @@ func (m *Migrator) DownTo(version string) error {
 		return fmt.Errorf("error creating migrate instance: %w", err)
 	}
 	defer func() {
-		if err := migrator.Close(); err != nil {
-			logger.Warn().Err(err).Msg("Failed to close migrator")
+		if sourceErr, dbErr := migrator.Close(); sourceErr != nil || dbErr != nil {
+			logger.Warn().Interface("sourceErr", sourceErr).Interface("dbErr", dbErr).Msg("Failed to close migrator")
 		}
 	}()
 
