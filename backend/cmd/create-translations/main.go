@@ -30,7 +30,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Failed to close database: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -59,7 +63,11 @@ func createCategoryTranslations(ctx context.Context, db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to query categories: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	translations := []Translation{}
 
@@ -149,7 +157,11 @@ func createAttributeTranslations(ctx context.Context, db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to query attributes: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	translations := []Translation{}
 

@@ -61,7 +61,11 @@ func testEndpoint(url string, token string) {
 	if err != nil {
 		log.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	fmt.Printf("Status Code: %d\n", resp.StatusCode)
 

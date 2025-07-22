@@ -23,13 +23,21 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Failed to close database connection: %v", err)
+		}
+	}()
 
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Fatal("Query failed:", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	cols, err := rows.Columns()
 	if err != nil {

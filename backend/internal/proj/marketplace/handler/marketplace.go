@@ -33,7 +33,9 @@ func (h *MarketplaceHandler) respondWithJSON(w http.ResponseWriter, statusCode i
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	w.Write(response)
+	if _, err := w.Write(response); err != nil {
+		h.logger.Error().Err(err).Msg("Failed to write response")
+	}
 }
 
 // respondWithError sends an error response in JSON format

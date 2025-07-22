@@ -95,7 +95,9 @@ func TestDebitSuccess(t *testing.T) {
 			Status:     "success",
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			t.Logf("Failed to encode response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -149,7 +151,9 @@ func TestDebitAPIError(t *testing.T) {
 			ErrorCode:    "INSUFFICIENT_FUNDS",
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			t.Logf("Failed to encode response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -203,7 +207,9 @@ func TestPreauthorizeSuccess(t *testing.T) {
 			RedirectURL: "https://payment.allsecure.rs/redirect/123",
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			t.Logf("Failed to encode response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -249,7 +255,9 @@ func TestCaptureSuccess(t *testing.T) {
 
 		// Проверяем тело запроса
 		var reqBody map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&reqBody)
+		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+			t.Logf("Failed to decode request body: %v", err)
+		}
 
 		if reqBody["uuid"] != "preauth-uuid-123" {
 			t.Errorf("Expected uuid preauth-uuid-123, got %v", reqBody["uuid"])
@@ -264,7 +272,9 @@ func TestCaptureSuccess(t *testing.T) {
 			Status:  "success",
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			t.Logf("Failed to encode response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -298,7 +308,9 @@ func TestRefundSuccess(t *testing.T) {
 			Status:  "success",
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			t.Logf("Failed to encode response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -323,7 +335,9 @@ func TestRefundSuccess(t *testing.T) {
 func TestHTTPError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Error"))
+		if _, err := w.Write([]byte("Internal Server Error")); err != nil {
+			t.Logf("Failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
