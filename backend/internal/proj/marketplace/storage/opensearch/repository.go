@@ -2360,13 +2360,13 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			sortField = fieldNameCreatedAt
 			sortOrder = sortOrderAsc
 		case fieldNamePrice:
-			sortField = "price"
+			sortField = fieldNamePrice
 			// sortOrder уже установлен из params.SortDirection выше
 		case "price_desc":
-			sortField = "price"
+			sortField = fieldNamePrice
 			sortOrder = sortOrderDesc
 		case "price_asc":
-			sortField = "price"
+			sortField = fieldNamePrice
 			sortOrder = sortOrderAsc
 		case "rating_desc":
 			logger.Info().Msgf("Применяем сортировку рейтинга по УБЫВАНИЮ")
