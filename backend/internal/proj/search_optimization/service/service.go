@@ -100,7 +100,9 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 		if r := recover(); r != nil {
 			s.logger.Error(fmt.Sprintf("Optimization process panicked: %v", r))
 			errorMsg := fmt.Sprintf("Internal error during optimization: %v", r)
-			s.repo.UpdateOptimizationSession(ctx, sessionID, "failed", nil, &errorMsg)
+			if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, "failed", nil, &errorMsg); updateErr != nil {
+				s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
+			}
 		}
 	}()
 
@@ -116,7 +118,9 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 		case <-ctx.Done():
 			// Контекст отменен, прекращаем оптимизацию
 			errorMsg := "optimization cancelled"
-			s.repo.UpdateOptimizationSession(ctx, sessionID, "cancelled", results, &errorMsg)
+			if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, "cancelled", results, &errorMsg); updateErr != nil {
+				s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
+			}
 			return
 		default:
 		}
@@ -136,7 +140,9 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 
 		// Обновление прогресса (каждые 10 полей)
 		if processedFields%10 == 0 {
-			s.repo.UpdateOptimizationSession(ctx, sessionID, "running", results, nil)
+			if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, "running", results, nil); updateErr != nil {
+				s.logger.Error(fmt.Sprintf("Failed to update optimization session progress: %v", updateErr))
+			}
 		}
 	}
 
