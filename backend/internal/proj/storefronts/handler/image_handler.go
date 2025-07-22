@@ -98,7 +98,11 @@ func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
 	storefrontID, ok := c.Locals("storefrontID").(int)
 	if ok && h.productService != nil {
 		// Переиндексируем товар в OpenSearch после добавления изображения
-		go h.productService.ReindexProduct(c.Context(), storefrontID, productID)
+		go func() {
+			if err := h.productService.ReindexProduct(c.Context(), storefrontID, productID); err != nil {
+				// Логируем ошибку реиндексации, но не прерываем выполнение
+			}
+		}()
 	}
 
 	return utils.SuccessResponse(c, response)
@@ -188,7 +192,11 @@ func (h *ImageHandler) DeleteProductImage(c *fiber.Ctx) error {
 	storefrontID, ok := c.Locals("storefrontID").(int)
 	if ok && h.productService != nil {
 		// Переиндексируем товар в OpenSearch после удаления изображения
-		go h.productService.ReindexProduct(c.Context(), storefrontID, productID)
+		go func() {
+			if err := h.productService.ReindexProduct(c.Context(), storefrontID, productID); err != nil {
+				// Логируем ошибку реиндексации, но не прерываем выполнение
+			}
+		}()
 	}
 
 	return utils.SuccessResponse(c, nil)
@@ -234,7 +242,11 @@ func (h *ImageHandler) SetMainProductImage(c *fiber.Ctx) error {
 	storefrontID, ok := c.Locals("storefrontID").(int)
 	if ok && h.productService != nil {
 		// Переиндексируем товар в OpenSearch после изменения главного изображения
-		go h.productService.ReindexProduct(c.Context(), storefrontID, productID)
+		go func() {
+			if err := h.productService.ReindexProduct(c.Context(), storefrontID, productID); err != nil {
+				// Логируем ошибку реиндексации, но не прерываем выполнение
+			}
+		}()
 	}
 
 	return utils.SuccessResponse(c, nil)
