@@ -10,6 +10,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+const (
+	// Error messages
+	errOrderNotFound = "order not found"
+	errAccessDenied  = "access denied"
+)
+
 // CreateOrder создает новый заказ
 // @Summary Create new order
 // @Description Creates a new order from cart items or direct items
@@ -141,9 +147,9 @@ func (h *OrdersHandler) GetOrder(c *fiber.Ctx) error {
 		logger.Error().Err(err).Msg("Failed to get order")
 
 		switch err.Error() {
-		case "order not found":
+		case errOrderNotFound:
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "orders.error.not_found")
-		case "access denied":
+		case errAccessDenied:
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.error.access_denied")
 		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "orders.error.get_failed")
@@ -189,9 +195,9 @@ func (h *OrdersHandler) CancelOrder(c *fiber.Ctx) error {
 		logger.Error().Err(err).Msg("Failed to cancel order")
 
 		switch err.Error() {
-		case "order not found":
+		case errOrderNotFound:
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "orders.error.not_found")
-		case "access denied":
+		case errAccessDenied:
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.error.access_denied")
 		case "order cannot be cancelled":
 			return utils.ErrorResponse(c, fiber.StatusConflict, "orders.error.cannot_cancel")
@@ -304,9 +310,9 @@ func (h *OrdersHandler) UpdateOrderStatus(c *fiber.Ctx) error {
 		logger.Error().Err(err).Msg("Failed to update order status")
 
 		switch err.Error() {
-		case "order not found":
+		case errOrderNotFound:
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "orders.error.not_found")
-		case "access denied":
+		case errAccessDenied:
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.error.access_denied")
 		case "invalid status transition":
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.error.invalid_status_transition")
