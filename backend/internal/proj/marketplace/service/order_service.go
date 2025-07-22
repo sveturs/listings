@@ -11,6 +11,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/proj/marketplace/repository"
 	"backend/internal/storage"
+	"backend/pkg/logger"
 	// Удаляем импорт payments service, используем наш локальный
 )
 
@@ -22,6 +23,7 @@ type OrderService struct {
 	paymentService  *PaymentService
 	notificationSvc NotificationService // Интерфейс для уведомлений
 	platformFeeRate float64             // Комиссия платформы в процентах
+	logger          *logger.Logger      // Логгер для записи сообщений
 }
 
 // NotificationService интерфейс для отправки уведомлений
@@ -50,6 +52,7 @@ func NewOrderService(
 		paymentService:  paymentService,
 		notificationSvc: notificationSvc,
 		platformFeeRate: platformFeeRate,
+		logger:          logger.GetLogger(),
 	}
 }
 
@@ -249,7 +252,7 @@ func (s *OrderService) CreateOrderFromRequest(ctx context.Context, req CreateOrd
 	if err != nil {
 		// Отменяем заказ если платеж не создался
 		if err := s.orderRepo.UpdateStatus(ctx, order.ID, models.MarketplaceOrderStatusCancelled, "Payment creation failed", nil); err != nil {
-			logger.Error().Err(err).Msg("Failed to update order status")
+			s.logger.Error("Failed to update order status: %v", err)
 		}
 		return nil, nil, errors.Wrap(err, "failed to create payment")
 	}
@@ -261,7 +264,7 @@ func (s *OrderService) CreateOrderFromRequest(ctx context.Context, req CreateOrd
 	// 5. Отправляем уведомление продавцу
 	go func() {
 		if err := s.notificationSvc.SendOrderCreated(ctx, order); err != nil {
-			logger.Error().Err(err).Msg("Failed to send order created notification")
+			s.logger.Error("Failed to send order created notification: %v", err)
 		}
 	}()
 
