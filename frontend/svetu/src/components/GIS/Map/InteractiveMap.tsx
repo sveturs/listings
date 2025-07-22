@@ -459,6 +459,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         clearTimeout(hidePopupTimer.current);
         hidePopupTimer.current = null;
       }
+      
+      // Закрываем попап выбранного маркера при наведении на кластер
+      setInternalSelectedMarker(null);
 
       if (!mapRef.current) return;
 
@@ -490,6 +493,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               imageUrl: f.properties.imageUrl,
               category: f.properties.metadata?.category,
               address: f.properties.data?.address,
+              locationPrivacy: f.properties.data?.locationPrivacy,
             }))
             .sort((a, b) => b.price - a.price) // Сортируем по цене (убывание)
             .slice(0, 4); // Берем топ-4
@@ -904,8 +908,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           />
         )}
 
-        {/* Детальный popup при клике */}
-        {(selectedMarker || internalSelectedMarker) && (
+        {/* Детальный popup при клике - скрываем если показан hover кластера */}
+        {(selectedMarker || internalSelectedMarker) && !hoveredCluster && (
           <MarkerClickPopup
             marker={selectedMarker || internalSelectedMarker!}
             onClose={() => {

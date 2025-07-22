@@ -22044,9 +22044,17 @@ export interface components {
       category_id: number;
       currency: string;
       description: string;
+      /** @description Location fields */
+      has_individual_location?: boolean;
+      individual_address?: string;
+      individual_latitude?: number;
+      individual_longitude?: number;
       is_active?: boolean;
+      /** @enum {string} */
+      location_privacy?: 'exact' | 'street' | 'district' | 'city';
       name: string;
       price: number;
+      show_on_map?: boolean;
       sku?: string;
       stock_quantity?: number;
     };
@@ -23004,12 +23012,19 @@ export interface components {
       created_at?: string;
       currency?: string;
       description?: string;
+      /** @description Location fields */
+      has_individual_location?: boolean;
       id?: number;
       /** @description Relations */
       images?: components['schemas']['backend_internal_domain_models.StorefrontProductImage'][];
+      individual_address?: string;
+      individual_latitude?: number;
+      individual_longitude?: number;
       is_active?: boolean;
+      location_privacy?: string;
       name?: string;
       price?: number;
+      show_on_map?: boolean;
       sku?: string;
       sold_count?: number;
       stock_quantity?: number;
@@ -23171,9 +23186,17 @@ export interface components {
       barcode?: string;
       category_id?: number;
       description?: string;
+      /** @description Location fields */
+      has_individual_location?: boolean;
+      individual_address?: string;
+      individual_latitude?: number;
+      individual_longitude?: number;
       is_active?: boolean;
+      /** @enum {string} */
+      location_privacy?: 'exact' | 'street' | 'district' | 'city';
       name?: string;
       price?: number;
+      show_on_map?: boolean;
       sku?: string;
       stock_quantity?: number;
     };

@@ -95,7 +95,11 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 				WHEN ug.source_type = 'marketplace_listing' THEN COALESCE(rc.average_rating, 0)
 				ELSE 0
 			END as rating,
-			ug.source_type::text as item_type`
+			ug.source_type::text as item_type,
+			CASE
+				WHEN ug.source_type = 'marketplace_listing' THEN 'exact'::text
+				WHEN ug.source_type = 'storefront_product' THEN COALESCE(s.default_privacy_level::text, 'exact'::text)
+			END as privacy_level`
 
 	// Добавляем расчет расстояния если есть центр поиска
 	if params.Center != nil {
@@ -193,6 +197,7 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 			&listing.ViewsCount,
 			&listing.Rating,
 			&listing.ItemType,
+			&listing.PrivacyLevel,
 		}
 
 		if params.Center != nil {
@@ -246,11 +251,10 @@ func (r *PostGISRepository) getListingImages(ctx context.Context, itemID int, it
 			LIMIT 5`
 	case "storefront_product":
 		query = `
-			SELECT spvi.image_url
-			FROM storefront_product_variants spv
-			JOIN storefront_product_variant_images spvi ON spv.id = spvi.variant_id
-			WHERE spv.product_id = $1 AND spv.is_active = true AND spvi.image_url IS NOT NULL
-			ORDER BY spv.is_default DESC, spvi.is_main DESC, spvi.display_order
+			SELECT image_url
+			FROM storefront_product_images
+			WHERE storefront_product_id = $1 AND image_url IS NOT NULL AND image_url != ''
+			ORDER BY is_default DESC, display_order
 			LIMIT 5`
 	default:
 		return []string{}, nil

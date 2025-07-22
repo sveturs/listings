@@ -74,10 +74,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
 
   const handleLocationChange = (locationData: LocationData) => {
     setLocation(locationData);
-    // Автоматически переходим к настройкам приватности после выбора
-    if (locationData && step === 'select') {
-      setTimeout(() => setStep('privacy'), 500);
-    }
+    // Убираем автоматический переход - пользователь сам решит когда переходить
   };
 
   const toggleSafeMeetingPlace = (place: string) => {
@@ -86,7 +83,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
     );
   };
 
-  const canProceed = location && step === 'privacy';
+  const canProceed = location !== undefined;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -138,6 +135,18 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                 showCurrentLocation={true}
                 defaultCountry={state.location?.country || 'Србија'}
               />
+
+              {location && (
+                <div className="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setStep('privacy')}
+                    className="btn btn-primary"
+                  >
+                    Далее к настройкам приватности →
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -238,12 +247,18 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
 
             <button
               className={`btn btn-primary ${!canProceed ? 'btn-disabled' : ''}`}
-              onClick={onNext}
+              onClick={() => {
+                if (step === 'select' && location) {
+                  setStep('privacy');
+                } else {
+                  onNext();
+                }
+              }}
               disabled={!canProceed}
             >
               {step === 'privacy'
-                ? 'Сохранить местоположение'
-                : t('common.continue')}{' '}
+                ? 'Сохранить и продолжить'
+                : 'Далее к настройкам приватности'}{' '}
               →
             </button>
           </div>

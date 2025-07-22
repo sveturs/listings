@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"backend/internal/proj/storefronts/service"
 	"backend/internal/services"
 	"backend/pkg/utils"
 
@@ -12,13 +13,15 @@ import (
 
 // ImageHandler - обработчик для работы с изображениями товаров витрин
 type ImageHandler struct {
-	imageService *services.ImageService
+	imageService   *services.ImageService
+	productService *service.ProductService
 }
 
 // NewImageHandler создает новый ImageHandler
-func NewImageHandler(imageService *services.ImageService) *ImageHandler {
+func NewImageHandler(imageService *services.ImageService, productService *service.ProductService) *ImageHandler {
 	return &ImageHandler{
-		imageService: imageService,
+		imageService:   imageService,
+		productService: productService,
 	}
 }
 
@@ -86,6 +89,13 @@ func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "storefronts.upload_failed")
 	}
 
+	// Получаем storefrontID из контекста
+	storefrontID, ok := c.Locals("storefrontID").(int)
+	if ok && h.productService != nil {
+		// Переиндексируем товар в OpenSearch после добавления изображения
+		go h.productService.ReindexProduct(c.Context(), storefrontID, productID)
+	}
+
 	return utils.SuccessResponse(c, response)
 }
 
@@ -149,6 +159,13 @@ func (h *ImageHandler) GetProductImages(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id} [delete]
 func (h *ImageHandler) DeleteProductImage(c *fiber.Ctx) error {
+	// Получение ID товара
+	productIDStr := c.Params("product_id")
+	productID, err := strconv.Atoi(productIDStr)
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "storefronts.invalid_product_id")
+	}
+
 	// Получение ID изображения
 	imageIDStr := c.Params("image_id")
 	imageID, err := strconv.Atoi(imageIDStr)
@@ -160,6 +177,13 @@ func (h *ImageHandler) DeleteProductImage(c *fiber.Ctx) error {
 	err = h.imageService.DeleteImage(c.Context(), imageID, services.ImageTypeStorefrontProduct)
 	if err != nil {
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "storefronts.delete_failed")
+	}
+
+	// Получаем storefrontID из контекста
+	storefrontID, ok := c.Locals("storefrontID").(int)
+	if ok && h.productService != nil {
+		// Переиндексируем товар в OpenSearch после удаления изображения
+		go h.productService.ReindexProduct(c.Context(), storefrontID, productID)
 	}
 
 	return utils.SuccessResponse(c, nil)
@@ -199,6 +223,13 @@ func (h *ImageHandler) SetMainProductImage(c *fiber.Ctx) error {
 	err = h.imageService.SetMainImage(c.Context(), imageID, services.ImageTypeStorefrontProduct, productID)
 	if err != nil {
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "storefronts.set_main_failed")
+	}
+
+	// Получаем storefrontID из контекста
+	storefrontID, ok := c.Locals("storefrontID").(int)
+	if ok && h.productService != nil {
+		// Переиндексируем товар в OpenSearch после изменения главного изображения
+		go h.productService.ReindexProduct(c.Context(), storefrontID, productID)
 	}
 
 	return utils.SuccessResponse(c, nil)

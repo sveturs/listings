@@ -11,6 +11,7 @@ interface ClusterListing {
   imageUrl?: string;
   category?: string;
   address?: string;
+  locationPrivacy?: string;
 }
 
 interface ClusterHoverPopupProps {
@@ -35,6 +36,50 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
   // Форматирование цены
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ru-RU').format(price);
+  };
+
+  // Форматирование адреса с учетом приватности
+  const formatAddressWithPrivacy = (address: string, privacyLevel?: string): string => {
+    if (!address) return '';
+
+    if (privacyLevel === 'exact') {
+      return address;
+    }
+
+    const parts = address.split(',').map(part => part.trim());
+
+    switch (privacyLevel) {
+      case 'approximate':
+      case 'street':
+        // Убираем номер дома
+        if (parts.length > 2) {
+          const streetPart = parts[0].replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '').trim();
+          return streetPart ? [streetPart, ...parts.slice(1)].join(', ') : parts.slice(1).join(', ');
+        }
+        return parts.slice(1).join(', ');
+
+      case 'district':
+        // Оставляем только район и город
+        if (parts.length > 2) {
+          return parts.slice(-2).join(', ');
+        }
+        return address;
+
+      case 'city_only':
+      case 'city':
+        // Оставляем только город
+        if (parts.length > 1) {
+          return parts[parts.length - 1];
+        }
+        return address;
+
+      case 'hidden':
+        // Скрываем адрес полностью
+        return 'Адрес скрыт';
+
+      default:
+        return address;
+    }
   };
 
   // Получение иконки категории
@@ -129,12 +174,14 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
             >
               {/* Изображение */}
               {listing.imageUrl ? (
-                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 relative">
                   <Image
                     src={listing.imageUrl}
                     alt={listing.title}
-                    fill
-                    className="object-cover"
+                    width={64}
+                    height={64}
+                    className="object-cover w-full h-full"
+                    sizes="64px"
                   />
                 </div>
               ) : (
@@ -165,7 +212,7 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
                 </div>
                 {listing.address && (
                   <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                    📍 {listing.address}
+                    📍 {formatAddressWithPrivacy(listing.address, listing.locationPrivacy)}
                   </p>
                 )}
               </div>

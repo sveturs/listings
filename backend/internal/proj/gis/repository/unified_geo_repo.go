@@ -234,11 +234,10 @@ func (r *UnifiedGeoRepository) getItemImages(ctx context.Context, itemID int, it
 			ORDER BY is_main DESC, created_at`
 	case "storefront_product":
 		query = `
-			SELECT spvi.image_url
-			FROM storefront_product_variants spv
-			JOIN storefront_product_variant_images spvi ON spv.id = spvi.variant_id
-			WHERE spv.product_id = $1 AND spv.is_active = true AND spvi.image_url IS NOT NULL
-			ORDER BY spv.is_default DESC, spvi.is_main DESC, spvi.display_order`
+			SELECT image_url
+			FROM storefront_product_images
+			WHERE storefront_product_id = $1 AND image_url IS NOT NULL AND image_url != ''
+			ORDER BY is_default DESC, display_order`
 	case "storefront":
 		// Для витрин пока нет изображений, возвращаем пустой массив
 		return []string{}, nil

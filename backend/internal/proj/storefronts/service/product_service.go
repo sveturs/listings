@@ -7,6 +7,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/proj/storefronts/storage/opensearch"
+	"backend/pkg/utils"
 )
 
 // ProductSearchRepository is an alias for OpenSearch interface
@@ -87,6 +88,11 @@ func (s *ProductService) GetProducts(ctx context.Context, filter models.ProductF
 		return nil, fmt.Errorf("failed to get products: %w", err)
 	}
 
+	// Обрабатываем адреса всех товаров с учетом приватности
+	for i := range products {
+		s.processProductLocationPrivacy(products[i])
+	}
+
 	logger.Info().Msgf("Found %d products for storefront %d", len(products), filter.StorefrontID)
 	return products, nil
 }
@@ -102,7 +108,31 @@ func (s *ProductService) GetProduct(ctx context.Context, storefrontID, productID
 		return nil, fmt.Errorf("product not found")
 	}
 
+	// Обрабатываем адрес с учетом приватности
+	s.processProductLocationPrivacy(product)
+
 	return product, nil
+}
+
+// processProductLocationPrivacy обрабатывает адрес товара с учетом уровня приватности
+func (s *ProductService) processProductLocationPrivacy(product *models.StorefrontProduct) {
+	if product == nil {
+		return
+	}
+
+	// Если у товара есть индивидуальный адрес и установлен уровень приватности
+	if product.HasIndividualLocation && product.IndividualAddress != nil && product.LocationPrivacy != nil {
+		// Форматируем адрес в соответствии с уровнем приватности
+		formattedAddress := utils.FormatAddressWithPrivacy(*product.IndividualAddress, *product.LocationPrivacy)
+		product.IndividualAddress = &formattedAddress
+
+		// Обрабатываем координаты с учетом приватности
+		if product.IndividualLatitude != nil && product.IndividualLongitude != nil {
+			lat, lng := utils.GetCoordinatesPrivacy(*product.IndividualLatitude, *product.IndividualLongitude, *product.LocationPrivacy)
+			product.IndividualLatitude = &lat
+			product.IndividualLongitude = &lng
+		}
+	}
 }
 
 // CreateProduct creates a new product
@@ -487,6 +517,32 @@ func (s *ProductService) BulkUpdateStatus(ctx context.Context, storefrontID, use
 		Updated: updatedIDs,
 		Failed:  failedOps,
 	}, nil
+}
+
+// ReindexProduct переиндексирует товар в OpenSearch
+func (s *ProductService) ReindexProduct(ctx context.Context, storefrontID, productID int) error {
+	// Получаем товар со всеми данными, включая изображения
+	product, err := s.storage.GetStorefrontProduct(ctx, storefrontID, productID)
+	if err != nil {
+		logger.Error().Err(err).Msgf("Failed to get product %d for reindexing", productID)
+		return err
+	}
+
+	if product == nil {
+		logger.Warn().Msgf("Product %d not found for reindexing", productID)
+		return nil
+	}
+
+	// Переиндексируем в OpenSearch
+	if s.searchRepo != nil {
+		if err := s.searchRepo.UpdateProduct(ctx, product); err != nil {
+			logger.Error().Err(err).Msgf("Failed to reindex product %d in OpenSearch", productID)
+			return err
+		}
+		logger.Info().Msgf("Successfully reindexed product %d in OpenSearch", productID)
+	}
+
+	return nil
 }
 
 // Validation helpers

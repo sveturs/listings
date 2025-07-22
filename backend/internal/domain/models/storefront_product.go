@@ -23,6 +23,14 @@ type StorefrontProduct struct {
 	SoldCount     int                    `json:"sold_count" db:"sold_count"`
 	CreatedAt     time.Time              `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time              `json:"updated_at" db:"updated_at"`
+	
+	// Location fields
+	HasIndividualLocation bool     `json:"has_individual_location" db:"has_individual_location"`
+	IndividualAddress     *string  `json:"individual_address,omitempty" db:"individual_address"`
+	IndividualLatitude    *float64 `json:"individual_latitude,omitempty" db:"individual_latitude"`
+	IndividualLongitude   *float64 `json:"individual_longitude,omitempty" db:"individual_longitude"`
+	LocationPrivacy       *string  `json:"location_privacy,omitempty" db:"location_privacy"`
+	ShowOnMap             bool     `json:"show_on_map" db:"show_on_map"`
 
 	// Relations
 	Images   []StorefrontProductImage   `json:"images" db:"-"`
@@ -230,6 +238,14 @@ type CreateProductRequest struct {
 	StockQuantity int                    `json:"stock_quantity" validate:"min=0"`
 	IsActive      bool                   `json:"is_active"`
 	Attributes    map[string]interface{} `json:"attributes,omitempty"`
+	
+	// Location fields
+	HasIndividualLocation *bool    `json:"has_individual_location,omitempty"`
+	IndividualAddress     *string  `json:"individual_address,omitempty"`
+	IndividualLatitude    *float64 `json:"individual_latitude,omitempty"`
+	IndividualLongitude   *float64 `json:"individual_longitude,omitempty"`
+	LocationPrivacy       *string  `json:"location_privacy,omitempty" validate:"omitempty,oneof=exact street district city"`
+	ShowOnMap             *bool    `json:"show_on_map,omitempty"`
 }
 
 // UpdateProductRequest represents a request to update a product
@@ -243,6 +259,14 @@ type UpdateProductRequest struct {
 	StockQuantity *int                   `json:"stock_quantity,omitempty" validate:"omitempty,min=0"`
 	IsActive      *bool                  `json:"is_active,omitempty"`
 	Attributes    map[string]interface{} `json:"attributes,omitempty"`
+	
+	// Location fields
+	HasIndividualLocation *bool    `json:"has_individual_location,omitempty"`
+	IndividualAddress     *string  `json:"individual_address,omitempty"`
+	IndividualLatitude    *float64 `json:"individual_latitude,omitempty"`
+	IndividualLongitude   *float64 `json:"individual_longitude,omitempty"`
+	LocationPrivacy       *string  `json:"location_privacy,omitempty" validate:"omitempty,oneof=exact street district city"`
+	ShowOnMap             *bool    `json:"show_on_map,omitempty"`
 }
 
 // UpdateInventoryRequest represents a request to update product inventory

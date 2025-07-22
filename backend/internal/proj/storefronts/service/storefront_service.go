@@ -146,7 +146,7 @@ func NewStorefrontService(services ServicesInterface) StorefrontService {
 	service := &StorefrontServiceImpl{
 		services: services,
 	}
-	
+
 	// Инициализируем репозиторий сразу
 	if services != nil && services.Storage() != nil {
 		repoInterface := services.Storage().Storefront()
@@ -157,7 +157,7 @@ func NewStorefrontService(services ServicesInterface) StorefrontService {
 			logger.Error().Str("type", fmt.Sprintf("%T", repoInterface)).Msg("Failed to cast storefront repository in NewStorefrontService")
 		}
 	}
-	
+
 	return service
 }
 
@@ -179,13 +179,13 @@ func (s *StorefrontServiceImpl) SetServices(services ServicesInterface) {
 // CreateStorefront создает новую витрину
 func (s *StorefrontServiceImpl) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
 	logger.Info().Int("userID", userID).Str("name", dto.Name).Msg("CreateStorefront: начало создания витрины")
-	
+
 	// Проверяем инициализацию репозитория
 	if s.repo == nil {
 		logger.Error().Msg("CreateStorefront: репозиторий не инициализирован")
 		return nil, ErrRepositoryNotInitialized
 	}
-	
+
 	// Проверяем может ли пользователь создать витрину
 	canCreate, err := s.canCreateStorefront(ctx, userID)
 	if err != nil {
@@ -540,7 +540,7 @@ func (s *StorefrontServiceImpl) CheckFeatureAvailability(ctx context.Context, st
 
 func (s *StorefrontServiceImpl) canCreateStorefront(ctx context.Context, userID int) (bool, error) {
 	logger.Info().Int("userID", userID).Msg("canCreateStorefront: проверка возможности создания витрины")
-	
+
 	// Получаем текущие витрины пользователя
 	currentStorefronts, err := s.ListUserStorefronts(ctx, userID)
 	if err != nil {
@@ -570,7 +570,7 @@ func (s *StorefrontServiceImpl) canCreateStorefront(ctx context.Context, userID 
 		Int("limit", limits.MaxStorefronts).
 		Bool("canCreate", canCreate).
 		Msg("canCreateStorefront: результат проверки")
-		
+
 	return canCreate, nil
 }
 

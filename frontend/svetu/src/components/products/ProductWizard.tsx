@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useCreateProduct } from '@/contexts/CreateProductContext';
 import CategoryStep from './steps/CategoryStep';
 import BasicInfoStep from './steps/BasicInfoStep';
+import LocationStep from './steps/LocationStep';
 import AttributesStep from './steps/AttributesStep';
 import PhotosStep from './steps/PhotosStep';
 import PreviewStep from './steps/PreviewStep';
@@ -15,6 +16,7 @@ interface ProductWizardProps {
 const STEPS = [
   { id: 'category', icon: '🏷️' },
   { id: 'basic', icon: '📝' },
+  { id: 'location', icon: '📍' },
   { id: 'attributes', icon: '⚙️' },
   { id: 'photos', icon: '📸' },
   { id: 'preview', icon: '👁️' },
@@ -31,10 +33,12 @@ export default function ProductWizard({ storefrontSlug }: ProductWizardProps) {
       case 1:
         return <BasicInfoStep onNext={nextStep} onBack={prevStep} />;
       case 2:
-        return <AttributesStep onNext={nextStep} onBack={prevStep} />;
+        return <LocationStep onNext={nextStep} onBack={prevStep} />;
       case 3:
-        return <PhotosStep onNext={nextStep} onBack={prevStep} />;
+        return <AttributesStep onNext={nextStep} onBack={prevStep} />;
       case 4:
+        return <PhotosStep onNext={nextStep} onBack={prevStep} />;
+      case 5:
         return (
           <PreviewStep onBack={prevStep} storefrontSlug={storefrontSlug} />
         );

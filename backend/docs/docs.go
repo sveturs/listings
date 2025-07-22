@@ -22842,8 +22842,30 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 10
                 },
+                "has_individual_location": {
+                    "description": "Location fields",
+                    "type": "boolean"
+                },
+                "individual_address": {
+                    "type": "string"
+                },
+                "individual_latitude": {
+                    "type": "number"
+                },
+                "individual_longitude": {
+                    "type": "number"
+                },
                 "is_active": {
                     "type": "boolean"
+                },
+                "location_privacy": {
+                    "type": "string",
+                    "enum": [
+                        "exact",
+                        "street",
+                        "district",
+                        "city"
+                    ]
                 },
                 "name": {
                     "type": "string",
@@ -22853,6 +22875,9 @@ const docTemplate = `{
                 "price": {
                     "type": "number",
                     "minimum": 0
+                },
+                "show_on_map": {
+                    "type": "boolean"
                 },
                 "sku": {
                     "type": "string"
@@ -25584,6 +25609,10 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "has_individual_location": {
+                    "description": "Location fields",
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -25594,14 +25623,29 @@ const docTemplate = `{
                         "$ref": "#/definitions/backend_internal_domain_models.StorefrontProductImage"
                     }
                 },
+                "individual_address": {
+                    "type": "string"
+                },
+                "individual_latitude": {
+                    "type": "number"
+                },
+                "individual_longitude": {
+                    "type": "number"
+                },
                 "is_active": {
                     "type": "boolean"
+                },
+                "location_privacy": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
                 "price": {
                     "type": "number"
+                },
+                "show_on_map": {
+                    "type": "boolean"
                 },
                 "sku": {
                     "type": "string"
@@ -26063,8 +26107,30 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 10
                 },
+                "has_individual_location": {
+                    "description": "Location fields",
+                    "type": "boolean"
+                },
+                "individual_address": {
+                    "type": "string"
+                },
+                "individual_latitude": {
+                    "type": "number"
+                },
+                "individual_longitude": {
+                    "type": "number"
+                },
                 "is_active": {
                     "type": "boolean"
+                },
+                "location_privacy": {
+                    "type": "string",
+                    "enum": [
+                        "exact",
+                        "street",
+                        "district",
+                        "city"
+                    ]
                 },
                 "name": {
                     "type": "string",
@@ -26074,6 +26140,9 @@ const docTemplate = `{
                 "price": {
                     "type": "number",
                     "minimum": 0
+                },
+                "show_on_map": {
+                    "type": "boolean"
                 },
                 "sku": {
                     "type": "string"
