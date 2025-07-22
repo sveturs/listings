@@ -17,7 +17,11 @@ func main() {
 		Password: "",
 		DB:       0,
 	})
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			log.Printf("Failed to close Redis client: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 

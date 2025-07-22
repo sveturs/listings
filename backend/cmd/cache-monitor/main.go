@@ -26,7 +26,11 @@ func main() {
 		Password: "",
 		DB:       0,
 	})
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			log.Printf("Failed to close Redis client: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -179,7 +183,11 @@ func testCachePerformance(ctx context.Context, client *redis.Client) {
 		log.Printf("Failed to create cache for performance test: %v", err)
 		return
 	}
-	defer redisCache.Close()
+	defer func() {
+		if err := redisCache.Close(); err != nil {
+			log.Printf("Failed to close Redis cache: %v", err)
+		}
+	}()
 
 	adapter := cache.NewAdapter(redisCache)
 

@@ -29,8 +29,16 @@ func setupTestRedis(t *testing.T) (*RedisCache, *miniredis.Miniredis) {
 
 func TestRedisCache_SetAndGet(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -102,8 +110,16 @@ func TestRedisCache_SetAndGet(t *testing.T) {
 
 func TestRedisCache_Delete(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -130,8 +146,16 @@ func TestRedisCache_Delete(t *testing.T) {
 
 func TestRedisCache_DeleteMultiple(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -156,8 +180,16 @@ func TestRedisCache_DeleteMultiple(t *testing.T) {
 
 func TestRedisCache_DeletePattern(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -192,8 +224,16 @@ func TestRedisCache_DeletePattern(t *testing.T) {
 
 func TestRedisCache_GetNonExistent(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -205,8 +245,16 @@ func TestRedisCache_GetNonExistent(t *testing.T) {
 
 func TestRedisCache_Exists(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -228,8 +276,16 @@ func TestRedisCache_Exists(t *testing.T) {
 
 func TestRedisCache_TTLExpiry(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -257,8 +313,16 @@ func TestRedisCache_TTLExpiry(t *testing.T) {
 
 func TestRedisCache_GetOrSet(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -300,8 +364,16 @@ func TestRedisCache_GetOrSet(t *testing.T) {
 
 func TestRedisCache_GetOrSetLoaderError(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -326,8 +398,16 @@ func TestRedisCache_ConnectionFailure(t *testing.T) {
 
 func TestRedisCache_ConcurrentAccess(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -362,7 +442,11 @@ func TestRedisCache_ConcurrentAccess(t *testing.T) {
 // TestRedisCache_GracefulDegradation tests graceful degradation when Redis is unavailable
 func TestRedisCache_GracefulDegradation(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -417,8 +501,16 @@ func TestRedisCache_GracefulDegradation(t *testing.T) {
 // TestRedisCache_MarshalUnmarshalErrors tests error handling for serialization issues
 func TestRedisCache_MarshalUnmarshalErrors(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -467,8 +559,16 @@ func TestRedisCache_MarshalUnmarshalErrors(t *testing.T) {
 // TestRedisCache_DeleteEmptyKeys tests deleting with empty key list
 func TestRedisCache_DeleteEmptyKeys(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
-	defer cache.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -480,7 +580,11 @@ func TestRedisCache_DeleteEmptyKeys(t *testing.T) {
 // TestRedisCache_Close tests proper connection closing
 func TestRedisCache_Close(t *testing.T) {
 	cache, mr := setupTestRedis(t)
-	defer mr.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -505,7 +609,11 @@ func TestRedisCache_GetOrSetCacheError(t *testing.T) {
 	// Create cache with valid miniredis
 	mr, err := miniredis.Run()
 	require.NoError(t, err)
-	defer mr.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
 
 	cache, err := NewRedisCache(mr.Addr(), "", 0, 10, logger)
 	require.NoError(t, err)
@@ -542,14 +650,22 @@ func TestRedisCache_GetOrSetCacheError(t *testing.T) {
 func BenchmarkRedisCache_Set(b *testing.B) {
 	mr, err := miniredis.Run()
 	require.NoError(b, err)
-	defer mr.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
 
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
 
 	cache, err := NewRedisCache(mr.Addr(), "", 0, 10, logger)
 	require.NoError(b, err)
-	defer cache.Close()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	type testData struct {
@@ -572,14 +688,22 @@ func BenchmarkRedisCache_Set(b *testing.B) {
 func BenchmarkRedisCache_Get(b *testing.B) {
 	mr, err := miniredis.Run()
 	require.NoError(b, err)
-	defer mr.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
 
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
 
 	cache, err := NewRedisCache(mr.Addr(), "", 0, 10, logger)
 	require.NoError(b, err)
-	defer cache.Close()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	type testData struct {
@@ -609,14 +733,22 @@ func BenchmarkRedisCache_Get(b *testing.B) {
 func BenchmarkRedisCache_GetOrSet(b *testing.B) {
 	mr, err := miniredis.Run()
 	require.NoError(b, err)
-	defer mr.Close()
+	defer func() {
+		if err := mr.Close(); err != nil {
+			t.Logf("Failed to close miniredis: %v", err)
+		}
+	}()
 
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
 
 	cache, err := NewRedisCache(mr.Addr(), "", 0, 10, logger)
 	require.NoError(b, err)
-	defer cache.Close()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	type testData struct {

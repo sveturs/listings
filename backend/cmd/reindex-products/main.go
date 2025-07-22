@@ -66,7 +66,11 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize storage")
 	}
-	defer storage.Close()
+	defer func() {
+		if err := storage.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close storage")
+		}
+	}()
 
 	// Get storefront product search repository
 	searchRepo := storage.StorefrontProductSearch()
@@ -110,7 +114,11 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to fetch products")
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	// Process products in batches
 	var products []*models.StorefrontProduct
