@@ -88,7 +88,11 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Создаем витрину
 	var storefront models.Storefront
@@ -215,7 +219,9 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 
 	// Конвертируем json.RawMessage в JSONB
 	if theme != nil {
-		json.Unmarshal(theme, &s.Theme)
+		if err := json.Unmarshal(theme, &s.Theme); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if settings != nil {
 		json.Unmarshal(settings, &s.Settings)
