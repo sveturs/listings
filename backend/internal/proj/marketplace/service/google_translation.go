@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"backend/internal/logger"
 	"backend/internal/storage"
 )
 

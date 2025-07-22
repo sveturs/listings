@@ -10,6 +10,7 @@ import (
 
 	"backend/internal/cache"
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 )
 
 // CreateAttribute создает новый атрибут категории
