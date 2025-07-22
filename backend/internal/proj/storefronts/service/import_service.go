@@ -243,7 +243,11 @@ func (s *ImportService) processZIPData(data []byte, storefrontID int) ([]models.
 
 		// Read file content
 		fileData, err := io.ReadAll(rc)
-		rc.Close()
+		func() {
+			if err := rc.Close(); err != nil {
+				fmt.Printf("Failed to close file: %v", err)
+			}
+		}()
 		if err != nil {
 			continue
 		}

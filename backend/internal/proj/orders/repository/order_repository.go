@@ -219,7 +219,11 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count orders: %w", err)
 	}
-	defer countRows.Close()
+	defer func() {
+		if err := countRows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 	if countRows.Next() {
 		countRows.Scan(&total)
 	}

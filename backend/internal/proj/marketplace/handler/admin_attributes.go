@@ -249,7 +249,11 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 		logger.Error().Err(err).Msg("Failed to get attributes")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getAttributesError")
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	attributes := make([]models.CategoryAttribute, 0)
 	for rows.Next() {
@@ -293,7 +297,9 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 					attribute.Translations[lang] = text
 				}
 			}
-			tRows.Close()
+			if err := tRows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close translation rows")
+		}
 		}
 
 		// Загружаем переводы для опций атрибута
@@ -314,7 +320,9 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 					attribute.OptionTranslations[lang][option] = text
 				}
 			}
-			oRows.Close()
+			if err := oRows.Close(); err != nil {
+				logger.Error().Err(err).Msg("Failed to close option translation rows")
+			}
 		}
 
 		attributes = append(attributes, attribute)
@@ -382,7 +390,9 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 				attribute.Translations[lang] = text
 			}
 		}
-		tRows.Close()
+		if err := tRows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close translation rows")
+		}
 	}
 
 	// Загружаем переводы опций, если атрибут типа select
@@ -404,7 +414,9 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 					attribute.OptionTranslations[lang][option] = text
 				}
 			}
-			oRows.Close()
+			if err := oRows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close option translation rows")
+		}
 		}
 	}
 
@@ -863,7 +875,11 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 	if err != nil {
 		return nil, fmt.Errorf("marketplace.getCategoryAttributesError: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	result := make([]models.CategoryAttributeMapping, 0)
 	for rows.Next() {
@@ -922,7 +938,9 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 					attribute.Translations[lang] = text
 				}
 			}
-			tRows.Close()
+			if err := tRows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close translation rows")
+		}
 		}
 
 		// Получаем переводы для опций атрибута
@@ -943,7 +961,9 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 					attribute.OptionTranslations[lang][option] = text
 				}
 			}
-			oRows.Close()
+			if err := oRows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close option translation rows")
+		}
 		}
 
 		mapping.Attribute = &attribute
@@ -1000,7 +1020,11 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.beginTransactionError")
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			logger.Error().Err(err).Msg("Failed to rollback transaction")
+		}
+	}()
 
 	// Удаляем существующие связи категории с атрибутами
 	_, err = tx.Exec(c.Context(), "DELETE FROM category_attribute_mapping WHERE category_id = $1", categoryID)
@@ -1265,7 +1289,11 @@ func (h *AdminAttributesHandler) CopyAttributesSettings(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.beginTransactionError")
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			logger.Error().Err(err).Msg("Failed to rollback transaction")
+		}
+	}()
 
 	// Удаляем существующие связи в целевой категории
 	_, err = tx.Exec(c.Context(), "DELETE FROM category_attribute_mapping WHERE category_id = $1", targetCategoryID)

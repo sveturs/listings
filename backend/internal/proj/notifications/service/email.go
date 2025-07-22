@@ -70,7 +70,11 @@ func (e *EmailService) SendEmail(to, subject, body string) error {
 		log.Printf("Error connecting to mail server: %v", err)
 		return fmt.Errorf("all email sending methods failed: %v", lastErr)
 	}
-	defer conn.Quit()
+	defer func() {
+		if err := conn.Quit(); err != nil {
+			log.Printf("Error closing SMTP connection: %v", err)
+		}
+	}()
 
 	// Установка параметров отправки
 	if err = conn.Mail(e.senderEmail); err != nil {

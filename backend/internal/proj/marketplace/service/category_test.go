@@ -81,7 +81,9 @@ func (suite *CategoryIntegrationTestSuite) SetupSuite() {
 
 func (suite *CategoryIntegrationTestSuite) TearDownSuite() {
 	if suite.db != nil {
-		suite.db.Close()
+		if err := suite.db.Close(); err != nil {
+			log.Printf("Ошибка при закрытии подключения к базе данных: %v", err)
+		}
 	}
 	if suite.pgContainer != nil {
 		if err := suite.pgContainer.Terminate(suite.ctx); err != nil {

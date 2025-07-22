@@ -48,7 +48,11 @@ func (s *GeocodeService) ReverseGeocode(ctx context.Context, lat, lon float64) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -143,7 +147,11 @@ func (s *GeocodeService) GetCitySuggestions(ctx context.Context, query string, l
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

@@ -223,7 +223,11 @@ func (s *GoogleTranslationService) Translate(ctx context.Context, text string, s
 	if err != nil {
 		return "", fmt.Errorf("ошибка выполнения запроса: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	// Считываем тело ответа для логирования
 	bodyBytes, err := ioutil.ReadAll(resp.Body)

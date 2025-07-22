@@ -382,7 +382,11 @@ func (h *Handler) SendPublicEmail(c *fiber.Ctx) error {
 		logger.Error().Err(err).Msg("Ошибка соединения с SMTP")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "email.connectError")
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close SMTP connection")
+		}
+	}()
 
 	// Устанавливаем отправителя и получателя
 	if err = conn.Mail("info@svetu.rs"); err != nil {

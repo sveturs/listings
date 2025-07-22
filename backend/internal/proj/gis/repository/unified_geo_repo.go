@@ -154,7 +154,11 @@ func (r *UnifiedGeoRepository) SearchListings(ctx context.Context, params types.
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to execute search query: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var listings []types.GeoListing
 	for rows.Next() {
@@ -294,7 +298,11 @@ func (r *UnifiedGeoRepository) GetStorefrontProducts(ctx context.Context, storef
 	if err != nil {
 		return nil, fmt.Errorf("failed to get storefront products: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var products []types.GeoListing
 	for rows.Next() {

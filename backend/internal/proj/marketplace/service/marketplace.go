@@ -24,6 +24,7 @@ import (
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	"backend/internal/storage"
+
 	"github.com/rs/zerolog"
 	//	"net/url"
 )
@@ -893,7 +894,11 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %w", err)
 	}
-	defer src.Close()
+	defer func() {
+		if err := src.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 
 	// Use FileStorage to upload
 	fileStorage := s.storage.FileStorage()
@@ -926,7 +931,9 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
 	imageID, err := s.storage.AddListingImage(ctx, image)
 	if err != nil {
 		// Если не удалось сохранить информацию, удаляем файл
-		fileStorage.DeleteFile(ctx, objectName)
+		if err := fileStorage.DeleteFile(ctx, objectName); err != nil {
+			logger.Error().Err(err).Str("objectName", objectName).Msg("Failed to delete file from storage")
+		}
 		return nil, fmt.Errorf("error saving image information: %w", err)
 	}
 	log.Printf("UploadImage: Изображение успешно сохранено в базе данных с ID=%d", imageID)
@@ -1021,19 +1028,25 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 		fileInfo, err := file.Stat()
 		if err != nil {
 			log.Printf("Ошибка получения информации о файле %s: %v", localPath, err)
-			file.Close()
+			if closeErr := file.Close(); closeErr != nil {
+				log.Printf("Ошибка закрытия файла %s: %v", localPath, closeErr)
+			}
 			continue
 		}
 
 		// Загружаем файл в MinIO
 		fileStorage := s.storage.FileStorage()
 		if fileStorage == nil {
-			file.Close()
+			if closeErr := file.Close(); closeErr != nil {
+				log.Printf("Ошибка закрытия файла %s: %v", localPath, closeErr)
+			}
 			return fmt.Errorf("сервис файлового хранилища не инициализирован")
 		}
 
 		publicURL, err := fileStorage.UploadFile(ctx, newPath, file, fileInfo.Size(), image.ContentType)
-		file.Close()
+		if closeErr := file.Close(); closeErr != nil {
+			log.Printf("Ошибка закрытия файла %s: %v", localPath, closeErr)
+		}
 		if err != nil {
 			log.Printf("Ошибка загрузки файла %s в MinIO: %v", localPath, err)
 			continue

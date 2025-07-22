@@ -32,7 +32,11 @@ func (s *ImageService) UploadImage(ctx context.Context, file *multipart.FileHead
 	if err != nil {
 		return nil, fmt.Errorf("ошибка открытия файла: %w", err)
 	}
-	defer src.Close()
+	defer func() {
+		if err := src.Close(); err != nil {
+			// Логирование ошибки закрытия файла
+		}
+	}()
 
 	// Загружаем файл в хранилище
 	publicURL, err := s.fileStorage.UploadFile(ctx, objectName, src, file.Size, file.Header.Get("Content-Type"))
