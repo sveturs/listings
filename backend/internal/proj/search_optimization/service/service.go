@@ -151,9 +151,13 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 	if len(results) == 0 {
 		status = "completed"
 		errorMsg := "no optimization results generated"
-		s.repo.UpdateOptimizationSession(ctx, sessionID, status, results, &errorMsg)
+		if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, status, results, &errorMsg); updateErr != nil {
+			s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
+		}
 	} else {
-		s.repo.UpdateOptimizationSession(ctx, sessionID, status, results, nil)
+		if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, status, results, nil); updateErr != nil {
+			s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
+		}
 	}
 
 	s.logger.Info(fmt.Sprintf("Optimization session %d completed with %d results", sessionID, len(results)))

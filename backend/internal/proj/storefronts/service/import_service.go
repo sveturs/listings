@@ -182,7 +182,11 @@ func (s *ImportService) downloadFile(ctx context.Context, url string) ([]byte, s
 	if err != nil {
 		return nil, "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// Логирование ошибки закрытия Body
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
