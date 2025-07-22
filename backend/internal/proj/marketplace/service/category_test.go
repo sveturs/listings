@@ -533,7 +533,11 @@ func (suite *CategoryIntegrationTestSuite) TestAutomaticTranslationCreation() {
 		id,
 	)
 	require.NoError(suite.T(), err)
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows в тесте
+		}
+	}()
 
 	for rows.Next() {
 		var t struct {
@@ -623,7 +627,11 @@ func (ts *testStorage) GetCategories(ctx context.Context) ([]models.MarketplaceC
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows в тесте
+		}
+	}()
 
 	var categories []models.MarketplaceCategory
 	for rows.Next() {
