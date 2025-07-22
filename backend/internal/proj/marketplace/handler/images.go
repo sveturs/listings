@@ -322,7 +322,11 @@ func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
 		logger.Error().Err(err).Msg("Failed to save file")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.saveFileError")
 	}
-	defer os.Remove(tempFilePath) // Удаляем временный файл после завершения
+	defer func() {
+		if err := os.Remove(tempFilePath); err != nil {
+			logger.Error().Err(err).Msg("Failed to remove temporary file")
+		}
+	}() // Удаляем временный файл после завершения
 
 	// Возвращаем заглушку для модерации изображения (полная реализация требует Vision API)
 	// TODO: Реализовать проверку с использованием Vision API

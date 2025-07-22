@@ -81,7 +81,11 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.Dist
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query districts with query: %s, args: %v", query, args)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var districts []types.District
 	for rows.Next() {
@@ -214,7 +218,11 @@ func (r *DistrictRepository) GetMunicipalities(ctx context.Context, params types
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to query municipalities")
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var municipalities []types.Municipality
 	for rows.Next() {
@@ -366,7 +374,11 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to search listings by district")
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var results []types.GeoListing
 	for rows.Next() {
@@ -478,7 +490,11 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to search listings by municipality")
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var results []types.GeoListing
 	for rows.Next() {
@@ -620,7 +636,11 @@ func (r *DistrictRepository) GetCities(ctx context.Context, params types.CitySea
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query cities with query: %s, args: %v", query, args)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var cities []types.City
 	for rows.Next() {

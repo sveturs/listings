@@ -485,7 +485,9 @@ func (h *ChatHandler) HandleWebSocketWithAuth(c *websocket.Conn, userID int) {
 	// Проверяем, что userID валидный
 	if userID == 0 {
 		logger.Warn().Int("userId", userID).Msg("WebSocket: Invalid user_id, closing connection")
-		c.Close()
+		if err := c.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close WebSocket connection")
+		}
 		return
 	}
 
@@ -508,8 +510,12 @@ func (h *ChatHandler) HandleWebSocketWithAuth(c *websocket.Conn, userID int) {
 
 		if !validOrigin {
 			logger.Warn().Str("origin", origin).Int("userId", userID).Msg("SECURITY: WebSocket invalid origin, closing connection")
-			c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseUnsupportedData, "Invalid origin"))
-			c.Close()
+			if err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseUnsupportedData, "Invalid origin")); err != nil {
+				logger.Error().Err(err).Msg("Failed to write WebSocket close message")
+			}
+			if err := c.Close(); err != nil {
+				logger.Error().Err(err).Msg("Failed to close WebSocket connection")
+			}
 			return
 		}
 	}
@@ -530,14 +536,18 @@ func (h *ChatHandler) HandleWebSocket(c *websocket.Conn) {
 	userIDRaw := c.Locals("user_id")
 	if userIDRaw == nil {
 		logger.Warn().Msg("WebSocket: No user_id found, closing connection")
-		c.Close()
+		if err := c.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close WebSocket connection")
+		}
 		return
 	}
 
 	userID, ok := userIDRaw.(int)
 	if !ok || userID == 0 {
 		logger.Warn().Interface("userIdRaw", userIDRaw).Msg("WebSocket: Invalid user_id, closing connection")
-		c.Close()
+		if err := c.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close WebSocket connection")
+		}
 		return
 	}
 
@@ -606,7 +616,10 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 							"timestamp": time.Now().UnixNano() / int64(time.Millisecond),
 						}
 						if pongBytes, err := json.Marshal(pongMsg); err == nil {
-							writeMessage(websocket.TextMessage, pongBytes)
+							if err := writeMessage(websocket.TextMessage, pongBytes); err != nil {
+								logger.Error().Err(err).Msg("Failed to send pong message")
+								return
+							}
 						}
 						continue
 
@@ -620,7 +633,10 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 							},
 						}
 						if respBytes, err := json.Marshal(response); err == nil {
-							writeMessage(websocket.TextMessage, respBytes)
+							if err := writeMessage(websocket.TextMessage, respBytes); err != nil {
+								logger.Error().Err(err).Msg("Failed to send online users response")
+								return
+							}
 						}
 						continue
 
@@ -650,7 +666,10 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 						"error": "ReceiverID is required",
 					}
 					if errBytes, err := json.Marshal(errMsg); err == nil {
-						writeMessage(websocket.TextMessage, errBytes)
+						if err := writeMessage(websocket.TextMessage, errBytes); err != nil {
+							logger.Error().Err(err).Msg("Failed to send error message")
+							return
+						}
 					}
 					continue
 				}
@@ -664,7 +683,10 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 						"listing_id": msg.ListingID,
 					}
 					if errBytes, err := json.Marshal(errMsg); err == nil {
-						writeMessage(websocket.TextMessage, errBytes)
+						if err := writeMessage(websocket.TextMessage, errBytes); err != nil {
+							logger.Error().Err(err).Msg("Failed to send error message")
+							return
+						}
 					}
 				}
 			}

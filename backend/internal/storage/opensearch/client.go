@@ -58,7 +58,11 @@ func (c *OpenSearchClient) CreateIndex(indexName string, mapping string) error {
 	if err != nil {
 		return fmt.Errorf("ошибка создания индекса: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	if res.IsError() {
 		return fmt.Errorf("ошибка создания индекса: %s", res.String())
@@ -98,7 +102,11 @@ func (c *OpenSearchClient) IndexDocument(indexName, id string, document interfac
 	if err != nil {
 		return fmt.Errorf("ошибка индексации документа: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	if res.IsError() {
 		return fmt.Errorf("ошибка индексации документа: %s", res.String())
@@ -165,7 +173,11 @@ func (c *OpenSearchClient) BulkIndex(indexName string, documents []map[string]in
 	if err != nil {
 		return fmt.Errorf("ошибка bulk индексации: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	if res.IsError() {
 		return fmt.Errorf("ошибка bulk индексации: %s", res.String())
@@ -185,7 +197,11 @@ func (c *OpenSearchClient) DeleteDocument(indexName, id string) error {
 	if err != nil {
 		return fmt.Errorf("ошибка удаления документа: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	if res.IsError() && res.StatusCode != 404 { // Игнорируем ошибку, если документ не найден
 		return fmt.Errorf("ошибка удаления документа: %s", res.String())
@@ -210,7 +226,11 @@ func (c *OpenSearchClient) Search(indexName string, query map[string]interface{}
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	if res.IsError() {
 		return nil, fmt.Errorf("ошибка выполнения поиска: %s", res.String())
@@ -325,7 +345,11 @@ func (c *OpenSearchClient) DeleteIndex(indexName string) error {
 	if err != nil {
 		return fmt.Errorf("ошибка удаления индекса: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	if res.IsError() && res.StatusCode != 404 { // Игнорируем, если индекс не существует
 		return fmt.Errorf("ошибка удаления индекса: %s", res.String())

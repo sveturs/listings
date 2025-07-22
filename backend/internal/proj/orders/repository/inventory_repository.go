@@ -49,7 +49,11 @@ func (r *InventoryRepository) CreateReservation(ctx context.Context, reservation
 	if err != nil {
 		return nil, fmt.Errorf("failed to create reservation: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	if rows.Next() {
 		err = rows.Scan(&reservation.ID, &reservation.CreatedAt)
@@ -208,7 +212,11 @@ func (r *InventoryRepository) CreateStockMovement(ctx context.Context, movement 
 	if err != nil {
 		return fmt.Errorf("failed to create stock movement: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	if rows.Next() {
 		err = rows.Scan(&movement.ID, &movement.CreatedAt)

@@ -68,7 +68,11 @@ func (s *POIService) SearchPOI(ctx context.Context, poiType types.POIType, lat, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("MapBox API returned status %d", resp.StatusCode)

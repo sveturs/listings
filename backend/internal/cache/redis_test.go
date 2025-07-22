@@ -429,7 +429,9 @@ func TestRedisCache_GracefulDegradation(t *testing.T) {
 	ctx := context.Background()
 
 	// Close the connection to simulate Redis being unavailable
-	cache.Close()
+	if err := cache.Close(); err != nil {
+		t.Logf("Failed to close cache: %v", err)
+	}
 
 	t.Run("Set with closed connection", func(t *testing.T) {
 		err := cache.Set(ctx, "test", "value", time.Hour)

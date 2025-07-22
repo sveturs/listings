@@ -352,7 +352,11 @@ func (r *PaymentRepository) GetPayoutsBySellerID(ctx context.Context, sellerID i
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var payouts []*models.MerchantPayout
 	for rows.Next() {

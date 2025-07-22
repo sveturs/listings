@@ -131,7 +131,11 @@ func (s *Storage) DeleteUser(ctx context.Context, id int) error {
 		log.Printf("Error beginning transaction: %v", err)
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			log.Printf("Failed to rollback transaction: %v", err)
+		}
+	}()
 
 	// 1. Сначала проверим все объявления и удалим зависимые данные
 	log.Printf("Deleting data for user's marketplace listings")

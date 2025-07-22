@@ -223,7 +223,11 @@ func (s *BalanceService) GetTransactions(ctx context.Context, userID int, limit,
 	if err != nil {
 		return nil, fmt.Errorf("failed to get transactions: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var transactions []models.BalanceTransaction
 	for rows.Next() {
@@ -253,7 +257,11 @@ func (s *BalanceService) GetPaymentMethods(ctx context.Context) ([]models.Paymen
 	if err != nil {
 		return nil, fmt.Errorf("failed to get payment methods: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var methods []models.PaymentMethod
 	for rows.Next() {

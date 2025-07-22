@@ -7,6 +7,7 @@ import (
 	"backend/internal/logger"
 	"backend/internal/proj/marketplace/service"
 	"backend/internal/storage/postgres"
+
 	"github.com/rs/zerolog"
 )
 

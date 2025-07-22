@@ -214,7 +214,11 @@ func (s *MarketplaceService) ReorderCategories(ctx context.Context, orderedIDs [
 	if err != nil {
 		return fmt.Errorf("не удалось начать транзакцию: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			fmt.Printf("Failed to rollback transaction: %v", err)
+		}
+	}()
 
 	// Обновляем порядок для каждой категории
 	for i, id := range orderedIDs {
