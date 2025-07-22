@@ -280,6 +280,16 @@ func (r *storefrontRepo) Update(ctx context.Context, id int, dto *models.Storefr
 		args = append(args, *dto.Website)
 		argCount++
 	}
+	if dto.LogoURL != nil {
+		setClauses = append(setClauses, fmt.Sprintf("logo_url = $%d", argCount))
+		args = append(args, *dto.LogoURL)
+		argCount++
+	}
+	if dto.BannerURL != nil {
+		setClauses = append(setClauses, fmt.Sprintf("banner_url = $%d", argCount))
+		args = append(args, *dto.BannerURL)
+		argCount++
+	}
 	if dto.Location != nil {
 		setClauses = append(setClauses, fmt.Sprintf("address = $%d", argCount))
 		args = append(args, dto.Location.FullAddress)
