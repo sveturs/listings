@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"backend/internal/proj/gis/types"
 	"backend/internal/logger"
+	"backend/internal/proj/gis/types"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"

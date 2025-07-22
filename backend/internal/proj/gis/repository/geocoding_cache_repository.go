@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"backend/internal/proj/gis/types"
 	"backend/internal/logger"
+	"backend/internal/proj/gis/types"
 
 	"github.com/jmoiron/sqlx"
 )

@@ -298,8 +298,8 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 				}
 			}
 			if err := tRows.Close(); err != nil {
-			logger.Error().Err(err).Msg("Failed to close translation rows")
-		}
+				logger.Error().Err(err).Msg("Failed to close translation rows")
+			}
 		}
 
 		// Загружаем переводы для опций атрибута
@@ -415,8 +415,8 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 				}
 			}
 			if err := oRows.Close(); err != nil {
-			logger.Error().Err(err).Msg("Failed to close option translation rows")
-		}
+				logger.Error().Err(err).Msg("Failed to close option translation rows")
+			}
 		}
 	}
 
@@ -939,8 +939,8 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 				}
 			}
 			if err := tRows.Close(); err != nil {
-			logger.Error().Err(err).Msg("Failed to close translation rows")
-		}
+				logger.Error().Err(err).Msg("Failed to close translation rows")
+			}
 		}
 
 		// Получаем переводы для опций атрибута
@@ -962,8 +962,8 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 				}
 			}
 			if err := oRows.Close(); err != nil {
-			logger.Error().Err(err).Msg("Failed to close option translation rows")
-		}
+				logger.Error().Err(err).Msg("Failed to close option translation rows")
+			}
 		}
 
 		mapping.Attribute = &attribute
