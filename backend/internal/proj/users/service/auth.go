@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/storage"
 	"backend/internal/types"
 	"backend/pkg/jwt"
@@ -67,8 +68,15 @@ func (s *AuthService) GetGoogleAuthURL(origin string) string {
 }
 
 func (s *AuthService) HandleGoogleCallback(ctx context.Context, code string) (*types.SessionData, error) {
+	logger.Info().
+		Str("code_prefix", code[:10]+"...").
+		Msg("HandleGoogleCallback: exchanging code for token")
+	
 	token, err := s.googleConfig.Exchange(ctx, code)
 	if err != nil {
+		logger.Error().
+			Err(err).
+			Msg("HandleGoogleCallback: failed to exchange code for token")
 		return nil, err
 	}
 

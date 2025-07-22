@@ -87,6 +87,10 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 
 	sessionData, err := h.services.Auth().HandleGoogleCallback(c.Context(), code)
 	if err != nil {
+		logger.Error().
+			Err(err).
+			Str("code", code[:10]+"...").
+			Msg("GoogleCallback: HandleGoogleCallback failed")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "auth.google_callback.error.authentication_failed")
 	}
 

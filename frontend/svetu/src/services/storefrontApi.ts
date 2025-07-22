@@ -59,11 +59,6 @@ export interface AnalyticsParams {
   to?: string;
 }
 
-export interface FileUploadParams {
-  storefrontId: number;
-  file: File;
-  type: 'logo' | 'banner';
-}
 
 /**
  * API сервис для работы с витринами
@@ -387,42 +382,6 @@ class StorefrontApiService {
     });
   }
 
-  // Загрузка файлов
-
-  /**
-   * Загрузка логотипа или баннера витрины
-   */
-  async uploadFile(params: FileUploadParams): Promise<{ url: string }> {
-    const { storefrontId, file, type } = params;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const endpoint = `/api/v1/storefronts/${storefrontId}/upload/${type}`;
-
-    return this.request<{ url: string }>(endpoint, {
-      method: 'POST',
-      body: formData,
-      headers: {}, // Убираем Content-Type для FormData
-    });
-  }
-
-  /**
-   * Загрузка логотипа витрины
-   */
-  async uploadLogo(storefrontId: number, file: File): Promise<{ url: string }> {
-    return this.uploadFile({ storefrontId, file, type: 'logo' });
-  }
-
-  /**
-   * Загрузка баннера витрины
-   */
-  async uploadBanner(
-    storefrontId: number,
-    file: File
-  ): Promise<{ url: string }> {
-    return this.uploadFile({ storefrontId, file, type: 'banner' });
-  }
 
   // Управление персоналом
 
