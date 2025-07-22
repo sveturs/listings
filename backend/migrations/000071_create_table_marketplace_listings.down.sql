@@ -19,3 +19,4 @@ DROP TRIGGER IF EXISTS refresh_category_counts_insert ON public.marketplace_list
 DROP TRIGGER IF EXISTS refresh_category_counts_update ON public.marketplace_listings;
 DROP TRIGGER IF EXISTS trg_new_listing_price_history ON public.marketplace_listings;
 DROP TRIGGER IF EXISTS trg_update_listing_price_history ON public.marketplace_listings;
+DROP TRIGGER IF EXISTS trigger_marketplace_listings_cache_refresh ON public.marketplace_listings;

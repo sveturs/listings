@@ -40,8 +40,8 @@ CREATE TABLE public.payment_transactions (
     capture_attempted_at timestamp with time zone,
     capture_attempts integer DEFAULT 0,
     CONSTRAINT payment_transactions_amount_positive CHECK ((amount > (0)::numeric)),
-    CONSTRAINT payment_transactions_capture_mode_check CHECK (((capture_mode)::text = ANY ((ARRAY['auto'::character varying, 'manual'::character varying])::text[]))),
-    CONSTRAINT payment_transactions_status_valid CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'authorized'::character varying, 'captured'::character varying, 'failed'::character varying, 'refunded'::character varying, 'voided'::character varying])::text[])))
+    CONSTRAINT payment_transactions_capture_mode_check CHECK (((capture_mode)::text = ANY (ARRAY[('auto'::character varying)::text, ('manual'::character varying)::text]))),
+    CONSTRAINT payment_transactions_status_valid CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('authorized'::character varying)::text, ('captured'::character varying)::text, ('failed'::character varying)::text, ('refunded'::character varying)::text, ('voided'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.payment_transactions_id_seq OWNED BY public.payment_transactions.id;

@@ -34,7 +34,7 @@ CREATE TABLE public.storefront_products (
     show_on_map boolean DEFAULT true,
     CONSTRAINT storefront_products_price_check CHECK ((price >= (0)::numeric)),
     CONSTRAINT storefront_products_stock_quantity_check CHECK ((stock_quantity >= 0)),
-    CONSTRAINT storefront_products_stock_status_check CHECK (((stock_status)::text = ANY ((ARRAY['in_stock'::character varying, 'low_stock'::character varying, 'out_of_stock'::character varying])::text[])))
+    CONSTRAINT storefront_products_stock_status_check CHECK (((stock_status)::text = ANY (ARRAY[('in_stock'::character varying)::text, ('low_stock'::character varying)::text, ('out_of_stock'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.storefront_products_id_seq OWNED BY public.storefront_products.id;
@@ -68,5 +68,11 @@ ALTER TABLE ONLY public.storefront_products
 
 ALTER TABLE ONLY public.storefront_products
     ADD CONSTRAINT storefront_products_storefront_id_fkey FOREIGN KEY (storefront_id) REFERENCES public.storefronts(id) ON DELETE CASCADE;
+
+CREATE TRIGGER trigger_auto_geocode_storefront_product AFTER INSERT OR UPDATE ON public.storefront_products FOR EACH ROW EXECUTE FUNCTION public.auto_geocode_storefront_product();
+
+CREATE TRIGGER trigger_cleanup_storefront_product_geo AFTER DELETE ON public.storefront_products FOR EACH ROW EXECUTE FUNCTION public.cleanup_unified_geo();
+
+CREATE TRIGGER trigger_storefront_products_cache_refresh AFTER INSERT OR DELETE OR UPDATE ON public.storefront_products FOR EACH ROW EXECUTE FUNCTION public.trigger_refresh_map_cache();
 
 CREATE TRIGGER update_stock_status_trigger BEFORE INSERT OR UPDATE OF stock_quantity ON public.storefront_products FOR EACH ROW EXECUTE FUNCTION public.update_product_stock_status();

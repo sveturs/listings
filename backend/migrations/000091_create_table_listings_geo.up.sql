@@ -26,8 +26,8 @@ CREATE TABLE public.listings_geo (
     district_id uuid,
     municipality_id uuid,
     CONSTRAINT chk_geocoding_confidence CHECK (((geocoding_confidence >= 0.0) AND (geocoding_confidence <= 1.0))),
-    CONSTRAINT chk_input_method CHECK (((input_method)::text = ANY ((ARRAY['manual'::character varying, 'geocoded'::character varying, 'map_click'::character varying, 'current_location'::character varying])::text[]))),
-    CONSTRAINT chk_location_privacy CHECK (((location_privacy)::text = ANY ((ARRAY['exact'::character varying, 'street'::character varying, 'district'::character varying, 'city'::character varying])::text[])))
+    CONSTRAINT chk_input_method CHECK (((input_method)::text = ANY (ARRAY[('manual'::character varying)::text, ('geocoded'::character varying)::text, ('map_click'::character varying)::text, ('current_location'::character varying)::text]))),
+    CONSTRAINT chk_location_privacy CHECK (((location_privacy)::text = ANY (ARRAY[('exact'::character varying)::text, ('street'::character varying)::text, ('district'::character varying)::text, ('city'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.listings_geo_id_seq OWNED BY public.listings_geo.id;
@@ -67,5 +67,7 @@ ALTER TABLE ONLY public.listings_geo
 
 ALTER TABLE ONLY public.listings_geo
     ADD CONSTRAINT listings_geo_municipality_id_fkey FOREIGN KEY (municipality_id) REFERENCES public.municipalities(id) ON DELETE SET NULL;
+
+CREATE TRIGGER trigger_listings_geo_updated_at BEFORE UPDATE ON public.listings_geo FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 CREATE TRIGGER trigger_update_listings_geo_updated_at BEFORE UPDATE ON public.listings_geo FOR EACH ROW EXECUTE FUNCTION public.update_listings_geo_updated_at();

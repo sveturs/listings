@@ -21,7 +21,7 @@ CREATE TABLE public.custom_ui_components (
     template_code text DEFAULT ''::text NOT NULL,
     styles text DEFAULT ''::text,
     props_schema jsonb DEFAULT '{}'::jsonb,
-    CONSTRAINT custom_ui_components_component_type_check CHECK (((component_type)::text = ANY ((ARRAY['category'::character varying, 'attribute'::character varying, 'filter'::character varying])::text[])))
+    CONSTRAINT custom_ui_components_component_type_check CHECK (((component_type)::text = ANY (ARRAY[('category'::character varying)::text, ('attribute'::character varying)::text, ('filter'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.custom_ui_components_id_seq OWNED BY public.custom_ui_components.id;

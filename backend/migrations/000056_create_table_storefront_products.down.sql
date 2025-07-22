@@ -13,4 +13,7 @@ DROP INDEX IF EXISTS public.idx_storefront_products_stock_status;
 DROP INDEX IF EXISTS public.idx_storefront_products_storefront_id;
 DROP INDEX IF EXISTS public.unique_storefront_product_barcode;
 DROP INDEX IF EXISTS public.unique_storefront_product_sku;
+DROP TRIGGER IF EXISTS trigger_auto_geocode_storefront_product ON public.storefront_products;
+DROP TRIGGER IF EXISTS trigger_cleanup_storefront_product_geo ON public.storefront_products;
+DROP TRIGGER IF EXISTS trigger_storefront_products_cache_refresh ON public.storefront_products;
 DROP TRIGGER IF EXISTS update_stock_status_trigger ON public.storefront_products;

@@ -22,20 +22,19 @@ CREATE TABLE public.marketplace_categories (
     count integer DEFAULT 0,
     external_id character varying(255),
     description text,
-    is_active boolean DEFAULT true
+    is_active boolean DEFAULT true,
+    seo_title character varying(255),
+    seo_description text,
+    seo_keywords text
 );
 
 ALTER SEQUENCE public.marketplace_categories_id_seq OWNED BY public.marketplace_categories.id;
 
 CREATE INDEX idx_marketplace_categories_external_id ON public.marketplace_categories USING btree (external_id);
 
-CREATE INDEX idx_marketplace_categories_is_active ON public.marketplace_categories USING btree (is_active) WHERE (is_active = true);
-
 CREATE INDEX idx_marketplace_categories_parent ON public.marketplace_categories USING btree (parent_id);
 
 CREATE INDEX idx_marketplace_categories_slug ON public.marketplace_categories USING btree (slug);
-
-CREATE INDEX idx_marketplace_categories_sort_order ON public.marketplace_categories USING btree (sort_order);
 
 ALTER TABLE ONLY public.marketplace_categories
     ADD CONSTRAINT marketplace_categories_pkey PRIMARY KEY (id);

@@ -22,7 +22,7 @@ CREATE TABLE public.escrow_payments (
     updated_at timestamp with time zone DEFAULT now(),
     CONSTRAINT escrow_payments_amount_positive CHECK ((amount > (0)::numeric)),
     CONSTRAINT escrow_payments_amounts_sum CHECK (((marketplace_commission + seller_amount) = amount)),
-    CONSTRAINT escrow_payments_status_valid CHECK (((status)::text = ANY ((ARRAY['held'::character varying, 'released'::character varying, 'refunded'::character varying])::text[])))
+    CONSTRAINT escrow_payments_status_valid CHECK (((status)::text = ANY (ARRAY[('held'::character varying)::text, ('released'::character varying)::text, ('refunded'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.escrow_payments_id_seq OWNED BY public.escrow_payments.id;

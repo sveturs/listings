@@ -29,7 +29,7 @@ CREATE TABLE public.storefront_product_variants (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT storefront_product_variants_stock_quantity_check CHECK ((stock_quantity >= 0)),
-    CONSTRAINT storefront_product_variants_stock_status_check CHECK (((stock_status)::text = ANY ((ARRAY['in_stock'::character varying, 'low_stock'::character varying, 'out_of_stock'::character varying])::text[])))
+    CONSTRAINT storefront_product_variants_stock_status_check CHECK (((stock_status)::text = ANY (ARRAY[('in_stock'::character varying)::text, ('low_stock'::character varying)::text, ('out_of_stock'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.storefront_product_variants_id_seq OWNED BY public.storefront_product_variants.id;

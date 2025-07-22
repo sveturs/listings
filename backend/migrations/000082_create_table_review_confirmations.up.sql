@@ -15,7 +15,7 @@ CREATE TABLE public.review_confirmations (
     confirmation_status character varying(50) NOT NULL,
     confirmed_at timestamp without time zone DEFAULT now() NOT NULL,
     notes text,
-    CONSTRAINT review_confirmations_confirmation_status_check CHECK (((confirmation_status)::text = ANY ((ARRAY['confirmed'::character varying, 'disputed'::character varying])::text[])))
+    CONSTRAINT review_confirmations_confirmation_status_check CHECK (((confirmation_status)::text = ANY (ARRAY[('confirmed'::character varying)::text, ('disputed'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.review_confirmations_id_seq OWNED BY public.review_confirmations.id;

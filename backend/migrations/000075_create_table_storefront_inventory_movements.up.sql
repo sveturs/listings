@@ -19,7 +19,7 @@ CREATE TABLE public.storefront_inventory_movements (
     notes text,
     user_id integer NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT storefront_inventory_movements_type_check CHECK (((type)::text = ANY ((ARRAY['in'::character varying, 'out'::character varying, 'adjustment'::character varying])::text[])))
+    CONSTRAINT storefront_inventory_movements_type_check CHECK (((type)::text = ANY (ARRAY[('in'::character varying)::text, ('out'::character varying)::text, ('adjustment'::character varying)::text])))
 );
 
 ALTER SEQUENCE public.storefront_inventory_movements_id_seq OWNED BY public.storefront_inventory_movements.id;

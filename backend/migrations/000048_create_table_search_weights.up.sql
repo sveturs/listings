@@ -21,8 +21,8 @@ CREATE TABLE public.search_weights (
     updated_at timestamp with time zone DEFAULT now(),
     created_by integer,
     updated_by integer,
-    CONSTRAINT search_weights_item_type_check CHECK (((item_type)::text = ANY ((ARRAY['marketplace'::character varying, 'storefront'::character varying, 'global'::character varying])::text[]))),
-    CONSTRAINT search_weights_search_type_check CHECK (((search_type)::text = ANY ((ARRAY['fulltext'::character varying, 'fuzzy'::character varying, 'exact'::character varying])::text[]))),
+    CONSTRAINT search_weights_item_type_check CHECK (((item_type)::text = ANY (ARRAY[('marketplace'::character varying)::text, ('storefront'::character varying)::text, ('global'::character varying)::text]))),
+    CONSTRAINT search_weights_search_type_check CHECK (((search_type)::text = ANY (ARRAY[('fulltext'::character varying)::text, ('fuzzy'::character varying)::text, ('exact'::character varying)::text]))),
     CONSTRAINT search_weights_weight_check CHECK (((weight >= (0.0)::double precision) AND (weight <= (1.0)::double precision)))
 );
 
