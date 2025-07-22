@@ -220,7 +220,7 @@ func (s *ImportService) processXMLData(data []byte, storefrontID int) ([]models.
 		// Log the Digital Vision parsing error for debugging
 		fmt.Printf("Digital Vision XML parsing failed: %v\n", err)
 		// If Digital Vision format fails, try generic XML (but it's not implemented)
-		return nil, nil, fmt.Errorf("Digital Vision XML parsing failed: %v (generic XML parsing not implemented)", err)
+		return nil, nil, fmt.Errorf("digital Vision XML parsing failed: %v (generic XML parsing not implemented)", err)
 	}
 
 	return products, errors, nil

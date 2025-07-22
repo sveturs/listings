@@ -725,7 +725,7 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	carFields := createCarFieldsMap()
 	importantAttrs := createImportantAttributesMap()
 
-	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+	if len(listing.Attributes) > 0 {
 		processAttributesForIndex(doc, listing.Attributes, importantAttrs, realEstateFields, carFields, listing.ID, r)
 	}
 
@@ -1279,7 +1279,7 @@ func processCoordinates(doc map[string]interface{}, listing *models.MarketplaceL
 }
 
 func processCategoryPath(doc map[string]interface{}, listing *models.MarketplaceListing, storage storage.Storage) {
-	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
+	if len(listing.CategoryPathIds) > 0 {
 		doc["category_path_ids"] = listing.CategoryPathIds
 	} else {
 		parentID := listing.CategoryID
@@ -1320,7 +1320,7 @@ func processUser(doc map[string]interface{}, listing *models.MarketplaceListing)
 }
 
 func processImages(doc map[string]interface{}, listing *models.MarketplaceListing, storage storage.Storage) {
-	if listing.Images != nil && len(listing.Images) > 0 {
+	if len(listing.Images) > 0 {
 		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
 		for _, img := range listing.Images {
 			imageDoc := map[string]interface{}{

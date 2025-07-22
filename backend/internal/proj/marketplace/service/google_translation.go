@@ -268,7 +268,7 @@ func (s *GoogleTranslationService) Translate(ctx context.Context, text string, s
 
 	if len(result.Data.Translations) == 0 {
 		log.Printf("Google Translate не вернул перевод. Тело ответа: %s", string(bodyBytes))
-		return "", fmt.Errorf("Google Translate не вернул перевод")
+		return "", fmt.Errorf("google Translate не вернул перевод")
 	}
 
 	translatedText := result.Data.Translations[0].TranslatedText

@@ -367,7 +367,7 @@ func (sc *SecurityCheck) RequiresAdminApproval(report *SecurityReport) bool {
 
 // GenerateSecurityBrief создает краткий отчет о безопасности для администратора
 func (sc *SecurityCheck) GenerateSecurityBrief(report *SecurityReport) string {
-	brief := fmt.Sprintf("🔒 ОТЧЕТ БЕЗОПАСНОСТИ\n")
+	brief := "🔒 ОТЧЕТ БЕЗОПАСНОСТИ\n"
 	brief += fmt.Sprintf("Общий статус: %s\n", report.OverallSafety)
 	brief += fmt.Sprintf("Критических проблем: %d\n", report.CriticalIssues)
 	brief += fmt.Sprintf("Предупреждений: %d\n", report.Warnings)

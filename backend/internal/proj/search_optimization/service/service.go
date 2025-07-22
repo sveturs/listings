@@ -311,7 +311,7 @@ func (s *searchOptimizationService) weightToCTRDerivative(weight float64) float6
 	k := 5.0
 	threshold := 0.5
 	exp := math.Exp(-k * (weight - threshold))
-	return (k * exp) / math.Pow(1.0+exp, 2)
+	return (k * exp) / ((1.0 + exp) * (1.0 + exp))
 }
 
 // Расчет уверенности в результате

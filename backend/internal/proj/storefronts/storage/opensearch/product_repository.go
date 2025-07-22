@@ -116,7 +116,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 	}
 
 	// Добавляем атрибуты товара
-	if product.Attributes != nil && len(product.Attributes) > 0 {
+	if len(product.Attributes) > 0 {
 		// Извлекаем важные поля из атрибутов
 		if brand, ok := product.Attributes["brand"].(string); ok {
 			doc["brand"] = brand
@@ -161,7 +161,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 	doc["search_keywords"] = deduplicate(searchKeywords)
 
 	// Добавляем изображения
-	if product.Images != nil && len(product.Images) > 0 {
+	if len(product.Images) > 0 {
 		imagesArray := make([]map[string]interface{}, 0, len(product.Images))
 		for _, img := range product.Images {
 			// Используем PublicURL для правильного отображения изображений
@@ -935,7 +935,7 @@ func calculateQualityScore(product *models.StorefrontProduct) float64 {
 	}
 
 	// Есть изображения
-	if product.Images != nil && len(product.Images) > 0 {
+	if len(product.Images) > 0 {
 		score += 20
 		if len(product.Images) > 3 {
 			score += 10
@@ -943,7 +943,7 @@ func calculateQualityScore(product *models.StorefrontProduct) float64 {
 	}
 
 	// Есть атрибуты
-	if product.Attributes != nil && len(product.Attributes) > 0 {
+	if len(product.Attributes) > 0 {
 		score += 15
 		if len(product.Attributes) > 5 {
 			score += 10
