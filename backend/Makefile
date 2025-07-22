@@ -69,6 +69,10 @@ lint:
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run ./...
 	@echo "✅ Linting completed!"
 
+lint-errcheck:
+	@echo "Running errcheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=errcheck ./...
+
 pre-commit: format-check lint
 	@echo "✅ Pre-commit checks passed!"
 
