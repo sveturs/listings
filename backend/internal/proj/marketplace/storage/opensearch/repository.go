@@ -624,7 +624,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 			listingID := listings[i].ID
 
 			// Проверяем наличие переводов и при необходимости загружаем их
-			if listings[i].Translations == nil || len(listings[i].Translations) == 0 {
+			if len(listings[i].Translations) == 0 {
 				translations, err := r.storage.GetTranslationsForEntity(ctx, "listing", listingID)
 				if err == nil && len(translations) > 0 {
 					transMap := make(models.TranslationMap)
@@ -640,7 +640,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 			}
 
 			// Проверяем наличие атрибутов и при необходимости загружаем их
-			if listings[i].Attributes == nil || len(listings[i].Attributes) == 0 {
+			if len(listings[i].Attributes) == 0 {
 				attrs, err := r.storage.GetListingAttributes(ctx, listingID)
 				if err == nil && len(attrs) > 0 {
 					listings[i].Attributes = attrs
@@ -2187,7 +2187,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
 
-	if params.AttributeFilters != nil && len(params.AttributeFilters) > 0 {
+	if len(params.AttributeFilters) > 0 {
 		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
 
 		realEstateAttrs := map[string]bool{

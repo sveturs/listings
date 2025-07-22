@@ -71,7 +71,7 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 	attribute.CreatedAt = createdAt
 
 	// Сохраняем переводы для атрибута
-	if attribute.Translations != nil && len(attribute.Translations) > 0 {
+	if len(attribute.Translations) > 0 {
 		for lang, text := range attribute.Translations {
 			translation := &models.Translation{
 				EntityType:     "attribute",
@@ -241,7 +241,7 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 	}
 
 	// Обновляем переводы для атрибута
-	if attribute.Translations != nil && len(attribute.Translations) > 0 {
+	if len(attribute.Translations) > 0 {
 		for lang, text := range attribute.Translations {
 			translation := &models.Translation{
 				EntityType:     "attribute",

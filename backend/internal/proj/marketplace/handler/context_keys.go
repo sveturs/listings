@@ -5,5 +5,7 @@ type ContextKey string
 
 const (
 	// Context keys
-	ContextKeyLocale ContextKey = "locale"
+	ContextKeyLocale    ContextKey = "locale"
+	ContextKeyUserID    ContextKey = "user_id"
+	ContextKeyIPAddress ContextKey = "ip_address"
 )

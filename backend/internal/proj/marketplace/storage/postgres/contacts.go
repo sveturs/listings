@@ -346,34 +346,13 @@ func (s *Storage) GetUserPrivacySettings(ctx context.Context, userID int) (*mode
 
 // Обновить настройки приватности
 func (s *Storage) UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
-	setParts := []string{}
-	args := []interface{}{userID}
-	argIndex := 2
-
-	if settings.AllowContactRequests != nil {
-		setParts = append(setParts, fmt.Sprintf("allow_contact_requests = $%d", argIndex))
-		args = append(args, *settings.AllowContactRequests)
-		argIndex++
-	}
-
-	if settings.AllowMessagesFromContactsOnly != nil {
-		setParts = append(setParts, fmt.Sprintf("allow_messages_from_contacts_only = $%d", argIndex))
-		args = append(args, *settings.AllowMessagesFromContactsOnly)
-		argIndex++
-	}
-
-	if len(setParts) == 0 {
+	// Проверяем, есть ли что обновлять
+	if settings.AllowContactRequests == nil && settings.AllowMessagesFromContactsOnly == nil {
 		return fmt.Errorf("no settings to update")
 	}
 
-	setParts = append(setParts, "updated_at = CURRENT_TIMESTAMP")
-	setClause := fmt.Sprintf("SET %s", fmt.Sprintf("%s", setParts[0]))
-	for i := 1; i < len(setParts); i++ {
-		setClause += ", " + setParts[i]
-	}
-
 	// Упрощенный запрос
-	simpleQuery := `
+	query := `
 		INSERT INTO user_privacy_settings (user_id, allow_contact_requests, allow_messages_from_contacts_only) 
 		VALUES ($1, COALESCE($2, true), COALESCE($3, false)) 
 		ON CONFLICT (user_id) 
@@ -383,7 +362,7 @@ func (s *Storage) UpdateUserPrivacySettings(ctx context.Context, userID int, set
 			updated_at = CURRENT_TIMESTAMP
 	`
 
-	_, err := s.pool.Exec(ctx, simpleQuery, userID, settings.AllowContactRequests, settings.AllowMessagesFromContactsOnly)
+	_, err := s.pool.Exec(ctx, query, userID, settings.AllowContactRequests, settings.AllowMessagesFromContactsOnly)
 	if err != nil {
 		return fmt.Errorf("error updating privacy settings: %w", err)
 	}

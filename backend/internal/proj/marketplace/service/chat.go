@@ -16,6 +16,14 @@ import (
 	"backend/internal/proj/notifications/service"
 )
 
+// ChatContextKey is a type for context keys to avoid collisions
+type ChatContextKey string
+
+const (
+	// Context keys for chat service
+	ChatContextKeyListingExists ChatContextKey = "listing_exists"
+)
+
 type ChatService struct {
 	storage             storage.Storage
 	notificationService service.NotificationServiceInterface
@@ -90,7 +98,7 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 
 	// Добавляем информацию о том, существует ли листинг в контекст
 	// Это будет использовано в CreateMessage
-	ctx = context.WithValue(ctx, "listing_exists", listingExists)
+	ctx = context.WithValue(ctx, ChatContextKeyListingExists, listingExists)
 
 	if err := s.storage.CreateMessage(ctx, msg); err != nil {
 		return err

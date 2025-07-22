@@ -41,12 +41,11 @@ func (s *TranslationService) DetectLanguage(ctx context.Context, text string) (s
 
 	// Очищаем текст от HTML тегов для анализа
 	cleanText := html.UnescapeString(text)
-	cleanTextLower := strings.ToLower(cleanText)
 
 	// Регулярное выражение для удаления HTML-тегов
 	htmlTagRegex := regexp.MustCompile(`<[^>]+>`)
 	cleanText = htmlTagRegex.ReplaceAllString(cleanText, " ")
-	cleanTextLower = strings.ToLower(cleanText)
+	cleanTextLower := strings.ToLower(cleanText)
 
 	// Проверяем наличие русских букв
 	for _, char := range russianSpecific {

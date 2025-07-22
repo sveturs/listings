@@ -125,8 +125,8 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 
 	// Делаем запрос на увеличение счетчика просмотров в горутине, чтобы не задерживать ответ
 	// Создаем новый контекст с данными из текущего запроса
-	viewCtx := context.WithValue(context.Background(), "user_id", c.Locals("user_id"))
-	viewCtx = context.WithValue(viewCtx, "ip_address", c.IP())
+	viewCtx := context.WithValue(context.Background(), ContextKeyUserID, c.Locals("user_id"))
+	viewCtx = context.WithValue(viewCtx, ContextKeyIPAddress, c.IP())
 
 	go func(listingID int, ctx context.Context) {
 		err := h.services.Storage().IncrementViewsCount(ctx, listingID)
