@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"backend/internal/logger"
 	"backend/internal/proj/gis/types"
 
 	"github.com/jmoiron/sqlx"
@@ -268,7 +269,11 @@ func (r *GeocodingCacheRepository) SearchSimilar(ctx context.Context, query stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to search similar addresses: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var entries []types.GeocodingCacheEntry
 

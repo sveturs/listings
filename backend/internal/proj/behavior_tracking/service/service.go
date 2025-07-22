@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-playground/validator/v10"
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 
 	"backend/internal/domain/behavior"

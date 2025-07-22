@@ -487,7 +487,11 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			fmt.Printf("Failed to rollback transaction: %v", err)
+		}
+	}()
 
 	// Validate input data
 	if msg.SenderID == 0 || msg.ReceiverID == 0 {

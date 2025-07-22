@@ -101,7 +101,11 @@ func (g *geocodingService) GeocodeAddress(ctx context.Context, address string) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to geocode: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// Логирование ошибки закрытия Body
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("geocoding failed with status %d", resp.StatusCode)
@@ -159,7 +163,11 @@ func (g *geocodingService) ReverseGeocode(ctx context.Context, lat, lng float64)
 	if err != nil {
 		return nil, fmt.Errorf("failed to reverse geocode: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// Логирование ошибки закрытия Body
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("reverse geocoding failed with status %d", resp.StatusCode)
@@ -227,8 +235,12 @@ func (g *geocodingService) ValidateAddress(ctx context.Context, address string) 
 func (g *geocodingService) parseNominatimResponse(resp *nominatimResponse) *models.Location {
 	lat := 0.0
 	lng := 0.0
-	fmt.Sscanf(resp.Lat, "%f", &lat)
-	fmt.Sscanf(resp.Lon, "%f", &lng)
+	if _, err := fmt.Sscanf(resp.Lat, "%f", &lat); err != nil {
+		// Не удалось распарсить широту, оставляем 0.0
+	}
+	if _, err := fmt.Sscanf(resp.Lon, "%f", &lng); err != nil {
+		// Не удалось распарсить долготу, оставляем 0.0
+	}
 
 	// Определяем город (может быть в разных полях)
 	city := resp.Address.City

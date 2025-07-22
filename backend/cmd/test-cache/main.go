@@ -49,7 +49,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create Redis cache: %v", err)
 	}
-	defer redisCache.Close()
+	defer func() {
+		if err := redisCache.Close(); err != nil {
+			log.Printf("Failed to close Redis connection: %v", err)
+		}
+	}()
 
 	// Создаем адаптер
 	cacheAdapter := cache.NewAdapter(redisCache)
@@ -216,11 +220,13 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
 			"locale":     locale,
 			"categories": cats,
 			"cached":     true,
-		})
+		}); err != nil {
+			log.Printf("Failed to encode categories response: %v", err)
+		}
 	})
 
 	http.HandleFunc("/categories/invalidate", func(w http.ResponseWriter, r *http.Request) {
@@ -237,11 +243,13 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
 			"status":  "success",
 			"pattern": pattern,
 			"message": "All category cache entries invalidated",
-		})
+		}); err != nil {
+			log.Printf("Failed to encode invalidate response: %v", err)
+		}
 	})
 
 	http.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
@@ -254,7 +262,9 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(stats)
+		if err := json.NewEncoder(w).Encode(stats); err != nil {
+			log.Printf("Failed to encode stats response: %v", err)
+		}
 	})
 
 	fmt.Println("\n   Server starting on http://localhost:8080")

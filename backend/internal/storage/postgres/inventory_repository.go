@@ -104,7 +104,11 @@ func (r *inventoryRepository) ReserveStock(ctx context.Context, reservation *mod
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Проверяем доступность товара и обновляем резерв
 	updateQuery := `
@@ -179,7 +183,11 @@ func (r *inventoryRepository) ReleaseReservation(ctx context.Context, reservatio
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Получаем информацию о резервировании
 	var reservation models.InventoryReservation
@@ -264,7 +272,11 @@ func (r *inventoryRepository) ConfirmReservation(ctx context.Context, reservatio
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Получаем информацию о резервировании
 	var reservation models.InventoryReservation

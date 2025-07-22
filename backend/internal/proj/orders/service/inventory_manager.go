@@ -155,7 +155,9 @@ func (im *InventoryManager) CommitOrderReservations(ctx context.Context, orderID
 			if err := im.CommitReservation(ctx, reservation.ID); err != nil {
 				im.logger.Error("Failed to commit reservation %d: %v", reservation.ID, err)
 				// Откатываем предыдущие
-				im.ReleaseOrderReservations(ctx, orderID)
+				if releaseErr := im.ReleaseOrderReservations(ctx, orderID); releaseErr != nil {
+					im.logger.Error("Failed to release order reservations: %v", releaseErr)
+				}
 				return fmt.Errorf("failed to commit reservation %d: %w", reservation.ID, err)
 			}
 		}

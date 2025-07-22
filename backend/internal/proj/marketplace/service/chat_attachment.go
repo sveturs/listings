@@ -123,7 +123,11 @@ func (s *ChatAttachmentService) UploadAttachments(ctx context.Context, messageID
 		if err != nil {
 			return nil, fmt.Errorf("error opening file: %w", err)
 		}
-		defer file.Close()
+		defer func() {
+			if err := file.Close(); err != nil {
+				logger.Warn().Err(err).Msg("Failed to close file")
+			}
+		}()
 
 		// Определяем тип файла
 		fileType := s.getFileType(fileHeader.Header.Get("Content-Type"))
@@ -156,7 +160,9 @@ func (s *ChatAttachmentService) UploadAttachments(ctx context.Context, messageID
 		// Сохраняем в БД
 		if err := s.storage.CreateChatAttachment(ctx, attachment); err != nil {
 			// Если не удалось сохранить в БД, удаляем файл из хранилища
-			s.fileStorage.DeleteFile(ctx, objectPath)
+			if err := s.fileStorage.DeleteFile(ctx, objectPath); err != nil {
+				logger.Warn().Err(err).Str("objectPath", objectPath).Msg("Failed to delete file after DB error")
+			}
 			return nil, fmt.Errorf("error saving attachment to database: %w", err)
 		}
 
@@ -222,7 +228,9 @@ func (s *ChatAttachmentService) DeleteAttachment(ctx context.Context, attachment
 	// Обновляем счетчик вложений
 	attachments, err := s.storage.GetMessageAttachments(ctx, attachment.MessageID)
 	if err == nil {
-		s.storage.UpdateMessageAttachmentsCount(ctx, attachment.MessageID, len(attachments))
+		if err := s.storage.UpdateMessageAttachmentsCount(ctx, attachment.MessageID, len(attachments)); err != nil {
+			logger.Warn().Err(err).Int("messageID", attachment.MessageID).Msg("Failed to update message attachments count")
+		}
 	}
 
 	return nil

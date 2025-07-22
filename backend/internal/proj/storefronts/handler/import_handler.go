@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -153,7 +154,11 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 			Message: err.Error(),
 		})
 	}
-	defer src.Close()
+	defer func() {
+		if err := src.Close(); err != nil {
+			fmt.Printf("Failed to close file: %v", err)
+		}
+	}()
 
 	// Read file data
 	fileData, err := io.ReadAll(src)
@@ -262,7 +267,11 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 			Message: err.Error(),
 		})
 	}
-	defer src.Close()
+	defer func() {
+		if err := src.Close(); err != nil {
+			fmt.Printf("Failed to close file: %v", err)
+		}
+	}()
 
 	fileData, err := io.ReadAll(src)
 	if err != nil {

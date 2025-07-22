@@ -11,10 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"backend/internal/logger"
 	"backend/internal/proj/gis/repository"
 	"backend/internal/proj/gis/types"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
 )
 
 // GeocodingService сервис для геокодирования
@@ -25,6 +27,7 @@ type GeocodingService struct {
 	httpClient     *http.Client
 	maxSuggestions int
 	defaultTTL     time.Duration
+	logger         zerolog.Logger
 }
 
 // NewGeocodingService создает новый сервис геокодирования
@@ -56,6 +59,7 @@ func NewGeocodingService(db *sqlx.DB) *GeocodingService {
 		httpClient:     &http.Client{Timeout: 10 * time.Second},
 		maxSuggestions: maxSuggestions,
 		defaultTTL:     time.Duration(ttlHours) * time.Hour,
+		logger:         logger.Get().With().Str("service", "geocoding").Logger(),
 	}
 }
 
@@ -153,7 +157,11 @@ func (s *GeocodingService) ReverseGeocode(ctx context.Context, point types.Point
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			s.logger.Warn().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("mapbox API returned status %d", resp.StatusCode)
@@ -252,7 +260,11 @@ func (s *GeocodingService) geocodeWithMapbox(ctx context.Context, req types.Geoc
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			s.logger.Warn().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("mapbox API returned status %d", resp.StatusCode)
@@ -346,7 +358,11 @@ func (s *GeocodingService) getFreshSuggestions(ctx context.Context, query string
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			s.logger.Warn().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("mapbox API returned status %d", resp.StatusCode)

@@ -264,7 +264,11 @@ func (s *Storage) RemoveContact(ctx context.Context, userID, contactUserID int) 
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Удаляем контакт в обоих направлениях
 	query := `DELETE FROM user_contacts WHERE (user_id = $1 AND contact_user_id = $2) OR (user_id = $2 AND contact_user_id = $1)`

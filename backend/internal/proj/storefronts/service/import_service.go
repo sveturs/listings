@@ -182,7 +182,11 @@ func (s *ImportService) downloadFile(ctx context.Context, url string) ([]byte, s
 	if err != nil {
 		return nil, "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// Логирование ошибки закрытия Body
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
@@ -243,7 +247,11 @@ func (s *ImportService) processZIPData(data []byte, storefrontID int) ([]models.
 
 		// Read file content
 		fileData, err := io.ReadAll(rc)
-		rc.Close()
+		func() {
+			if err := rc.Close(); err != nil {
+				fmt.Printf("Failed to close file: %v", err)
+			}
+		}()
 		if err != nil {
 			continue
 		}

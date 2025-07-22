@@ -54,7 +54,11 @@ func (r *OrderRepository) Create(ctx context.Context, order *models.StorefrontOr
 	if err != nil {
 		return nil, fmt.Errorf("failed to create order: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	if rows.Next() {
 		err = rows.Scan(&order.ID, &order.OrderNumber, &order.CreatedAt, &order.UpdatedAt, &order.EscrowReleaseDate)
@@ -219,9 +223,15 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count orders: %w", err)
 	}
-	defer countRows.Close()
+	defer func() {
+		if err := countRows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 	if countRows.Next() {
-		countRows.Scan(&total)
+		if err := countRows.Scan(&total); err != nil {
+			return nil, 0, fmt.Errorf("failed to scan total count: %w", err)
+		}
 	}
 
 	// Сортировка
@@ -268,7 +278,11 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get orders: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var orders []models.StorefrontOrder
 	for rows.Next() {
@@ -298,7 +312,11 @@ func (r *OrderRepository) AddItem(ctx context.Context, item *models.StorefrontOr
 	if err != nil {
 		return fmt.Errorf("failed to add order item: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	if rows.Next() {
 		err = rows.Scan(&item.ID, &item.CreatedAt)

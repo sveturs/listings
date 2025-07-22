@@ -214,7 +214,11 @@ func (s *MarketplaceService) ReorderCategories(ctx context.Context, orderedIDs [
 	if err != nil {
 		return fmt.Errorf("не удалось начать транзакцию: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			fmt.Printf("Failed to rollback transaction: %v", err)
+		}
+	}()
 
 	// Обновляем порядок для каждой категории
 	for i, id := range orderedIDs {
@@ -318,7 +322,11 @@ func (s *MarketplaceService) getCategoryAttributeGroupsFromDB(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("не удалось получить группы атрибутов категории: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var groups []*models.AttributeGroup
 	for rows.Next() {

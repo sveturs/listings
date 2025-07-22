@@ -22,7 +22,10 @@ import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
+	"backend/internal/logger"
 	"backend/internal/storage"
+
+	"github.com/rs/zerolog"
 	//	"net/url"
 )
 
@@ -32,6 +35,7 @@ type MarketplaceService struct {
 	OrderService       OrderServiceInterface
 	searchWeights      *config.SearchWeights
 	cache              CacheInterface
+	logger             zerolog.Logger
 }
 
 func NewMarketplaceService(storage storage.Storage, translationService TranslationServiceInterface, searchWeights *config.SearchWeights, cache CacheInterface) MarketplaceServiceInterface {
@@ -40,6 +44,7 @@ func NewMarketplaceService(storage storage.Storage, translationService Translati
 		translationService: translationService,
 		searchWeights:      searchWeights,
 		cache:              cache,
+		logger:             logger.Get().With().Str("service", "marketplace").Logger(),
 	}
 
 	// Создаем сервис заказов напрямую, избегая циклической зависимости
@@ -456,7 +461,11 @@ func (s *MarketplaceService) GetCategorySuggestions(ctx context.Context, query s
 		log.Printf("Ошибка при выполнении запроса категорий: %v", err)
 		return []models.CategorySuggestion{}, nil
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var results []models.CategorySuggestion
 	for rows.Next() {
@@ -889,7 +898,11 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %w", err)
 	}
-	defer src.Close()
+	defer func() {
+		if err := src.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 
 	// Use FileStorage to upload
 	fileStorage := s.storage.FileStorage()
@@ -922,7 +935,9 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
 	imageID, err := s.storage.AddListingImage(ctx, image)
 	if err != nil {
 		// Если не удалось сохранить информацию, удаляем файл
-		fileStorage.DeleteFile(ctx, objectName)
+		if err := fileStorage.DeleteFile(ctx, objectName); err != nil {
+			logger.Error().Err(err).Str("objectName", objectName).Msg("Failed to delete file from storage")
+		}
 		return nil, fmt.Errorf("error saving image information: %w", err)
 	}
 	log.Printf("UploadImage: Изображение успешно сохранено в базе данных с ID=%d", imageID)
@@ -978,7 +993,11 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("ошибка получения изображений: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var count int
 	for rows.Next() {
@@ -1017,19 +1036,25 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 		fileInfo, err := file.Stat()
 		if err != nil {
 			log.Printf("Ошибка получения информации о файле %s: %v", localPath, err)
-			file.Close()
+			if closeErr := file.Close(); closeErr != nil {
+				log.Printf("Ошибка закрытия файла %s: %v", localPath, closeErr)
+			}
 			continue
 		}
 
 		// Загружаем файл в MinIO
 		fileStorage := s.storage.FileStorage()
 		if fileStorage == nil {
-			file.Close()
+			if closeErr := file.Close(); closeErr != nil {
+				log.Printf("Ошибка закрытия файла %s: %v", localPath, closeErr)
+			}
 			return fmt.Errorf("сервис файлового хранилища не инициализирован")
 		}
 
 		publicURL, err := fileStorage.UploadFile(ctx, newPath, file, fileInfo.Size(), image.ContentType)
-		file.Close()
+		if closeErr := file.Close(); closeErr != nil {
+			log.Printf("Ошибка закрытия файла %s: %v", localPath, closeErr)
+		}
 		if err != nil {
 			log.Printf("Ошибка загрузки файла %s в MinIO: %v", localPath, err)
 			continue
@@ -1670,7 +1695,11 @@ func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, 
 			log.Printf("Ошибка запасного SQL-запроса: %v", err)
 			return []string{}, nil
 		}
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				// Логирование ошибки закрытия rows
+			}
+		}()
 
 		var results []string
 		for rows.Next() {
@@ -1887,7 +1916,11 @@ func (s *MarketplaceService) applyAdvancedGeoFilters(ctx context.Context, filter
 	if err != nil {
 		return nil, fmt.Errorf("failed to call GIS service: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)

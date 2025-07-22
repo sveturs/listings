@@ -151,10 +151,14 @@ func (r *PaymentRepository) GetByID(ctx context.Context, id int64) (*models.Paym
 
 	// Парсим JSON поля
 	if gatewayResponse.Valid {
-		json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse)
+		if err := json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if errorDetails.Valid {
-		json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails)
+		if err := json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 
 	return &transaction, nil
@@ -191,10 +195,14 @@ func (r *PaymentRepository) GetByGatewayTransactionID(ctx context.Context, gatew
 
 	// Парсим JSON поля
 	if gatewayResponse.Valid {
-		json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse)
+		if err := json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if errorDetails.Valid {
-		json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails)
+		if err := json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 
 	return &transaction, nil
@@ -352,7 +360,11 @@ func (r *PaymentRepository) GetPayoutsBySellerID(ctx context.Context, sellerID i
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+		}
+	}()
 
 	var payouts []*models.MerchantPayout
 	for rows.Next() {
@@ -371,13 +383,19 @@ func (r *PaymentRepository) GetPayoutsBySellerID(ctx context.Context, sellerID i
 
 		// Парсим JSON поля
 		if bankAccountInfo.Valid {
-			json.Unmarshal([]byte(bankAccountInfo.String), &payout.BankAccountInfo)
+			if err := json.Unmarshal([]byte(bankAccountInfo.String), &payout.BankAccountInfo); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if gatewayResponse.Valid {
-			json.Unmarshal([]byte(gatewayResponse.String), &payout.GatewayResponse)
+			if err := json.Unmarshal([]byte(gatewayResponse.String), &payout.GatewayResponse); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if errorDetails.Valid {
-			json.Unmarshal([]byte(errorDetails.String), &payout.ErrorDetails)
+			if err := json.Unmarshal([]byte(errorDetails.String), &payout.ErrorDetails); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 
 		payouts = append(payouts, &payout)

@@ -15,14 +15,22 @@ func DetectFaceInImage(ctx context.Context, imagePath string) (bool, error) {
 		log.Printf("DetectFaceInImage: ошибка создания клиента Vision API: %v", err)
 		return false, err
 	}
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			log.Printf("DetectFaceInImage: ошибка закрытия клиента Vision API: %v", err)
+		}
+	}()
 
 	file, err := os.Open(imagePath)
 	if err != nil {
 		log.Printf("DetectFaceInImage: ошибка открытия файла: %v", err)
 		return false, err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("Failed to close file: %v", err)
+		}
+	}()
 
 	image, err := vision.NewImageFromReader(file)
 	if err != nil {

@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"backend/internal/logger"
+	"backend/internal/proj/gis/types"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
-
-	"backend/internal/proj/gis/types"
 )
 
 // PostGISRepository репозиторий для работы с пространственными данными
@@ -171,7 +172,11 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to execute search query: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var listings []types.GeoListing
 	for rows.Next() {
@@ -465,7 +470,11 @@ func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.Searc
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to search listings: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	// Сканируем результаты
 	for rows.Next() {

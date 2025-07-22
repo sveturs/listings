@@ -11,6 +11,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/proj/marketplace/repository"
 	"backend/internal/storage"
+	"backend/pkg/logger"
 	// Удаляем импорт payments service, используем наш локальный
 )
 
@@ -22,6 +23,7 @@ type OrderService struct {
 	paymentService  *PaymentService
 	notificationSvc NotificationService // Интерфейс для уведомлений
 	platformFeeRate float64             // Комиссия платформы в процентах
+	logger          *logger.Logger      // Логгер для записи сообщений
 }
 
 // NotificationService интерфейс для отправки уведомлений
@@ -50,6 +52,7 @@ func NewOrderService(
 		paymentService:  paymentService,
 		notificationSvc: notificationSvc,
 		platformFeeRate: platformFeeRate,
+		logger:          logger.GetLogger(),
 	}
 }
 
@@ -248,7 +251,9 @@ func (s *OrderService) CreateOrderFromRequest(ctx context.Context, req CreateOrd
 	paymentResult, err := s.paymentService.CreatePayment(ctx, paymentReq)
 	if err != nil {
 		// Отменяем заказ если платеж не создался
-		s.orderRepo.UpdateStatus(ctx, order.ID, models.MarketplaceOrderStatusCancelled, "Payment creation failed", nil)
+		if err := s.orderRepo.UpdateStatus(ctx, order.ID, models.MarketplaceOrderStatusCancelled, "Payment creation failed", nil); err != nil {
+			s.logger.Error("Failed to update order status: %v", err)
+		}
 		return nil, nil, errors.Wrap(err, "failed to create payment")
 	}
 
@@ -257,7 +262,11 @@ func (s *OrderService) CreateOrderFromRequest(ctx context.Context, req CreateOrd
 	// TODO: Обновить payment_transaction_id в БД
 
 	// 5. Отправляем уведомление продавцу
-	go s.notificationSvc.SendOrderCreated(ctx, order)
+	go func() {
+		if err := s.notificationSvc.SendOrderCreated(ctx, order); err != nil {
+			s.logger.Error("Failed to send order created notification: %v", err)
+		}
+	}()
 
 	return order, paymentResult, nil
 }
@@ -280,7 +289,11 @@ func (s *OrderService) ConfirmPayment(ctx context.Context, orderID int64) error 
 	}
 
 	// Отправляем уведомления
-	go s.notificationSvc.SendOrderPaid(ctx, order)
+	go func() {
+		if err := s.notificationSvc.SendOrderPaid(ctx, order); err != nil {
+			s.logger.Error("Failed to send order paid notification: %v", err)
+		}
+	}()
 
 	return nil
 }
@@ -323,10 +336,16 @@ func (s *OrderService) MarkAsShipped(ctx context.Context, orderID int64, sellerI
 			"tracking_number": trackingNumber,
 		},
 	}
-	s.orderRepo.AddMessage(ctx, message)
+	if err := s.orderRepo.AddMessage(ctx, message); err != nil {
+		s.logger.Error("Failed to add shipping message: %v", err)
+	}
 
 	// Уведомляем покупателя
-	go s.notificationSvc.SendOrderShipped(ctx, order)
+	go func() {
+		if err := s.notificationSvc.SendOrderShipped(ctx, order); err != nil {
+			s.logger.Error("Failed to send order shipped notification: %v", err)
+		}
+	}()
 
 	return nil
 }
@@ -358,7 +377,11 @@ func (s *OrderService) ConfirmDelivery(ctx context.Context, orderID int64, buyer
 	// TODO: Обновить protection_expires_at в БД
 
 	// Уведомляем продавца
-	go s.notificationSvc.SendOrderDelivered(ctx, order)
+	go func() {
+		if err := s.notificationSvc.SendOrderDelivered(ctx, order); err != nil {
+			s.logger.Error("Failed to send order delivered notification: %v", err)
+		}
+	}()
 
 	return nil
 }
@@ -393,7 +416,11 @@ func (s *OrderService) CompleteOrder(ctx context.Context, orderID int64) error {
 	// TODO: s.paymentService.CreatePayout(...)
 
 	// Уведомляем о выплате
-	go s.notificationSvc.SendPaymentReleased(ctx, order)
+	go func() {
+		if err := s.notificationSvc.SendPaymentReleased(ctx, order); err != nil {
+			s.logger.Error("Failed to send payment released notification: %v", err)
+		}
+	}()
 
 	return nil
 }
@@ -435,7 +462,9 @@ func (s *OrderService) OpenDispute(ctx context.Context, orderID int64, userID in
 			"dispute_reason": reason,
 		},
 	}
-	s.orderRepo.AddMessage(ctx, message)
+	if err := s.orderRepo.AddMessage(ctx, message); err != nil {
+		s.logger.Error("Failed to add dispute message: %v", err)
+	}
 
 	// TODO: Уведомить службу поддержки
 

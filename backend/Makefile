@@ -46,48 +46,32 @@ docs-clean:
 # Go formatting and linting
 format:
 	@echo "Formatting Go code with gofumpt..."
-	@if ! command -v gofumpt >/dev/null 2>&1; then \
-		echo "Installing gofumpt..."; \
-		go install mvdan.cc/gofumpt@latest; \
-	fi
-	@if ! command -v goimports >/dev/null 2>&1; then \
-		echo "Installing goimports..."; \
-		go install golang.org/x/tools/cmd/goimports@latest; \
-	fi
-	gofumpt -l -w .
-	goimports -w .
+	go tool golang.org/x/tools/cmd/goimports -w .
+	go tool mvdan.cc/gofumpt -w .
 	@echo "Go code formatting completed!"
 
 format-check:
 	@echo "Checking Go code formatting..."
-	@if ! command -v gofumpt >/dev/null 2>&1; then \
-		echo "Installing gofumpt..."; \
-		go install mvdan.cc/gofumpt@latest; \
-	fi
-	@if ! command -v goimports >/dev/null 2>&1; then \
-		echo "Installing goimports..."; \
-		go install golang.org/x/tools/cmd/goimports@latest; \
-	fi
-	@if [ -n "$$(gofumpt -d .)" ]; then \
+	@if [ -n "$$(go tool mvdan.cc/gofumpt -d .)" ]; then \
 		echo "❌ Code is not formatted. Run 'make format' to fix."; \
-		gofumpt -d .; \
+		go tool mvdan.cc/gofumpt -d .; \
 		exit 1; \
 	fi
-	@if [ -n "$$(goimports -d .)" ]; then \
+	@if [ -n "$$(go tool golang.org/x/tools/cmd/goimports -d .)" ]; then \
 		echo "❌ Imports are not formatted. Run 'make format' to fix."; \
-		goimports -d .; \
+		go tool golang.org/x/tools/cmd/goimports -d .; \
 		exit 1; \
 	fi
 	@echo "✅ Go code formatting is correct!"
 
 lint:
 	@echo "Running Go linters..."
-	@if ! command -v golangci-lint >/dev/null 2>&1; then \
-		echo "Installing golangci-lint..."; \
-		go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; \
-	fi
-	golangci-lint run ./...
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run ./...
 	@echo "✅ Linting completed!"
+
+lint-errcheck:
+	@echo "Running errcheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=errcheck ./...
 
 pre-commit: format-check lint
 	@echo "✅ Pre-commit checks passed!"

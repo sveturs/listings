@@ -79,7 +79,9 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("Error connecting to database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		db.Close()
+	}()
 
 	// Проверка подключения к БД
 	if err := db.Ping(context.Background()); err != nil {

@@ -127,7 +127,11 @@ func (r *CartRepository) Create(ctx context.Context, cart *models.ShoppingCart) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cart: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	if rows.Next() {
 		err = rows.Scan(&cart.ID, &cart.CreatedAt, &cart.UpdatedAt)
@@ -221,7 +225,11 @@ func (r *CartRepository) AddItem(ctx context.Context, item *models.ShoppingCartI
 	if err != nil {
 		return nil, fmt.Errorf("failed to add cart item: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	if rows.Next() {
 		err = rows.Scan(&item.ID, &item.CreatedAt, &item.UpdatedAt)

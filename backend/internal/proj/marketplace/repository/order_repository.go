@@ -64,7 +64,11 @@ func (r *OrderRepository) Create(ctx context.Context, order *models.MarketplaceO
 	if err != nil {
 		return errors.Wrap(err, "failed to create order")
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	if rows.Next() {
 		err = rows.Scan(&order.ID, &order.CreatedAt, &order.UpdatedAt)
@@ -308,7 +312,11 @@ func (r *OrderRepository) AddMessage(ctx context.Context, message *models.OrderM
 	if err != nil {
 		return errors.Wrap(err, "failed to add message")
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	if rows.Next() {
 		err = rows.Scan(&message.ID, &message.CreatedAt)

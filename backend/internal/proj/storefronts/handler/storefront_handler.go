@@ -777,7 +777,11 @@ func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_open_file")
 	}
-	defer src.Close()
+	defer func() {
+		if err := src.Close(); err != nil {
+			// Логирование ошибки закрытия file
+		}
+	}()
 
 	// Читаем данные
 	data := make([]byte, file.Size)
@@ -833,7 +837,11 @@ func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_open_file")
 	}
-	defer src.Close()
+	defer func() {
+		if err := src.Close(); err != nil {
+			// Логирование ошибки закрытия file
+		}
+	}()
 
 	// Читаем данные
 	data := make([]byte, file.Size)

@@ -7,18 +7,22 @@ import (
 	"backend/internal/logger"
 	"backend/internal/proj/marketplace/service"
 	"backend/internal/storage/postgres"
+
+	"github.com/rs/zerolog"
 )
 
 // MarketplaceHandler represents the main handler for marketplace operations
 type MarketplaceHandler struct {
 	storage *postgres.Storage
 	service service.MarketplaceServiceInterface
+	logger  zerolog.Logger
 }
 
 // NewMarketplaceHandler creates a new marketplace handler
 func NewMarketplaceHandler(storage *postgres.Storage) *MarketplaceHandler {
 	return &MarketplaceHandler{
 		storage: storage,
+		logger:  logger.Get().With().Str("handler", "marketplace").Logger(),
 	}
 }
 
@@ -33,7 +37,9 @@ func (h *MarketplaceHandler) respondWithJSON(w http.ResponseWriter, statusCode i
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	w.Write(response)
+	if _, err := w.Write(response); err != nil {
+		h.logger.Error().Err(err).Msg("Failed to write response")
+	}
 }
 
 // respondWithError sends an error response in JSON format

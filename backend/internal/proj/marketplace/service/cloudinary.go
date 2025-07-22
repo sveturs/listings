@@ -93,14 +93,22 @@ func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string)
 		log.Printf("ModerateImage: ошибка создания Vision клиента: %v", err)
 		return result, nil
 	}
-	defer visionClient.Close()
+	defer func() {
+		if err := visionClient.Close(); err != nil {
+			log.Printf("ModerateImage: failed to close vision client: %v", err)
+		}
+	}()
 
 	file, err := os.Open(imagePath)
 	if err != nil {
 		log.Printf("ModerateImage: ошибка открытия файла Vision: %v", err)
 		return result, nil
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("ModerateImage: failed to close file: %v", err)
+		}
+	}()
 
 	img, err := vision.NewImageFromReader(file)
 	if err != nil {

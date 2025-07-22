@@ -26,7 +26,11 @@ func TestRedisCacheRealIntegration(t *testing.T) {
 	if err != nil {
 		t.Skipf("Skipping test: Redis not available: %v", err)
 	}
-	defer cache.Close()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			t.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 
@@ -309,7 +313,11 @@ func BenchmarkRedisCacheOperations(b *testing.B) {
 	if err != nil {
 		b.Skipf("Skipping benchmark: Redis not available: %v", err)
 	}
-	defer cache.Close()
+	defer func() {
+		if err := cache.Close(); err != nil {
+			b.Logf("Failed to close cache: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 

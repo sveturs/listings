@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 
+	"backend/internal/logger"
 	"backend/internal/proj/gis/types"
 
 	"github.com/jmoiron/sqlx"
@@ -196,7 +197,11 @@ func (s *DensityService) GetDensityHeatmap(ctx context.Context, bbox *types.Boun
 	if err != nil {
 		return nil, fmt.Errorf("failed to get density heatmap: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var points []map[string]interface{}
 	for rows.Next() {

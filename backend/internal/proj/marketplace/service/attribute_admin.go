@@ -10,6 +10,7 @@ import (
 
 	"backend/internal/cache"
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 )
 
 // CreateAttribute создает новый атрибут категории
@@ -278,7 +279,11 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 	if err != nil {
 		return fmt.Errorf("не удалось получить связанные категории: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	for rows.Next() {
 		var categoryID int
@@ -323,19 +328,27 @@ func (s *MarketplaceService) DeleteAttribute(ctx context.Context, id int) error 
 	for rows.Next() {
 		var categoryID int
 		if err := rows.Scan(&categoryID); err != nil {
-			rows.Close()
+			if closeErr := rows.Close(); closeErr != nil {
+				logger.Error().Err(closeErr).Msg("Failed to close rows")
+			}
 			return fmt.Errorf("не удалось прочитать ID категории: %w", err)
 		}
 		categoryIDs = append(categoryIDs, categoryID)
 	}
-	rows.Close()
+	if err := rows.Close(); err != nil {
+		logger.Error().Err(err).Msg("Failed to close rows")
+	}
 
 	// Начинаем транзакцию
 	tx, err := s.storage.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("не удалось начать транзакцию: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			s.logger.Warn().Err(err).Msg("Failed to rollback transaction")
+		}
+	}()
 
 	// Удаляем связи с категориями
 	_, err = tx.Exec(ctx, "DELETE FROM category_attribute_mapping WHERE attribute_id = $1", id)
@@ -416,7 +429,11 @@ func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*mod
 	if err != nil {
 		return &attribute, fmt.Errorf("не удалось получить переводы: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	attribute.Translations = make(map[string]string)
 	for rows.Next() {
@@ -437,7 +454,11 @@ func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*mod
 	if err != nil {
 		return &attribute, fmt.Errorf("не удалось получить переводы опций: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	attribute.OptionTranslations = make(map[string]map[string]string)
 	for rows.Next() {
@@ -621,7 +642,11 @@ func (s *MarketplaceService) GetCategoryByID(ctx context.Context, id int) (*mode
 	if err != nil {
 		return &category, fmt.Errorf("не удалось получить переводы: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	category.Translations = make(map[string]string)
 	for rows.Next() {
@@ -711,7 +736,11 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 	if err != nil {
 		return nil, fmt.Errorf("не удалось получить атрибуты категории: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	attributes := make([]models.CategoryAttribute, 0)
 	for rows.Next() {
@@ -791,7 +820,9 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 					attribute.Translations[lang] = text
 				}
 			}
-			tRows.Close()
+			if err := tRows.Close(); err != nil {
+				s.logger.Warn().Err(err).Msg("Failed to close translation rows")
+			}
 		}
 
 		// Получаем переводы для опций атрибута
@@ -812,7 +843,9 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 					attribute.OptionTranslations[lang][option] = text
 				}
 			}
-			oRows.Close()
+			if err := oRows.Close(); err != nil {
+				s.logger.Warn().Err(err).Msg("Failed to close option rows")
+			}
 		}
 
 		attributes = append(attributes, attribute)
@@ -982,7 +1015,11 @@ func (s *MarketplaceService) SaveListingAttributes(ctx context.Context, listingI
 	if err != nil {
 		return fmt.Errorf("не удалось начать транзакцию: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			s.logger.Warn().Err(err).Msg("Failed to rollback transaction")
+		}
+	}()
 
 	// Удаляем существующие атрибуты для данного объявления
 	_, err = tx.Exec(ctx, "DELETE FROM listing_attribute_values WHERE listing_id = $1", listingID)

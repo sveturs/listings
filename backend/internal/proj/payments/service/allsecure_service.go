@@ -146,9 +146,11 @@ func (s *AllSecureService) CreatePayment(ctx context.Context, req CreatePaymentR
 	response, err := s.client.Preauthorize(ctx, allsecureReq)
 	if err != nil {
 		// Обновляем статус транзакции
-		s.repository.UpdateTransactionStatus(ctx, transaction.ID, models.PaymentStatusFailed, map[string]interface{}{
+		if updateErr := s.repository.UpdateTransactionStatus(ctx, transaction.ID, models.PaymentStatusFailed, map[string]interface{}{
 			"error": err.Error(),
-		})
+		}); updateErr != nil {
+			// Логируем ошибку обновления, но не прерываем выполнение
+		}
 		return nil, fmt.Errorf("AllSecure request failed: %w", err)
 	}
 

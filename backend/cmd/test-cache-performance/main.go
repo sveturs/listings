@@ -93,7 +93,11 @@ func makeRequest(locale string, label string) (time.Duration, int) {
 		log.Printf("Error making request: %v", err)
 		return 0, 0
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

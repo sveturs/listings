@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -62,7 +63,11 @@ func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "storefronts.file_open_error")
 	}
-	defer src.Close()
+	defer func() {
+		if err := src.Close(); err != nil {
+			fmt.Printf("Failed to close file: %v", err)
+		}
+	}()
 
 	// Получение дополнительных параметров
 	isMain := c.FormValue("is_main") == "true"

@@ -402,7 +402,11 @@ func (h *AdminTranslationsHandler) GetTranslationStatus(c *fiber.Ctx) error {
 		logger.Error().Err(err).Msg("Failed to get translation status")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getTranslationStatusError")
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	// Формируем результат
 	statusMap := make(map[int]map[string]TranslationFieldStatus)

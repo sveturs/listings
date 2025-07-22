@@ -26,7 +26,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
-	defer redisCache.Close()
+	defer func() {
+		if err := redisCache.Close(); err != nil {
+			log.Printf("Failed to close redis cache: %v", err)
+		}
+	}()
 
 	cacheAdapter := cache.NewAdapter(redisCache)
 
@@ -170,7 +174,11 @@ func callAPI(locale string) {
 		log.Printf("Error calling API: %v", err)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	fmt.Printf("  API Response: %s\n", resp.Status)
 }
