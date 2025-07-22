@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	// Test constants for digraphs
+	titleCaseDz = "Dž"
+)
+
 // TestComprehensiveDigraphHandling tests all possible digraph combinations
 func TestComprehensiveDigraphHandling(t *testing.T) {
 	trans := NewSerbianTransliterator()
@@ -34,7 +39,7 @@ func TestComprehensiveDigraphHandling(t *testing.T) {
 
 		// dž/џ variations
 		{"dž", "џ", "lowercase dž"},
-		{"Dž", "Џ", "capitalized Dž"},
+		{titleCaseDz, "Џ", "capitalized Dž"},
 		{"DŽ", "Џ", "uppercase DŽ - but converts to Dž for single char"},
 		{"džep", "џеп", "dž in word"},
 		{"Džep", "Џеп", "Dž at start"},
@@ -59,7 +64,7 @@ func TestComprehensiveDigraphHandling(t *testing.T) {
 			} else if tt.latin == "NJ" && tt.cyrillic == "Њ" {
 				expectedLatin = "Nj"
 			} else if tt.latin == "DŽ" && tt.cyrillic == "Џ" {
-				expectedLatin = "Dž"
+				expectedLatin = titleCaseDz
 			}
 
 			if result != expectedLatin {
@@ -163,7 +168,7 @@ func TestAllCyrillicCharacters(t *testing.T) {
 		'Ј': "J", 'К': "K", 'Л': "L", 'Љ': "Lj", 'М': "M",
 		'Н': "N", 'Њ': "Nj", 'О': "O", 'П': "P", 'Р': "R",
 		'С': "S", 'Т': "T", 'Ћ': "Ć", 'У': "U", 'Ф': "F",
-		'Х': "H", 'Ц': "C", 'Ч': "Č", 'Џ': "Dž", 'Ш': "Š",
+		'Х': "H", 'Ц': "C", 'Ч': "Č", 'Џ': titleCaseDz, 'Ш': "Š",
 	}
 
 	for cyrillic, expectedLatin := range uppercaseCyrillicChars {

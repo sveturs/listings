@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+
 // ProductHandler handles HTTP requests for storefront products
 type ProductHandler struct {
 	productService *service.ProductService
@@ -80,7 +81,7 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 	}
 
 	if isActive := c.Query("is_active"); isActive != "" {
-		active := isActive == "true"
+		active := isActive == boolValueTrue
 		filter.IsActive = &active
 	}
 

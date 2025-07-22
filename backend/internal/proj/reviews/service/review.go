@@ -18,6 +18,9 @@ const (
 	entityTypeListing    = "listing"
 	entityTypeUser       = "user"
 	entityTypeStorefront = "storefront"
+	
+	// Rating trends
+	trendStable = "stable"
 )
 
 type ReviewService struct {
@@ -616,10 +619,10 @@ func (s *ReviewService) GetUserAggregatedRating(ctx context.Context, userID int)
 		} else if diff < -0.2 {
 			rating.RecentTrend = "down"
 		} else {
-			rating.RecentTrend = "stable"
+			rating.RecentTrend = trendStable
 		}
 	} else {
-		rating.RecentTrend = "stable"
+		rating.RecentTrend = trendStable
 	}
 
 	return rating, nil
@@ -671,10 +674,10 @@ func (s *ReviewService) GetStorefrontAggregatedRating(ctx context.Context, store
 		} else if diff < -0.2 {
 			rating.RecentTrend = "down"
 		} else {
-			rating.RecentTrend = "stable"
+			rating.RecentTrend = trendStable
 		}
 	} else {
-		rating.RecentTrend = "stable"
+		rating.RecentTrend = trendStable
 	}
 
 	return rating, nil

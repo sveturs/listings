@@ -15,6 +15,16 @@ import (
 	"backend/internal/proj/storefronts/parsers"
 )
 
+const (
+	// Status values
+	statusFailed = "failed"
+	
+	// File types
+	fileTypeXML = "xml"
+	fileTypeCSV = "csv"
+	fileTypeZIP = "zip"
+)
+
 // ImportService handles product import operations
 type ImportService struct {
 	productService *ProductService
@@ -47,7 +57,7 @@ func (s *ImportService) ImportFromURL(ctx context.Context, req models.ImportRequ
 	// Download file
 	data, _, err := s.downloadFile(ctx, *req.FileURL)
 	if err != nil {
-		job.Status = "failed"
+		job.Status = statusFailed
 		job.ErrorMessage = &[]string{fmt.Sprintf("Failed to download file: %v", err)}[0]
 		return job, err
 	}
@@ -62,18 +72,18 @@ func (s *ImportService) ImportFromURL(ctx context.Context, req models.ImportRequ
 	var validationErrors []models.ImportValidationError
 
 	switch req.FileType {
-	case "xml":
+	case fileTypeXML:
 		products, validationErrors, err = s.processXMLData(data, req.StorefrontID)
-	case "csv":
+	case fileTypeCSV:
 		products, validationErrors, err = s.processCSVData(data, req.StorefrontID)
-	case "zip":
+	case fileTypeZIP:
 		products, validationErrors, err = s.processZIPData(data, req.StorefrontID)
 	default:
 		return nil, fmt.Errorf("unsupported file type: %s", req.FileType)
 	}
 
 	if err != nil {
-		job.Status = "failed"
+		job.Status = statusFailed
 		job.ErrorMessage = &[]string{err.Error()}[0]
 		return job, err
 	}
@@ -127,18 +137,18 @@ func (s *ImportService) ImportFromFile(ctx context.Context, fileData []byte, req
 	var err error
 
 	switch req.FileType {
-	case "xml":
+	case fileTypeXML:
 		products, validationErrors, err = s.processXMLData(fileData, req.StorefrontID)
-	case "csv":
+	case fileTypeCSV:
 		products, validationErrors, err = s.processCSVData(fileData, req.StorefrontID)
-	case "zip":
+	case fileTypeZIP:
 		products, validationErrors, err = s.processZIPData(fileData, req.StorefrontID)
 	default:
 		return nil, fmt.Errorf("unsupported file type: %s", req.FileType)
 	}
 
 	if err != nil {
-		job.Status = "failed"
+		job.Status = statusFailed
 		job.ErrorMessage = &[]string{err.Error()}[0]
 		return job, err
 	}
@@ -408,11 +418,11 @@ func (s *ImportService) ValidateImportFile(ctx context.Context, fileData []byte,
 	var err error
 
 	switch fileType {
-	case "xml":
+	case fileTypeXML:
 		products, validationErrors, err = s.processXMLData(fileData, storefrontID)
-	case "csv":
+	case fileTypeCSV:
 		products, validationErrors, err = s.processCSVData(fileData, storefrontID)
-	case "zip":
+	case fileTypeZIP:
 		products, validationErrors, err = s.processZIPData(fileData, storefrontID)
 	default:
 		return nil, fmt.Errorf("unsupported file type: %s", fileType)

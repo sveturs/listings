@@ -9,6 +9,11 @@ import (
 	"backend/internal/proj/search_optimization/storage"
 )
 
+const (
+	// Severity levels
+	severityWarning = "warning"
+)
+
 // SecurityCheck функция проверки безопасности перед применением изменений
 type SecurityCheck struct {
 	service *searchOptimizationService
@@ -139,7 +144,7 @@ func (sc *SecurityCheck) ValidateOptimizationResults(ctx context.Context, result
 				switch violation.Severity {
 				case "critical":
 					report.CriticalIssues++
-				case "warning":
+				case severityWarning:
 					report.Warnings++
 				}
 			}
