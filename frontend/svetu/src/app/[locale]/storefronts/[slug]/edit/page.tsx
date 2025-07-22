@@ -26,6 +26,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { toast } from '@/utils/toast';
+import { storefrontApi } from '@/services/storefrontApi';
 
 export default function EditStorefrontPage() {
   const params = useParams();
@@ -80,6 +81,11 @@ export default function EditStorefrontPage() {
     local_delivery: true,
     shipping: false,
   });
+
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -196,17 +202,50 @@ export default function EditStorefrontPage() {
     );
   }
 
-  if (error || !currentStorefront) {
+  // Отладочная информация
+  console.log('Debug info:', {
+    error,
+    currentStorefront,
+    isLoading,
+    slug,
+  });
+
+  if (error) {
     return (
       <div className="min-h-screen bg-base-200 flex items-center justify-center">
         <div className="card bg-base-100 shadow-xl max-w-md w-full">
           <div className="card-body text-center">
             <ExclamationCircleIcon className="w-16 h-16 mx-auto text-error mb-4" />
             <h2 className="card-title justify-center text-2xl">
-              {t('storefronts.notFound')}
+              Ошибка загрузки
+            </h2>
+            <p className="text-base-content/70">{error}</p>
+            <div className="card-actions justify-center mt-6">
+              <Link
+                href={`/${locale}/profile/storefronts`}
+                className="btn btn-primary"
+              >
+                <ArrowLeftIcon className="w-5 h-5" />
+                {t('common.back')}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentStorefront) {
+    return (
+      <div className="min-h-screen bg-base-200 flex items-center justify-center">
+        <div className="card bg-base-100 shadow-xl max-w-md w-full">
+          <div className="card-body text-center">
+            <ExclamationCircleIcon className="w-16 h-16 mx-auto text-error mb-4" />
+            <h2 className="card-title justify-center text-2xl">
+              Загрузка витрины...
             </h2>
             <p className="text-base-content/70">
-              {error || t('storefronts.loadError')}
+              Витрина не загружена: {currentStorefront ? 'есть' : 'нет'}
             </p>
             <div className="card-actions justify-center mt-6">
               <Link
@@ -285,14 +324,14 @@ export default function EditStorefrontPage() {
             onClick={() => setActiveTab('payment')}
           >
             <CreditCardIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.payment')}
+            {t('storefronts.paymentTab')}
           </button>
           <button
             className={`tab ${activeTab === 'delivery' ? 'tab-active' : ''}`}
             onClick={() => setActiveTab('delivery')}
           >
             <TruckIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.delivery')}
+            {t('storefronts.deliveryOptions')}
           </button>
           <button
             className={`tab ${activeTab === 'media' ? 'tab-active' : ''}`}
@@ -492,7 +531,7 @@ export default function EditStorefrontPage() {
                           className="checkbox checkbox-primary"
                         />
                         <span className="label-text capitalize ml-2">
-                          {t(`days.${day}`)}
+                          {t(`common.days.${day}`)}
                         </span>
                       </label>
                     </div>
@@ -600,9 +639,11 @@ export default function EditStorefrontPage() {
                   <div className="flex items-center gap-6">
                     <div className="avatar">
                       <div className="w-32 rounded-xl bg-base-200">
-                        {currentStorefront.logo_url ? (
+                        {logoPreview || currentStorefront.logo_url ? (
                           <Image
-                            src={currentStorefront.logo_url}
+                            src={
+                              logoPreview || currentStorefront.logo_url || ''
+                            }
                             alt="Logo"
                             fill
                             className="object-cover"
@@ -615,9 +656,96 @@ export default function EditStorefrontPage() {
                       </div>
                     </div>
                     <div>
-                      <button type="button" className="btn btn-primary btn-sm">
-                        {t('storefronts.uploadLogo')}
-                      </button>
+                      <input
+                        type="file"
+                        id="logo-upload"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+
+                          // Валидация размера файла (5MB)
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast.error(
+                              t('storefronts.fileTooLarge', { max: '5MB' })
+                            );
+                            e.target.value = ''; // Сбрасываем input
+                            return;
+                          }
+
+                          // Показываем превью
+                          const reader = new FileReader();
+                          reader.onload = (e) => {
+                            setLogoPreview(e.target?.result as string);
+                          };
+                          reader.readAsDataURL(file);
+
+                          // Загружаем файл
+                          try {
+                            setUploadingLogo(true);
+                            await storefrontApi.uploadLogo(
+                              currentStorefront.id!,
+                              file
+                            );
+                            toast.success(t('storefronts.logoUploadSuccess'));
+                            // Обновляем витрину чтобы получить новый URL
+                            dispatch(fetchStorefrontBySlug(slug));
+                          } catch {
+                            toast.error(t('storefronts.logoUploadError'));
+                            setLogoPreview(null);
+                          } finally {
+                            setUploadingLogo(false);
+                            // Сбрасываем input чтобы можно было выбрать тот же файл снова
+                            e.target.value = '';
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <div className="flex gap-2">
+                        <label
+                          htmlFor="logo-upload"
+                          className={`btn btn-primary btn-sm ${uploadingLogo ? 'loading' : ''}`}
+                        >
+                          {uploadingLogo
+                            ? t('common.uploading')
+                            : t('storefronts.uploadLogo')}
+                        </label>
+                        {(logoPreview || currentStorefront.logo_url) && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (currentStorefront.logo_url) {
+                                // Удаляем логотип из базы данных
+                                try {
+                                  const updates: StorefrontUpdateDTO = {
+                                    logo_url: '',
+                                  };
+                                  await dispatch(
+                                    updateStorefront({
+                                      id: currentStorefront.id!,
+                                      data: updates,
+                                    })
+                                  ).unwrap();
+                                  toast.success(t('storefronts.logoRemoved'));
+                                  // Обновляем витрину
+                                  dispatch(fetchStorefrontBySlug(slug));
+                                } catch {
+                                  toast.error(t('storefronts.logoRemoveError'));
+                                }
+                              }
+                              // Очищаем превью и input
+                              setLogoPreview(null);
+                              const input = document.getElementById(
+                                'logo-upload'
+                              ) as HTMLInputElement;
+                              if (input) input.value = '';
+                            }}
+                            className="btn btn-ghost btn-sm text-error"
+                          >
+                            {t('common.remove')}
+                          </button>
+                        )}
+                      </div>
                       <p className="text-sm text-base-content/60 mt-2">
                         {t('storefronts.logoRequirements')}
                       </p>
@@ -632,10 +760,12 @@ export default function EditStorefrontPage() {
                     {t('storefronts.banner')}
                   </h3>
                   <div className="space-y-4">
-                    <div className="aspect-[3/1] bg-base-200 rounded-xl overflow-hidden">
-                      {currentStorefront.banner_url ? (
+                    <div className="aspect-[3/1] bg-base-200 rounded-xl overflow-hidden relative max-h-48">
+                      {bannerPreview || currentStorefront.banner_url ? (
                         <Image
-                          src={currentStorefront.banner_url}
+                          src={
+                            bannerPreview || currentStorefront.banner_url || ''
+                          }
                           alt="Banner"
                           fill
                           className="object-cover"
@@ -646,9 +776,96 @@ export default function EditStorefrontPage() {
                         </div>
                       )}
                     </div>
-                    <button type="button" className="btn btn-primary btn-sm">
-                      {t('storefronts.uploadBanner')}
-                    </button>
+                    <input
+                      type="file"
+                      id="banner-upload"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        // Валидация размера файла (10MB)
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error(
+                            t('storefronts.fileTooLarge', { max: '10MB' })
+                          );
+                          e.target.value = ''; // Сбрасываем input
+                          return;
+                        }
+
+                        // Показываем превью
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          setBannerPreview(e.target?.result as string);
+                        };
+                        reader.readAsDataURL(file);
+
+                        // Загружаем файл
+                        try {
+                          setUploadingBanner(true);
+                          await storefrontApi.uploadBanner(
+                            currentStorefront.id!,
+                            file
+                          );
+                          toast.success(t('storefronts.bannerUploadSuccess'));
+                          // Обновляем витрину чтобы получить новый URL
+                          dispatch(fetchStorefrontBySlug(slug));
+                        } catch {
+                          toast.error(t('storefronts.bannerUploadError'));
+                          setBannerPreview(null);
+                        } finally {
+                          setUploadingBanner(false);
+                          // Сбрасываем input чтобы можно было выбрать тот же файл снова
+                          e.target.value = '';
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <div className="flex gap-2">
+                      <label
+                        htmlFor="banner-upload"
+                        className={`btn btn-primary btn-sm ${uploadingBanner ? 'loading' : ''}`}
+                      >
+                        {uploadingBanner
+                          ? t('common.uploading')
+                          : t('storefronts.uploadBanner')}
+                      </label>
+                      {(bannerPreview || currentStorefront.banner_url) && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (currentStorefront.banner_url) {
+                              // Удаляем баннер из базы данных
+                              try {
+                                const updates: StorefrontUpdateDTO = {
+                                  banner_url: '',
+                                };
+                                await dispatch(
+                                  updateStorefront({
+                                    id: currentStorefront.id!,
+                                    data: updates,
+                                  })
+                                ).unwrap();
+                                toast.success(t('storefronts.bannerRemoved'));
+                                // Обновляем витрину
+                                dispatch(fetchStorefrontBySlug(slug));
+                              } catch {
+                                toast.error(t('storefronts.bannerRemoveError'));
+                              }
+                            }
+                            // Очищаем превью и input
+                            setBannerPreview(null);
+                            const input = document.getElementById(
+                              'banner-upload'
+                            ) as HTMLInputElement;
+                            if (input) input.value = '';
+                          }}
+                          className="btn btn-ghost btn-sm text-error"
+                        >
+                          {t('common.remove')}
+                        </button>
+                      )}
+                    </div>
                     <p className="text-sm text-base-content/60">
                       {t('storefronts.bannerRequirements')}
                     </p>

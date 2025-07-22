@@ -1,5 +1,6 @@
 import { config } from '@/config';
 import { apiClient } from './api-client';
+import { tokenManager } from '@/utils/tokenManager';
 import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированного API
@@ -58,7 +59,6 @@ export interface AnalyticsParams {
   from?: string;
   to?: string;
 }
-
 
 /**
  * API сервис для работы с витринами
@@ -199,17 +199,24 @@ class StorefrontApiService {
     const formData = new FormData();
     formData.append('logo', file);
 
-    const response = await fetch(
-      `${config.api.baseUrl}/api/v1/storefronts/${storefrontId}/logo`,
-      {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      }
-    );
+    const endpoint = `/api/v1/storefronts/${storefrontId}/logo`;
+
+    // Используем fetch с правильными заголовками авторизации
+    const token = await tokenManager.getAccessToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${config.api.url}${endpoint}`, {
+      method: 'POST',
+      body: formData,
+      headers,
+    });
 
     if (!response.ok) {
-      throw new Error('Failed to upload logo');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to upload logo');
     }
 
     const data = await response.json();
@@ -226,17 +233,24 @@ class StorefrontApiService {
     const formData = new FormData();
     formData.append('banner', file);
 
-    const response = await fetch(
-      `${config.api.baseUrl}/api/v1/storefronts/${storefrontId}/banner`,
-      {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      }
-    );
+    const endpoint = `/api/v1/storefronts/${storefrontId}/banner`;
+
+    // Используем fetch с правильными заголовками авторизации
+    const token = await tokenManager.getAccessToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${config.api.url}${endpoint}`, {
+      method: 'POST',
+      body: formData,
+      headers,
+    });
 
     if (!response.ok) {
-      throw new Error('Failed to upload banner');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to upload banner');
     }
 
     const data = await response.json();
@@ -381,7 +395,6 @@ class StorefrontApiService {
       body: JSON.stringify({ options }),
     });
   }
-
 
   // Управление персоналом
 

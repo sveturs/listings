@@ -71,7 +71,7 @@ func (s *AuthService) HandleGoogleCallback(ctx context.Context, code string) (*t
 	logger.Info().
 		Str("code_prefix", code[:10]+"...").
 		Msg("HandleGoogleCallback: exchanging code for token")
-	
+
 	token, err := s.googleConfig.Exchange(ctx, code)
 	if err != nil {
 		logger.Error().

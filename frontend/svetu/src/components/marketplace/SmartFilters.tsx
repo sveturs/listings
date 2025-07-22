@@ -38,7 +38,7 @@ export function SmartFilters({
     if (Object.keys(filterValues).length > 0) {
       onChange({});
     }
-  }, [categoryId]); // Убираем onChange из зависимостей
+  }, [categoryId, filterValues, onChange]);
 
   const handleFilterChange = (attributeId: string, value: any) => {
     const newFilters = {

@@ -3,6 +3,10 @@ import type { components } from '@/types/generated/api';
 
 type StorefrontProduct =
   components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+type UpdateProductRequest =
+  components['schemas']['backend_internal_domain_models.UpdateProductRequest'];
+type CreateProductRequest =
+  components['schemas']['backend_internal_domain_models.CreateProductRequest'];
 
 export const storefrontProductsService = {
   // Получить товары витрины
@@ -42,5 +46,122 @@ export const storefrontProductsService = {
       `/api/v1/storefronts/slug/${storefrontSlug}/products/${productId}`
     );
     return response.data;
+  },
+
+  // Создать товар
+  async createProduct(
+    storefrontSlug: string,
+    productData: CreateProductRequest
+  ): Promise<StorefrontProduct> {
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontSlug}/products`,
+      productData
+    );
+    return response.data;
+  },
+
+  // Обновить товар
+  async updateProduct(
+    storefrontSlug: string,
+    productId: number,
+    productData: UpdateProductRequest
+  ): Promise<StorefrontProduct> {
+    const response = await apiClient.put(
+      `/api/v1/storefronts/${storefrontSlug}/products/${productId}`,
+      productData
+    );
+    return response.data;
+  },
+
+  // Удалить товар
+  async deleteProduct(
+    storefrontSlug: string,
+    productId: number
+  ): Promise<void> {
+    await apiClient.delete(
+      `/api/v1/storefronts/${storefrontSlug}/products/${productId}`
+    );
+  },
+
+  // Загрузить изображения товара
+  async uploadProductImages(
+    storefrontSlug: string,
+    productId: number,
+    images: File[],
+    mainImageIndex?: number
+  ): Promise<{ uploaded: any[] }> {
+    const uploaded: any[] = [];
+
+    console.log('uploadProductImages called with:', {
+      storefrontSlug,
+      productId,
+      imagesCount: images.length,
+      mainImageIndex,
+      images: images.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+    });
+
+    // Загружаем изображения по одному
+    for (let index = 0; index < images.length; index++) {
+      const image = images[index];
+      const formData = new FormData();
+      formData.append('image', image); // Backend ожидает 'image', не 'images'
+
+      // Устанавливаем главное изображение если это нужный индекс
+      if (index === mainImageIndex) {
+        formData.append('is_main', 'true');
+      } else {
+        formData.append('is_main', 'false');
+      }
+
+      // Устанавливаем порядок отображения
+      formData.append('display_order', index.toString());
+
+      console.log(`Uploading image ${index}:`, {
+        fileName: image.name,
+        fileSize: image.size,
+        fileType: image.type,
+        isMain: index === mainImageIndex,
+        displayOrder: index,
+      });
+
+      try {
+        // НЕ устанавливаем Content-Type вручную - браузер сделает это сам с правильным boundary
+        const response = await apiClient.post(
+          `/api/v1/storefronts/${storefrontSlug}/products/${productId}/images`,
+          formData
+        );
+        console.log(`Image ${index} uploaded successfully:`, response.data);
+        uploaded.push(response.data);
+      } catch (error: any) {
+        console.error(`Failed to upload image ${index}:`, error);
+        console.error('Error response:', error.response?.data);
+        throw error;
+      }
+    }
+
+    return { uploaded };
+  },
+
+  // Удалить изображение товара
+  async deleteProductImage(
+    storefrontSlug: string,
+    productId: number,
+    imageId: number
+  ): Promise<void> {
+    await apiClient.delete(
+      `/api/v1/storefronts/${storefrontSlug}/products/${productId}/images/${imageId}`
+    );
+  },
+
+  // Установить главное изображение
+  async setMainImage(
+    storefrontSlug: string,
+    productId: number,
+    imageId: number
+  ): Promise<void> {
+    await apiClient.put(
+      `/api/v1/storefronts/${storefrontSlug}/products/${productId}/images/${imageId}/main`,
+      {}
+    );
   },
 };
