@@ -1842,7 +1842,7 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
 			// Если options пустой или не валидный, устанавливаем пустой JSON объект
 			attr.Options = json.RawMessage(`{}`)
 		}
-		
+
 		if validRules.Valid && len(validRules.String) > 0 {
 			attr.ValidRules = json.RawMessage(validRules.String)
 		} else {

@@ -6,9 +6,10 @@ import type { Feature, Polygon } from 'geojson';
 import type { MapBounds } from '@/components/GIS/types/gis';
 import { SmartFilters } from '@/components/marketplace/SmartFilters';
 import { QuickFilters } from '@/components/marketplace/QuickFilters';
+import { CategoryTreeSelector } from '@/components/common/CategoryTreeSelector';
 
 interface MapFilters {
-  category: string;
+  categories: number[];
   priceFrom: number;
   priceTo: number;
   radius: number;
@@ -138,7 +139,7 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
 
   const handleResetFilters = () => {
     const resetFilters = {
-      category: '',
+      categories: [],
       priceFrom: 0,
       priceTo: 0,
       radius: 10000,
@@ -153,7 +154,7 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
   };
 
   const hasActiveFilters =
-    localFilters.category ||
+    localFilters.categories.length > 0 ||
     localFilters.priceFrom > 0 ||
     localFilters.priceTo > 0;
 
@@ -224,21 +225,21 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
                 <label className="block text-sm font-medium text-base-content mb-2">
                   {t.filters.category}
                 </label>
-                <select
-                  className="select select-bordered w-full"
-                  value={localFilters.category}
-                  onChange={(e) =>
-                    handleLocalFiltersChange({ category: e.target.value })
-                  }
-                >
-                  <option value="">{t.filters.allCategories}</option>
-                  <option value="1100">Квартира</option>
-                  <option value="1200">Комната</option>
-                  <option value="1300">Дом, дача, коттедж</option>
-                  <option value="2000">Автомобили</option>
-                  <option value="3000">Электроника</option>
-                  <option value="9000">Работа</option>
-                </select>
+                <CategoryTreeSelector
+                  value={localFilters.categories}
+                  onChange={(value) => {
+                    const categories = Array.isArray(value)
+                      ? value
+                      : value
+                        ? [value]
+                        : [];
+                    handleLocalFiltersChange({ categories });
+                  }}
+                  multiple={true}
+                  placeholder={t.filters.allCategories}
+                  showPath={true}
+                  className="w-full"
+                />
               </div>
 
               {/* Цена от */}
@@ -278,33 +279,37 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
               </div>
 
               {/* Быстрые фильтры */}
-              {localFilters.category && (
-                <div className="mb-4">
-                  <QuickFilters
-                    categoryId={localFilters.category}
-                    onSelectFilter={handleQuickFilterSelect}
-                    className="mb-4"
-                  />
-                </div>
-              )}
+              {localFilters.categories &&
+                localFilters.categories.length > 0 && (
+                  <div className="mb-4">
+                    <QuickFilters
+                      categoryId={localFilters.categories[0].toString()}
+                      onSelectFilter={handleQuickFilterSelect}
+                      className="mb-4"
+                    />
+                  </div>
+                )}
 
               {/* Динамические фильтры по атрибутам категории */}
-              {localFilters.category && (
-                <div>
-                  <SmartFilters
-                    categoryId={parseInt(localFilters.category) || null}
-                    onChange={(attributeFilters) =>
-                      handleLocalFiltersChange({ attributes: attributeFilters })
-                    }
-                    lang={
-                      typeof window !== 'undefined'
-                        ? window.location.pathname.split('/')[1] || 'sr'
-                        : 'sr'
-                    }
-                    className="space-y-3"
-                  />
-                </div>
-              )}
+              {localFilters.categories &&
+                localFilters.categories.length > 0 && (
+                  <div>
+                    <SmartFilters
+                      categoryId={localFilters.categories[0]}
+                      onChange={(attributeFilters) =>
+                        handleLocalFiltersChange({
+                          attributes: attributeFilters,
+                        })
+                      }
+                      lang={
+                        typeof window !== 'undefined'
+                          ? window.location.pathname.split('/')[1] || 'sr'
+                          : 'sr'
+                      }
+                      className="space-y-3"
+                    />
+                  </div>
+                )}
 
               {/* Радиус поиска с WalkingAccessibilityControl */}
               <div>

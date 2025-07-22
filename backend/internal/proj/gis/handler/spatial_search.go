@@ -417,9 +417,31 @@ func (h *SpatialHandler) RadiusSearch(c *fiber.Ctx) error {
 
 		req.Filters = &types.RadiusFilters{}
 
-		// Категории
+		// Категории - поддерживаем передачу как строк ID
 		if categories := c.Query("categories"); categories != "" {
-			req.Filters.Categories = strings.Split(categories, ",")
+			// Пытаемся парсить как ID
+			categoryStrings := strings.Split(categories, ",")
+			categoryIDs := make([]int, 0, len(categoryStrings))
+			for _, catStr := range categoryStrings {
+				if id, err := strconv.Atoi(strings.TrimSpace(catStr)); err == nil {
+					categoryIDs = append(categoryIDs, id)
+				}
+			}
+
+			if len(categoryIDs) > 0 {
+				req.Filters.CategoryIDs = categoryIDs
+				log.Info().
+					Str("categories_raw", categories).
+					Ints("category_ids_parsed", categoryIDs).
+					Msg("🔍 BACKEND: Parsed categories as IDs")
+			} else {
+				// Если не удалось распарсить как ID, сохраняем как строки
+				req.Filters.Categories = categoryStrings
+				log.Info().
+					Str("categories_raw", categories).
+					Strs("categories_parsed", req.Filters.Categories).
+					Msg("🔍 BACKEND: Parsing categories as strings")
+			}
 		}
 
 		// ID категорий

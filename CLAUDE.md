@@ -28,6 +28,13 @@
 - frontend: React, NextJS, Tailwind, DaisyUI
 - backend: Go, Postgres, Minio, OpenSearch
 
+## Документация по категориям и фильтрам
+
+- **IMPLEMENTATION_CATEGORY_SELECTOR.md** - общая инструкция по реализации выбора категорий во всей системе
+- **DISPLAY_CATEGORIES_INSTRUCTION.md** - инструкция по правильному отображению категорий
+- **CATEGORY_ATTRIBUTES_STATUS.md** - статус системы атрибутов категорий и их интеграции с фильтрами
+- **MAP_CATEGORIES_FILTERS_INSTRUCTION.md** - NEW! Инструкция по работе с категориями и фильтрами на карте
+
 ## IMPORTANT INSTRUCTIONS
 
 - When working with frontend - use instructions from [@.ai/frontend.md](.ai/frontend.md)

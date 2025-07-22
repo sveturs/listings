@@ -41,10 +41,10 @@ func (h *AdminCategoriesHandler) GetAllCategories(c *fiber.Ctx) error {
 
 	// Получаем язык из query параметра
 	lang := c.Query("lang", "en")
-	
+
 	// Создаем контекст с языком
 	ctx := context.WithValue(c.UserContext(), "locale", lang)
-	
+
 	categories, err := h.marketplaceService.GetAllCategories(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get all categories")
