@@ -8,7 +8,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	globalService "backend/internal/proj/global/service"
-	"backend/internal/proj/payments/service"
 	paymentService "backend/internal/proj/payments/service"
 	"backend/pkg/logger"
 	"backend/pkg/utils"
@@ -30,7 +29,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 
 // InitAllSecure инициализирует AllSecure handlers
 // Вызывается после создания основного handler'а, когда доступна конфигурация
-func (h *Handler) InitAllSecure(allsecureService *service.AllSecureService) {
+func (h *Handler) InitAllSecure(allsecureService *paymentService.AllSecureService) {
 	if allsecureService == nil {
 		log.Printf("Warning: AllSecure service is nil, skipping AllSecure handlers initialization")
 		return

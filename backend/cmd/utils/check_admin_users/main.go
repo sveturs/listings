@@ -122,5 +122,5 @@ func main() {
 
 	fmt.Printf("\n=== Generated JWT token for admin user (ID: %d) ===\n", claims.ID)
 	fmt.Println(tokenString)
-	fmt.Printf("\nExpires at: %s\n", claims.ExpiresAt.Time.Format(time.RFC3339))
+	fmt.Printf("\nExpires at: %s\n", claims.ExpiresAt.Format(time.RFC3339))
 }

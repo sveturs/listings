@@ -83,7 +83,7 @@ func (s *NotificationService) UpdateNotificationSettings(ctx context.Context, se
 		// Если нашли существующие настройки, проверим, не затираем ли мы случайно поля
 		if existingSetting != nil {
 			// Если обновление касается только telegram_enabled, сохраним текущее значение email_enabled
-			if settings.EmailEnabled == false && existingSetting.EmailEnabled == true {
+			if !settings.EmailEnabled && existingSetting.EmailEnabled {
 				if c := ctx.Value("request"); c != nil {
 					if req, ok := c.(map[string]interface{}); ok {
 						if _, exists := req["email_enabled"]; !exists {
@@ -95,7 +95,7 @@ func (s *NotificationService) UpdateNotificationSettings(ctx context.Context, se
 			}
 
 			// И наоборот - если обновление касается только email_enabled
-			if settings.TelegramEnabled == false && existingSetting.TelegramEnabled == true {
+			if !settings.TelegramEnabled && existingSetting.TelegramEnabled {
 				if c := ctx.Value("request"); c != nil {
 					if req, ok := c.(map[string]interface{}); ok {
 						if _, exists := req["telegram_enabled"]; !exists {

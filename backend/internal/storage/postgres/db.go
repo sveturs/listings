@@ -1511,10 +1511,14 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 		}
 	}
 	if seoMeta != nil {
-		json.Unmarshal(seoMeta, &s.SEOMeta)
+		if err := json.Unmarshal(seoMeta, &s.SEOMeta); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if aiConfig != nil {
-		json.Unmarshal(aiConfig, &s.AIAgentConfig)
+		if err := json.Unmarshal(aiConfig, &s.AIAgentConfig); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 
 	return &s, nil

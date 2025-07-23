@@ -106,11 +106,12 @@ func (db *Database) ListComponents(ctx context.Context, filters map[string]inter
 	}
 
 	if active, ok := filters["active"].(string); ok && active != "" {
-		if active == "true" {
+		switch active {
+		case "true":
 			query += fmt.Sprintf(" AND is_active = $%d", argNum)
 			args = append(args, true)
 			argNum++
-		} else if active == "false" {
+		case "false":
 			query += fmt.Sprintf(" AND is_active = $%d", argNum)
 			args = append(args, false)
 			argNum++

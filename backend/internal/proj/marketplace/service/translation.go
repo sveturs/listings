@@ -41,12 +41,11 @@ func (s *TranslationService) DetectLanguage(ctx context.Context, text string) (s
 
 	// Очищаем текст от HTML тегов для анализа
 	cleanText := html.UnescapeString(text)
-	cleanTextLower := strings.ToLower(cleanText)
 
 	// Регулярное выражение для удаления HTML-тегов
 	htmlTagRegex := regexp.MustCompile(`<[^>]+>`)
 	cleanText = htmlTagRegex.ReplaceAllString(cleanText, " ")
-	cleanTextLower = strings.ToLower(cleanText)
+	cleanTextLower := strings.ToLower(cleanText)
 
 	// Проверяем наличие русских букв
 	for _, char := range russianSpecific {
@@ -301,9 +300,10 @@ func (s *TranslationService) TranslateWithContext(ctx context.Context, text stri
 	fieldContext := ""
 	if fieldName != "" {
 		fieldNameLower := strings.ToLower(fieldName)
-		if fieldNameLower == "title" || fieldNameLower == "name" || fieldNameLower == "header" {
+		switch fieldNameLower {
+		case "title", "name", "header":
 			fieldContext = "This is a product title/header. In target language, use appropriate product terminology. For example, 'Maska/mask' in Serbian should be translated as 'case' in English or 'чехол' in Russian, not directly transliterated."
-		} else if fieldNameLower == "description" || fieldNameLower == "content" {
+		case "description", "content":
 			fieldContext = "This is a product description. Use natural, marketing-appropriate language in the target language."
 		}
 	}

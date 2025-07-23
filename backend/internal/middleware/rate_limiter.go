@@ -32,8 +32,8 @@ func (m *Middleware) AuthRateLimit() fiber.Handler {
 
 		// Пропускаем localhost в режиме разработки
 		Next: func(c *fiber.Ctx) bool {
-			if m.config.Environment == "development" || m.config.Environment == "dev" {
-				return c.IP() == "127.0.0.1" || c.IP() == "::1"
+			if m.config.Environment == envDevelopment || m.config.Environment == envDev {
+				return c.IP() == localhostIPv4 || c.IP() == localhostIPv6
 			}
 			return false
 		},
@@ -90,8 +90,8 @@ func (m *Middleware) RegistrationRateLimit() fiber.Handler {
 
 		// Пропускаем localhost в режиме разработки
 		Next: func(c *fiber.Ctx) bool {
-			if m.config.Environment == "development" || m.config.Environment == "dev" {
-				return c.IP() == "127.0.0.1" || c.IP() == "::1"
+			if m.config.Environment == envDevelopment || m.config.Environment == envDev {
+				return c.IP() == localhostIPv4 || c.IP() == localhostIPv6
 			}
 			return false
 		},
@@ -276,8 +276,8 @@ func (m *Middleware) RateLimitMessages() fiber.Handler {
 		key := fmt.Sprintf("user:%d", userID)
 
 		// Разные лимиты для разных эндпоинтов
-		switch {
-		case path == "/api/v1/marketplace/chat/messages":
+		switch path {
+		case "/api/v1/marketplace/chat/messages":
 			// 30 сообщений в минуту
 			if !messageLimiter.isAllowed(key, 30, time.Minute) {
 				logger.Info().
@@ -287,7 +287,7 @@ func (m *Middleware) RateLimitMessages() fiber.Handler {
 				return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "Слишком много сообщений. Подождите немного.")
 			}
 
-		case path == "/api/v1/marketplace/chat/messages/:id/attachments":
+		case "/api/v1/marketplace/chat/messages/:id/attachments":
 			// 10 загрузок файлов в минуту
 			if !fileLimiter.isAllowed(key, 10, time.Minute) {
 				logger.Info().
@@ -326,8 +326,8 @@ func (m *Middleware) RefreshTokenRateLimit() fiber.Handler {
 
 		// Не пропускаем localhost в продакшене
 		Next: func(c *fiber.Ctx) bool {
-			if m.config.Environment == "development" || m.config.Environment == "dev" {
-				return c.IP() == "127.0.0.1" || c.IP() == "::1"
+			if m.config.Environment == envDevelopment || m.config.Environment == envDev {
+				return c.IP() == localhostIPv4 || c.IP() == localhostIPv6
 			}
 			return false
 		},

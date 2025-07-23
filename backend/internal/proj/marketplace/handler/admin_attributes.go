@@ -17,6 +17,15 @@ import (
 	"backend/pkg/utils"
 )
 
+const (
+	queryOptionTranslations = `
+			SELECT language, field_name, translated_text
+			FROM translations
+			WHERE entity_type = 'attribute_option' AND entity_id = $1
+		`
+	attributeTypeSelect = "select"
+)
+
 // AdminAttributesHandler обрабатывает запросы админки для управления атрибутами
 type AdminAttributesHandler struct {
 	*CategoriesHandler
@@ -303,11 +312,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 		}
 
 		// Загружаем переводы для опций атрибута
-		optionTranslationsQuery := `
-			SELECT language, field_name, translated_text
-			FROM translations
-			WHERE entity_type = 'attribute_option' AND entity_id = $1
-		`
+		optionTranslationsQuery := queryOptionTranslations
 		oRows, err := h.marketplaceService.Storage().Query(c.Context(), optionTranslationsQuery, attribute.ID)
 		if err == nil {
 			attribute.OptionTranslations = make(map[string]map[string]string)
@@ -396,12 +401,8 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 	}
 
 	// Загружаем переводы опций, если атрибут типа select
-	if attribute.AttributeType == "select" && attribute.Options != nil {
-		optionTranslationsQuery := `
-			SELECT language, field_name, translated_text
-			FROM translations
-			WHERE entity_type = 'attribute_option' AND entity_id = $1
-		`
+	if attribute.AttributeType == attributeTypeSelect && attribute.Options != nil {
+		optionTranslationsQuery := queryOptionTranslations
 		oRows, err := h.marketplaceService.Storage().Query(c.Context(), optionTranslationsQuery, attribute.ID)
 		if err == nil {
 			attribute.OptionTranslations = make(map[string]map[string]string)
@@ -944,11 +945,7 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 		}
 
 		// Получаем переводы для опций атрибута
-		optionTranslationsQuery := `
-			SELECT language, field_name, translated_text
-			FROM translations
-			WHERE entity_type = 'attribute_option' AND entity_id = $1
-		`
+		optionTranslationsQuery := queryOptionTranslations
 		oRows, err := h.marketplaceService.Storage().Query(ctx, optionTranslationsQuery, attribute.ID)
 		if err == nil {
 			attribute.OptionTranslations = make(map[string]map[string]string)

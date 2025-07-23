@@ -24,6 +24,19 @@ import (
 	"backend/pkg/transliteration"
 )
 
+const (
+	// Field names
+	fieldNamePrice     = "price"
+	fieldNameCreatedAt = "created_at"
+
+	// Boolean values
+	boolValueTrue = "true"
+
+	// Sort orders
+	sortOrderDesc = "desc"
+	sortOrderAsc  = "asc"
+)
+
 // Repository реализует интерфейс MarketplaceSearchRepository
 type Repository struct {
 	client         *osClient.OpenSearchClient
@@ -611,7 +624,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 			listingID := listings[i].ID
 
 			// Проверяем наличие переводов и при необходимости загружаем их
-			if listings[i].Translations == nil || len(listings[i].Translations) == 0 {
+			if len(listings[i].Translations) == 0 {
 				translations, err := r.storage.GetTranslationsForEntity(ctx, "listing", listingID)
 				if err == nil && len(translations) > 0 {
 					transMap := make(models.TranslationMap)
@@ -627,7 +640,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 			}
 
 			// Проверяем наличие атрибутов и при необходимости загружаем их
-			if listings[i].Attributes == nil || len(listings[i].Attributes) == 0 {
+			if len(listings[i].Attributes) == 0 {
 				attrs, err := r.storage.GetListingAttributes(ctx, listingID)
 				if err == nil && len(attrs) > 0 {
 					listings[i].Attributes = attrs
@@ -687,14 +700,14 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 		"description":       listing.Description,
 		"title_suggest":     listing.Title,
 		"title_variations":  []string{listing.Title, strings.ToLower(listing.Title)},
-		"price":             listing.Price,
+		fieldNamePrice:      listing.Price,
 		"condition":         listing.Condition,
 		"status":            listing.Status,
 		"location":          listing.Location,
 		"city":              listing.City,
 		"country":           listing.Country,
 		"views_count":       listing.ViewsCount,
-		"created_at":        listing.CreatedAt.Format(time.RFC3339),
+		fieldNameCreatedAt:  listing.CreatedAt.Format(time.RFC3339),
 		"updated_at":        listing.UpdatedAt.Format(time.RFC3339),
 		"show_on_map":       listing.ShowOnMap,
 		"original_language": listing.OriginalLanguage,
@@ -712,7 +725,7 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	carFields := createCarFieldsMap()
 	importantAttrs := createImportantAttributesMap()
 
-	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+	if len(listing.Attributes) > 0 {
 		processAttributesForIndex(doc, listing.Attributes, importantAttrs, realEstateFields, carFields, listing.ID, r)
 	}
 
@@ -967,7 +980,7 @@ func addRangesForAttribute(doc map[string]interface{}, attr models.ListingAttrib
 	numVal := *attr.NumericValue
 
 	switch attr.AttributeName {
-	case "price":
+	case fieldNamePrice:
 		doc["price_range"] = getPriceRange(int(numVal))
 	case "mileage":
 		doc["mileage_range"] = getMileageRange(int(numVal))
@@ -1129,7 +1142,7 @@ func processDiscountData(doc map[string]interface{}, listing *models.Marketplace
 
 		if len(matches) > 1 && len(priceMatches) > 1 {
 			discountPercent, _ := strconv.Atoi(matches[1])
-			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+			oldPriceStr := strings.ReplaceAll(priceMatches[1], ",", ".")
 			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
 
 			if listing.Metadata == nil {
@@ -1266,7 +1279,7 @@ func processCoordinates(doc map[string]interface{}, listing *models.MarketplaceL
 }
 
 func processCategoryPath(doc map[string]interface{}, listing *models.MarketplaceListing, storage storage.Storage) {
-	if listing.CategoryPathIds != nil && len(listing.CategoryPathIds) > 0 {
+	if len(listing.CategoryPathIds) > 0 {
 		doc["category_path_ids"] = listing.CategoryPathIds
 	} else {
 		parentID := listing.CategoryID
@@ -1307,7 +1320,7 @@ func processUser(doc map[string]interface{}, listing *models.MarketplaceListing)
 }
 
 func processImages(doc map[string]interface{}, listing *models.MarketplaceListing, storage storage.Storage) {
-	if listing.Images != nil && len(listing.Images) > 0 {
+	if len(listing.Images) > 0 {
 		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
 		for _, img := range listing.Images {
 			imageDoc := map[string]interface{}{
@@ -2174,7 +2187,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
 
-	if params.AttributeFilters != nil && len(params.AttributeFilters) > 0 {
+	if len(params.AttributeFilters) > 0 {
 		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
 
 		realEstateAttrs := map[string]bool{
@@ -2216,8 +2229,8 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					})
 					logger.Info().Msgf("Added term filter for text real estate attribute %s = %s",
 						attrName, attrValue)
-				} else if attrValue == "true" || attrValue == "false" {
-					boolVal := attrValue == "true"
+				} else if attrValue == boolValueTrue || attrValue == "false" {
+					boolVal := attrValue == boolValueTrue
 					filter = append(filter, map[string]interface{}{
 						"term": map[string]interface{}{
 							attrName: boolVal,
@@ -2282,8 +2295,8 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 							})
 						}
 					}
-				} else if attrValue == "true" || attrValue == "false" {
-					boolVal := attrValue == "true"
+				} else if attrValue == boolValueTrue || attrValue == "false" {
+					boolVal := attrValue == boolValueTrue
 					innerMust = append(innerMust, map[string]interface{}{
 						"term": map[string]interface{}{
 							"attributes.boolean_value": boolVal,
@@ -2318,7 +2331,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		if params.SortDirection != "" {
 			sortOrder = params.SortDirection
 		} else {
-			sortOrder = "desc"
+			sortOrder = sortOrderDesc
 		}
 
 		switch params.Sort {
@@ -2338,23 +2351,23 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			}
 			return query
 		case "date":
-			sortField = "created_at"
+			sortField = fieldNameCreatedAt
 			// sortOrder уже установлен из params.SortDirection выше
 		case "date_desc":
-			sortField = "created_at"
-			sortOrder = "desc"
+			sortField = fieldNameCreatedAt
+			sortOrder = sortOrderDesc
 		case "date_asc":
-			sortField = "created_at"
-			sortOrder = "asc"
-		case "price":
-			sortField = "price"
+			sortField = fieldNameCreatedAt
+			sortOrder = sortOrderAsc
+		case fieldNamePrice:
+			sortField = fieldNamePrice
 			// sortOrder уже установлен из params.SortDirection выше
 		case "price_desc":
-			sortField = "price"
-			sortOrder = "desc"
+			sortField = fieldNamePrice
+			sortOrder = sortOrderDesc
 		case "price_asc":
-			sortField = "price"
-			sortOrder = "asc"
+			sortField = fieldNamePrice
+			sortOrder = sortOrderAsc
 		case "rating_desc":
 			logger.Info().Msgf("Применяем сортировку рейтинга по УБЫВАНИЮ")
 			query["sort"] = []interface{}{

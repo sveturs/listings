@@ -35,7 +35,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	if strings.HasPrefix(path, "/api/v1/gis") {
 		method := c.Method()
 		// Публичные GET routes
-		if method == "GET" && (strings.HasSuffix(path, "/search") ||
+		if method == httpMethodGet && (strings.HasSuffix(path, "/search") ||
 			strings.HasSuffix(path, "/search/radius") ||
 			strings.HasSuffix(path, "/clusters") ||
 			strings.HasSuffix(path, "/nearby") ||
@@ -51,16 +51,16 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			return c.Next()
 		}
 		// Публичные POST routes для cities
-		if method == "POST" && strings.HasSuffix(path, "/cities/visible") {
+		if method == httpMethodPost && strings.HasSuffix(path, "/cities/visible") {
 			logger.Info().Str("path", path).Msg("Skipping auth for public GIS cities routes")
 			return c.Next()
 		}
 		// Публичные Geocoding API routes (Phase 2)
-		if strings.Contains(path, "/geocode/") && ((method == "GET" && (strings.HasSuffix(path, "/suggestions") ||
+		if strings.Contains(path, "/geocode/") && ((method == httpMethodGet && (strings.HasSuffix(path, "/suggestions") ||
 			strings.HasSuffix(path, "/search") ||
 			strings.HasSuffix(path, "/reverse") ||
 			strings.HasSuffix(path, "/stats"))) ||
-			(method == "POST" && strings.HasSuffix(path, "/validate"))) {
+			(method == httpMethodPost && strings.HasSuffix(path, "/validate"))) {
 			logger.Info().Str("path", path).Msg("Skipping auth for public GIS geocoding routes")
 			return c.Next()
 		}
@@ -100,7 +100,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	if authHeader != "" {
 		// Извлекаем токен из заголовка "Bearer <token>"
 		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && parts[0] == "Bearer" {
+		if len(parts) == 2 && parts[0] == bearerScheme {
 			tokenString := parts[1]
 
 			// Валидируем JWT токен
@@ -279,7 +279,7 @@ func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader != "" {
 		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && parts[0] == "Bearer" {
+		if len(parts) == 2 && parts[0] == bearerScheme {
 			claims, err := jwt.ValidateToken(parts[1], m.config.JWTSecret)
 			if err == nil {
 				c.Locals("user_id", claims.UserID)
@@ -314,7 +314,7 @@ func (m *Middleware) RefreshJWT(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader != "" {
 		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && parts[0] == "Bearer" {
+		if len(parts) == 2 && parts[0] == bearerScheme {
 			currentToken = parts[1]
 		}
 	}

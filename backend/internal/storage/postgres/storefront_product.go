@@ -511,7 +511,11 @@ func (s *Database) UpdateProductInventory(ctx context.Context, storefrontID, pro
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Update stock quantity
 	var newQuantity int
@@ -701,7 +705,11 @@ func (s *Database) BulkCreateProducts(ctx context.Context, storefrontID int, pro
 	if err != nil {
 		return nil, []error{fmt.Errorf("failed to begin transaction: %w", err)}
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	for i, req := range products {
 		// Create product
@@ -742,7 +750,11 @@ func (s *Database) BulkUpdateProducts(ctx context.Context, storefrontID int, upd
 	if err != nil {
 		return nil, []error{fmt.Errorf("failed to begin transaction: %w", err)}
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Verify all products belong to the storefront
 	productIDs := make([]int, len(updates))
@@ -869,7 +881,11 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 	if err != nil {
 		return nil, []error{fmt.Errorf("failed to begin transaction: %w", err)}
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Delete products that belong to the storefront
 	rows, err := tx.Query(ctx,

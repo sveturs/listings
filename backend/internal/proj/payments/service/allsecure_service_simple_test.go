@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/shopspring/decimal"
@@ -184,7 +185,7 @@ func TestValidatePaymentRequestLogic(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := service.validatePaymentRequest(nil, tc.request)
+			err := service.validatePaymentRequest(context.TODO(), tc.request)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("validatePaymentRequest() error = %v, wantErr %v", err, tc.wantErr)
 			}

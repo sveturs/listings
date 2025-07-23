@@ -321,7 +321,11 @@ func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, er
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// Логируем ошибку закрытия response body
+		}
+	}()
 
 	if resp.IsError() {
 		return nil, fmt.Errorf("ошибка в ответе OpenSearch: %s", resp.String())

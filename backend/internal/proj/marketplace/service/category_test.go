@@ -42,8 +42,7 @@ func (suite *CategoryIntegrationTestSuite) SetupSuite() {
 	suite.ctx = ctx
 
 	// Запускаем PostgreSQL контейнер
-	pgContainer, err := postgres.RunContainer(ctx,
-		testcontainers.WithImage("postgres:16"),
+	pgContainer, err := postgres.Run(ctx, "postgres:16",
 		postgres.WithDatabase("testdb"),
 		postgres.WithUsername("testuser"),
 		postgres.WithPassword("testpass"),
@@ -533,7 +532,11 @@ func (suite *CategoryIntegrationTestSuite) TestAutomaticTranslationCreation() {
 		id,
 	)
 	require.NoError(suite.T(), err)
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows в тесте
+		}
+	}()
 
 	for rows.Next() {
 		var t struct {
@@ -623,7 +626,11 @@ func (ts *testStorage) GetCategories(ctx context.Context) ([]models.MarketplaceC
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows в тесте
+		}
+	}()
 
 	var categories []models.MarketplaceCategory
 	for rows.Next() {

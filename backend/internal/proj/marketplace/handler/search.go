@@ -126,16 +126,6 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		}
 	}
 
-	// Получаем язык из контекста или из запроса
-	lang := c.Query("lang")
-	if lang == "" {
-		if ctxLang, ok := c.Locals("language").(string); ok && ctxLang != "" {
-			lang = ctxLang
-		} else {
-			lang = "ru" // Язык по умолчанию
-		}
-	}
-
 	// Устанавливаем значения по умолчанию
 	if params.Size <= 0 {
 		params.Size = 20
@@ -149,8 +139,18 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		params.Size = 100
 	}
 
-	// Устанавливаем язык
-	params.Language = lang
+	// Устанавливаем язык из контекста или из запроса
+	if params.Language == "" {
+		lang := c.Query("lang")
+		if lang == "" {
+			if ctxLang, ok := c.Locals("language").(string); ok && ctxLang != "" {
+				lang = ctxLang
+			} else {
+				lang = "ru" // Язык по умолчанию
+			}
+		}
+		params.Language = lang
+	}
 
 	// Проверяем, нужно ли использовать нечеткий поиск
 	useFuzzy := c.Query("fuzzy", "true") // По умолчанию включен
@@ -170,7 +170,7 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 
 	// Создаем контекст с языком
 	ctx := c.Context()
-	ctx.SetUserValue("language", lang)
+	ctx.SetUserValue("language", params.Language)
 
 	// Выполняем поиск
 	results, err := h.marketplaceService.SearchListingsAdvanced(ctx, &params)
@@ -455,17 +455,7 @@ func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 		}
 	}
 
-	// Получаем язык из контекста или из запроса
-	lang := c.Query("lang")
-	if lang == "" {
-		if ctxLang, ok := c.Locals("language").(string); ok && ctxLang != "" {
-			lang = ctxLang
-		} else {
-			lang = "ru" // Язык по умолчанию
-		}
-	}
-
-	// Получаем предложения для текущего языка
+	// Получаем предложения
 	suggestions, err := h.marketplaceService.GetSuggestions(c.Context(), prefix, size)
 	if err != nil {
 		logger.Error().Err(err).Str("prefix", prefix).Msg("Failed to get suggestions")

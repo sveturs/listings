@@ -9,6 +9,11 @@ import (
 	"backend/internal/proj/search_optimization/storage"
 )
 
+const (
+	// Severity levels
+	severityWarning = "warning"
+)
+
 // SecurityCheck функция проверки безопасности перед применением изменений
 type SecurityCheck struct {
 	service *searchOptimizationService
@@ -139,7 +144,7 @@ func (sc *SecurityCheck) ValidateOptimizationResults(ctx context.Context, result
 				switch violation.Severity {
 				case "critical":
 					report.CriticalIssues++
-				case "warning":
+				case severityWarning:
 					report.Warnings++
 				}
 			}
@@ -362,7 +367,7 @@ func (sc *SecurityCheck) RequiresAdminApproval(report *SecurityReport) bool {
 
 // GenerateSecurityBrief создает краткий отчет о безопасности для администратора
 func (sc *SecurityCheck) GenerateSecurityBrief(report *SecurityReport) string {
-	brief := fmt.Sprintf("🔒 ОТЧЕТ БЕЗОПАСНОСТИ\n")
+	brief := "🔒 ОТЧЕТ БЕЗОПАСНОСТИ\n"
 	brief += fmt.Sprintf("Общий статус: %s\n", report.OverallSafety)
 	brief += fmt.Sprintf("Критических проблем: %d\n", report.CriticalIssues)
 	brief += fmt.Sprintf("Предупреждений: %d\n", report.Warnings)

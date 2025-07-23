@@ -112,7 +112,11 @@ func (r *MarketplaceOrderRepository) UpdateStatus(ctx context.Context, orderID i
 	if err != nil {
 		return errors.Wrap(err, "failed to begin transaction")
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Получаем текущий статус
 	var currentStatus string

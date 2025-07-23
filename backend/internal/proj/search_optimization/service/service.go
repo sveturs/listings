@@ -14,6 +14,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	// Status values
+	statusCompleted = "completed"
+)
+
 type searchOptimizationService struct {
 	repo          storage.SearchOptimizationRepository
 	logger        logger.Logger
@@ -147,9 +152,9 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 	}
 
 	// Завершение оптимизации
-	status := "completed"
+	status := statusCompleted
 	if len(results) == 0 {
-		status = "completed"
+		status = statusCompleted
 		errorMsg := "no optimization results generated"
 		if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, status, results, &errorMsg); updateErr != nil {
 			s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
@@ -306,7 +311,7 @@ func (s *searchOptimizationService) weightToCTRDerivative(weight float64) float6
 	k := 5.0
 	threshold := 0.5
 	exp := math.Exp(-k * (weight - threshold))
-	return (k * exp) / math.Pow(1.0+exp, 2)
+	return (k * exp) / ((1.0 + exp) * (1.0 + exp))
 }
 
 // Расчет уверенности в результате
@@ -583,7 +588,7 @@ func (s *searchOptimizationService) ApplyOptimizedWeights(ctx context.Context, s
 		return err
 	}
 
-	if session == nil || session.Status != "completed" {
+	if session == nil || session.Status != statusCompleted {
 		return errors.New("optimization session not found or not completed")
 	}
 

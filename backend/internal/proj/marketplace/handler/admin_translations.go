@@ -16,6 +16,14 @@ import (
 	"backend/pkg/utils"
 )
 
+const (
+	providerGoogle      = "google"
+	providerOpenAI      = "openai"
+	providerManual      = "manual"
+	entityTypeCategory  = "category"
+	entityTypeAttribute = "attribute"
+)
+
 // AdminTranslationsHandler обрабатывает административные запросы для переводов
 type AdminTranslationsHandler struct {
 	services           globalService.ServicesInterface
@@ -66,11 +74,11 @@ func (h *AdminTranslationsHandler) BatchTranslateCategories(c *fiber.Ctx) error 
 	// Определяем провайдер перевода
 	provider := request.Provider
 	if provider == "" {
-		provider = "google"
+		provider = providerGoogle
 	}
 
 	translationProvider := service.GoogleTranslate
-	if strings.ToLower(provider) == "openai" {
+	if strings.ToLower(provider) == providerOpenAI {
 		translationProvider = service.OpenAI
 	}
 
@@ -203,11 +211,11 @@ func (h *AdminTranslationsHandler) BatchTranslateAttributes(c *fiber.Ctx) error 
 	// Определяем провайдер перевода
 	provider := request.Provider
 	if provider == "" {
-		provider = "google"
+		provider = providerGoogle
 	}
 
 	translationProvider := service.GoogleTranslate
-	if strings.ToLower(provider) == "openai" {
+	if strings.ToLower(provider) == providerOpenAI {
 		translationProvider = service.OpenAI
 	}
 
@@ -368,7 +376,7 @@ func (h *AdminTranslationsHandler) GetTranslationStatus(c *fiber.Ctx) error {
 	entityIDs := c.Query("entity_ids")
 
 	// Валидация типа сущности
-	if entityType != "category" && entityType != "attribute" {
+	if entityType != entityTypeCategory && entityType != entityTypeAttribute {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidEntityType")
 	}
 
@@ -498,7 +506,7 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 	fieldName := c.Params("field_name")
 
 	// Валидация типа сущности
-	if entityType != "category" && entityType != "attribute" {
+	if entityType != entityTypeCategory && entityType != entityTypeAttribute {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidEntityType")
 	}
 
@@ -514,13 +522,13 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 	// Определяем провайдер перевода
 	provider := request.Provider
 	if provider == "" {
-		provider = "manual"
+		provider = providerManual
 	}
 
 	translationProvider := service.Manual
-	if strings.ToLower(provider) == "google" {
+	if strings.ToLower(provider) == providerGoogle {
 		translationProvider = service.GoogleTranslate
-	} else if strings.ToLower(provider) == "openai" {
+	} else if strings.ToLower(provider) == providerOpenAI {
 		translationProvider = service.OpenAI
 	}
 
@@ -532,7 +540,7 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 			Language:            lang,
 			FieldName:           fieldName,
 			TranslatedText:      translatedText,
-			IsMachineTranslated: provider != "manual",
+			IsMachineTranslated: provider != providerManual,
 			IsVerified:          provider == "manual",
 			Metadata:            map[string]interface{}{"provider": provider},
 		}
@@ -554,7 +562,7 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 		updatedStatus[lang] = TranslationFieldStatus{
 			Language:            lang,
 			IsTranslated:        true,
-			IsMachineTranslated: provider != "manual",
+			IsMachineTranslated: provider != providerManual,
 			IsVerified:          provider == "manual",
 		}
 	}

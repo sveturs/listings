@@ -80,7 +80,7 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 	}
 
 	if isActive := c.Query("is_active"); isActive != "" {
-		active := isActive == "true"
+		active := isActive == boolValueTrue
 		filter.IsActive = &active
 	}
 
