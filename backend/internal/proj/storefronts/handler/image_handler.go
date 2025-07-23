@@ -123,6 +123,7 @@ func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
 		go func() {
 			if err := h.productService.ReindexProduct(c.Context(), storefrontID, productID); err != nil {
 				// Логируем ошибку реиндексации, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}()
 	}
@@ -217,6 +218,7 @@ func (h *ImageHandler) DeleteProductImage(c *fiber.Ctx) error {
 		go func() {
 			if err := h.productService.ReindexProduct(c.Context(), storefrontID, productID); err != nil {
 				// Логируем ошибку реиндексации, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}()
 	}
@@ -267,6 +269,7 @@ func (h *ImageHandler) SetMainProductImage(c *fiber.Ctx) error {
 		go func() {
 			if err := h.productService.ReindexProduct(c.Context(), storefrontID, productID); err != nil {
 				// Логируем ошибку реиндексации, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}()
 	}

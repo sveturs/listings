@@ -124,7 +124,7 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 		return 0, err
 	}
 
-	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+	if len(listing.Attributes) > 0 {
 		// Фильтрация дубликатов атрибутов
 		uniqueAttrs := make(map[int]models.ListingAttributeValue)
 		for _, attr := range listing.Attributes {
@@ -472,6 +472,7 @@ func (s *MarketplaceService) GetCategorySuggestions(ctx context.Context, query s
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -1004,6 +1005,7 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -1706,6 +1708,7 @@ func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, 
 		defer func() {
 			if err := rows.Close(); err != nil {
 				// Логирование ошибки закрытия rows
+				_ = err // Explicitly ignore error
 			}
 		}()
 

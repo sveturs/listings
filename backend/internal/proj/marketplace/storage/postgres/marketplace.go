@@ -1172,6 +1172,7 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -1908,7 +1909,7 @@ func (s *Storage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]
 					var options map[string]interface{}
 
 					// Пытаемся использовать существующие options
-					if attr.Options != nil && len(attr.Options) > 0 {
+					if len(attr.Options) > 0 {
 						err := json.Unmarshal(attr.Options, &options)
 						if err != nil {
 							options = make(map[string]interface{})

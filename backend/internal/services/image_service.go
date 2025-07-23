@@ -119,9 +119,11 @@ func (s *ImageService) UploadImage(ctx context.Context, req *UploadImageRequest)
 		// Откат: удаление файлов из MinIO
 		if deleteErr := s.fileStorage.DeleteFile(ctx, filePath); deleteErr != nil {
 			// Логируем ошибку удаления, но не прерываем выполнение
+			_ = deleteErr // Explicitly ignore error
 		}
 		if deleteErr := s.fileStorage.DeleteFile(ctx, thumbnailPath); deleteErr != nil {
 			// Логируем ошибку удаления, но не прерываем выполнение
+			_ = deleteErr // Explicitly ignore error
 		}
 		return nil, fmt.Errorf("failed to save image to database: %w", err)
 	}

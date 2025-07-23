@@ -113,6 +113,7 @@ func (r *SearchConfigRepository) GetSynonyms(ctx context.Context, language strin
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логируем ошибку закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -297,6 +298,7 @@ func (r *SearchConfigRepository) GetPopularSearches(ctx context.Context, limit i
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логируем ошибку закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 

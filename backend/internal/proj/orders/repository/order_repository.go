@@ -57,6 +57,7 @@ func (r *OrderRepository) Create(ctx context.Context, order *models.StorefrontOr
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -226,6 +227,7 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 	defer func() {
 		if err := countRows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 	if countRows.Next() {
@@ -281,6 +283,7 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -315,6 +318,7 @@ func (r *OrderRepository) AddItem(ctx context.Context, item *models.StorefrontOr
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 

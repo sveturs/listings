@@ -35,6 +35,7 @@ func (s *ImageService) UploadImage(ctx context.Context, file *multipart.FileHead
 	defer func() {
 		if err := src.Close(); err != nil {
 			// Логирование ошибки закрытия файла
+			_ = err // Explicitly ignore error
 		}
 	}()
 
