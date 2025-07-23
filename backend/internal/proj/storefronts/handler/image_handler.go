@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -119,11 +120,13 @@ func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
 	// Получаем storefrontID из контекста
 	storefrontID, ok := c.Locals("storefrontID").(int)
 	if ok && h.productService != nil {
+		// Создаем фоновый контекст для goroutine, так как c.Context() станет nil после завершения запроса
+		ctx := context.Background()
 		// Переиндексируем товар в OpenSearch после добавления изображения
 		go func() {
-			if err := h.productService.ReindexProduct(c.Context(), storefrontID, productID); err != nil {
+			if err := h.productService.ReindexProduct(ctx, storefrontID, productID); err != nil {
 				// Логируем ошибку реиндексации, но не прерываем выполнение
-				_ = err // Explicitly ignore error
+				fmt.Printf("Failed to reindex product %d in storefront %d: %v\n", productID, storefrontID, err)
 			}
 		}()
 	}
@@ -214,11 +217,13 @@ func (h *ImageHandler) DeleteProductImage(c *fiber.Ctx) error {
 	// Получаем storefrontID из контекста
 	storefrontID, ok := c.Locals("storefrontID").(int)
 	if ok && h.productService != nil {
+		// Создаем фоновый контекст для goroutine, так как c.Context() станет nil после завершения запроса
+		ctx := context.Background()
 		// Переиндексируем товар в OpenSearch после удаления изображения
 		go func() {
-			if err := h.productService.ReindexProduct(c.Context(), storefrontID, productID); err != nil {
+			if err := h.productService.ReindexProduct(ctx, storefrontID, productID); err != nil {
 				// Логируем ошибку реиндексации, но не прерываем выполнение
-				_ = err // Explicitly ignore error
+				fmt.Printf("Failed to reindex product %d in storefront %d after image deletion: %v\n", productID, storefrontID, err)
 			}
 		}()
 	}
@@ -265,11 +270,13 @@ func (h *ImageHandler) SetMainProductImage(c *fiber.Ctx) error {
 	// Получаем storefrontID из контекста
 	storefrontID, ok := c.Locals("storefrontID").(int)
 	if ok && h.productService != nil {
+		// Создаем фоновый контекст для goroutine, так как c.Context() станет nil после завершения запроса
+		ctx := context.Background()
 		// Переиндексируем товар в OpenSearch после изменения главного изображения
 		go func() {
-			if err := h.productService.ReindexProduct(c.Context(), storefrontID, productID); err != nil {
+			if err := h.productService.ReindexProduct(ctx, storefrontID, productID); err != nil {
 				// Логируем ошибку реиндексации, но не прерываем выполнение
-				_ = err // Explicitly ignore error
+				fmt.Printf("Failed to reindex product %d in storefront %d after main image change: %v\n", productID, storefrontID, err)
 			}
 		}()
 	}
