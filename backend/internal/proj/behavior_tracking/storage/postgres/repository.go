@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -102,7 +103,7 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 	committed := false
 	defer func() {
 		if !committed {
-			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != pgx.ErrTxClosed {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
 				logger.Error().Err(rollbackErr).Msg("Failed to rollback transaction")
 			}
 		}

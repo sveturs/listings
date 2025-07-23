@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -318,12 +319,11 @@ func (h *SpatialHandler) UpdateListingAddress(c *fiber.Ctx) error {
 	)
 	if err != nil {
 		// Разные типы ошибок
-		switch err {
-		case types.ErrListingNotFound:
+		if errors.Is(err, types.ErrListingNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "gis.listingNotFound")
-		case types.ErrAccessDenied:
+		} else if errors.Is(err, types.ErrAccessDenied) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "gis.accessDenied")
-		default:
+		} else {
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "gis.updateError")
 		}
 	}
