@@ -25,9 +25,9 @@ jobs:
         working-directory: ./backend
         run: make format-check
 
-      # - name: Run golangci-lint
-      #   working-directory: ./backend
-      #   run: make lint
+      - name: Run golangci-lint
+        working-directory: ./backend
+        run: make lint
 
       # - name: Comment on PR if formatting needed
       #   if: failure()
