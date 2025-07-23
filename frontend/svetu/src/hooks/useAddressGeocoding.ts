@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { apiClient } from '@/services/api-client';
 
 // Типы для геокодирования
 export interface AddressGeocodingResult {
@@ -350,25 +351,10 @@ export function useAddressGeocoding(
         setLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/v1/gis/geocode/multilingual`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              latitude: lat,
-              longitude: lng,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await apiClient.post('/api/v1/gis/geocode/multilingual', {
+          latitude: lat,
+          longitude: lng,
+        });
 
         if (data.success && data.data) {
           return {
