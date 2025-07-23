@@ -95,8 +95,8 @@ func (s *BalanceService) CreateDeposit(ctx context.Context, userID int, amount f
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
-			s.logger.Error("Failed to rollback transaction", "error", err)
+		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			s.logger.Error("Failed to rollback transaction", "error", rollbackErr)
 		}
 	}()
 
@@ -167,8 +167,8 @@ func (s *BalanceService) ProcessDeposit(ctx context.Context, transactionID int) 
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
-			s.logger.Error("Failed to rollback transaction", "error", err)
+		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			s.logger.Error("Failed to rollback transaction", "error", rollbackErr)
 		}
 	}()
 
