@@ -8,6 +8,10 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import config from '@/config';
+import {
+  formatAddressWithPrivacy,
+  getFullLocalizedAddress,
+} from '@/utils/addressUtils';
 
 interface MarketplaceCardProps {
   item: MarketplaceItem;
@@ -207,7 +211,10 @@ export default function MarketplaceCard({
                               d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
                             />
                           </svg>
-                          {item.location}
+                          {formatAddressWithPrivacy(
+                            getFullLocalizedAddress(item, locale),
+                            item.location_privacy
+                          )}
                         </span>
                       )}
                       <span className="hidden sm:inline">
@@ -378,7 +385,10 @@ export default function MarketplaceCard({
                   d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
                 />
               </svg>
-              {item.location}
+              {formatAddressWithPrivacy(
+                getFullLocalizedAddress(item, locale),
+                item.location_privacy
+              )}
             </p>
           )}
           <p className="text-xs text-base-content/50">

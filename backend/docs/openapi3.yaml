@@ -4941,6 +4941,46 @@ paths:
       summary: Статистика кэша геокодирования
       tags:
         - gis
+  /api/v1/gis/geocode/multilingual:
+    post:
+      description: Получает адреса по координатам на трех языках (сербский,
+        английский, русский)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_gis_types.MultilingualGeocode\
+                Request"
+        description: Координаты
+        required: true
+      responses:
+        "200":
+          description: Адреса на разных языках
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_gis_types.MultilingualGeocode\
+                          Response"
+                    type: object
+        "400":
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Многоязычное обратное геокодирование
+      tags:
+        - gis
   /api/v1/gis/geocode/reverse:
     get:
       description: Получает адрес по координатам
@@ -18825,6 +18865,32 @@ components:
         - PrivacyStreet
         - PrivacyDistrict
         - PrivacyCity
+    backend_internal_proj_gis_types.MultilingualGeocodeRequest:
+      properties:
+        latitude:
+          maximum: 90
+          minimum: -90
+          type: number
+        longitude:
+          maximum: 180
+          minimum: -180
+          type: number
+      required:
+        - latitude
+        - longitude
+      type: object
+    backend_internal_proj_gis_types.MultilingualGeocodeResponse:
+      properties:
+        address_en:
+          description: Английский
+          type: string
+        address_ru:
+          description: Русский
+          type: string
+        address_sr:
+          description: Сербский
+          type: string
+      type: object
     backend_internal_proj_gis_types.Municipality:
       properties:
         area_km2:

@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { Popup } from 'react-map-gl';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import type { MapMarkerData } from '../types/gis';
 // import { getCategoryIcon } from '../../../utils/categoryIcons';
 import SafeImage from '../../SafeImage';
+import { getLocalizedAddress } from '@/utils/addressUtils';
 
 interface MarkerHoverPopupProps {
   marker: MapMarkerData;
@@ -23,6 +24,7 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
   onMouseLeave,
 }) => {
   const t = useTranslations('common');
+  const locale = useLocale();
 
   // Форматирование адреса с учетом приватности
   const formatAddressWithPrivacy = (
@@ -270,7 +272,13 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
                   </svg>
                   <span className="text-sm text-gray-600 line-clamp-1">
                     {formatAddressWithPrivacy(
-                      parsedData?.address || marker.data?.address,
+                      getLocalizedAddress(
+                        parsedData?.location ||
+                          parsedData?.address ||
+                          marker.data?.address,
+                        parsedData?.translations,
+                        locale
+                      ),
                       parsedData?.locationPrivacy ||
                         parsedData?.location_privacy ||
                         parsedData?.privacy_level

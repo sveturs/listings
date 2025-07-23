@@ -145,6 +145,39 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 		}
 	}
 	listing.ID = listingID
+
+	// Сохраняем переводы адресных полей
+	addressFields := make(map[string]string)
+	if listing.Location != "" {
+		addressFields["location"] = listing.Location
+	}
+	if listing.City != "" {
+		addressFields["city"] = listing.City
+	}
+	if listing.Country != "" {
+		addressFields["country"] = listing.Country
+	}
+
+	// Если есть адресные поля, переводим их на другие языки
+	if len(addressFields) > 0 {
+		// Определяем целевые языки (все поддерживаемые языки кроме исходного)
+		targetLanguages := []string{"en", "ru", "sr"}
+		// Удаляем исходный язык из списка целевых
+		filteredTargetLanguages := make([]string, 0, len(targetLanguages))
+		for _, lang := range targetLanguages {
+			if lang != listing.OriginalLanguage {
+				filteredTargetLanguages = append(filteredTargetLanguages, lang)
+			}
+		}
+
+		// Сохраняем переводы адресов асинхронно, чтобы не замедлять создание объявления
+		go func() {
+			if err := s.SaveAddressTranslations(context.Background(), listingID, addressFields, listing.OriginalLanguage, filteredTargetLanguages); err != nil {
+				log.Printf("Error saving address translations for listing %d: %v", listingID, err)
+			}
+		}()
+	}
+
 	fullListing, err := s.storage.GetListingByID(ctx, listingID)
 	if err != nil {
 		log.Printf("Ошибка получения полного объявления для индексации: %v", err)
@@ -537,6 +570,57 @@ func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.
 	// Вызываем существующий метод для обновления объявления в БД
 	if err := s.storage.UpdateListing(ctx, listing); err != nil {
 		return err
+	}
+
+	// Проверяем, изменились ли адресные поля
+	addressChanged := false
+	if currentListing.Location != listing.Location ||
+		currentListing.City != listing.City ||
+		currentListing.Country != listing.Country {
+		addressChanged = true
+	}
+
+	// Если адресные поля изменились, обновляем переводы
+	if addressChanged {
+		addressFields := make(map[string]string)
+		if listing.Location != "" {
+			addressFields["location"] = listing.Location
+		}
+		if listing.City != "" {
+			addressFields["city"] = listing.City
+		}
+		if listing.Country != "" {
+			addressFields["country"] = listing.Country
+		}
+
+		if len(addressFields) > 0 {
+			// Определяем язык обновленных данных
+			sourceLanguage := listing.OriginalLanguage
+			if sourceLanguage == "" {
+				// Если язык не указан, используем язык из контекста или русский по умолчанию
+				if userLang, ok := ctx.Value("language").(string); ok && userLang != "" {
+					sourceLanguage = userLang
+				} else {
+					sourceLanguage = "ru"
+				}
+			}
+
+			// Определяем целевые языки
+			targetLanguages := []string{"en", "ru", "sr"}
+			filteredTargetLanguages := make([]string, 0, len(targetLanguages))
+			for _, lang := range targetLanguages {
+				if lang != sourceLanguage {
+					filteredTargetLanguages = append(filteredTargetLanguages, lang)
+				}
+			}
+
+			// Обновляем переводы адресов асинхронно
+			go func() {
+				if err := s.SaveAddressTranslations(context.Background(), listing.ID, addressFields, sourceLanguage, filteredTargetLanguages); err != nil {
+					log.Printf("Error updating address translations for listing %d: %v", listing.ID, err)
+				}
+			}()
+		}
 	}
 
 	// Получаем полное объявление со всеми связанными данными после обновления
@@ -1956,4 +2040,49 @@ func (s *MarketplaceService) applyAdvancedGeoFilters(ctx context.Context, filter
 	}
 
 	return response.Data.FilteredIDs, nil
+}
+
+// SaveAddressTranslations сохраняет переводы адресных полей объявления
+func (s *MarketplaceService) SaveAddressTranslations(ctx context.Context, listingID int, addressFields map[string]string, sourceLanguage string, targetLanguages []string) error {
+	// Проверяем, есть ли адресные поля для перевода
+	if len(addressFields) == 0 {
+		return nil
+	}
+
+	// Проверяем наличие сервиса перевода
+	if s.translationService == nil {
+		log.Printf("Translation service not available for address translations")
+		return nil
+	}
+
+	// Переводим адресные поля на все целевые языки
+	translations, err := s.translationService.TranslateEntityFields(ctx, sourceLanguage, targetLanguages, addressFields)
+	if err != nil {
+		log.Printf("Error translating address fields for listing %d: %v", listingID, err)
+		return fmt.Errorf("error translating address fields: %w", err)
+	}
+
+	// Сохраняем переводы в базу данных
+	for language, fields := range translations {
+		// Пропускаем исходный язык - он уже сохранен в основных полях объявления
+		if language == sourceLanguage {
+			continue
+		}
+
+		for fieldName, translatedText := range fields {
+			// Сохраняем перевод для каждого поля
+			err := s.SaveTranslation(ctx, "listing", listingID, language, fieldName, translatedText, map[string]interface{}{
+				"source_language": sourceLanguage,
+				"provider":        "google_translate",
+				"is_address":      true,
+			})
+			if err != nil {
+				log.Printf("Error saving translation for field %s to language %s: %v", fieldName, language, err)
+				// Продолжаем с другими переводами, не прерываем процесс
+			}
+		}
+	}
+
+	log.Printf("Successfully saved address translations for listing %d", listingID)
+	return nil
 }

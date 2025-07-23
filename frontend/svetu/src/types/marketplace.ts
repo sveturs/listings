@@ -13,6 +13,25 @@ export interface MarketplaceItem {
   location?: string;
   city?: string;
   country?: string;
+  location_privacy?: 'exact' | 'street' | 'district' | 'city';
+  // Переводы адресов (могут приходить из backend)
+  translations?: {
+    location?: {
+      sr?: string;
+      en?: string;
+      ru?: string;
+    };
+    city?: {
+      sr?: string;
+      en?: string;
+      ru?: string;
+    };
+    country?: {
+      sr?: string;
+      en?: string;
+      ru?: string;
+    };
+  };
   images?: MarketplaceImage[];
   created_at: string;
   updated_at?: string;

@@ -24,6 +24,7 @@ func RegisterRoutes(app *fiber.App, db *sqlx.DB, authMiddleware *middleware.Midd
 	gis.Post("/geocode/validate", geocodingHandler.ValidateGeocode)
 	gis.Get("/geocode/suggestions", geocodingHandler.SearchAddressSuggestions)
 	gis.Get("/geocode/reverse", geocodingHandler.ReverseGeocode)
+	gis.Post("/geocode/multilingual", geocodingHandler.MultilingualReverseGeocode)
 	gis.Get("/geocode/cache/stats", geocodingHandler.GetCacheStats)
 
 	// ========== Публичные маршруты поиска ==========

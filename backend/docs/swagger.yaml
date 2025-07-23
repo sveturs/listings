@@ -3780,6 +3780,32 @@ definitions:
     - PrivacyStreet
     - PrivacyDistrict
     - PrivacyCity
+  backend_internal_proj_gis_types.MultilingualGeocodeRequest:
+    properties:
+      latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+    required:
+    - latitude
+    - longitude
+    type: object
+  backend_internal_proj_gis_types.MultilingualGeocodeResponse:
+    properties:
+      address_en:
+        description: Английский
+        type: string
+      address_ru:
+        description: Русский
+        type: string
+      address_sr:
+        description: Сербский
+        type: string
+    type: object
   backend_internal_proj_gis_types.Municipality:
     properties:
       area_km2:
@@ -10896,6 +10922,42 @@ paths:
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Статистика кэша геокодирования
+      tags:
+      - gis
+  /api/v1/gis/geocode/multilingual:
+    post:
+      consumes:
+      - application/json
+      description: Получает адреса по координатам на трех языках (сербский, английский,
+        русский)
+      parameters:
+      - description: Координаты
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_gis_types.MultilingualGeocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Адреса на разных языках
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_gis_types.MultilingualGeocodeResponse'
+              type: object
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Многоязычное обратное геокодирование
       tags:
       - gis
   /api/v1/gis/geocode/reverse:

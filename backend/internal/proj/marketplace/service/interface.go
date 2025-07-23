@@ -86,6 +86,7 @@ type MarketplaceServiceInterface interface {
 	// Методы перевода
 	TranslateText(ctx context.Context, text, sourceLanguage, targetLanguage string) (string, error)
 	SaveTranslation(ctx context.Context, entityType string, entityID int, language, fieldName, translatedText string, metadata map[string]any) error
+	SaveAddressTranslations(ctx context.Context, listingID int, addressFields map[string]string, sourceLanguage string, targetLanguages []string) error
 
 	// Методы для работы с группами атрибутов
 	GetCategoryAttributeGroups(ctx context.Context, categoryID int) ([]*models.AttributeGroup, error)

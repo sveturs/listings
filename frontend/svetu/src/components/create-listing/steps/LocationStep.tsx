@@ -19,6 +19,11 @@ interface LocationData {
   region: string;
   country: string;
   confidence: number;
+  addressMultilingual?: {
+    sr: string;
+    en: string;
+    ru: string;
+  };
 }
 
 export default function LocationStep({ onNext, onBack }: LocationStepProps) {
@@ -67,6 +72,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
           city: location.city,
           region: location.region,
           country: location.country,
+          addressMultilingual: location.addressMultilingual,
         },
       });
     }

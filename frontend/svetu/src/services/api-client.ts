@@ -135,6 +135,12 @@ class ApiClient {
       headers.set('Content-Type', 'application/json');
     }
 
+    // Добавляем заголовок Accept-Language
+    if (!headers.has('Accept-Language') && typeof window !== 'undefined') {
+      const locale = localStorage.getItem('locale') || 'sr';
+      headers.set('Accept-Language', locale);
+    }
+
     // Добавляем токен авторизации если нужно
     if (includeAuth && typeof window !== 'undefined') {
       const token = await tokenManager.getAccessToken();

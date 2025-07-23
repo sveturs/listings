@@ -37,6 +37,12 @@ export interface UseAddressGeocodingOptions {
   language?: string;
 }
 
+export interface MultilingualAddressResult {
+  address_sr: string;
+  address_en: string;
+  address_ru: string;
+}
+
 export interface UseAddressGeocodingReturn {
   suggestions: AddressGeocodingResult[];
   loading: boolean;
@@ -46,6 +52,10 @@ export interface UseAddressGeocodingReturn {
     lat: number,
     lng: number
   ) => Promise<AddressGeocodingResult | null>;
+  getMultilingualAddress: (
+    lat: number,
+    lng: number
+  ) => Promise<MultilingualAddressResult | null>;
   validateAddress: (address: string) => Promise<{
     success: boolean;
     location?: { lat: number; lng: number };
@@ -331,12 +341,62 @@ export function useAddressGeocoding(
     setError(null);
   }, []);
 
+  const getMultilingualAddress = useCallback(
+    async (
+      lat: number,
+      lng: number
+    ): Promise<MultilingualAddressResult | null> => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/v1/gis/geocode/multilingual`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              latitude: lat,
+              longitude: lng,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          return {
+            address_sr: data.data.address_sr,
+            address_en: data.data.address_en,
+            address_ru: data.data.address_ru,
+          };
+        }
+
+        return null;
+      } catch (err: any) {
+        console.error('Multilingual geocoding error:', err);
+        setError('Failed to get multilingual addresses.');
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
   return {
     suggestions,
     loading,
     error,
     search,
     reverseGeocode,
+    getMultilingualAddress,
     validateAddress,
     clearSuggestions,
     clearError,

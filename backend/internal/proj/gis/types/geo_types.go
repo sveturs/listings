@@ -501,3 +501,18 @@ func (v *VisibleCitiesRequest) Validate() error {
 	}
 	return v.Bounds.Validate()
 }
+
+// ========== Multilingual Geocoding Types ==========
+
+// MultilingualGeocodeRequest запрос для многоязычного геокодирования
+type MultilingualGeocodeRequest struct {
+	Latitude  float64 `json:"latitude" validate:"required,min=-90,max=90"`
+	Longitude float64 `json:"longitude" validate:"required,min=-180,max=180"`
+}
+
+// MultilingualGeocodeResponse ответ с адресами на разных языках
+type MultilingualGeocodeResponse struct {
+	AddressSr string `json:"address_sr"` // Сербский
+	AddressEn string `json:"address_en"` // Английский
+	AddressRu string `json:"address_ru"` // Русский
+}

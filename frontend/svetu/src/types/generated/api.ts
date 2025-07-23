@@ -7130,6 +7130,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/gis/geocode/multilingual': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Многоязычное обратное геокодирование
+     * @description Получает адреса по координатам на трех языках (сербский, английский, русский)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Координаты */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_gis_types.MultilingualGeocodeRequest'];
+        };
+      };
+      responses: {
+        /** @description Адреса на разных языках */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_gis_types.MultilingualGeocodeResponse'];
+            };
+          };
+        };
+        /** @description Ошибка валидации */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/gis/geocode/reverse': {
     parameters: {
       query?: never;
@@ -23547,6 +23611,18 @@ export interface components {
       | 'street'
       | 'district'
       | 'city';
+    'backend_internal_proj_gis_types.MultilingualGeocodeRequest': {
+      latitude: number;
+      longitude: number;
+    };
+    'backend_internal_proj_gis_types.MultilingualGeocodeResponse': {
+      /** @description Английский */
+      address_en?: string;
+      /** @description Русский */
+      address_ru?: string;
+      /** @description Сербский */
+      address_sr?: string;
+    };
     'backend_internal_proj_gis_types.Municipality': {
       area_km2?: number;
       boundary?: components['schemas']['backend_internal_proj_gis_types.Polygon'];
