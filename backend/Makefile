@@ -64,10 +64,12 @@ format-check:
 	fi
 	@echo "✅ Go code formatting is correct!"
 
-lint:
+lint_full:
 	@echo "Running Go linters..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run ./...
 	@echo "✅ Linting completed!"
+
+lint: lint-errcheck lint-goconst lint-govet 
 
 lint-errcheck:
 	@echo "Running errcheck linter only..."
@@ -80,6 +82,39 @@ lint-goconst:
 lint-staticcheck:
 	@echo "Running staticcheck linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=staticcheck ./...
+
+lint-govet:
+	@echo "Running govet linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=govet ./...
+
+lint-revive:
+	@echo "Running revive linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=revive ./...
+
+lint-misspell:
+	@echo "Running misspell linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=misspell ./...
+
+lint-lll:
+	@echo "Running lll linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=lll ./...
+
+lint-unused:
+	@echo "Running unused linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=unused ./...
+
+lint-ineffassign:
+	@echo "Running ineffassign linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=ineffassign ./...
+
+lint-gocritic:
+	@echo "Running gocritic linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=gocritic ./...
+
+lint-gosec:
+	@echo "Running gosec linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=gosec ./...
+
 
 pre-commit: format-check lint
 	@echo "✅ Pre-commit checks passed!"
