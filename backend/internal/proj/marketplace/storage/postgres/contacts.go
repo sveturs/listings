@@ -93,7 +93,7 @@ func (s *Storage) GetContact(ctx context.Context, userID, contactUserID int) (*m
 		&contactPicture,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrContactNotFound // Контакт не найден
 		}
 		return nil, fmt.Errorf("error getting contact: %w", err)
@@ -324,7 +324,7 @@ func (s *Storage) GetUserPrivacySettings(ctx context.Context, userID int) (*mode
 		&settings.UpdatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// Если настроек нет, создаем их с значениями по умолчанию
 		insertQuery := `
 			INSERT INTO user_privacy_settings (user_id, allow_contact_requests, allow_messages_from_contacts_only) 

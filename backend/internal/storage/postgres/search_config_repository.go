@@ -47,7 +47,7 @@ func (r *SearchConfigRepository) GetWeightByField(ctx context.Context, fieldName
 
 	err := r.db.GetContext(ctx, &weight, query, fieldName)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrSearchWeightNotFound
 		}
 		return nil, fmt.Errorf("failed to get weight for field %s: %w", fieldName, err)
@@ -350,7 +350,7 @@ func (r *SearchConfigRepository) GetConfig(ctx context.Context) (*domain.SearchC
 
 	err := r.db.GetContext(ctx, &config, query)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrSearchConfigNotFound
 		}
 		return nil, fmt.Errorf("failed to get search config: %w", err)

@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -44,7 +45,7 @@ func (db *Database) GetComponent(ctx context.Context, id int) (*models.CustomUIC
 		&component.CreatedBy, &component.UpdatedBy,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("component not found")
 	}
 

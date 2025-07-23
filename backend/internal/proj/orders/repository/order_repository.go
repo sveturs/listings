@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -132,7 +133,7 @@ func (r *OrderRepository) GetByID(ctx context.Context, orderID int64) (*models.S
 	var order models.StorefrontOrder
 	err := r.db.GetContext(ctx, &order, query, orderID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("order not found")
 		}
 		return nil, fmt.Errorf("failed to get order: %w", err)

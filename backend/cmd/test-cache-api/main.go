@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -71,7 +72,7 @@ func main() {
 		// Проверяем, есть ли уже данные в кеше
 		var cachedCategories []map[string]interface{}
 		err := cacheAdapter.Get(ctx, cacheKey, &cachedCategories)
-		if err == cache.ErrCacheMiss {
+		if errors.Is(err, cache.ErrCacheMiss) {
 			fmt.Println("Status: NOT in cache")
 		} else if err != nil {
 			fmt.Printf("Status: Error checking cache: %v\n", err)
@@ -86,7 +87,7 @@ func main() {
 		// Проверяем кеш снова
 		time.Sleep(100 * time.Millisecond) // Даем время на обработку
 		err = cacheAdapter.Get(ctx, cacheKey, &cachedCategories)
-		if err == cache.ErrCacheMiss {
+		if errors.Is(err, cache.ErrCacheMiss) {
 			fmt.Println("After API call: Still NOT in cache")
 		} else if err != nil {
 			fmt.Printf("After API call: Error: %v\n", err)

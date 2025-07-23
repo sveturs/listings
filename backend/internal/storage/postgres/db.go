@@ -256,7 +256,7 @@ func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*mode
 		&image.PublicURL, &image.CreatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("image not found")
 		}
 		return nil, err
@@ -352,7 +352,7 @@ func (db *Database) GetSession(ctx context.Context, token string) (*types.Sessio
 		&session.Provider,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrSessionNotFound
 		}
 		return nil, err
@@ -714,7 +714,7 @@ func (db *Database) GetAttributeOptionTranslations(ctx context.Context, attribut
 		&optValue, &enTrans, &srTrans,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrAttributeTranslationNotFound
 		}
 		return nil, fmt.Errorf("error getting attribute translations: %w", err)
@@ -1110,7 +1110,7 @@ func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, selle
 		&stats.DaysSinceLastMsg,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		// Чат не существует, возвращаем пустую статистику
 		return stats, nil
 	}
@@ -1140,7 +1140,7 @@ func (db *Database) GetUserAggregatedRating(ctx context.Context, userID int) (*m
 		&rating.RecentReviews, &rating.LastReviewAt,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		// Если нет данных в материализованном представлении, возвращаем пустой рейтинг
 		return rating, nil
 	}
@@ -1170,7 +1170,7 @@ func (db *Database) GetStorefrontAggregatedRating(ctx context.Context, storefron
 		&rating.RecentReviews, &rating.LastReviewAt, &rating.OwnerID,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return rating, nil
 	}
 
@@ -1216,7 +1216,7 @@ func (db *Database) GetReviewConfirmation(ctx context.Context, reviewID int) (*m
 		&confirmation.ConfirmationStatus, &confirmation.ConfirmedAt, &confirmation.Notes,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrReviewConfirmationNotFound
 	}
 
@@ -1272,7 +1272,7 @@ func (db *Database) GetReviewDispute(ctx context.Context, reviewID int) (*models
 		&dispute.UpdatedAt, &dispute.ResolvedAt,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrReviewDisputeNotFound
 	}
 
@@ -1325,7 +1325,7 @@ func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityT
 	`
 
 	err := db.pool.QueryRow(ctx, query, userID, entityType, entityID).Scan(&existingReviewID)
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
@@ -1511,7 +1511,7 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 		&s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrStorefrontNotFound
 		}
 		return nil, err

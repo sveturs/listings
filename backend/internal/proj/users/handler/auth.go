@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -411,7 +412,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	// Аутентификация с получением access и refresh токенов
 	accessToken, refreshToken, user, err := h.services.Auth().LoginWithRefreshToken(c.Context(), loginData.Email, loginData.Password, c.IP(), c.Get("User-Agent"))
 	if err != nil {
-		if err == types.ErrInvalidCredentials {
+		if errors.Is(err, types.ErrInvalidCredentials) {
 			return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.login.error.invalid_credentials")
 		}
 		logger.Error().Err(err).Msg("Login failed")
@@ -497,7 +498,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		c.Get("User-Agent"),
 	)
 	if err != nil {
-		if err == types.ErrUserAlreadyExists {
+		if errors.Is(err, types.ErrUserAlreadyExists) {
 			return utils.ErrorResponse(c, fiber.StatusConflict, "auth.register.error.email_exists")
 		}
 		logger.Error().Err(err).Msg("Registration failed")

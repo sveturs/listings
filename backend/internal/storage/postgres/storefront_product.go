@@ -232,7 +232,7 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 		&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrStorefrontProductNotFound
 	}
 	if err != nil {

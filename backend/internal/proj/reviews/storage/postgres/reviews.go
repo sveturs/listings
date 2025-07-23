@@ -485,7 +485,7 @@ func (s *Storage) AddReviewVote(ctx context.Context, vote *models.ReviewVote) er
         WHERE review_id = $1 AND user_id = $2
     `, vote.ReviewID, vote.UserID).Scan(&existingVoteType)
 
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("error checking existing vote: %w", err)
 	}
 
@@ -927,7 +927,7 @@ func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models
 	// Получаем имя пользователя
 	var userName sql.NullString
 	err := s.pool.QueryRow(ctx, `SELECT name FROM users WHERE id = $1`, userID).Scan(&userName)
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		log.Printf("Error getting user name: %v", err)
 	}
 
@@ -990,7 +990,7 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
 	// Получаем название витрины
 	var storefrontName sql.NullString
 	err := s.pool.QueryRow(ctx, `SELECT name FROM storefronts WHERE id = $1`, storefrontID).Scan(&storefrontName)
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		log.Printf("Error getting storefront name: %v", err)
 	}
 

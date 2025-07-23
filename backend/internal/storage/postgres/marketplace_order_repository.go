@@ -71,7 +71,7 @@ func (r *MarketplaceOrderRepository) GetByID(ctx context.Context, id int64) (*mo
 		&order.CreatedAt, &order.UpdatedAt,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("marketplace order not found")
 		}
 		return nil, pkgErrors.Wrap(err, "failed to get marketplace order")
@@ -101,7 +101,7 @@ func (r *MarketplaceOrderRepository) GetByPaymentTransactionID(ctx context.Conte
 		&order.CreatedAt, &order.UpdatedAt,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrMarketplaceOrderNotFound
 		}
 		return nil, pkgErrors.Wrap(err, "failed to get marketplace order by transaction id")
@@ -165,6 +165,13 @@ func (r *MarketplaceOrderRepository) UpdateStatus(ctx context.Context, orderID i
 			SET delivered_at = NOW(), 
 			    protection_expires_at = NOW() + INTERVAL '7 days' 
 			WHERE id = $1`, orderID)
+	case models.MarketplaceOrderStatusPending, 
+		models.MarketplaceOrderStatusPaid,
+		models.MarketplaceOrderStatusCompleted,
+		models.MarketplaceOrderStatusDisputed,
+		models.MarketplaceOrderStatusCancelled,
+		models.MarketplaceOrderStatusRefunded:
+		// Для этих статусов нет специфичных полей для обновления
 	}
 	if err != nil {
 		return pkgErrors.Wrap(err, "failed to update status-specific fields")

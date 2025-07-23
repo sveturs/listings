@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"backend/internal/domain/models"
@@ -90,7 +91,7 @@ func (s *attributeGroupStorage) GetAttributeGroup(ctx context.Context, id int) (
 		&group.UpdatedAt,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, fmt.Errorf("группа атрибутов не найдена")
 	}
 	if err != nil {
@@ -121,7 +122,7 @@ func (s *attributeGroupStorage) GetAttributeGroupByName(ctx context.Context, nam
 		&group.UpdatedAt,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, fmt.Errorf("группа атрибутов не найдена")
 	}
 	if err != nil {

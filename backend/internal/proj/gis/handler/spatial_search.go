@@ -202,7 +202,7 @@ func (h *SpatialHandler) GetListingLocation(c *fiber.Ctx) error {
 	// Получаем геоданные
 	listing, err := h.service.GetListingLocation(c.Context(), listingID)
 	if err != nil {
-		if err == types.ErrLocationNotFound {
+		if errors.Is(err, types.ErrLocationNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "gis.listingNotFound")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "gis.getLocationError")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -195,7 +196,7 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*models.S
 		&cancelledAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("order not found")
 		}
 		return nil, fmt.Errorf("failed to get order: %w", err)
@@ -301,7 +302,7 @@ func (r *orderRepository) GetByOrderNumber(ctx context.Context, orderNumber stri
 	var orderID int64
 	err := r.pool.QueryRow(ctx, "SELECT id FROM storefront_orders WHERE order_number = $1", orderNumber).Scan(&orderID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("order not found")
 		}
 		return nil, fmt.Errorf("failed to get order by number: %w", err)
@@ -492,6 +493,8 @@ func (r *orderRepository) UpdateStatus(ctx context.Context, orderID int64, statu
 		query += ", delivered_at = CURRENT_TIMESTAMP"
 	case models.OrderStatusCancelled:
 		query += ", canceled_at = CURRENT_TIMESTAMP"
+	case models.OrderStatusPending, models.OrderStatusProcessing, models.OrderStatusRefunded:
+		// Для этих статусов нет специфичных временных меток для обновления
 	}
 
 	query += ", updated_at = CURRENT_TIMESTAMP WHERE id = $3"

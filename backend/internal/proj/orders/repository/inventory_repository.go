@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -92,7 +93,7 @@ func (r *InventoryRepository) GetReservation(ctx context.Context, reservationID 
 	var reservation models.InventoryReservation
 	err := r.db.GetContext(ctx, &reservation, query, reservationID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("reservation not found")
 		}
 		return nil, fmt.Errorf("failed to get reservation: %w", err)
