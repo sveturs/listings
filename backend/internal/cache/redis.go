@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -147,7 +148,7 @@ func (r *RedisCache) GetOrSet(ctx context.Context, key string, dest interface{},
 		return nil
 	}
 
-	if err != ErrCacheMiss {
+	if !errors.Is(err, ErrCacheMiss) {
 		// Если ошибка не cache miss, логируем но продолжаем
 		r.logger.WithError(err).WithField("key", key).Warn("Cache get error, loading fresh data")
 	}

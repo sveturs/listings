@@ -4,13 +4,14 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"github.com/gofiber/websocket/v2"
-	"github.com/pkg/errors"
+	pkgErrors "github.com/pkg/errors"
 
 	_ "backend/docs"
 	"backend/internal/config"
@@ -68,18 +69,18 @@ type Server struct {
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
 	if err != nil {
-		return nil, errors.Wrap(err, "Ошибка инициализации файлового хранилища")
+		return nil, pkgErrors.Wrap(err, "Ошибка инициализации файлового хранилища")
 	}
 
 	osClient, err := initializeOpenSearch(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "OpenSearch initialization failed")
+		return nil, pkgErrors.Wrap(err, "OpenSearch initialization failed")
 	} else {
 		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
 	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize database")
+		return nil, pkgErrors.Wrap(err, "failed to initialize database")
 	}
 
 	translationService, err := initializeTranslationService(cfg, db)
@@ -97,7 +98,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	storefrontModule := storefronts.NewModule(services)
 	ordersModule, err := orders.NewModule(db)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize orders module")
+		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
 	}
 	contactsHandler := contactsHandler.NewHandler(services)
 	paymentsHandler := paymentHandler.NewHandler(services)
@@ -122,7 +123,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 			// Стандартная обработка ошибки
 			code := fiber.StatusInternalServerError
-			if e, ok := err.(*fiber.Error); ok {
+			var e *fiber.Error
+			if errors.As(err, &e) {
 				code = e.Code
 			}
 
