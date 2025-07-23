@@ -47,7 +47,8 @@ func main() {
 		ORDER BY ordinal_position
 	`)
 	if err != nil {
-		log.Fatalf("Failed to get table structure: %v", err)
+		log.Printf("Failed to get table structure: %v", err)
+		return
 	}
 
 	for rows.Next() {

@@ -31,7 +31,8 @@ func main() {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		log.Fatal("Query failed:", err)
+		log.Printf("Query failed: %v", err)
+		return
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {

@@ -71,7 +71,8 @@ func testEndpoint(url string, token string) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("Failed to read response: %v", err)
+		log.Printf("Failed to read response: %v", err)
+		return
 	}
 
 	// Pretty print JSON response

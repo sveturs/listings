@@ -121,7 +121,11 @@ func (r *UnifiedGeoRepository) SearchListings(ctx context.Context, params types.
 	}
 
 	// Подсчет общего количества
-	countQuery := "SELECT COUNT(*) " + strings.Replace(query, query[:strings.Index(query, "FROM")], "", 1)
+	fromIndex := strings.Index(query, "FROM")
+	if fromIndex == -1 {
+		fromIndex = 0
+	}
+	countQuery := "SELECT COUNT(*) " + strings.Replace(query, query[:fromIndex], "", 1)
 	var totalCount int64
 	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
 	if err != nil {

@@ -55,7 +55,8 @@ func main() {
 		LIMIT 1
 	`).Scan(&id, &email)
 	if err != nil {
-		log.Fatalf("Failed to get admin user: %v", err)
+		log.Printf("Failed to get admin user: %v", err)
+		return
 	}
 
 	fmt.Printf("Found admin user: ID=%d, Email=%s\n", id, email)

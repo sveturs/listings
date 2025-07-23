@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -153,7 +154,8 @@ func run(cfg *config.Config) error {
 
 	// Получаем путь к YAML файлу из аргументов командной строки
 	if len(os.Args) < 2 {
-		log.Fatal("Укажите путь для сохранения YAML файла с категориями")
+		log.Printf("Укажите путь для сохранения YAML файла с категориями")
+		return errors.New("missing yaml file path argument")
 	}
 	yamlFilePath := os.Args[1]
 

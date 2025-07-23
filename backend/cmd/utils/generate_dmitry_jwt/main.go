@@ -49,7 +49,8 @@ func main() {
 	// Получаем пользователя
 	user, err := db.GetUserByEmail(ctx, targetEmail)
 	if err != nil || user == nil {
-		log.Fatal("User not found:", err)
+		log.Printf("User not found: %v", err)
+		return
 	}
 
 	// Генерируем JWT токен

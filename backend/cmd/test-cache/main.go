@@ -276,5 +276,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
-	log.Fatal(server.ListenAndServe())
+	if err := server.ListenAndServe(); err != nil {
+		log.Printf("Server failed: %v", err)
+	}
 }

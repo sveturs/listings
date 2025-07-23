@@ -234,6 +234,6 @@ func main() {
 
 	if indexedCount < totalCount {
 		logger.Error().Msgf("WARNING: %d products failed to index", totalCount-indexedCount)
-		os.Exit(1)
+		return
 	}
 }

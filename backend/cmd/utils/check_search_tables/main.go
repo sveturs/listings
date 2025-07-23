@@ -40,7 +40,8 @@ func main() {
 		ORDER BY table_name
 	`)
 	if err != nil {
-		log.Fatalf("Failed to query tables: %v", err)
+		log.Printf("Failed to query tables: %v", err)
+		return
 	}
 	defer rows.Close()
 

@@ -41,7 +41,8 @@ func main() {
 	// Получаем пользователя
 	user, err := db.GetUserByEmail(ctx, targetEmail)
 	if err != nil || user == nil {
-		log.Fatal("Admin user not found:", err)
+		log.Printf("Admin user not found: %v", err)
+		return
 	}
 
 	// Получаем профиль пользователя с полем is_admin

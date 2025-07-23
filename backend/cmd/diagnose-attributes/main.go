@@ -40,7 +40,8 @@ func main() {
 
 	// Проверяем подключение
 	if err := db.Ping(); err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
+		log.Printf("Failed to ping database: %v", err)
+		return
 	}
 
 	// Проверяем категории, которые должны иметь атрибуты
