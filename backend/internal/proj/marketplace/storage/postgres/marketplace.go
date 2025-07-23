@@ -19,7 +19,7 @@ import (
 	"backend/internal/proj/marketplace/service"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	//"time"
+	// "time"
 	// "github.com/jackc/pgx/v5"
 )
 
@@ -558,14 +558,12 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		if len(metadataJSON) > 0 {
 			if err := json.Unmarshal(metadataJSON, &listing.Metadata); err != nil {
 				log.Printf("Error unmarshaling metadata for listing %d: %v", listing.ID, err)
-			} else {
+			} else if listing.Metadata != nil {
 				// Обработка метаданных о скидках
-				if listing.Metadata != nil {
-					if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
-						listing.HasDiscount = true
-						if prevPrice, ok := discount["previous_price"].(float64); ok {
-							listing.OldPrice = prevPrice
-						}
+				if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
+					listing.HasDiscount = true
+					if prevPrice, ok := discount["previous_price"].(float64); ok {
+						listing.OldPrice = prevPrice
 					}
 				}
 			}

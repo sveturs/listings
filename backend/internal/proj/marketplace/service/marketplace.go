@@ -764,25 +764,23 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
 
 				log.Printf("Создана информация о скидке для объявления %d из истории цен: %d%%, старая цена: %.2f",
 					listingID, discountPercent, maxPrice)
-			} else {
+			} else if listing.Metadata != nil && listing.Metadata["discount"] != nil {
 				// Если скидка меньше 5%, удаляем информацию о скидке
-				if listing.Metadata != nil && listing.Metadata["discount"] != nil {
-					delete(listing.Metadata, "discount")
+				delete(listing.Metadata, "discount")
 
-					// Обновляем объявление в БД
-					_, err := s.storage.Exec(ctx, `
+				// Обновляем объявление в БД
+				_, err := s.storage.Exec(ctx, `
                         UPDATE marketplace_listings
                         SET metadata = $1
                         WHERE id = $2
                     `, listing.Metadata, listingID)
-					if err != nil {
-						log.Printf("Ошибка удаления метаданных о малой скидке: %v", err)
-						return err
-					}
-
-					log.Printf("Удалена информация о малой скидке (%.1f%%) для объявления %d",
-						float64(discountPercent), listingID)
+				if err != nil {
+					log.Printf("Ошибка удаления метаданных о малой скидке: %v", err)
+					return err
 				}
+
+				log.Printf("Удалена информация о малой скидке (%.1f%%) для объявления %d",
+					float64(discountPercent), listingID)
 			}
 		} else if listing.Metadata != nil && listing.Metadata["discount"] != nil {
 			// Если максимальная цена не найдена или текущая цена не ниже максимальной,
