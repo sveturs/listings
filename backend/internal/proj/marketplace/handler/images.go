@@ -484,7 +484,7 @@ func (h *ImagesHandler) EnhanceImages(c *fiber.Ctx) error {
 		Success: true,
 		Data: EnhanceImagesData{
 			Message: "marketplace.imageEnhancementStarted",
-			JobID:   fmt.Sprintf("enhance_%d_%d", listingID, time.Now().Unix()),
+			JobID:   fmt.Sprintf("enhance_%s_%d_%d", enhancementType, listingID, time.Now().Unix()),
 		},
 	}
 	return utils.SuccessResponse(c, response)
