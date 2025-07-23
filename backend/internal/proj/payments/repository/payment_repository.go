@@ -409,6 +409,10 @@ func (r *PaymentRepository) GetPayoutsBySellerID(ctx context.Context, sellerID i
 		payouts = append(payouts, &payout)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over rows: %w", err)
+	}
+
 	return payouts, nil
 }
 

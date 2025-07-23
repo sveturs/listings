@@ -32,7 +32,7 @@ type MinioClient struct {
 }
 
 // NewMinioClient создает новый клиент MinIO
-func NewMinioClient(config MinioConfig) (*MinioClient, error) {
+func NewMinioClient(ctx context.Context, config MinioConfig) (*MinioClient, error) {
 	client, err := minio.New(config.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(config.AccessKeyID, config.SecretAccessKey, ""),
 		Secure: config.UseSSL,
@@ -42,14 +42,14 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 	}
 
 	// Проверка существования бакета
-	exists, err := client.BucketExists(context.Background(), config.BucketName)
+	exists, err := client.BucketExists(ctx, config.BucketName)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка проверки существования бакета: %w", err)
 	}
 
 	// Создание бакета, если он не существует
 	if !exists {
-		err = client.MakeBucket(context.Background(), config.BucketName, minio.MakeBucketOptions{
+		err = client.MakeBucket(ctx, config.BucketName, minio.MakeBucketOptions{
 			Region: config.Location,
 		})
 		if err != nil {
@@ -59,7 +59,7 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 
 		// Устанавливаем политику доступа для публичного чтения
 		policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + config.BucketName + `/*"]}]}`
-		err = client.SetBucketPolicy(context.Background(), config.BucketName, policy)
+		err = client.SetBucketPolicy(ctx, config.BucketName, policy)
 		if err != nil {
 			return nil, fmt.Errorf("ошибка установки политики бакета: %w", err)
 		}
@@ -68,11 +68,11 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 
 	// Также создаем bucket для файлов чата если он не существует
 	chatBucket := "chat-files"
-	chatExists, err := client.BucketExists(context.Background(), chatBucket)
+	chatExists, err := client.BucketExists(ctx, chatBucket)
 	if err != nil {
 		log.Printf("Ошибка проверки существования бакета chat-files: %v", err)
 	} else if !chatExists {
-		err = client.MakeBucket(context.Background(), chatBucket, minio.MakeBucketOptions{
+		err = client.MakeBucket(ctx, chatBucket, minio.MakeBucketOptions{
 			Region: config.Location,
 		})
 		if err != nil {
@@ -82,7 +82,7 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 
 			// Устанавливаем политику доступа для публичного чтения
 			chatPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + chatBucket + `/*"]}]}`
-			err = client.SetBucketPolicy(context.Background(), chatBucket, chatPolicy)
+			err = client.SetBucketPolicy(ctx, chatBucket, chatPolicy)
 			if err != nil {
 				log.Printf("Ошибка установки политики бакета chat-files: %v", err)
 			} else {
@@ -93,11 +93,11 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 
 	// Создаем bucket для фотографий отзывов если он не существует
 	reviewPhotosBucket := "review-photos"
-	reviewExists, err := client.BucketExists(context.Background(), reviewPhotosBucket)
+	reviewExists, err := client.BucketExists(ctx, reviewPhotosBucket)
 	if err != nil {
 		log.Printf("Ошибка проверки существования бакета review-photos: %v", err)
 	} else if !reviewExists {
-		err = client.MakeBucket(context.Background(), reviewPhotosBucket, minio.MakeBucketOptions{
+		err = client.MakeBucket(ctx, reviewPhotosBucket, minio.MakeBucketOptions{
 			Region: config.Location,
 		})
 		if err != nil {
@@ -107,7 +107,7 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 
 			// Устанавливаем политику доступа для публичного чтения
 			reviewPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + reviewPhotosBucket + `/*"]}]}`
-			err = client.SetBucketPolicy(context.Background(), reviewPhotosBucket, reviewPolicy)
+			err = client.SetBucketPolicy(ctx, reviewPhotosBucket, reviewPolicy)
 			if err != nil {
 				log.Printf("Ошибка установки политики бакета review-photos: %v", err)
 			} else {

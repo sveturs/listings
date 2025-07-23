@@ -58,7 +58,7 @@ type Database struct {
 	productSearchRepo    storefrontOpenSearch.ProductSearchRepository // Репозиторий для поиска товаров витрин
 }
 
-func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights) (*Database, error) {
+func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights) (*Database, error) {
 	// Настраиваем конфигурацию пула
 	poolConfig, err := pgxpool.ParseConfig(dbURL)
 	if err != nil {
@@ -69,7 +69,7 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 	poolConfig.MaxConns = 50 // Увеличиваем максимальное количество соединений
 	poolConfig.MinConns = 10 // Минимальное количество соединений
 
-	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error creating connection pool: %w", err)
 	}

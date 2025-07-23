@@ -30,8 +30,8 @@ type behaviorTrackingService struct {
 }
 
 // NewBehaviorTrackingService создает новый сервис
-func NewBehaviorTrackingService(repo postgres.BehaviorTrackingRepository) BehaviorTrackingService {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewBehaviorTrackingService(ctx context.Context, repo postgres.BehaviorTrackingRepository) BehaviorTrackingService {
+	ctx, cancel := context.WithCancel(ctx)
 
 	s := &behaviorTrackingService{
 		repo:        repo,

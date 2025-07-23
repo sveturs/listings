@@ -67,7 +67,7 @@ type Server struct {
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
-	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	fileStorage, err := filestorage.NewFileStorage(ctx, cfg.FileStorage)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "Ошибка инициализации файлового хранилища")
 	}
@@ -78,7 +78,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	} else {
 		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize database")
 	}

@@ -58,7 +58,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 		if pool := poolAccessor.GetPool(); pool != nil {
 			// Create behavior tracking repository and service
 			behaviorRepo := behaviorTrackingPostgres.NewBehaviorTrackingRepository(pool)
-			behaviorTrackingSvc = behaviorTrackingService.NewBehaviorTrackingService(behaviorRepo)
+			behaviorTrackingSvc = behaviorTrackingService.NewBehaviorTrackingService(ctx, behaviorRepo)
 			log.Println("Behavior tracking service initialized successfully")
 		} else {
 			log.Println("Warning: PostgreSQL pool not available for behavior tracking")
@@ -107,7 +107,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 	}
 
 	// Инициализация файлового хранилища
-	fileStorageSvc, err := filestorage.NewFileStorage(cfg.FileStorage)
+	fileStorageSvc, err := filestorage.NewFileStorage(ctx, cfg.FileStorage)
 	if err != nil {
 		log.Printf("Ошибка инициализации файлового хранилища: %v. Будут использоваться временные файлы.", err)
 	}
@@ -115,7 +115,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 	// Создаем отдельное хранилище для chat-files
 	chatFileStorageConfig := cfg.FileStorage
 	chatFileStorageConfig.MinioBucketName = "chat-files"
-	chatFileStorageSvc, err := filestorage.NewFileStorage(chatFileStorageConfig)
+	chatFileStorageSvc, err := filestorage.NewFileStorage(ctx, chatFileStorageConfig)
 	if err != nil {
 		log.Printf("Ошибка инициализации хранилища чат-файлов: %v", err)
 		chatFileStorageSvc = fileStorageSvc // Используем основное хранилище как fallback
