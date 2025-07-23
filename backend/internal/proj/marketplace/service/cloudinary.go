@@ -196,12 +196,18 @@ func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string)
 
 func translateLikelihood(likelihood visionpb.Likelihood) string {
 	switch likelihood {
-	case visionpb.Likelihood_VERY_LIKELY:
-		return "очень вероятно"
-	case visionpb.Likelihood_LIKELY:
-		return "вероятно"
+	case visionpb.Likelihood_UNKNOWN:
+		return "неизвестно"
+	case visionpb.Likelihood_VERY_UNLIKELY:
+		return "очень маловероятно"
+	case visionpb.Likelihood_UNLIKELY:
+		return "маловероятно"
 	case visionpb.Likelihood_POSSIBLE:
 		return "возможно"
+	case visionpb.Likelihood_LIKELY:
+		return "вероятно"
+	case visionpb.Likelihood_VERY_LIKELY:
+		return "очень вероятно"
 	default:
 		return "неопределено"
 	}

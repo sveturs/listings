@@ -328,6 +328,70 @@ func (s *ImageService) createImageRecord(req *UploadImageRequest, imageURL, thum
 			StorageBucket:       bucket,
 			PublicURL:           imageURL,
 		}
+	case ImageTypeStorefrontLogo:
+		// Для логотипа витрины
+		return &models.StorefrontProductImage{
+			StorefrontProductID: req.EntityID,
+			ImageURL:            imageURL,
+			ThumbnailURL:        thumbnailURL,
+			DisplayOrder:        req.DisplayOrder,
+			IsDefault:           req.IsMain,
+			FilePath:            filePath,
+			FileName:            req.FileHeader.Filename,
+			FileSize:            int(req.FileHeader.Size),
+			ContentType:         req.FileHeader.Header.Get("Content-Type"),
+			StorageType:         "minio",
+			StorageBucket:       bucket,
+			PublicURL:           imageURL,
+		}
+	case ImageTypeStorefrontBanner:
+		// Для баннера витрины
+		return &models.StorefrontProductImage{
+			StorefrontProductID: req.EntityID,
+			ImageURL:            imageURL,
+			ThumbnailURL:        thumbnailURL,
+			DisplayOrder:        req.DisplayOrder,
+			IsDefault:           req.IsMain,
+			FilePath:            filePath,
+			FileName:            req.FileHeader.Filename,
+			FileSize:            int(req.FileHeader.Size),
+			ContentType:         req.FileHeader.Header.Get("Content-Type"),
+			StorageType:         "minio",
+			StorageBucket:       bucket,
+			PublicURL:           imageURL,
+		}
+	case ImageTypeChatFile:
+		// Для файлов чата
+		return &models.StorefrontProductImage{
+			StorefrontProductID: req.EntityID,
+			ImageURL:            imageURL,
+			ThumbnailURL:        thumbnailURL,
+			DisplayOrder:        req.DisplayOrder,
+			IsDefault:           req.IsMain,
+			FilePath:            filePath,
+			FileName:            req.FileHeader.Filename,
+			FileSize:            int(req.FileHeader.Size),
+			ContentType:         req.FileHeader.Header.Get("Content-Type"),
+			StorageType:         "minio",
+			StorageBucket:       bucket,
+			PublicURL:           imageURL,
+		}
+	case ImageTypeReviewPhoto:
+		// Для фото отзывов
+		return &models.StorefrontProductImage{
+			StorefrontProductID: req.EntityID,
+			ImageURL:            imageURL,
+			ThumbnailURL:        thumbnailURL,
+			DisplayOrder:        req.DisplayOrder,
+			IsDefault:           req.IsMain,
+			FilePath:            filePath,
+			FileName:            req.FileHeader.Filename,
+			FileSize:            int(req.FileHeader.Size),
+			ContentType:         req.FileHeader.Header.Get("Content-Type"),
+			StorageType:         "minio",
+			StorageBucket:       bucket,
+			PublicURL:           imageURL,
+		}
 	default:
 		// Для других типов можно добавить обработку
 		return &models.StorefrontProductImage{
