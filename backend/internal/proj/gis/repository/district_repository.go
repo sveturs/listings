@@ -16,6 +16,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ErrDistrictNotFound возвращается когда район не найден
+var ErrDistrictNotFound = errors.New("district not found")
+
+// ErrMunicipalityNotFound возвращается когда муниципалитет не найден
+var ErrMunicipalityNotFound = errors.New("municipality not found")
+
 // DistrictRepository handles district and municipality data access
 type DistrictRepository struct {
 	db *sqlx.DB
@@ -148,7 +154,7 @@ func (r *DistrictRepository) GetDistrictByID(ctx context.Context, id uuid.UUID) 
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, ErrDistrictNotFound
 		}
 		return nil, errors.Wrap(err, "failed to get district by ID")
 	}
@@ -284,7 +290,7 @@ func (r *DistrictRepository) GetMunicipalityByID(ctx context.Context, id uuid.UU
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, ErrMunicipalityNotFound
 		}
 		return nil, errors.Wrap(err, "failed to get municipality by ID")
 	}

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -11,8 +12,14 @@ import (
 	"backend/internal/proj/search_optimization/storage"
 	"backend/pkg/logger"
 
-	"github.com/pkg/errors"
+	pkgErrors "github.com/pkg/errors"
 )
+
+// ErrInsufficientDataForOptimization возвращается когда недостаточно данных для оптимизации
+var ErrInsufficientDataForOptimization = errors.New("insufficient data for optimization")
+
+// ErrLowConfidenceOptimization возвращается когда уверенность в оптимизации слишком низкая
+var ErrLowConfidenceOptimization = errors.New("low confidence optimization result")
 
 const (
 	// Status values
@@ -55,13 +62,13 @@ func NewSearchOptimizationService(
 func (s *searchOptimizationService) StartOptimization(ctx context.Context, params *OptimizationParams, adminID int) (int64, error) {
 	// Валидация параметров
 	if err := s.validateOptimizationParams(params); err != nil {
-		return 0, errors.Wrap(err, "invalid optimization parameters")
+		return 0, pkgErrors.Wrap(err, "invalid optimization parameters")
 	}
 
 	// Получение текущих весов для анализа
 	weights, err := s.repo.GetSearchWeights(ctx, params.ItemType, params.CategoryID)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to get current search weights")
+		return 0, pkgErrors.Wrap(err, "failed to get current search weights")
 	}
 
 	// Фильтрация весов по указанным полям
@@ -91,7 +98,7 @@ func (s *searchOptimizationService) StartOptimization(ctx context.Context, param
 
 	err = s.repo.CreateOptimizationSession(ctx, session)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to create optimization session")
+		return 0, pkgErrors.Wrap(err, "failed to create optimization session")
 	}
 
 	// Запуск оптимизации в фоновом режиме
@@ -172,7 +179,7 @@ func (s *searchOptimizationService) optimizeFieldWeight(ctx context.Context, wei
 	// Получение данных о поведении пользователей для данного поля
 	fieldData, err := s.repo.GetFieldPerformanceMetrics(ctx, weight.FieldName, fromDate, toDate)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get behavior data for field %s", weight.FieldName)
+		return nil, pkgErrors.Wrapf(err, "failed to get behavior data for field %s", weight.FieldName)
 	}
 
 	// Проверка достаточности данных
@@ -186,7 +193,7 @@ func (s *searchOptimizationService) optimizeFieldWeight(ctx context.Context, wei
 	if totalSearches < params.MinSampleSize {
 		s.logger.Debug(fmt.Sprintf("Insufficient data for field %s: %d searches (min: %d)",
 			weight.FieldName, totalSearches, params.MinSampleSize))
-		return nil, nil
+		return nil, ErrInsufficientDataForOptimization
 	}
 
 	// Машинное обучение: градиентный спуск для оптимизации веса
@@ -195,7 +202,7 @@ func (s *searchOptimizationService) optimizeFieldWeight(ctx context.Context, wei
 	if confidence < params.ConfidenceLevel {
 		s.logger.Debug(fmt.Sprintf("Low confidence for field %s: %.3f (min: %.3f)",
 			weight.FieldName, confidence, params.ConfidenceLevel))
-		return nil, nil
+		return nil, ErrLowConfidenceOptimization
 	}
 
 	// Валидация оптимизированного веса
@@ -445,22 +452,22 @@ func (s *searchOptimizationService) CancelOptimization(ctx context.Context, sess
 // Валидация параметров оптимизации
 func (s *searchOptimizationService) validateOptimizationParams(params *OptimizationParams) error {
 	if params.MinSampleSize < 10 {
-		return errors.New("min_sample_size must be at least 10")
+		return pkgErrors.New("min_sample_size must be at least 10")
 	}
 	if params.ConfidenceLevel < 0.5 || params.ConfidenceLevel > 0.99 {
-		return errors.New("confidence_level must be between 0.5 and 0.99")
+		return pkgErrors.New("confidence_level must be between 0.5 and 0.99")
 	}
 	if params.LearningRate <= 0 || params.LearningRate > 1 {
-		return errors.New("learning_rate must be between 0 and 1")
+		return pkgErrors.New("learning_rate must be between 0 and 1")
 	}
 	if params.MaxIterations < 10 || params.MaxIterations > 10000 {
-		return errors.New("max_iterations must be between 10 and 10000")
+		return pkgErrors.New("max_iterations must be between 10 and 10000")
 	}
 	if params.AnalysisPeriod < 1 || params.AnalysisPeriod > 365 {
-		return errors.New("analysis_period_days must be between 1 and 365")
+		return pkgErrors.New("analysis_period_days must be between 1 and 365")
 	}
 	if params.ItemType != "marketplace" && params.ItemType != "storefront" && params.ItemType != "global" {
-		return errors.New("item_type must be one of: marketplace, storefront, global")
+		return pkgErrors.New("item_type must be one of: marketplace, storefront, global")
 	}
 
 	return nil
@@ -589,7 +596,7 @@ func (s *searchOptimizationService) ApplyOptimizedWeights(ctx context.Context, s
 	}
 
 	if session == nil || session.Status != statusCompleted {
-		return errors.New("optimization session not found or not completed")
+		return pkgErrors.New("optimization session not found or not completed")
 	}
 
 	// Получение результатов для проверки безопасности
@@ -604,13 +611,13 @@ func (s *searchOptimizationService) ApplyOptimizedWeights(ctx context.Context, s
 	// КРИТИЧЕСКАЯ ПРОВЕРКА БЕЗОПАСНОСТИ
 	securityReport, err := s.securityCheck.ValidateOptimizationResults(ctx, resultsToApply)
 	if err != nil {
-		return errors.Wrap(err, "security validation failed")
+		return pkgErrors.Wrap(err, "security validation failed")
 	}
 
 	// Проверка критических проблем
 	if securityReport.CriticalIssues > 0 {
 		s.logger.Error("Critical security issues detected for session %d by admin %d", sessionID, adminID)
-		return errors.New("critical security issues detected - application blocked")
+		return pkgErrors.New("critical security issues detected - application blocked")
 	}
 
 	// Логирование предупреждений
@@ -735,17 +742,17 @@ func (s *searchOptimizationService) CreateWeightBackup(ctx context.Context, item
 
 func (s *searchOptimizationService) StartABTest(ctx context.Context, config *ABTestConfig, newWeights []*storage.SearchWeight, adminID int) (int64, error) {
 	// TODO: Реализация A/B тестирования
-	return 0, errors.New("A/B testing not implemented yet")
+	return 0, pkgErrors.New("A/B testing not implemented yet")
 }
 
 func (s *searchOptimizationService) GetABTestResults(ctx context.Context, testID int64) (*ABTestResult, error) {
 	// TODO: Реализация получения результатов A/B тестирования
-	return nil, errors.New("A/B testing not implemented yet")
+	return nil, pkgErrors.New("A/B testing not implemented yet")
 }
 
 func (s *searchOptimizationService) GetWeightPerformanceMetrics(ctx context.Context, fieldName string, fromDate, toDate time.Time) (*WeightPerformanceMetrics, error) {
 	// TODO: Подробные метрики производительности веса
-	return nil, errors.New("weight performance metrics not implemented yet")
+	return nil, pkgErrors.New("weight performance metrics not implemented yet")
 }
 
 func (s *searchOptimizationService) GetOptimizationHistory(ctx context.Context, limit int) ([]*storage.OptimizationSession, error) {
@@ -754,17 +761,17 @@ func (s *searchOptimizationService) GetOptimizationHistory(ctx context.Context, 
 
 func (s *searchOptimizationService) GetFieldCorrelationMatrix(ctx context.Context, fromDate, toDate time.Time) (map[string]map[string]float64, error) {
 	// TODO: Матрица корреляции полей
-	return nil, errors.New("field correlation matrix not implemented yet")
+	return nil, pkgErrors.New("field correlation matrix not implemented yet")
 }
 
 func (s *searchOptimizationService) TrainWeightOptimizationModel(ctx context.Context, behaviorData []*storage.BehaviorAnalysisData) (*MLModel, error) {
 	// TODO: Полная реализация ML модели
-	return nil, errors.New("ML model training not implemented yet")
+	return nil, pkgErrors.New("ML model training not implemented yet")
 }
 
 func (s *searchOptimizationService) PredictOptimalWeights(ctx context.Context, model *MLModel, currentWeights []*storage.SearchWeight) ([]*storage.WeightOptimizationResult, error) {
 	// TODO: Предсказание оптимальных весов с помощью ML модели
-	return nil, errors.New("ML weight prediction not implemented yet")
+	return nil, pkgErrors.New("ML weight prediction not implemented yet")
 }
 
 func (s *searchOptimizationService) GetOptimizationConfig(ctx context.Context) (*OptimizationConfig, error) {
@@ -774,10 +781,10 @@ func (s *searchOptimizationService) GetOptimizationConfig(ctx context.Context) (
 func (s *searchOptimizationService) UpdateOptimizationConfig(ctx context.Context, config *OptimizationConfig, adminID int) error {
 	// Валидация конфигурации
 	if config.DefaultMinSampleSize < 10 {
-		return errors.New("default_min_sample_size must be at least 10")
+		return pkgErrors.New("default_min_sample_size must be at least 10")
 	}
 	if config.MaxWeightChange < 0.01 || config.MaxWeightChange > 1.0 {
-		return errors.New("max_weight_change must be between 0.01 and 1.0")
+		return pkgErrors.New("max_weight_change must be between 0.01 and 1.0")
 	}
 
 	s.config = config
@@ -802,7 +809,7 @@ func (s *searchOptimizationService) GetSynonyms(ctx context.Context, language, s
 	// Получение синонимов из репозитория
 	synonyms, total, err := s.repo.GetSynonyms(ctx, language, search, offset, limit)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get synonyms")
+		return nil, 0, pkgErrors.Wrap(err, "failed to get synonyms")
 	}
 
 	// Преобразование в формат для frontend
@@ -826,22 +833,22 @@ func (s *searchOptimizationService) GetSynonyms(ctx context.Context, language, s
 func (s *searchOptimizationService) CreateSynonym(ctx context.Context, term, synonym, language string, isActive bool, adminID int) (int64, error) {
 	// Валидация входных данных
 	if len(term) == 0 || len(term) > 255 {
-		return 0, errors.New("term length must be between 1 and 255 characters")
+		return 0, pkgErrors.New("term length must be between 1 and 255 characters")
 	}
 	if len(synonym) == 0 || len(synonym) > 255 {
-		return 0, errors.New("synonym length must be between 1 and 255 characters")
+		return 0, pkgErrors.New("synonym length must be between 1 and 255 characters")
 	}
 	if language != "en" && language != "ru" && language != "sr" {
-		return 0, errors.New("language must be one of: en, ru, sr")
+		return 0, pkgErrors.New("language must be one of: en, ru, sr")
 	}
 
 	// Проверка на существование дубликата
 	existing, err := s.repo.CheckSynonymExists(ctx, term, synonym, language)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to check synonym existence")
+		return 0, pkgErrors.Wrap(err, "failed to check synonym existence")
 	}
 	if existing {
-		return 0, errors.New("synonym already exists")
+		return 0, pkgErrors.New("synonym already exists")
 	}
 
 	// Создание синонима
@@ -854,7 +861,7 @@ func (s *searchOptimizationService) CreateSynonym(ctx context.Context, term, syn
 
 	synonymID, err := s.repo.CreateSynonym(ctx, synonymData)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to create synonym")
+		return 0, pkgErrors.Wrap(err, "failed to create synonym")
 	}
 
 	s.logger.Info(fmt.Sprintf("Synonym created: %s -> %s (%s) by admin %d", term, synonym, language, adminID))
@@ -866,22 +873,22 @@ func (s *searchOptimizationService) CreateSynonym(ctx context.Context, term, syn
 func (s *searchOptimizationService) UpdateSynonym(ctx context.Context, synonymID int64, term, synonym, language string, isActive bool, adminID int) error {
 	// Валидация входных данных
 	if len(term) == 0 || len(term) > 255 {
-		return errors.New("term length must be between 1 and 255 characters")
+		return pkgErrors.New("term length must be between 1 and 255 characters")
 	}
 	if len(synonym) == 0 || len(synonym) > 255 {
-		return errors.New("synonym length must be between 1 and 255 characters")
+		return pkgErrors.New("synonym length must be between 1 and 255 characters")
 	}
 	if language != "en" && language != "ru" && language != "sr" {
-		return errors.New("language must be one of: en, ru, sr")
+		return pkgErrors.New("language must be one of: en, ru, sr")
 	}
 
 	// Проверка существования синонима
 	exists, err := s.repo.CheckSynonymExistsByID(ctx, synonymID)
 	if err != nil {
-		return errors.Wrap(err, "failed to check synonym existence")
+		return pkgErrors.Wrap(err, "failed to check synonym existence")
 	}
 	if !exists {
-		return errors.New("synonym not found")
+		return pkgErrors.New("synonym not found")
 	}
 
 	// Обновление синонима
@@ -894,7 +901,7 @@ func (s *searchOptimizationService) UpdateSynonym(ctx context.Context, synonymID
 
 	err = s.repo.UpdateSynonym(ctx, synonymID, synonymData)
 	if err != nil {
-		return errors.Wrap(err, "failed to update synonym")
+		return pkgErrors.Wrap(err, "failed to update synonym")
 	}
 
 	s.logger.Info(fmt.Sprintf("Synonym updated (ID: %d): %s -> %s (%s) by admin %d", synonymID, term, synonym, language, adminID))
@@ -907,16 +914,16 @@ func (s *searchOptimizationService) DeleteSynonym(ctx context.Context, synonymID
 	// Проверка существования синонима
 	exists, err := s.repo.CheckSynonymExistsByID(ctx, synonymID)
 	if err != nil {
-		return errors.Wrap(err, "failed to check synonym existence")
+		return pkgErrors.Wrap(err, "failed to check synonym existence")
 	}
 	if !exists {
-		return errors.New("synonym not found")
+		return pkgErrors.New("synonym not found")
 	}
 
 	// Удаление синонима
 	err = s.repo.DeleteSynonym(ctx, synonymID)
 	if err != nil {
-		return errors.Wrap(err, "failed to delete synonym")
+		return pkgErrors.Wrap(err, "failed to delete synonym")
 	}
 
 	s.logger.Info(fmt.Sprintf("Synonym deleted (ID: %d) by admin %d", synonymID, adminID))

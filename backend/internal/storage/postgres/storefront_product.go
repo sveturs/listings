@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -12,6 +13,9 @@ import (
 
 	"github.com/lib/pq"
 )
+
+// ErrStorefrontProductNotFound возвращается когда товар витрины не найден
+var ErrStorefrontProductNotFound = errors.New("storefront product not found")
 
 // GetBySlug retrieves a storefront by slug
 func (s *Database) GetBySlug(ctx context.Context, slug string) (*models.Storefront, error) {
@@ -229,7 +233,7 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 	)
 
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, ErrStorefrontProductNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get storefront product: %w", err)

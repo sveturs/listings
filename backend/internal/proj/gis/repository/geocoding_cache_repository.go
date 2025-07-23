@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -12,6 +13,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 )
+
+// ErrGeocodingCacheNotFound возвращается когда запись в кэше не найдена
+var ErrGeocodingCacheNotFound = errors.New("geocoding cache entry not found")
 
 // GeocodingCacheRepository репозиторий для кэша геокодирования
 type GeocodingCacheRepository struct {
@@ -64,7 +68,7 @@ func (r *GeocodingCacheRepository) GetByAddress(ctx context.Context, normalizedA
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // Не найдено в кэше - это нормально
+			return nil, ErrGeocodingCacheNotFound // Не найдено в кэше - это нормально
 		}
 		return nil, fmt.Errorf("failed to get geocoding cache entry: %w", err)
 	}

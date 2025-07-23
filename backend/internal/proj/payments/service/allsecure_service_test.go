@@ -13,6 +13,9 @@ import (
 	"backend/pkg/logger"
 )
 
+// ErrNotImplementedInMock возвращается когда метод мока не реализован
+var ErrNotImplementedInMock = errors.New("method not implemented in mock")
+
 // Константы статусов платежей (определяем локально для тестов)
 const (
 	PaymentStatusPending    = "pending"
@@ -51,23 +54,23 @@ func (m *mockAllSecureClient) Refund(ctx context.Context, uuid string, amount st
 }
 
 func (m *mockAllSecureClient) Debit(ctx context.Context, req allsecure.TransactionRequest) (*allsecure.TransactionResponse, error) {
-	return nil, nil
+	return nil, ErrNotImplementedInMock
 }
 
 func (m *mockAllSecureClient) Void(ctx context.Context, uuid string) (*allsecure.TransactionResponse, error) {
-	return nil, nil
+	return nil, ErrNotImplementedInMock
 }
 
 func (m *mockAllSecureClient) Register(ctx context.Context, req allsecure.TransactionRequest) (*allsecure.TransactionResponse, error) {
-	return nil, nil
+	return nil, ErrNotImplementedInMock
 }
 
 func (m *mockAllSecureClient) Deregister(ctx context.Context, uuid string) (*allsecure.TransactionResponse, error) {
-	return nil, nil
+	return nil, ErrNotImplementedInMock
 }
 
 func (m *mockAllSecureClient) Payout(ctx context.Context, req allsecure.PayoutRequest) (*allsecure.TransactionResponse, error) {
-	return nil, nil
+	return nil, ErrNotImplementedInMock
 }
 
 // Mock для Payment Repository
@@ -112,11 +115,11 @@ func (m *mockPaymentRepository) UpdateTransaction(ctx context.Context, id int64,
 }
 
 func (m *mockPaymentRepository) CreateEscrowPayment(ctx context.Context, req repository.CreateEscrowRequest) (*models.EscrowPayment, error) {
-	return nil, nil
+	return nil, ErrNotImplementedInMock
 }
 
 func (m *mockPaymentRepository) GetEscrowByTransactionID(ctx context.Context, transactionID int64) (*models.EscrowPayment, error) {
-	return nil, nil
+	return nil, ErrNotImplementedInMock
 }
 
 func (m *mockPaymentRepository) ReleaseEscrow(ctx context.Context, escrowID int64) error {
@@ -124,7 +127,7 @@ func (m *mockPaymentRepository) ReleaseEscrow(ctx context.Context, escrowID int6
 }
 
 func (m *mockPaymentRepository) CreatePayout(ctx context.Context, req repository.CreatePayoutRequest) (*models.MerchantPayout, error) {
-	return nil, nil
+	return nil, ErrNotImplementedInMock
 }
 
 func (m *mockPaymentRepository) GetPayoutsBySellerID(ctx context.Context, sellerID int) ([]*models.MerchantPayout, error) {

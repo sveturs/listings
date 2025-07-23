@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log"
 	"math"
 	"time"
@@ -10,6 +11,12 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/storage"
 )
+
+// ErrInsufficientPriceHistory возвращается когда недостаточно данных истории цен для анализа скидки
+var ErrInsufficientPriceHistory = errors.New("insufficient price history for discount analysis")
+
+// ErrNoDiscount возвращается когда скидка не обнаружена
+var ErrNoDiscount = errors.New("no discount found")
 
 // PriceHistoryServiceInterface определяет интерфейс для работы с историей цен
 type PriceHistoryServiceInterface interface {
@@ -80,7 +87,7 @@ func (s *PriceHistoryService) AnalyzeDiscount(ctx context.Context, listingID int
 
 	// Если истории нет или она слишком короткая, скидки нет
 	if len(history) < 2 {
-		return nil, nil
+		return nil, ErrInsufficientPriceHistory
 	}
 
 	// Получаем текущую цену (последняя активная запись)
@@ -155,5 +162,5 @@ func (s *PriceHistoryService) AnalyzeDiscount(ctx context.Context, listingID int
 	}
 
 	// Если текущая цена не ниже предыдущей, скидки нет
-	return nil, nil
+	return nil, ErrNoDiscount
 }

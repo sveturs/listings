@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log"
 	"sync"
 	"time"
@@ -18,6 +19,9 @@ import (
 	oauth2v2 "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 )
+
+// ErrSessionNotFound возвращается когда сессия не найдена
+var ErrSessionNotFound = errors.New("session not found")
 
 type AuthService struct {
 	googleConfig *oauth2.Config
@@ -128,7 +132,7 @@ func (s *AuthService) GetSession(ctx context.Context, token string) (*types.Sess
 	}
 
 	log.Printf("AuthService: Session not found")
-	return nil, nil
+	return nil, ErrSessionNotFound
 }
 
 func (s *AuthService) DeleteSession(token string) {

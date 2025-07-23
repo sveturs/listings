@@ -3,6 +3,7 @@ package service_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -574,6 +575,9 @@ func TestCategoryIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(CategoryIntegrationTestSuite))
 }
 
+// ErrTestMethodNotImplemented возвращается когда тестовый метод не реализован
+var ErrTestMethodNotImplemented = errors.New("test method not implemented")
+
 // testStorage - простая реализация storage.Storage для тестов
 type testStorage struct {
 	db *sql.DB
@@ -653,23 +657,23 @@ func (ts *testStorage) GetCategories(ctx context.Context) ([]models.MarketplaceC
 
 // Остальные методы storage.Storage - заглушки для компиляции
 func (ts *testStorage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return nil, nil
+	return nil, ErrTestMethodNotImplemented
 }
 
 func (ts *testStorage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
-	return nil, nil
+	return nil, ErrTestMethodNotImplemented
 }
 
 func (ts *testStorage) GetUserByID(ctx context.Context, id int) (*models.User, error) {
-	return nil, nil
+	return nil, ErrTestMethodNotImplemented
 }
 
 func (ts *testStorage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return nil, nil
+	return nil, ErrTestMethodNotImplemented
 }
 func (ts *testStorage) UpdateUser(ctx context.Context, user *models.User) error { return nil }
 func (ts *testStorage) GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error) {
-	return nil, nil
+	return nil, ErrTestMethodNotImplemented
 }
 
 func (ts *testStorage) UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error {
@@ -681,7 +685,7 @@ func (ts *testStorage) GetFavoritedUsers(ctx context.Context, listingID int) ([]
 }
 
 func (ts *testStorage) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
-	return nil, nil
+	return nil, ErrTestMethodNotImplemented
 }
 
 func (ts *testStorage) CreateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
@@ -689,11 +693,11 @@ func (ts *testStorage) CreateRefreshToken(ctx context.Context, token *models.Ref
 }
 
 func (ts *testStorage) GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error) {
-	return nil, nil
+	return nil, ErrTestMethodNotImplemented
 }
 
 func (ts *testStorage) GetRefreshTokenByID(ctx context.Context, id int) (*models.RefreshToken, error) {
-	return nil, nil
+	return nil, ErrTestMethodNotImplemented
 }
 
 func (ts *testStorage) GetUserRefreshTokens(ctx context.Context, userID int) ([]*models.RefreshToken, error) {

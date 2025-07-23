@@ -3,11 +3,15 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 )
+
+// ErrContactNotFound возвращается когда контакт не найден
+var ErrContactNotFound = errors.New("contact not found")
 
 // Добавить контакт
 func (s *Storage) AddContact(ctx context.Context, contact *models.UserContact) error {
@@ -90,7 +94,7 @@ func (s *Storage) GetContact(ctx context.Context, userID, contactUserID int) (*m
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // Контакт не найден
+			return nil, ErrContactNotFound // Контакт не найден
 		}
 		return nil, fmt.Errorf("error getting contact: %w", err)
 	}

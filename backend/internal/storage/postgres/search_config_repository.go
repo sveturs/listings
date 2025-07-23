@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"backend/internal/domain"
@@ -10,6 +11,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
+
+// ErrSearchWeightNotFound возвращается когда вес поиска не найден
+var ErrSearchWeightNotFound = errors.New("search weight not found")
+
+// ErrSearchConfigNotFound возвращается когда конфигурация поиска не найдена
+var ErrSearchConfigNotFound = errors.New("search config not found")
 
 type SearchConfigRepository struct {
 	db *sqlx.DB
@@ -41,7 +48,7 @@ func (r *SearchConfigRepository) GetWeightByField(ctx context.Context, fieldName
 	err := r.db.GetContext(ctx, &weight, query, fieldName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, ErrSearchWeightNotFound
 		}
 		return nil, fmt.Errorf("failed to get weight for field %s: %w", fieldName, err)
 	}
@@ -334,7 +341,7 @@ func (r *SearchConfigRepository) GetConfig(ctx context.Context) (*domain.SearchC
 	err := r.db.GetContext(ctx, &config, query)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, ErrSearchConfigNotFound
 		}
 		return nil, fmt.Errorf("failed to get search config: %w", err)
 	}

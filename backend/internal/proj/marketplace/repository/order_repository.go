@@ -12,6 +12,9 @@ import (
 	"backend/internal/domain/models"
 )
 
+// ErrOrderNotFound возвращается когда заказ не найден
+var ErrOrderNotFound = errors.New("order not found")
+
 // OrderRepository предоставляет методы для работы с заказами
 type OrderRepository struct {
 	db *sqlx.DB
@@ -97,7 +100,7 @@ func (r *OrderRepository) GetByPaymentTransactionID(ctx context.Context, transac
 	err := r.db.GetContext(ctx, &order, query, transactionID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
+			return nil, ErrOrderNotFound
 		}
 		return nil, pkgErrors.Wrap(err, "failed to get order by transaction id")
 	}

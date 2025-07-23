@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -17,6 +18,9 @@ import (
 	"backend/internal/storage/filestorage"
 	"backend/pkg/utils"
 )
+
+// ErrDocumentMetadataNotImplemented возвращается когда функция извлечения метаданных не реализована
+var ErrDocumentMetadataNotImplemented = errors.New("document metadata extraction not implemented")
 
 // ChatAttachmentServiceInterface определяет методы для работы с вложениями чата
 type ChatAttachmentServiceInterface interface {
@@ -334,5 +338,5 @@ func (s *ChatAttachmentService) GenerateVideoThumbnail(videoPath string) (string
 // ExtractDocumentMetadata извлекает метаданные документа (заглушка)
 func (s *ChatAttachmentService) ExtractDocumentMetadata(documentPath string) (map[string]interface{}, error) {
 	// TODO: Реализовать извлечение метаданных
-	return nil, nil
+	return nil, ErrDocumentMetadataNotImplemented
 }

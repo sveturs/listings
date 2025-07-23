@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -32,6 +33,21 @@ import (
 	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
 	osClient "backend/internal/storage/opensearch"
 )
+
+// ErrSessionNotFound возвращается когда сессия не найдена
+var ErrSessionNotFound = errors.New("session not found")
+
+// ErrAttributeTranslationNotFound возвращается когда перевод атрибута не найден
+var ErrAttributeTranslationNotFound = errors.New("attribute translation not found")
+
+// ErrReviewConfirmationNotFound возвращается когда подтверждение отзыва не найдено
+var ErrReviewConfirmationNotFound = errors.New("review confirmation not found")
+
+// ErrReviewDisputeNotFound возвращается когда спор по отзыву не найден
+var ErrReviewDisputeNotFound = errors.New("review dispute not found")
+
+// ErrStorefrontNotFound возвращается когда витрина не найдена
+var ErrStorefrontNotFound = errors.New("storefront not found")
 
 type Database struct {
 	pool          *pgxpool.Pool
@@ -337,7 +353,7 @@ func (db *Database) GetSession(ctx context.Context, token string) (*types.Sessio
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, nil
+			return nil, ErrSessionNotFound
 		}
 		return nil, err
 	}
@@ -699,7 +715,7 @@ func (db *Database) GetAttributeOptionTranslations(ctx context.Context, attribut
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, nil
+			return nil, ErrAttributeTranslationNotFound
 		}
 		return nil, fmt.Errorf("error getting attribute translations: %w", err)
 	}
@@ -1201,7 +1217,7 @@ func (db *Database) GetReviewConfirmation(ctx context.Context, reviewID int) (*m
 	)
 
 	if err == pgx.ErrNoRows {
-		return nil, nil
+		return nil, ErrReviewConfirmationNotFound
 	}
 
 	return confirmation, err
@@ -1257,7 +1273,7 @@ func (db *Database) GetReviewDispute(ctx context.Context, reviewID int) (*models
 	)
 
 	if err == pgx.ErrNoRows {
-		return nil, nil
+		return nil, ErrReviewDisputeNotFound
 	}
 
 	return dispute, err
@@ -1496,7 +1512,7 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, nil
+			return nil, ErrStorefrontNotFound
 		}
 		return nil, err
 	}

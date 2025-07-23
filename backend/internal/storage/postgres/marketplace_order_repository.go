@@ -3,13 +3,17 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/pkg/errors"
+	pkgErrors "github.com/pkg/errors"
 
 	"backend/internal/domain/models"
 )
+
+// ErrMarketplaceOrderNotFound возвращается когда заказ маркетплейса не найден
+var ErrMarketplaceOrderNotFound = errors.New("marketplace order not found")
 
 // MarketplaceOrderRepository предоставляет методы для работы с заказами маркетплейса
 type MarketplaceOrderRepository struct {
@@ -40,7 +44,7 @@ func (r *MarketplaceOrderRepository) Create(ctx context.Context, order *models.M
 		order.ShippingMethod,
 	).Scan(&order.ID, &order.CreatedAt, &order.UpdatedAt)
 	if err != nil {
-		return errors.Wrap(err, "failed to create marketplace order")
+		return pkgErrors.Wrap(err, "failed to create marketplace order")
 	}
 
 	return nil
@@ -70,7 +74,7 @@ func (r *MarketplaceOrderRepository) GetByID(ctx context.Context, id int64) (*mo
 		if err == sql.ErrNoRows {
 			return nil, errors.New("marketplace order not found")
 		}
-		return nil, errors.Wrap(err, "failed to get marketplace order")
+		return nil, pkgErrors.Wrap(err, "failed to get marketplace order")
 	}
 
 	return &order, nil
@@ -98,9 +102,9 @@ func (r *MarketplaceOrderRepository) GetByPaymentTransactionID(ctx context.Conte
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, ErrMarketplaceOrderNotFound
 		}
-		return nil, errors.Wrap(err, "failed to get marketplace order by transaction id")
+		return nil, pkgErrors.Wrap(err, "failed to get marketplace order by transaction id")
 	}
 
 	return &order, nil
@@ -110,7 +114,7 @@ func (r *MarketplaceOrderRepository) GetByPaymentTransactionID(ctx context.Conte
 func (r *MarketplaceOrderRepository) UpdateStatus(ctx context.Context, orderID int64, newStatus models.MarketplaceOrderStatus, reason string, userID *int64) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to begin transaction")
+		return pkgErrors.Wrap(err, "failed to begin transaction")
 	}
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
@@ -124,7 +128,7 @@ func (r *MarketplaceOrderRepository) UpdateStatus(ctx context.Context, orderID i
 	err = tx.QueryRow(ctx,
 		"SELECT status FROM marketplace_orders WHERE id = $1 FOR UPDATE", orderID).Scan(&currentStatus)
 	if err != nil {
-		return errors.Wrap(err, "failed to get current status")
+		return pkgErrors.Wrap(err, "failed to get current status")
 	}
 
 	// Проверяем возможность перехода
@@ -138,7 +142,7 @@ func (r *MarketplaceOrderRepository) UpdateStatus(ctx context.Context, orderID i
 		"UPDATE marketplace_orders SET status = $1, updated_at = NOW() WHERE id = $2",
 		newStatus, orderID)
 	if err != nil {
-		return errors.Wrap(err, "failed to update status")
+		return pkgErrors.Wrap(err, "failed to update status")
 	}
 
 	// Записываем в историю
@@ -147,7 +151,7 @@ func (r *MarketplaceOrderRepository) UpdateStatus(ctx context.Context, orderID i
 		VALUES ($1, $2, $3, $4, $5)`,
 		orderID, currentStatus, newStatus, reason, userID)
 	if err != nil {
-		return errors.Wrap(err, "failed to insert status history")
+		return pkgErrors.Wrap(err, "failed to insert status history")
 	}
 
 	// Обновляем специфичные поля в зависимости от статуса
@@ -163,7 +167,7 @@ func (r *MarketplaceOrderRepository) UpdateStatus(ctx context.Context, orderID i
 			WHERE id = $1`, orderID)
 	}
 	if err != nil {
-		return errors.Wrap(err, "failed to update status-specific fields")
+		return pkgErrors.Wrap(err, "failed to update status-specific fields")
 	}
 
 	return tx.Commit(ctx)
@@ -193,7 +197,7 @@ func (r *MarketplaceOrderRepository) GetOrdersForAutoCapture(ctx context.Context
 
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get orders for auto capture")
+		return nil, pkgErrors.Wrap(err, "failed to get orders for auto capture")
 	}
 	defer rows.Close()
 
@@ -208,13 +212,13 @@ func (r *MarketplaceOrderRepository) GetOrdersForAutoCapture(ctx context.Context
 			&order.CreatedAt, &order.UpdatedAt,
 		)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to scan order")
+			return nil, pkgErrors.Wrap(err, "failed to scan order")
 		}
 		orders = append(orders, &order)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, errors.Wrap(err, "error during rows iteration")
+		return nil, pkgErrors.Wrap(err, "error during rows iteration")
 	}
 
 	return orders, nil
@@ -236,7 +240,7 @@ func (r *MarketplaceOrderRepository) GetBuyerOrders(ctx context.Context, buyerID
 
 	rows, err := r.pool.Query(ctx, query, buyerID, limit, offset)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get buyer orders")
+		return nil, 0, pkgErrors.Wrap(err, "failed to get buyer orders")
 	}
 	defer rows.Close()
 
@@ -251,7 +255,7 @@ func (r *MarketplaceOrderRepository) GetBuyerOrders(ctx context.Context, buyerID
 			&order.CreatedAt, &order.UpdatedAt,
 		)
 		if err != nil {
-			return nil, 0, errors.Wrap(err, "failed to scan order")
+			return nil, 0, pkgErrors.Wrap(err, "failed to scan order")
 		}
 		orders = append(orders, &order)
 	}
@@ -261,7 +265,7 @@ func (r *MarketplaceOrderRepository) GetBuyerOrders(ctx context.Context, buyerID
 	err = r.pool.QueryRow(ctx,
 		"SELECT COUNT(*) FROM marketplace_orders WHERE buyer_id = $1", buyerID).Scan(&total)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get total count")
+		return nil, 0, pkgErrors.Wrap(err, "failed to get total count")
 	}
 
 	return orders, total, nil
@@ -283,7 +287,7 @@ func (r *MarketplaceOrderRepository) GetSellerOrders(ctx context.Context, seller
 
 	rows, err := r.pool.Query(ctx, query, sellerID, limit, offset)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get seller orders")
+		return nil, 0, pkgErrors.Wrap(err, "failed to get seller orders")
 	}
 	defer rows.Close()
 
@@ -298,7 +302,7 @@ func (r *MarketplaceOrderRepository) GetSellerOrders(ctx context.Context, seller
 			&order.CreatedAt, &order.UpdatedAt,
 		)
 		if err != nil {
-			return nil, 0, errors.Wrap(err, "failed to scan order")
+			return nil, 0, pkgErrors.Wrap(err, "failed to scan order")
 		}
 		orders = append(orders, &order)
 	}
@@ -308,7 +312,7 @@ func (r *MarketplaceOrderRepository) GetSellerOrders(ctx context.Context, seller
 	err = r.pool.QueryRow(ctx,
 		"SELECT COUNT(*) FROM marketplace_orders WHERE seller_id = $1", sellerID).Scan(&total)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get total count")
+		return nil, 0, pkgErrors.Wrap(err, "failed to get total count")
 	}
 
 	return orders, total, nil
@@ -322,7 +326,7 @@ func (r *MarketplaceOrderRepository) UpdateShippingInfo(ctx context.Context, ord
 		WHERE id = $3`,
 		shippingMethod, trackingNumber, orderID)
 	if err != nil {
-		return errors.Wrap(err, "failed to update shipping info")
+		return pkgErrors.Wrap(err, "failed to update shipping info")
 	}
 
 	return nil
@@ -342,7 +346,7 @@ func (r *MarketplaceOrderRepository) AddMessage(ctx context.Context, message *mo
 		message.Content, message.Metadata,
 	).Scan(&message.ID, &message.CreatedAt)
 	if err != nil {
-		return errors.Wrap(err, "failed to add message")
+		return pkgErrors.Wrap(err, "failed to add message")
 	}
 
 	return nil
@@ -359,7 +363,7 @@ func (r *MarketplaceOrderRepository) GetOrderMessages(ctx context.Context, order
 
 	rows, err := r.pool.Query(ctx, query, orderID)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get order messages")
+		return nil, pkgErrors.Wrap(err, "failed to get order messages")
 	}
 	defer rows.Close()
 
@@ -372,13 +376,13 @@ func (r *MarketplaceOrderRepository) GetOrderMessages(ctx context.Context, order
 			&message.CreatedAt,
 		)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to scan message")
+			return nil, pkgErrors.Wrap(err, "failed to scan message")
 		}
 		messages = append(messages, &message)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, errors.Wrap(err, "error during rows iteration")
+		return nil, pkgErrors.Wrap(err, "error during rows iteration")
 	}
 
 	return messages, nil

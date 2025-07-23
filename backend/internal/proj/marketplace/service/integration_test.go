@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"testing"
 
 	"backend/internal/config"
@@ -16,6 +17,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+// ErrMockMethodNotImplemented возвращается когда метод мока не реализован
+var ErrMockMethodNotImplemented = errors.New("mock method not implemented")
 
 // MockStorage для тестирования
 type MockStorage struct {
@@ -56,19 +60,19 @@ func (m *MockStorage) AddAdmin(ctx context.Context, admin *models.AdminUser) err
 
 // Все остальные методы интерфейса Storage (заглушки)
 func (m *MockStorage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return nil, nil
+	return nil, ErrMockMethodNotImplemented
 }
 
 func (m *MockStorage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
-	return nil, nil
+	return nil, ErrMockMethodNotImplemented
 }
-func (m *MockStorage) GetUserByID(ctx context.Context, id int) (*models.User, error) { return nil, nil }
+func (m *MockStorage) GetUserByID(ctx context.Context, id int) (*models.User, error) { return nil, ErrMockMethodNotImplemented }
 func (m *MockStorage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return nil, nil
+	return nil, ErrMockMethodNotImplemented
 }
 func (m *MockStorage) UpdateUser(ctx context.Context, user *models.User) error { return nil }
 func (m *MockStorage) GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error) {
-	return nil, nil
+	return nil, ErrMockMethodNotImplemented
 }
 
 func (m *MockStorage) UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error {
