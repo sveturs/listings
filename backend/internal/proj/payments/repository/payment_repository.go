@@ -153,11 +153,13 @@ func (r *PaymentRepository) GetByID(ctx context.Context, id int64) (*models.Paym
 	if gatewayResponse.Valid {
 		if err := json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse); err != nil {
 			// Логируем ошибку, но не прерываем выполнение
+			_ = err // Explicitly ignore error
 		}
 	}
 	if errorDetails.Valid {
 		if err := json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails); err != nil {
 			// Логируем ошибку, но не прерываем выполнение
+			_ = err // Explicitly ignore error
 		}
 	}
 
@@ -197,11 +199,13 @@ func (r *PaymentRepository) GetByGatewayTransactionID(ctx context.Context, gatew
 	if gatewayResponse.Valid {
 		if err := json.Unmarshal([]byte(gatewayResponse.String), &transaction.GatewayResponse); err != nil {
 			// Логируем ошибку, но не прерываем выполнение
+			_ = err // Explicitly ignore error
 		}
 	}
 	if errorDetails.Valid {
 		if err := json.Unmarshal([]byte(errorDetails.String), &transaction.ErrorDetails); err != nil {
 			// Логируем ошибку, но не прерываем выполнение
+			_ = err // Explicitly ignore error
 		}
 	}
 
@@ -363,6 +367,7 @@ func (r *PaymentRepository) GetPayoutsBySellerID(ctx context.Context, sellerID i
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -385,16 +390,19 @@ func (r *PaymentRepository) GetPayoutsBySellerID(ctx context.Context, sellerID i
 		if bankAccountInfo.Valid {
 			if err := json.Unmarshal([]byte(bankAccountInfo.String), &payout.BankAccountInfo); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if gatewayResponse.Valid {
 			if err := json.Unmarshal([]byte(gatewayResponse.String), &payout.GatewayResponse); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if errorDetails.Valid {
 			if err := json.Unmarshal([]byte(errorDetails.String), &payout.ErrorDetails); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 

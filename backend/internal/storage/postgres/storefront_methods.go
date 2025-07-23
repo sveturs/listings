@@ -22,6 +22,7 @@ func (r *storefrontRepo) SetWorkingHours(ctx context.Context, hours []*models.St
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -112,6 +113,7 @@ func (r *storefrontRepo) SetPaymentMethods(ctx context.Context, methods []*model
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -172,6 +174,7 @@ func (r *storefrontRepo) GetPaymentMethods(ctx context.Context, storefrontID int
 		if settings != nil {
 			if err := json.Unmarshal(settings, &m.Settings); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 
@@ -194,6 +197,7 @@ func (r *storefrontRepo) SetDeliveryOptions(ctx context.Context, options []*mode
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -295,21 +299,25 @@ func (r *storefrontRepo) GetDeliveryOptions(ctx context.Context, storefrontID in
 		if zonesJSON != nil {
 			if err := json.Unmarshal(zonesJSON, &opt.Zones); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if availableDaysJSON != nil {
 			if err := json.Unmarshal(availableDaysJSON, &opt.AvailableDays); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if providerConfigJSON != nil {
 			if err := json.Unmarshal(providerConfigJSON, &opt.ProviderConfig); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if supportedPaymentsJSON != nil {
 			if err := json.Unmarshal(supportedPaymentsJSON, &opt.SupportedPaymentMethods); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 
@@ -395,6 +403,7 @@ func (r *storefrontRepo) GetStaff(ctx context.Context, storefrontID int) ([]*mod
 		if permissionsJSON != nil {
 			if err := json.Unmarshal(permissionsJSON, &s.Permissions); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 
@@ -512,26 +521,31 @@ func (r *storefrontRepo) GetAnalytics(ctx context.Context, storefrontID int, fro
 		if trafficJSON != nil {
 			if err := json.Unmarshal(trafficJSON, &a.TrafficSources); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if topProductsJSON != nil {
 			if err := json.Unmarshal(topProductsJSON, &a.TopProducts); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if topCategoriesJSON != nil {
 			if err := json.Unmarshal(topCategoriesJSON, &a.TopCategories); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if paymentMethodsJSON != nil {
 			if err := json.Unmarshal(paymentMethodsJSON, &a.PaymentMethodsUsage); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if ordersByCityJSON != nil {
 			if err := json.Unmarshal(ordersByCityJSON, &a.OrdersByCity); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 

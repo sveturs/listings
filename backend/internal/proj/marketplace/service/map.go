@@ -151,6 +151,7 @@ func (s *MarketplaceService) GetListingsInBounds(ctx context.Context, neLat, neL
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -320,6 +321,7 @@ func (s *MarketplaceService) GetMapClusters(ctx context.Context, neLat, neLng, s
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
 	}()
 

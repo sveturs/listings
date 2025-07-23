@@ -324,6 +324,7 @@ func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, er
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			// Логируем ошибку закрытия response body
+			_ = err // Explicitly ignore error
 		}
 	}()
 

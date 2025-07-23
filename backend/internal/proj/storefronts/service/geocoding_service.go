@@ -104,6 +104,7 @@ func (g *geocodingService) GeocodeAddress(ctx context.Context, address string) (
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			// Логирование ошибки закрытия Body
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -166,6 +167,7 @@ func (g *geocodingService) ReverseGeocode(ctx context.Context, lat, lng float64)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			// Логирование ошибки закрытия Body
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -237,9 +239,11 @@ func (g *geocodingService) parseNominatimResponse(resp *nominatimResponse) *mode
 	lng := 0.0
 	if _, err := fmt.Sscanf(resp.Lat, "%f", &lat); err != nil {
 		// Не удалось распарсить широту, оставляем 0.0
+		_ = err // Explicitly ignore error
 	}
 	if _, err := fmt.Sscanf(resp.Lon, "%f", &lng); err != nil {
 		// Не удалось распарсить долготу, оставляем 0.0
+		_ = err // Explicitly ignore error
 	}
 
 	// Определяем город (может быть в разных полях)

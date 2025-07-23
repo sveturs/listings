@@ -91,6 +91,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -221,21 +222,25 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 	if theme != nil {
 		if err := json.Unmarshal(theme, &s.Theme); err != nil {
 			// Логируем ошибку, но не прерываем выполнение
+			_ = err // Explicitly ignore error
 		}
 	}
 	if settings != nil {
 		if err := json.Unmarshal(settings, &s.Settings); err != nil {
 			// Логируем ошибку, но не прерываем выполнение
+			_ = err // Explicitly ignore error
 		}
 	}
 	if seoMeta != nil {
 		if err := json.Unmarshal(seoMeta, &s.SEOMeta); err != nil {
 			// Логируем ошибку, но не прерываем выполнение
+			_ = err // Explicitly ignore error
 		}
 	}
 	if aiConfig != nil {
 		if err := json.Unmarshal(aiConfig, &s.AIAgentConfig); err != nil {
 			// Логируем ошибку, но не прерываем выполнение
+			_ = err // Explicitly ignore error
 		}
 	}
 
@@ -532,21 +537,25 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 		if theme != nil {
 			if err := json.Unmarshal(theme, &s.Theme); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if settings != nil {
 			if err := json.Unmarshal(settings, &s.Settings); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if seoMeta != nil {
 			if err := json.Unmarshal(seoMeta, &s.SEOMeta); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 		if aiConfig != nil {
 			if err := json.Unmarshal(aiConfig, &s.AIAgentConfig); err != nil {
 				// Логируем ошибку, но не прерываем выполнение
+				_ = err // Explicitly ignore error
 			}
 		}
 

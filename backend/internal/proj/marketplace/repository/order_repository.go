@@ -137,6 +137,7 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 	defer func() {
 		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
 			// Transaction was already committed or rolled back, ignore
+			_ = err // Explicitly ignore error
 		}
 	}()
 

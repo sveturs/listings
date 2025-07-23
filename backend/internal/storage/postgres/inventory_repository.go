@@ -107,6 +107,7 @@ func (r *inventoryRepository) ReserveStock(ctx context.Context, reservation *mod
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -186,6 +187,7 @@ func (r *inventoryRepository) ReleaseReservation(ctx context.Context, reservatio
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -275,6 +277,7 @@ func (r *inventoryRepository) ConfirmReservation(ctx context.Context, reservatio
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 

@@ -781,6 +781,7 @@ func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
 	defer func() {
 		if err := src.Close(); err != nil {
 			// Логирование ошибки закрытия file
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -841,6 +842,7 @@ func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 	defer func() {
 		if err := src.Close(); err != nil {
 			// Логирование ошибки закрытия file
+			_ = err // Explicitly ignore error
 		}
 	}()
 

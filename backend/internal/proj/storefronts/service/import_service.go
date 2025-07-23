@@ -195,6 +195,7 @@ func (s *ImportService) downloadFile(ctx context.Context, url string) ([]byte, s
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			// Логирование ошибки закрытия Body
+			_ = err // Explicitly ignore error
 		}
 	}()
 

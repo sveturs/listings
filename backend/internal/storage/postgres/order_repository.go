@@ -62,6 +62,7 @@ func (r *orderRepository) Create(ctx context.Context, order *models.StorefrontOr
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 

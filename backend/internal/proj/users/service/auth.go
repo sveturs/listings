@@ -15,6 +15,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	oauth2v2 "google.golang.org/api/oauth2/v2"
+	"google.golang.org/api/option"
 )
 
 type AuthService struct {
@@ -72,7 +73,7 @@ func (s *AuthService) HandleGoogleCallback(ctx context.Context, code string) (*t
 		return nil, err
 	}
 
-	oauth2Service, err := oauth2v2.New(s.googleConfig.Client(ctx, token))
+	oauth2Service, err := oauth2v2.NewService(ctx, option.WithHTTPClient(s.googleConfig.Client(ctx, token)))
 	if err != nil {
 		return nil, err
 	}
