@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Search, PlusCircle, MessageCircle, User } from 'lucide-react';
@@ -19,6 +19,11 @@ export const MobileBottomNav: React.FC = () => {
   const pathname = usePathname();
   const t = useTranslations('navigation');
   const { isAuthenticated } = useAuthContext();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems: NavItem[] = [
     {
@@ -47,13 +52,14 @@ export const MobileBottomNav: React.FC = () => {
     {
       icon: User,
       label: t('profile'),
-      href: isAuthenticated ? '/profile' : '/auth/login',
+      href: mounted && isAuthenticated ? '/profile' : '/auth/login',
     },
   ];
 
   // Фильтруем элементы, требующие авторизации
   const visibleItems = navItems.filter(
-    (item) => !item.authRequired || (item.authRequired && isAuthenticated)
+    (item) =>
+      !item.authRequired || (item.authRequired && mounted && isAuthenticated)
   );
 
   // Функция для определения активности ссылки
