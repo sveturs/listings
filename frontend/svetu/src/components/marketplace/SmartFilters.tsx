@@ -34,11 +34,8 @@ export function SmartFilters({
   // Сброс фильтров при смене категории
   useEffect(() => {
     setFilterValues({});
-    // Вызываем onChange только если действительно были фильтры
-    if (Object.keys(filterValues).length > 0) {
-      onChange({});
-    }
-  }, [categoryId, filterValues, onChange]);
+    onChange({});
+  }, [categoryId, onChange]);
 
   const handleFilterChange = (attributeId: string, value: any) => {
     const newFilters = {
