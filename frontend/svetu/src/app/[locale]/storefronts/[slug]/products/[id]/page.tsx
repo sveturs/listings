@@ -8,6 +8,10 @@ import { storefrontApi } from '@/services/storefrontApi';
 import type { components } from '@/types/generated/api';
 import SafeImage from '@/components/SafeImage';
 import AddToCartButton from '@/components/cart/AddToCartButton';
+import {
+  formatAddressWithPrivacy,
+  type LocationPrivacyLevel,
+} from '@/utils/addressUtils';
 
 type StorefrontProduct =
   components['schemas']['backend_internal_domain_models.StorefrontProduct'];
@@ -26,57 +30,6 @@ export default function StorefrontProductPage({ params }: Props) {
   const [storefront, setStorefront] = useState<Storefront | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
-  // Форматирование адреса с учетом приватности
-  const formatAddressWithPrivacy = (
-    address: string,
-    privacyLevel?: string
-  ): string => {
-    if (!address) return '';
-
-    if (privacyLevel === 'exact') {
-      return address;
-    }
-
-    const parts = address.split(',').map((part) => part.trim());
-
-    switch (privacyLevel) {
-      case 'approximate':
-      case 'street':
-        // Убираем номер дома
-        if (parts.length > 2) {
-          const streetPart = parts[0]
-            .replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '')
-            .trim();
-          return streetPart
-            ? [streetPart, ...parts.slice(1)].join(', ')
-            : parts.slice(1).join(', ');
-        }
-        return parts.slice(1).join(', ');
-
-      case 'district':
-        // Оставляем только район и город
-        if (parts.length > 2) {
-          return parts.slice(-2).join(', ');
-        }
-        return address;
-
-      case 'city_only':
-      case 'city':
-        // Оставляем только город
-        if (parts.length > 1) {
-          return parts[parts.length - 1];
-        }
-        return address;
-
-      case 'hidden':
-        // Скрываем адрес полностью
-        return 'Адрес скрыт';
-
-      default:
-        return address;
-    }
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -353,7 +306,7 @@ export default function StorefrontProductPage({ params }: Props) {
                 </svg>
                 {formatAddressWithPrivacy(
                   product.individual_address,
-                  product.location_privacy
+                  product.location_privacy as LocationPrivacyLevel
                 )}
               </div>
             )}

@@ -6,7 +6,11 @@ import { useTranslations, useLocale } from 'next-intl';
 import type { MapMarkerData } from '../types/gis';
 // import { getCategoryIcon } from '../../../utils/categoryIcons';
 import SafeImage from '../../SafeImage';
-import { getLocalizedAddress } from '@/utils/addressUtils';
+import {
+  getLocalizedAddress,
+  formatAddressWithPrivacy,
+  type LocationPrivacyLevel,
+} from '@/utils/addressUtils';
 
 interface MarkerHoverPopupProps {
   marker: MapMarkerData;
@@ -25,57 +29,6 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
 }) => {
   const t = useTranslations('common');
   const locale = useLocale();
-
-  // Форматирование адреса с учетом приватности
-  const formatAddressWithPrivacy = (
-    address: string,
-    privacyLevel?: string
-  ): string => {
-    if (!address) return '';
-
-    if (privacyLevel === 'exact') {
-      return address;
-    }
-
-    const parts = address.split(',').map((part) => part.trim());
-
-    switch (privacyLevel) {
-      case 'approximate':
-      case 'street':
-        // Убираем номер дома
-        if (parts.length > 2) {
-          const streetPart = parts[0]
-            .replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '')
-            .trim();
-          return streetPart
-            ? [streetPart, ...parts.slice(1)].join(', ')
-            : parts.slice(1).join(', ');
-        }
-        return parts.slice(1).join(', ');
-
-      case 'district':
-        // Оставляем только район и город
-        if (parts.length > 2) {
-          return parts.slice(-2).join(', ');
-        }
-        return address;
-
-      case 'city_only':
-      case 'city':
-        // Оставляем только город
-        if (parts.length > 1) {
-          return parts[parts.length - 1];
-        }
-        return address;
-
-      case 'hidden':
-        // Скрываем адрес полностью
-        return t('addressHidden');
-
-      default:
-        return address;
-    }
-  };
 
   // Парсим JSON данные
   const parsedData = React.useMemo(() => {
@@ -279,9 +232,9 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
                         parsedData?.translations,
                         locale
                       ),
-                      parsedData?.locationPrivacy ||
+                      (parsedData?.locationPrivacy ||
                         parsedData?.location_privacy ||
-                        parsedData?.privacy_level
+                        parsedData?.privacy_level) as LocationPrivacyLevel
                     )}
                   </span>
                 </div>

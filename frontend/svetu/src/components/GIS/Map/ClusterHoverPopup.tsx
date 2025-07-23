@@ -4,6 +4,10 @@ import React, { useState } from 'react';
 import { Popup } from 'react-map-gl';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import {
+  formatAddressWithPrivacy,
+  type LocationPrivacyLevel,
+} from '@/utils/addressUtils';
 
 interface ClusterListing {
   id: string;
@@ -41,57 +45,6 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
   // Форматирование цены
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ru-RU').format(price);
-  };
-
-  // Форматирование адреса с учетом приватности
-  const formatAddressWithPrivacy = (
-    address: string,
-    privacyLevel?: string
-  ): string => {
-    if (!address) return '';
-
-    if (privacyLevel === 'exact') {
-      return address;
-    }
-
-    const parts = address.split(',').map((part) => part.trim());
-
-    switch (privacyLevel) {
-      case 'approximate':
-      case 'street':
-        // Убираем номер дома
-        if (parts.length > 2) {
-          const streetPart = parts[0]
-            .replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '')
-            .trim();
-          return streetPart
-            ? [streetPart, ...parts.slice(1)].join(', ')
-            : parts.slice(1).join(', ');
-        }
-        return parts.slice(1).join(', ');
-
-      case 'district':
-        // Оставляем только район и город
-        if (parts.length > 2) {
-          return parts.slice(-2).join(', ');
-        }
-        return address;
-
-      case 'city_only':
-      case 'city':
-        // Оставляем только город
-        if (parts.length > 1) {
-          return parts[parts.length - 1];
-        }
-        return address;
-
-      case 'hidden':
-        // Скрываем адрес полностью
-        return t('addressHidden');
-
-      default:
-        return address;
-    }
   };
 
   // Получение иконки категории
@@ -231,7 +184,7 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
                     📍{' '}
                     {formatAddressWithPrivacy(
                       listing.address,
-                      listing.locationPrivacy
+                      listing.locationPrivacy as LocationPrivacyLevel
                     )}
                   </p>
                 )}

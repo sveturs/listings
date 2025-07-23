@@ -13,6 +13,11 @@ import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MarketplaceItem } from '@/types/marketplace';
+import {
+  formatAddressWithPrivacy,
+  getFullLocalizedAddress,
+  type LocationPrivacyLevel,
+} from '@/utils/addressUtils';
 
 interface SimilarListingsProps {
   listingId: number;
@@ -235,7 +240,12 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                       </svg>
-                      <span className="truncate">{listing.location}</span>
+                      <span className="truncate">
+                        {formatAddressWithPrivacy(
+                          getFullLocalizedAddress(listing, locale),
+                          listing.location_privacy as LocationPrivacyLevel
+                        )}
+                      </span>
                     </>
                   )}
                 </div>
@@ -330,7 +340,12 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                           />
                         </svg>
-                        <span className="truncate">{listing.location}</span>
+                        <span className="truncate">
+                          {formatAddressWithPrivacy(
+                            getFullLocalizedAddress(listing, locale),
+                            listing.location_privacy as LocationPrivacyLevel
+                          )}
+                        </span>
                       </p>
                     )}
                     {/* Action buttons */}
