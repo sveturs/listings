@@ -119,7 +119,7 @@ func run(cfg *config.Config) error {
 	ctx := context.Background()
 
 	// Инициализируем файловое хранилище
-	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	fileStorage, err := filestorage.NewFileStorage(context.Background(), cfg.FileStorage)
 	if err != nil {
 		log.Printf("Ошибка инициализации файлового хранилища: %v. Функции загрузки файлов могут быть недоступны.", err)
 
@@ -145,7 +145,7 @@ func run(cfg *config.Config) error {
 	}
 
 	// Инициализируем базу данных с OpenSearch и файловым хранилищем
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}

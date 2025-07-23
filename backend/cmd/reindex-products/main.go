@@ -57,6 +57,7 @@ func main() {
 
 	// Initialize storage with all necessary dependencies
 	storage, err := postgresStorage.NewDatabase(
+		context.Background(),
 		cfg.DatabaseURL,
 		osClient,
 		"",                // minioEndpoint - not needed for this task

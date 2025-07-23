@@ -107,7 +107,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	geocodeHandler := geocodeHandler.NewHandler(services)
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db)
-	behaviorTrackingModule := behavior_tracking.NewModule(db.GetPool())
+	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool())
 	searchAdminModule := search_admin.NewModule(db)
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())

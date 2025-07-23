@@ -20,13 +20,13 @@ func main() {
 	}
 
 	// Создаем файловое хранилище
-	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	fileStorage, err := filestorage.NewFileStorage(context.Background(), cfg.FileStorage)
 	if err != nil {
 		log.Fatal("Failed to create file storage:", err)
 	}
 
 	// Подключаемся к базе данных
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(context.Background(), cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}

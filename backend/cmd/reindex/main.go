@@ -68,14 +68,14 @@ func main() {
 	}
 
 	// Инициализация файлового хранилища
-	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	fileStorage, err := filestorage.NewFileStorage(context.Background(), cfg.FileStorage)
 	if err != nil {
 		logger.Info().Msgf("Warning: Failed to initialize file storage: %v. Proceeding without file storage.", err)
 		// Не прерываем выполнение программы, так как для индексации это не критично
 	}
 
 	// Подключение к базе данных
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(context.Background(), cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("Error connecting to database: %v", err)
 	}
