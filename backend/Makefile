@@ -69,7 +69,7 @@ lint_full:
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run ./...
 	@echo "✅ Linting completed!"
 
-lint: lint-errcheck lint-goconst lint-govet 
+lint: lint-errcheck lint-goconst lint-govet lint-revive
 
 lint-errcheck:
 	@echo "Running errcheck linter only..."
@@ -79,21 +79,21 @@ lint-goconst:
 	@echo "Running goconst linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=goconst ./...
 
-lint-staticcheck:
-	@echo "Running staticcheck linter only..."
-	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=staticcheck ./...
-
 lint-govet:
 	@echo "Running govet linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=govet ./...
 
-lint-revive:
-	@echo "Running revive linter only..."
-	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=revive ./...
-
 lint-misspell:
 	@echo "Running misspell linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=misspell ./...
+
+lint-staticcheck:
+	@echo "Running staticcheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=staticcheck ./...
+
+lint-revive:
+	@echo "Running revive linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=revive ./...
 
 lint-lll:
 	@echo "Running lll linter only..."
