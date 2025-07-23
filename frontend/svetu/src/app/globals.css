@@ -3,9 +3,10 @@
 @import '../styles/chat-patterns.css';
 @import '../styles/chat-bubble.css';
 
+/* Используем переменные DaisyUI для совместимости с темами */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(var(--b1));
+  --foreground: oklch(var(--bc));
 }
 
 @theme inline {
@@ -15,16 +16,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Стили для body теперь автоматически адаптируются к выбранной теме */
 body {
-  background: var(--background);
-  color: var(--foreground);
+  @apply bg-base-100 text-base-content;
   font-family: Arial, Helvetica, sans-serif;
 }
 

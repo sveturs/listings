@@ -97,6 +97,10 @@
     "closed": "Closed",
     "open": "Open",
     "searching": "Searching...",
+    "eco": {
+      "secondHand": "Second-hand",
+      "refurbished": "Refurbished"
+    },
     "publishing": "Publishing...",
     "publish": "Publish",
     "free_above": "Free above",
@@ -318,6 +322,13 @@
     "description": "Find the best deals from individuals and stores",
     "privateListingsOnly": "Private listings only",
     "privateListingsOnlyDescription": "Show only marketplace products from private sellers"
+  },
+  "navigation": {
+    "home": "Home",
+    "search": "Search",
+    "create": "Create",
+    "chats": "Chats",
+    "profile": "Profile"
   },
   "header": {
     "nav": {

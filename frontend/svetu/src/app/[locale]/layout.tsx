@@ -10,6 +10,8 @@ import { ReduxProvider } from '@/components/ReduxProvider';
 import WebSocketManager from '@/components/WebSocketManager';
 import AuthStateManager from '@/components/AuthStateManager';
 import { VisibleCitiesProvider } from '@/components/GIS/contexts/VisibleCitiesContext';
+import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
+import { themeInitScript } from '@/scripts/theme-init';
 import '../globals.css';
 
 const geistSans = Geist({
@@ -80,9 +82,10 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} data-theme="cupcake">
+    <html lang={locale}>
       <head>
         <PublicEnvScript />
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -94,7 +97,10 @@ export default async function RootLayout({
                 <AuthStateManager />
                 <WebSocketManager />
                 <Header />
-                <main className="min-h-screen pt-28 lg:pt-16">{children}</main>
+                <main className="min-h-screen pt-28 lg:pt-16 pb-16 md:pb-0">
+                  {children}
+                </main>
+                <MobileBottomNav />
               </VisibleCitiesProvider>
             </AuthProvider>
           </ReduxProvider>

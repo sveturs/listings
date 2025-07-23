@@ -62,6 +62,10 @@
     "closed": "Zatvoreno",
     "open": "Otvoreno",
     "searching": "Pretraživanje...",
+    "eco": {
+      "secondHand": "Polovno",
+      "refurbished": "Obnovljeno"
+    },
     "publishing": "Objavljivanje...",
     "publish": "Objavi",
     "free_above": "Besplatno iznad",
@@ -98,6 +102,13 @@
     "added": "Added!",
     "outOfStock": "Out of Stock",
     "quantity": "Quantity"
+  },
+  "navigation": {
+    "home": "Početna",
+    "search": "Pretraga",
+    "create": "Dodaj",
+    "chats": "Poruke",
+    "profile": "Profil"
   },
   "checkout": {
     "title": "Checkout",

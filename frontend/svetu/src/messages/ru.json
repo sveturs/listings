@@ -98,6 +98,10 @@
     "closed": "Закрыто",
     "open": "Открыто",
     "searching": "Поиск...",
+    "eco": {
+      "secondHand": "Б/У",
+      "refurbished": "Восстановлен"
+    },
     "publishing": "Публикация...",
     "publish": "Опубликовать",
     "free_above": "Бесплатно от",
@@ -326,6 +330,13 @@
     "description": "Находите лучшие предложения от частных лиц и магазинов",
     "privateListingsOnly": "Только частные объявления",
     "privateListingsOnlyDescription": "Показывать только товары от частных продавцов"
+  },
+  "navigation": {
+    "home": "Главная",
+    "search": "Поиск",
+    "create": "Создать",
+    "chats": "Чаты",
+    "profile": "Профиль"
   },
   "header": {
     "nav": {

@@ -11,6 +11,7 @@ import { SearchBar } from './SearchBar';
 import { useAuthContext } from '@/contexts/AuthContext';
 import CartIcon from './cart/CartIcon';
 import ShoppingCartModal from './cart/ShoppingCartModal';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function Header() {
   const t = useTranslations('header');
@@ -142,7 +143,7 @@ export default function Header() {
             {mounted && isAuthenticated && user && (
               <Link
                 href="/create-listing"
-                className="btn btn-primary btn-sm hidden sm:flex"
+                className="btn btn-primary btn-sm hidden md:flex"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -163,6 +164,7 @@ export default function Header() {
                 </span>
               </Link>
             )}
+            <ThemeToggle />
             <LanguageSwitcher />
             <AuthButton onLoginClick={() => setIsLoginModalOpen(true)} />
           </div>
