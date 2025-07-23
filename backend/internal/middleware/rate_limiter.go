@@ -277,8 +277,8 @@ func (m *Middleware) RateLimitMessages() fiber.Handler {
 		key := fmt.Sprintf("user:%d", userID)
 
 		// Разные лимиты для разных эндпоинтов
-		switch {
-		case path == "/api/v1/marketplace/chat/messages":
+		switch path {
+		case "/api/v1/marketplace/chat/messages":
 			// 30 сообщений в минуту
 			if !messageLimiter.isAllowed(key, 30, time.Minute) {
 				logger.Info().
@@ -288,7 +288,7 @@ func (m *Middleware) RateLimitMessages() fiber.Handler {
 				return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "Слишком много сообщений. Подождите немного.")
 			}
 
-		case path == "/api/v1/marketplace/chat/messages/:id/attachments":
+		case "/api/v1/marketplace/chat/messages/:id/attachments":
 			// 10 загрузок файлов в минуту
 			if !fileLimiter.isAllowed(key, 10, time.Minute) {
 				logger.Info().

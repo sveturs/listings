@@ -332,11 +332,14 @@ func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.Marketpla
 		priorityAttrs := []string{"make", attributeNameModel, "brand", "type", "rooms", "property_type", "body_type"}
 
 		// В зависимости от попытки используем разное количество атрибутов
-		maxAttrs := 3
-		if tryNumber == 1 {
+		var maxAttrs int
+		switch tryNumber {
+		case 1:
 			maxAttrs = 2 // Во второй попытке используем меньше атрибутов
-		} else if tryNumber == 2 {
+		case 2:
 			maxAttrs = 1 // В третьей попытке используем только самые важные
+		default:
+			maxAttrs = 3
 		}
 
 		attrCount := 0

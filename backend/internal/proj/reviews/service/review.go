@@ -308,7 +308,8 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 	}
 
 	// Для пользователей и витрин используем материализованные представления
-	if entityType == entityTypeUser {
+	switch entityType {
+	case entityTypeUser:
 		// Используем материализованное представление user_ratings
 		err := s.storage.QueryRow(ctx, `
 			SELECT 
@@ -356,7 +357,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		}
 
 		return stats, nil
-	} else if entityType == entityTypeStorefront {
+	case entityTypeStorefront:
 		// Используем материализованное представление storefront_ratings
 		err := s.storage.QueryRow(ctx, `
 			SELECT 
@@ -403,9 +404,8 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		}
 
 		return stats, nil
-	}
-
-	// Для других типов сущностей (listing, room, car) используем прямой запрос
+	default:
+		// Для других типов сущностей (listing, room, car) используем прямой запрос
 	err := s.storage.QueryRow(ctx, `
         SELECT 
             COUNT(*) as total,
@@ -453,6 +453,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 	}
 
 	return stats, nil
+	}
 }
 
 func (s *ReviewService) UpdateReviewPhotos(ctx context.Context, reviewId int, photoUrls []string) error {
