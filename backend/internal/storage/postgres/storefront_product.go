@@ -514,6 +514,7 @@ func (s *Database) UpdateProductInventory(ctx context.Context, storefrontID, pro
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -708,6 +709,7 @@ func (s *Database) BulkCreateProducts(ctx context.Context, storefrontID int, pro
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -753,6 +755,7 @@ func (s *Database) BulkUpdateProducts(ctx context.Context, storefrontID int, upd
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -884,6 +887,7 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 

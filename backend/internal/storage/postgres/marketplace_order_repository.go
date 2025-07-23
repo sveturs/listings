@@ -115,6 +115,7 @@ func (r *MarketplaceOrderRepository) UpdateStatus(ctx context.Context, orderID i
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 

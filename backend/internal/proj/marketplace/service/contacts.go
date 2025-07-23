@@ -125,8 +125,8 @@ func (s *ContactsService) UpdateContactStatus(ctx context.Context, userID int, c
 	// 2. Статус blocked - можно разблокировать (принять)
 	// 3. Статус accepted - можно заблокировать
 	if existingContact.Status != models.ContactStatusPending &&
-		!(existingContact.Status == models.ContactStatusBlocked && req.Status == models.ContactStatusAccepted) &&
-		!(existingContact.Status == models.ContactStatusAccepted && req.Status == models.ContactStatusBlocked) {
+		(existingContact.Status != models.ContactStatusBlocked || req.Status != models.ContactStatusAccepted) &&
+		(existingContact.Status != models.ContactStatusAccepted || req.Status != models.ContactStatusBlocked) {
 		return fmt.Errorf("invalid status transition from %s to %s", existingContact.Status, req.Status)
 	}
 

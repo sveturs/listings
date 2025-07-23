@@ -21,6 +21,7 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -471,6 +472,7 @@ func (s *Storage) AddReviewVote(ctx context.Context, vote *models.ReviewVote) er
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -536,6 +538,7 @@ func (s *Storage) UpdateReviewVotes(ctx context.Context, reviewId int) error {
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
+			_ = err // Explicitly ignore error
 		}
 	}()
 

@@ -535,6 +535,7 @@ func (suite *CategoryIntegrationTestSuite) TestAutomaticTranslationCreation() {
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логируем ошибку закрытия rows в тесте
+			_ = err // Explicitly ignore error
 		}
 	}()
 
@@ -629,6 +630,7 @@ func (ts *testStorage) GetCategories(ctx context.Context) ([]models.MarketplaceC
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логируем ошибку закрытия rows в тесте
+			_ = err // Explicitly ignore error
 		}
 	}()
 

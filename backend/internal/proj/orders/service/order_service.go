@@ -198,6 +198,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 			for _, res := range reservations {
 				if releaseErr := s.inventoryMgr.ReleaseReservation(ctx, res.ID); releaseErr != nil {
 					// Логируем ошибку, но продолжаем откат остальных
+					_ = releaseErr // Explicitly ignore error
 				}
 			}
 			// TODO: использовать транзакции для отката
@@ -237,6 +238,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		for _, res := range reservations {
 			if releaseErr := s.inventoryMgr.ReleaseReservation(ctx, res.ID); releaseErr != nil {
 				// Логируем ошибку, но продолжаем откат остальных
+				_ = releaseErr // Explicitly ignore error
 			}
 		}
 		return nil, fmt.Errorf("failed to update order totals: %w", err)

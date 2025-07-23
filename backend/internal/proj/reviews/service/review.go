@@ -312,7 +312,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 	case entityTypeUser:
 		// Используем материализованное представление user_ratings
 		err := s.storage.QueryRow(ctx, `
-			SELECT 
+			SELECT
 				total_reviews,
 				average_rating,
 				verified_reviews,
@@ -345,6 +345,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		defer func() {
 			if err := rows.Close(); err != nil {
 				// Логирование ошибки закрытия rows
+				_ = err // Explicitly ignore error
 			}
 		}()
 
@@ -360,7 +361,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 	case entityTypeStorefront:
 		// Используем материализованное представление storefront_ratings
 		err := s.storage.QueryRow(ctx, `
-			SELECT 
+			SELECT
 				total_reviews,
 				average_rating,
 				verified_reviews,
@@ -392,6 +393,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		defer func() {
 			if err := rows.Close(); err != nil {
 				// Логирование ошибки закрытия rows
+				_ = err // Explicitly ignore error
 			}
 		}()
 
@@ -407,13 +409,13 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 	default:
 		// Для других типов сущностей (listing, room, car) используем прямой запрос
 		err := s.storage.QueryRow(ctx, `
-        SELECT 
+        SELECT
             COUNT(*) as total,
             COALESCE(AVG(rating), 0) as avg_rating,
             COUNT(*) FILTER (WHERE is_verified_purchase) as verified,
             COUNT(*) FILTER (WHERE array_length(photos, 1) > 0) as with_photos
         FROM reviews
-        WHERE entity_type = $1 
+        WHERE entity_type = $1
         AND entity_id = $2
         AND status = 'published'
     `, entityType, entityId).Scan(
@@ -430,19 +432,20 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		rows, err := s.storage.Query(ctx, `
         SELECT rating, COUNT(*)
         FROM reviews
-        WHERE entity_type = $1 
+        WHERE entity_type = $1
         AND entity_id = $2
         AND status = 'published'
         GROUP BY rating
     `, entityType, entityId)
-		if err != nil {
-			return nil, err
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логирование ошибки закрытия rows
+			_ = err // Explicitly ignore error
 		}
-		defer func() {
-			if err := rows.Close(); err != nil {
-				// Логирование ошибки закрытия rows
-			}
-		}()
+	}()
 
 		for rows.Next() {
 			var rating, count int

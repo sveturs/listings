@@ -203,6 +203,7 @@ func (c *Client) makeRequest(ctx context.Context, method, endpoint string, paylo
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			// Log error but don't return it since we're in defer
+			_ = err // Explicitly ignore error
 		}
 	}()
 

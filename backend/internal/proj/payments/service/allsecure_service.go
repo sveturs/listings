@@ -150,6 +150,7 @@ func (s *AllSecureService) CreatePayment(ctx context.Context, req CreatePaymentR
 			"error": err.Error(),
 		}); updateErr != nil {
 			// Логируем ошибку обновления, но не прерываем выполнение
+			_ = updateErr // Explicitly ignore error
 		}
 		return nil, fmt.Errorf("AllSecure request failed: %w", err)
 	}
