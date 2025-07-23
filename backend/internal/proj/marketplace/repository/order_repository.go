@@ -172,7 +172,7 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 	case models.MarketplaceOrderStatusDisputed:
 		// Нет дополнительных действий для статуса disputed
 	case models.MarketplaceOrderStatusCancelled:
-		// Нет дополнительных действий для статуса cancelled
+		// Нет дополнительных действий для статуса canceled
 	case models.MarketplaceOrderStatusRefunded:
 		// Нет дополнительных действий для статуса refunded
 	}
