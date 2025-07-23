@@ -99,8 +99,17 @@
     "searching": "Searching...",
     "eco": {
       "secondHand": "Second-hand",
+      "refurbished": "Refurbished",
+      "badge": "Eco"
+    },
+    "condition": {
+      "new": "New",
+      "likeNew": "Like new",
+      "used": "Used",
       "refurbished": "Refurbished"
     },
+    "photos": "photos",
+    "secureDeal": "Secure deal",
     "publishing": "Publishing...",
     "publish": "Publish",
     "free_above": "Free above",

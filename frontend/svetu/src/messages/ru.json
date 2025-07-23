@@ -100,8 +100,17 @@
     "searching": "Поиск...",
     "eco": {
       "secondHand": "Б/У",
+      "refurbished": "Восстановлен",
+      "badge": "Эко"
+    },
+    "condition": {
+      "new": "Новое",
+      "likeNew": "Как новое",
+      "used": "Б/У",
       "refurbished": "Восстановлен"
     },
+    "photos": "фото",
+    "secureDeal": "Безопасная сделка",
     "publishing": "Публикация...",
     "publish": "Опубликовать",
     "free_above": "Бесплатно от",

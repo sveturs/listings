@@ -7,7 +7,7 @@ import {
   UnifiedSearchItem,
 } from '@/services/unifiedSearch';
 import { MarketplaceItem } from '@/types/marketplace';
-import MarketplaceCard from '@/components/MarketplaceCard';
+import { EnhancedListingCard } from '@/components/marketplace/EnhancedListingCard';
 import ViewToggle from '@/components/common/ViewToggle';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -324,7 +324,7 @@ export default function MarketplaceList({
         }
       >
         {items.map((item) => (
-          <MarketplaceCard
+          <EnhancedListingCard
             key={item.id}
             item={convertToMarketplaceItem(item)}
             locale={locale}

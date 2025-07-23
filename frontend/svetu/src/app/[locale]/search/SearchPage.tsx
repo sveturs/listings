@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SearchBar } from '@/components/SearchBar';
-import MarketplaceCard from '@/components/MarketplaceCard';
+import { EnhancedListingCard } from '@/components/marketplace/EnhancedListingCard';
 import ViewToggle from '@/components/common/ViewToggle';
 import { SearchResultCard } from '@/components/search';
 import { useViewPreference } from '@/hooks/useViewPreference';
@@ -1048,7 +1048,7 @@ export default function SearchPage() {
                         item.product_type as 'marketplace' | 'storefront'
                       }
                     >
-                      <MarketplaceCard
+                      <EnhancedListingCard
                         item={convertToMarketplaceItem(item)}
                         locale={locale}
                         viewMode={viewMode}

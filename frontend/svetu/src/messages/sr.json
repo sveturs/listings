@@ -64,8 +64,17 @@
     "searching": "Pretraživanje...",
     "eco": {
       "secondHand": "Polovno",
+      "refurbished": "Obnovljeno",
+      "badge": "Eko"
+    },
+    "condition": {
+      "new": "Novo",
+      "likeNew": "Kao novo",
+      "used": "Polovno",
       "refurbished": "Obnovljeno"
     },
+    "photos": "fotografije",
+    "secureDeal": "Sigurna transakcija",
     "publishing": "Objavljivanje...",
     "publish": "Objavi",
     "free_above": "Besplatno iznad",
