@@ -1666,11 +1666,14 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
 		}
 
 		// Установка разумных шагов в зависимости от диапазона
-		step := 1.0
-		if attrName == "engine_capacity" {
+		var step float64
+		switch attrName {
+		case "engine_capacity":
 			step = 0.1
-		} else if attrName == "area" || attrName == "land_area" {
+		case "area", "land_area":
 			step = 0.5
+		default:
+			step = 1.0
 		}
 
 		// Создаем информацию о границах
@@ -2457,15 +2460,16 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 			if attr.NumericValue != nil {
 				hasValue = true
 				// Форматирование числовых значений
-				if attr.AttributeName == attrNameYear {
+				switch attr.AttributeName {
+				case attrNameYear:
 					attr.DisplayValue = fmt.Sprintf("%d", int(*attr.NumericValue))
-				} else if attr.AttributeName == "engine_capacity" {
+				case "engine_capacity":
 					attr.DisplayValue = fmt.Sprintf("%.1f л", *attr.NumericValue)
-				} else if attr.AttributeName == attrNameMileage {
+				case attrNameMileage:
 					attr.DisplayValue = fmt.Sprintf("%d км", int(*attr.NumericValue))
-				} else if attr.AttributeName == attrNamePower {
+				case attrNamePower:
 					attr.DisplayValue = fmt.Sprintf("%d л.с.", int(*attr.NumericValue))
-				} else {
+				default:
 					attr.DisplayValue = fmt.Sprintf("%g", *attr.NumericValue)
 				}
 			}
@@ -2489,16 +2493,17 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 			// Если нет значения, но есть отображаемое значение
 			if !hasValue && attr.DisplayValue != "" {
 				// Попытка восстановить типизированное значение из отображаемого
-				if attr.AttributeType == "text" || attr.AttributeType == "select" {
+				switch attr.AttributeType {
+				case "text", "select":
 					strVal := attr.DisplayValue
 					attr.TextValue = &strVal
-				} else if attr.AttributeType == "number" {
+				case "number":
 					// Удаляем неожиданные символы (буквы, единицы измерения)
 					clean := regexp.MustCompile(`[^\d\.-]`).ReplaceAllString(attr.DisplayValue, "")
 					if numVal, err := strconv.ParseFloat(clean, 64); err == nil {
 						attr.NumericValue = &numVal
 					}
-				} else if attr.AttributeType == "boolean" {
+				case "boolean":
 					boolVal := strings.ToLower(attr.DisplayValue) == "да" ||
 						strings.ToLower(attr.DisplayValue) == "true" ||
 						attr.DisplayValue == "1"

@@ -190,7 +190,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 	}
 
 	// Добавляем варианты товара
-	if product.Variants != nil && len(product.Variants) > 0 {
+	if len(product.Variants) > 0 {
 		variantsArray := make([]map[string]interface{}, 0, len(product.Variants))
 		minPrice := product.Price
 		maxPrice := product.Price
@@ -951,7 +951,7 @@ func calculateQualityScore(product *models.StorefrontProduct) float64 {
 	}
 
 	// Есть варианты
-	if product.Variants != nil && len(product.Variants) > 0 {
+	if len(product.Variants) > 0 {
 		score += 15
 	}
 

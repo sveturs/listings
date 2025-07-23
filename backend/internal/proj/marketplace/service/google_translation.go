@@ -159,29 +159,32 @@ func (s *GoogleTranslationService) Translate(ctx context.Context, text string, s
 		switch targetLanguage {
 		case "en":
 			// Для русских текстов, переводим в формат "[RU->EN] Текст"
-			if sourceLanguage == "ru" {
+			switch sourceLanguage {
+			case "ru":
 				translatedText = fmt.Sprintf("[RU->EN] %s", text)
-			} else if sourceLanguage == "sr" {
+			case "sr":
 				translatedText = fmt.Sprintf("[SR->EN] %s", text)
-			} else {
+			default:
 				translatedText = text
 			}
 		case "ru":
 			// Для других языков, переводим в формат "[Lang->RU] Текст"
-			if sourceLanguage == "en" {
+			switch sourceLanguage {
+			case "en":
 				translatedText = fmt.Sprintf("[EN->RU] %s", text)
-			} else if sourceLanguage == "sr" {
+			case "sr":
 				translatedText = fmt.Sprintf("[SR->RU] %s", text)
-			} else {
+			default:
 				translatedText = text
 			}
 		case "sr":
 			// Для других языков, переводим в формат "[Lang->SR] Текст"
-			if sourceLanguage == "en" {
+			switch sourceLanguage {
+			case "en":
 				translatedText = fmt.Sprintf("[EN->SR] %s", text)
-			} else if sourceLanguage == "ru" {
+			case "ru":
 				translatedText = fmt.Sprintf("[RU->SR] %s", text)
-			} else {
+			default:
 				translatedText = text
 			}
 		default:

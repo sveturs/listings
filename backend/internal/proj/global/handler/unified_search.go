@@ -724,7 +724,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 
 	// Подготавливаем фильтры для трекинга
 	searchFilters := make(map[string]interface{})
-	if params.ProductTypes != nil && len(params.ProductTypes) > 0 {
+	if len(params.ProductTypes) > 0 {
 		searchFilters["product_types"] = params.ProductTypes
 	}
 	if params.CategoryID != "" {
@@ -747,7 +747,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 	var itemType behavior.ItemType
 
 	// Проверяем, что у нас есть типы товаров
-	if params.ProductTypes == nil || len(params.ProductTypes) == 0 {
+	if len(params.ProductTypes) == 0 {
 		// По умолчанию используем marketplace
 		itemType = behavior.ItemTypeMarketplace
 	} else if len(params.ProductTypes) == 1 {
