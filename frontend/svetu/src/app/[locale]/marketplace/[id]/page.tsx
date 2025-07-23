@@ -101,6 +101,7 @@ export default function ListingPage({ params }: Props) {
   const [listing, setListing] = useState<Listing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [localizedAddress, setLocalizedAddress] = useState<string | null>(null);
 
   // Форматирование адреса с учетом приватности
   const formatAddressWithPrivacy = (
@@ -146,12 +147,34 @@ export default function ListingPage({ params }: Props) {
 
       case 'hidden':
         // Скрываем адрес полностью
-        return 'Адрес скрыт';
+        return locale === 'ru' ? 'Адрес скрыт' : 'Address hidden';
 
       default:
         return address;
     }
   };
+
+  // Получение адреса на нужном языке через обратное геокодирование
+  const fetchLocalizedAddress = useCallback(
+    async (lat: number, lng: number) => {
+      try {
+        const language = locale === 'ru' ? 'ru' : 'sr'; // Используем сербский для всех языков кроме русского
+        const response = await fetch(
+          `${config.getApiUrl()}/api/v1/gis/geocode/reverse?lat=${lat}&lng=${lng}&language=${language}`
+        );
+        if (!response.ok) return null;
+        const result = await response.json();
+        if (result.success && result.data) {
+          return result.data.place_name || result.data.text || null;
+        }
+        return null;
+      } catch (error) {
+        console.error('Failed to fetch localized address:', error);
+        return null;
+      }
+    },
+    [locale]
+  );
 
   const fetchListing = useCallback(async () => {
     try {
@@ -161,17 +184,25 @@ export default function ListingPage({ params }: Props) {
       if (!response.ok) throw new Error('Failed to fetch listing');
       const result = await response.json();
       // Проверяем обертку ответа
-      if (result.data) {
-        setListing(result.data);
-      } else {
-        setListing(result);
+      let listingData = result.data || result;
+      setListing(listingData);
+
+      // Получаем локализованный адрес если есть координаты
+      if (listingData.latitude && listingData.longitude) {
+        const localAddr = await fetchLocalizedAddress(
+          listingData.latitude,
+          listingData.longitude
+        );
+        if (localAddr) {
+          setLocalizedAddress(localAddr);
+        }
       }
     } catch (error) {
       console.error('Error fetching listing:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, fetchLocalizedAddress]);
 
   useEffect(() => {
     fetchListing();
@@ -432,7 +463,7 @@ export default function ListingPage({ params }: Props) {
                       />
                     </svg>
                     {formatAddressWithPrivacy(
-                      listing.location,
+                      localizedAddress || listing.location,
                       listing.location_privacy
                     )}
                   </p>

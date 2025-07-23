@@ -222,7 +222,7 @@ export default function EditPreviewStep({
                 <p className="text-sm text-base-content/60">
                   {state.location.privacyLevel &&
                     t(
-                      `storefronts.products.privacy.${state.location.privacyLevel === 'approximate' ? 'street' : state.location.privacyLevel}`
+                      `storefronts.products.privacy.${state.location.privacyLevel}`
                     )}
                 </p>
               </div>

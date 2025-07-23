@@ -56,6 +56,7 @@
     "sendMessage": "Написать сообщение",
     "viewAll": "Посмотреть все",
     "documentation": "Документация",
+    "addressHidden": "Адрес скрыт",
     "close": "Закрыть",
     "add": "Добавить",
     "showing": "Показано",
@@ -3362,6 +3363,20 @@
       "mobileHint": "Тап на иконку сменит режим",
       "desktopHint": "R/W - смена режима",
       "updatingIsochrone": "Обновление зоны доступности..."
+    },
+    "views": "просмотров",
+    "cluster": {
+      "listings": "объявление",
+      "listingsPlural": "объявлений",
+      "listingsCount": "{count, plural, =1 {# объявление} =2 {# объявления} =3 {# объявления} =4 {# объявления} other {# объявлений}}",
+      "zoomToView": "Приблизьте карту для просмотра",
+      "andMore": "и еще {count}",
+      "andMoreCount": "{count, plural, =1 {и еще # объявление} =2 {и еще # объявления} =3 {и еще # объявления} =4 {и еще # объявления} other {и еще # объявлений}}",
+      "collapse": "Свернуть",
+      "clickOnCluster": "Нажмите на кластер",
+      "zoomIn": "Приблизить",
+      "addressHidden": "Адрес скрыт",
+      "withoutTitle": "Без названия"
     }
   },
   "listing": {

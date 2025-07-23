@@ -158,6 +158,32 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 			Msg("🔍 BACKEND PostGIS: Added category filter to unified query")
 	}
 
+	// Фильтр по минимальной цене
+	if params.MinPrice != nil {
+		query += fmt.Sprintf(` AND (
+			(ug.source_type = 'marketplace_listing' AND ml.price >= $%d) OR
+			(ug.source_type = 'storefront_product' AND sp.price >= $%d)
+		)`, argIndex, argIndex)
+		args = append(args, *params.MinPrice)
+		argIndex++
+		log.Info().
+			Float64("minPrice", *params.MinPrice).
+			Msg("🔍 BACKEND PostGIS: Added min price filter to unified query")
+	}
+
+	// Фильтр по максимальной цене
+	if params.MaxPrice != nil {
+		query += fmt.Sprintf(` AND (
+			(ug.source_type = 'marketplace_listing' AND ml.price <= $%d) OR
+			(ug.source_type = 'storefront_product' AND sp.price <= $%d)
+		)`, argIndex, argIndex)
+		args = append(args, *params.MaxPrice)
+		argIndex++
+		log.Info().
+			Float64("maxPrice", *params.MaxPrice).
+			Msg("🔍 BACKEND PostGIS: Added max price filter to unified query")
+	}
+
 	// Подсчет общего количества
 	countQuery := "SELECT COUNT(*) " + strings.Replace(query, query[:strings.Index(query, "FROM")], "", 1)
 	var totalCount int64

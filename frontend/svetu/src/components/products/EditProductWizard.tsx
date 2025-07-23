@@ -41,12 +41,7 @@ export default function EditProductWizard({
       case 3:
         return <EditAttributesStep onNext={nextStep} onBack={prevStep} />;
       case 4:
-        return (
-          <EditPhotosStep
-            onNext={nextStep}
-            onBack={prevStep}
-          />
-        );
+        return <EditPhotosStep onNext={nextStep} onBack={prevStep} />;
       case 5:
         return (
           <EditPreviewStep

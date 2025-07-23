@@ -22,7 +22,7 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
   onMouseEnter,
   onMouseLeave,
 }) => {
-  const t = useTranslations('map');
+  const t = useTranslations('common');
 
   // Форматирование адреса с учетом приватности
   const formatAddressWithPrivacy = (
@@ -68,7 +68,7 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
 
       case 'hidden':
         // Скрываем адрес полностью
-        return 'Адрес скрыт';
+        return t('addressHidden');
 
       default:
         return address;

@@ -48,6 +48,7 @@
     "sendMessage": "Send message",
     "viewAll": "View all",
     "documentation": "Documentation",
+    "addressHidden": "Address hidden",
     "close": "Close",
     "add": "Add",
     "showing": "Showing",
@@ -3209,6 +3210,20 @@
       "mobileHint": "Tap icon to change mode",
       "desktopHint": "R/W - change mode",
       "updatingIsochrone": "Updating accessibility zone..."
+    },
+    "views": "views",
+    "cluster": {
+      "listings": "listing",
+      "listingsPlural": "listings",
+      "listingsCount": "{count, plural, =1 {# listing} other {# listings}}",
+      "zoomToView": "Zoom in to view",
+      "andMore": "and {count} more",
+      "andMoreCount": "{count, plural, =1 {and # more listing} other {and # more listings}}",
+      "collapse": "Collapse",
+      "clickOnCluster": "Click on cluster",
+      "zoomIn": "Zoom in",
+      "addressHidden": "Address hidden",
+      "withoutTitle": "Untitled"
     }
   }
 }
