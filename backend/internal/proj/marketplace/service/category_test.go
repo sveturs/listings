@@ -42,8 +42,7 @@ func (suite *CategoryIntegrationTestSuite) SetupSuite() {
 	suite.ctx = ctx
 
 	// Запускаем PostgreSQL контейнер
-	pgContainer, err := postgres.RunContainer(ctx,
-		testcontainers.WithImage("postgres:16"),
+	pgContainer, err := postgres.Run(ctx, "postgres:16",
 		postgres.WithDatabase("testdb"),
 		postgres.WithUsername("testuser"),
 		postgres.WithPassword("testpass"),

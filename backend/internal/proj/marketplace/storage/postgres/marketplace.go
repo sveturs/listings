@@ -126,7 +126,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		log.Printf("Error saving original description translation: %v", err)
 	}
 
-	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+	if len(listing.Attributes) > 0 {
 		// Устанавливаем ID объявления для каждого атрибута
 		for i := range listing.Attributes {
 			listing.Attributes[i].ListingID = listingID
@@ -1300,7 +1300,7 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
 		}
 
 		// JSON значение
-		if attr.JSONValue != nil && len(attr.JSONValue) > 0 {
+		if len(attr.JSONValue) > 0 {
 			valueArgs = append(valueArgs, string(attr.JSONValue))
 		} else {
 			valueArgs = append(valueArgs, nil)
@@ -2483,7 +2483,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 				}
 			}
 
-			if attr.JSONValue != nil && len(attr.JSONValue) > 0 {
+			if len(attr.JSONValue) > 0 {
 				hasValue = true
 				if attr.DisplayValue == "" {
 					attr.DisplayValue = string(attr.JSONValue)

@@ -325,6 +325,7 @@ func (s *MarketplaceService) getCategoryAttributeGroupsFromDB(ctx context.Contex
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Явно игнорируем ошибку
 		}
 	}()
 

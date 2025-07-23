@@ -54,6 +54,7 @@ func (r *VariantRepository) CreateVariant(ctx context.Context, req *types.Create
 	defer func() {
 		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
 			// Transaction was already committed or rolled back, ignore
+			_ = err // Explicitly ignore the error
 		}
 	}()
 
@@ -412,6 +413,7 @@ func (r *VariantRepository) SetupProductAttributes(ctx context.Context, req *typ
 	defer func() {
 		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
 			// Transaction was already committed or rolled back, ignore
+			_ = err // Explicitly ignore the error
 		}
 	}()
 
