@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Popup } from 'react-map-gl';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface ClusterListing {
   id: string;
@@ -33,6 +34,10 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
   onMouseEnter,
   onMouseLeave,
 }) => {
+  const t = useTranslations('map.cluster');
+
+  // Состояние для показа всех объявлений
+  const [showAll, setShowAll] = useState(false);
   // Форматирование цены
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ru-RU').format(price);
@@ -82,7 +87,7 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
 
       case 'hidden':
         // Скрываем адрес полностью
-        return 'Адрес скрыт';
+        return t('addressHidden');
 
       default:
         return address;
@@ -140,8 +145,9 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
     return '📦';
   };
 
-  const displayListings = listings.slice(0, 4); // Показываем максимум 4 объявления
-  const remainingCount = totalCount - displayListings.length;
+  const displayListings = showAll ? listings : listings.slice(0, 4); // Показываем все или первые 4
+  const remainingCount = totalCount - 4; // Количество скрытых объявлений
+  const shouldShowButton = !showAll && listings.length > 4; // Показывать кнопку только если есть скрытые
 
   return (
     <Popup
@@ -163,16 +169,19 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
         {/* Заголовок */}
         <div className="mb-3 pb-3 border-b border-gray-200">
           <h3 className="text-lg font-bold text-gray-900">
-            {totalCount} объявлени
-            {totalCount === 1 ? 'е' : totalCount < 5 ? 'я' : 'й'}
+            {t('listingsCount', { count: totalCount })}
           </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            Приблизьте карту для просмотра
-          </p>
+          <p className="text-sm text-gray-600 mt-1">{t('zoomToView')}</p>
         </div>
 
         {/* Список объявлений */}
-        <div className="space-y-3">
+        <div
+          className={`space-y-3 ${
+            showAll && listings.length > 4
+              ? 'max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'
+              : ''
+          }`}
+        >
           {displayListings.map((listing) => (
             <div
               key={listing.id}
@@ -202,7 +211,7 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
               {/* Информация */}
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium text-sm text-gray-900 line-clamp-1">
-                  {listing.title}
+                  {listing.title || t('withoutTitle')}
                 </h4>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-sm font-bold text-primary">
@@ -248,22 +257,62 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
           ))}
         </div>
 
-        {/* Если есть еще объявления */}
-        {remainingCount > 0 && (
+        {/* Кнопка показать еще объявления */}
+        {shouldShowButton && (
           <div className="mt-3 pt-3 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center">
-              и еще {remainingCount} объявлени
-              {remainingCount === 1 ? 'е' : remainingCount < 5 ? 'я' : 'й'}
-            </p>
+            <button
+              onClick={() => setShowAll(true)}
+              className="w-full text-sm text-primary hover:text-primary-focus font-medium py-2 px-3 rounded-lg hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+            >
+              <span>{t('andMoreCount', { count: remainingCount })}</span>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Кнопка свернуть */}
+        {showAll && listings.length > 4 && (
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <button
+              onClick={() => setShowAll(false)}
+              className="w-full text-sm text-gray-600 hover:text-gray-800 font-medium py-2 px-3 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+            >
+              <span>{t('collapse')}</span>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 15l7-7 7 7"
+                />
+              </svg>
+            </button>
           </div>
         )}
 
         {/* CTA */}
         <div className="mt-4 pt-3 border-t border-gray-200">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">Нажмите на кластер</p>
+            <p className="text-sm text-gray-600">{t('clickOnCluster')}</p>
             <div className="flex items-center gap-1 text-primary">
-              <span className="text-sm font-medium">Приблизить</span>
+              <span className="text-sm font-medium">{t('zoomIn')}</span>
               <svg
                 className="w-4 h-4"
                 fill="none"

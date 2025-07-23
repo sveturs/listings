@@ -28,6 +28,7 @@
     "sendMessage": "Pošalji poruku",
     "viewAll": "Prikaži sve",
     "documentation": "Dokumentacija",
+    "addressHidden": "Adresa je skrivena",
     "close": "Zatvori",
     "add": "Dodaj",
     "search": "Pretraži",
@@ -2353,6 +2354,7 @@
       "maxImagesError": "You can upload maximum 5 images",
       "addImage": "Add Image",
       "categoryAttributes": "Category Attributes",
+      "categoryAttributesDescription": "Unesite specifične atribute za ovu kategoriju",
       "noAttributesForCategory": "No specific attributes for this category",
       "addProductDescription": "Add new products to your storefront catalog",
       "productNamePlaceholder": "Enter product name",
@@ -3111,6 +3113,20 @@
       "mobileHint": "Tap na ikonu menja režim",
       "desktopHint": "R/W - promena režima",
       "updatingIsochrone": "Ažuriranje zone dostupnosti..."
+    },
+    "views": "pregleda",
+    "cluster": {
+      "listings": "oglas",
+      "listingsPlural": "oglasa",
+      "listingsCount": "{count, plural, =1 {# oglas} =2 {# oglasa} =3 {# oglasa} =4 {# oglasa} other {# oglasa}}",
+      "zoomToView": "Približite mapu za pregled",
+      "andMore": "i još {count}",
+      "andMoreCount": "{count, plural, =1 {i još # oglas} =2 {i još # oglasa} =3 {i još # oglasa} =4 {i još # oglasa} other {i još # oglasa}}",
+      "collapse": "Skupi",
+      "clickOnCluster": "Kliknite na klaster",
+      "zoomIn": "Približi",
+      "addressHidden": "Adresa sakrivena",
+      "withoutTitle": "Bez naslova"
     }
   }
 }

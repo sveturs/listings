@@ -470,9 +470,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
       if (source) {
         try {
-          // Получаем маркеры из кластера
+          // Получаем маркеры из кластера - запрашиваем больше, чтобы показать все
           const features = await new Promise<any[]>((resolve) => {
-            source.getClusterLeaves(clusterId, 10, 0, (err, features) => {
+            source.getClusterLeaves(clusterId, 100, 0, (err, features) => {
               if (err) {
                 console.error('Error getting cluster leaves:', err);
                 resolve([]);
@@ -495,8 +495,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               address: f.properties.data?.address,
               locationPrivacy: f.properties.data?.locationPrivacy,
             }))
-            .sort((a, b) => b.price - a.price) // Сортируем по цене (убывание)
-            .slice(0, 4); // Берем топ-4
+            .sort((a, b) => b.price - a.price); // Сортируем по цене (убывание)
 
           // Получаем общее количество объявлений в кластере
           const pointCount = await new Promise<number>((resolve) => {

@@ -17,7 +17,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
   onClose,
 }) => {
   const router = useRouter();
-  const t = useTranslations('marketplace');
+  const t = useTranslations('common');
 
   // Форматирование адреса с учетом приватности
   const formatAddressWithPrivacy = (
@@ -63,7 +63,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
 
       case 'hidden':
         // Скрываем адрес полностью
-        return 'Адрес скрыт';
+        return t('addressHidden');
 
       default:
         return address;

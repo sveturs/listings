@@ -148,7 +148,11 @@ function productEditReducer(
           individual_address: product.individual_address || '',
           individual_latitude: product.individual_latitude || undefined,
           individual_longitude: product.individual_longitude || undefined,
-          location_privacy: (product.location_privacy || 'exact') as 'exact' | 'street' | 'district' | 'city',
+          location_privacy: (product.location_privacy || 'exact') as
+            | 'exact'
+            | 'street'
+            | 'district'
+            | 'city',
           show_on_map: product.show_on_map ?? true,
           sku: product.sku || '',
           barcode: product.barcode || '',
@@ -283,7 +287,11 @@ function productEditReducer(
           individual_address: action.payload?.individualAddress || '',
           individual_latitude: action.payload?.latitude,
           individual_longitude: action.payload?.longitude,
-          location_privacy: (action.payload?.privacyLevel === 'approximate' ? 'street' : action.payload?.privacyLevel || 'exact') as 'exact' | 'street' | 'district' | 'city',
+          location_privacy: (action.payload?.privacyLevel || 'exact') as
+            | 'exact'
+            | 'street'
+            | 'district'
+            | 'city',
           show_on_map: action.payload?.showOnMap ?? true,
         },
         hasUnsavedChanges: true,

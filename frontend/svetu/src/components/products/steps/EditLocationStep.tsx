@@ -51,7 +51,14 @@ export default function EditLocationStep({
   );
   const [privacyLevel, setPrivacyLevel] = useState<
     'exact' | 'street' | 'district' | 'city'
-  >(state.location?.privacyLevel === 'approximate' ? 'street' : (state.location?.privacyLevel || 'exact'));
+  >(
+    state.location?.privacyLevel === 'street' ||
+      state.location?.privacyLevel === 'district' ||
+      state.location?.privacyLevel === 'city' ||
+      state.location?.privacyLevel === 'exact'
+      ? state.location.privacyLevel
+      : 'exact'
+  );
 
   // Сохранение в контексте при изменениях
   useEffect(() => {
@@ -66,12 +73,7 @@ export default function EditLocationStep({
       privacyLevel,
       showOnMap: true,
     });
-  }, [
-    useStorefrontLocation,
-    individualLocation,
-    privacyLevel,
-    setLocation,
-  ]);
+  }, [useStorefrontLocation, individualLocation, privacyLevel, setLocation]);
 
   const handleLocationTypeChange = (useStorefront: boolean) => {
     setUseStorefrontLocation(useStorefront);
@@ -258,7 +260,14 @@ export default function EditLocationStep({
             <LocationPrivacySettings
               selectedLevel={privacyLevel}
               onLevelChange={setPrivacyLevel}
-              location={individualLocation ? { lat: individualLocation.latitude, lng: individualLocation.longitude } : undefined}
+              location={
+                individualLocation
+                  ? {
+                      lat: individualLocation.latitude,
+                      lng: individualLocation.longitude,
+                    }
+                  : undefined
+              }
               showPreview={true}
             />
           </div>
