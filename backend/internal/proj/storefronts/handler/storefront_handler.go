@@ -52,11 +52,12 @@ func (h *StorefrontHandler) CreateStorefront(c *fiber.Ctx) error {
 
 	storefront, err := h.service.CreateStorefront(c.Context(), userID, &dto)
 	if err != nil {
-		if errors.Is(err, service.ErrStorefrontLimitReached) {
+		switch {
+		case errors.Is(err, service.ErrStorefrontLimitReached):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.limit_reached")
-		} else if errors.Is(err, service.ErrInvalidLocation) {
+		case errors.Is(err, service.ErrInvalidLocation):
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_location")
-		} else {
+		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.create_failed")
 		}
 	}
@@ -148,13 +149,14 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 
 	err = h.service.Update(c.Context(), userID, id, &dto)
 	if err != nil {
-		if errors.Is(err, service.ErrInsufficientPermissions) {
+		switch {
+		case errors.Is(err, service.ErrInsufficientPermissions):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		} else if errors.Is(err, service.ErrFeatureNotAvailable) {
+		case errors.Is(err, service.ErrFeatureNotAvailable):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.feature_not_available")
-		} else if errors.Is(err, postgres.ErrNotFound) {
+		case errors.Is(err, postgres.ErrNotFound):
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
-		} else {
+		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_failed")
 		}
 	}
@@ -188,11 +190,12 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 
 	err = h.service.Delete(c.Context(), userID, id)
 	if err != nil {
-		if errors.Is(err, service.ErrUnauthorized) {
+		switch {
+		case errors.Is(err, service.ErrUnauthorized):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.only_owner_can_delete")
-		} else if errors.Is(err, postgres.ErrNotFound) {
+		case errors.Is(err, postgres.ErrNotFound):
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
-		} else {
+		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.delete_failed")
 		}
 	}

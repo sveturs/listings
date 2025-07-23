@@ -2487,13 +2487,14 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 							from, fromOk := bucket["from"].(float64)
 							to, toOk := bucket["to"].(float64)
 
-							if fromOk && toOk {
+							switch {
+							case fromOk && toOk:
 								key = fmt.Sprintf("%v-%v", from, to)
-							} else if fromOk {
+							case fromOk:
 								key = fmt.Sprintf("%v+", from)
-							} else if toOk {
+							case toOk:
 								key = fmt.Sprintf("0-%v", to)
-							} else {
+							default:
 								continue
 							}
 

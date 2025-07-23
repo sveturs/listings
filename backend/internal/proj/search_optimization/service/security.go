@@ -152,17 +152,18 @@ func (sc *SecurityCheck) ValidateOptimizationResults(ctx context.Context, result
 	}
 
 	// Определяем общий уровень безопасности
-	if report.CriticalIssues > 0 {
+	switch {
+	case report.CriticalIssues > 0:
 		report.OverallSafety = "dangerous"
 		report.ApprovalRequired = true
 		report.Recommendations = append(report.Recommendations,
 			"❌ Критические проблемы безопасности! Необходимо одобрение старшего администратора.")
-	} else if report.Warnings > 3 {
+	case report.Warnings > 3:
 		report.OverallSafety = "warning"
 		report.ApprovalRequired = true
 		report.Recommendations = append(report.Recommendations,
 			"⚠️ Множественные предупреждения. Рекомендуется дополнительная проверка.")
-	} else if report.Warnings > 0 {
+	case report.Warnings > 0:
 		report.OverallSafety = "warning"
 		report.Recommendations = append(report.Recommendations,
 			"⚠️ Обнаружены предупреждения. Мониторьте изменения после применения.")

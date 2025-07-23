@@ -185,11 +185,12 @@ func main() {
 		key := cache.BuildCategoriesKey(locale)
 		var temp []Category
 		err = cacheAdapter.Get(ctx, key, &temp)
-		if errors.Is(err, cache.ErrCacheMiss) {
+		switch {
+		case errors.Is(err, cache.ErrCacheMiss):
 			fmt.Printf("   ✓ Key %s successfully deleted\n", key)
-		} else if err != nil {
+		case err != nil:
 			fmt.Printf("   × Error checking key %s: %v\n", key, err)
-		} else {
+		default:
 			fmt.Printf("   × Key %s still exists!\n", key)
 		}
 	}

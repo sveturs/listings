@@ -1533,11 +1533,12 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 			}
 
 			// Форматируем отображаемое значение с учетом типа
-			if attr.AttributeName == attrNameYear {
+			switch {
+			case attr.AttributeName == attrNameYear:
 				attr.DisplayValue = fmt.Sprintf("%d", int(numericValue.Float64))
-			} else if unitStr != "" {
+			case unitStr != "":
 				attr.DisplayValue = fmt.Sprintf("%g %s", numericValue.Float64, unitStr)
-			} else {
+			default:
 				attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
 			}
 

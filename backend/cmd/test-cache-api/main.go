@@ -88,11 +88,12 @@ func main() {
 		// Проверяем кеш снова
 		time.Sleep(100 * time.Millisecond) // Даем время на обработку
 		err = cacheAdapter.Get(ctx, cacheKey, &cachedCategories)
-		if errors.Is(err, cache.ErrCacheMiss) {
+		switch {
+		case errors.Is(err, cache.ErrCacheMiss):
 			fmt.Println("After API call: Still NOT in cache")
-		} else if err != nil {
+		case err != nil:
 			fmt.Printf("After API call: Error: %v\n", err)
-		} else {
+		default:
 			fmt.Printf("After API call: NOW in cache (%d categories)\n", len(cachedCategories))
 		}
 	}

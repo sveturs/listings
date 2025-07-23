@@ -168,11 +168,12 @@ func main() {
 	for _, locale := range []string{"en", "ru", "sr"} {
 		key := cache.BuildCategoriesKey(locale)
 		exists, err := redisCache.Exists(ctx, key)
-		if err != nil {
+		switch {
+		case err != nil:
 			log.Printf("Error checking key %s: %v", key, err)
-		} else if !exists {
+		case !exists:
 			fmt.Printf("   ✓ Key deleted: %s\n", key)
-		} else {
+		default:
 			fmt.Printf("   × Key still exists: %s\n", key)
 		}
 	}
