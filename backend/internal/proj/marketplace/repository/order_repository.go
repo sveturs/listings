@@ -112,7 +112,7 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 		return pkgErrors.Wrap(err, "failed to begin transaction")
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			// Transaction was already committed or rolled back, ignore
 			_ = err // Explicitly ignore error
 		}

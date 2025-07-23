@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 
@@ -962,7 +963,7 @@ func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models
 		&summary.Rating4,
 		&summary.Rating5)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			// Если отзывов нет, возвращаем пустую сводку
 			return summary, nil
 		}
@@ -1024,7 +1025,7 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
 		&summary.Rating4,
 		&summary.Rating5)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			// Если отзывов нет, возвращаем пустую сводку
 			return summary, nil
 		}

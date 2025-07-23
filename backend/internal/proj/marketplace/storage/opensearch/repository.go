@@ -4,6 +4,7 @@ package opensearch
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -649,7 +650,7 @@ func (r *Repository) getAttributeOptionTranslations(attrName, value string) (map
 		&optionValue, &enTranslation, &srTranslation,
 	)
 	if err != nil {
-		if err != pgx.ErrNoRows {
+		if !errors.Is(err, pgx.ErrNoRows) {
 			logger.Info().Msgf("Ошибка получения переводов для атрибута %s, значение %s: %v", attrName, value, err)
 		}
 		return nil, err

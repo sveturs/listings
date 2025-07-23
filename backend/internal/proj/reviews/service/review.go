@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -326,7 +327,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 			&stats.PhotoReviews,
 		)
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			if errors.Is(err, pgx.ErrNoRows) {
 				// Если нет записи в материализованном представлении, возвращаем пустую статистику
 				return stats, nil
 			}
@@ -375,7 +376,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 			&stats.PhotoReviews,
 		)
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return stats, nil
 			}
 			return nil, err

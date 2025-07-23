@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -267,7 +268,7 @@ func (s *SpatialService) UpdateListingAddress(
 
 	// Получаем текущие данные для логирования
 	currentGeo, err := s.getEnhancedListingGeo(ctx, listingID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get current geo data: %w", err)
 	}
 

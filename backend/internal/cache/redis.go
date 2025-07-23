@@ -45,7 +45,7 @@ func NewRedisCache(ctx context.Context, url string, password string, db int, poo
 // Get получает значение из кеша
 func (r *RedisCache) Get(ctx context.Context, key string, dest interface{}) error {
 	val, err := r.client.Get(ctx, key).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return ErrCacheMiss
 	}
 	if err != nil {

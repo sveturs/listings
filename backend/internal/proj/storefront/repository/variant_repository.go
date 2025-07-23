@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -52,7 +53,7 @@ func (r *VariantRepository) CreateVariant(ctx context.Context, req *types.Create
 		return nil, err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			// Transaction was already committed or rolled back, ignore
 			_ = err // Explicitly ignore the error
 		}
@@ -412,7 +413,7 @@ func (r *VariantRepository) SetupProductAttributes(ctx context.Context, req *typ
 		return err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			// Transaction was already committed or rolled back, ignore
 			_ = err // Explicitly ignore the error
 		}

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -184,7 +185,7 @@ func main() {
 		key := cache.BuildCategoriesKey(locale)
 		var temp []Category
 		err = cacheAdapter.Get(ctx, key, &temp)
-		if err == cache.ErrCacheMiss {
+		if errors.Is(err, cache.ErrCacheMiss) {
 			fmt.Printf("   ✓ Key %s successfully deleted\n", key)
 		} else if err != nil {
 			fmt.Printf("   × Error checking key %s: %v\n", key, err)
