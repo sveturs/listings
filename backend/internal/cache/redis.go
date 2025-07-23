@@ -169,7 +169,7 @@ func (r *RedisCache) GetOrSet(ctx context.Context, key string, dest interface{},
 
 	// Асинхронно сохраняем в кеш
 	go func() {
-		if err := r.Set(context.Background(), key, data, ttl); err != nil {
+		if err := r.Set(ctx, key, data, ttl); err != nil {
 			r.logger.WithError(err).WithField("key", key).Warn("Failed to cache value")
 		}
 	}()

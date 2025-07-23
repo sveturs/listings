@@ -54,12 +54,12 @@ func (s *behaviorTrackingService) flushWorker() {
 	for {
 		select {
 		case <-s.flushTicker.C:
-			if err := s.flushBuffer(); err != nil {
+			if err := s.flushBuffer(context.Background()); err != nil {
 				logger.Error().Err(err).Msg("Failed to flush event buffer")
 			}
 		case <-s.ctx.Done():
 			// Сохраняем оставшиеся события перед завершением
-			if err := s.flushBuffer(); err != nil {
+			if err := s.flushBuffer(context.Background()); err != nil {
 				logger.Error().Err(err).Msg("Failed to flush event buffer on shutdown")
 			}
 			return
@@ -68,7 +68,7 @@ func (s *behaviorTrackingService) flushWorker() {
 }
 
 // flushBuffer сохраняет накопленные события в БД
-func (s *behaviorTrackingService) flushBuffer() error {
+func (s *behaviorTrackingService) flushBuffer(ctx context.Context) error {
 	s.bufferMutex.Lock()
 	defer s.bufferMutex.Unlock()
 
@@ -158,7 +158,7 @@ func (s *behaviorTrackingService) TrackEvent(ctx context.Context, userID *int, r
 	if shouldFlush {
 		logger.Info().Msg("Buffer is full, triggering flush")
 		go func() {
-			if err := s.flushBuffer(); err != nil {
+			if err := s.flushBuffer(ctx); err != nil {
 				logger.Error().Err(err).Msg("Failed to flush full buffer")
 			}
 		}()
@@ -237,7 +237,7 @@ func (s *behaviorTrackingService) GetItemMetrics(ctx context.Context, query *beh
 // UpdateSearchMetrics обновляет агрегированные метрики поиска за период
 func (s *behaviorTrackingService) UpdateSearchMetrics(ctx context.Context, periodStart, periodEnd time.Time) error {
 	// Форсируем сохранение буфера перед обновлением метрик
-	if err := s.flushBuffer(); err != nil {
+	if err := s.flushBuffer(ctx); err != nil {
 		logger.Error().Err(err).Msg("Failed to flush buffer before updating metrics")
 	}
 
@@ -309,5 +309,5 @@ func (s *behaviorTrackingService) Close() error {
 	time.Sleep(100 * time.Millisecond)
 
 	// Финальный флаш буфера
-	return s.flushBuffer()
+	return s.flushBuffer(context.Background())
 }
