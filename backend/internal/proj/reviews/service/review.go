@@ -437,15 +437,15 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
         AND status = 'published'
         GROUP BY rating
     `, entityType, entityId)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			// Логирование ошибки закрытия rows
-			_ = err // Explicitly ignore error
+		if err != nil {
+			return nil, err
 		}
-	}()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				// Логирование ошибки закрытия rows
+				_ = err // Explicitly ignore error
+			}
+		}()
 
 		for rows.Next() {
 			var rating, count int
