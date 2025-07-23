@@ -36,7 +36,8 @@ func main() {
 
 	// Проверяем подключение
 	if err := client.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		log.Printf("Failed to connect to Redis: %v", err)
+		return
 	}
 
 	fmt.Println("✓ Connected to Redis!")

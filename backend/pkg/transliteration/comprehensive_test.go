@@ -59,11 +59,12 @@ func TestComprehensiveDigraphHandling(t *testing.T) {
 			expectedLatin := tt.latin
 
 			// Special case: single uppercase digraphs should convert to title case
-			if tt.latin == "LJ" && tt.cyrillic == "Љ" {
+			switch {
+			case tt.latin == "LJ" && tt.cyrillic == "Љ":
 				expectedLatin = "Lj"
-			} else if tt.latin == "NJ" && tt.cyrillic == "Њ" {
+			case tt.latin == "NJ" && tt.cyrillic == "Њ":
 				expectedLatin = "Nj"
-			} else if tt.latin == "DŽ" && tt.cyrillic == "Џ" {
+			case tt.latin == "DŽ" && tt.cyrillic == "Џ":
 				expectedLatin = titleCaseDz
 			}
 

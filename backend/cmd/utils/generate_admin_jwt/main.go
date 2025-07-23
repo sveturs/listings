@@ -48,18 +48,21 @@ func main() {
 	// Получаем профиль пользователя с полем is_admin
 	userProfile, err := db.GetUserProfile(ctx, user.ID)
 	if err != nil {
-		log.Fatal("Failed to get user profile:", err)
+		log.Printf("Failed to get user profile: %v", err)
+		return
 	}
 
 	// Проверяем, что пользователь является администратором
 	if !userProfile.IsAdmin {
-		log.Fatal("User is not an admin")
+		log.Printf("User is not an admin")
+		return
 	}
 
 	// Генерируем JWT токен
 	jwtToken, err := generateJWT(int64(user.ID), user.Email, cfg.JWTSecret, cfg.JWTExpirationHours)
 	if err != nil {
-		log.Fatal("Failed to generate JWT token:", err)
+		log.Printf("Failed to generate JWT token: %v", err)
+		return
 	}
 
 	// Выводим результат

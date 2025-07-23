@@ -163,7 +163,8 @@ func run(cfg *config.Config) error {
 	// Получаем все категории из базы данных
 	flatCategories, err := db.GetCategories(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to get categories: %v", err)
+		return err
 	}
 
 	// Конвертируем категории в упрощенный формат
@@ -177,7 +178,8 @@ func run(cfg *config.Config) error {
 
 	// Записываем категории в YAML файл
 	if err := writeCategoriesFile(yamlFilePath, rootCategories); err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to write categories file: %v", err)
+		return err
 	}
 
 	fmt.Printf("Успешно экспортировано %d категорий в файл %s\n",

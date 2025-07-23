@@ -81,7 +81,8 @@ func main() {
 	// Sign token
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		log.Fatalf("Failed to sign token: %v", err)
+		log.Printf("Failed to sign token: %v", err)
+		return
 	}
 
 	fmt.Printf("\n=== Generated JWT token ===\n")

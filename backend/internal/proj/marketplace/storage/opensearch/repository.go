@@ -954,15 +954,16 @@ func addRangesForAttribute(doc map[string]interface{}, attr models.ListingAttrib
 	case "mileage":
 		doc["mileage_range"] = getMileageRange(int(numVal))
 	case "area":
-		if numVal <= 30 {
+		switch {
+		case numVal <= 30:
 			doc["area_range"] = "do 30 m²"
-		} else if numVal <= 50 {
+		case numVal <= 50:
 			doc["area_range"] = "30-50 m²"
-		} else if numVal <= 80 {
+		case numVal <= 80:
 			doc["area_range"] = "50-80 m²"
-		} else if numVal <= 120 {
+		case numVal <= 120:
 			doc["area_range"] = "80-120 m²"
-		} else {
+		default:
 			doc["area_range"] = "od 120 m²"
 		}
 	}
@@ -2137,7 +2138,8 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			}
 
 			if realEstateAttrs[attrName] {
-				if strings.Contains(attrValue, ",") {
+				switch {
+				case strings.Contains(attrValue, ","):
 					parts := strings.Split(attrValue, ",")
 					if len(parts) == 2 {
 						minVal, minErr := strconv.ParseFloat(parts[0], 64)
@@ -2156,7 +2158,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 								attrName, minVal, maxVal)
 						}
 					}
-				} else if attrName == "property_type" || attrName == "building_type" {
+				case attrName == "property_type" || attrName == "building_type":
 					filter = append(filter, map[string]interface{}{
 						"term": map[string]interface{}{
 							attrName: attrValue,
@@ -2164,7 +2166,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					})
 					logger.Info().Msgf("Added term filter for text real estate attribute %s = %s",
 						attrName, attrValue)
-				} else if attrValue == boolValueTrue || attrValue == "false" {
+				case attrValue == boolValueTrue || attrValue == "false":
 					boolVal := attrValue == boolValueTrue
 					filter = append(filter, map[string]interface{}{
 						"term": map[string]interface{}{
@@ -2173,7 +2175,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					})
 					logger.Info().Msgf("Added boolean filter for real estate attribute %s = %v",
 						attrName, boolVal)
-				} else {
+				default:
 					if numVal, err := strconv.ParseFloat(attrValue, 64); err == nil {
 						filter = append(filter, map[string]interface{}{
 							"term": map[string]interface{}{

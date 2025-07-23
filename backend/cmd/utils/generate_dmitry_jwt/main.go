@@ -56,13 +56,15 @@ func main() {
 	// Генерируем JWT токен
 	jwtToken, err := authService.GenerateJWT(user.ID, user.Email)
 	if err != nil {
-		log.Fatal("Failed to generate JWT token:", err)
+		log.Printf("Failed to generate JWT token: %v", err)
+		return
 	}
 
 	// Генерируем refresh токен
 	refreshToken, _, err := authService.GenerateTokensForOAuth(ctx, user.ID, user.Email, "127.0.0.1", "CLI Tool")
 	if err != nil {
-		log.Fatal("Failed to generate refresh token:", err)
+		log.Printf("Failed to generate refresh token: %v", err)
+		return
 	}
 
 	// Выводим результат

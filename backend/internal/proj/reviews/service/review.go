@@ -619,11 +619,12 @@ func (s *ReviewService) GetUserAggregatedRating(ctx context.Context, userID int)
 	// Определяем тренд
 	if data.RecentRating != nil && data.RecentReviews >= 5 {
 		diff := *data.RecentRating - data.AverageRating
-		if diff > 0.2 {
+		switch {
+		case diff > 0.2:
 			rating.RecentTrend = "up"
-		} else if diff < -0.2 {
+		case diff < -0.2:
 			rating.RecentTrend = "down"
-		} else {
+		default:
 			rating.RecentTrend = trendStable
 		}
 	} else {
@@ -674,11 +675,12 @@ func (s *ReviewService) GetStorefrontAggregatedRating(ctx context.Context, store
 
 	if data.RecentRating != nil && data.RecentReviews >= 5 {
 		diff := *data.RecentRating - data.AverageRating
-		if diff > 0.2 {
+		switch {
+		case diff > 0.2:
 			rating.RecentTrend = "up"
-		} else if diff < -0.2 {
+		case diff < -0.2:
 			rating.RecentTrend = "down"
-		} else {
+		default:
 			rating.RecentTrend = trendStable
 		}
 	} else {

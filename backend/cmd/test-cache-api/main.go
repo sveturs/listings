@@ -72,11 +72,12 @@ func main() {
 		// Проверяем, есть ли уже данные в кеше
 		var cachedCategories []map[string]interface{}
 		err := cacheAdapter.Get(ctx, cacheKey, &cachedCategories)
-		if errors.Is(err, cache.ErrCacheMiss) {
+		switch {
+		case errors.Is(err, cache.ErrCacheMiss):
 			fmt.Println("Status: NOT in cache")
-		} else if err != nil {
+		case err != nil:
 			fmt.Printf("Status: Error checking cache: %v\n", err)
-		} else {
+		default:
 			fmt.Printf("Status: FOUND in cache (%d categories)\n", len(cachedCategories))
 		}
 

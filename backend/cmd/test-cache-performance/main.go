@@ -35,11 +35,12 @@ func main() {
 		fmt.Printf("  Third request:  %v (%d categories)\n", duration3, count3)
 
 		// Если второй и третий запросы значительно быстрее первого, кеш работает
-		if duration2 < duration1/2 && duration3 < duration1/2 {
+		switch {
+		case duration2 < duration1/2 && duration3 < duration1/2:
 			fmt.Println("  ✓ Cache appears to be working!")
-		} else if duration2 < time.Duration(float64(duration1)*0.8) || duration3 < time.Duration(float64(duration1)*0.8) {
+		case duration2 < time.Duration(float64(duration1)*0.8) || duration3 < time.Duration(float64(duration1)*0.8):
 			fmt.Println("  ~ Cache might be working (small improvement)")
-		} else {
+		default:
 			fmt.Println("  ✗ Cache doesn't seem to be working")
 		}
 	}
@@ -64,11 +65,12 @@ func main() {
 	fmt.Printf("Average time per request: %v\n", avgTime)
 	fmt.Printf("Total categories fetched: %d\n", totalCategories)
 
-	if avgTime < 10*time.Millisecond {
+	switch {
+	case avgTime < 10*time.Millisecond:
 		fmt.Println("✓ Excellent performance - cache is definitely working!")
-	} else if avgTime < 50*time.Millisecond {
+	case avgTime < 50*time.Millisecond:
 		fmt.Println("✓ Good performance - cache is likely working")
-	} else {
+	default:
 		fmt.Println("✗ Poor performance - cache might not be working")
 	}
 }

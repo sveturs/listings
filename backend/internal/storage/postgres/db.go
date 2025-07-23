@@ -830,7 +830,8 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 	var viewExists bool
 	var err error
 
-	if userID > 0 {
+	switch {
+	case userID > 0:
 		// Для авторизованных пользователей проверяем по ID
 		err = db.pool.QueryRow(ctx, `
 			SELECT EXISTS (
@@ -838,7 +839,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 				WHERE listing_id = $1 AND user_id = $2
 			)
 		`, id, userID).Scan(&viewExists)
-	} else if userIdentifier != "" {
+	case userIdentifier != "":
 		// Для неавторизованных пользователей проверяем строго по IP-адресу,
 		// убедившись, что user_id IS NULL (чтобы не конфликтовать с ограничением уникальности)
 		err = db.pool.QueryRow(ctx, `
@@ -847,7 +848,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 				WHERE listing_id = $1 AND ip_hash = $2 AND user_id IS NULL
 			)
 		`, id, userIdentifier).Scan(&viewExists)
-	} else {
+	default:
 		// Если нет ни ID пользователя, ни IP - считаем, что просмотр уже был (перестраховка)
 		return nil
 	}

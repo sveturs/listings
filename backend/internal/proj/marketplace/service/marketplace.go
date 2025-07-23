@@ -321,15 +321,16 @@ func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.Marketpla
 	}
 
 	// Добавляем локацию в зависимости от попытки
-	if listing.City != "" && tryNumber < 2 {
+	switch {
+	case listing.City != "" && tryNumber < 2:
 		// Первые 2 попытки - ищем в том же городе
 		params.City = listing.City
 		log.Printf("Попытка %d: поиск в городе %s", tryNumber, listing.City)
-	} else if listing.Country != "" && tryNumber == 2 {
+	case listing.Country != "" && tryNumber == 2:
 		// Третья попытка - ищем в той же стране
 		params.Country = listing.Country
 		log.Printf("Попытка %d: поиск в стране %s", tryNumber, listing.Country)
-	} else {
+	default:
 		// Последняя попытка - без географических ограничений
 		log.Printf("Попытка %d: поиск без географических ограничений", tryNumber)
 	}

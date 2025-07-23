@@ -42,7 +42,8 @@ func main() {
 
 	cols, err := rows.Columns()
 	if err != nil {
-		log.Fatal("Failed to get columns:", err)
+		log.Printf("Failed to get columns: %v", err)
+		return
 	}
 
 	// Print column headers
@@ -65,7 +66,8 @@ func main() {
 	for rows.Next() {
 		err = rows.Scan(scanArgs...)
 		if err != nil {
-			log.Fatal("Failed to scan row:", err)
+			log.Printf("Failed to scan row: %v", err)
+			return
 		}
 
 		for i, value := range values {

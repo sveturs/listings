@@ -186,11 +186,12 @@ func (p *CSVParser) parseCSVRecord(record []string, headerMap map[string]int, li
 	salePriceStr := getField("sale_price")
 	if salePriceStr != "" {
 		salePrice, err := strconv.ParseFloat(salePriceStr, 64)
-		if err != nil {
+		switch {
+		case err != nil:
 			addError("sale_price", fmt.Sprintf("Invalid sale price format: %v", err), salePriceStr)
-		} else if salePrice < 0 {
+		case salePrice < 0:
 			addError("sale_price", "Sale price cannot be negative", salePrice)
-		} else {
+		default:
 			product.SalePrice = &salePrice
 		}
 	}

@@ -70,7 +70,8 @@ func main() {
 		ORDER BY id
 	`)
 	if err != nil {
-		log.Fatalf("Failed to query admin users: %v", err)
+		log.Printf("Failed to query admin users: %v", err)
+		return
 	}
 	defer rows.Close()
 
@@ -99,7 +100,8 @@ func main() {
 	// Generate JWT for the first admin
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		log.Fatal("JWT_SECRET is not set")
+		log.Printf("JWT_SECRET is not set")
+		return
 	}
 
 	// Create claims for admin user
@@ -118,7 +120,8 @@ func main() {
 	// Sign token
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		log.Fatalf("Failed to sign token: %v", err)
+		log.Printf("Failed to sign token: %v", err)
+		return
 	}
 
 	fmt.Printf("\n=== Generated JWT token for admin user (ID: %d) ===\n", claims.ID)

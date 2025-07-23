@@ -319,11 +319,12 @@ func (h *SpatialHandler) UpdateListingAddress(c *fiber.Ctx) error {
 	)
 	if err != nil {
 		// Разные типы ошибок
-		if errors.Is(err, types.ErrListingNotFound) {
+		switch {
+		case errors.Is(err, types.ErrListingNotFound):
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "gis.listingNotFound")
-		} else if errors.Is(err, types.ErrAccessDenied) {
+		case errors.Is(err, types.ErrAccessDenied):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "gis.accessDenied")
-		} else {
+		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "gis.updateError")
 		}
 	}

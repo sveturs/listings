@@ -584,11 +584,12 @@ func (s *OrderService) UpdateCartItemQuantity(ctx context.Context, itemID int, s
 	var cart *models.ShoppingCart
 	var err error
 
-	if userID != nil {
+	switch {
+	case userID != nil:
 		cart, err = s.cartRepo.GetByUser(ctx, *userID, storefrontID)
-	} else if sessionID != nil {
+	case sessionID != nil:
 		cart, err = s.cartRepo.GetBySession(ctx, *sessionID, storefrontID)
-	} else {
+	default:
 		return nil, fmt.Errorf("either user_id or session_id must be provided")
 	}
 

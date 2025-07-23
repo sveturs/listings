@@ -190,7 +190,8 @@ func (r *behaviorTrackingRepository) GetSearchMetrics(ctx context.Context, query
 	// Метрика пересекается с запрашиваемым периодом если:
 	// - period_start метрики <= period_end запроса
 	// - period_end метрики >= period_start запроса
-	if !query.PeriodStart.IsZero() && !query.PeriodEnd.IsZero() {
+	switch {
+	case !query.PeriodStart.IsZero() && !query.PeriodEnd.IsZero():
 		argCount++
 		conditions = append(conditions, fmt.Sprintf("period_start <= $%d", argCount))
 		args = append(args, query.PeriodEnd)
@@ -198,11 +199,11 @@ func (r *behaviorTrackingRepository) GetSearchMetrics(ctx context.Context, query
 		argCount++
 		conditions = append(conditions, fmt.Sprintf("period_end >= $%d", argCount))
 		args = append(args, query.PeriodStart)
-	} else if !query.PeriodStart.IsZero() {
+	case !query.PeriodStart.IsZero():
 		argCount++
 		conditions = append(conditions, fmt.Sprintf("period_end >= $%d", argCount))
 		args = append(args, query.PeriodStart)
-	} else if !query.PeriodEnd.IsZero() {
+	case !query.PeriodEnd.IsZero():
 		argCount++
 		conditions = append(conditions, fmt.Sprintf("period_start <= $%d", argCount))
 		args = append(args, query.PeriodEnd)

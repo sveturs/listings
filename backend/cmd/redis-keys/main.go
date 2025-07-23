@@ -42,7 +42,8 @@ func main() {
 	for {
 		keys, nextCursor, err := client.Scan(ctx, cursor, "*", 100).Result()
 		if err != nil {
-			log.Fatalf("Error scanning keys: %v", err)
+			log.Printf("Error scanning keys: %v", err)
+			return
 		}
 
 		allKeys = append(allKeys, keys...)

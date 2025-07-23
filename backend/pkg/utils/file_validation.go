@@ -142,16 +142,17 @@ func ValidateFileName(filename string) (string, error) {
 func GetFileTypeFromMIME(contentType string) string {
 	contentType = strings.ToLower(contentType)
 
-	if strings.HasPrefix(contentType, "image/") {
+	switch {
+	case strings.HasPrefix(contentType, "image/"):
 		return "image"
-	} else if strings.HasPrefix(contentType, "video/") {
+	case strings.HasPrefix(contentType, "video/"):
 		return "video"
-	} else if strings.HasPrefix(contentType, "application/pdf") ||
+	case strings.HasPrefix(contentType, "application/pdf") ||
 		strings.HasPrefix(contentType, "application/msword") ||
 		strings.HasPrefix(contentType, "application/vnd.") ||
-		strings.HasPrefix(contentType, "text/") {
+		strings.HasPrefix(contentType, "text/"):
 		return "document"
+	default:
+		return "unknown"
 	}
-
-	return "unknown"
 }
