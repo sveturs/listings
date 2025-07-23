@@ -27,6 +27,8 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
+var ErrNotImplemented = errors.New("not implemented in mock")
+
 type CategoryIntegrationTestSuite struct {
 	suite.Suite
 	ctx          context.Context
@@ -684,7 +686,7 @@ func (ts *testStorage) UpdateUserProfile(ctx context.Context, id int, update *mo
 }
 func (ts *testStorage) UpdateLastSeen(ctx context.Context, id int) error { return nil }
 func (ts *testStorage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
@@ -704,7 +706,7 @@ func (ts *testStorage) GetRefreshTokenByID(ctx context.Context, id int) (*models
 }
 
 func (ts *testStorage) GetUserRefreshTokens(ctx context.Context, userID int) ([]*models.RefreshToken, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) UpdateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
@@ -730,12 +732,12 @@ func (ts *testStorage) IsUserAdmin(ctx context.Context, email string) (bool, err
 }
 
 func (ts *testStorage) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) AddAdmin(ctx context.Context, admin *models.AdminUser) error { return nil }
 func (ts *testStorage) RemoveAdmin(ctx context.Context, email string) error         { return nil }
 func (ts *testStorage) CreateReview(ctx context.Context, review *models.Review) (*models.Review, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error) {
@@ -743,7 +745,7 @@ func (ts *testStorage) GetReviews(ctx context.Context, filter models.ReviewsFilt
 }
 
 func (ts *testStorage) GetReviewByID(ctx context.Context, id int) (*models.Review, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) UpdateReview(ctx context.Context, review *models.Review) error { return nil }
 func (ts *testStorage) UpdateReviewStatus(ctx context.Context, reviewId int, status string) error {
@@ -767,23 +769,23 @@ func (ts *testStorage) GetEntityRating(ctx context.Context, entityType string, e
 }
 
 func (ts *testStorage) GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetNotificationSettings(ctx context.Context, userID int) ([]models.NotificationSettings, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) UpdateNotificationSettings(ctx context.Context, settings *models.NotificationSettings) error {
@@ -795,7 +797,7 @@ func (ts *testStorage) SaveTelegramConnection(ctx context.Context, userID int, c
 }
 
 func (ts *testStorage) GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) DeleteTelegramConnection(ctx context.Context, userID int) error { return nil }
 func (ts *testStorage) CreateNotification(ctx context.Context, notification *models.Notification) error {
@@ -803,7 +805,7 @@ func (ts *testStorage) CreateNotification(ctx context.Context, notification *mod
 }
 
 func (ts *testStorage) GetUserNotifications(ctx context.Context, userID int, limit, offset int) ([]models.Notification, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) MarkNotificationAsRead(ctx context.Context, userID int, notificationID int) error {
@@ -823,7 +825,7 @@ func (ts *testStorage) GetListings(ctx context.Context, filters map[string]strin
 }
 
 func (ts *testStorage) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) IncrementViewsCount(ctx context.Context, id int) error { return nil }
 func (ts *testStorage) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
@@ -831,7 +833,7 @@ func (ts *testStorage) UpdateListing(ctx context.Context, listing *models.Market
 }
 func (ts *testStorage) DeleteListing(ctx context.Context, id int, userID int) error { return nil }
 func (ts *testStorage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
@@ -839,27 +841,27 @@ func (ts *testStorage) AddListingImage(ctx context.Context, image *models.Market
 }
 
 func (ts *testStorage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) FileStorage() filestorage.FileStorageInterface { return nil }
 func (ts *testStorage) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) DeleteListingImage(ctx context.Context, imageID int) error { return nil }
 func (ts *testStorage) GetAttributeOptionTranslations(ctx context.Context, attributeName, optionValue string) (map[string]string, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) AddToFavorites(ctx context.Context, userID int, listingID int) error {
@@ -871,11 +873,11 @@ func (ts *testStorage) RemoveFromFavorites(ctx context.Context, userID int, list
 }
 
 func (ts *testStorage) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) AddPriceHistoryEntry(ctx context.Context, entry *models.PriceHistoryEntry) error {
@@ -891,15 +893,15 @@ func (ts *testStorage) SaveListingAttributes(ctx context.Context, listingID int,
 }
 
 func (ts *testStorage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) SynchronizeDiscountMetadata(ctx context.Context) error { return nil }
 func (ts *testStorage) GetUserBalance(ctx context.Context, userID int) (*models.UserBalance, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetUserTransactions(ctx context.Context, userID int, limit, offset int) ([]models.BalanceTransaction, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) CreateTransaction(ctx context.Context, transaction *models.BalanceTransaction) (int, error) {
@@ -907,7 +909,7 @@ func (ts *testStorage) CreateTransaction(ctx context.Context, transaction *model
 }
 
 func (ts *testStorage) GetActivePaymentMethods(ctx context.Context) ([]models.PaymentMethod, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) UpdateBalance(ctx context.Context, userID int, amount float64) error {
@@ -919,15 +921,15 @@ func (ts *testStorage) CreateMessage(ctx context.Context, msg *models.Marketplac
 }
 
 func (ts *testStorage) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetChat(ctx context.Context, chatID int, userID int) (*models.MarketplaceChat, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
@@ -943,11 +945,11 @@ func (ts *testStorage) CreateChatAttachment(ctx context.Context, attachment *mod
 }
 
 func (ts *testStorage) GetChatAttachment(ctx context.Context, attachmentID int) (*models.ChatAttachment, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetMessageAttachments(ctx context.Context, messageID int) ([]*models.ChatAttachment, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) DeleteChatAttachment(ctx context.Context, attachmentID int) error { return nil }
 func (ts *testStorage) UpdateMessageAttachmentsCount(ctx context.Context, messageID int, count int) error {
@@ -955,19 +957,19 @@ func (ts *testStorage) UpdateMessageAttachmentsCount(ctx context.Context, messag
 }
 
 func (ts *testStorage) GetMessageByID(ctx context.Context, messageID int) (*models.MarketplaceMessage, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetChatActivityStats(ctx context.Context, buyerID int, sellerID int, listingID int) (*models.ChatActivityStats, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetUserAggregatedRating(ctx context.Context, userID int) (*models.UserAggregatedRating, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetStorefrontAggregatedRating(ctx context.Context, storefrontID int) (*models.StorefrontAggregatedRating, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) RefreshRatingViews(ctx context.Context) error { return nil }
 func (ts *testStorage) CreateReviewConfirmation(ctx context.Context, confirmation *models.ReviewConfirmation) error {
@@ -975,7 +977,7 @@ func (ts *testStorage) CreateReviewConfirmation(ctx context.Context, confirmatio
 }
 
 func (ts *testStorage) GetReviewConfirmation(ctx context.Context, reviewID int) (*models.ReviewConfirmation, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) CreateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error {
@@ -983,7 +985,7 @@ func (ts *testStorage) CreateReviewDispute(ctx context.Context, dispute *models.
 }
 
 func (ts *testStorage) GetReviewDispute(ctx context.Context, reviewID int) (*models.ReviewDispute, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) UpdateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error {
@@ -991,19 +993,19 @@ func (ts *testStorage) UpdateReviewDispute(ctx context.Context, dispute *models.
 }
 
 func (ts *testStorage) CanUserReviewEntity(ctx context.Context, userID int, entityType string, entityID int) (*models.CanReviewResponse, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetUserStorefronts(ctx context.Context, userID int) ([]models.Storefront, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) UpdateStorefront(ctx context.Context, storefront *models.Storefront) error {
@@ -1017,15 +1019,15 @@ func (ts *testStorage) Inventory() interface{}                             { ret
 func (ts *testStorage) MarketplaceOrder() interface{}                      { return nil }
 func (ts *testStorage) StorefrontProductSearch() interface{}               { return nil }
 func (ts *testStorage) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) ReindexAllListings(ctx context.Context) error { return nil }
 func (ts *testStorage) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
@@ -1034,7 +1036,7 @@ func (ts *testStorage) IndexListing(ctx context.Context, listing *models.Marketp
 func (ts *testStorage) DeleteListingIndex(ctx context.Context, id string) error { return nil }
 func (ts *testStorage) PrepareIndex(ctx context.Context) error                  { return nil }
 func (ts *testStorage) SearchStorefrontsOpenSearch(ctx context.Context, params *opensearch.StorefrontSearchParams) (*opensearch.StorefrontSearchResult, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) IndexStorefront(ctx context.Context, storefront *models.Storefront) error {
@@ -1043,7 +1045,7 @@ func (ts *testStorage) IndexStorefront(ctx context.Context, storefront *models.S
 func (ts *testStorage) DeleteStorefrontIndex(ctx context.Context, storefrontID int) error { return nil }
 func (ts *testStorage) ReindexAllStorefronts(ctx context.Context) error                   { return nil }
 func (ts *testStorage) GetTranslationsForEntity(ctx context.Context, entityType string, entityID int) ([]models.Translation, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) AddContact(ctx context.Context, contact *models.UserContact) error { return nil }
 func (ts *testStorage) UpdateContactStatus(ctx context.Context, userID, contactUserID int, status, notes string) error {
@@ -1051,7 +1053,7 @@ func (ts *testStorage) UpdateContactStatus(ctx context.Context, userID, contactU
 }
 
 func (ts *testStorage) GetContact(ctx context.Context, userID, contactUserID int) (*models.UserContact, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetUserContacts(ctx context.Context, userID int, status string, page, limit int) ([]models.UserContact, int, error) {
@@ -1063,7 +1065,7 @@ func (ts *testStorage) RemoveContact(ctx context.Context, userID, contactUserID 
 }
 
 func (ts *testStorage) GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
@@ -1083,11 +1085,11 @@ func (ts *testStorage) SearchCategoriesFuzzy(ctx context.Context, searchTerm str
 }
 
 func (ts *testStorage) SearchCategories(ctx context.Context, query string, limit int) ([]models.MarketplaceCategory, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) GetPopularSearchQueries(ctx context.Context, query string, limit int) ([]interface{}, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (ts *testStorage) SaveSearchQuery(ctx context.Context, query, normalized string, resultsCount int, language string) error {
@@ -1095,7 +1097,7 @@ func (ts *testStorage) SaveSearchQuery(ctx context.Context, query, normalized st
 }
 
 func (ts *testStorage) SearchListingsAdvanced(ctx context.Context, params interface{}) (interface{}, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (ts *testStorage) Close()                         {}
 func (ts *testStorage) Ping(ctx context.Context) error { return nil }
@@ -1153,7 +1155,7 @@ func (d *dummyTranslationService) TranslateToAllLanguages(ctx context.Context, t
 }
 
 func (d *dummyTranslationService) TranslateEntityFields(ctx context.Context, sourceLanguage string, targetLanguages []string, fields map[string]string) (map[string]map[string]string, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (d *dummyTranslationService) TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error) {
@@ -1235,7 +1237,7 @@ func (m *mockTranslationService) TranslateToAllLanguages(ctx context.Context, te
 }
 
 func (m *mockTranslationService) TranslateEntityFields(ctx context.Context, sourceLanguage string, targetLanguages []string, fields map[string]string) (map[string]map[string]string, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *mockTranslationService) TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error) {

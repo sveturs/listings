@@ -18,8 +18,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// ErrMockMethodNotImplemented возвращается когда метод мока не реализован
-var ErrMockMethodNotImplemented = errors.New("mock method not implemented")
+var ErrNotImplemented = errors.New("not implemented in mock")
 
 // MockStorage для тестирования
 type MockStorage struct {
@@ -60,23 +59,23 @@ func (m *MockStorage) AddAdmin(ctx context.Context, admin *models.AdminUser) err
 
 // Все остальные методы интерфейса Storage (заглушки)
 func (m *MockStorage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return nil, ErrMockMethodNotImplemented
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
-	return nil, ErrMockMethodNotImplemented
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetUserByID(ctx context.Context, id int) (*models.User, error) {
-	return nil, ErrMockMethodNotImplemented
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return nil, ErrMockMethodNotImplemented
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) UpdateUser(ctx context.Context, user *models.User) error { return nil }
 func (m *MockStorage) GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error) {
-	return nil, ErrMockMethodNotImplemented
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error {
@@ -84,11 +83,11 @@ func (m *MockStorage) UpdateUserProfile(ctx context.Context, id int, update *mod
 }
 func (m *MockStorage) UpdateLastSeen(ctx context.Context, id int) error { return nil }
 func (m *MockStorage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) CreateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
@@ -96,15 +95,15 @@ func (m *MockStorage) CreateRefreshToken(ctx context.Context, token *models.Refr
 }
 
 func (m *MockStorage) GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetRefreshTokenByID(ctx context.Context, id int) (*models.RefreshToken, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetUserRefreshTokens(ctx context.Context, userID int) ([]*models.RefreshToken, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) UpdateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
@@ -126,10 +125,10 @@ func (m *MockStorage) GetAllUsers(ctx context.Context, limit, offset int) ([]*mo
 func (m *MockStorage) UpdateUserStatus(ctx context.Context, id int, status string) error { return nil }
 func (m *MockStorage) DeleteUser(ctx context.Context, id int) error                      { return nil }
 func (m *MockStorage) IsUserAdmin(ctx context.Context, email string) (bool, error)       { return false, nil }
-func (m *MockStorage) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error)     { return nil, nil }
+func (m *MockStorage) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error)     { return nil, ErrNotImplemented }
 func (m *MockStorage) RemoveAdmin(ctx context.Context, email string) error               { return nil }
 func (m *MockStorage) CreateReview(ctx context.Context, review *models.Review) (*models.Review, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error) {
@@ -137,7 +136,7 @@ func (m *MockStorage) GetReviews(ctx context.Context, filter models.ReviewsFilte
 }
 
 func (m *MockStorage) GetReviewByID(ctx context.Context, id int) (*models.Review, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) UpdateReview(ctx context.Context, review *models.Review) error { return nil }
 func (m *MockStorage) UpdateReviewStatus(ctx context.Context, reviewId int, status string) error {
@@ -165,27 +164,27 @@ func (m *MockStorage) QueryRow(ctx context.Context, sql string, args ...interfac
 }
 
 func (m *MockStorage) Query(ctx context.Context, sql string, args ...interface{}) (storage.Rows, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetUserReviews(ctx context.Context, userID int, filter models.ReviewsFilter) ([]models.Review, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetStorefrontReviews(ctx context.Context, storefrontID int, filter models.ReviewsFilter) ([]models.Review, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetUserRatingSummary(ctx context.Context, userID int) (*models.UserRatingSummary, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetStorefrontRatingSummary(ctx context.Context, storefrontID int) (*models.StorefrontRatingSummary, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetNotificationSettings(ctx context.Context, userID int) ([]models.NotificationSettings, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) UpdateNotificationSettings(ctx context.Context, settings *models.NotificationSettings) error {
@@ -197,7 +196,7 @@ func (m *MockStorage) SaveTelegramConnection(ctx context.Context, userID int, ch
 }
 
 func (m *MockStorage) GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) DeleteTelegramConnection(ctx context.Context, userID int) error { return nil }
 func (m *MockStorage) CreateNotification(ctx context.Context, notification *models.Notification) error {
@@ -205,7 +204,7 @@ func (m *MockStorage) CreateNotification(ctx context.Context, notification *mode
 }
 
 func (m *MockStorage) GetUserNotifications(ctx context.Context, userID int, limit, offset int) ([]models.Notification, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) MarkNotificationAsRead(ctx context.Context, userID int, notificationID int) error {
@@ -229,7 +228,7 @@ func (m *MockStorage) UpdateListing(ctx context.Context, listing *models.Marketp
 }
 func (m *MockStorage) DeleteListing(ctx context.Context, id int, userID int) error { return nil }
 func (m *MockStorage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
@@ -237,35 +236,35 @@ func (m *MockStorage) AddListingImage(ctx context.Context, image *models.Marketp
 }
 
 func (m *MockStorage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) FileStorage() filestorage.FileStorageInterface { return nil }
 func (m *MockStorage) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) DeleteListingImage(ctx context.Context, imageID int) error { return nil }
 func (m *MockStorage) GetAttributeOptionTranslations(ctx context.Context, attributeName, optionValue string) (map[string]string, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) AddToFavorites(ctx context.Context, userID int, listingID int) error {
@@ -277,11 +276,11 @@ func (m *MockStorage) RemoveFromFavorites(ctx context.Context, userID int, listi
 }
 
 func (m *MockStorage) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) AddPriceHistoryEntry(ctx context.Context, entry *models.PriceHistoryEntry) error {
@@ -297,15 +296,15 @@ func (m *MockStorage) SaveListingAttributes(ctx context.Context, listingID int, 
 }
 
 func (m *MockStorage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) SynchronizeDiscountMetadata(ctx context.Context) error { return nil }
 func (m *MockStorage) GetUserBalance(ctx context.Context, userID int) (*models.UserBalance, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetUserTransactions(ctx context.Context, userID int, limit, offset int) ([]models.BalanceTransaction, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) CreateTransaction(ctx context.Context, transaction *models.BalanceTransaction) (int, error) {
@@ -313,7 +312,7 @@ func (m *MockStorage) CreateTransaction(ctx context.Context, transaction *models
 }
 
 func (m *MockStorage) GetActivePaymentMethods(ctx context.Context) ([]models.PaymentMethod, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) UpdateBalance(ctx context.Context, userID int, amount float64) error {
@@ -321,7 +320,7 @@ func (m *MockStorage) UpdateBalance(ctx context.Context, userID int, amount floa
 }
 
 func (m *MockStorage) BeginTx(ctx context.Context, opts *sql.TxOptions) (storage.Transaction, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
@@ -329,15 +328,15 @@ func (m *MockStorage) CreateMessage(ctx context.Context, msg *models.Marketplace
 }
 
 func (m *MockStorage) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetChat(ctx context.Context, chatID int, userID int) (*models.MarketplaceChat, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
@@ -353,11 +352,11 @@ func (m *MockStorage) CreateChatAttachment(ctx context.Context, attachment *mode
 }
 
 func (m *MockStorage) GetChatAttachment(ctx context.Context, attachmentID int) (*models.ChatAttachment, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetMessageAttachments(ctx context.Context, messageID int) ([]*models.ChatAttachment, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) DeleteChatAttachment(ctx context.Context, attachmentID int) error { return nil }
 func (m *MockStorage) UpdateMessageAttachmentsCount(ctx context.Context, messageID int, count int) error {
@@ -365,19 +364,19 @@ func (m *MockStorage) UpdateMessageAttachmentsCount(ctx context.Context, message
 }
 
 func (m *MockStorage) GetMessageByID(ctx context.Context, messageID int) (*models.MarketplaceMessage, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetChatActivityStats(ctx context.Context, buyerID int, sellerID int, listingID int) (*models.ChatActivityStats, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetUserAggregatedRating(ctx context.Context, userID int) (*models.UserAggregatedRating, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetStorefrontAggregatedRating(ctx context.Context, storefrontID int) (*models.StorefrontAggregatedRating, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) RefreshRatingViews(ctx context.Context) error { return nil }
 func (m *MockStorage) CreateReviewConfirmation(ctx context.Context, confirmation *models.ReviewConfirmation) error {
@@ -385,7 +384,7 @@ func (m *MockStorage) CreateReviewConfirmation(ctx context.Context, confirmation
 }
 
 func (m *MockStorage) GetReviewConfirmation(ctx context.Context, reviewID int) (*models.ReviewConfirmation, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) CreateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error {
@@ -393,7 +392,7 @@ func (m *MockStorage) CreateReviewDispute(ctx context.Context, dispute *models.R
 }
 
 func (m *MockStorage) GetReviewDispute(ctx context.Context, reviewID int) (*models.ReviewDispute, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) UpdateReviewDispute(ctx context.Context, dispute *models.ReviewDispute) error {
@@ -401,23 +400,23 @@ func (m *MockStorage) UpdateReviewDispute(ctx context.Context, dispute *models.R
 }
 
 func (m *MockStorage) CanUserReviewEntity(ctx context.Context, userID int, entityType string, entityID int) (*models.CanReviewResponse, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetUserStorefronts(ctx context.Context, userID int) ([]models.Storefront, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) UpdateStorefront(ctx context.Context, storefront *models.Storefront) error {
@@ -444,7 +443,7 @@ func (m *MockStorage) SearchListingsOpenSearch(ctx context.Context, params *sear
 }
 
 func (m *MockStorage) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) ReindexAllListings(ctx context.Context) error { return nil }
 func (m *MockStorage) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
@@ -453,7 +452,7 @@ func (m *MockStorage) IndexListing(ctx context.Context, listing *models.Marketpl
 func (m *MockStorage) DeleteListingIndex(ctx context.Context, id string) error { return nil }
 func (m *MockStorage) PrepareIndex(ctx context.Context) error                  { return nil }
 func (m *MockStorage) SearchStorefrontsOpenSearch(ctx context.Context, params *opensearch.StorefrontSearchParams) (*opensearch.StorefrontSearchResult, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) IndexStorefront(ctx context.Context, storefront *models.Storefront) error {
@@ -462,7 +461,7 @@ func (m *MockStorage) IndexStorefront(ctx context.Context, storefront *models.St
 func (m *MockStorage) DeleteStorefrontIndex(ctx context.Context, storefrontID int) error { return nil }
 func (m *MockStorage) ReindexAllStorefronts(ctx context.Context) error                   { return nil }
 func (m *MockStorage) GetTranslationsForEntity(ctx context.Context, entityType string, entityID int) ([]models.Translation, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 func (m *MockStorage) AddContact(ctx context.Context, contact *models.UserContact) error { return nil }
 func (m *MockStorage) UpdateContactStatus(ctx context.Context, userID, contactUserID int, status, notes string) error {
@@ -470,7 +469,7 @@ func (m *MockStorage) UpdateContactStatus(ctx context.Context, userID, contactUs
 }
 
 func (m *MockStorage) GetContact(ctx context.Context, userID, contactUserID int) (*models.UserContact, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) GetUserContacts(ctx context.Context, userID int, status string, page, limit int) ([]models.UserContact, int, error) {
@@ -478,7 +477,7 @@ func (m *MockStorage) GetUserContacts(ctx context.Context, userID int, status st
 }
 func (m *MockStorage) RemoveContact(ctx context.Context, userID, contactUserID int) error { return nil }
 func (m *MockStorage) GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (m *MockStorage) UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
