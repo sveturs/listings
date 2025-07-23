@@ -94,8 +94,8 @@ func makeRequest(locale string, label string) (time.Duration, int) {
 		return 0, 0
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Failed to close response body: %v", err)
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
 		}
 	}()
 
