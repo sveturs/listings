@@ -201,7 +201,7 @@ func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search
 
 // GetOpenSearchClient возвращает клиент OpenSearch для прямого выполнения запросов
 func (db *Database) GetOpenSearchClient() (interface {
-	Execute(method, path string, body []byte) ([]byte, error)
+	Execute(ctx context.Context, method, path string, body []byte) ([]byte, error)
 }, error,
 ) {
 	if db.osClient == nil {

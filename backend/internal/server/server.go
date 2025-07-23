@@ -165,7 +165,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	notificationsHandler.ConnectTelegramWebhook()
 	server.setupMiddleware()
-	server.setupRoutes()
+	server.setupRoutes() //nolint:contextcheck
 
 	return server, nil
 }

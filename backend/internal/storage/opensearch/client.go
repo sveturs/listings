@@ -39,8 +39,8 @@ func NewOpenSearchClient(config Config) (*OpenSearchClient, error) {
 }
 
 // CreateIndex создает индекс с указанной схемой
-func (c *OpenSearchClient) CreateIndex(indexName string, mapping string) error {
-	exists, err := c.IndexExists(indexName)
+func (c *OpenSearchClient) CreateIndex(ctx context.Context, indexName string, mapping string) error {
+	exists, err := c.IndexExists(ctx, indexName)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (c *OpenSearchClient) CreateIndex(indexName string, mapping string) error {
 		Body:  strings.NewReader(mapping),
 	}
 
-	res, err := createIndex.Do(context.Background(), c.client)
+	res, err := createIndex.Do(ctx, c.client)
 	if err != nil {
 		return fmt.Errorf("ошибка создания индекса: %w", err)
 	}
@@ -72,12 +72,12 @@ func (c *OpenSearchClient) CreateIndex(indexName string, mapping string) error {
 }
 
 // IndexExists проверяет существование индекса
-func (c *OpenSearchClient) IndexExists(indexName string) (bool, error) {
+func (c *OpenSearchClient) IndexExists(ctx context.Context, indexName string) (bool, error) {
 	exists := opensearchapi.IndicesExistsRequest{
 		Index: []string{indexName},
 	}
 
-	res, err := exists.Do(context.Background(), c.client)
+	res, err := exists.Do(ctx, c.client)
 	if err != nil {
 		return false, fmt.Errorf("ошибка проверки индекса: %w", err)
 	}
@@ -86,7 +86,7 @@ func (c *OpenSearchClient) IndexExists(indexName string) (bool, error) {
 }
 
 // IndexDocument индексирует документ
-func (c *OpenSearchClient) IndexDocument(indexName, id string, document interface{}) error {
+func (c *OpenSearchClient) IndexDocument(ctx context.Context, indexName, id string, document interface{}) error {
 	docBytes, err := json.Marshal(document)
 	if err != nil {
 		return fmt.Errorf("ошибка сериализации документа: %w", err)
@@ -98,7 +98,7 @@ func (c *OpenSearchClient) IndexDocument(indexName, id string, document interfac
 		Body:       strings.NewReader(string(docBytes)),
 	}
 
-	res, err := req.Do(context.Background(), c.client)
+	res, err := req.Do(ctx, c.client)
 	if err != nil {
 		return fmt.Errorf("ошибка индексации документа: %w", err)
 	}
@@ -116,7 +116,7 @@ func (c *OpenSearchClient) IndexDocument(indexName, id string, document interfac
 }
 
 // BulkIndex индексирует несколько документов за один запрос
-func (c *OpenSearchClient) BulkIndex(indexName string, documents []map[string]interface{}) error {
+func (c *OpenSearchClient) BulkIndex(ctx context.Context, indexName string, documents []map[string]interface{}) error {
 	if len(documents) == 0 {
 		return nil
 	}
@@ -169,7 +169,7 @@ func (c *OpenSearchClient) BulkIndex(indexName string, documents []map[string]in
 		Body: strings.NewReader(bulkBody.String()),
 	}
 
-	res, err := req.Do(context.Background(), c.client)
+	res, err := req.Do(ctx, c.client)
 	if err != nil {
 		return fmt.Errorf("ошибка bulk индексации: %w", err)
 	}
@@ -187,13 +187,13 @@ func (c *OpenSearchClient) BulkIndex(indexName string, documents []map[string]in
 }
 
 // DeleteDocument удаляет документ из индекса
-func (c *OpenSearchClient) DeleteDocument(indexName, id string) error {
+func (c *OpenSearchClient) DeleteDocument(ctx context.Context, indexName, id string) error {
 	req := opensearchapi.DeleteRequest{
 		Index:      indexName,
 		DocumentID: id,
 	}
 
-	res, err := req.Do(context.Background(), c.client)
+	res, err := req.Do(ctx, c.client)
 	if err != nil {
 		return fmt.Errorf("ошибка удаления документа: %w", err)
 	}
@@ -211,7 +211,7 @@ func (c *OpenSearchClient) DeleteDocument(indexName, id string) error {
 }
 
 // Search выполняет поиск по индексу
-func (c *OpenSearchClient) Search(indexName string, query map[string]interface{}) ([]byte, error) {
+func (c *OpenSearchClient) Search(ctx context.Context, indexName string, query map[string]interface{}) ([]byte, error) {
 	queryJSON, err := json.Marshal(query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка сериализации запроса: %w", err)
@@ -222,7 +222,7 @@ func (c *OpenSearchClient) Search(indexName string, query map[string]interface{}
 		Body:  strings.NewReader(string(queryJSON)),
 	}
 
-	res, err := req.Do(context.Background(), c.client)
+	res, err := req.Do(ctx, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
 	}
@@ -246,7 +246,7 @@ func (c *OpenSearchClient) Search(indexName string, query map[string]interface{}
 }
 
 // Suggest выполняет запрос на автодополнение
-func (c *OpenSearchClient) Suggest(indexName, field, prefix string, size int) ([]byte, error) {
+func (c *OpenSearchClient) Suggest(ctx context.Context, indexName, field, prefix string, size int) ([]byte, error) {
 	suggestQuery := map[string]interface{}{
 		"suggest": map[string]interface{}{
 			"completion": map[string]interface{}{
@@ -259,11 +259,11 @@ func (c *OpenSearchClient) Suggest(indexName, field, prefix string, size int) ([
 		},
 	}
 
-	return c.Search(indexName, suggestQuery)
+	return c.Search(ctx, indexName, suggestQuery)
 }
 
 // Execute выполняет прямой запрос к OpenSearch с указанным методом, путём и телом запроса
-func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, error) {
+func (c *OpenSearchClient) Execute(ctx context.Context, method, path string, body []byte) ([]byte, error) {
 	var bodyReader strings.Reader
 	if body != nil {
 		bodyReader = *strings.NewReader(string(body))
@@ -281,7 +281,7 @@ func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, er
 			Index: []string{path},
 			Body:  &bodyReader,
 		}
-		resp, err = req.Do(context.Background(), c.client)
+		resp, err = req.Do(ctx, c.client)
 	case "POST":
 		// Проверяем, содержит ли путь "_search" - если да, то это запрос поиска
 		if strings.Contains(path, "_search") {
@@ -291,7 +291,7 @@ func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, er
 				Index: []string{index},
 				Body:  &bodyReader,
 			}
-			resp, err = req.Do(context.Background(), c.client)
+			resp, err = req.Do(ctx, c.client)
 		} else {
 			// Обычный запрос индексации
 			req := opensearchapi.IndexRequest{
@@ -299,7 +299,7 @@ func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, er
 				DocumentID: "",
 				Body:       &bodyReader,
 			}
-			resp, err = req.Do(context.Background(), c.client)
+			resp, err = req.Do(ctx, c.client)
 		}
 	case "PUT":
 		req := opensearchapi.IndexRequest{
@@ -307,13 +307,13 @@ func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, er
 			DocumentID: "",
 			Body:       &bodyReader,
 		}
-		resp, err = req.Do(context.Background(), c.client)
+		resp, err = req.Do(ctx, c.client)
 	case "DELETE":
 		req := opensearchapi.DeleteRequest{
 			Index:      path,
 			DocumentID: "",
 		}
-		resp, err = req.Do(context.Background(), c.client)
+		resp, err = req.Do(ctx, c.client)
 	default:
 		return nil, fmt.Errorf("неподдерживаемый метод HTTP: %s", method)
 	}
@@ -341,12 +341,12 @@ func (c *OpenSearchClient) Execute(method, path string, body []byte) ([]byte, er
 	return result, nil
 }
 
-func (c *OpenSearchClient) DeleteIndex(indexName string) error {
+func (c *OpenSearchClient) DeleteIndex(ctx context.Context, indexName string) error {
 	req := opensearchapi.IndicesDeleteRequest{
 		Index: []string{indexName},
 	}
 
-	res, err := req.Do(context.Background(), c.client)
+	res, err := req.Do(ctx, c.client)
 	if err != nil {
 		return fmt.Errorf("ошибка удаления индекса: %w", err)
 	}
