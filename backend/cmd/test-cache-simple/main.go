@@ -46,7 +46,6 @@ func main() {
 
 	// Создаем адаптер
 	cacheAdapter := cache.NewAdapter(redisCache)
-	ctx := context.Background()
 
 	// 1. Тест базовых операций
 	fmt.Println("\n1. Testing basic operations:")

@@ -64,8 +64,6 @@ func main() {
 	fmt.Println("=== Redis Cache Test ===")
 	fmt.Printf("Connected to Redis at: %s\n\n", cfg.Redis.URL)
 
-	ctx := context.Background()
-
 	// 1. Тест базовых операций
 	fmt.Println("1. Testing basic Set/Get operations:")
 	testKey := "test:simple:key"

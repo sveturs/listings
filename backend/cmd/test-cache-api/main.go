@@ -99,8 +99,6 @@ func main() {
 	fmt.Println("\n\nFinal cache state:")
 	fmt.Println(strings.Repeat("=", 50))
 
-	ctx := context.Background()
-
 	// Проверяем ключи категорий
 	foundKeys := []string{}
 
