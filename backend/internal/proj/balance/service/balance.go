@@ -50,11 +50,15 @@ func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*models.Us
 		&balance.UpdatedAt,
 	)
 	if err != nil {
-		return &models.UserBalance{
-			UserID:   userID,
-			Balance:  0,
-			Currency: "RSD",
-		}, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			// Если баланс не найден, создаем новый с нулевым балансом
+			return &models.UserBalance{
+				UserID:   userID,
+				Balance:  0,
+				Currency: "RSD",
+			}, nil
+		}
+		return nil, fmt.Errorf("failed to get user balance: %w", err)
 	}
 
 	return &balance, nil
