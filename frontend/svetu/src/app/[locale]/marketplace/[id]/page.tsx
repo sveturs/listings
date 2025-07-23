@@ -14,6 +14,10 @@ import ListingActions from '@/components/marketplace/listing/ListingActions';
 import SimilarListings from '@/components/marketplace/listing/SimilarListings';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
 import { ReviewsSection } from '@/components/reviews';
+import {
+  formatAddressWithPrivacy,
+  getFullLocalizedAddress,
+} from '@/utils/addressUtils';
 
 interface User {
   id: number;
@@ -67,6 +71,24 @@ interface Listing {
   longitude?: number;
   city?: string;
   country?: string;
+  // Переводы адресов
+  translations?: {
+    location?: {
+      sr?: string;
+      en?: string;
+      ru?: string;
+    };
+    city?: {
+      sr?: string;
+      en?: string;
+      ru?: string;
+    };
+    country?: {
+      sr?: string;
+      en?: string;
+      ru?: string;
+    };
+  };
   views_count: number;
   favorites_count?: number;
   created_at: string;
@@ -103,58 +125,10 @@ export default function ListingPage({ params }: Props) {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [localizedAddress, setLocalizedAddress] = useState<string | null>(null);
 
-  // Форматирование адреса с учетом приватности
-  const formatAddressWithPrivacy = (
-    address: string,
-    privacyLevel?: string
-  ): string => {
-    if (!address) return '';
-
-    if (privacyLevel === 'exact') {
-      return address;
-    }
-
-    const parts = address.split(',').map((part) => part.trim());
-
-    switch (privacyLevel) {
-      case 'approximate':
-      case 'street':
-        // Убираем номер дома
-        if (parts.length > 2) {
-          const streetPart = parts[0]
-            .replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '')
-            .trim();
-          return streetPart
-            ? [streetPart, ...parts.slice(1)].join(', ')
-            : parts.slice(1).join(', ');
-        }
-        return parts.slice(1).join(', ');
-
-      case 'district':
-        // Оставляем только район и город
-        if (parts.length > 2) {
-          return parts.slice(-2).join(', ');
-        }
-        return address;
-
-      case 'city_only':
-      case 'city':
-        // Оставляем только город
-        if (parts.length > 1) {
-          return parts[parts.length - 1];
-        }
-        return address;
-
-      case 'hidden':
-        // Скрываем адрес полностью
-        return locale === 'ru' ? 'Адрес скрыт' : 'Address hidden';
-
-      default:
-        return address;
-    }
-  };
+  // Используем локализованный адрес из backend или запрашиваем через геокодирование
 
   // Получение адреса на нужном языке через обратное геокодирование
+  // (используется только если backend не предоставил переводы)
   const fetchLocalizedAddress = useCallback(
     async (lat: number, lng: number) => {
       try {
@@ -184,11 +158,17 @@ export default function ListingPage({ params }: Props) {
       if (!response.ok) throw new Error('Failed to fetch listing');
       const result = await response.json();
       // Проверяем обертку ответа
-      let listingData = result.data || result;
+      const listingData = result.data || result;
       setListing(listingData);
 
-      // Получаем локализованный адрес если есть координаты
-      if (listingData.latitude && listingData.longitude) {
+      // Проверяем есть ли переводы адресов из backend
+      const hasTranslations =
+        listingData.translations?.location?.[
+          locale as keyof typeof listingData.translations.location
+        ];
+
+      if (!hasTranslations && listingData.latitude && listingData.longitude) {
+        // Получаем локализованный адрес через геокодирование только если нет переводов
         const localAddr = await fetchLocalizedAddress(
           listingData.latitude,
           listingData.longitude
@@ -196,13 +176,16 @@ export default function ListingPage({ params }: Props) {
         if (localAddr) {
           setLocalizedAddress(localAddr);
         }
+      } else if (hasTranslations) {
+        // Используем готовые переводы из backend
+        setLocalizedAddress(getFullLocalizedAddress(listingData, locale));
       }
     } catch (error) {
       console.error('Error fetching listing:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [id, fetchLocalizedAddress]);
+  }, [id, fetchLocalizedAddress, locale]);
 
   useEffect(() => {
     fetchListing();
@@ -463,8 +446,9 @@ export default function ListingPage({ params }: Props) {
                       />
                     </svg>
                     {formatAddressWithPrivacy(
-                      localizedAddress || listing.location,
-                      listing.location_privacy
+                      localizedAddress ||
+                        getFullLocalizedAddress(listing, locale),
+                      listing.location_privacy as any
                     )}
                   </p>
                 )}

@@ -184,3 +184,37 @@ func (h *GeocodingHandler) CleanupExpiredCache(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, result)
 }
+
+// MultilingualReverseGeocode многоязычное обратное геокодирование
+// @Summary Многоязычное обратное геокодирование
+// @Description Получает адреса по координатам на трех языках (сербский, английский, русский)
+// @Tags gis
+// @Accept json
+// @Produce json
+// @Param request body types.MultilingualGeocodeRequest true "Координаты"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.MultilingualGeocodeResponse} "Адреса на разных языках"
+// @Failure 400 {object} utils.ErrorResponseSwag "Ошибка валидации"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка"
+// @Router /api/v1/gis/geocode/multilingual [post]
+func (h *GeocodingHandler) MultilingualReverseGeocode(c *fiber.Ctx) error {
+	var req types.MultilingualGeocodeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "geocoding.parseError")
+	}
+
+	// Валидация координат
+	if req.Latitude < -90 || req.Latitude > 90 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "geocoding.invalidLatitude")
+	}
+	if req.Longitude < -180 || req.Longitude > 180 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "geocoding.invalidLongitude")
+	}
+
+	ctx := c.Context()
+	result, err := h.geocodingService.GetMultilingualAddress(ctx, req.Latitude, req.Longitude)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "geocoding.multilingualError")
+	}
+
+	return utils.SuccessResponse(c, result)
+}

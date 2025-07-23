@@ -71,6 +71,11 @@ export interface CreateListingState {
     city: string;
     region: string;
     country: string;
+    addressMultilingual?: {
+      sr: string;
+      en: string;
+      ru: string;
+    };
   };
 
   // Атрибуты

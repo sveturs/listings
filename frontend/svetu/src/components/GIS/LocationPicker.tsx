@@ -3,8 +3,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import Map, { Marker } from 'react-map-gl';
 import SmartAddressInput from '@/components/GIS/SmartAddressInput';
-import { AddressGeocodingResult } from '@/hooks/useAddressGeocoding';
+import {
+  AddressGeocodingResult,
+  useAddressGeocoding,
+} from '@/hooks/useAddressGeocoding';
 import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { useLocale } from 'next-intl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface LocationData {
@@ -15,6 +19,12 @@ interface LocationData {
   region: string;
   country: string;
   confidence: number;
+  // Многоязычные адреса
+  addressMultilingual?: {
+    sr: string;
+    en: string;
+    ru: string;
+  };
 }
 
 interface LocationPickerProps {
@@ -36,6 +46,8 @@ export default function LocationPicker({
   defaultCountry = 'Србија',
   mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
 }: LocationPickerProps) {
+  const locale = useLocale();
+  const { getMultilingualAddress } = useAddressGeocoding({ language: locale });
   const [mode, setMode] = useState<'search' | 'map'>('search');
   const [address, setAddress] = useState(value?.address || '');
   const [mapLocation, setMapLocation] = useState({
@@ -68,7 +80,7 @@ export default function LocationPicker({
       try {
         const response = await fetch(
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?` +
-            `access_token=${mapboxToken}&language=ru&types=address,place`
+            `access_token=${mapboxToken}&language=${locale}&types=address,place`
         );
 
         if (!response.ok) throw new Error('Geocoding failed');
@@ -98,6 +110,23 @@ export default function LocationPicker({
             confidence: 0.9, // Высокая уверенность для точки, выбранной пользователем
           };
 
+          // Получаем многоязычные адреса
+          try {
+            const multilingualAddresses = await getMultilingualAddress(
+              lat,
+              lng
+            );
+            if (multilingualAddresses) {
+              locationData.addressMultilingual = {
+                sr: multilingualAddresses.address_sr,
+                en: multilingualAddresses.address_en,
+                ru: multilingualAddresses.address_ru,
+              };
+            }
+          } catch (error) {
+            console.error('Failed to get multilingual addresses:', error);
+          }
+
           setAddress(locationData.address);
           setSelectedLocation(locationData);
           onChange(locationData);
@@ -122,12 +151,12 @@ export default function LocationPicker({
         setIsReverseGeocoding(false);
       }
     },
-    [mapboxToken, defaultCountry, onChange]
+    [mapboxToken, defaultCountry, onChange, locale, getMultilingualAddress]
   );
 
   // Обработка выбора адреса из поиска
   const handleAddressSelect = useCallback(
-    (value: string, result?: AddressGeocodingResult) => {
+    async (value: string, result?: AddressGeocodingResult) => {
       setAddress(value);
 
       if (result) {
@@ -147,6 +176,23 @@ export default function LocationPicker({
           confidence: result.confidence,
         };
 
+        // Получаем многоязычные адреса
+        try {
+          const multilingualAddresses = await getMultilingualAddress(
+            result.location.lat,
+            result.location.lng
+          );
+          if (multilingualAddresses) {
+            locationData.addressMultilingual = {
+              sr: multilingualAddresses.address_sr,
+              en: multilingualAddresses.address_en,
+              ru: multilingualAddresses.address_ru,
+            };
+          }
+        } catch (error) {
+          console.error('Failed to get multilingual addresses:', error);
+        }
+
         setSelectedLocation(locationData);
         setMapLocation({
           latitude: result.location.lat,
@@ -156,7 +202,7 @@ export default function LocationPicker({
         onChange(locationData);
       }
     },
-    [defaultCountry, onChange]
+    [defaultCountry, onChange, getMultilingualAddress]
   );
 
   // Обработка клика по карте
@@ -230,7 +276,7 @@ export default function LocationPicker({
             placeholder={placeholder}
             showCurrentLocation={showCurrentLocation}
             country={['rs', 'hr', 'ba', 'me']}
-            language="ru"
+            language={locale}
           />
 
           {selectedLocation && (

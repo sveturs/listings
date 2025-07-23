@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"backend/internal/logger"
@@ -192,6 +193,70 @@ func (s *GeocodingService) GetCacheStats(ctx context.Context) (map[string]interf
 // CleanupExpiredCache очистка устаревшего кэша
 func (s *GeocodingService) CleanupExpiredCache(ctx context.Context) (int64, error) {
 	return s.cacheRepo.CleanupExpired(ctx)
+}
+
+// GetMultilingualAddress получает адреса на трех языках
+func (s *GeocodingService) GetMultilingualAddress(ctx context.Context, lat, lng float64) (*types.MultilingualGeocodeResponse, error) {
+	// Параллельные запросы для всех языков
+	var wg sync.WaitGroup
+	var addressSr, addressEn, addressRu string
+	var errSr, errEn, errRu error
+
+	wg.Add(3)
+
+	// Запрос на сербском
+	go func() {
+		defer wg.Done()
+		result, err := s.ReverseGeocode(ctx, types.Point{Lat: lat, Lng: lng}, "sr")
+		if err == nil && result != nil {
+			addressSr = result.PlaceName
+		}
+		errSr = err
+	}()
+
+	// Запрос на английском
+	go func() {
+		defer wg.Done()
+		result, err := s.ReverseGeocode(ctx, types.Point{Lat: lat, Lng: lng}, "en")
+		if err == nil && result != nil {
+			addressEn = result.PlaceName
+		}
+		errEn = err
+	}()
+
+	// Запрос на русском
+	go func() {
+		defer wg.Done()
+		result, err := s.ReverseGeocode(ctx, types.Point{Lat: lat, Lng: lng}, "ru")
+		if err == nil && result != nil {
+			addressRu = result.PlaceName
+		}
+		errRu = err
+	}()
+
+	wg.Wait()
+
+	// Проверяем что хотя бы один запрос успешен
+	if errSr != nil && errEn != nil && errRu != nil {
+		return nil, fmt.Errorf("failed to get address in any language: sr=%v, en=%v, ru=%v", errSr, errEn, errRu)
+	}
+
+	// Если какой-то адрес не получен, используем английский как fallback
+	if addressSr == "" && addressEn != "" {
+		addressSr = addressEn
+	}
+	if addressRu == "" && addressEn != "" {
+		addressRu = addressEn
+	}
+	if addressEn == "" && addressSr != "" {
+		addressEn = addressSr
+	}
+
+	return &types.MultilingualGeocodeResponse{
+		AddressSr: addressSr,
+		AddressEn: addressEn,
+		AddressRu: addressRu,
+	}, nil
 }
 
 // Приватные методы

@@ -8456,6 +8456,70 @@
                 }
             }
         },
+        "/api/v1/gis/geocode/multilingual": {
+            "post": {
+                "description": "Получает адреса по координатам на трех языках (сербский, английский, русский)",
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Многоязычное обратное геокодирование",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_proj_gis_types.MultilingualGeocodeRequest"
+                            }
+                        }
+                    },
+                    "description": "Координаты",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Адреса на разных языках",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_proj_gis_types.MultilingualGeocodeResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка валидации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/gis/geocode/reverse": {
             "get": {
                 "description": "Получает адрес по координатам",
@@ -30924,6 +30988,42 @@
                     "PrivacyDistrict",
                     "PrivacyCity"
                 ]
+            },
+            "backend_internal_proj_gis_types.MultilingualGeocodeRequest": {
+                "type": "object",
+                "required": [
+                    "latitude",
+                    "longitude"
+                ],
+                "properties": {
+                    "latitude": {
+                        "type": "number",
+                        "maximum": 90,
+                        "minimum": -90
+                    },
+                    "longitude": {
+                        "type": "number",
+                        "maximum": 180,
+                        "minimum": -180
+                    }
+                }
+            },
+            "backend_internal_proj_gis_types.MultilingualGeocodeResponse": {
+                "type": "object",
+                "properties": {
+                    "address_en": {
+                        "description": "Английский",
+                        "type": "string"
+                    },
+                    "address_ru": {
+                        "description": "Русский",
+                        "type": "string"
+                    },
+                    "address_sr": {
+                        "description": "Сербский",
+                        "type": "string"
+                    }
+                }
             },
             "backend_internal_proj_gis_types.Municipality": {
                 "type": "object",

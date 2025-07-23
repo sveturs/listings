@@ -4,8 +4,9 @@ import React from 'react';
 import { Popup } from 'react-map-gl';
 import type { MapMarkerData } from '../types/gis';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
+import { getLocalizedAddress } from '@/utils/addressUtils';
 
 interface MarkerClickPopupProps {
   marker: MapMarkerData;
@@ -18,6 +19,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
 }) => {
   const router = useRouter();
   const t = useTranslations('common');
+  const locale = useLocale();
 
   // Форматирование адреса с учетом приватности
   const formatAddressWithPrivacy = (
@@ -210,9 +212,13 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
               </svg>
               <span>
                 {formatAddressWithPrivacy(
-                  parsedData?.address ||
-                    parsedData?.location ||
-                    parsedMetadata?.address,
+                  getLocalizedAddress(
+                    parsedData?.address ||
+                      parsedData?.location ||
+                      parsedMetadata?.address,
+                    parsedData?.translations,
+                    locale
+                  ),
                   parsedData?.locationPrivacy
                 )}
               </span>
