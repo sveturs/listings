@@ -110,11 +110,9 @@ func (db *Database) ListComponents(ctx context.Context, filters map[string]inter
 		case "true":
 			query += fmt.Sprintf(" AND is_active = $%d", argNum)
 			args = append(args, true)
-			argNum++
 		case "false":
 			query += fmt.Sprintf(" AND is_active = $%d", argNum)
 			args = append(args, false)
-			argNum++
 		}
 	}
 
@@ -194,7 +192,6 @@ func (db *Database) GetComponentUsages(ctx context.Context, componentID, categor
 	if categoryID != nil {
 		query += fmt.Sprintf(" AND ucu.category_id = $%d", argNum)
 		args = append(args, *categoryID)
-		argNum++
 	}
 
 	query += " ORDER BY ucu.created_at DESC"

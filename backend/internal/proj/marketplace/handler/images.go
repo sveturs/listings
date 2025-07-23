@@ -395,7 +395,7 @@ func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
 	// Получаем тип улучшения
 	enhancementType := c.FormValue("enhancement_type")
 	if enhancementType == "" {
-		enhancementType = "quality" // По умолчанию улучшаем качество
+		// По умолчанию используется качество
 	}
 
 	// Создаем предпросмотр улучшенного изображения
@@ -474,7 +474,7 @@ func (h *ImagesHandler) EnhanceImages(c *fiber.Ctx) error {
 	// Получаем тип улучшения
 	enhancementType := c.FormValue("enhancement_type")
 	if enhancementType == "" {
-		enhancementType = "quality" // По умолчанию улучшаем качество
+		// По умолчанию используется качество
 	}
 
 	// Запускаем процесс улучшения изображений

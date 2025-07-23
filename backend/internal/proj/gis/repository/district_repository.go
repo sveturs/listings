@@ -73,7 +73,6 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.Dist
 		argCount++
 		query += fmt.Sprintf(" AND ST_Contains(boundary, ST_SetSRID(ST_MakePoint($%d, $%d), 4326))", argCount, argCount+1)
 		args = append(args, params.Point.Lng, params.Point.Lat)
-		argCount++
 	}
 
 	query += " ORDER BY name"
@@ -210,7 +209,6 @@ func (r *DistrictRepository) GetMunicipalities(ctx context.Context, params types
 		argCount++
 		query += fmt.Sprintf(" AND ST_Contains(boundary, ST_SetSRID(ST_MakePoint($%d, $%d), 4326))", argCount, argCount+1)
 		args = append(args, params.Point.Lng, params.Point.Lat)
-		argCount++
 	}
 
 	query += " ORDER BY name"
