@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"backend/internal/domain/models"
+	"backend/pkg/logger"
 )
 
 // GeocodingService интерфейс сервиса геокодирования
@@ -226,6 +227,7 @@ func (g *geocodingService) SmartGeocode(ctx context.Context, userLat, userLng fl
 func (g *geocodingService) ValidateAddress(ctx context.Context, address string) (bool, error) {
 	location, err := g.GeocodeAddress(ctx, address)
 	if err != nil {
+		logger.GetLogger().Info("Failed to geocode address for validation: %v, address: %s", err, address)
 		return false, nil
 	}
 

@@ -133,6 +133,7 @@ func (s *GeocodingService) SearchSuggestions(ctx context.Context, query string, 
 	freshSuggestions, err := s.getFreshSuggestions(ctx, query, limit, language, countryCode)
 	if err != nil {
 		// Если MapBox недоступен, возвращаем только кэшированные результаты
+		s.logger.Info().Err(err).Msg("Failed to get fresh suggestions, using cached data")
 		return cachedSuggestions, nil
 	}
 
