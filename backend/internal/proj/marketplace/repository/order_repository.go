@@ -151,6 +151,12 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 
 	// Обновляем специфичные поля в зависимости от статуса
 	switch newStatus {
+	case models.MarketplaceOrderStatusPending:
+		// Нет дополнительных действий для статуса pending
+	case models.MarketplaceOrderStatusPaid:
+		// Нет дополнительных действий для статуса paid
+	case models.MarketplaceOrderStatusCompleted:
+		// Нет дополнительных действий для статуса completed
 	case models.MarketplaceOrderStatusShipped:
 		_, err = tx.ExecContext(ctx,
 			"UPDATE marketplace_orders SET shipped_at = NOW() WHERE id = $1", orderID)
@@ -160,6 +166,12 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 			SET delivered_at = NOW(), 
 			    protection_expires_at = NOW() + INTERVAL '%d days' 
 			WHERE id = $1`, orderID)
+	case models.MarketplaceOrderStatusDisputed:
+		// Нет дополнительных действий для статуса disputed
+	case models.MarketplaceOrderStatusCancelled:
+		// Нет дополнительных действий для статуса cancelled
+	case models.MarketplaceOrderStatusRefunded:
+		// Нет дополнительных действий для статуса refunded
 	}
 	if err != nil {
 		return pkgErrors.Wrap(err, "failed to update status-specific fields")
