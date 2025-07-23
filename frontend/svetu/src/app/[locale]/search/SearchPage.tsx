@@ -11,6 +11,7 @@ import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
+import { ListingGridSkeleton } from '@/components/ui/skeletons';
 import {
   UnifiedSearchService,
   UnifiedSearchResult,
@@ -898,8 +899,8 @@ export default function SearchPage() {
           {/* Основной контент */}
           <main className="flex-1">
             {loading && allItems.length === 0 && (
-              <div className="flex justify-center py-16">
-                <span className="loading loading-spinner loading-lg text-primary"></span>
+              <div className="py-4">
+                <ListingGridSkeleton count={8} viewMode={viewMode} />
               </div>
             )}
 
@@ -1056,6 +1057,13 @@ export default function SearchPage() {
                     </SearchResultCard>
                   ))}
                 </div>
+
+                {/* Показываем скелетоны при подгрузке */}
+                {loading && allItems.length > 0 && (
+                  <div className="mt-6">
+                    <ListingGridSkeleton count={4} viewMode={viewMode} />
+                  </div>
+                )}
 
                 <InfiniteScrollTrigger
                   ref={loadMoreRef}

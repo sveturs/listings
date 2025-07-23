@@ -13,6 +13,7 @@ import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
 import { FilterValues } from './ListingFilters';
+import { ListingGridSkeleton } from '@/components/ui/skeletons';
 
 // Функция для конвертации фильтров в формат API
 function convertFiltersToSearchParams(filters: FilterValues) {
@@ -270,13 +271,16 @@ export default function MarketplaceList({
     onLoadMore: loadMore,
   });
 
-  // Показываем состояние загрузки для начальной загрузки
+  // Показываем скелетоны для начальной загрузки
   if (loading && !initialized && items.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="loading loading-spinner loading-lg mb-4"></div>
-        <p className="text-base-content/70">{t('loading')}</p>
-      </div>
+      <>
+        <div className="flex justify-between mb-4">
+          <div className="h-10 w-32 bg-base-300 rounded animate-pulse" />
+          <div className="h-10 w-24 bg-base-300 rounded animate-pulse" />
+        </div>
+        <ListingGridSkeleton count={8} viewMode={viewMode} />
+      </>
     );
   }
 
@@ -332,6 +336,13 @@ export default function MarketplaceList({
           />
         ))}
       </div>
+
+      {/* Показываем скелетоны при загрузке следующей страницы */}
+      {loading && initialized && items.length > 0 && (
+        <div className="mt-6">
+          <ListingGridSkeleton count={4} viewMode={viewMode} />
+        </div>
+      )}
 
       {error && (
         <div className="alert alert-error mt-4">
