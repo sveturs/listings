@@ -108,7 +108,7 @@ func writeCategoriesFile(filePath string, categories []*SimplifiedCategory) erro
 	}
 
 	// Записываем в файл
-	if err := os.WriteFile(filePath, yamlData, 0o644); err != nil {
+	if err := os.WriteFile(filePath, yamlData, 0o600); err != nil {
 		return fmt.Errorf("ошибка записи файла: %w", err)
 	}
 

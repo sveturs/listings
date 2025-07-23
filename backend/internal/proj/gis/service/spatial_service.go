@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/binary"
 	"fmt"
 	"math"
-	"math/rand"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -514,8 +515,8 @@ func (s *SpatialService) calculateBlurredLocation(location types.Point, privacy 
 
 	// Генерируем случайное смещение в пределах радиуса
 	// Используем равномерное распределение по площади круга
-	angle := rand.Float64() * 2 * math.Pi
-	distance := math.Sqrt(rand.Float64()) * blurRadius
+	angle := cryptoRandFloat64() * 2 * math.Pi
+	distance := math.Sqrt(cryptoRandFloat64()) * blurRadius
 
 	// Преобразуем метры в градусы (приблизительно)
 	offsetLat := (distance * math.Cos(angle)) / 111000 // ~111км на градус широты
@@ -527,6 +528,17 @@ func (s *SpatialService) calculateBlurredLocation(location types.Point, privacy 
 	}
 
 	return blurredLocation
+}
+
+// cryptoRandFloat64 генерирует криптографически стойкое случайное число от 0 до 1
+func cryptoRandFloat64() float64 {
+	var b [8]byte
+	_, err := rand.Read(b[:])
+	if err != nil {
+		// В случае ошибки возвращаем 0.5 для безопасности
+		return 0.5
+	}
+	return float64(binary.BigEndian.Uint64(b[:])) / (1 << 64)
 }
 
 // calculateConfidenceScore вычисление показателя доверия
