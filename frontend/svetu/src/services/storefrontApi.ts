@@ -1,5 +1,6 @@
 import { config } from '@/config';
 import { apiClient } from './api-client';
+import { tokenManager } from '@/utils/tokenManager';
 import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированного API
@@ -57,12 +58,6 @@ export interface AnalyticsParams {
   storefrontId: number;
   from?: string;
   to?: string;
-}
-
-export interface FileUploadParams {
-  storefrontId: number;
-  file: File;
-  type: 'logo' | 'banner';
 }
 
 /**
@@ -195,6 +190,71 @@ class StorefrontApiService {
     return this.request<void>(endpoint, {
       method: 'DELETE',
     });
+  }
+
+  /**
+   * Загрузка логотипа витрины
+   */
+  async uploadLogo(storefrontId: number, file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    const endpoint = `/api/v1/storefronts/${storefrontId}/logo`;
+
+    // Используем fetch с правильными заголовками авторизации
+    const token = await tokenManager.getAccessToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${config.api.url}${endpoint}`, {
+      method: 'POST',
+      body: formData,
+      headers,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to upload logo');
+    }
+
+    const data = await response.json();
+    return { url: data.logo_url || data.url };
+  }
+
+  /**
+   * Загрузка баннера витрины
+   */
+  async uploadBanner(
+    storefrontId: number,
+    file: File
+  ): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('banner', file);
+
+    const endpoint = `/api/v1/storefronts/${storefrontId}/banner`;
+
+    // Используем fetch с правильными заголовками авторизации
+    const token = await tokenManager.getAccessToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${config.api.url}${endpoint}`, {
+      method: 'POST',
+      body: formData,
+      headers,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to upload banner');
+    }
+
+    const data = await response.json();
+    return { url: data.banner_url || data.url };
   }
 
   // Поиск и фильтрация
@@ -334,43 +394,6 @@ class StorefrontApiService {
       method: 'PUT',
       body: JSON.stringify({ options }),
     });
-  }
-
-  // Загрузка файлов
-
-  /**
-   * Загрузка логотипа или баннера витрины
-   */
-  async uploadFile(params: FileUploadParams): Promise<{ url: string }> {
-    const { storefrontId, file, type } = params;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const endpoint = `/api/v1/storefronts/${storefrontId}/upload/${type}`;
-
-    return this.request<{ url: string }>(endpoint, {
-      method: 'POST',
-      body: formData,
-      headers: {}, // Убираем Content-Type для FormData
-    });
-  }
-
-  /**
-   * Загрузка логотипа витрины
-   */
-  async uploadLogo(storefrontId: number, file: File): Promise<{ url: string }> {
-    return this.uploadFile({ storefrontId, file, type: 'logo' });
-  }
-
-  /**
-   * Загрузка баннера витрины
-   */
-  async uploadBanner(
-    storefrontId: number,
-    file: File
-  ): Promise<{ url: string }> {
-    return this.uploadFile({ storefrontId, file, type: 'banner' });
   }
 
   // Управление персоналом

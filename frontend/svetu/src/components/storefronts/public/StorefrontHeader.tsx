@@ -17,12 +17,13 @@ export default function StorefrontHeader({
 }: StorefrontHeaderProps) {
   const t = useTranslations();
   
-  const bannerImage = storefront.banner_image_url || '/storefront-banner-default.jpg';
+  const bannerImage = storefront.banner_url || storefront.banner_image_url || '/storefront-banner-default.jpg';
   const logoImage = storefront.logo_url || '/storefront-logo-default.png';
   
   const handleBannerClick = () => {
-    if (storefront.banner_image_url) {
-      onImageClick([storefront.banner_image_url], 0);
+    const banner = storefront.banner_url || storefront.banner_image_url;
+    if (banner) {
+      onImageClick([banner], 0);
     }
   };
   

@@ -85,7 +85,14 @@ sudo systemctl restart postgresql
 - **IMPLEMENTATION_CATEGORY_SELECTOR.md** - общая инструкция по реализации выбора категорий во всей системе
 - **DISPLAY_CATEGORIES_INSTRUCTION.md** - инструкция по правильному отображению категорий
 - **CATEGORY_ATTRIBUTES_STATUS.md** - статус системы атрибутов категорий и их интеграции с фильтрами
-- **MAP_CATEGORIES_FILTERS_INSTRUCTION.md** - NEW! Инструкция по работе с категориями и фильтрами на карте
+- **MAP_CATEGORIES_FILTERS_INSTRUCTION.md** - инструкция по работе с категориями и фильтрами на карте
+
+## Документация по витринам (Storefronts)
+
+- **STOREFRONTS_STATUS.md** - актуальный статус функционала витрин и последние обновления
+- **STOREFRONT_PRODUCT_CATEGORY_SELECTION.md** - реализация выбора категорий при создании товара в витрине
+- **PRODUCT_LOCATION_IMPLEMENTATION_PLAN.md** - управление местоположением и приватностью адресов товаров
+- **LOCATION_PICKER_INSTRUCTION.md** - использование компонента LocationPicker для выбора адреса
 
 ## IMPORTANT INSTRUCTIONS
 

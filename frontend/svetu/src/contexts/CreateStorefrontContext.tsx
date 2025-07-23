@@ -19,6 +19,12 @@ interface StorefrontFormData {
   description: string;
   businessType: string;
 
+  // Images
+  logoFile?: File;
+  bannerFile?: File;
+  logoUrl?: string;
+  bannerUrl?: string;
+
   // Business Details
   registrationNumber?: string;
   taxNumber?: string;
@@ -164,6 +170,34 @@ export const CreateStorefrontProvider: React.FC<
       const response = await storefrontApi.createStorefront(requestData);
 
       if (response?.id) {
+        // Upload images if provided
+        try {
+          const uploadPromises = [];
+
+          if (formData.logoFile) {
+            uploadPromises.push(
+              storefrontApi
+                .uploadLogo(response.id, formData.logoFile)
+                .catch((err) => console.error('Failed to upload logo:', err))
+            );
+          }
+
+          if (formData.bannerFile) {
+            uploadPromises.push(
+              storefrontApi
+                .uploadBanner(response.id, formData.bannerFile)
+                .catch((err) => console.error('Failed to upload banner:', err))
+            );
+          }
+
+          if (uploadPromises.length > 0) {
+            await Promise.all(uploadPromises);
+          }
+        } catch (error) {
+          console.error('Error uploading images:', error);
+          // Don't fail the whole process if image upload fails
+        }
+
         toast.success(t('create_storefront.success'));
         resetFormData();
         return { success: true, storefrontId: response.id };

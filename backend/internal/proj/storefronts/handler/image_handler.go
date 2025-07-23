@@ -45,18 +45,40 @@ func NewImageHandler(imageService *services.ImageService, productService *servic
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug}/products/{product_id}/images [post]
 func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
-	// Получение ID товара
+	// Логирование для отладки
+	fmt.Printf("UploadProductImage - Full URL: %s\n", c.OriginalURL())
+	fmt.Printf("UploadProductImage - Method: %s\n", c.Method())
+	fmt.Printf("UploadProductImage - All params: %+v\n", c.AllParams())
+	fmt.Printf("UploadProductImage - product_id param: %s\n", c.Params("product_id"))
+	fmt.Printf("UploadProductImage - id param: %s\n", c.Params("id"))
+	
+	// Получение ID товара - пробуем оба варианта
 	productIDStr := c.Params("product_id")
+	if productIDStr == "" {
+		productIDStr = c.Params("id")
+	}
+	fmt.Printf("UploadProductImage - Using productIDStr: %s\n", productIDStr)
+	
 	productID, err := strconv.Atoi(productIDStr)
 	if err != nil {
+		fmt.Printf("UploadProductImage - Error parsing product ID: %v\n", err)
 		return utils.ErrorResponse(c, http.StatusBadRequest, "storefronts.invalid_product_id")
 	}
+	fmt.Printf("UploadProductImage - Parsed productID: %d\n", productID)
 
 	// Получение файла из формы
 	file, err := c.FormFile("image")
 	if err != nil {
+		fmt.Printf("UploadProductImage - Error getting file: %v\n", err)
+		fmt.Printf("UploadProductImage - Form file names: %v\n", c.GetReqHeaders())
+		// Попробуем вывести все файлы из формы
+		form, _ := c.MultipartForm()
+		if form != nil {
+			fmt.Printf("UploadProductImage - Form files: %+v\n", form.File)
+		}
 		return utils.ErrorResponse(c, http.StatusBadRequest, "storefronts.no_image_file")
 	}
+	fmt.Printf("UploadProductImage - Got file: %s, size: %d\n", file.Filename, file.Size)
 
 	// Открытие файла
 	src, err := file.Open()

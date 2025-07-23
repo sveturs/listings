@@ -638,7 +638,9 @@ const MapPage: React.FC = () => {
             price: listing.price,
             category: listing.category?.name || 'Unknown',
             image: (listing as any).images?.[0] || listing.images?.[0],
-            address: listing.individual_address || listing.address ||
+            address:
+              listing.individual_address ||
+              (listing as any).address ||
               `${listing.location.city || ''}, ${listing.location.country || ''}`
                 .trim()
                 .replace(/^,\s*|,\s*$/, ''),

@@ -162,6 +162,12 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Get("/slug/:slug/import/jobs/:jobId/status", m.getJobStatusBySlug)
 		protected.Post("/slug/:slug/import/jobs/:jobId/cancel", m.cancelJobBySlug)
 		protected.Post("/slug/:slug/import/jobs/:jobId/retry", m.retryJobBySlug)
+
+		// Маршруты товаров по slug без префикса (для frontend совместимости)
+		protected.Put("/:slug/products/:id", m.updateProductBySlugDirect)
+		protected.Post("/:slug/products/:product_id/images", m.uploadProductImageBySlugDirect)
+		protected.Delete("/:slug/products/:product_id/images/:image_id", m.deleteProductImageBySlugDirect)
+		protected.Post("/:slug/products/:product_id/images/:image_id/main", m.setMainProductImageBySlugDirect)
 	}
 
 	// Публичные маршруты импорта (для получения шаблонов и документации)
@@ -652,4 +658,57 @@ func (m *Module) updateImageOrderBySlug(c *fiber.Ctx) error {
 	}
 
 	return m.imageHandler.UpdateImageOrder(c)
+}
+
+// Direct slug wrapper functions for frontend compatibility (без префикса /slug/)
+func (m *Module) updateProductBySlugDirect(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	return m.productHandler.UpdateProduct(c)
+}
+
+func (m *Module) uploadProductImageBySlugDirect(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	return m.imageHandler.UploadProductImage(c)
+}
+
+func (m *Module) deleteProductImageBySlugDirect(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	return m.imageHandler.DeleteProductImage(c)
+}
+
+func (m *Module) setMainProductImageBySlugDirect(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	return m.imageHandler.SetMainProductImage(c)
 }
