@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/proj/storefronts/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -264,6 +265,13 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 	}
 
 	if err := h.productService.UpdateProduct(c.Context(), storefrontID, productID, userID, &req); err != nil {
+		logger.Error().
+			Err(err).
+			Int("storefrontID", storefrontID).
+			Int("productID", productID).
+			Int("userID", userID).
+			Interface("request", req).
+			Msg("Failed to update product")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
