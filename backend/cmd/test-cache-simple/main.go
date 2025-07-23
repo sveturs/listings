@@ -13,7 +13,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	
+
 	// Создаем логгер
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)

@@ -144,7 +144,7 @@ func createCategoryTranslations(ctx context.Context, db *sql.DB) error {
 		`, t.EntityType, t.EntityID, t.FieldName, t.Language, t.Text, time.Now())
 
 		if err != nil {
-			log.Printf("Error inserting translation for category %s, field %s, lang %s: %v", 
+			log.Printf("Error inserting translation for category %s, field %s, lang %s: %v",
 				t.EntityID, t.FieldName, t.Language, err)
 		} else {
 			log.Printf("Created translation for category %s, field %s, lang %s", t.EntityID, t.FieldName, t.Language)

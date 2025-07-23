@@ -591,7 +591,6 @@ func (m *Module) bulkUpdateStatusBySlug(c *fiber.Ctx) error {
 	return m.productHandler.BulkUpdateStatus(c)
 }
 
-
 // Функции-обертки для изображений товаров
 func (m *Module) uploadProductImageBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {

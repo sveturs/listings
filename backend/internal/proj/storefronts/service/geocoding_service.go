@@ -318,4 +318,3 @@ func (g *geocodingService) parseNominatimResponse(resp *nominatimResponse) *mode
 }
 
 // Вспомогательные функции для работы с сербскими адресами
-

@@ -78,7 +78,7 @@ func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string)
 		log.Printf("ModerateImage: invalid path with directory traversal: %s", imagePath)
 		return nil, fmt.Errorf("invalid file path")
 	}
-	
+
 	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 		log.Printf("ModerateImage: файл %s не существует", imagePath)
 		return nil, fmt.Errorf("file does not exist: %s", imagePath)

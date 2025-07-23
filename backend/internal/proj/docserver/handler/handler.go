@@ -77,7 +77,7 @@ func (h *Handler) GetFileContent(c *fiber.Ctx) error {
 	}
 
 	fullPath := filepath.Join(h.cfg.RootPath, cleanPath)
-	
+
 	// Additional security: ensure the resolved path is within the root directory
 	absRootPath, _ := filepath.Abs(h.cfg.RootPath)
 	absFullPath, _ := filepath.Abs(fullPath)

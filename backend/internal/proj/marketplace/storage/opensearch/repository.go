@@ -195,7 +195,6 @@ func (r *Repository) GetClient() *osClient.OpenSearchClient {
 	return r.client
 }
 
-
 // SearchListings выполняет поиск объявлений
 func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
 	var query map[string]interface{}
@@ -551,7 +550,6 @@ func extractBucketsFromAgg(agg map[string]interface{}, suggestions map[string]bo
 		}
 	}
 }
-
 
 // ReindexAll переиндексирует все объявления
 func (r *Repository) ReindexAll(ctx context.Context) error {
@@ -1337,7 +1335,6 @@ func processImages(doc map[string]interface{}, listing *models.MarketplaceListin
 	}
 }
 
-
 func getMileageRange(mileage int) string {
 	switch {
 	case mileage <= 5000:
@@ -1375,7 +1372,6 @@ func getPriceRange(price int) string {
 		return "500001+"
 	}
 }
-
 
 func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float64 }, error) {
 	query := city

@@ -596,7 +596,6 @@ type StorefrontSearchItem struct {
 
 // Helper functions
 
-
 func deduplicate(slice []string) []string {
 	seen := make(map[string]bool)
 	result := []string{}
@@ -608,7 +607,6 @@ func deduplicate(slice []string) []string {
 	}
 	return result
 }
-
 
 // storefrontMapping маппинг для индекса витрин
 const storefrontMapping = `{

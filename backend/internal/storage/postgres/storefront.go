@@ -726,7 +726,6 @@ func (r *storefrontRepo) HasPermission(ctx context.Context, storefrontID, userID
 
 // Helper функции
 
-
 func getOwnerPermissions() models.JSONB {
 	return models.JSONB{
 		"can_add_products":     true,

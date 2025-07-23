@@ -75,7 +75,7 @@ func main() {
 	}
 
 	// Подключение к базе данных
-	db, err := postgres.NewDatabase(context.Background(), cfg.DatabaseURL, osClient, 
+	db, err := postgres.NewDatabase(context.Background(), cfg.DatabaseURL, osClient,
 		cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("Error connecting to database: %v", err)

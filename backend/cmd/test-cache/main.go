@@ -27,7 +27,7 @@ type Category struct {
 
 func main() {
 	ctx := context.Background()
-	
+
 	// Загружаем конфигурацию
 	cfg, err := config.NewConfig()
 	if err != nil {

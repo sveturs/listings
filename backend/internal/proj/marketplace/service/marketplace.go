@@ -1122,7 +1122,7 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 			log.Printf("Skipping image with invalid path: %s", image.FilePath)
 			continue
 		}
-		
+
 		// Открываем исходный файл
 		localPath := fmt.Sprintf("./uploads/%s", image.FilePath)
 		file, err := os.Open(localPath) // #nosec G304 -- path validated above

@@ -407,4 +407,3 @@ func (s *MarketplaceService) calculateGridSize(zoom int) float64 {
 		return baseGridSize // 0.1 градуса
 	}
 }
-

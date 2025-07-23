@@ -66,7 +66,11 @@ func (m *MockStorage) GetOrCreateGoogleUser(ctx context.Context, user *models.Us
 func (m *MockStorage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	return nil, ErrMockMethodNotImplemented
 }
-func (m *MockStorage) GetUserByID(ctx context.Context, id int) (*models.User, error) { return nil, ErrMockMethodNotImplemented }
+
+func (m *MockStorage) GetUserByID(ctx context.Context, id int) (*models.User, error) {
+	return nil, ErrMockMethodNotImplemented
+}
+
 func (m *MockStorage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
 	return nil, ErrMockMethodNotImplemented
 }
