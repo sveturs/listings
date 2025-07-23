@@ -90,18 +90,18 @@ func (e *EmailService) SendEmail(to, subject, body string) error {
 	w, err := conn.Data()
 	if err != nil {
 		log.Printf("Error getting data writer: %v", err)
-		return fmt.Errorf("DATA command error: %v", err)
+		return fmt.Errorf("DATA command error: %w", err)
 	}
 
 	_, err = w.Write([]byte(message))
 	if err != nil {
 		log.Printf("Error writing message body: %v", err)
-		return fmt.Errorf("message writing error: %v", err)
+		return fmt.Errorf("message writing error: %w", err)
 	}
 
 	if err = w.Close(); err != nil {
 		log.Printf("Error closing message writer: %v", err)
-		return fmt.Errorf("error finalizing message: %v", err)
+		return fmt.Errorf("error finalizing message: %w", err)
 	}
 
 	log.Printf("Email sent successfully to %s using manual connection", to)

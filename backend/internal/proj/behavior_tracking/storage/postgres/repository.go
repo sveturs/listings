@@ -634,7 +634,7 @@ func (r *behaviorTrackingRepository) GetAggregatedSearchMetrics(ctx context.Cont
 		&metrics.UniqueSearches,
 		&metrics.AverageSearchDurationMs,
 	)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get general metrics: %w", err)
 	}
 
@@ -729,7 +729,7 @@ func (r *behaviorTrackingRepository) GetAggregatedSearchMetrics(ctx context.Cont
 		&avgPosition,
 		&conversions,
 	)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get click metrics: %w", err)
 	}
 
