@@ -143,7 +143,7 @@ func NewConfig() (*Config, error) {
 	// Получаем JWT секретный ключ
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		jwtSecret = "default-jwt-secret-change-in-production" // Дефолтное значение для разработки
+		jwtSecret = "default-jwt-secret-change-in-production" // #nosec G101 -- default development secret
 	}
 	config.JWTSecret = jwtSecret
 

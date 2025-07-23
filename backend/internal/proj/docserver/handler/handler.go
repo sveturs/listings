@@ -99,7 +99,7 @@ func (h *Handler) GetFileContent(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "docs.onlyMarkdownAllowed")
 	}
 
-	content, err := os.ReadFile(fullPath)
+	content, err := os.ReadFile(fullPath) // #nosec G304 -- path validated above
 	if err != nil {
 		logger.Error().Err(err).Str("path", cleanPath).Msg("Failed to read file")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "docs.readError")

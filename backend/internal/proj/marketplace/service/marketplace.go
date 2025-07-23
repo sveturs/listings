@@ -1119,9 +1119,15 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 		// Создаем новый путь для изображения в MinIO
 		newPath := fmt.Sprintf("listings/%d/%s", image.ListingID, filepath.Base(image.FilePath))
 
+		// Security check: validate file path
+		if strings.Contains(image.FilePath, "..") {
+			log.Printf("Skipping image with invalid path: %s", image.FilePath)
+			continue
+		}
+		
 		// Открываем исходный файл
 		localPath := fmt.Sprintf("./uploads/%s", image.FilePath)
-		file, err := os.Open(localPath)
+		file, err := os.Open(localPath) // #nosec G304 -- path validated above
 		if err != nil {
 			log.Printf("Ошибка открытия файла %s: %v", localPath, err)
 			continue

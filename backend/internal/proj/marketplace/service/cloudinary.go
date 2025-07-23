@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 
-	//	"strings"
 	vision "cloud.google.com/go/vision/apiv1"
 	visionpb "cloud.google.com/go/vision/v2/apiv1/visionpb"
 )
@@ -73,6 +73,12 @@ func (s *CloudinaryService) MakeUglyPhotoBeautiful(ctx context.Context, imagePat
 func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string) (map[string]interface{}, error) {
 	log.Printf("ModerateImage: старт модерации файла %s", imagePath)
 
+	// Security check: validate file path
+	if strings.Contains(imagePath, "..") {
+		log.Printf("ModerateImage: invalid path with directory traversal: %s", imagePath)
+		return nil, fmt.Errorf("invalid file path")
+	}
+	
 	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 		log.Printf("ModerateImage: файл %s не существует", imagePath)
 		return nil, fmt.Errorf("file does not exist: %s", imagePath)
@@ -99,7 +105,7 @@ func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string)
 		}
 	}()
 
-	file, err := os.Open(imagePath)
+	file, err := os.Open(imagePath) // #nosec G304 -- path validated above
 	if err != nil {
 		log.Printf("ModerateImage: ошибка открытия файла Vision: %v", err)
 		return result, nil

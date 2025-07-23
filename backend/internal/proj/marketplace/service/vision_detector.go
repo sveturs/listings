@@ -5,11 +5,18 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 
 	vision "cloud.google.com/go/vision/apiv1"
 )
 
 func DetectFaceInImage(ctx context.Context, imagePath string) (bool, error) {
+	// Security check: validate file path
+	if strings.Contains(imagePath, "..") {
+		log.Printf("DetectFaceInImage: invalid path with directory traversal: %s", imagePath)
+		return false, nil
+	}
+	
 	client, err := vision.NewImageAnnotatorClient(ctx)
 	if err != nil {
 		log.Printf("DetectFaceInImage: ошибка создания клиента Vision API: %v", err)
@@ -21,7 +28,7 @@ func DetectFaceInImage(ctx context.Context, imagePath string) (bool, error) {
 		}
 	}()
 
-	file, err := os.Open(imagePath)
+	file, err := os.Open(imagePath) // #nosec G304 -- path validated above
 	if err != nil {
 		log.Printf("DetectFaceInImage: ошибка открытия файла: %v", err)
 		return false, err
