@@ -23,7 +23,8 @@ func main() {
 		// Generate a test token if not provided
 		fmt.Println("No TEST_JWT_TOKEN found. Using hardcoded admin token.")
 		// This is the token for admin user from previous sessions
-		jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo5LCJlbWFpbCI6ImFkbWluQHRlc3QuY29tIiwiaXNzIjoic3ZldHUtYmFja2VuZCIsInN1YiI6InVzZXI6OSIsImV4cCI6MTc1NDUxODY0OSwibmJmIjoxNzUxOTI2NjQ5LCJpYXQiOjE3NTE5MjY2NDl9.Dh13B3RTPIYGR6-cIVznnpOX_w3vnN4MOMmgBWuMYxQ" // #nosec G101 -- test token for development
+		jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo5LCJlbWFpbCI6ImFkbWluQHRlc3QuY29tIiwiaXNzIjoic3ZldHUtYmFja2VuZCIsInN1YiI6InVzZXI6OSIsImV4cCI6MTc1NDUxODY0OSwibmJmIjoxNzUxOTI2NjQ5LCJpYXQiOjE3NTE5MjY2NDl9." +
+			"Dh13B3RTPIYGR6-cIVznnpOX_w3vnN4MOMmgBWuMYxQ" // #nosec G101 -- test token for development
 	}
 
 	// Test the analytics endpoint

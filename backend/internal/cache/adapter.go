@@ -36,6 +36,7 @@ func (a *Adapter) DeletePattern(ctx context.Context, pattern string) error {
 }
 
 // GetOrSet получает значение из кеша или устанавливает новое
-func (a *Adapter) GetOrSet(ctx context.Context, key string, dest interface{}, ttl time.Duration, loader func() (interface{}, error)) error {
+func (a *Adapter) GetOrSet(ctx context.Context, key string, dest interface{}, ttl time.Duration, 
+	loader func() (interface{}, error)) error {
 	return a.cache.GetOrSet(ctx, key, dest, ttl, loader)
 }

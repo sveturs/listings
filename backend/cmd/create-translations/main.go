@@ -136,14 +136,16 @@ func createCategoryTranslations(ctx context.Context, db *sql.DB) error {
 	// Insert translations
 	for _, t := range translations {
 		_, err := db.ExecContext(ctx, `
-			INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text, is_machine_translated, is_verified, created_at, updated_at)
+			INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text, 
+				is_machine_translated, is_verified, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, true, false, $6, $6)
 			ON CONFLICT (entity_type, entity_id, language, field_name) 
 			DO UPDATE SET translated_text = $5, updated_at = $6
 		`, t.EntityType, t.EntityID, t.FieldName, t.Language, t.Text, time.Now())
 
 		if err != nil {
-			log.Printf("Error inserting translation for category %s, field %s, lang %s: %v", t.EntityID, t.FieldName, t.Language, err)
+			log.Printf("Error inserting translation for category %s, field %s, lang %s: %v", 
+				t.EntityID, t.FieldName, t.Language, err)
 		} else {
 			log.Printf("Created translation for category %s, field %s, lang %s", t.EntityID, t.FieldName, t.Language)
 		}
@@ -203,7 +205,8 @@ func createAttributeTranslations(ctx context.Context, db *sql.DB) error {
 	// Insert translations
 	for _, t := range translations {
 		_, err := db.ExecContext(ctx, `
-			INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text, is_machine_translated, is_verified, created_at, updated_at)
+			INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text, 
+				is_machine_translated, is_verified, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, true, false, $6, $6)
 			ON CONFLICT (entity_type, entity_id, language, field_name) 
 			DO UPDATE SET translated_text = $5, updated_at = $6
