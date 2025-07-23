@@ -69,51 +69,104 @@ lint_full:
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run ./...
 	@echo "✅ Linting completed!"
 
-lint: lint-errcheck lint-goconst lint-govet lint-revive
-
-lint-errcheck:
-	@echo "Running errcheck linter only..."
-	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=errcheck ./...
-
-lint-goconst:
-	@echo "Running goconst linter only..."
-	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=goconst ./...
+lint: lint-revive lint-misspell lint-unused lint-ineffassign lint-goconst lint-gosec lint-errcheck lint-bodyclose lint-sqlclosecheck lint-asasalint lint-asciicheck lint-bidichk lint-durationcheck lint-makezero
 
 lint-govet:
 	@echo "Running govet linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=govet ./...
-
-lint-misspell:
-	@echo "Running misspell linter only..."
-	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=misspell ./...
-
-lint-staticcheck:
-	@echo "Running staticcheck linter only..."
-	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=staticcheck ./...
-
+	
 lint-revive:
 	@echo "Running revive linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=revive ./...
-
+	
+lint-misspell:
+	@echo "Running misspell linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=misspell ./...
+	
 lint-lll:
 	@echo "Running lll linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=lll ./...
-
+	
 lint-unused:
 	@echo "Running unused linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=unused ./...
 
+
 lint-ineffassign:
 	@echo "Running ineffassign linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=ineffassign ./...
-
+	
+lint-goconst:
+	@echo "Running goconst linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=goconst ./...
+	
 lint-gocritic:
 	@echo "Running gocritic linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=gocritic ./...
-
+	
 lint-gosec:
 	@echo "Running gosec linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=gosec ./...
+	
+lint-errcheck:
+	@echo "Running errcheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=errcheck ./...
+	
+lint-staticcheck:
+	@echo "Running staticcheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=staticcheck ./...
+	
+lint-bodyclose:
+	@echo "Running bodyclose linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=bodyclose ./...
+	
+lint-contextcheck:
+	@echo "Running contextcheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=contextcheck ./...
+	
+lint-nilerr:
+	@echo "Running nilerr linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=nilerr ./...
+
+lint-sqlclosecheck:
+	@echo "Running sqlclosecheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=sqlclosecheck ./...
+	
+lint-rowserrcheck:
+	@echo "Running rowserrcheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=rowserrcheck ./...
+	
+lint-asasalint:
+	@echo "Running asasalint linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=asasalint ./...
+	
+lint-asciicheck:
+	@echo "Running asciicheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=asciicheck ./...
+	
+lint-bidichk:
+	@echo "Running bidichk linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=bidichk ./...
+	
+lint-durationcheck:
+	@echo "Running durationcheck linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=durationcheck ./...
+	
+lint-errorlint:
+	@echo "Running errorlint linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=errorlint ./...
+	
+lint-exhaustive:
+	@echo "Running exhaustive linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=exhaustive ./...
+	
+lint-makezero:
+	@echo "Running makezero linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=makezero ./...
+	
+lint-nilnil:
+	@echo "Running nilnil linter only..."
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=nilnil ./...
 
 
 pre-commit: format-check lint
