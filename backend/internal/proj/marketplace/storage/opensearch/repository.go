@@ -194,28 +194,6 @@ func (r *Repository) GetClient() *osClient.OpenSearchClient {
 	return r.client
 }
 
-// Метод для извлечения ID из документа OpenSearch
-func (r *Repository) extractDocumentID(hit map[string]interface{}) (int, error) {
-	if idStr, ok := hit["_id"].(string); ok {
-		if id, err := strconv.Atoi(idStr); err == nil {
-			return id, nil
-		}
-	}
-
-	if source, ok := hit["_source"].(map[string]interface{}); ok {
-		if idFloat, ok := source["id"].(float64); ok {
-			return int(idFloat), nil
-		} else if idInt, ok := source["id"].(int); ok {
-			return idInt, nil
-		} else if idStr, ok := source["id"].(string); ok {
-			if id, err := strconv.Atoi(idStr); err == nil {
-				return id, nil
-			}
-		}
-	}
-
-	return 0, fmt.Errorf("не удалось получить ID объявления из документа")
-}
 
 // SearchListings выполняет поиск объявлений
 func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
@@ -573,14 +551,6 @@ func extractBucketsFromAgg(agg map[string]interface{}, suggestions map[string]bo
 	}
 }
 
-func contains(arr []string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
-		}
-	}
-	return false
-}
 
 // ReindexAll переиндексирует все объявления
 func (r *Repository) ReindexAll(ctx context.Context) error {
@@ -1366,16 +1336,6 @@ func processImages(doc map[string]interface{}, listing *models.MarketplaceListin
 	}
 }
 
-func getLocalizedRoomText(rooms float64) string {
-	switch int(rooms) {
-	case 1:
-		return "комната"
-	case 2, 3, 4:
-		return "комнаты"
-	default:
-		return "комнат"
-	}
-}
 
 func getMileageRange(mileage int) string {
 	switch {
@@ -1415,28 +1375,6 @@ func getPriceRange(price int) string {
 	}
 }
 
-func isImportantAttribute(attrName string) bool {
-	importantAttrs := map[string]bool{
-		"make":            true,
-		"model":           true,
-		"brand":           true,
-		"year":            true,
-		"color":           true,
-		"rooms":           true,
-		"property_type":   true,
-		"body_type":       true,
-		"engine_capacity": true,
-		"fuel_type":       true,
-		"transmission":    true,
-		"cpu":             true,
-		"gpu":             true,
-		"memory":          true,
-		"ram":             true,
-		"storage_type":    true,
-		"screen_size":     true,
-	}
-	return importantAttrs[attrName]
-}
 
 func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float64 }, error) {
 	query := city

@@ -22,5 +22,3 @@ func NewMarketplaceHandler(storage *postgres.Storage) *MarketplaceHandler {
 		logger:  logger.Get().With().Str("handler", "marketplace").Logger(),
 	}
 }
-
-

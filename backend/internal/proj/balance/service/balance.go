@@ -279,4 +279,3 @@ func (s *BalanceService) GetPaymentMethods(ctx context.Context) ([]models.Paymen
 
 	return methods, nil
 }
-

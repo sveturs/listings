@@ -596,14 +596,6 @@ type StorefrontSearchItem struct {
 
 // Helper functions
 
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
 
 func deduplicate(slice []string) []string {
 	seen := make(map[string]bool)
@@ -617,9 +609,6 @@ func deduplicate(slice []string) []string {
 	return result
 }
 
-func boolPtr(b bool) *bool {
-	return &b
-}
 
 // storefrontMapping маппинг для индекса витрин
 const storefrontMapping = `{

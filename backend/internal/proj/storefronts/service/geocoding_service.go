@@ -317,23 +317,3 @@ func (g *geocodingService) parseNominatimResponse(resp *nominatimResponse) *mode
 
 // Вспомогательные функции для работы с сербскими адресами
 
-// normalizeAddress нормализует адрес для Балкан
-func normalizeAddress(address string) string {
-	// Заменяем распространенные сокращения
-	replacements := map[string]string{
-		"ул.":   "улица",
-		"бул.":  "булевар",
-		"тргпј": "трг",
-		"бр.":   "",
-		"br.":   "",
-		"ul.":   "ulica",
-		"bul.":  "bulevar",
-	}
-
-	normalized := strings.ToLower(address)
-	for old, new := range replacements {
-		normalized = strings.ReplaceAll(normalized, old, new)
-	}
-
-	return normalized
-}

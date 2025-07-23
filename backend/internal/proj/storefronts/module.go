@@ -591,12 +591,6 @@ func (m *Module) bulkUpdateStatusBySlug(c *fiber.Ctx) error {
 	return m.productHandler.BulkUpdateStatus(c)
 }
 
-// withStorefrontAccess создает middleware для проверки доступа к витрине
-func (m *Module) withStorefrontAccess() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		return m.checkStorefrontAccess(c)
-	}
-}
 
 // Функции-обертки для изображений товаров
 func (m *Module) uploadProductImageBySlug(c *fiber.Ctx) error {

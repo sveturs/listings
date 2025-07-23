@@ -583,7 +583,6 @@ func (h *ListingsHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 	})
 }
 
-
 // processAttributesFromRequest обрабатывает атрибуты из запроса
 func processAttributesFromRequest(requestBody map[string]interface{}, listing *models.MarketplaceListing) {
 	// Проверяем наличие атрибутов в запросе

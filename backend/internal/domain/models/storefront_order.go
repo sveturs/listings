@@ -15,7 +15,7 @@ const (
 	OrderStatusProcessing OrderStatus = "processing" // в обработке
 	OrderStatusShipped    OrderStatus = "shipped"    // отправлен
 	OrderStatusDelivered  OrderStatus = "delivered"  // доставлен
-	OrderStatusCancelled  OrderStatus = "canceled"  // отменен
+	OrderStatusCancelled  OrderStatus = "canceled"   // отменен
 	OrderStatusRefunded   OrderStatus = "refunded"   // возвращен
 )
 

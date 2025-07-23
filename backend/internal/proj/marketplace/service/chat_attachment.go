@@ -325,7 +325,6 @@ func (s *ChatAttachmentService) getFileType(contentType string) string {
 	return models.FileTypeDocument
 }
 
-
 // GenerateVideoThumbnail генерирует превью для видео (заглушка)
 func (s *ChatAttachmentService) GenerateVideoThumbnail(videoPath string) (string, error) {
 	// TODO: Реализовать генерацию превью для видео

@@ -726,13 +726,6 @@ func (r *storefrontRepo) HasPermission(ctx context.Context, storefrontID, userID
 
 // Helper функции
 
-func generateSlug(name string) string {
-	// Простая генерация slug - в продакшене нужно использовать библиотеку
-	slug := strings.ToLower(name)
-	slug = strings.ReplaceAll(slug, " ", "-")
-	// Добавляем timestamp для уникальности
-	return fmt.Sprintf("%s-%d", slug, time.Now().Unix())
-}
 
 func getOwnerPermissions() models.JSONB {
 	return models.JSONB{
