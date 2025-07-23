@@ -390,6 +390,10 @@ func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int64, sto
 	order.Status = status
 
 	switch status {
+	case models.OrderStatusPending:
+		// Заказ в ожидании
+	case models.OrderStatusConfirmed:
+		// Заказ подтвержден
 	case models.OrderStatusProcessing:
 		// Заказ взят в обработку
 	case models.OrderStatusShipped:
@@ -399,6 +403,10 @@ func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int64, sto
 		}
 	case models.OrderStatusDelivered:
 		order.DeliveredAt = &now
+	case models.OrderStatusCancelled:
+		// Заказ отменен
+	case models.OrderStatusRefunded:
+		// Заказ возвращен
 	}
 
 	if notes != nil {
@@ -462,8 +470,10 @@ func (s *OrderService) calculateEscrowDays(storefront *models.Storefront) int {
 		return 3 // Минимальный срок для бизнес-планов
 	case models.SubscriptionPlanProfessional:
 		return 5 // Средний срок
+	case models.SubscriptionPlanStarter:
+		return 7 // Максимальный срок для starter плана
 	default:
-		return 7 // Максимальный срок для starter/бесплатного плана
+		return 7 // Максимальный срок для неизвестного плана
 	}
 }
 
