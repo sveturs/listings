@@ -280,29 +280,3 @@ func (s *BalanceService) GetPaymentMethods(ctx context.Context) ([]models.Paymen
 	return methods, nil
 }
 
-func (s *BalanceService) validateDeposit(amount float64, method string) error {
-	if amount <= 0 {
-		return fmt.Errorf("amount must be greater than 0")
-	}
-
-	// Проверяем метод оплаты
-	var paymentMethod models.PaymentMethod
-	err := s.storage.QueryRow(context.Background(), `
-        SELECT minimum_amount, maximum_amount
-        FROM payment_methods
-        WHERE code = $1 AND is_active = true
-    `, method).Scan(&paymentMethod.MinimumAmount, &paymentMethod.MaximumAmount)
-	if err != nil {
-		return fmt.Errorf("invalid payment method")
-	}
-
-	if amount < paymentMethod.MinimumAmount {
-		return fmt.Errorf("amount must be at least %v", paymentMethod.MinimumAmount)
-	}
-
-	if paymentMethod.MaximumAmount > 0 && amount > paymentMethod.MaximumAmount {
-		return fmt.Errorf("amount cannot exceed %v", paymentMethod.MaximumAmount)
-	}
-
-	return nil
-}

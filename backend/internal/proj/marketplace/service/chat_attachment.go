@@ -325,15 +325,6 @@ func (s *ChatAttachmentService) getFileType(contentType string) string {
 	return models.FileTypeDocument
 }
 
-// isAllowedType проверяет, разрешен ли MIME тип
-func (s *ChatAttachmentService) isAllowedType(contentType string, allowedTypes []string) bool {
-	for _, allowed := range allowedTypes {
-		if contentType == allowed {
-			return true
-		}
-	}
-	return false
-}
 
 // GenerateVideoThumbnail генерирует превью для видео (заглушка)
 func (s *ChatAttachmentService) GenerateVideoThumbnail(videoPath string) (string, error) {

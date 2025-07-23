@@ -342,10 +342,6 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	}, nil
 }
 
-// searchMarketplace поиск в marketplace
-func (h *UnifiedSearchHandler) searchMarketplace(ctx context.Context, params *UnifiedSearchParams) ([]UnifiedSearchItem, int, int64, error) {
-	return h.searchMarketplaceWithLimit(ctx, params, params.Limit*2)
-}
 
 // searchMarketplaceWithLimit поиск в marketplace с указанным лимитом
 func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, params *UnifiedSearchParams, limit int) ([]UnifiedSearchItem, int, int64, error) {
@@ -397,10 +393,6 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 	return items, results.Total, results.Took, nil
 }
 
-// searchStorefront поиск в storefront
-func (h *UnifiedSearchHandler) searchStorefront(ctx context.Context, params *UnifiedSearchParams) ([]UnifiedSearchItem, int, int64, error) {
-	return h.searchStorefrontWithLimit(ctx, params, params.Limit*2)
-}
 
 // searchStorefrontWithLimit поиск в storefront с указанным лимитом
 func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, params *UnifiedSearchParams, limit int) ([]UnifiedSearchItem, int, int64, error) {
