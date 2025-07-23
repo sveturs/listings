@@ -63,12 +63,12 @@ func ValidateToken(tokenString string, secret string) (*Claims, error) {
 	}
 
 	// Дополнительная явная проверка истечения для безопасности
-	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
 		return nil, fmt.Errorf("token expired")
 	}
 
 	// Проверка на токены из будущего (защита от clock skew attacks)
-	if claims.IssuedAt != nil && claims.IssuedAt.Time.After(time.Now().Add(5*time.Minute)) {
+	if claims.IssuedAt != nil && claims.IssuedAt.After(time.Now().Add(5*time.Minute)) {
 		return nil, fmt.Errorf("token issued in the future")
 	}
 
@@ -127,12 +127,12 @@ func ValidateRefreshToken(tokenString string, secret string) (*RefreshClaims, er
 	}
 
 	// Проверка истечения
-	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
 		return nil, fmt.Errorf("refresh token expired")
 	}
 
 	// Проверка на токены из будущего
-	if claims.IssuedAt != nil && claims.IssuedAt.Time.After(time.Now().Add(5*time.Minute)) {
+	if claims.IssuedAt != nil && claims.IssuedAt.After(time.Now().Add(5*time.Minute)) {
 		return nil, fmt.Errorf("refresh token issued in the future")
 	}
 

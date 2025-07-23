@@ -22,6 +22,16 @@ import (
 	// "github.com/jackc/pgx/v5"
 )
 
+const (
+	// Attribute names
+	attrNameArea           = "area"
+	attrNameLandArea      = "land_area"
+	attrNameMileage       = "mileage"
+	attrNameEngineCapacity = "engine_capacity"
+	attrNamePower         = "power"
+	attrNameYear          = "year"
+)
+
 var (
 	attributeCacheMutex sync.RWMutex
 	attributeCache      map[int][]models.CategoryAttribute
@@ -116,7 +126,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		log.Printf("Error saving original description translation: %v", err)
 	}
 
-	if listing.Attributes != nil && len(listing.Attributes) > 0 {
+	if len(listing.Attributes) > 0 {
 		// Устанавливаем ID объявления для каждого атрибута
 		for i := range listing.Attributes {
 			listing.Attributes[i].ListingID = listingID
@@ -1144,7 +1154,7 @@ func isZeroValidValue(attrName string) bool {
 	// Для этих атрибутов ноль - допустимое значение
 	zeroValidAttrs := map[string]bool{
 		"floor":   true, // Например, цокольный этаж
-		"mileage": true, // Для новых автомобилей
+		attrNameMileage: true, // Для новых автомобилей
 		"price":   true, // Для бесплатных объявлений
 	}
 	return zeroValidAttrs[attrName]
@@ -1200,15 +1210,15 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
 			unit = attr.Unit
 		} else {
 			switch attr.AttributeName {
-			case "area":
+			case attrNameArea:
 				unit = "m²"
-			case "land_area":
+			case attrNameLandArea:
 				unit = "ar"
-			case "mileage":
+			case attrNameMileage:
 				unit = "km"
-			case "engine_capacity":
+			case attrNameEngineCapacity:
 				unit = "l"
-			case "power":
+			case attrNamePower:
 				unit = "ks"
 			case "screen_size":
 				unit = "inč"
@@ -1223,9 +1233,9 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
 		if attr.NumericValue == nil && attr.TextValue != nil && *attr.TextValue != "" {
 			// Список числовых атрибутов для конвертации
 			numericAttrs := map[string]bool{
-				"rooms": true, "floor": true, "total_floors": true, "area": true,
-				"land_area": true, "mileage": true, "year": true, "engine_capacity": true,
-				"power": true, "screen_size": true,
+				"rooms": true, "floor": true, "total_floors": true, attrNameArea: true,
+				attrNameLandArea: true, attrNameMileage: true, attrNameYear: true, attrNameEngineCapacity: true,
+				attrNamePower: true, "screen_size": true,
 			}
 
 			if numericAttrs[attr.AttributeName] {
@@ -1290,7 +1300,7 @@ func (s *Storage) SaveListingAttributes(ctx context.Context, listingID int, attr
 		}
 
 		// JSON значение
-		if attr.JSONValue != nil && len(attr.JSONValue) > 0 {
+		if len(attr.JSONValue) > 0 {
 			valueArgs = append(valueArgs, string(attr.JSONValue))
 		} else {
 			valueArgs = append(valueArgs, nil)
@@ -1507,15 +1517,15 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 			if unitStr == "" {
 				// Определяем единицу измерения на основе имени атрибута
 				switch attr.AttributeName {
-				case "area":
+				case attrNameArea:
 					unitStr = "m²"
-				case "land_area":
+				case attrNameLandArea:
 					unitStr = "ar"
-				case "mileage":
+				case attrNameMileage:
 					unitStr = "km"
-				case "engine_capacity":
+				case attrNameEngineCapacity:
 					unitStr = "l"
-				case "power":
+				case attrNamePower:
 					unitStr = "ks"
 				case "screen_size":
 					unitStr = "inč"
@@ -1523,7 +1533,7 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 			}
 
 			// Форматируем отображаемое значение с учетом типа
-			if attr.AttributeName == "year" {
+			if attr.AttributeName == attrNameYear {
 				attr.DisplayValue = fmt.Sprintf("%d", int(numericValue.Float64))
 			} else if unitStr != "" {
 				attr.DisplayValue = fmt.Sprintf("%g %s", numericValue.Float64, unitStr)
@@ -1645,22 +1655,25 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
 		}
 
 		// Для года и других целочисленных параметров округляем границы
-		if attrName == "year" || attrName == "rooms" || attrName == "floor" || attrName == "total_floors" {
+		if attrName == attrNameYear || attrName == "rooms" || attrName == "floor" || attrName == "total_floors" {
 			minValue = float64(int(minValue))
 			maxValue = float64(int(maxValue))
 		}
 
 		// Для "year" добавляем запас +1 год для новых автомобилей
-		if attrName == "year" && maxValue >= float64(time.Now().Year()-1) {
+		if attrName == attrNameYear && maxValue >= float64(time.Now().Year()-1) {
 			maxValue = float64(time.Now().Year() + 1)
 		}
 
 		// Установка разумных шагов в зависимости от диапазона
-		step := 1.0
-		if attrName == "engine_capacity" {
+		var step float64
+		switch attrName {
+		case "engine_capacity":
 			step = 0.1
-		} else if attrName == "area" || attrName == "land_area" {
+		case "area", "land_area":
 			step = 0.5
+		default:
+			step = 1.0
 		}
 
 		// Создаем информацию о границах
@@ -1677,10 +1690,10 @@ func (s *Storage) GetAttributeRanges(ctx context.Context, categoryID int) (map[s
 
 	// Если нет данных, устанавливаем разумные значения по умолчанию
 	defaultRanges := map[string]map[string]interface{}{
-		"year":            {"min": float64(time.Now().Year() - 30), "max": float64(time.Now().Year() + 1), "step": 1.0},
-		"mileage":         {"min": 0.0, "max": 500000.0, "step": 1000.0},
+		attrNameYear:      {"min": float64(time.Now().Year() - 30), "max": float64(time.Now().Year() + 1), "step": 1.0},
+		attrNameMileage:   {"min": 0.0, "max": 500000.0, "step": 1000.0},
 		"engine_capacity": {"min": 0.5, "max": 8.0, "step": 0.1},
-		"power":           {"min": 50.0, "max": 500.0, "step": 10.0},
+		attrNamePower:     {"min": 50.0, "max": 500.0, "step": 10.0},
 		"rooms":           {"min": 1.0, "max": 10.0, "step": 1.0},
 		"floor":           {"min": 1.0, "max": 25.0, "step": 1.0},
 		"total_floors":    {"min": 1.0, "max": 30.0, "step": 1.0},
@@ -2447,15 +2460,16 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 			if attr.NumericValue != nil {
 				hasValue = true
 				// Форматирование числовых значений
-				if attr.AttributeName == "year" {
+				switch attr.AttributeName {
+				case attrNameYear:
 					attr.DisplayValue = fmt.Sprintf("%d", int(*attr.NumericValue))
-				} else if attr.AttributeName == "engine_capacity" {
+				case "engine_capacity":
 					attr.DisplayValue = fmt.Sprintf("%.1f л", *attr.NumericValue)
-				} else if attr.AttributeName == "mileage" {
+				case attrNameMileage:
 					attr.DisplayValue = fmt.Sprintf("%d км", int(*attr.NumericValue))
-				} else if attr.AttributeName == "power" {
+				case attrNamePower:
 					attr.DisplayValue = fmt.Sprintf("%d л.с.", int(*attr.NumericValue))
-				} else {
+				default:
 					attr.DisplayValue = fmt.Sprintf("%g", *attr.NumericValue)
 				}
 			}
@@ -2469,7 +2483,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 				}
 			}
 
-			if attr.JSONValue != nil && len(attr.JSONValue) > 0 {
+			if len(attr.JSONValue) > 0 {
 				hasValue = true
 				if attr.DisplayValue == "" {
 					attr.DisplayValue = string(attr.JSONValue)
@@ -2479,16 +2493,17 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 			// Если нет значения, но есть отображаемое значение
 			if !hasValue && attr.DisplayValue != "" {
 				// Попытка восстановить типизированное значение из отображаемого
-				if attr.AttributeType == "text" || attr.AttributeType == "select" {
+				switch attr.AttributeType {
+				case "text", "select":
 					strVal := attr.DisplayValue
 					attr.TextValue = &strVal
-				} else if attr.AttributeType == "number" {
+				case "number":
 					// Удаляем неожиданные символы (буквы, единицы измерения)
 					clean := regexp.MustCompile(`[^\d\.-]`).ReplaceAllString(attr.DisplayValue, "")
 					if numVal, err := strconv.ParseFloat(clean, 64); err == nil {
 						attr.NumericValue = &numVal
 					}
-				} else if attr.AttributeType == "boolean" {
+				case "boolean":
 					boolVal := strings.ToLower(attr.DisplayValue) == "да" ||
 						strings.ToLower(attr.DisplayValue) == "true" ||
 						attr.DisplayValue == "1"

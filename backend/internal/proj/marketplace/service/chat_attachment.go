@@ -56,9 +56,32 @@ func createChatFileStorage(defaultStorage filestorage.FileStorageInterface) file
 	// В будущем можно создать отдельный bucket
 	return &chatFileStorageWrapper{
 		baseStorage: defaultStorage,
-		bucketName:  "chat-files",
+		bucketName:  bucketChatFiles,
 	}
 }
+
+const (
+	// File extensions for attachment validation
+	extensionJPG  = ".jpg"
+	extensionJPEG = ".jpeg"
+	extensionPNG  = ".png"
+	extensionGIF  = ".gif"
+	extensionWEBP = ".webp"
+	extensionMP4  = ".mp4"
+	extensionWEBM = ".webm"
+	extensionPDF  = ".pdf"
+	extensionDOC  = ".doc"
+	extensionDOCX = ".docx"
+	extensionTXT  = ".txt"
+	
+	// URL paths
+	listingsPath   = "/listings/"
+	chatFilesPath  = "/chat-files/"
+	
+	// Storage configuration
+	storageMinio      = "minio"
+	bucketChatFiles   = "chat-files"
+)
 
 // chatFileStorageWrapper обертка для работы с файлами чата
 type chatFileStorageWrapper struct {
@@ -78,7 +101,7 @@ func (w *chatFileStorageWrapper) UploadFile(ctx context.Context, objectName stri
 	}
 
 	// Заменяем путь на правильный для chat-files
-	publicURL = strings.Replace(publicURL, "/listings/", "/chat-files/", 1)
+	publicURL = strings.Replace(publicURL, listingsPath, chatFilesPath, 1)
 	return publicURL, nil
 }
 
@@ -92,7 +115,7 @@ func (w *chatFileStorageWrapper) GetURL(ctx context.Context, objectName string) 
 		return "", err
 	}
 	// Заменяем путь на правильный для chat-files
-	url = strings.Replace(url, "/listings/", "/chat-files/", 1)
+	url = strings.Replace(url, listingsPath, chatFilesPath, 1)
 	return url, nil
 }
 
@@ -152,8 +175,8 @@ func (s *ChatAttachmentService) UploadAttachments(ctx context.Context, messageID
 			FileName:      fileHeader.Filename,
 			FileSize:      fileHeader.Size,
 			ContentType:   fileHeader.Header.Get("Content-Type"),
-			StorageType:   "minio",
-			StorageBucket: "chat-files",
+			StorageType:   storageMinio,
+			StorageBucket: bucketChatFiles,
 			PublicURL:     publicURL,
 		}
 
@@ -251,25 +274,25 @@ func (s *ChatAttachmentService) ValidateFile(file *multipart.FileHeader, config 
 	if contentType == "" {
 		ext := strings.ToLower(filepath.Ext(file.Filename))
 		switch ext {
-		case ".jpg", ".jpeg":
+		case extensionJPG, extensionJPEG:
 			contentType = "image/jpeg"
-		case ".png":
+		case extensionPNG:
 			contentType = "image/png"
-		case ".gif":
+		case extensionGIF:
 			contentType = "image/gif"
-		case ".webp":
+		case extensionWEBP:
 			contentType = "image/webp"
-		case ".mp4":
+		case extensionMP4:
 			contentType = "video/mp4"
-		case ".webm":
+		case extensionWEBM:
 			contentType = "video/webm"
-		case ".pdf":
+		case extensionPDF:
 			contentType = "application/pdf"
-		case ".doc":
+		case extensionDOC:
 			contentType = "application/msword"
-		case ".docx":
+		case extensionDOCX:
 			contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-		case ".txt":
+		case extensionTXT:
 			contentType = "text/plain"
 		default:
 			return fmt.Errorf("unable to determine file type for extension: %s", ext)

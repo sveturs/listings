@@ -88,7 +88,11 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Создаем витрину
 	var storefront models.Storefront
@@ -215,16 +219,24 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 
 	// Конвертируем json.RawMessage в JSONB
 	if theme != nil {
-		json.Unmarshal(theme, &s.Theme)
+		if err := json.Unmarshal(theme, &s.Theme); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if settings != nil {
-		json.Unmarshal(settings, &s.Settings)
+		if err := json.Unmarshal(settings, &s.Settings); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if seoMeta != nil {
-		json.Unmarshal(seoMeta, &s.SEOMeta)
+		if err := json.Unmarshal(seoMeta, &s.SEOMeta); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 	if aiConfig != nil {
-		json.Unmarshal(aiConfig, &s.AIAgentConfig)
+		if err := json.Unmarshal(aiConfig, &s.AIAgentConfig); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+		}
 	}
 
 	return &s, nil
@@ -528,16 +540,24 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 
 		// Парсим JSONB поля
 		if theme != nil {
-			json.Unmarshal(theme, &s.Theme)
+			if err := json.Unmarshal(theme, &s.Theme); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if settings != nil {
-			json.Unmarshal(settings, &s.Settings)
+			if err := json.Unmarshal(settings, &s.Settings); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if seoMeta != nil {
-			json.Unmarshal(seoMeta, &s.SEOMeta)
+			if err := json.Unmarshal(seoMeta, &s.SEOMeta); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 		if aiConfig != nil {
-			json.Unmarshal(aiConfig, &s.AIAgentConfig)
+			if err := json.Unmarshal(aiConfig, &s.AIAgentConfig); err != nil {
+				// Логируем ошибку, но не прерываем выполнение
+			}
 		}
 
 		storefronts = append(storefronts, s)

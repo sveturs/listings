@@ -15,6 +15,14 @@ import (
 	"backend/pkg/utils"
 )
 
+// ContextKey is a type for context keys to avoid collisions
+type ContextKey string
+
+const (
+	// Context keys
+	ContextKeyReturnURL ContextKey = "return_url"
+)
+
 type BalanceHandler struct {
 	balanceService balance.BalanceServiceInterface
 	paymentService paymentService.PaymentServiceInterface // Теперь используем импортированный пакет
@@ -95,7 +103,7 @@ func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
 	log.Printf("Processing deposit request: amount=%f, method=%s, return_url=%s", request.Amount, request.PaymentMethod, request.ReturnURL)
 
 	// Добавляем return_url в контекст для мок-сервиса
-	ctx := context.WithValue(c.Context(), "return_url", request.ReturnURL)
+	ctx := context.WithValue(c.Context(), ContextKeyReturnURL, request.ReturnURL)
 
 	// Создаем платежную сессию вместо прямого создания депозита
 	session, err := h.paymentService.CreatePaymentSession(

@@ -60,7 +60,7 @@ func (wm *WeightManager) GetCategoryWeights(categoryID int) map[string]float64 {
 }
 
 func (wm *WeightManager) getDefaultWeights() map[string]float64 {
-	if wm.defaultWeights != nil && len(wm.defaultWeights) > 0 {
+	if len(wm.defaultWeights) > 0 {
 		return wm.defaultWeights
 	}
 

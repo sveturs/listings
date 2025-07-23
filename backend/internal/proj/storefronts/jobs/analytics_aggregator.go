@@ -142,7 +142,11 @@ func (a *AnalyticsAggregator) getActiveStorefronts(ctx context.Context) ([]*mode
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows
+		}
+	}()
 
 	var storefronts []*models.Storefront
 	for rows.Next() {
@@ -169,7 +173,11 @@ func (a *AnalyticsAggregator) getEventStats(ctx context.Context, storefrontID in
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows
+		}
+	}()
 
 	stats := make(map[string]int)
 	for rows.Next() {

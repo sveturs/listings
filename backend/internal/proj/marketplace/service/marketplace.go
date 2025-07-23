@@ -29,6 +29,11 @@ import (
 	//	"net/url"
 )
 
+const (
+	// Attribute names
+	attributeNameModel = "model"
+)
+
 type MarketplaceService struct {
 	storage            storage.Storage
 	translationService TranslationServiceInterface
@@ -324,14 +329,17 @@ func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.Marketpla
 		attributeFilters := make(map[string]string)
 
 		// Приоритетные атрибуты для разных категорий
-		priorityAttrs := []string{"make", "model", "brand", "type", "rooms", "property_type", "body_type"}
+		priorityAttrs := []string{"make", attributeNameModel, "brand", "type", "rooms", "property_type", "body_type"}
 
 		// В зависимости от попытки используем разное количество атрибутов
-		maxAttrs := 3
-		if tryNumber == 1 {
+		var maxAttrs int
+		switch tryNumber {
+		case 1:
 			maxAttrs = 2 // Во второй попытке используем меньше атрибутов
-		} else if tryNumber == 2 {
+		case 2:
 			maxAttrs = 1 // В третьей попытке используем только самые важные
+		default:
+			maxAttrs = 3
 		}
 
 		attrCount := 0
@@ -624,7 +632,7 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
 			// Рассчитываем продолжительность действия цены
 			var duration time.Duration
 			if entry.EffectiveTo == nil {
-				duration = time.Now().Sub(entry.EffectiveFrom)
+				duration = time.Since(entry.EffectiveFrom)
 			} else {
 				duration = entry.EffectiveTo.Sub(entry.EffectiveFrom)
 			}
@@ -722,7 +730,7 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
 
 		if len(matches) > 1 && len(priceMatches) > 1 {
 			discountPercent, _ := strconv.Atoi(matches[1])
-			oldPriceStr := strings.Replace(priceMatches[1], ",", ".", -1)
+			oldPriceStr := strings.ReplaceAll(priceMatches[1], ",", ".")
 			oldPrice, _ := strconv.ParseFloat(oldPriceStr, 64)
 
 			// Проверяем реальность скидки
@@ -1369,7 +1377,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 
 							// Проверяем атрибуты
 							for _, attr := range result.Attributes {
-								if attr.AttributeName == "model" && attr.TextValue != nil {
+								if attr.AttributeName == attributeNameModel && attr.TextValue != nil {
 									attrValue := strings.ToLower(*attr.TextValue)
 									if strings.Contains(attrValue, modelWord) {
 										matched = true
@@ -1469,7 +1477,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 					if attr.AttributeName == "make" && attr.TextValue != nil {
 						makeValue = strings.ToLower(*attr.TextValue)
 					}
-					if attr.AttributeName == "model" && attr.TextValue != nil {
+					if attr.AttributeName == attributeNameModel && attr.TextValue != nil {
 						modelValue = strings.ToLower(*attr.TextValue)
 					}
 				}
@@ -1544,7 +1552,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 					if attr.AttributeName == "make" && attr.TextValue != nil {
 						makeValue = *attr.TextValue
 					}
-					if attr.AttributeName == "model" && attr.TextValue != nil {
+					if attr.AttributeName == attributeNameModel && attr.TextValue != nil {
 						modelValue = *attr.TextValue
 					}
 				}

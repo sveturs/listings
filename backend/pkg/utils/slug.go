@@ -16,7 +16,7 @@ func GenerateSlug(s string) string {
 	s = strings.ReplaceAll(s, " ", "-")
 
 	// Удаляем все символы, кроме букв, цифр и дефисов
-	reg := regexp.MustCompile("[^a-zA-Z0-9\\p{L}-]")
+	reg := regexp.MustCompile(`[^a-zA-Z0-9\p{L}-]`)
 	s = reg.ReplaceAllString(s, "")
 
 	// Заменяем последовательности дефисов на один дефис

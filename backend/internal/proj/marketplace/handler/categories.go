@@ -51,7 +51,7 @@ func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 	lang := c.Query("lang", "en")
 
 	// Создаем контекст с языком
-	ctx := context.WithValue(c.UserContext(), "locale", lang)
+	ctx := context.WithValue(c.UserContext(), ContextKeyLocale, lang)
 
 	categories, err := h.marketplaceService.GetCategories(ctx)
 	if err != nil {
@@ -88,7 +88,7 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 	}
 
 	// Создаем контекст с языком
-	ctx := context.WithValue(c.UserContext(), "locale", lang)
+	ctx := context.WithValue(c.UserContext(), ContextKeyLocale, lang)
 
 	// Если кеш устарел или пуст, загружаем дерево категорий из хранилища
 	categoryTree, err := h.marketplaceService.GetCategoryTree(ctx)

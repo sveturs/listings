@@ -15,6 +15,10 @@ import (
 	"backend/pkg/utils"
 )
 
+const (
+	translationProviderOpenAI = "openai"
+)
+
 // TranslationsHandler обрабатывает запросы, связанные с переводами
 type TranslationsHandler struct {
 	services           globalService.ServicesInterface
@@ -98,7 +102,7 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 
 	// Проверяем корректность провайдера и приводим к типу TranslationProvider
 	translationProvider := service.GoogleTranslate
-	if strings.ToLower(provider) == "openai" {
+	if strings.ToLower(provider) == translationProviderOpenAI {
 		translationProvider = service.OpenAI
 	}
 
@@ -418,7 +422,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 	}
 
 	translationProvider := service.GoogleTranslate
-	if strings.ToLower(provider) == "openai" {
+	if strings.ToLower(provider) == translationProviderOpenAI {
 		translationProvider = service.OpenAI
 	}
 

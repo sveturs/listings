@@ -9,6 +9,7 @@ import (
 	"backend/internal/logger"
 )
 
+
 func (m *Middleware) Logger() fiber.Handler {
 	masker := NewSensitiveDataMasker()
 
@@ -29,7 +30,7 @@ func (m *Middleware) Logger() fiber.Handler {
 		}
 
 		// Логируем тело запроса только для POST/PUT/PATCH с маскированием
-		if method == "POST" || method == "PUT" || method == "PATCH" {
+		if method == httpMethodPost || method == httpMethodPut || method == httpMethodPatch {
 			body := c.Body()
 			if len(body) > 0 && len(body) < 10000 { // Не логируем большие тела запросов
 				// Пытаемся распарсить как JSON для красивого вывода

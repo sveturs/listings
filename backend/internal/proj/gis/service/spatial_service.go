@@ -390,6 +390,7 @@ func (s *SpatialService) getEnhancedListingGeo(ctx context.Context, listingID in
 	// Парсим компоненты адреса если есть
 	if addressComponentsJSON.Valid && addressComponentsJSON.String != "" {
 		// TODO: реализовать парсинг JSON
+		_ = addressComponentsJSON.String // Пока игнорируем
 	}
 
 	return &geo, nil

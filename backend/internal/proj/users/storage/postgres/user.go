@@ -10,6 +10,11 @@ import (
 	"backend/internal/domain/models"
 )
 
+const (
+	// Provider types
+	providerGoogle = "google"
+)
+
 func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
 	var userID int
 
@@ -29,7 +34,7 @@ func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) 
 			return nil, err
 		}
 		user.ID = userID
-		user.Provider = "google"
+		user.Provider = providerGoogle
 		return user, nil
 	}
 
@@ -49,7 +54,7 @@ func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) 
 			return nil, err
 		}
 		user.ID = userID
-		user.Provider = "google"
+		user.Provider = providerGoogle
 		return user, nil
 	}
 
@@ -64,7 +69,7 @@ func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) 
 	}
 
 	user.ID = userID
-	user.Provider = "google"
+	user.Provider = providerGoogle
 
 	// Создаем настройки приватности для нового пользователя OAuth
 	_, err = s.pool.Exec(ctx, `

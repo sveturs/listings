@@ -142,9 +142,7 @@ func NewMinioClient(config MinioConfig) (*MinioClient, error) {
 
 func (m *MinioClient) UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
 	// Remove leading slash if present
-	if strings.HasPrefix(objectName, "/") {
-		objectName = objectName[1:]
-	}
+	objectName = strings.TrimPrefix(objectName, "/")
 
 	// Upload file to MinIO
 	_, err := m.client.PutObject(ctx, m.bucketName, objectName, reader, size, minio.PutObjectOptions{
@@ -173,9 +171,7 @@ func (m *MinioClient) DeleteFile(ctx context.Context, objectName string) error {
 // GetPresignedURL создает предварительно подписанный URL для доступа к файлу
 func (m *MinioClient) GetPresignedURL(ctx context.Context, objectName string, expiry time.Duration) (string, error) {
 	// Удаляем начальный слеш, если он есть
-	if strings.HasPrefix(objectName, "/") {
-		objectName = objectName[1:]
-	}
+	objectName = strings.TrimPrefix(objectName, "/")
 
 	// Создаем предварительно подписанный URL
 	presignedURL, err := m.client.PresignedGetObject(ctx, m.bucketName, objectName, expiry, nil)
@@ -188,9 +184,7 @@ func (m *MinioClient) GetPresignedURL(ctx context.Context, objectName string, ex
 // GetObject возвращает файл из MinIO в виде потока
 func (m *MinioClient) GetObject(ctx context.Context, objectName string) (io.ReadCloser, error) {
 	// Удаляем начальный слеш, если он есть
-	if strings.HasPrefix(objectName, "/") {
-		objectName = objectName[1:]
-	}
+	objectName = strings.TrimPrefix(objectName, "/")
 
 	log.Printf("Получение объекта из MinIO: bucket=%s, object=%s", m.bucketName, objectName)
 
@@ -206,9 +200,7 @@ func (m *MinioClient) GetObject(ctx context.Context, objectName string) (io.Read
 // UploadToCustomBucket загружает файл в указанный бакет
 func (m *MinioClient) UploadToCustomBucket(ctx context.Context, bucketName, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
 	// Remove leading slash if present
-	if strings.HasPrefix(objectName, "/") {
-		objectName = objectName[1:]
-	}
+	objectName = strings.TrimPrefix(objectName, "/")
 
 	// Upload file to MinIO
 	_, err := m.client.PutObject(ctx, bucketName, objectName, reader, size, minio.PutObjectOptions{
@@ -234,9 +226,7 @@ func (m *MinioClient) DeleteFileFromCustomBucket(ctx context.Context, bucketName
 
 // GetPresignedURLFromCustomBucket создает предварительно подписанный URL для файла из указанного бакета
 func (m *MinioClient) GetPresignedURLFromCustomBucket(ctx context.Context, bucketName, objectName string, expiry time.Duration) (string, error) {
-	if strings.HasPrefix(objectName, "/") {
-		objectName = objectName[1:]
-	}
+	objectName = strings.TrimPrefix(objectName, "/")
 
 	presignedURL, err := m.client.PresignedGetObject(ctx, bucketName, objectName, expiry, nil)
 	if err != nil {
@@ -247,9 +237,7 @@ func (m *MinioClient) GetPresignedURLFromCustomBucket(ctx context.Context, bucke
 
 // GetObjectFromCustomBucket возвращает файл из указанного бакета в виде потока
 func (m *MinioClient) GetObjectFromCustomBucket(ctx context.Context, bucketName, objectName string) (io.ReadCloser, error) {
-	if strings.HasPrefix(objectName, "/") {
-		objectName = objectName[1:]
-	}
+	objectName = strings.TrimPrefix(objectName, "/")
 
 	log.Printf("Получение объекта из MinIO: bucket=%s, object=%s", bucketName, objectName)
 

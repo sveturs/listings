@@ -43,7 +43,7 @@ func (h *AdminCategoriesHandler) GetAllCategories(c *fiber.Ctx) error {
 	lang := c.Query("lang", "en")
 
 	// Создаем контекст с языком
-	ctx := context.WithValue(c.UserContext(), "locale", lang)
+	ctx := context.WithValue(c.UserContext(), ContextKeyLocale, lang)
 
 	categories, err := h.marketplaceService.GetAllCategories(ctx)
 	if err != nil {

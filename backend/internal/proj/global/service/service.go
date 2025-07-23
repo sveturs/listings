@@ -14,7 +14,6 @@ import (
 	behaviorTrackingPostgres "backend/internal/proj/behavior_tracking/storage/postgres"
 	geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
 	marketplaceService "backend/internal/proj/marketplace/service"
-	translationService "backend/internal/proj/marketplace/service"
 	notificationService "backend/internal/proj/notifications/service"
 	payment "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
@@ -34,7 +33,7 @@ type Service struct {
 	contacts         *marketplaceService.ContactsService
 	config           *config.Config
 	notification     *notificationService.Service
-	translation      translationService.TranslationServiceInterface
+	translation      marketplaceService.TranslationServiceInterface
 	balance          *balance.BalanceService
 	payment          payment.PaymentServiceInterface
 	storefront       storefrontService.StorefrontService
@@ -46,7 +45,7 @@ type Service struct {
 	behaviorTracking behaviorTrackingService.BehaviorTrackingService
 }
 
-func NewService(storage storage.Storage, cfg *config.Config, translationSvc translationService.TranslationServiceInterface) *Service {
+func NewService(storage storage.Storage, cfg *config.Config, translationSvc marketplaceService.TranslationServiceInterface) *Service {
 	notificationSvc := notificationService.NewService(storage)
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
@@ -217,7 +216,7 @@ func (s *Service) Notification() notificationService.NotificationServiceInterfac
 	return s.notification.Notification
 }
 
-func (s *Service) Translation() translationService.TranslationServiceInterface {
+func (s *Service) Translation() marketplaceService.TranslationServiceInterface {
 	return s.translation
 }
 

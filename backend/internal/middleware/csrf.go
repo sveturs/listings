@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+
 const (
 	CSRFTokenLength = 32
 	CSRFCookieName  = "csrf_token"
@@ -28,7 +29,7 @@ func (m *Middleware) CSRFProtection() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Пропускаем GET, HEAD, OPTIONS запросы
 		method := c.Method()
-		if method == "GET" || method == "HEAD" || method == "OPTIONS" {
+		if method == httpMethodGet || method == httpMethodHead || method == httpMethodOptions {
 			return c.Next()
 		}
 

@@ -170,7 +170,7 @@ func (s *CloudinaryService) ModerateImage(ctx context.Context, imagePath string)
 	result["url"] = resp.SecureURL
 	result["public_id"] = resp.PublicID
 
-	if resp.Moderation != nil && len(resp.Moderation) > 0 {
+	if len(resp.Moderation) > 0 {
 		for _, mod := range resp.Moderation {
 			if mod.Status == "rejected" {
 				result["safe"] = false

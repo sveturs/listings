@@ -85,5 +85,5 @@ func main() {
 
 	fmt.Printf("\n=== Generated JWT token ===\n")
 	fmt.Println(tokenString)
-	fmt.Printf("\nExpires at: %s\n", claims.ExpiresAt.Time.Format(time.RFC3339))
+	fmt.Printf("\nExpires at: %s\n", claims.ExpiresAt.Format(time.RFC3339))
 }

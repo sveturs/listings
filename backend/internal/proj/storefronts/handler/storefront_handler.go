@@ -15,6 +15,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+
 // StorefrontHandler HTTP handler для витрин
 type StorefrontHandler struct {
 	service service.StorefrontService
@@ -238,12 +239,12 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 	}
 
 	if isActive := c.Query("is_active"); isActive != "" {
-		active := isActive == "true"
+		active := isActive == boolValueTrue
 		filter.IsActive = &active
 	}
 
 	if isVerified := c.Query("is_verified"); isVerified != "" {
-		verified := isVerified == "true"
+		verified := isVerified == boolValueTrue
 		filter.IsVerified = &verified
 	}
 
@@ -421,23 +422,23 @@ func (h *StorefrontHandler) SearchOpenSearch(c *fiber.Ctx) error {
 		params.MinRating = minRating
 	}
 	if isVerified := c.Query("is_verified"); isVerified != "" {
-		verified := isVerified == "true"
+		verified := isVerified == boolValueTrue
 		params.IsVerified = &verified
 	}
 	if isActive := c.Query("is_active"); isActive != "" {
-		active := isActive == "true"
+		active := isActive == boolValueTrue
 		params.IsActive = &active
 	}
 	if isOpenNow := c.Query("is_open_now"); isOpenNow != "" {
-		openNow := isOpenNow == "true"
+		openNow := isOpenNow == boolValueTrue
 		params.IsOpenNow = &openNow
 	}
 	if hasDelivery := c.Query("has_delivery"); hasDelivery != "" {
-		delivery := hasDelivery == "true"
+		delivery := hasDelivery == boolValueTrue
 		params.HasDelivery = &delivery
 	}
 	if hasSelfPickup := c.Query("has_self_pickup"); hasSelfPickup != "" {
-		selfPickup := hasSelfPickup == "true"
+		selfPickup := hasSelfPickup == boolValueTrue
 		params.HasSelfPickup = &selfPickup
 	}
 

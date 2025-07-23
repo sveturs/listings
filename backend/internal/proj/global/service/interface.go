@@ -8,10 +8,7 @@ import (
 	balanceService "backend/internal/proj/balance/service"
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
 	geocodeService "backend/internal/proj/geocode/service"
-	chatService "backend/internal/proj/marketplace/service"
-	contactsService "backend/internal/proj/marketplace/service"
 	marketplaceService "backend/internal/proj/marketplace/service"
-	translationService "backend/internal/proj/marketplace/service"
 	notificationService "backend/internal/proj/notifications/service"
 	paymentService "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
@@ -34,10 +31,10 @@ type ServicesInterface interface {
 	Config() *config.Config
 	Marketplace() marketplaceService.MarketplaceServiceInterface
 	Review() reviewService.ReviewServiceInterface
-	Chat() chatService.ChatServiceInterface
-	Contacts() contactsService.ContactsServiceInterface
+	Chat() marketplaceService.ChatServiceInterface
+	Contacts() marketplaceService.ContactsServiceInterface
 	Notification() notificationService.NotificationServiceInterface
-	Translation() translationService.TranslationServiceInterface
+	Translation() marketplaceService.TranslationServiceInterface
 	Balance() balanceService.BalanceServiceInterface
 	Payment() paymentService.PaymentServiceInterface
 	Storefront() storefrontService.StorefrontService

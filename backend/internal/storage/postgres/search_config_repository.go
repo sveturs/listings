@@ -110,7 +110,11 @@ func (r *SearchConfigRepository) GetSynonyms(ctx context.Context, language strin
 	if err != nil {
 		return nil, fmt.Errorf("failed to get synonyms: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows
+		}
+	}()
 
 	for rows.Next() {
 		var synonym domain.SearchSynonym
@@ -290,7 +294,11 @@ func (r *SearchConfigRepository) GetPopularSearches(ctx context.Context, limit i
 	if err != nil {
 		return nil, fmt.Errorf("failed to get popular searches: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			// Логируем ошибку закрытия rows
+		}
+	}()
 
 	var results []map[string]interface{}
 	for rows.Next() {

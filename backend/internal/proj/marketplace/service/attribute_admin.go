@@ -13,6 +13,13 @@ import (
 	"backend/internal/logger"
 )
 
+const (
+	attributeTypeSelect    = "select"
+	attributeTypeMultiselect = "multiselect"
+	attributeTypeText      = "text"
+	attributeTypeTextarea  = "textarea"
+)
+
 // CreateAttribute создает новый атрибут категории
 func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *models.CategoryAttribute) (int, error) {
 	// Преобразуем Options в JSON, если они представлены как структура
@@ -64,7 +71,7 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 	attribute.CreatedAt = createdAt
 
 	// Сохраняем переводы для атрибута
-	if attribute.Translations != nil && len(attribute.Translations) > 0 {
+	if len(attribute.Translations) > 0 {
 		for lang, text := range attribute.Translations {
 			translation := &models.Translation{
 				EntityType:     "attribute",
@@ -113,7 +120,7 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 		}
 
 		// Автоматически переводим опции, если они есть
-		if attribute.Options != nil && len(attribute.Options) > 0 {
+		if len(attribute.Options) > 0 {
 			var options []map[string]interface{}
 			if err := json.Unmarshal(attribute.Options, &options); err == nil {
 				for _, option := range options {
@@ -153,7 +160,7 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 	}
 
 	// Сохраняем переводы для опций атрибута
-	if attribute.OptionTranslations != nil && len(attribute.OptionTranslations) > 0 {
+	if len(attribute.OptionTranslations) > 0 {
 		for lang, options := range attribute.OptionTranslations {
 			for optionKey, optionValue := range options {
 				translation := &models.Translation{
@@ -234,7 +241,7 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 	}
 
 	// Обновляем переводы для атрибута
-	if attribute.Translations != nil && len(attribute.Translations) > 0 {
+	if len(attribute.Translations) > 0 {
 		for lang, text := range attribute.Translations {
 			translation := &models.Translation{
 				EntityType:     "attribute",
@@ -251,7 +258,7 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 	}
 
 	// Обновляем переводы для опций атрибута
-	if attribute.OptionTranslations != nil && len(attribute.OptionTranslations) > 0 {
+	if len(attribute.OptionTranslations) > 0 {
 		for lang, options := range attribute.OptionTranslations {
 			for optionKey, optionValue := range options {
 				translation := &models.Translation{
@@ -766,7 +773,7 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 		)
 
 		// Добавляем отладку сразу после сканирования
-		if attribute.AttributeType == "select" || attribute.AttributeType == "multiselect" {
+		if attribute.AttributeType == attributeTypeSelect || attribute.AttributeType == attributeTypeMultiselect {
 			log.Printf("DEBUG SCAN: Attribute %s (ID: %d) - raw options valid: %v, content: %s",
 				attribute.Name, attribute.ID, optionsJSON.Valid, optionsJSON.String)
 		}
@@ -787,13 +794,13 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 		if optionsJSON.Valid && len(optionsJSON.String) > 0 {
 			attribute.Options = json.RawMessage(optionsJSON.String)
 			// Добавляем логирование для отладки
-			if attribute.AttributeType == "select" || attribute.AttributeType == "multiselect" {
+			if attribute.AttributeType == attributeTypeSelect || attribute.AttributeType == attributeTypeMultiselect {
 				log.Printf("DEBUG: Attribute %s (ID: %d) options set to: %s", attribute.Name, attribute.ID, optionsJSON.String)
 			}
 		} else {
 			// Если options пустой, устанавливаем пустой JSON объект
 			attribute.Options = json.RawMessage(`{}`)
-			if attribute.AttributeType == "select" || attribute.AttributeType == "multiselect" {
+			if attribute.AttributeType == attributeTypeSelect || attribute.AttributeType == attributeTypeMultiselect {
 				log.Printf("DEBUG: Attribute %s (ID: %d) has empty options, setting to {}", attribute.Name, attribute.ID)
 			}
 		}
@@ -853,7 +860,7 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 
 	log.Printf("DEBUG getCategoryAttributesFromDB returning %d attributes for category %d", len(attributes), categoryID)
 	for _, attr := range attributes {
-		if attr.AttributeType == "select" || attr.AttributeType == "multiselect" {
+		if attr.AttributeType == attributeTypeSelect || attr.AttributeType == attributeTypeMultiselect {
 			log.Printf("DEBUG - Attribute %s: options=%s", attr.Name, string(attr.Options))
 		}
 	}
@@ -1037,7 +1044,7 @@ func (s *MarketplaceService) SaveListingAttributes(ctx context.Context, listingI
 
 		// Определяем тип значения и устанавливаем соответствующее поле
 		switch attr.AttributeType {
-		case "text", "textarea", "select", "multiselect":
+		case attributeTypeText, attributeTypeTextarea, attributeTypeSelect, attributeTypeMultiselect:
 			valueType = "text"
 			textValue = attr.TextValue
 		case "number", "range":

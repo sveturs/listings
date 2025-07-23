@@ -13,6 +13,16 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const (
+	// Entity types
+	entityTypeListing    = "listing"
+	entityTypeUser       = "user"
+	entityTypeStorefront = "storefront"
+	
+	// Rating trends
+	trendStable = "stable"
+)
+
 type ReviewService struct {
 	storage storage.Storage
 }
@@ -30,7 +40,7 @@ func NewReviewService(storage storage.Storage) ReviewServiceInterface { //  Revi
 // UpdateEntityRatingInSearch обновляет рейтинг объекта в поисковом индексе
 func (s *ReviewService) UpdateEntityRatingInSearch(ctx context.Context, entityType string, entityID int, avgRating float64) error {
 	// Обновляем только для листингов
-	if entityType != "listing" {
+	if entityType != entityTypeListing {
 		return nil
 	}
 
@@ -251,7 +261,7 @@ func (s *ReviewService) GetEntityRating(ctx context.Context, entityType string, 
 func (s *ReviewService) checkVerifiedPurchase(ctx context.Context, userId int, entityType string, entityId int) bool {
 	// В зависимости от типа сущности проверяем наличие покупки/бронирования
 	switch entityType {
-	case "listing":
+	case entityTypeListing:
 		// Для маркетплейса проверяем активность в чате
 		// Сначала получаем информацию о листинге, чтобы узнать продавца
 		listing, err := s.storage.GetListingByID(ctx, entityId)
@@ -298,7 +308,8 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 	}
 
 	// Для пользователей и витрин используем материализованные представления
-	if entityType == "user" {
+	switch entityType {
+	case entityTypeUser:
 		// Используем материализованное представление user_ratings
 		err := s.storage.QueryRow(ctx, `
 			SELECT 
@@ -346,7 +357,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		}
 
 		return stats, nil
-	} else if entityType == "storefront" {
+	case entityTypeStorefront:
 		// Используем материализованное представление storefront_ratings
 		err := s.storage.QueryRow(ctx, `
 			SELECT 
@@ -393,9 +404,8 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		}
 
 		return stats, nil
-	}
-
-	// Для других типов сущностей (listing, room, car) используем прямой запрос
+	default:
+		// Для других типов сущностей (listing, room, car) используем прямой запрос
 	err := s.storage.QueryRow(ctx, `
         SELECT 
             COUNT(*) as total,
@@ -443,6 +453,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 	}
 
 	return stats, nil
+	}
 }
 
 func (s *ReviewService) UpdateReviewPhotos(ctx context.Context, reviewId int, photoUrls []string) error {
@@ -522,7 +533,7 @@ func (s *ReviewService) GetStorefrontRatingSummary(ctx context.Context, storefro
 // для правильной агрегации рейтингов после удаления объектов
 func (s *ReviewService) setEntityOrigin(ctx context.Context, review *models.Review) error {
 	switch review.EntityType {
-	case "listing":
+	case entityTypeListing:
 		// Для отзывов на товары определяем владельца
 		listing, err := s.storage.GetListingByID(ctx, review.EntityID)
 		if err != nil {
@@ -531,22 +542,22 @@ func (s *ReviewService) setEntityOrigin(ctx context.Context, review *models.Revi
 
 		// Если товар принадлежит магазину, origin указывает на магазин
 		if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-			review.EntityOriginType = "storefront"
+			review.EntityOriginType = entityTypeStorefront
 			review.EntityOriginID = *listing.StorefrontID
 		} else {
 			// Иначе origin указывает на продавца
-			review.EntityOriginType = "user"
+			review.EntityOriginType = entityTypeUser
 			review.EntityOriginID = listing.UserID
 		}
 
-	case "storefront":
+	case entityTypeStorefront:
 		// Для отзывов на магазин origin - сам магазин
-		review.EntityOriginType = "storefront"
+		review.EntityOriginType = entityTypeStorefront
 		review.EntityOriginID = review.EntityID
 
-	case "user":
+	case entityTypeUser:
 		// Для отзывов на пользователя origin - сам пользователь
-		review.EntityOriginType = "user"
+		review.EntityOriginType = entityTypeUser
 		review.EntityOriginID = review.EntityID
 
 	default:
@@ -565,7 +576,7 @@ func (s *ReviewService) GetUserAggregatedRating(ctx context.Context, userID int)
 
 	// Преобразуем в общий формат AggregatedRating
 	rating := &models.AggregatedRating{
-		EntityType:   "user",
+		EntityType:   entityTypeUser,
 		EntityID:     userID,
 		Average:      data.AverageRating,
 		TotalReviews: data.TotalReviews,
@@ -609,10 +620,10 @@ func (s *ReviewService) GetUserAggregatedRating(ctx context.Context, userID int)
 		} else if diff < -0.2 {
 			rating.RecentTrend = "down"
 		} else {
-			rating.RecentTrend = "stable"
+			rating.RecentTrend = trendStable
 		}
 	} else {
-		rating.RecentTrend = "stable"
+		rating.RecentTrend = trendStable
 	}
 
 	return rating, nil
@@ -626,7 +637,7 @@ func (s *ReviewService) GetStorefrontAggregatedRating(ctx context.Context, store
 	}
 
 	rating := &models.AggregatedRating{
-		EntityType:   "storefront",
+		EntityType:   entityTypeStorefront,
 		EntityID:     storefrontID,
 		Average:      data.AverageRating,
 		TotalReviews: data.TotalReviews,
@@ -664,10 +675,10 @@ func (s *ReviewService) GetStorefrontAggregatedRating(ctx context.Context, store
 		} else if diff < -0.2 {
 			rating.RecentTrend = "down"
 		} else {
-			rating.RecentTrend = "stable"
+			rating.RecentTrend = trendStable
 		}
 	} else {
-		rating.RecentTrend = "stable"
+		rating.RecentTrend = trendStable
 	}
 
 	return rating, nil

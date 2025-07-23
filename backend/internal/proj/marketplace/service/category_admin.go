@@ -39,7 +39,7 @@ func (s *MarketplaceService) CreateCategory(ctx context.Context, category *model
 	}
 
 	// Если есть переводы, сохраняем их
-	if category.Translations != nil && len(category.Translations) > 0 {
+	if len(category.Translations) > 0 {
 		for lang, text := range category.Translations {
 			translation := &models.Translation{
 				EntityType:     "category",
@@ -126,7 +126,7 @@ func (s *MarketplaceService) UpdateCategory(ctx context.Context, category *model
 	}
 
 	// Если есть переводы, обновляем их
-	if category.Translations != nil && len(category.Translations) > 0 {
+	if len(category.Translations) > 0 {
 		for lang, text := range category.Translations {
 			translation := &models.Translation{
 				EntityType:     "category",
@@ -325,6 +325,7 @@ func (s *MarketplaceService) getCategoryAttributeGroupsFromDB(ctx context.Contex
 	defer func() {
 		if err := rows.Close(); err != nil {
 			// Логирование ошибки закрытия rows
+			_ = err // Явно игнорируем ошибку
 		}
 	}()
 

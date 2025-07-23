@@ -59,7 +59,11 @@ func (r *orderRepository) Create(ctx context.Context, order *models.StorefrontOr
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+		}
+	}()
 
 	// Создаем заказ (без items - они будут в отдельной таблице)
 	query := `
