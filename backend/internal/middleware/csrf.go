@@ -8,7 +8,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-
 const (
 	CSRFTokenLength = 32
 	CSRFCookieName  = "csrf_token"

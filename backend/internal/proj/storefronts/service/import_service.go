@@ -18,7 +18,7 @@ import (
 const (
 	// Status values
 	statusFailed = "failed"
-	
+
 	// File types
 	fileTypeXML = "xml"
 	fileTypeCSV = "csv"

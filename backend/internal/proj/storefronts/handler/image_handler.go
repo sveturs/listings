@@ -51,14 +51,14 @@ func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
 	fmt.Printf("UploadProductImage - All params: %+v\n", c.AllParams())
 	fmt.Printf("UploadProductImage - product_id param: %s\n", c.Params("product_id"))
 	fmt.Printf("UploadProductImage - id param: %s\n", c.Params("id"))
-	
+
 	// Получение ID товара - пробуем оба варианта
 	productIDStr := c.Params("product_id")
 	if productIDStr == "" {
 		productIDStr = c.Params("id")
 	}
 	fmt.Printf("UploadProductImage - Using productIDStr: %s\n", productIDStr)
-	
+
 	productID, err := strconv.Atoi(productIDStr)
 	if err != nil {
 		fmt.Printf("UploadProductImage - Error parsing product ID: %v\n", err)

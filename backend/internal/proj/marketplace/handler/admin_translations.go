@@ -17,10 +17,10 @@ import (
 )
 
 const (
-	providerGoogle = "google"
-	providerOpenAI = "openai"
-	providerManual = "manual"
-	entityTypeCategory = "category"
+	providerGoogle      = "google"
+	providerOpenAI      = "openai"
+	providerManual      = "manual"
+	entityTypeCategory  = "category"
 	entityTypeAttribute = "attribute"
 )
 

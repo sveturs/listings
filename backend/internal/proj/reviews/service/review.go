@@ -18,7 +18,7 @@ const (
 	entityTypeListing    = "listing"
 	entityTypeUser       = "user"
 	entityTypeStorefront = "storefront"
-	
+
 	// Rating trends
 	trendStable = "stable"
 )
@@ -406,7 +406,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		return stats, nil
 	default:
 		// Для других типов сущностей (listing, room, car) используем прямой запрос
-	err := s.storage.QueryRow(ctx, `
+		err := s.storage.QueryRow(ctx, `
         SELECT 
             COUNT(*) as total,
             COALESCE(AVG(rating), 0) as avg_rating,
@@ -417,17 +417,17 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
         AND entity_id = $2
         AND status = 'published'
     `, entityType, entityId).Scan(
-		&stats.TotalReviews,
-		&stats.AverageRating,
-		&stats.VerifiedReviews,
-		&stats.PhotoReviews,
-	)
-	if err != nil {
-		return nil, err
-	}
+			&stats.TotalReviews,
+			&stats.AverageRating,
+			&stats.VerifiedReviews,
+			&stats.PhotoReviews,
+		)
+		if err != nil {
+			return nil, err
+		}
 
-	// Получаем распределение оценок
-	rows, err := s.storage.Query(ctx, `
+		// Получаем распределение оценок
+		rows, err := s.storage.Query(ctx, `
         SELECT rating, COUNT(*)
         FROM reviews
         WHERE entity_type = $1 
@@ -435,24 +435,24 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
         AND status = 'published'
         GROUP BY rating
     `, entityType, entityId)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			// Логирование ошибки закрытия rows
-		}
-	}()
-
-	for rows.Next() {
-		var rating, count int
-		if err := rows.Scan(&rating, &count); err != nil {
+		if err != nil {
 			return nil, err
 		}
-		stats.RatingDistribution[rating] = count
-	}
+		defer func() {
+			if err := rows.Close(); err != nil {
+				// Логирование ошибки закрытия rows
+			}
+		}()
 
-	return stats, nil
+		for rows.Next() {
+			var rating, count int
+			if err := rows.Scan(&rating, &count); err != nil {
+				return nil, err
+			}
+			stats.RatingDistribution[rating] = count
+		}
+
+		return stats, nil
 	}
 }
 

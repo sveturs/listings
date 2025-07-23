@@ -9,7 +9,6 @@ import (
 	"backend/internal/logger"
 )
 
-
 func (m *Middleware) Logger() fiber.Handler {
 	masker := NewSensitiveDataMasker()
 

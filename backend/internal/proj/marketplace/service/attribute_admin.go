@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	attributeTypeSelect    = "select"
+	attributeTypeSelect      = "select"
 	attributeTypeMultiselect = "multiselect"
-	attributeTypeText      = "text"
-	attributeTypeTextarea  = "textarea"
+	attributeTypeText        = "text"
+	attributeTypeTextarea    = "textarea"
 )
 
 // CreateAttribute создает новый атрибут категории

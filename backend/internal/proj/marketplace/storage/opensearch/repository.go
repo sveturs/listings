@@ -28,10 +28,10 @@ const (
 	// Field names
 	fieldNamePrice     = "price"
 	fieldNameCreatedAt = "created_at"
-	
+
 	// Boolean values
 	boolValueTrue = "true"
-	
+
 	// Sort orders
 	sortOrderDesc = "desc"
 	sortOrderAsc  = "asc"

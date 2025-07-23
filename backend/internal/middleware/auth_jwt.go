@@ -13,7 +13,6 @@ import (
 	"backend/pkg/utils"
 )
 
-
 // AuthRequiredJWT - основной метод аутентификации через JWT
 // Поддерживает как Bearer токены в заголовке, так и fallback на session cookies
 func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {

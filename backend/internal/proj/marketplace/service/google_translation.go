@@ -36,10 +36,10 @@ const (
 	OpenAI TranslationProvider = "openai"
 	// Manual ручной перевод
 	Manual TranslationProvider = "manual"
-	
+
 	// Language detection
 	languageAuto = "auto"
-	
+
 	// Field names
 	fieldNameTitle = "title"
 	fieldNameName  = "name"

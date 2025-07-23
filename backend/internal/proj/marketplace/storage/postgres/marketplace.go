@@ -25,11 +25,11 @@ import (
 const (
 	// Attribute names
 	attrNameArea           = "area"
-	attrNameLandArea      = "land_area"
-	attrNameMileage       = "mileage"
+	attrNameLandArea       = "land_area"
+	attrNameMileage        = "mileage"
 	attrNameEngineCapacity = "engine_capacity"
-	attrNamePower         = "power"
-	attrNameYear          = "year"
+	attrNamePower          = "power"
+	attrNameYear           = "year"
 )
 
 var (
@@ -1153,9 +1153,9 @@ func sanitizeAttributeValue(attr *models.ListingAttributeValue) {
 func isZeroValidValue(attrName string) bool {
 	// Для этих атрибутов ноль - допустимое значение
 	zeroValidAttrs := map[string]bool{
-		"floor":   true, // Например, цокольный этаж
+		"floor":         true, // Например, цокольный этаж
 		attrNameMileage: true, // Для новых автомобилей
-		"price":   true, // Для бесплатных объявлений
+		"price":         true, // Для бесплатных объявлений
 	}
 	return zeroValidAttrs[attrName]
 }

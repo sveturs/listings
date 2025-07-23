@@ -73,14 +73,14 @@ const (
 	extensionDOC  = ".doc"
 	extensionDOCX = ".docx"
 	extensionTXT  = ".txt"
-	
+
 	// URL paths
-	listingsPath   = "/listings/"
-	chatFilesPath  = "/chat-files/"
-	
+	listingsPath  = "/listings/"
+	chatFilesPath = "/chat-files/"
+
 	// Storage configuration
-	storageMinio      = "minio"
-	bucketChatFiles   = "chat-files"
+	storageMinio    = "minio"
+	bucketChatFiles = "chat-files"
 )
 
 // chatFileStorageWrapper обертка для работы с файлами чата

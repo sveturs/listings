@@ -15,7 +15,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-
 // StorefrontHandler HTTP handler для витрин
 type StorefrontHandler struct {
 	service service.StorefrontService

@@ -12,7 +12,6 @@ import (
 	"backend/pkg/utils"
 )
 
-
 // AuthRateLimit создает rate limiter для аутентификации
 // Ограничивает количество попыток входа/регистрации для защиты от brute force атак
 func (m *Middleware) AuthRateLimit() fiber.Handler {
