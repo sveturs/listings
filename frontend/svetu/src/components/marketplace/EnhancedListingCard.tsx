@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru, enUS, sr } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
 import { MarketplaceItem, MarketplaceImage } from '@/types/marketplace';
 import SafeImage from '@/components/SafeImage';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,7 +59,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
 
   const dateLocale = localeMap[locale] || enUS;
 
-  const conditionBadge = {
+  const conditionBadge: Record<string, { text: string; class: string }> = {
     new: { text: t('condition.new'), class: 'badge-success' },
     like_new: { text: t('condition.likeNew'), class: 'badge-info' },
     used: { text: t('condition.used'), class: 'badge-primary' },
@@ -138,7 +139,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
     if (onToggleFavorite && !isProcessingFavorite) {
       setIsProcessingFavorite(true);
       try {
-        await onToggleFavorite(item.id);
+        await onToggleFavorite(item.id.toString());
         setIsFavorite(!isFavorite);
       } catch (error) {
         console.error('Error toggling favorite:', error);
@@ -196,7 +197,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
 
                 {/* Badges */}
                 <div className="absolute top-1 left-1 flex flex-col gap-1">
-                  {item.condition && (
+                  {item.condition && conditionBadge[item.condition] && (
                     <div
                       className={`badge badge-sm ${conditionBadge[item.condition].class}`}
                     >
@@ -226,9 +227,9 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-grow">
                     {/* Категория */}
-                    {item.category_name && (
+                    {item.category?.name && (
                       <div className="text-xs text-base-content/60 mb-1">
-                        {item.category_name}
+                        {item.category.name}
                       </div>
                     )}
 
@@ -243,14 +244,14 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
                     )}
 
                     {/* Продавец и рейтинг */}
-                    {item.user_name && (
+                    {item.user?.name && (
                       <div className="flex items-center gap-2 mt-2 text-sm">
                         <div className="avatar placeholder">
                           <div className="bg-neutral text-neutral-content rounded-full w-5">
-                            <span className="text-xs">{item.user_name[0]}</span>
+                            <span className="text-xs">{item.user.name[0]}</span>
                           </div>
                         </div>
-                        <span className="font-medium">{item.user_name}</span>
+                        <span className="font-medium">{item.user.name}</span>
                         {/* TODO: добавить поле verified в API */}
                         {/* {item.seller?.verified && (
                           <Shield className="w-3 h-3 text-success" />
@@ -281,10 +282,10 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
                           locale: dateLocale,
                         })}
                       </span>
-                      {item.view_count !== undefined && (
+                      {item.views_count !== undefined && (
                         <span className="flex items-center gap-1">
                           <Eye className="w-3 h-3" />
-                          {item.view_count}
+                          {item.views_count}
                         </span>
                       )}
                     </div>
@@ -433,9 +434,9 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
 
       <div className="card-body p-3">
         {/* Категория */}
-        {item.category_name && (
+        {item.category?.name && (
           <div className="text-xs text-base-content/60">
-            {item.category_name}
+            {item.category.name}
           </div>
         )}
 
@@ -445,14 +446,14 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
         </h3>
 
         {/* Продавец */}
-        {item.user_name && (
+        {item.user?.name && (
           <div className="flex items-center gap-2 text-xs">
             <div className="avatar placeholder">
               <div className="bg-neutral text-neutral-content rounded-full w-5">
-                <span className="text-xs">{item.user_name[0]}</span>
+                <span className="text-xs">{item.user.name[0]}</span>
               </div>
             </div>
-            <span className="font-medium">{item.user_name}</span>
+            <span className="font-medium">{item.user.name}</span>
             {/* TODO: добавить рейтинг */}
             <div className="flex items-center gap-1">
               <Star className="w-3 h-3 fill-warning text-warning" />
@@ -475,15 +476,21 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {formatDistanceToNow(new Date(item.created_at), {
-                addSuffix: true,
-                locale: dateLocale,
-              })}
+              {(() => {
+                const date = new Date(item.created_at);
+                if (isNaN(date.getTime())) {
+                  return '-';
+                }
+                return formatDistanceToNow(date, {
+                  addSuffix: true,
+                  locale: dateLocale,
+                });
+              })()}
             </span>
-            {item.view_count !== undefined && (
+            {item.views_count !== undefined && (
               <span className="flex items-center gap-1">
                 <Eye className="w-3 h-3" />
-                {item.view_count}
+                {item.views_count}
               </span>
             )}
           </div>
