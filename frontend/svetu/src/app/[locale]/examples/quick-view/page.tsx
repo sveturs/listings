@@ -1,315 +1,344 @@
 'use client';
 
-import React, { useState } from 'react';
-import { QuickView } from '@/components/ui/QuickView';
-import { Eye, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { AnimatedSection } from '@/components/ui/AnimatedSection';
+import {
+  XMarkIcon,
+  HeartIcon,
+  ShareIcon,
+  MapPinIcon,
+  CurrencyEuroIcon,
+  CalendarIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 
-export default function QuickViewExamplesPage() {
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+interface Listing {
+  id: number;
+  title: string;
+  price: number;
+  location: string;
+  type: string;
+  rating: number;
+  images: number;
+}
 
-  const sampleProducts = [
+export default function QuickViewExamplePage() {
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const listings: Listing[] = [
     {
-      id: '1',
-      title: 'iPhone 14 Pro Max 256GB',
-      price: '€899',
-      description: `Продаю iPhone 14 Pro Max в отличном состоянии.
-      
-Характеристики:
-- Память: 256GB
-- Цвет: Deep Purple
-- Состояние: как новый
-- Комплект: полный (коробка, зарядка, документы)
-- Гарантия: до марта 2024
-
-Телефон использовался аккуратно, всегда в чехле и с защитным стеклом.
-Без царапин и сколов. Батарея держит отлично - 96% здоровья.
-
-Причина продажи: переход на Android.`,
-      images: [
-        'https://via.placeholder.com/600x400/9333ea/ffffff?text=iPhone+1',
-        'https://via.placeholder.com/600x400/7c3aed/ffffff?text=iPhone+2',
-        'https://via.placeholder.com/600x400/6d28d9/ffffff?text=iPhone+3',
-      ],
-      category: 'Электроника',
-      seller: {
-        name: 'Александр П.',
-        rating: 4.8,
-        totalReviews: 127,
-      },
-      location: {
-        address: 'Белград, Врачар',
-        distance: 2.5,
-      },
-      stats: {
-        views: 342,
-        favorites: 28,
-      },
-      condition: 'used',
+      id: 1,
+      title: 'Cozy Studio in City Center',
+      price: 450,
+      location: 'Belgrade, Serbia',
+      type: 'Studio',
+      rating: 4.5,
+      images: 5,
     },
     {
-      id: '2',
-      title: 'Кожаная куртка Zara, размер M',
-      price: '€120',
-      description: `Стильная кожаная куртка от Zara.
-      
-Детали:
-- Размер: M (подойдет на 46-48)
-- Материал: натуральная кожа
-- Цвет: черный
-- Состояние: отличное
-
-Куртка практически новая, носилась несколько раз.`,
-      images: [
-        'https://via.placeholder.com/600x400/000000/ffffff?text=Jacket+1',
-        'https://via.placeholder.com/600x400/171717/ffffff?text=Jacket+2',
-      ],
-      category: 'Одежда',
-      seller: {
-        name: 'Мария К.',
-        rating: 4.9,
-        totalReviews: 89,
-      },
-      location: {
-        address: 'Нови Сад, Центр',
-        distance: 0.8,
-      },
-      stats: {
-        views: 156,
-        favorites: 12,
-      },
-      condition: 'used',
+      id: 2,
+      title: 'Modern 2BR Apartment',
+      price: 750,
+      location: 'Novi Sad, Serbia',
+      type: '2 Bedroom',
+      rating: 4.8,
+      images: 8,
     },
     {
-      id: '3',
-      title: 'MacBook Air M2 13" 512GB',
-      price: '€1,299',
-      description: `MacBook Air с процессором M2.
-      
-Конфигурация:
-- Процессор: Apple M2
-- Память: 16GB
-- SSD: 512GB
-- Цвет: Midnight
-- Год: 2023
-
-Идеальное состояние, покупался для учебы.`,
-      images: [
-        'https://via.placeholder.com/600x400/1e3a8a/ffffff?text=MacBook',
-      ],
-      category: 'Компьютеры',
-      seller: {
-        name: 'Tech Store',
-        rating: 4.7,
-        totalReviews: 234,
-      },
-      location: {
-        address: 'Белград, Нови Београд',
-        distance: 5.2,
-      },
-      stats: {
-        views: 521,
-        favorites: 45,
-      },
-      condition: 'refurbished',
+      id: 3,
+      title: 'Luxury Penthouse',
+      price: 1200,
+      location: 'Belgrade, Serbia',
+      type: 'Penthouse',
+      rating: 5.0,
+      images: 12,
+    },
+    {
+      id: 4,
+      title: 'Student Room Near University',
+      price: 250,
+      location: 'Belgrade, Serbia',
+      type: 'Room',
+      rating: 4.2,
+      images: 3,
     },
   ];
 
-  const openQuickView = (product: any) => {
-    setSelectedProduct(product);
-    setIsQuickViewOpen(true);
+  const openQuickView = (listing: Listing) => {
+    setSelectedListing(listing);
+    setIsFavorite(false);
+  };
+
+  const closeQuickView = () => {
+    setSelectedListing(null);
+    setIsFavorite(false);
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8">Быстрый просмотр товара</h1>
+    <div className="container mx-auto p-4 max-w-6xl">
+      <AnimatedSection animation="fadeIn">
+        <h1 className="text-4xl font-bold mb-8">Quick View Modal</h1>
+        <p className="text-lg text-base-content/70 mb-8">
+          Preview listings quickly without leaving the current page
+        </p>
+      </AnimatedSection>
 
-      {/* Описание */}
-      <section className="mb-12">
-        <div className="card bg-base-200 p-6">
-          <h2 className="text-2xl font-semibold mb-4">О компоненте QuickView</h2>
-          <p className="text-base-content/80 mb-4">
-            Компонент быстрого просмотра позволяет пользователям детально изучить товар без перехода на отдельную страницу.
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-base-content/80">
-            <li>Модальное окно с полной информацией о товаре</li>
-            <li>Галерея изображений с навигацией</li>
-            <li>Информация о продавце и местоположении</li>
-            <li>Кнопки быстрых действий</li>
-            <li>Адаптивный дизайн для всех устройств</li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Примеры товаров */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Нажмите на кнопку для просмотра</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sampleProducts.map((product) => (
-            <div key={product.id} className="card bg-base-100 shadow-sm hover:shadow-lg transition-shadow">
-              <figure className="h-48 bg-base-200 relative">
-                <img
-                  src={product.images[0]}
-                  alt={product.title}
-                  className="w-full h-full object-cover"
-                />
-                {/* Quick View Button Overlay */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button
-                    onClick={() => openQuickView(product)}
-                    className="btn btn-primary btn-sm gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Быстрый просмотр
-                  </button>
-                </div>
-              </figure>
-              
-              <div className="card-body p-4">
-                <h3 className="font-semibold line-clamp-2">{product.title}</h3>
-                <p className="text-xl font-bold text-primary">{product.price}</p>
-                
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-base-content/60">
-                    {product.stats.views} просмотров
-                  </span>
-                  <button
-                    onClick={() => openQuickView(product)}
-                    className="btn btn-ghost btn-sm gap-1"
-                  >
-                    <Zap className="w-4 h-4" />
-                    Быстрый просмотр
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Интеграция с карточками */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Интеграция с карточками товаров</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Hover версия */}
-          <div className="card bg-base-200 p-6">
-            <h3 className="text-lg font-semibold mb-4">При наведении</h3>
-            <div className="card bg-base-100 shadow-sm group">
-              <figure className="h-40 bg-base-300 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                  <button
-                    onClick={() => openQuickView(sampleProducts[0])}
-                    className="btn btn-primary btn-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Быстрый просмотр
-                  </button>
-                </div>
-              </figure>
-              <div className="card-body p-4">
-                <h4 className="font-medium">Товар с hover эффектом</h4>
-                <p className="text-sm text-base-content/60">Наведите для просмотра</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Icon версия */}
-          <div className="card bg-base-200 p-6">
-            <h3 className="text-lg font-semibold mb-4">С иконкой</h3>
-            <div className="card bg-base-100 shadow-sm">
-              <figure className="h-40 bg-base-300 relative">
-                <button
-                  onClick={() => openQuickView(sampleProducts[1])}
-                  className="absolute top-2 right-2 btn btn-circle btn-sm bg-base-100/80 hover:bg-base-100"
+      {/* Listing Grid */}
+      <AnimatedSection animation="slideUp" delay={0.1}>
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">
+            Click any listing for quick preview
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {listings.map((listing, index) => (
+              <AnimatedSection
+                key={listing.id}
+                animation="slideUp"
+                delay={0.1 * index}
+              >
+                <div
+                  className="card bg-base-100 shadow-xl cursor-pointer hover:shadow-2xl transition-shadow"
+                  onClick={() => openQuickView(listing)}
                 >
-                  <Eye className="w-4 h-4" />
-                </button>
-              </figure>
-              <div className="card-body p-4">
-                <h4 className="font-medium">Товар с иконкой просмотра</h4>
-                <p className="text-sm text-base-content/60">Кнопка всегда видна</p>
-              </div>
-            </div>
+                  <figure className="px-4 pt-4">
+                    <div className="bg-base-200 rounded-lg h-48 w-full flex items-center justify-center">
+                      <span className="text-6xl">🏠</span>
+                    </div>
+                  </figure>
+                  <div className="card-body">
+                    <h3 className="card-title">{listing.title}</h3>
+                    <p className="text-base-content/70">{listing.location}</p>
+                    <div className="flex justify-between items-center mt-4">
+                      <span className="text-2xl font-bold">
+                        €{listing.price}/mo
+                      </span>
+                      <div className="badge badge-ghost">{listing.type}</div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="rating rating-sm">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <input
+                            key={star}
+                            type="radio"
+                            className="mask mask-star-2 bg-orange-400"
+                            checked={star <= Math.floor(listing.rating)}
+                            readOnly
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm text-base-content/70">
+                        ({listing.rating})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </AnimatedSection>
+            ))}
           </div>
-        </div>
-      </section>
-
-      {/* Особенности */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Особенности компонента</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="card bg-base-100 p-4">
-            <h3 className="font-medium mb-2">🖼️ Галерея изображений</h3>
-            <p className="text-sm text-base-content/70">
-              Переключение между фото с превью и счетчиком
-            </p>
-          </div>
-          
-          <div className="card bg-base-100 p-4">
-            <h3 className="font-medium mb-2">📱 Адаптивность</h3>
-            <p className="text-sm text-base-content/70">
-              Оптимизирован для мобильных и десктопов
-            </p>
-          </div>
-          
-          <div className="card bg-base-100 p-4">
-            <h3 className="font-medium mb-2">⚡ Быстрая загрузка</h3>
-            <p className="text-sm text-base-content/70">
-              Ленивая загрузка изображений
-            </p>
-          </div>
-          
-          <div className="card bg-base-100 p-4">
-            <h3 className="font-medium mb-2">🎨 Анимации</h3>
-            <p className="text-sm text-base-content/70">
-              Плавное появление и переходы
-            </p>
-          </div>
-          
-          <div className="card bg-base-100 p-4">
-            <h3 className="font-medium mb-2">🔒 Блокировка скролла</h3>
-            <p className="text-sm text-base-content/70">
-              Предотвращение прокрутки фона
-            </p>
-          </div>
-          
-          <div className="card bg-base-100 p-4">
-            <h3 className="font-medium mb-2">♿ Доступность</h3>
-            <p className="text-sm text-base-content/70">
-              Поддержка клавиатуры и скрин-ридеров
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Примеры кода */}
-      <section className="card bg-base-200 p-6">
-        <h2 className="text-2xl font-semibold mb-4">Использование</h2>
-        <div className="mockup-code">
-          <pre data-prefix="1"><code>{`import { QuickView } from '@/components/ui/QuickView';`}</code></pre>
-          <pre data-prefix="2"><code>{``}</code></pre>
-          <pre data-prefix="3"><code>{`const [isOpen, setIsOpen] = useState(false);`}</code></pre>
-          <pre data-prefix="4"><code>{`const [product, setProduct] = useState(null);`}</code></pre>
-          <pre data-prefix="5"><code>{``}</code></pre>
-          <pre data-prefix="6"><code>{`<QuickView`}</code></pre>
-          <pre data-prefix="7"><code>{`  isOpen={isOpen}`}</code></pre>
-          <pre data-prefix="8"><code>{`  onClose={() => setIsOpen(false)}`}</code></pre>
-          <pre data-prefix="9"><code>{`  product={product}`}</code></pre>
-          <pre data-prefix="10"><code>{`/>`}</code></pre>
-        </div>
-      </section>
+        </section>
+      </AnimatedSection>
 
       {/* Quick View Modal */}
-      {selectedProduct && (
-        <QuickView
-          isOpen={isQuickViewOpen}
-          onClose={() => setIsQuickViewOpen(false)}
-          product={selectedProduct}
-        />
+      {selectedListing && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-4xl">
+            {/* Header */}
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-bold text-xl">{selectedListing.title}</h3>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={closeQuickView}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Image Gallery */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="col-span-2 md:col-span-1 bg-base-200 rounded-lg h-64 flex items-center justify-center">
+                <span className="text-8xl">🏠</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-base-200 rounded-lg h-30 flex items-center justify-center"
+                  >
+                    <span className="text-4xl">📷</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="mb-4">
+                  <h4 className="font-semibold mb-2">Details</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <MapPinIcon className="h-5 w-5 text-base-content/50" />
+                      <span>{selectedListing.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CurrencyEuroIcon className="h-5 w-5 text-base-content/50" />
+                      <span className="font-bold">
+                        €{selectedListing.price}/month
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon className="h-5 w-5 text-base-content/50" />
+                      <span>Available immediately</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="h-5 w-5 text-base-content/50" />
+                      <span>Posted by John Doe</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="font-semibold mb-2">Features</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="badge badge-outline">WiFi</div>
+                    <div className="badge badge-outline">Parking</div>
+                    <div className="badge badge-outline">Pet Friendly</div>
+                    <div className="badge badge-outline">Furnished</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Description</h4>
+                <p className="text-base-content/80 mb-4">
+                  Beautiful and modern accommodation in the heart of the city.
+                  Perfect for students and young professionals. Close to public
+                  transport, shops, and restaurants. All utilities included in
+                  the price.
+                </p>
+
+                <div className="flex gap-2">
+                  <button
+                    className="btn btn-primary flex-1"
+                    onClick={() => alert('Contact feature would open here')}
+                  >
+                    Contact Owner
+                  </button>
+                  <button
+                    className={`btn btn-square ${isFavorite ? 'btn-error' : 'btn-ghost'}`}
+                    onClick={() => setIsFavorite(!isFavorite)}
+                  >
+                    {isFavorite ? (
+                      <HeartIconSolid className="h-5 w-5" />
+                    ) : (
+                      <HeartIcon className="h-5 w-5" />
+                    )}
+                  </button>
+                  <button className="btn btn-square btn-ghost">
+                    <ShareIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-action">
+              <button className="btn" onClick={closeQuickView}>
+                Close
+              </button>
+              <button className="btn btn-primary">View Full Details</button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={closeQuickView}></div>
+        </div>
       )}
+
+      {/* Features */}
+      <AnimatedSection animation="slideUp" delay={0.3}>
+        <section className="card bg-base-100 shadow-xl mb-8">
+          <div className="card-body">
+            <h2 className="card-title mb-4">Quick View Features</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-semibold mb-2">⚡ Instant Preview</h3>
+                <p className="text-base-content/70">
+                  View essential listing information without page navigation
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">📸 Image Gallery</h3>
+                <p className="text-base-content/70">
+                  Browse through property images in a compact layout
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">💬 Quick Actions</h3>
+                <p className="text-base-content/70">
+                  Contact owner, save to favorites, or share directly from
+                  preview
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">📱 Mobile Optimized</h3>
+                <p className="text-base-content/70">
+                  Responsive design works perfectly on all devices
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </AnimatedSection>
+
+      {/* Implementation */}
+      <AnimatedSection animation="slideUp" delay={0.4}>
+        <section className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <h2 className="card-title mb-4">Implementation</h2>
+            <div className="mockup-code">
+              <pre data-prefix="1">
+                <code>{`// Open modal with listing data`}</code>
+              </pre>
+              <pre data-prefix="2">
+                <code>{`const openQuickView = (listing) => {`}</code>
+              </pre>
+              <pre data-prefix="3">
+                <code>{`  setSelectedListing(listing);`}</code>
+              </pre>
+              <pre data-prefix="4">
+                <code>{`};`}</code>
+              </pre>
+              <pre data-prefix="5">
+                <code>{``}</code>
+              </pre>
+              <pre data-prefix="6">
+                <code>{`// Modal component`}</code>
+              </pre>
+              <pre data-prefix="7">
+                <code>{`{selectedListing && (`}</code>
+              </pre>
+              <pre data-prefix="8">
+                <code>{`  <div className="modal modal-open">`}</code>
+              </pre>
+              <pre data-prefix="9">
+                <code>{`    <div className="modal-box">`}</code>
+              </pre>
+              <pre data-prefix="10">
+                <code>{`      {/* Quick view content */}`}</code>
+              </pre>
+              <pre data-prefix="11">
+                <code>{`    </div>`}</code>
+              </pre>
+              <pre data-prefix="12">
+                <code>{`  </div>`}</code>
+              </pre>
+              <pre data-prefix="13">
+                <code>{`)}`}</code>
+              </pre>
+            </div>
+          </div>
+        </section>
+      </AnimatedSection>
     </div>
   );
 }

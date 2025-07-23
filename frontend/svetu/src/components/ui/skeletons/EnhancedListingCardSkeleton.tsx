@@ -6,11 +6,12 @@ interface EnhancedListingCardSkeletonProps {
   viewMode?: 'grid' | 'list';
 }
 
-export const EnhancedListingCardSkeleton: React.FC<EnhancedListingCardSkeletonProps> = ({
-  viewMode = 'grid',
-}) => {
+export const EnhancedListingCardSkeleton: React.FC<
+  EnhancedListingCardSkeletonProps
+> = ({ viewMode = 'grid' }) => {
   // Общий класс для анимированных блоков
-  const shimmerClass = 'relative overflow-hidden bg-base-300 before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent';
+  const shimmerClass =
+    'relative overflow-hidden bg-base-300 before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent';
 
   if (viewMode === 'list') {
     return (
@@ -18,7 +19,9 @@ export const EnhancedListingCardSkeleton: React.FC<EnhancedListingCardSkeletonPr
         <div className="card-body p-4">
           <div className="flex gap-4">
             {/* Изображение слева */}
-            <div className={`w-32 h-32 flex-shrink-0 rounded-lg ${shimmerClass}`} />
+            <div
+              className={`w-32 h-32 flex-shrink-0 rounded-lg ${shimmerClass}`}
+            />
 
             {/* Информация */}
             <div className="flex-grow">

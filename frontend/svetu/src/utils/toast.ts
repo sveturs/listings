@@ -63,19 +63,19 @@ class ToastManager {
 
   private close(toast: HTMLElement) {
     if (!toast || toast.style.opacity === '0') return;
-    
+
     // Отменяем таймер если он есть
     const timeoutId = (toast as any).timeoutId;
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
-    
+
     toast.style.opacity = '0';
     toast.style.transform = 'scale(0.9)';
-    
+
     setTimeout(() => {
       toast.remove();
-      
+
       // Удаляем контейнер если он пустой
       if (this.container && this.container.children.length === 0) {
         this.container.remove();
@@ -106,7 +106,7 @@ class ToastManager {
         <span>${message}</span>
       </div>
     `;
-    
+
     // Закрытие по клику
     toast.addEventListener('click', () => {
       this.close(toast);
@@ -129,7 +129,7 @@ class ToastManager {
     const timeoutId = setTimeout(() => {
       this.close(toast);
     }, duration);
-    
+
     // Сохраняем ID таймера для возможности отмены
     (toast as any).timeoutId = timeoutId;
   }

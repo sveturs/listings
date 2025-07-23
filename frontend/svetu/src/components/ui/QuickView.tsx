@@ -1,7 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { X, Heart, Share2, ShoppingCart, Eye, Star, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  X,
+  Heart,
+  Share2,
+  ShoppingCart,
+  Eye,
+  Star,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { DistanceBadge } from './DistanceBadge';
 
 interface QuickViewProps {
@@ -32,7 +42,11 @@ interface QuickViewProps {
   };
 }
 
-export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }) => {
+export const QuickView: React.FC<QuickViewProps> = ({
+  isOpen,
+  onClose,
+  product,
+}) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
 
@@ -50,14 +64,14 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
 
   const handlePrevImage = () => {
     setIsImageLoading(true);
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === 0 ? product.images.length - 1 : prev - 1
     );
   };
 
   const handleNextImage = () => {
     setIsImageLoading(true);
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === product.images.length - 1 ? 0 : prev + 1
     );
   };
@@ -67,14 +81,14 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 animate-fadeIn"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="fixed inset-4 md:inset-8 lg:inset-12 z-50 flex items-center justify-center pointer-events-none">
-        <div 
+        <div
           className="bg-base-100 rounded-2xl shadow-2xl w-full h-full max-w-6xl max-h-[90vh] overflow-hidden pointer-events-auto animate-slideUp"
           onClick={(e) => e.stopPropagation()}
         >
@@ -96,14 +110,17 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
               {/* Main Image */}
               <div className="relative h-full flex items-center justify-center p-4">
                 <img
-                  src={product.images[currentImageIndex] || 'https://via.placeholder.com/600x400'}
+                  src={
+                    product.images[currentImageIndex] ||
+                    'https://via.placeholder.com/600x400'
+                  }
                   alt={product.title}
                   className={`max-w-full max-h-full object-contain rounded-lg transition-opacity duration-300 ${
                     isImageLoading ? 'opacity-0' : 'opacity-100'
                   }`}
                   onLoad={() => setIsImageLoading(false)}
                 />
-                
+
                 {/* Navigation Arrows */}
                 {product.images.length > 1 && (
                   <>
@@ -121,7 +138,7 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
                     </button>
                   </>
                 )}
-                
+
                 {/* Image Counter */}
                 {product.images.length > 1 && (
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-base-100/80 backdrop-blur-sm rounded-full px-3 py-1">
@@ -143,8 +160,8 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
                         setCurrentImageIndex(index);
                       }}
                       className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                        index === currentImageIndex 
-                          ? 'border-primary ring-2 ring-primary/30' 
+                        index === currentImageIndex
+                          ? 'border-primary ring-2 ring-primary/30'
                           : 'border-transparent hover:border-base-300'
                       }`}
                     >
@@ -171,14 +188,19 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
                     </span>
                   )}
                   {product.location && (
-                    <DistanceBadge distance={product.location.distance} variant="compact" />
+                    <DistanceBadge
+                      distance={product.location.distance}
+                      variant="compact"
+                    />
                   )}
                 </div>
 
                 {/* Title & Price */}
                 <div>
                   <h1 className="text-2xl font-bold mb-2">{product.title}</h1>
-                  <p className="text-3xl font-bold text-primary">{product.price}</p>
+                  <p className="text-3xl font-bold text-primary">
+                    {product.price}
+                  </p>
                 </div>
 
                 {/* Stats */}
@@ -198,7 +220,9 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
                 {/* Description */}
                 <div className="py-4">
                   <h3 className="font-semibold mb-2">Описание</h3>
-                  <p className="text-base-content/80 whitespace-pre-wrap">{product.description}</p>
+                  <p className="text-base-content/80 whitespace-pre-wrap">
+                    {product.description}
+                  </p>
                 </div>
 
                 {/* Seller */}
@@ -208,7 +232,10 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
                       <div className="avatar">
                         <div className="w-12 h-12 rounded-full bg-base-300">
                           {product.seller.avatar ? (
-                            <img src={product.seller.avatar} alt={product.seller.name} />
+                            <img
+                              src={product.seller.avatar}
+                              alt={product.seller.name}
+                            />
                           ) : (
                             <span className="text-lg font-semibold flex items-center justify-center h-full">
                               {product.seller.name[0]}
@@ -221,14 +248,13 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-warning fill-warning" />
                           <span className="text-sm">
-                            {product.seller.rating.toFixed(1)} ({product.seller.totalReviews})
+                            {product.seller.rating.toFixed(1)} (
+                            {product.seller.totalReviews})
                           </span>
                         </div>
                       </div>
                     </div>
-                    <button className="btn btn-sm btn-ghost">
-                      Профиль
-                    </button>
+                    <button className="btn btn-sm btn-ghost">Профиль</button>
                   </div>
                 </div>
 
@@ -236,7 +262,9 @@ export const QuickView: React.FC<QuickViewProps> = ({ isOpen, onClose, product }
                 {product.location && (
                   <div className="py-4">
                     <h3 className="font-semibold mb-2">Местоположение</h3>
-                    <p className="text-base-content/80">{product.location.address}</p>
+                    <p className="text-base-content/80">
+                      {product.location.address}
+                    </p>
                   </div>
                 )}
 

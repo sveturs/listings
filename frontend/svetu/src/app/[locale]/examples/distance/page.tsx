@@ -1,215 +1,280 @@
 'use client';
 
-import React, { useState } from 'react';
-import { DistanceBadge } from '@/components/ui/DistanceBadge';
-import { DistanceVisualizer } from '@/components/ui/DistanceVisualizer';
-import { DistanceIndicator } from '@/components/ui/DistanceIndicator';
-import { Slider } from '@/components/ui/Slider';
+import { useState } from 'react';
+import { AnimatedSection } from '@/components/ui/AnimatedSection';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 
-export default function DistanceExamplesPage() {
-  const [distance, setDistance] = useState(2.5);
+export default function DistanceExamplePage() {
+  const [unit, setUnit] = useState<'km' | 'mi'>('km');
 
-  const exampleDistances = [0.3, 0.8, 1.5, 3.2, 7.5, 12, 25];
-  const addresses = [
-    'ул. Пушкина, д. 10',
-    'пр. Ленина, д. 45, кв. 12',
-    'Центральный район, ул. Мира',
-    'Северный микрорайон, д. 7',
+  const distances = [
+    { meters: 250, walkTime: 3 },
+    { meters: 500, walkTime: 6 },
+    { meters: 1000, walkTime: 12 },
+    { meters: 2500, walkTime: 30 },
+    { meters: 5000, walkTime: 60 },
+    { meters: 10000, walkTime: 120 },
   ];
 
+  const formatDistance = (meters: number) => {
+    if (unit === 'km') {
+      return meters < 1000 ? `${meters}m` : `${(meters / 1000).toFixed(1)}km`;
+    } else {
+      const miles = meters * 0.000621371;
+      return miles < 0.5
+        ? `${Math.round(meters * 3.28084)}ft`
+        : `${miles.toFixed(1)}mi`;
+    }
+  };
+
+  const getDistanceColor = (meters: number) => {
+    if (meters <= 500) return 'text-success';
+    if (meters <= 1000) return 'text-info';
+    if (meters <= 2500) return 'text-warning';
+    return 'text-error';
+  };
+
+  const getDistanceWidth = (meters: number) => {
+    const maxDistance = 10000;
+    return `${(meters / maxDistance) * 100}%`;
+  };
+
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8">Визуализация расстояния</h1>
+    <div className="container mx-auto p-4 max-w-6xl">
+      <AnimatedSection animation="fadeIn">
+        <h1 className="text-4xl font-bold mb-8">Distance Visualization</h1>
+        <p className="text-lg text-base-content/70 mb-8">
+          Visual representation of distances with walking time estimates
+        </p>
+      </AnimatedSection>
 
-      {/* Интерактивная демонстрация */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Интерактивная демонстрация</h2>
-        
-        <div className="card bg-base-200 p-6">
-          <div className="mb-6">
-            <label className="label">
-              <span className="label-text">Расстояние: {distance.toFixed(1)} км</span>
-            </label>
-            <input
-              type="range"
-              min="0.1"
-              max="30"
-              step="0.1"
-              value={distance}
-              onChange={(e) => setDistance(parseFloat(e.target.value))}
-              className="range range-primary"
-            />
-            <div className="w-full flex justify-between text-xs px-2 mt-1">
-              <span>0.1 км</span>
-              <span>5 км</span>
-              <span>10 км</span>
-              <span>20 км</span>
-              <span>30 км</span>
+      {/* Unit Toggle */}
+      <AnimatedSection animation="slideUp" delay={0.1}>
+        <div className="card bg-base-100 shadow-xl mb-8">
+          <div className="card-body">
+            <h2 className="card-title mb-4">Unit Selection</h2>
+            <div className="flex gap-2">
+              <button
+                className={`btn ${unit === 'km' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setUnit('km')}
+              >
+                Metric (km/m)
+              </button>
+              <button
+                className={`btn ${unit === 'mi' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setUnit('mi')}
+              >
+                Imperial (mi/ft)
+              </button>
             </div>
           </div>
+        </div>
+      </AnimatedSection>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Визуализатор */}
-            <div>
-              <h3 className="font-medium mb-3">DistanceVisualizer</h3>
-              <DistanceVisualizer
-                distance={distance}
-                address="ул. Примерная, д. 123"
-                showMap={true}
-                showTravelTime={true}
-              />
-            </div>
+      {/* Distance Cards */}
+      <AnimatedSection animation="slideUp" delay={0.2}>
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">Distance Cards</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {distances.map((item, index) => (
+              <AnimatedSection
+                key={item.meters}
+                animation="slideUp"
+                delay={0.1 * index}
+              >
+                <div className="card bg-base-100 shadow-xl">
+                  <div className="card-body">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3
+                          className={`text-3xl font-bold ${getDistanceColor(item.meters)}`}
+                        >
+                          {formatDistance(item.meters)}
+                        </h3>
+                        <p className="text-base-content/70">
+                          ~{item.walkTime} min walk
+                        </p>
+                      </div>
+                      <div
+                        className={`text-4xl ${getDistanceColor(item.meters)}`}
+                      >
+                        {item.meters <= 500 && '🚶‍♂️'}
+                        {item.meters > 500 && item.meters <= 1000 && '🚴‍♂️'}
+                        {item.meters > 1000 && item.meters <= 2500 && '🚗'}
+                        {item.meters > 2500 && '🚌'}
+                      </div>
+                    </div>
+                    <progress
+                      className={`progress ${
+                        item.meters <= 500
+                          ? 'progress-success'
+                          : item.meters <= 1000
+                            ? 'progress-info'
+                            : item.meters <= 2500
+                              ? 'progress-warning'
+                              : 'progress-error'
+                      } w-full mt-4`}
+                      value={item.meters}
+                      max="10000"
+                    ></progress>
+                  </div>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+        </section>
+      </AnimatedSection>
 
-            {/* Варианты бейджей */}
+      {/* Visual Distance Bar */}
+      <AnimatedSection animation="slideUp" delay={0.3}>
+        <section className="card bg-base-100 shadow-xl mb-8">
+          <div className="card-body">
+            <h2 className="card-title mb-6">Distance Comparison</h2>
             <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-3">DistanceBadge варианты</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-base-content/60 w-20">Default:</span>
-                    <DistanceBadge distance={distance} />
+              {distances.map((item) => (
+                <div key={item.meters}>
+                  <div className="flex justify-between mb-2">
+                    <span className="font-medium">
+                      {formatDistance(item.meters)}
+                    </span>
+                    <span className="text-sm text-base-content/70">
+                      ~{item.walkTime} min
+                    </span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-base-content/60 w-20">Compact:</span>
-                    <DistanceBadge distance={distance} variant="compact" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-base-content/60 w-20">Detailed:</span>
-                    <DistanceBadge distance={distance} variant="detailed" />
+                  <div className="relative bg-base-200 rounded-full h-8 overflow-hidden">
+                    <div
+                      className={`absolute inset-y-0 left-0 ${
+                        item.meters <= 500
+                          ? 'bg-success'
+                          : item.meters <= 1000
+                            ? 'bg-info'
+                            : item.meters <= 2500
+                              ? 'bg-warning'
+                              : 'bg-error'
+                      } rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-2`}
+                      style={{ width: getDistanceWidth(item.meters) }}
+                    >
+                      <MapPinIcon className="h-5 w-5 text-white" />
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-3">DistanceIndicator размеры</h3>
-                <div className="space-y-2">
-                  <DistanceIndicator distance={distance} size="sm" />
-                  <DistanceIndicator distance={distance} size="md" />
-                  <DistanceIndicator distance={distance} size="lg" />
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </AnimatedSection>
 
-      {/* Примеры использования */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Примеры на карточках товаров</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {exampleDistances.slice(0, 6).map((dist, index) => (
-            <div key={index} className="card bg-base-100 shadow-sm">
-              <figure className="h-40 bg-base-200"></figure>
-              <div className="card-body p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">Товар {index + 1}</h3>
-                  <DistanceBadge distance={dist} />
+      {/* Circular Distance Indicator */}
+      <AnimatedSection animation="slideUp" delay={0.4}>
+        <section className="card bg-base-100 shadow-xl mb-8">
+          <div className="card-body">
+            <h2 className="card-title mb-6">Circular Indicators</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {distances.slice(0, 4).map((item) => (
+                <div key={item.meters} className="text-center">
+                  <div className="relative inline-flex">
+                    <div
+                      className={`radial-progress ${getDistanceColor(item.meters)}`}
+                      style={{ '--value': (item.meters / 10000) * 100 } as any}
+                      role="progressbar"
+                    >
+                      <span className="text-xl font-bold">
+                        {formatDistance(item.meters)}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-base-content/70 mt-2">
+                    {item.walkTime} min
+                  </p>
                 </div>
-                <p className="text-sm text-base-content/70 mb-3">
-                  Описание товара для примера визуализации расстояния
+              ))}
+            </div>
+          </div>
+        </section>
+      </AnimatedSection>
+
+      {/* Map-style Distance */}
+      <AnimatedSection animation="slideUp" delay={0.5}>
+        <section className="card bg-base-100 shadow-xl mb-8">
+          <div className="card-body">
+            <h2 className="card-title mb-6">Map-style Visualization</h2>
+            <div className="relative bg-base-200 rounded-lg p-8 h-64 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center">
+                {[100, 200, 300, 400].map((radius) => (
+                  <div
+                    key={radius}
+                    className="absolute border border-base-content/20 rounded-full"
+                    style={{
+                      width: `${radius}px`,
+                      height: `${radius}px`,
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="relative z-10">
+                <div className="bg-primary text-primary-content rounded-full w-4 h-4"></div>
+                <p className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm font-medium">
+                  Your Location
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold">€{(50 + index * 25).toFixed(0)}</span>
-                  <DistanceIndicator distance={dist} size="sm" />
+              </div>
+              {/* Sample points */}
+              <div className="absolute top-1/4 left-1/3">
+                <div className="bg-success rounded-full w-3 h-3"></div>
+                <p className="text-xs mt-1">250m</p>
+              </div>
+              <div className="absolute bottom-1/3 right-1/4">
+                <div className="bg-warning rounded-full w-3 h-3"></div>
+                <p className="text-xs mt-1">1.2km</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </AnimatedSection>
+
+      {/* Usage Examples */}
+      <AnimatedSection animation="slideUp" delay={0.6}>
+        <section className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <h2 className="card-title mb-4">Usage in Listings</h2>
+            <div className="space-y-4">
+              {/* Example listing card */}
+              <div className="card bg-base-200">
+                <div className="card-body">
+                  <h3 className="font-semibold mb-2">
+                    Modern Apartment in City Center
+                  </h3>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <MapPinIcon className="h-4 w-4" />
+                      <span className="text-success font-medium">
+                        450m from center
+                      </span>
+                    </div>
+                    <span className="text-base-content/70">• 5 min walk</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card bg-base-200">
+                <div className="card-body">
+                  <h3 className="font-semibold mb-2">
+                    Cozy Studio Near University
+                  </h3>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <MapPinIcon className="h-4 w-4" />
+                      <span className="text-warning font-medium">
+                        2.3km from campus
+                      </span>
+                    </div>
+                    <span className="text-base-content/70">• 28 min walk</span>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Цветовая схема */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Цветовая схема расстояний</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card bg-success/10 border border-success/20 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 bg-success rounded-full"></div>
-              <h3 className="font-medium text-success">Очень близко</h3>
-            </div>
-            <p className="text-sm">До 1 км</p>
-            <div className="mt-3">
-              <DistanceBadge distance={0.5} />
-            </div>
           </div>
-
-          <div className="card bg-info/10 border border-info/20 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 bg-info rounded-full"></div>
-              <h3 className="font-medium text-info">Рядом</h3>
-            </div>
-            <p className="text-sm">1-5 км</p>
-            <div className="mt-3">
-              <DistanceBadge distance={3} />
-            </div>
-          </div>
-
-          <div className="card bg-warning/10 border border-warning/20 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 bg-warning rounded-full"></div>
-              <h3 className="font-medium text-warning">Недалеко</h3>
-            </div>
-            <p className="text-sm">5-15 км</p>
-            <div className="mt-3">
-              <DistanceBadge distance={10} />
-            </div>
-          </div>
-
-          <div className="card bg-base-200 border border-base-300 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 bg-base-300 rounded-full"></div>
-              <h3 className="font-medium">Далеко</h3>
-            </div>
-            <p className="text-sm">Более 15 км</p>
-            <div className="mt-3">
-              <DistanceBadge distance={20} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Детальный вид */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Детальный вид для страницы товара</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {addresses.map((address, index) => (
-            <div key={index} className="card bg-base-100 shadow-md p-6">
-              <h3 className="font-semibold mb-4">Местоположение товара</h3>
-              <DistanceVisualizer
-                distance={exampleDistances[index]}
-                address={address}
-                showMap={true}
-                showTravelTime={true}
-              />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Примеры кода */}
-      <section className="card bg-base-200 p-6">
-        <h2 className="text-2xl font-semibold mb-4">Примеры использования</h2>
-        <div className="mockup-code">
-          <pre data-prefix="1"><code>{`import { DistanceBadge, DistanceVisualizer, DistanceIndicator } from '@/components/ui';`}</code></pre>
-          <pre data-prefix="2"><code>{``}</code></pre>
-          <pre data-prefix="3"><code>{`// Простой бейдж`}</code></pre>
-          <pre data-prefix="4"><code>{`<DistanceBadge distance={2.5} />`}</code></pre>
-          <pre data-prefix="5"><code>{``}</code></pre>
-          <pre data-prefix="6"><code>{`// Индикатор с тултипом`}</code></pre>
-          <pre data-prefix="7"><code>{`<DistanceIndicator distance={1.2} size="sm" />`}</code></pre>
-          <pre data-prefix="8"><code>{``}</code></pre>
-          <pre data-prefix="9"><code>{`// Полная визуализация`}</code></pre>
-          <pre data-prefix="10"><code>{`<DistanceVisualizer`}</code></pre>
-          <pre data-prefix="11"><code>{`  distance={3.7}`}</code></pre>
-          <pre data-prefix="12"><code>{`  address="ул. Примерная, д. 123"`}</code></pre>
-          <pre data-prefix="13"><code>{`  showMap={true}`}</code></pre>
-          <pre data-prefix="14"><code>{`  showTravelTime={true}`}</code></pre>
-          <pre data-prefix="15"><code>{`/>`}</code></pre>
-        </div>
-      </section>
+        </section>
+      </AnimatedSection>
     </div>
   );
 }

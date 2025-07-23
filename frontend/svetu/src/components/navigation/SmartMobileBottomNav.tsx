@@ -6,11 +6,11 @@ import { EnhancedMobileBottomNav } from './EnhancedMobileBottomNav';
 export const SmartMobileBottomNav: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('up');
+  const [_scrollDirection, setScrollDirection] = useState<'up' | 'down'>('up');
 
   const handleScroll = useCallback(() => {
     const currentScrollY = window.scrollY;
-    
+
     // Определяем направление скролла
     if (currentScrollY > lastScrollY && currentScrollY > 100) {
       setScrollDirection('down');
@@ -19,13 +19,13 @@ export const SmartMobileBottomNav: React.FC = () => {
       setScrollDirection('up');
       setIsVisible(true);
     }
-    
+
     setLastScrollY(currentScrollY);
   }, [lastScrollY]);
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };

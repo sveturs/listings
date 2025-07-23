@@ -2,15 +2,15 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { 
-  TrendingUp, 
-  Star, 
-  Shield, 
-  MapPin, 
-  Clock, 
+import {
+  TrendingUp,
+  Star,
+  Shield,
+  MapPin,
+  Clock,
   Users,
   Sparkles,
-  ArrowRight
+  ArrowRight,
 } from 'lucide-react';
 
 interface BentoGridProps {
@@ -58,12 +58,17 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
               </p>
             </div>
             <div className="flex justify-between items-end">
-              <Link href="/search" className="btn btn-primary group-hover:scale-105 transition-transform">
+              <Link
+                href="/search"
+                className="btn btn-primary group-hover:scale-105 transition-transform"
+              >
                 Начать поиск
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
               <div className="text-right">
-                <p className="text-sm text-base-content/60">Активных объявлений</p>
+                <p className="text-sm text-base-content/60">
+                  Активных объявлений
+                </p>
                 <p className="text-2xl font-bold text-primary">
                   {stats?.totalListings?.toLocaleString() || '10,000+'}
                 </p>
@@ -90,7 +95,9 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   className="flex items-center justify-between p-2 rounded-lg hover:bg-base-200 transition-colors"
                 >
                   <span className="text-sm">{cat.name}</span>
-                  <span className="text-xs text-base-content/60">{cat.count}</span>
+                  <span className="text-xs text-base-content/60">
+                    {cat.count}
+                  </span>
                 </Link>
               ))}
             </div>
@@ -108,7 +115,9 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold">Безопасные сделки</h3>
-                <p className="text-xs text-base-content/60">Защита покупателей</p>
+                <p className="text-xs text-base-content/60">
+                  Защита покупателей
+                </p>
               </div>
             </div>
             <div className="stats stats-vertical shadow-none bg-transparent p-0">
@@ -140,9 +149,15 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                 </div>
               </figure>
               <div className="card-body p-4">
-                <p className="text-xs text-base-content/60">{featuredListing.category}</p>
-                <h3 className="font-semibold line-clamp-1">{featuredListing.title}</h3>
-                <p className="text-lg font-bold text-primary">{featuredListing.price}</p>
+                <p className="text-xs text-base-content/60">
+                  {featuredListing.category}
+                </p>
+                <h3 className="font-semibold line-clamp-1">
+                  {featuredListing.title}
+                </h3>
+                <p className="text-lg font-bold text-primary">
+                  {featuredListing.price}
+                </p>
               </div>
             </div>
           </Link>
@@ -159,11 +174,17 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             </div>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-base-content/70">Активных продавцов</span>
-                <span className="font-bold">{stats?.activeUsers?.toLocaleString() || '1,500+'}</span>
+                <span className="text-sm text-base-content/70">
+                  Активных продавцов
+                </span>
+                <span className="font-bold">
+                  {stats?.activeUsers?.toLocaleString() || '1,500+'}
+                </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-base-content/70">Новых сегодня</span>
+                <span className="text-sm text-base-content/70">
+                  Новых сегодня
+                </span>
                 <span className="font-bold text-info">+23</span>
               </div>
             </div>

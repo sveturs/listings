@@ -59,7 +59,8 @@ body {
 
 /* Pulse animation variation */
 @keyframes gentle-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

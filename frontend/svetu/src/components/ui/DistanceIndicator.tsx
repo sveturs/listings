@@ -47,9 +47,11 @@ export const DistanceIndicator: React.FC<DistanceIndicatorProps> = ({
   };
 
   const colorClass = getColor(distance);
-  
+
   const content = (
-    <div className={`inline-flex items-center ${sizeClasses[size]} ${colorClass} ${className}`}>
+    <div
+      className={`inline-flex items-center ${sizeClasses[size]} ${colorClass} ${className}`}
+    >
       <MapPin className={iconSizes[size]} />
       <span className="font-medium">{formatDistance(distance)}</span>
     </div>
@@ -62,24 +64,29 @@ export const DistanceIndicator: React.FC<DistanceIndicatorProps> = ({
   // Подробная информация для tooltip
   const getTooltipContent = () => {
     const walkingTime = Math.round((distance / 5) * 60); // 5 км/ч скорость ходьбы
-    
+
     return (
       <div className="space-y-2 p-2">
         <div className="font-medium">Расстояние от вас</div>
         <div className="text-sm space-y-1">
-          <div>{distance < 1 ? `${Math.round(distance * 1000)} метров` : `${distance.toFixed(1)} километров`}</div>
-          <div className="text-base-content/70">
-            Пешком: ~{walkingTime < 60 ? `${walkingTime} мин` : `${Math.round(walkingTime / 60)} ч`}
+          <div>
+            {distance < 1
+              ? `${Math.round(distance * 1000)} метров`
+              : `${distance.toFixed(1)} километров`}
           </div>
-          {distance <= 1 && <div className="text-success">В шаговой доступности!</div>}
+          <div className="text-base-content/70">
+            Пешком: ~
+            {walkingTime < 60
+              ? `${walkingTime} мин`
+              : `${Math.round(walkingTime / 60)} ч`}
+          </div>
+          {distance <= 1 && (
+            <div className="text-success">В шаговой доступности!</div>
+          )}
         </div>
       </div>
     );
   };
 
-  return (
-    <Tooltip content={getTooltipContent()}>
-      {content}
-    </Tooltip>
-  );
+  return <Tooltip content={getTooltipContent()}>{content}</Tooltip>;
 };

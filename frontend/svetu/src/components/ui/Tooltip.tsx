@@ -32,13 +32,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
   };
 
   return (
-    <div 
+    <div
       className="relative inline-block"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
     >
       {children}
-      
+
       {isVisible && (
         <div
           className={`
@@ -53,7 +53,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           `}
         >
           {content}
-          
+
           {/* Arrow */}
           <div
             className={`

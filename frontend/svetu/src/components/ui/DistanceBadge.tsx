@@ -47,7 +47,9 @@ export const DistanceBadge: React.FC<DistanceBadgeProps> = ({
 
   if (variant === 'compact') {
     return (
-      <span className={`text-xs font-medium ${getColorClass(distance)} ${className}`}>
+      <span
+        className={`text-xs font-medium ${getColorClass(distance)} ${className}`}
+      >
         {formatDistance(distance)}
       </span>
     );
@@ -69,7 +71,7 @@ export const DistanceBadge: React.FC<DistanceBadgeProps> = ({
 
   // Default variant
   return (
-    <div 
+    <div
       className={`
         inline-flex items-center gap-1.5 px-2.5 py-1 
         rounded-full border text-sm font-medium

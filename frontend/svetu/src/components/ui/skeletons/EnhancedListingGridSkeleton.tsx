@@ -8,10 +8,9 @@ interface EnhancedListingGridSkeletonProps {
   viewMode?: 'grid' | 'list';
 }
 
-export const EnhancedListingGridSkeleton: React.FC<EnhancedListingGridSkeletonProps> = ({
-  count = 8,
-  viewMode = 'grid',
-}) => {
+export const EnhancedListingGridSkeleton: React.FC<
+  EnhancedListingGridSkeletonProps
+> = ({ count = 8, viewMode = 'grid' }) => {
   // Генерируем разные задержки для каждого элемента
   const items = Array.from({ length: count }, (_, i) => ({
     id: i,

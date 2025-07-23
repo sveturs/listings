@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { MapPin, Navigation, Clock, Car, PersonStanding } from 'lucide-react';
+import { MapPin, Navigation, Car, PersonStanding } from 'lucide-react';
 
 interface DistanceVisualizerProps {
   distance: number; // в километрах
@@ -22,10 +22,10 @@ export const DistanceVisualizer: React.FC<DistanceVisualizerProps> = ({
   const getTravelTime = (km: number) => {
     const walkingSpeed = 5; // км/ч
     const drivingSpeed = 30; // км/ч в городе
-    
+
     const walkingMinutes = Math.round((km / walkingSpeed) * 60);
     const drivingMinutes = Math.round((km / drivingSpeed) * 60);
-    
+
     return { walking: walkingMinutes, driving: drivingMinutes };
   };
 
@@ -81,7 +81,7 @@ export const DistanceVisualizer: React.FC<DistanceVisualizerProps> = ({
               className="text-base-300"
               strokeDasharray="2 2"
             />
-            
+
             {/* Радиус расстояния */}
             <circle
               cx="50%"
@@ -100,7 +100,7 @@ export const DistanceVisualizer: React.FC<DistanceVisualizerProps> = ({
               className="text-primary"
             />
           </svg>
-          
+
           {/* Центральная точка (вы) */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
             <div className="relative">
@@ -111,74 +111,92 @@ export const DistanceVisualizer: React.FC<DistanceVisualizerProps> = ({
               Вы здесь
             </span>
           </div>
-          
+
           {/* Точка назначения */}
-          <div 
+          <div
             className="absolute"
             style={{
-              top: `${50 - (radius * 0.7)}%`,
-              left: `${50 + (radius * 0.5)}%`,
-              transform: 'translate(-50%, -50%)'
+              top: `${50 - radius * 0.7}%`,
+              left: `${50 + radius * 0.5}%`,
+              transform: 'translate(-50%, -50%)',
             }}
           >
             <MapPin className="w-5 h-5 text-error" />
           </div>
-          
+
           {/* Легенда расстояния */}
           <div className="absolute top-2 right-2 bg-base-100/90 backdrop-blur-sm rounded px-2 py-1">
             <span className="text-xs font-medium">
-              {distance < 1 ? `${Math.round(distance * 1000)} м` : `${distance.toFixed(1)} км`}
+              {distance < 1
+                ? `${Math.round(distance * 1000)} м`
+                : `${distance.toFixed(1)} км`}
             </span>
           </div>
         </div>
       )}
-      
+
       {/* Информация о расстоянии */}
       <div className="space-y-2">
         {/* Адрес */}
         {address && (
           <div className="flex items-start gap-2">
             <Navigation className="w-4 h-4 text-base-content/60 mt-0.5" />
-            <p className="text-sm text-base-content/80 line-clamp-2">{address}</p>
+            <p className="text-sm text-base-content/80 line-clamp-2">
+              {address}
+            </p>
           </div>
         )}
-        
+
         {/* Время в пути */}
         {showTravelTime && (
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <PersonStanding className="w-4 h-4 text-base-content/60" />
               <span className="text-sm">
-                {walking < 60 ? `${walking} мин` : `${Math.round(walking / 60)} ч`}
+                {walking < 60
+                  ? `${walking} мин`
+                  : `${Math.round(walking / 60)} ч`}
               </span>
             </div>
-            
+
             {distance > 2 && (
               <div className="flex items-center gap-1.5">
                 <Car className="w-4 h-4 text-base-content/60" />
                 <span className="text-sm">
-                  {driving < 60 ? `${driving} мин` : `${Math.round(driving / 60)} ч`}
+                  {driving < 60
+                    ? `${driving} мин`
+                    : `${Math.round(driving / 60)} ч`}
                 </span>
               </div>
             )}
           </div>
         )}
-        
+
         {/* Статус близости */}
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${
-            distance <= 1 ? 'bg-success' :
-            distance <= 5 ? 'bg-info' :
-            distance <= 15 ? 'bg-warning' :
-            'bg-base-300'
-          }`}></div>
+          <div
+            className={`w-2 h-2 rounded-full ${
+              distance <= 1
+                ? 'bg-success'
+                : distance <= 5
+                  ? 'bg-info'
+                  : distance <= 15
+                    ? 'bg-warning'
+                    : 'bg-base-300'
+            }`}
+          ></div>
           <span className="text-sm font-medium">
-            {distance <= 0.5 ? 'Очень близко' :
-             distance <= 1 ? 'В шаговой доступности' :
-             distance <= 3 ? 'Рядом с вами' :
-             distance <= 5 ? 'Недалеко' :
-             distance <= 10 ? 'В вашем районе' :
-             'Далеко'}
+            {distance <= 0.5
+              ? 'Очень близко'
+              : distance <= 1
+                ? 'В шаговой доступности'
+                : distance <= 3
+                  ? 'Рядом с вами'
+                  : distance <= 5
+                    ? 'Недалеко'
+                    : distance <= 10
+                      ? 'В вашем районе'
+                      : 'Далеко'}
           </span>
         </div>
       </div>

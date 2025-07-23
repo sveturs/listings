@@ -129,14 +129,15 @@ export const EnhancedMobileBottomNav: React.FC = () => {
                 <Icon
                   className={`
                     w-5 h-5 transition-all duration-200
-                    ${active 
-                      ? 'text-primary scale-110' 
-                      : item.color || 'text-base-content/60'
+                    ${
+                      active
+                        ? 'text-primary scale-110'
+                        : item.color || 'text-base-content/60'
                     }
                     group-hover:scale-110
                   `}
                 />
-                
+
                 {/* Анимированный бейдж */}
                 {item.badge !== undefined && item.badge > 0 && (
                   <span className="badge badge-error badge-xs absolute -top-1 -right-2 animate-pulse">
@@ -156,9 +157,10 @@ export const EnhancedMobileBottomNav: React.FC = () => {
               <span
                 className={`
                   text-xs mt-1 transition-all duration-200
-                  ${active 
-                    ? 'text-primary font-medium translate-y-0' 
-                    : 'text-base-content/60 translate-y-0.5'
+                  ${
+                    active
+                      ? 'text-primary font-medium translate-y-0'
+                      : 'text-base-content/60 translate-y-0.5'
                   }
                 `}
               >
