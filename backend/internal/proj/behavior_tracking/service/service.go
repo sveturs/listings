@@ -44,7 +44,7 @@ func NewBehaviorTrackingService(ctx context.Context, repo postgres.BehaviorTrack
 	}
 
 	// Запускаем горутину для периодического флаша буфера
-	go s.flushWorker()
+	go s.flushWorker() //nolint:contextcheck // использует внутренний контекст s.ctx
 
 	return s
 }

@@ -225,7 +225,7 @@ func (s *Server) setupMiddleware() {
 	s.app.Use("/ws", s.middleware.AuthRequiredJWT)
 }
 
-func (s *Server) setupRoutes() {
+func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние маршруты
 	s.app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Svetu API")
 	})

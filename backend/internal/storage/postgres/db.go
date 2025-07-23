@@ -134,21 +134,21 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 	if osClient != nil {
 		db.osMarketplaceRepo = opensearch.NewRepository(osClient, indexName, db, searchWeights)
 		// Подготавливаем индекс
-		if err := db.osMarketplaceRepo.PrepareIndex(context.Background()); err != nil {
+		if err := db.osMarketplaceRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса OpenSearch: %v", err)
 		}
 
 		// Инициализируем репозиторий витрин в OpenSearch
 		db.osStorefrontRepo = storefrontOpenSearch.NewStorefrontRepository(osClient, db.storefrontIndex)
 		// Подготавливаем индекс витрин
-		if err := db.osStorefrontRepo.PrepareIndex(context.Background()); err != nil {
+		if err := db.osStorefrontRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса витрин в OpenSearch: %v", err)
 		}
 
 		// Инициализируем репозиторий товаров витрин в OpenSearch
 		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "storefront_products")
 		// Подготавливаем индекс товаров витрин
-		if err := db.productSearchRepo.PrepareIndex(context.Background()); err != nil {
+		if err := db.productSearchRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
 		}
 	}
@@ -912,7 +912,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 				// Не прерываем выполнение, так как главное - обновить в PostgreSQL
 			} else {
 				// Обновляем данные в OpenSearch
-				go db.updateViewCountInOpenSearch(id, viewsCount)
+				go db.updateViewCountInOpenSearch(id, viewsCount) //nolint:contextcheck // фоновое обновление
 			}
 		}
 	}
