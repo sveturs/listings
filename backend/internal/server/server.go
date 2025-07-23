@@ -204,7 +204,7 @@ func initializeOpenSearch(cfg *config.Config) (*opensearch.OpenSearchClient, err
 		Password: cfg.OpenSearch.Password,
 	})
 	if err != nil {
-		return nil, errors.New("Ошибка подключения к OpenSearch")
+		return nil, errors.New("ошибка подключения к OpenSearch")
 	}
 
 	return osClient, nil

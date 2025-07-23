@@ -84,14 +84,14 @@ func (s *behaviorTrackingService) flushBuffer(ctx context.Context) error {
 	s.eventBuffer = s.eventBuffer[:0]
 
 	// Сохраняем события пакетом с увеличенным таймаутом
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	flushCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	logger.Info().
 		Int("events_to_save", len(events)).
 		Msg("flushBuffer: attempting to save behavior events to database")
 
-	if err := s.repo.SaveEventsBatch(ctx, events); err != nil {
+	if err := s.repo.SaveEventsBatch(flushCtx, events); err != nil {
 		// При ошибке conn busy просто логируем и не возвращаем события в буфер
 		// чтобы избежать накопления событий
 		if strings.Contains(err.Error(), "conn busy") {
