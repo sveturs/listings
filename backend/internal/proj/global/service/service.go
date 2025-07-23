@@ -2,6 +2,7 @@
 package service
 
 import (
+	"context"
 	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -45,7 +46,7 @@ type Service struct {
 	behaviorTracking behaviorTrackingService.BehaviorTrackingService
 }
 
-func NewService(storage storage.Storage, cfg *config.Config, translationSvc marketplaceService.TranslationServiceInterface) *Service {
+func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config, translationSvc marketplaceService.TranslationServiceInterface) *Service {
 	notificationSvc := notificationService.NewService(storage)
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
@@ -74,6 +75,7 @@ func NewService(storage storage.Storage, cfg *config.Config, translationSvc mark
 	if cfg.Redis.URL != "" {
 		logger := logrus.New()
 		redisCache, err := cache.NewRedisCache(
+			ctx,
 			cfg.Redis.URL,
 			cfg.Redis.Password,
 			cfg.Redis.DB,

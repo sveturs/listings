@@ -14,12 +14,14 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+	
 	// Создаем логгер
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
 
 	// Подключаемся к Redis
-	redisCache, err := cache.NewRedisCache("localhost:6379", "", 0, 10, logger)
+	redisCache, err := cache.NewRedisCache(ctx, "localhost:6379", "", 0, 10, logger)
 	if err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}

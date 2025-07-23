@@ -65,7 +65,7 @@ type Server struct {
 	fileStorage        filestorage.FileStorageInterface
 }
 
-func NewServer(cfg *config.Config) (*Server, error) {
+func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
 	if err != nil {
 		return nil, errors.Wrap(err, "Ошибка инициализации файлового хранилища")
@@ -87,7 +87,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to initialize translation service: %w", err)
 	}
 
-	services := globalService.NewService(db, cfg, translationService)
+	services := globalService.NewService(ctx, db, cfg, translationService)
 
 	usersHandler := userHandler.NewHandler(services)
 	reviewHandler := reviewHandler.NewHandler(services)

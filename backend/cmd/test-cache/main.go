@@ -25,6 +25,8 @@ type Category struct {
 }
 
 func main() {
+	ctx := context.Background()
+	
 	// Загружаем конфигурацию
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -40,6 +42,7 @@ func main() {
 
 	// Создаем Redis кеш
 	redisCache, err := cache.NewRedisCache(
+		ctx,
 		cfg.Redis.URL,
 		cfg.Redis.Password,
 		cfg.Redis.DB,

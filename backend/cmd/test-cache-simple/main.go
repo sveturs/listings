@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+	
 	// Создаем логгер
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
@@ -24,6 +26,7 @@ func main() {
 	fmt.Println("Connecting to Redis at localhost:6379...")
 
 	redisCache, err := cache.NewRedisCache(
+		ctx,
 		"localhost:6379",
 		"", // password
 		0,  // db

@@ -17,7 +17,7 @@ type RedisCache struct {
 }
 
 // NewRedisCache создает новый экземпляр Redis кеша
-func NewRedisCache(url string, password string, db int, poolSize int, logger *logrus.Logger) (*RedisCache, error) {
+func NewRedisCache(ctx context.Context, url string, password string, db int, poolSize int, logger *logrus.Logger) (*RedisCache, error) {
 	options := &redis.Options{
 		Addr:     url,
 		Password: password,
@@ -28,10 +28,10 @@ func NewRedisCache(url string, password string, db int, poolSize int, logger *lo
 	client := redis.NewClient(options)
 
 	// Проверяем подключение
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	testCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := client.Ping(ctx).Err(); err != nil {
+	if err := client.Ping(testCtx).Err(); err != nil {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 
