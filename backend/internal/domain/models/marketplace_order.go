@@ -16,7 +16,7 @@ const (
 	MarketplaceOrderStatusDelivered MarketplaceOrderStatus = "delivered"
 	MarketplaceOrderStatusCompleted MarketplaceOrderStatus = "completed"
 	MarketplaceOrderStatusDisputed  MarketplaceOrderStatus = "disputed"
-	MarketplaceOrderStatusCancelled MarketplaceOrderStatus = "cancelled"
+	MarketplaceOrderStatusCancelled MarketplaceOrderStatus = "canceled"
 	MarketplaceOrderStatusRefunded  MarketplaceOrderStatus = "refunded"
 )
 

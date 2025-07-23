@@ -157,7 +157,7 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*models.S
 			shipping_address, billing_address,
 			payment_method, payment_status, payment_transaction_id,
 			customer_notes, metadata, created_at, updated_at,
-			confirmed_at, shipped_at, delivered_at, cancelled_at
+			confirmed_at, shipped_at, delivered_at, canceled_at
 		FROM storefront_orders
 		WHERE id = $1`
 
@@ -339,7 +339,7 @@ func (r *orderRepository) Update(ctx context.Context, order *models.StorefrontOr
 			confirmed_at = $17,
 			shipped_at = $18,
 			delivered_at = $19,
-			cancelled_at = $20,
+			canceled_at = $20,
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = $21`
 
@@ -491,7 +491,7 @@ func (r *orderRepository) UpdateStatus(ctx context.Context, orderID int64, statu
 	case models.OrderStatusDelivered:
 		query += ", delivered_at = CURRENT_TIMESTAMP"
 	case models.OrderStatusCancelled:
-		query += ", cancelled_at = CURRENT_TIMESTAMP"
+		query += ", canceled_at = CURRENT_TIMESTAMP"
 	}
 
 	query += ", updated_at = CURRENT_TIMESTAMP WHERE id = $3"

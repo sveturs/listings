@@ -203,7 +203,7 @@ func (h *SearchOptimizationHandler) CancelOptimization(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, map[string]interface{}{
 		"session_id": sessionID,
-		"message":    "Optimization cancelled successfully",
+		"message":    "Optimization canceled successfully",
 	})
 }
 

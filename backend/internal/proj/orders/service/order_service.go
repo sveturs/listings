@@ -290,7 +290,7 @@ func (s *OrderService) ConfirmOrder(ctx context.Context, orderID int64) error {
 
 // CancelOrder отменяет заказ
 func (s *OrderService) CancelOrder(ctx context.Context, orderID int64, userID int, reason string) (*models.StorefrontOrder, error) {
-	s.logger.Info("Cancelling order (order_id: %d, user_id: %d)", orderID, userID)
+	s.logger.Info("Canceling order (order_id: %d, user_id: %d)", orderID, userID)
 
 	order, err := s.orderRepo.GetByID(ctx, orderID)
 	if err != nil {
@@ -303,7 +303,7 @@ func (s *OrderService) CancelOrder(ctx context.Context, orderID int64, userID in
 	}
 
 	if !order.CanBeCancelled() {
-		return nil, fmt.Errorf("order cannot be cancelled in current status: %s", order.Status)
+		return nil, fmt.Errorf("order cannot be canceled in current status: %s", order.Status)
 	}
 
 	// Освобождаем резервирования
@@ -323,7 +323,7 @@ func (s *OrderService) CancelOrder(ctx context.Context, orderID int64, userID in
 		return nil, fmt.Errorf("failed to update order status: %w", err)
 	}
 
-	s.logger.Info("Order cancelled successfully (order_id: %d)", orderID)
+	s.logger.Info("Order canceled successfully (order_id: %d)", orderID)
 	return order, nil
 }
 

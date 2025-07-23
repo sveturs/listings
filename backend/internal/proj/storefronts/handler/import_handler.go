@@ -515,7 +515,7 @@ func (h *ImportHandler) GetJobStatus(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param jobId path int true "Job ID"
-// @Success 200 {object} models.SuccessResponse "Job cancelled successfully"
+// @Success 200 {object} models.SuccessResponse "Job canceled successfully"
 // @Failure 400 {object} models.ErrorResponse "Bad request"
 // @Failure 401 {object} models.ErrorResponse "Unauthorized"
 // @Failure 403 {object} models.ErrorResponse "Forbidden"
@@ -542,7 +542,7 @@ func (h *ImportHandler) CancelJob(c *fiber.Ctx) error {
 
 	return c.JSON(models.SuccessResponse{
 		Success: true,
-		Message: "Job cancelled successfully",
+		Message: "Job canceled successfully",
 	})
 }
 

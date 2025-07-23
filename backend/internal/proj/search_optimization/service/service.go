@@ -122,8 +122,8 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 		select {
 		case <-ctx.Done():
 			// Контекст отменен, прекращаем оптимизацию
-			errorMsg := "optimization cancelled"
-			if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, "cancelled", results, &errorMsg); updateErr != nil {
+			errorMsg := "optimization canceled"
+			if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, "canceled", results, &errorMsg); updateErr != nil {
 				s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
 			}
 			return
@@ -438,8 +438,8 @@ func (s *searchOptimizationService) GetOptimizationStatus(ctx context.Context, s
 func (s *searchOptimizationService) CancelOptimization(ctx context.Context, sessionID int64, adminID int) error {
 	// В реальной реализации нужно отменить фоновый процесс
 	// Пока просто обновляем статус
-	errorMsg := "cancelled by admin"
-	return s.repo.UpdateOptimizationSession(ctx, sessionID, "cancelled", nil, &errorMsg)
+	errorMsg := "canceled by admin"
+	return s.repo.UpdateOptimizationSession(ctx, sessionID, "canceled", nil, &errorMsg)
 }
 
 // Валидация параметров оптимизации

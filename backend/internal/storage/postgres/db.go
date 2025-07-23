@@ -1283,7 +1283,7 @@ func (db *Database) UpdateReviewDispute(ctx context.Context, dispute *models.Rev
 	// Если спор разрешен, обновляем флаг в reviews
 	if dispute.Status == "resolved_keep_review" ||
 		dispute.Status == "resolved_remove_review" ||
-		dispute.Status == "cancelled" {
+		dispute.Status == "canceled" {
 		_, err = db.pool.Exec(ctx,
 			"UPDATE reviews SET has_active_dispute = false WHERE id = $1",
 			dispute.ReviewID,

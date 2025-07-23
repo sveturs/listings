@@ -8678,7 +8678,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Job cancelled successfully",
+                        "description": "Job canceled successfully",
                         "schema": {
                             "$ref": "#/definitions/SuccessResponse"
                         }
@@ -13682,7 +13682,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Cancelled order",
+                        "description": "Canceled order",
                         "schema": {
                             "allOf": [
                                 {
@@ -13724,7 +13724,7 @@ const docTemplate = `{
                         }
                     },
                     "409": {
-                        "description": "Order cannot be cancelled",
+                        "description": "Order cannot be canceled",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -13839,7 +13839,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Payment cancelled successfully",
+                        "description": "Payment canceled successfully",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
                         }
@@ -22981,7 +22981,7 @@ const docTemplate = `{
                     "enum": [
                         "not_a_customer",
                         "false_information",
-                        "deal_cancelled",
+                        "deal_canceled",
                         "spam",
                         "other"
                     ]
@@ -24069,7 +24069,7 @@ const docTemplate = `{
                 "delivered",
                 "completed",
                 "disputed",
-                "cancelled",
+                "canceled",
                 "refunded"
             ],
             "x-enum-varnames": [
@@ -24227,7 +24227,7 @@ const docTemplate = `{
                 "processing",
                 "shipped",
                 "delivered",
-                "cancelled",
+                "canceled",
                 "refunded"
             ],
             "x-enum-comments": {
@@ -25394,7 +25394,7 @@ const docTemplate = `{
                 "billing_address": {
                     "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                 },
-                "cancelled_at": {
+                "canceled_at": {
                     "type": "string"
                 },
                 "commission_amount": {

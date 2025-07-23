@@ -15,7 +15,7 @@ const (
 	OrderStatusProcessing OrderStatus = "processing" // в обработке
 	OrderStatusShipped    OrderStatus = "shipped"    // отправлен
 	OrderStatusDelivered  OrderStatus = "delivered"  // доставлен
-	OrderStatusCancelled  OrderStatus = "cancelled"  // отменен
+	OrderStatusCancelled  OrderStatus = "canceled"  // отменен
 	OrderStatusRefunded   OrderStatus = "refunded"   // возвращен
 )
 
@@ -111,7 +111,7 @@ type StorefrontOrder struct {
 	ConfirmedAt *time.Time `json:"confirmed_at,omitempty" db:"confirmed_at"`
 	ShippedAt   *time.Time `json:"shipped_at,omitempty" db:"shipped_at"`
 	DeliveredAt *time.Time `json:"delivered_at,omitempty" db:"delivered_at"`
-	CancelledAt *time.Time `json:"cancelled_at,omitempty" db:"cancelled_at"`
+	CancelledAt *time.Time `json:"canceled_at,omitempty" db:"canceled_at"`
 	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }

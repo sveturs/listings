@@ -138,7 +138,7 @@ func (s *AllSecureService) CreatePayment(ctx context.Context, req CreatePaymentR
 		},
 		CallbackURL: s.config.WebhookURL,
 		SuccessURL:  req.ReturnURL + "?status=success",
-		CancelURL:   req.ReturnURL + "?status=cancelled",
+		CancelURL:   req.ReturnURL + "?status=canceled",
 		ErrorURL:    req.ReturnURL + "?status=error",
 	}
 
