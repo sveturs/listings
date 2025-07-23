@@ -135,6 +135,11 @@ func (r *SearchConfigRepository) GetSynonyms(ctx context.Context, language strin
 		synonyms = append(synonyms, synonym)
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over synonyms: %w", err)
+	}
+
 	return synonyms, nil
 }
 
@@ -325,6 +330,11 @@ func (r *SearchConfigRepository) GetPopularSearches(ctx context.Context, limit i
 			"count":       count,
 			"avg_results": avgResults,
 		})
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over popular searches: %w", err)
 	}
 
 	return results, nil

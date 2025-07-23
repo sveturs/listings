@@ -127,6 +127,11 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.Dist
 		districts = append(districts, d)
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over districts")
+	}
+
 	return districts, nil
 }
 
@@ -261,6 +266,11 @@ func (r *DistrictRepository) GetMunicipalities(ctx context.Context, params types
 		}
 
 		municipalities = append(municipalities, m)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over municipalities")
 	}
 
 	return municipalities, nil
@@ -428,6 +438,11 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 		results = append(results, result)
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over district listings")
+	}
+
 	return results, nil
 }
 
@@ -542,6 +557,11 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 			result.Images = []string{firstImageURL.String}
 		}
 		results = append(results, result)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over municipality listings")
 	}
 
 	return results, nil
@@ -682,6 +702,11 @@ func (r *DistrictRepository) GetCities(ctx context.Context, params types.CitySea
 		}
 
 		cities = append(cities, c)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over cities")
 	}
 
 	return cities, nil

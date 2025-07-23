@@ -157,6 +157,12 @@ func checkCategoryAttributes(db *sql.DB, categoryID int) {
 		count++
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		fmt.Printf("Категория %d: ОШИБКА при итерации - %v\n", categoryID, err)
+		return
+	}
+
 	if count == 0 {
 		fmt.Printf("Категория %d: НЕТ атрибутов\n", categoryID)
 	} else {
@@ -219,6 +225,12 @@ func runGetCategoryAttributesQuery(db *sql.DB, categoryID int) {
 
 		fmt.Printf("  - %s (id=%d, type=%s)\n", name, id, attrType)
 		count++
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		fmt.Printf("Категория %d: ОШИБКА при итерации - %v\n", categoryID, err)
+		return
 	}
 
 	if count == 0 {
@@ -288,6 +300,12 @@ func diagnoseCategoryHierarchy(db *sql.DB, categoryID int) {
 		hierarchyCount++
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		fmt.Printf("  Диагностика: ОШИБКА при итерации иерархии - %v\n", err)
+		return
+	}
+
 	if hierarchyCount == 0 {
 		fmt.Printf("    Иерархия пуста (возможно, рекурсивный запрос работает некорректно)\n")
 	}
@@ -335,6 +353,12 @@ func diagnoseCategoryHierarchy(db *sql.DB, categoryID int) {
 
 		fmt.Printf("    Категория %d: %d атрибутов\n", catID, attrCount)
 		hasLinks = hasLinks || (attrCount > 0)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		fmt.Printf("  Диагностика: ОШИБКА при итерации связей - %v\n", err)
+		return
 	}
 
 	if !hasLinks {

@@ -231,6 +231,11 @@ func (r *UnifiedGeoRepository) SearchListings(ctx context.Context, params types.
 		listings = append(listings, listing)
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating over unified geo listings: %w", err)
+	}
+
 	return listings, totalCount, nil
 }
 
@@ -362,6 +367,11 @@ func (r *UnifiedGeoRepository) GetStorefrontProducts(ctx context.Context, storef
 		product.Images = images
 
 		products = append(products, product)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over storefront products: %w", err)
 	}
 
 	return products, nil

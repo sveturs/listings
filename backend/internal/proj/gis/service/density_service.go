@@ -217,6 +217,11 @@ func (s *DensityService) GetDensityHeatmap(ctx context.Context, bbox *types.Boun
 		})
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over density data: %w", err)
+	}
+
 	return points, nil
 }
 

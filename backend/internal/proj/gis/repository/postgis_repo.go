@@ -273,6 +273,11 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 		listings = append(listings, listing)
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating over unified geo listings: %w", err)
+	}
+
 	return listings, totalCount, nil
 }
 
@@ -551,6 +556,11 @@ func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.Searc
 		listing.Images, _ = r.getListingImages(ctx, listing.ID, "marketplace_listing")
 
 		listings = append(listings, listing)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating over legacy listings: %w", err)
 	}
 
 	return listings, totalCount, nil

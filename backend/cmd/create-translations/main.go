@@ -128,6 +128,11 @@ func createCategoryTranslations(ctx context.Context, db *sql.DB) error {
 		}
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("error iterating over categories: %w", err)
+	}
+
 	// Insert translations
 	for _, t := range translations {
 		_, err := db.ExecContext(ctx, `
@@ -188,6 +193,11 @@ func createAttributeTranslations(ctx context.Context, db *sql.DB) error {
 				Text:       translateText(displayName, lang),
 			})
 		}
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("error iterating over attributes: %w", err)
 	}
 
 	// Insert translations

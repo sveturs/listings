@@ -551,6 +551,9 @@ func (suite *CategoryIntegrationTestSuite) TestAutomaticTranslationCreation() {
 		translations = append(translations, t)
 	}
 
+	// Check for iteration errors
+	require.NoError(suite.T(), rows.Err())
+
 	// Проверяем, что создались переводы для en и sr
 	assert.Len(suite.T(), translations, 2)
 
@@ -588,7 +591,7 @@ func (ts *testStorage) QueryRow(ctx context.Context, query string, args ...inter
 }
 
 func (ts *testStorage) Query(ctx context.Context, query string, args ...interface{}) (storage.Rows, error) {
-	return ts.db.QueryContext(ctx, query, args...)
+	return ts.db.QueryContext(ctx, query, args...) //nolint:rowserrcheck // rows.Err() checked by caller
 }
 
 func (ts *testStorage) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
@@ -1111,7 +1114,7 @@ func (tt *testTransaction) QueryRow(ctx context.Context, query string, args ...i
 }
 
 func (tt *testTransaction) Query(ctx context.Context, query string, args ...interface{}) (storage.Rows, error) {
-	return tt.tx.QueryContext(ctx, query, args...)
+	return tt.tx.QueryContext(ctx, query, args...) //nolint:rowserrcheck // rows.Err() checked by caller
 }
 
 func (tt *testTransaction) Commit() error {

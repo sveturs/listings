@@ -83,4 +83,9 @@ func main() {
 		}
 		fmt.Println()
 	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		log.Printf("Error iterating over rows: %v", err)
+	}
 }
