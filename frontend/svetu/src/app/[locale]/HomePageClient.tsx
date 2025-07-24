@@ -1,9 +1,10 @@
 'use client';
 
 import { PageTransition } from '@/components/ui/PageTransition';
-import HomePage from '@/components/marketplace/HomePage';
 import { Link } from '@/i18n/routing';
 import { BentoGrid } from '@/components/ui/BentoGrid';
+import { BentoGridCategories } from '@/components/ui/BentoGridCategories';
+import { BentoGridListings } from '@/components/ui/BentoGridListings';
 import { useEffect, useState } from 'react';
 
 interface HomePageData {
@@ -55,6 +56,8 @@ export default function HomePageClient({
 }: HomePageClientProps) {
   const [bentoData, setBentoData] = useState<HomePageData | null>(homePageData);
   const [isLoading, setIsLoading] = useState(!homePageData);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [filters, setFilters] = useState<Record<string, any>>({});
 
   useEffect(() => {
     // Если данные не были загружены на сервере (dev mode), загружаем на клиенте
@@ -103,12 +106,20 @@ export default function HomePageClient({
             )}
           </div>
 
-          <HomePage
-            initialData={initialData}
-            locale={locale}
-            error={error}
-            paymentsEnabled={paymentsEnabled}
-          />
+          {/* Новая секция BentoGrid с категориями и объявлениями */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+            <BentoGridCategories 
+              onCategorySelect={setSelectedCategoryId}
+              selectedCategoryId={selectedCategoryId}
+              filters={filters}
+              onFiltersChange={setFilters}
+            />
+            <BentoGridListings
+              locale={locale}
+              selectedCategoryId={selectedCategoryId}
+              filters={filters}
+            />
+          </div>
 
           {/* Плавающая кнопка создания объявления */}
           <Link
