@@ -3001,6 +3001,7 @@
     "description": "Pronađite proizvode i usluge u vašoj blizini",
     "loading": "Učitavanje mape...",
     "search": {
+      "title": "Pretraga mesta",
       "address": "Pretraga po adresi",
       "addressPlaceholder": "Unesite adresu ili naziv mesta",
       "found": "Adresa pronađena",
@@ -3018,6 +3019,7 @@
       "allCategories": "Sve kategorije",
       "priceFrom": "Cena od",
       "priceTo": "Cena do",
+      "price": "Cena",
       "radius": "Radijus pretrage",
       "selectCategory": "Izaberite kategoriju",
       "applyFilters": "Prikaži {count} oglasa",
@@ -3106,6 +3108,7 @@
       }
     },
     "categories": {
+      "title": "Kategorije",
       "realEstate": "Nekretnine",
       "vehicles": "Vozila",
       "electronics": "Elektronika",
@@ -3124,6 +3127,20 @@
     "errors": {
       "loadingFailed": "Nije moguće učitati oglase"
     },
+    "geolocation": {
+      "findMe": "Moja lokacija",
+      "error": "Nije moguće odrediti lokaciju"
+    },
+    "showAll": "Prikaži sve oglase",
+    "hidePanel": "Sakrij panel",
+    "showPanel": "Prikaži panel",
+    "quickCategories": "Brze kategorije",
+    "activeListings": "Aktivni oglasi",
+    "activeFilters": "aktivnih filtera",
+    "fullscreenMap": "Mapa preko celog ekrana",
+    "enterFullscreen": "Režim preko celog ekrana",
+    "exitFullscreen": "Izađi iz režima preko celog ekrana",
+    "popularDistricts": "Popularni kvartovi",
     "controls": {
       "walkingAccessibility": "Pešačka dostupnost",
       "searchRadius": "Radijus pretrage",
@@ -3155,6 +3172,8 @@
       "zoomIn": "Približi",
       "addressHidden": "Adresa sakrivena",
       "withoutTitle": "Bez naslova"
-    }
+    },
+    "showHeader": "Prikaži zaglavlje",
+    "hideHeader": "Sakrij zaglavlje"
   }
 }
