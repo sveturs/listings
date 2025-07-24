@@ -16,8 +16,8 @@ interface CategoryTreeNode extends MarketplaceCategory {
 interface BentoGridCategoriesProps {
   onCategorySelect: (categoryId: number | null) => void;
   selectedCategoryId?: number | null;
-  filters?: any;
-  onFiltersChange?: (filters: any) => void;
+  filters?: Record<string, any>;
+  onFiltersChange?: (filters: Record<string, any>) => void;
 }
 
 export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({

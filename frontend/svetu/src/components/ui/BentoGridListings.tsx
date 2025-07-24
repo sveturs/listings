@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { ShoppingBag, TrendingUp, ArrowRight, LayoutGrid, List } from 'lucide-react';
 import { UnifiedSearchService, UnifiedSearchItem } from '@/services/unifiedSearch';
@@ -66,27 +66,26 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
   const [showAll, setShowAll] = useState(false);
 
   // Конвертация фильтров в формат API
-  const convertFiltersToSearchParams = (filters: Record<string, any>) => {
-    const searchParams: Record<string, any> = {};
+  const searchParams = useMemo(() => {
+    const params: Record<string, any> = {};
     
-    if (filters.priceMin) searchParams.priceMin = filters.priceMin;
-    if (filters.priceMax) searchParams.priceMax = filters.priceMax;
-    if (filters.condition) searchParams.condition = filters.condition;
-    if (filters.sellerType) {
-      searchParams.storefrontID = filters.sellerType === 'company' ? 'not_null' : null;
+    if (filters?.priceMin) params.priceMin = filters.priceMin;
+    if (filters?.priceMax) params.priceMax = filters.priceMax;
+    if (filters?.condition) params.condition = filters.condition;
+    if (filters?.sellerType) {
+      params.storefrontID = filters.sellerType === 'company' ? 'not_null' : null;
     }
-    if (filters.attributeFilters && Object.keys(filters.attributeFilters).length > 0) {
-      searchParams.attributeFilters = filters.attributeFilters;
+    if (filters?.attributeFilters && Object.keys(filters.attributeFilters).length > 0) {
+      params.attributeFilters = filters.attributeFilters;
     }
     
-    return searchParams;
-  };
+    return params;
+  }, [filters?.priceMin, filters?.priceMax, filters?.condition, filters?.sellerType, filters?.attributeFilters]);
 
   // Загрузка данных
   const loadData = useCallback(async (pageNum: number = 1) => {
     try {
       setLoading(true);
-      const searchParams = convertFiltersToSearchParams(filters);
       
       const response = await UnifiedSearchService.search({
         query: '',
@@ -119,11 +118,13 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [productTypes, selectedCategoryId, filters]);
+  }, [productTypes, selectedCategoryId, searchParams]);
 
   useEffect(() => {
+    console.log('BentoGridListings: Filters changed, reloading data');
+    setPage(1);
     loadData(1);
-  }, [productTypes, selectedCategoryId, filters]);
+  }, [selectedCategoryId, JSON.stringify(searchParams)]); // Используем JSON.stringify для глубокого сравнения
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {

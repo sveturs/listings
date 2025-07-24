@@ -5,7 +5,7 @@ import { Link } from '@/i18n/routing';
 import { BentoGrid } from '@/components/ui/BentoGrid';
 import { BentoGridCategories } from '@/components/ui/BentoGridCategories';
 import { BentoGridListings } from '@/components/ui/BentoGridListings';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 interface HomePageData {
   categories: Array<{
@@ -59,6 +59,15 @@ export default function HomePageClient({
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [filters, setFilters] = useState<Record<string, any>>({});
 
+  // Стабильные коллбэки для предотвращения лишних рендеров
+  const handleCategorySelect = useCallback((categoryId: number | null) => {
+    setSelectedCategoryId(categoryId);
+  }, []);
+
+  const handleFiltersChange = useCallback((newFilters: Record<string, any>) => {
+    setFilters(newFilters);
+  }, []);
+
   useEffect(() => {
     // Если данные не были загружены на сервере (dev mode), загружаем на клиенте
     if (!homePageData && typeof window !== 'undefined') {
@@ -109,10 +118,10 @@ export default function HomePageClient({
           {/* Новая секция BentoGrid с категориями и объявлениями */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
             <BentoGridCategories 
-              onCategorySelect={setSelectedCategoryId}
+              onCategorySelect={handleCategorySelect}
               selectedCategoryId={selectedCategoryId}
               filters={filters}
-              onFiltersChange={setFilters}
+              onFiltersChange={handleFiltersChange}
             />
             <BentoGridListings
               locale={locale}
