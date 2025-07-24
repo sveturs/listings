@@ -1,10 +1,11 @@
 'use client';
 
 import { PageTransition } from '@/components/ui/PageTransition';
-import HomePage from '@/components/marketplace/HomePage';
 import { Link } from '@/i18n/routing';
 import { BentoGrid } from '@/components/ui/BentoGrid';
-import { useEffect, useState } from 'react';
+import { BentoGridCategories } from '@/components/ui/BentoGridCategories';
+import { BentoGridListings } from '@/components/ui/BentoGridListings';
+import { useEffect, useState, useCallback } from 'react';
 
 interface HomePageData {
   categories: Array<{
@@ -55,6 +56,19 @@ export default function HomePageClient({
 }: HomePageClientProps) {
   const [bentoData, setBentoData] = useState<HomePageData | null>(homePageData);
   const [isLoading, setIsLoading] = useState(!homePageData);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null
+  );
+  const [filters, setFilters] = useState<Record<string, any>>({});
+
+  // Стабильные коллбэки для предотвращения лишних рендеров
+  const handleCategorySelect = useCallback((categoryId: number | null) => {
+    setSelectedCategoryId(categoryId);
+  }, []);
+
+  const handleFiltersChange = useCallback((newFilters: Record<string, any>) => {
+    setFilters(newFilters);
+  }, []);
 
   useEffect(() => {
     // Если данные не были загружены на сервере (dev mode), загружаем на клиенте
@@ -74,12 +88,12 @@ export default function HomePageClient({
   return (
     <PageTransition mode="fade">
       <div className="min-h-screen">
-        <div className="container mx-auto px-4 pt-8">
+        <div className="container mx-auto px-1 sm:px-4 pt-8">
           {/* BentoGrid секция */}
           <div className="mb-12">
             {isLoading ? (
               // Skeleton loader для BentoGrid
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 p-1 sm:p-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
@@ -103,12 +117,20 @@ export default function HomePageClient({
             )}
           </div>
 
-          <HomePage
-            initialData={initialData}
-            locale={locale}
-            error={error}
-            paymentsEnabled={paymentsEnabled}
-          />
+          {/* Новая секция BentoGrid с категориями и объявлениями */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 p-1 sm:p-4 pb-24 lg:pb-4">
+            <BentoGridCategories
+              onCategorySelect={handleCategorySelect}
+              selectedCategoryId={selectedCategoryId}
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+            />
+            <BentoGridListings
+              locale={locale}
+              selectedCategoryId={selectedCategoryId}
+              filters={filters}
+            />
+          </div>
 
           {/* Плавающая кнопка создания объявления */}
           <Link

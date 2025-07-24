@@ -23,8 +23,9 @@ export const BentoGridMap: React.FC<BentoGridMapProps> = ({
   userLocation,
 }) => {
   // Состояние для отслеживания доступности геолокации
-  const [isGeolocationAvailable, setIsGeolocationAvailable] = React.useState(false);
-  
+  const [isGeolocationAvailable, setIsGeolocationAvailable] =
+    React.useState(false);
+
   React.useEffect(() => {
     if ('geolocation' in navigator) {
       setIsGeolocationAvailable(true);
@@ -41,18 +42,20 @@ export const BentoGridMap: React.FC<BentoGridMapProps> = ({
         zoom: 13,
       };
     }
-    
+
     // Если нет локации пользователя, центрируем на первом объявлении
     // или на дефолтных координатах Белграда
     if (listings.length > 0) {
-      const avgLat = listings.reduce((sum, l) => sum + l.latitude, 0) / listings.length;
-      const avgLng = listings.reduce((sum, l) => sum + l.longitude, 0) / listings.length;
+      const avgLat =
+        listings.reduce((sum, l) => sum + l.latitude, 0) / listings.length;
+      const avgLng =
+        listings.reduce((sum, l) => sum + l.longitude, 0) / listings.length;
       return {
         center: { longitude: avgLng, latitude: avgLat },
         zoom: 12,
       };
     }
-    
+
     return {
       center: { longitude: 20.4489, latitude: 44.7866 }, // Белград
       zoom: 11,
@@ -113,7 +116,7 @@ export const BentoGridMap: React.FC<BentoGridMapProps> = ({
         <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-white/20 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/20 to-transparent" />
       </div>
-      
+
       {/* Кнопка геолокации */}
       {isGeolocationAvailable && !userLocation && (
         <button
@@ -133,9 +136,24 @@ export const BentoGridMap: React.FC<BentoGridMapProps> = ({
           className="absolute bottom-4 right-4 btn btn-sm btn-circle btn-primary shadow-lg hover:scale-110 transition-transform"
           title="Определить мое местоположение"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+            />
           </svg>
         </button>
       )}

@@ -10,6 +10,8 @@ import { MarketplaceItem } from '@/types/marketplace';
 import { EnhancedListingCard } from '@/components/marketplace/EnhancedListingCard';
 import ViewToggle from '@/components/common/ViewToggle';
 import { useViewPreference } from '@/hooks/useViewPreference';
+import GridColumnsToggle from '@/components/common/GridColumnsToggle';
+import { useGridColumns } from '@/hooks/useGridColumns';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
 import { FilterValues } from './ListingFilters';
@@ -118,6 +120,7 @@ export default function MarketplaceList({
   const [hasMore, setHasMore] = useState(initialData?.has_more ?? true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useViewPreference('grid');
+  const [gridColumns, setGridColumns] = useGridColumns(1);
   const [initialized, setInitialized] = useState(!!initialData);
 
   // console.log('MarketplaceList state:', {
@@ -313,17 +316,28 @@ export default function MarketplaceList({
 
   return (
     <>
-      <div className="flex justify-between mb-4">
-        <button onClick={manualLoad} className="btn btn-primary">
-          Manual Load ({items.length} items)
-        </button>
-        <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
+      <div className="flex justify-end mb-4">
+        <div className="flex gap-2">
+          {viewMode === 'grid' && (
+            <div className="lg:hidden">
+              <GridColumnsToggle
+                currentColumns={gridColumns}
+                onColumnsChange={setGridColumns}
+              />
+            </div>
+          )}
+          <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
+        </div>
       </div>
 
       <div
         className={
           viewMode === 'grid'
-            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+            ? gridColumns === 1
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 lg:gap-6'
+              : gridColumns === 2
+                ? 'grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5 sm:gap-3'
+                : 'grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 sm:gap-2'
             : 'space-y-4'
         }
       >
@@ -333,6 +347,7 @@ export default function MarketplaceList({
             item={convertToMarketplaceItem(item)}
             locale={locale}
             viewMode={viewMode}
+            gridColumns={viewMode === 'grid' ? gridColumns : undefined}
           />
         ))}
       </div>
