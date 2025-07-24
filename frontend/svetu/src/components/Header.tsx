@@ -12,6 +12,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import CartIcon from './cart/CartIcon';
 import ShoppingCartModal from './cart/ShoppingCartModal';
 import { ThemeToggle } from './ThemeToggle';
+import Image from 'next/image';
 
 export default function Header() {
   const t = useTranslations('header');
@@ -117,7 +118,19 @@ export default function Header() {
                 ))}
               </ul>
             </div>
-            <Link href="/" className="btn btn-ghost text-xl px-2">
+            <Link
+              href="/"
+              className="btn btn-ghost text-xl px-2 flex items-center gap-2"
+            >
+              <div className="w-8 h-8 flex items-center justify-center">
+                <Image 
+                  src="/logos/svetu-gradient-48x48.png" 
+                  alt="SveTu Logo" 
+                  width={32} 
+                  height={32}
+                  className="object-contain"
+                />
+              </div>
               SveTu
             </Link>
           </div>

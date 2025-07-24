@@ -221,36 +221,6 @@ const MapPage: React.FC = () => {
   // Состояние для раскрытия секции фильтров
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
 
-  // Состояние для скрытия хедера сайта
-  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
-
-  // Функция для скрытия/показа хедера
-  const toggleHeader = useCallback(() => {
-    setIsHeaderHidden(!isHeaderHidden);
-
-    // Находим хедер и управляем его видимостью
-    const header = document.querySelector('header');
-    const main = document.querySelector('main');
-
-    if (header && main) {
-      if (!isHeaderHidden) {
-        // Скрываем хедер
-        header.style.transform = 'translateY(-100%)';
-        header.style.transition = 'transform 0.3s ease';
-        // Убираем верхний отступ у main
-        main.style.paddingTop = '0';
-        main.style.transition = 'padding-top 0.3s ease';
-      } else {
-        // Показываем хедер
-        header.style.transform = 'translateY(0)';
-        header.style.transition = 'transform 0.3s ease';
-        // Возвращаем верхний отступ у main
-        main.style.paddingTop = '4rem'; // 64px - высота хедера
-        main.style.transition = 'padding-top 0.3s ease';
-      }
-    }
-  }, [isHeaderHidden]);
-
   // Функция для обновления URL без перезагрузки страницы
   const updateURL = useCallback(
     (newFilters: MapFilters, newViewState: MapViewState, query?: string) => {
@@ -1000,27 +970,6 @@ const MapPage: React.FC = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-base-100">
-      {/* Кнопка скрытия/показа хедера */}
-      <button
-        onClick={toggleHeader}
-        className="fixed top-2 right-2 z-[150] btn btn-circle btn-sm bg-base-100 hover:bg-base-200 shadow-md"
-        title={isHeaderHidden ? t('showHeader') : t('hideHeader')}
-      >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d={isHeaderHidden ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'}
-          />
-        </svg>
-      </button>
-
       {/* Карта на весь экран */}
       <div className="absolute inset-0">
         <InteractiveMap

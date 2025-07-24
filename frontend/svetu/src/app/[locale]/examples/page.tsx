@@ -63,6 +63,14 @@ export default function ExamplesPage() {
       color: 'bg-gradient-to-r from-red-500 to-orange-500',
       icon: '🏷️',
     },
+    {
+      title: 'Interactive Logos',
+      description:
+        '3D animated logos with particles, springs and morphing effects',
+      href: '/examples/logos',
+      color: 'bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500',
+      icon: '🎭',
+    },
   ];
 
   return (

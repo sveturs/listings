@@ -254,7 +254,6 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
                 )}
               </div>
             )}
-
           </>
         )}
       </div>

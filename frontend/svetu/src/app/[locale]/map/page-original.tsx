@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
+// import MarkerClickPopup from '@/components/GIS/Map/MarkerClickPopup';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
 import {
   MapViewState,
@@ -16,8 +17,10 @@ import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
+// import WalkingAccessibilityControl from '@/components/GIS/Map/WalkingAccessibilityControl'; // Заменен на NativeSliderControl
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
+// import { DistrictMapSelector } from '@/components/search';
 import { SmartFilters } from '@/components/marketplace/SmartFilters';
 import { QuickFilters } from '@/components/marketplace/QuickFilters';
 import { CategoryTreeSelector } from '@/components/common/CategoryTreeSelector';
@@ -135,7 +138,7 @@ const MapPage: React.FC = () => {
   const getInitialViewStateFromURL = (): MapViewState => {
     const lat = parseFloat(searchParams?.get('lat') || '44.8176');
     const lng = parseFloat(searchParams?.get('lng') || '20.4649');
-    const zoom = parseFloat(searchParams?.get('zoom') || '11');
+    const zoom = parseFloat(searchParams?.get('zoom') || '10');
 
     return {
       longitude: lng,
@@ -214,42 +217,6 @@ const MapPage: React.FC = () => {
 
   // Включить поиск по районам
   const _enableDistrictSearch = searchType === 'district';
-
-  // Состояние для сворачивания левой панели
-  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
-
-  // Состояние для раскрытия секции фильтров
-  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
-
-  // Состояние для скрытия хедера сайта
-  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
-
-  // Функция для скрытия/показа хедера
-  const toggleHeader = useCallback(() => {
-    setIsHeaderHidden(!isHeaderHidden);
-
-    // Находим хедер и управляем его видимостью
-    const header = document.querySelector('header');
-    const main = document.querySelector('main');
-
-    if (header && main) {
-      if (!isHeaderHidden) {
-        // Скрываем хедер
-        header.style.transform = 'translateY(-100%)';
-        header.style.transition = 'transform 0.3s ease';
-        // Убираем верхний отступ у main
-        main.style.paddingTop = '0';
-        main.style.transition = 'padding-top 0.3s ease';
-      } else {
-        // Показываем хедер
-        header.style.transform = 'translateY(0)';
-        header.style.transition = 'transform 0.3s ease';
-        // Возвращаем верхний отступ у main
-        main.style.paddingTop = '4rem'; // 64px - высота хедера
-        main.style.transition = 'padding-top 0.3s ease';
-      }
-    }
-  }, [isHeaderHidden]);
 
   // Функция для обновления URL без перезагрузки страницы
   const updateURL = useCallback(
@@ -689,6 +656,23 @@ const MapPage: React.FC = () => {
     []
   );
 
+  // Получение цвета для категории (если понадобится в будущем)
+  // const getCategoryColor = (categorySlug: string): string => {
+  //   const colors: { [key: string]: string } = {
+  //     'real-estate': '#3B82F6', // blue
+  //     vehicles: '#EF4444', // red
+  //     electronics: '#10B981', // green
+  //     clothing: '#F59E0B', // amber
+  //     services: '#8B5CF6', // violet
+  //     jobs: '#F97316', // orange
+  //     'children-goods-toys': '#EC4899', // pink
+  //     'home-garden': '#16A34A', // green
+  //     appliances: '#0EA5E9', // sky
+  //     default: '#6B7280', // gray
+  //   };
+  //   return colors[categorySlug] || colors.default;
+  // };
+
   // Поиск по адресу
   const handleAddressSearch = useCallback(
     async (query: string) => {
@@ -980,115 +964,244 @@ const MapPage: React.FC = () => {
     [t]
   );
 
-  // Популярные районы
-  const popularDistricts = [
-    { name: 'Нови Београд', lat: 44.8094, lng: 20.3864, zoom: 13 },
-    { name: 'Земун', lat: 44.8433, lng: 20.4011, zoom: 13 },
-    { name: 'Врачар', lat: 44.7988, lng: 20.4724, zoom: 14 },
-    { name: 'Савски венац', lat: 44.7879, lng: 20.4573, zoom: 13 },
-  ];
-
-  // Быстрые категории
-  const quickCategories = [
-    { icon: '🏠', name: t('categories.realEstate'), id: 1 },
-    { icon: '🚗', name: t('categories.vehicles'), id: 2 },
-    { icon: '📱', name: t('categories.electronics'), id: 3 },
-    { icon: '👕', name: t('categories.clothing'), id: 4 },
-    { icon: '🔧', name: t('categories.services'), id: 5 },
-    { icon: '💼', name: t('categories.jobs'), id: 6 },
-  ];
-
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-base-100">
-      {/* Кнопка скрытия/показа хедера */}
-      <button
-        onClick={toggleHeader}
-        className="fixed top-2 right-2 z-[150] btn btn-circle btn-sm bg-base-100 hover:bg-base-200 shadow-md"
-        title={isHeaderHidden ? t('showHeader') : t('hideHeader')}
-      >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d={isHeaderHidden ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'}
-          />
-        </svg>
-      </button>
-
-      {/* Карта на весь экран */}
-      <div className="absolute inset-0">
-        <InteractiveMap
-          initialViewState={viewState}
-          markers={markers}
-          onMarkerClick={handleMarkerClick}
-          onViewStateChange={handleViewStateChange}
-          className="w-full h-full"
-          mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
-          controlsConfig={{
-            showNavigation: true,
-            showFullscreen: true,
-            showGeolocate: true,
-            position: 'top-right',
-          }}
-          isMobile={isMobile}
-          selectedMarker={selectedMarker}
-          onMarkerClose={() => setSelectedMarker(null)}
-          showBuyerMarker={true}
-          buyerLocation={buyerLocation}
-          searchRadius={filters.radius}
-          walkingMode={walkingMode}
-          walkingTime={walkingTime}
-          onBuyerLocationChange={handleBuyerLocationChange}
-          onIsochroneChange={setCurrentIsochrone}
-          onWalkingModeChange={setWalkingMode}
-          onWalkingTimeChange={setWalkingTime}
-          onSearchRadiusChange={handleSearchRadiusChange}
-          useNativeControl={true}
-          controlTranslations={controlTranslations}
-          districtBoundary={districtBoundary}
-        />
-      </div>
-
-      {/* Левая панель - поиск и категории */}
-      <div
-        className={`absolute left-0 top-0 bottom-0 ${isLeftPanelCollapsed ? 'w-12' : 'w-80'} bg-base-100 shadow-2xl flex flex-col z-20 transition-all duration-300 ${isMobile ? '-translate-x-full' : ''}`}
-      >
-        {/* Кнопка сворачивания/разворачивания */}
-        <button
-          onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
-          className={`absolute ${isLeftPanelCollapsed ? 'left-3' : '-right-3'} top-6 z-30 btn btn-circle btn-sm bg-base-100 hover:bg-base-200 shadow-md`}
-          title={isLeftPanelCollapsed ? 'Развернуть панель' : 'Свернуть панель'}
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d={isLeftPanelCollapsed ? 'M9 5l7 7-7 7' : 'M15 19l-7-7 7-7'}
+    <div className="min-h-screen bg-base-100">
+      {/* Контейнер с картой и фильтрами */}
+      <div className="relative h-[100dvh] md:h-[calc(100vh-140px)]">
+        {/* Десктопная боковая панель с фильтрами */}
+        <div className="absolute left-4 top-4 z-10 w-80 bg-white rounded-lg shadow-lg hidden md:block">
+          {/* Поиск по адресу */}
+          <div className="p-4 border-b border-base-300">
+            {/* Поиск по адресу - всегда показываем, так как районы отключены */}
+            <label className="block text-sm font-medium text-base-content mb-2">
+              {t('search.address')}
+            </label>
+            <SearchBar
+              initialQuery={searchQuery}
+              onSearch={(query) => {
+                setIsSearchFromUser(true);
+                handleAddressSearch(query);
+              }}
+              placeholder={t('search.addressPlaceholder')}
+              className="w-full"
+              geoLocation={
+                viewState.latitude && viewState.longitude
+                  ? {
+                      lat: viewState.latitude,
+                      lon: viewState.longitude,
+                      radius: filters.radius,
+                    }
+                  : undefined
+              }
             />
-          </svg>
-        </button>
-
-        {/* Лого и поиск */}
-        <div
-          className={`p-4 border-b border-base-300 ${isLeftPanelCollapsed ? 'hidden' : ''}`}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <h1 className="text-2xl font-bold">SveTu</h1>
-            <div className="badge badge-primary">{markers.length}</div>
           </div>
 
+          {/* Фильтры */}
+          <div className="p-4">
+            <h3 className="text-lg font-medium text-base-content mb-3">
+              {t('filters.title')}
+            </h3>
+
+            {/* Категория */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-base-content mb-1">
+                {t('filters.category')}
+              </label>
+              <CategoryTreeSelector
+                value={filters.categories}
+                onChange={(value) => {
+                  const categories = Array.isArray(value)
+                    ? value
+                    : value
+                      ? [value]
+                      : [];
+                  handleFiltersChange({ categories });
+                }}
+                multiple={true}
+                placeholder={t('filters.allCategories')}
+                showPath={true}
+                className="w-full"
+              />
+            </div>
+
+            {/* Цена от */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-base-content mb-1">
+                {t('filters.priceFrom')}
+              </label>
+              <input
+                type="number"
+                className="input input-bordered w-full"
+                value={filters.priceFrom || ''}
+                onChange={(e) =>
+                  handleFiltersChange({
+                    priceFrom: parseInt(e.target.value) || 0,
+                  })
+                }
+                placeholder="0"
+              />
+            </div>
+
+            {/* Цена до */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-base-content mb-1">
+                {t('filters.priceTo')}
+              </label>
+              <input
+                type="number"
+                className="input input-bordered w-full"
+                value={filters.priceTo || ''}
+                onChange={(e) =>
+                  handleFiltersChange({
+                    priceTo: parseInt(e.target.value) || 0,
+                  })
+                }
+                placeholder="∞"
+              />
+            </div>
+
+            {/* Динамические фильтры по атрибутам категории */}
+            {filters.categories && filters.categories.length > 0 && (
+              <div className="mb-4">
+                <SmartFilters
+                  categoryId={filters.categories[0]}
+                  onChange={(attributeFilters) =>
+                    handleFiltersChange({ attributes: attributeFilters })
+                  }
+                  lang={currentLang}
+                  className="space-y-3"
+                />
+              </div>
+            )}
+
+            {/* Контроль радиуса поиска */}
+            <div className="mb-4 space-y-3">
+              <label className="block text-sm font-medium text-base-content">
+                {t('controls.radiusControl')}
+              </label>
+
+              {/* Переключатель типа радиуса */}
+              <div className="flex gap-1 p-1 bg-base-200 rounded-lg">
+                <button
+                  type="button"
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    walkingMode === 'walking'
+                      ? 'bg-primary text-primary-content'
+                      : 'text-base-content hover:bg-base-300'
+                  }`}
+                  onClick={() => setWalkingMode('walking')}
+                >
+                  🚶 {t('controls.walkingMode')}
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    walkingMode === 'radius'
+                      ? 'bg-primary text-primary-content'
+                      : 'text-base-content hover:bg-base-300'
+                  }`}
+                  onClick={() => setWalkingMode('radius')}
+                >
+                  📏 {t('controls.distanceMode')}
+                </button>
+              </div>
+
+              {/* Слайдер радиуса */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-base-content/70">
+                  <span>
+                    {walkingMode === 'walking'
+                      ? `5 ${t('controls.minUnit')}`
+                      : `0.1 ${t('controls.kmUnit')}`}
+                  </span>
+                  <span className="font-medium">
+                    {walkingMode === 'walking'
+                      ? `${walkingTime} ${t('controls.minUnit')}`
+                      : `${filters.radius >= 1000 ? (filters.radius / 1000).toFixed(1) : (filters.radius / 1000).toFixed(1)} ${t('controls.kmUnit')}`}
+                  </span>
+                  <span>
+                    {walkingMode === 'walking'
+                      ? `60 ${t('controls.minUnit')}`
+                      : `50 ${t('controls.kmUnit')}`}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  className="range range-primary range-sm"
+                  min={walkingMode === 'walking' ? 5 : 100}
+                  max={walkingMode === 'walking' ? 60 : 50000}
+                  step={walkingMode === 'walking' ? 5 : 100}
+                  value={
+                    walkingMode === 'walking' ? walkingTime : filters.radius
+                  }
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    if (walkingMode === 'walking') {
+                      setWalkingTime(value);
+                    } else {
+                      handleFiltersChange({ radius: value });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Быстрые фильтры для категории */}
+            {filters.categories && filters.categories.length > 0 && (
+              <div className="mb-4">
+                <QuickFilters
+                  categoryId={filters.categories[0].toString()}
+                  onSelectFilter={handleQuickFilterSelect}
+                />
+              </div>
+            )}
+
+            {/* Статистика */}
+            <div className="text-sm text-base-content-secondary">
+              {t('results.showing')}: {markers.length} {t('results.listings')}
+            </div>
+          </div>
+        </div>
+
+        {/* Мобильная кнопка фильтров */}
+        <div className="absolute top-4 left-4 z-[1000] md:hidden">
+          <button
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="bg-white rounded-lg shadow-lg p-3 flex items-center space-x-2 hover:bg-gray-50 transition-all duration-200 active:scale-95"
+            aria-label="Открыть фильтры"
+          >
+            <svg
+              className="w-5 h-5 text-gray-700"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
+              />
+            </svg>
+            <span className="text-sm font-medium text-gray-700">
+              {t('filters.title')}
+            </span>
+            {(filters.categories.length > 0 ||
+              filters.priceFrom > 0 ||
+              filters.priceTo > 0) && (
+              <span className="bg-primary text-white text-xs px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
+                {[
+                  filters.categories.length > 0 ? 1 : 0,
+                  filters.priceFrom > 0 ? 1 : 0,
+                  filters.priceTo > 0 ? 1 : 0,
+                ].reduce((a, b) => a + b, 0)}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Мобильный поиск */}
+        <div className="absolute top-4 right-4 left-20 z-[1000] md:hidden">
           <SearchBar
             initialQuery={searchQuery}
             onSearch={(query) => {
@@ -1097,521 +1210,105 @@ const MapPage: React.FC = () => {
             }}
             placeholder={t('search.addressPlaceholder')}
             className="w-full"
-            geoLocation={
-              viewState.latitude && viewState.longitude
-                ? {
-                    lat: viewState.latitude,
-                    lon: viewState.longitude,
-                    radius: filters.radius,
-                  }
-                : undefined
-            }
           />
         </div>
 
-        {/* Быстрые фильтры */}
-        <div
-          className={`p-4 border-b border-base-300 ${isLeftPanelCollapsed ? 'hidden' : ''}`}
-        >
-          <h3 className="text-sm font-semibold mb-3 text-base-content/70">
-            {t('categories.title')}
-          </h3>
-          <div className="grid grid-cols-3 gap-2">
-            {quickCategories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  const isSelected = filters.categories.includes(cat.id);
-                  handleFiltersChange({
-                    categories: isSelected
-                      ? filters.categories.filter((c) => c !== cat.id)
-                      : [...filters.categories, cat.id],
-                  });
-                }}
-                className={`btn btn-sm ${filters.categories.includes(cat.id) ? 'btn-primary' : 'btn-ghost'} flex flex-col h-auto py-2`}
-              >
-                <span className="text-xl">{cat.icon}</span>
-                <span className="text-xs">{cat.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Популярные районы */}
-        <div
-          className={`p-4 border-b border-base-300 ${isLeftPanelCollapsed ? 'hidden' : ''}`}
-        >
-          <h3 className="text-sm font-semibold mb-3 text-base-content/70">
-            {t('popularDistricts')}
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {popularDistricts.map((district) => (
-              <button
-                key={district.name}
-                onClick={() => {
-                  setViewState({
-                    ...viewState,
-                    latitude: district.lat,
-                    longitude: district.lng,
-                    zoom: district.zoom,
-                  });
-                  setBuyerLocation({
-                    latitude: district.lat,
-                    longitude: district.lng,
-                  });
-                }}
-                className="btn btn-xs btn-outline"
-              >
-                {district.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Дополнительные фильтры */}
-        <div
-          className={`flex-1 overflow-y-auto ${isLeftPanelCollapsed ? 'hidden' : ''}`}
-        >
-          {/* Кнопка-заголовок для фильтров */}
-          <div className="px-4 pt-4">
-            <button
-              onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
-              className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-base-200 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
-                  />
-                </svg>
-                <span className="font-medium">{t('filters.title')}</span>
-                {(filters.priceFrom > 0 ||
-                  filters.priceTo > 0 ||
-                  filters.categories.length > 0) && (
-                  <div className="badge badge-primary badge-sm">
-                    {filters.categories.length +
-                      (filters.priceFrom > 0 ? 1 : 0) +
-                      (filters.priceTo > 0 ? 1 : 0)}
-                  </div>
-                )}
-              </div>
-              <svg
-                className={`w-4 h-4 transition-transform ${isFiltersExpanded ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Содержимое фильтров */}
-          {isFiltersExpanded && (
-            <div className="p-4 space-y-4">
-              {/* Категория */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">{t('filters.category')}</span>
-                </label>
-                <CategoryTreeSelector
-                  value={filters.categories}
-                  onChange={(value) => {
-                    const categories = Array.isArray(value)
-                      ? value
-                      : value
-                        ? [value]
-                        : [];
-                    handleFiltersChange({ categories });
-                  }}
-                  multiple={true}
-                  placeholder={t('filters.allCategories')}
-                  showPath={true}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Цена */}
-              <div>
-                <label className="label">
-                  <span className="label-text">{t('filters.price')}</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="form-control">
-                    <input
-                      type="number"
-                      className="input input-bordered input-sm"
-                      value={filters.priceFrom || ''}
-                      onChange={(e) =>
-                        handleFiltersChange({
-                          priceFrom: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      placeholder={t('filters.priceFrom')}
-                    />
-                  </div>
-                  <div className="form-control">
-                    <input
-                      type="number"
-                      className="input input-bordered input-sm"
-                      value={filters.priceTo || ''}
-                      onChange={(e) =>
-                        handleFiltersChange({
-                          priceTo: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      placeholder={t('filters.priceTo')}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Радиус поиска */}
-              <div>
-                <label className="label">
-                  <span className="label-text">
-                    {t('controls.radiusControl')}
-                  </span>
-                </label>
-
-                {/* Переключатель режима */}
-                <div className="tabs tabs-boxed tabs-sm mb-3">
-                  <a
-                    className={`tab ${walkingMode === 'walking' ? 'tab-active' : ''}`}
-                    onClick={() => setWalkingMode('walking')}
-                  >
-                    🚶 {t('controls.walkingMode')}
-                  </a>
-                  <a
-                    className={`tab ${walkingMode === 'radius' ? 'tab-active' : ''}`}
-                    onClick={() => setWalkingMode('radius')}
-                  >
-                    📏 {t('controls.distanceMode')}
-                  </a>
-                </div>
-
-                {/* Слайдер */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span>
-                      {walkingMode === 'walking'
-                        ? `5 ${t('controls.minUnit')}`
-                        : `0.1 ${t('controls.kmUnit')}`}
-                    </span>
-                    <span className="font-medium badge badge-primary badge-sm">
-                      {walkingMode === 'walking'
-                        ? `${walkingTime} ${t('controls.minUnit')}`
-                        : `${(filters.radius / 1000).toFixed(1)} ${t('controls.kmUnit')}`}
-                    </span>
-                    <span>
-                      {walkingMode === 'walking'
-                        ? `60 ${t('controls.minUnit')}`
-                        : `50 ${t('controls.kmUnit')}`}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    className="range range-primary range-sm"
-                    min={walkingMode === 'walking' ? 5 : 100}
-                    max={walkingMode === 'walking' ? 60 : 50000}
-                    step={walkingMode === 'walking' ? 5 : 100}
-                    value={
-                      walkingMode === 'walking' ? walkingTime : filters.radius
-                    }
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-                      if (walkingMode === 'walking') {
-                        setWalkingTime(value);
-                      } else {
-                        handleFiltersChange({ radius: value });
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Динамические фильтры */}
-              {filters.categories && filters.categories.length > 0 && (
-                <div>
-                  <SmartFilters
-                    categoryId={filters.categories[0]}
-                    onChange={(attributeFilters) =>
-                      handleFiltersChange({ attributes: attributeFilters })
-                    }
-                    lang={currentLang}
-                    className="space-y-3"
-                  />
-                </div>
-              )}
-
-              {/* Быстрые фильтры */}
-              {filters.categories && filters.categories.length > 0 && (
-                <div>
-                  <QuickFilters
-                    categoryId={filters.categories[0].toString()}
-                    onSelectFilter={handleQuickFilterSelect}
-                  />
-                </div>
-              )}
-
-              {/* Кнопка сброса */}
-              <button
-                onClick={() => {
-                  setFilters({
-                    categories: [],
-                    priceFrom: 0,
-                    priceTo: 0,
-                    radius: 5000,
-                    attributes: {},
-                  });
-                }}
-                className="btn btn-outline btn-sm btn-block"
-              >
-                {t('filters.resetFilters')}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Свёрнутое состояние - вертикальные иконки */}
-        {isLeftPanelCollapsed && (
-          <div className="flex flex-col items-center py-4 gap-3">
-            {/* Поиск */}
-            <button
-              onClick={() => setIsLeftPanelCollapsed(false)}
-              className="btn btn-ghost btn-sm btn-square"
-              title="Поиск"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </button>
-
-            {/* Категории */}
-            <button
-              onClick={() => setIsLeftPanelCollapsed(false)}
-              className="btn btn-ghost btn-sm btn-square"
-              title="Категории"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                />
-              </svg>
-            </button>
-
-            {/* Фильтры */}
-            <button
-              onClick={() => {
-                setIsLeftPanelCollapsed(false);
-                setIsFiltersExpanded(true);
-              }}
-              className="btn btn-ghost btn-sm btn-square"
-              title="Фильтры"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Мобильная кнопка меню */}
-      {isMobile && (
-        <button
-          onClick={() => setIsMobileFiltersOpen(true)}
-          className="btn btn-circle btn-primary fixed top-4 left-4 shadow-xl z-30"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
-      )}
-
-      {/* Плавающие кнопки быстрых действий */}
-      <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-10">
-        {/* Геолокация */}
-        <button
-          onClick={() => {
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(
-                (position) => {
-                  const { latitude, longitude } = position.coords;
-                  setViewState({
-                    ...viewState,
-                    latitude,
-                    longitude,
-                    zoom: 15,
-                  });
-                  setBuyerLocation({ latitude, longitude });
-                },
-                () => {
-                  toast.error(t('geolocation.error'));
-                }
-              );
-            }
-          }}
-          className="btn btn-circle btn-lg bg-base-100 shadow-xl hover:shadow-2xl"
-          title={t('geolocation.findMe')}
-        >
-          📍
-        </button>
-
-        {/* Показать все маркеры */}
-        {markers.length > 0 && (
-          <button
-            onClick={() => {
-              // Вычисляем границы всех маркеров
-              const lats = markers.map((m) => m.latitude);
-              const lngs = markers.map((m) => m.longitude);
-              const minLat = Math.min(...lats);
-              const maxLat = Math.max(...lats);
-              const minLng = Math.min(...lngs);
-              const maxLng = Math.max(...lngs);
-
-              const centerLat = (minLat + maxLat) / 2;
-              const centerLng = (minLng + maxLng) / 2;
-
-              // Рассчитываем zoom чтобы показать все маркеры
-              const latDiff = maxLat - minLat;
-              const lngDiff = maxLng - minLng;
-              const maxDiff = Math.max(latDiff, lngDiff);
-
-              let zoom = 10;
-              if (maxDiff < 0.01) zoom = 15;
-              else if (maxDiff < 0.05) zoom = 13;
-              else if (maxDiff < 0.1) zoom = 12;
-              else if (maxDiff < 0.5) zoom = 10;
-              else zoom = 8;
-
-              setViewState({
-                ...viewState,
-                latitude: centerLat,
-                longitude: centerLng,
-                zoom,
-              });
+        {/* Карта */}
+        <div className="absolute inset-0">
+          <InteractiveMap
+            initialViewState={viewState}
+            markers={markers}
+            onMarkerClick={handleMarkerClick}
+            onViewStateChange={handleViewStateChange}
+            className="w-full h-full"
+            mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
+            controlsConfig={{
+              showNavigation: true,
+              showFullscreen: true,
+              showGeolocate: true,
+              position: isMobile ? 'bottom-right' : 'top-right',
             }}
-            className="btn btn-circle btn-lg bg-base-100 shadow-xl hover:shadow-2xl"
-            title={t('showAll')}
-          >
-            🔍
-          </button>
+            isMobile={isMobile}
+            selectedMarker={selectedMarker}
+            onMarkerClose={() => setSelectedMarker(null)}
+            showBuyerMarker={true}
+            buyerLocation={buyerLocation}
+            searchRadius={filters.radius}
+            walkingMode={walkingMode}
+            walkingTime={walkingTime}
+            onBuyerLocationChange={handleBuyerLocationChange}
+            onIsochroneChange={setCurrentIsochrone}
+            onWalkingModeChange={setWalkingMode}
+            onWalkingTimeChange={setWalkingTime}
+            onSearchRadiusChange={handleSearchRadiusChange}
+            useNativeControl={true} // Используем нативный контрол по умолчанию
+            controlTranslations={controlTranslations}
+            districtBoundary={districtBoundary}
+          />
+        </div>
+
+        {/* Мобильный drawer с фильтрами */}
+        <MobileFiltersDrawer
+          isOpen={isMobileFiltersOpen}
+          onClose={() => setIsMobileFiltersOpen(false)}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onSearch={handleAddressSearch}
+          isSearching={isSearching}
+          markersCount={markers.length}
+          enableDistrictSearch={searchType === 'district'}
+          onDistrictSearchResults={handleDistrictSearchResults}
+          onDistrictBoundsChange={handleDistrictBoundsChange}
+          onDistrictBoundaryChange={setDistrictBoundary}
+          currentViewport={currentMapViewport}
+          searchType={searchType}
+          onSearchTypeChange={setSearchType}
+          translations={{
+            title: t('filters.title'),
+            search: {
+              address: t('search.address'),
+              placeholder: t('search.addressPlaceholder'),
+              byAddress: t('search.byAddress'),
+              byDistrict: t('search.byDistrict'),
+            },
+            filters: {
+              category: t('filters.category'),
+              allCategories: t('filters.allCategories'),
+              priceFrom: t('filters.priceFrom'),
+              priceTo: t('filters.priceTo'),
+              radius: t('filters.radius'),
+            },
+            categories: {
+              realEstate: t('categories.realEstate'),
+              vehicles: t('categories.vehicles'),
+              electronics: t('categories.electronics'),
+              clothing: t('categories.clothing'),
+              services: t('categories.services'),
+              jobs: t('categories.jobs'),
+            },
+            results: {
+              showing: t('results.showing'),
+              listings: t('results.listings'),
+            },
+            actions: {
+              apply: t('actions.apply'),
+              reset: t('actions.reset'),
+            },
+          }}
+        />
+
+        {/* Индикатор загрузки */}
+        {isLoading && (
+          <div className="absolute top-20 right-4 z-10 bg-white rounded-lg shadow-lg p-3 md:top-4">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <span className="text-sm text-base-content">{t('loading')}</span>
+            </div>
+          </div>
         )}
       </div>
-
-      {/* Индикатор загрузки */}
-      {isLoading && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-30">
-          <div className="alert alert-info shadow-lg">
-            <span className="loading loading-spinner loading-sm"></span>
-            <span>{t('loading')}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Мобильный drawer с фильтрами */}
-      <MobileFiltersDrawer
-        isOpen={isMobileFiltersOpen}
-        onClose={() => setIsMobileFiltersOpen(false)}
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onSearch={handleAddressSearch}
-        isSearching={isSearching}
-        markersCount={markers.length}
-        enableDistrictSearch={searchType === 'district'}
-        onDistrictSearchResults={handleDistrictSearchResults}
-        onDistrictBoundsChange={handleDistrictBoundsChange}
-        onDistrictBoundaryChange={setDistrictBoundary}
-        currentViewport={currentMapViewport}
-        searchType={searchType}
-        onSearchTypeChange={setSearchType}
-        translations={{
-          title: t('filters.title'),
-          search: {
-            address: t('search.address'),
-            placeholder: t('search.addressPlaceholder'),
-            byAddress: t('search.byAddress'),
-            byDistrict: t('search.byDistrict'),
-          },
-          filters: {
-            category: t('filters.category'),
-            allCategories: t('filters.allCategories'),
-            priceFrom: t('filters.priceFrom'),
-            priceTo: t('filters.priceTo'),
-            radius: t('filters.radius'),
-          },
-          categories: {
-            realEstate: t('categories.realEstate'),
-            vehicles: t('categories.vehicles'),
-            electronics: t('categories.electronics'),
-            clothing: t('categories.clothing'),
-            services: t('categories.services'),
-            jobs: t('categories.jobs'),
-          },
-          results: {
-            showing: t('results.showing'),
-            listings: t('results.listings'),
-          },
-          actions: {
-            apply: t('actions.apply'),
-            reset: t('actions.reset'),
-          },
-        }}
-      />
     </div>
   );
 };
