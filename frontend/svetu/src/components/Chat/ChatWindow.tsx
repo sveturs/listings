@@ -13,6 +13,7 @@ import Link from 'next/link';
 import configManager from '@/config';
 import { contactsService } from '@/services/contacts';
 import { getLastSeenText } from '@/utils/timeUtils';
+import { toast } from '@/utils/toast';
 
 interface ChatWindowProps {
   chat?: MarketplaceChat;
@@ -306,24 +307,24 @@ export default function ChatWindow({
         added_from_chat_id: chat.id,
       });
 
-      alert(t('contactAdded'));
+      toast.success(t('contactAdded'));
     } catch (error) {
       console.error('Error adding contact:', error);
       // Проверяем тип ошибки и показываем соответствующее сообщение
       if (error instanceof Error) {
         if (error.message.includes('already exists')) {
-          alert(t('contactAlreadyExists'));
+          toast.warning(t('contactAlreadyExists'));
         } else if (error.message.includes('cannot add yourself')) {
-          alert(t('cannotAddYourself'));
+          toast.error(t('cannotAddYourself'));
         } else if (error.message.includes('does not allow contact requests')) {
-          alert(t('userDoesNotAllowContacts'));
+          toast.info(t('userDoesNotAllowContacts'));
         } else if (error.message.includes('Unauthorized')) {
-          alert(t('pleaseLoginToAddContacts'));
+          toast.warning(t('pleaseLoginToAddContacts'));
         } else {
-          alert(t('failedToAddContact'));
+          toast.error(t('failedToAddContact'));
         }
       } else {
-        alert(t('failedToAddContact'));
+        toast.error(t('failedToAddContact'));
       }
     } finally {
       setIsAddingContact(false);

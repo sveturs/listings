@@ -6,6 +6,7 @@ import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { balanceService } from '@/services/balance';
 import { BalanceWidget } from '@/components/balance/BalanceWidget';
+import { toast } from '@/utils/toast';
 
 const PRESET_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 
@@ -56,11 +57,11 @@ export default function DepositPage() {
         window.location.href = response.data.payment_url;
       } else {
         console.error('Invalid response structure:', response);
-        alert(t('admin.balance.error.deposit_failed'));
+        toast.error(t('admin.balance.error.deposit_failed'));
       }
     } catch (error) {
       console.error('Deposit error:', error);
-      alert(t('admin.balance.error.deposit_failed'));
+      toast.error(t('admin.balance.error.deposit_failed'));
     } finally {
       setIsProcessing(false);
     }

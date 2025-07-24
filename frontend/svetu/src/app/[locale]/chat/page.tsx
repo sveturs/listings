@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ChatLayout from '@/components/Chat/ChatLayout';
+import { PageTransition } from '@/components/ui/PageTransition';
 
 export default function ChatPage() {
   const locale = useLocale();
@@ -124,14 +125,16 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="absolute inset-0 top-16 flex flex-col">
-      {/* Chat content */}
-      <div className="flex-1 overflow-hidden px-2 sm:px-4 pb-2">
-        <ChatLayout
-          initialListingId={listingId ? parseInt(listingId) : undefined}
-          initialSellerId={sellerId ? parseInt(sellerId) : undefined}
-        />
+    <PageTransition mode="slide">
+      <div className="absolute inset-0 top-16 flex flex-col">
+        {/* Chat content */}
+        <div className="flex-1 overflow-hidden px-2 sm:px-4 pb-2">
+          <ChatLayout
+            initialListingId={listingId ? parseInt(listingId) : undefined}
+            initialSellerId={sellerId ? parseInt(sellerId) : undefined}
+          />
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

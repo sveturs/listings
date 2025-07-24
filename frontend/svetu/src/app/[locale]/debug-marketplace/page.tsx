@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { MarketplaceService } from '@/services/marketplace';
 import configManager from '@/config';
-import MarketplaceCard from '@/components/MarketplaceCard';
+import { EnhancedListingCard } from '@/components/marketplace/EnhancedListingCard';
 
 export default function DebugMarketplacePage() {
   const [data, setData] = useState<any>(null);
@@ -70,9 +70,13 @@ export default function DebugMarketplacePage() {
           </div>
 
           <div>
-            <h2 className="font-bold">MarketplaceCard Component:</h2>
+            <h2 className="font-bold">EnhancedListingCard Component:</h2>
             <div className="w-64">
-              <MarketplaceCard item={listing177} locale="en" viewMode="grid" />
+              <EnhancedListingCard
+                item={listing177}
+                locale="en"
+                viewMode="grid"
+              />
             </div>
           </div>
         </div>

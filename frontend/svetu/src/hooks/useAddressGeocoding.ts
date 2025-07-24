@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { apiClient } from '@/services/api-client';
 
 // Типы для геокодирования
 export interface AddressGeocodingResult {
@@ -239,7 +240,7 @@ export function useAddressGeocoding(
 
         const data = await response.json();
 
-        if (data.success && data.data) {
+        if (data && (data as any).success && (data as any).data) {
           return {
             id: data.data.id || `${lat}-${lng}`,
             text: data.data.text || data.data.place_name,
@@ -311,7 +312,7 @@ export function useAddressGeocoding(
 
         const data = await response.json();
 
-        if (data.success && data.data) {
+        if (data && (data as any).success && (data as any).data) {
           return {
             success: data.data.success,
             location: data.data.location,
@@ -350,31 +351,16 @@ export function useAddressGeocoding(
         setLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/v1/gis/geocode/multilingual`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              latitude: lat,
-              longitude: lng,
-            }),
-          }
-        );
+        const data = await apiClient.post('/api/v1/gis/geocode/multilingual', {
+          latitude: lat,
+          longitude: lng,
+        });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.success && data.data) {
+        if (data && (data as any).success && (data as any).data) {
           return {
-            address_sr: data.data.address_sr,
-            address_en: data.data.address_en,
-            address_ru: data.data.address_ru,
+            address_sr: (data as any).data.address_sr,
+            address_en: (data as any).data.address_en,
+            address_ru: (data as any).data.address_ru,
           };
         }
 

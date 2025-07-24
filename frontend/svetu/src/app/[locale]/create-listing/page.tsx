@@ -21,6 +21,7 @@ import {
 } from '@/components/DraftStatus';
 import { DraftsModal } from '@/components/DraftsModal';
 import { toast } from '@/utils/toast';
+import { PageTransition } from '@/components/ui/PageTransition';
 
 const steps = [
   { id: 'category', label: 'create_listing.steps.category' },
@@ -141,62 +142,64 @@ export default function CreateListingPage() {
   };
 
   return (
-    <CreateListingProvider draftId={draftId}>
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 min-h-screen">
-        {/* Оффлайн индикатор */}
-        <OfflineIndicator />
+    <PageTransition mode="slide">
+      <CreateListingProvider draftId={draftId}>
+        <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 min-h-screen">
+          {/* Оффлайн индикатор */}
+          <OfflineIndicator />
 
-        {/* Региональный заголовок с традиционным стилем */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex-1" />
-            <h1 className="text-2xl sm:text-3xl font-bold text-primary">
-              {t('create_listing.title')}
-            </h1>
-            <div className="flex items-center gap-2">
-              <DraftStatus />
-              <DraftIndicator onClick={() => setShowDraftsModal(true)} />
+          {/* Региональный заголовок с традиционным стилем */}
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary">
+                {t('create_listing.title')}
+              </h1>
+              <div className="flex items-center gap-2">
+                <DraftStatus />
+                <DraftIndicator onClick={() => setShowDraftsModal(true)} />
+              </div>
             </div>
+            <p className="text-sm text-base-content/70">
+              {t('create_listing.subtitle_regional')}
+            </p>
           </div>
-          <p className="text-sm text-base-content/70">
-            {t('create_listing.subtitle_regional')}
-          </p>
+
+          {/* Индикатор экономии трафика */}
+          <div className="alert alert-info mb-4 sm:hidden">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="stroke-current shrink-0 w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <span className="text-xs">
+              {t('create_listing.data_saving_mode')}
+            </span>
+          </div>
+
+          <StepWizard
+            steps={steps}
+            currentStep={currentStep}
+            onStepClick={handleStepChange}
+          />
+
+          <div className="mt-4 sm:mt-8">{renderStep()}</div>
+
+          {/* Модальное окно черновиков */}
+          <DraftsModal
+            isOpen={showDraftsModal}
+            onClose={() => setShowDraftsModal(false)}
+          />
         </div>
-
-        {/* Индикатор экономии трафика */}
-        <div className="alert alert-info mb-4 sm:hidden">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            className="stroke-current shrink-0 w-6 h-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
-          <span className="text-xs">
-            {t('create_listing.data_saving_mode')}
-          </span>
-        </div>
-
-        <StepWizard
-          steps={steps}
-          currentStep={currentStep}
-          onStepClick={handleStepChange}
-        />
-
-        <div className="mt-4 sm:mt-8">{renderStep()}</div>
-
-        {/* Модальное окно черновиков */}
-        <DraftsModal
-          isOpen={showDraftsModal}
-          onClose={() => setShowDraftsModal(false)}
-        />
-      </div>
-    </CreateListingProvider>
+      </CreateListingProvider>
+    </PageTransition>
   );
 }

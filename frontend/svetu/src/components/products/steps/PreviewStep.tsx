@@ -9,6 +9,10 @@ import { toast } from '@/utils/toast';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
 import Image from 'next/image';
 import type { components } from '@/types/generated/api';
+import {
+  formatAddressWithPrivacy,
+  type LocationPrivacyLevel,
+} from '@/utils/addressUtils';
 
 type CategoryAttribute =
   components['schemas']['backend_internal_domain_models.CategoryAttribute'];
@@ -60,54 +64,6 @@ export default function PreviewStep({
       city: 'city_only',
     };
     return mapping[frontendLevel] || 'exact';
-  };
-
-  // Обработка адреса в соответствии с уровнем приватности
-  const formatAddressWithPrivacy = (
-    address: string,
-    privacyLevel?: string
-  ): string => {
-    if (!address) return '';
-
-    // Для точного адреса возвращаем как есть
-    if (privacyLevel === 'exact') {
-      return address;
-    }
-
-    // Разбираем адрес на части
-    const parts = address.split(',').map((part) => part.trim());
-
-    switch (privacyLevel) {
-      case 'street':
-        // Убираем номер дома (первую часть), оставляем улицу и город
-        if (parts.length > 2) {
-          // Пытаемся найти улицу (обычно содержит слова как улица, ул., бульвар и т.д.)
-          const streetPart = parts[0]
-            .replace(/\d+[а-яА-Яa-zA-Z]?(\s|$)/g, '')
-            .trim();
-          return streetPart
-            ? [streetPart, ...parts.slice(1)].join(', ')
-            : parts.slice(1).join(', ');
-        }
-        return parts.slice(1).join(', ');
-
-      case 'district':
-        // Оставляем только район и город (убираем улицу и номер дома)
-        if (parts.length > 2) {
-          return parts.slice(-2).join(', ');
-        }
-        return address;
-
-      case 'city':
-        // Оставляем только город
-        if (parts.length > 1) {
-          return parts[parts.length - 1];
-        }
-        return address;
-
-      default:
-        return address;
-    }
   };
 
   const handleSubmit = async () => {
@@ -458,7 +414,7 @@ export default function PreviewStep({
                         <span className="text-base-content text-right max-w-[60%]">
                           {formatAddressWithPrivacy(
                             state.location.individualAddress || '',
-                            state.location.privacyLevel
+                            state.location.privacyLevel as LocationPrivacyLevel
                           )}
                         </span>
                       </div>

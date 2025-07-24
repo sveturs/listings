@@ -65,6 +65,7 @@ export default function StorefrontInfo({ storefront }: StorefrontInfoProps) {
                 <span className="font-semibold">{t('common.location')}</span>
               </div>
               <p className="text-sm text-base-content/80">
+                {/* TODO: Добавить поддержку локализации когда backend будет поддерживать переводы для витрин */}
                 {storefront.location.full_address}
               </p>
             </div>

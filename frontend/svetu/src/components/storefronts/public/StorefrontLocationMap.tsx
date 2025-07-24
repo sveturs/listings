@@ -60,7 +60,10 @@ export default function StorefrontLocationMap({ location, storefront }: Storefro
           <Popup>
             <div className="p-2">
               <h3 className="font-bold text-lg">{storefront.name}</h3>
-              <p className="text-sm mt-1">{location.full_address}</p>
+              <p className="text-sm mt-1">
+                {/* TODO: Добавить поддержку локализации когда backend будет поддерживать переводы для витрин */}
+                {location.full_address}
+              </p>
               <button 
                 className="btn btn-primary btn-sm mt-3 w-full"
                 onClick={handleDirections}

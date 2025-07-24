@@ -325,11 +325,20 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 	hasIndividualLocation := req.HasIndividualLocation != nil && *req.HasIndividualLocation
 	showOnMap := req.ShowOnMap == nil || *req.ShowOnMap // Default true
 
+	// Handle empty strings as NULL for SKU and Barcode
+	var sku, barcode interface{}
+	if req.SKU != nil && *req.SKU != "" {
+		sku = req.SKU
+	}
+	if req.Barcode != nil && *req.Barcode != "" {
+		barcode = req.Barcode
+	}
+
 	var product models.StorefrontProduct
 	err := s.pool.QueryRow(
 		ctx, query,
 		storefrontID, req.Name, req.Description, req.Price, req.Currency, req.CategoryID,
-		req.SKU, req.Barcode, req.StockQuantity, req.IsActive, attributesJSON,
+		sku, barcode, req.StockQuantity, req.IsActive, attributesJSON,
 		hasIndividualLocation, req.IndividualAddress, req.IndividualLatitude,
 		req.IndividualLongitude, req.LocationPrivacy, showOnMap,
 	).Scan(&product.ID, &product.StockStatus, &product.CreatedAt, &product.UpdatedAt)
@@ -366,6 +375,13 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 
 // UpdateStorefrontProduct updates an existing product
 func (s *Database) UpdateStorefrontProduct(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error {
+	// Log incoming request
+	logger.Info().
+		Int("storefront_id", storefrontID).
+		Int("product_id", productID).
+		Interface("request", req).
+		Msg("Updating storefront product")
+
 	var setClauses []string
 	var args []interface{}
 	argIndex := 1
@@ -396,13 +412,23 @@ func (s *Database) UpdateStorefrontProduct(ctx context.Context, storefrontID, pr
 
 	if req.SKU != nil {
 		setClauses = append(setClauses, fmt.Sprintf("sku = $%d", argIndex))
-		args = append(args, *req.SKU)
+		// Treat empty string as NULL
+		if *req.SKU == "" {
+			args = append(args, nil)
+		} else {
+			args = append(args, *req.SKU)
+		}
 		argIndex++
 	}
 
 	if req.Barcode != nil {
 		setClauses = append(setClauses, fmt.Sprintf("barcode = $%d", argIndex))
-		args = append(args, *req.Barcode)
+		// Treat empty string as NULL
+		if *req.Barcode == "" {
+			args = append(args, nil)
+		} else {
+			args = append(args, *req.Barcode)
+		}
 		argIndex++
 	}
 
@@ -453,8 +479,8 @@ func (s *Database) UpdateStorefrontProduct(ctx context.Context, storefrontID, pr
 	}
 
 	if req.LocationPrivacy != nil {
-		setClauses = append(setClauses, fmt.Sprintf("location_privacy = $%d", argIndex))
-		args = append(args, req.LocationPrivacy)
+		setClauses = append(setClauses, fmt.Sprintf("location_privacy = $%d::location_privacy_level", argIndex))
+		args = append(args, *req.LocationPrivacy)
 		argIndex++
 	}
 
@@ -477,8 +503,19 @@ func (s *Database) UpdateStorefrontProduct(ctx context.Context, storefrontID, pr
 		WHERE id = $%d AND storefront_id = $%d`,
 		strings.Join(setClauses, ", "), argIndex, argIndex+1)
 
+	// Log the query for debugging
+	logger.Debug().
+		Str("query", query).
+		Interface("args", args).
+		Msg("Executing UPDATE query")
+
 	result, err := s.pool.Exec(ctx, query, args...)
 	if err != nil {
+		logger.Error().
+			Err(err).
+			Str("query", query).
+			Interface("args", args).
+			Msg("Failed to execute UPDATE query")
 		return fmt.Errorf("failed to update storefront product: %w", err)
 	}
 

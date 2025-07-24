@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { ordersService } from '@/services/orders';
 import SafeImage from '@/components/SafeImage';
 import type { components } from '@/types/generated/api';
+import { toast } from '@/utils/toast';
 
 type StorefrontOrder =
   components['schemas']['backend_internal_domain_models.StorefrontOrder'];
@@ -82,7 +83,7 @@ export default function OrderCard({ order, onOrderUpdate }: OrderCardProps) {
       onOrderUpdate?.(updatedOrder);
     } catch (error) {
       console.error('Failed to cancel order:', error);
-      alert(t('cancelError'));
+      toast.error(t('cancelError'));
     } finally {
       setLoading(false);
     }

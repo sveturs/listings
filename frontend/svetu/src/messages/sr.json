@@ -24,6 +24,7 @@
     "hoursAgo": "h pre",
     "daysAgo": "d pre",
     "daysAgoWithCount": "Pre {count} dana",
+    "dateUnknown": "Datum nepoznat",
     "chat": "Ćaskanje",
     "sendMessage": "Pošalji poruku",
     "viewAll": "Prikaži sve",
@@ -62,6 +63,20 @@
     "closed": "Zatvoreno",
     "open": "Otvoreno",
     "searching": "Pretraživanje...",
+    "eco": {
+      "secondHand": "Polovno",
+      "refurbished": "Obnovljeno",
+      "badge": "Eko"
+    },
+    "condition": {
+      "new": "Novo",
+      "likeNew": "Kao novo",
+      "used": "Polovno",
+      "refurbished": "Obnovljeno"
+    },
+    "photos": "fotografije",
+    "quickView": "Brzi pregled",
+    "secureDeal": "Sigurna transakcija",
     "publishing": "Objavljivanje...",
     "publish": "Objavi",
     "free_above": "Besplatno iznad",
@@ -98,6 +113,13 @@
     "added": "Added!",
     "outOfStock": "Out of Stock",
     "quantity": "Quantity"
+  },
+  "navigation": {
+    "home": "Početna",
+    "search": "Pretraga",
+    "create": "Dodaj",
+    "chats": "Poruke",
+    "profile": "Profil"
   },
   "checkout": {
     "title": "Checkout",
@@ -2886,6 +2908,9 @@
     "userContacts": "Moji kontakti",
     "profile": "Profil",
     "logout": "Odjavi se",
+    "search": "Pretraga",
+    "create": "Dodaj",
+    "chats": "Poruke",
     "adminPanel": "Admin panel",
     "messages": "Poruke",
     "notifications": "Obaveštenja",

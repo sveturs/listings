@@ -52,6 +52,7 @@
     "notSpecified": "Не указано",
     "daysAgo": "д. назад",
     "daysAgoWithCount": "{count} д. назад",
+    "dateUnknown": "Дата неизвестна",
     "chat": "Чат",
     "sendMessage": "Написать сообщение",
     "viewAll": "Посмотреть все",
@@ -98,6 +99,20 @@
     "closed": "Закрыто",
     "open": "Открыто",
     "searching": "Поиск...",
+    "eco": {
+      "secondHand": "Б/У",
+      "refurbished": "Восстановлен",
+      "badge": "Эко"
+    },
+    "condition": {
+      "new": "Новое",
+      "likeNew": "Как новое",
+      "used": "Б/У",
+      "refurbished": "Восстановлен"
+    },
+    "photos": "фото",
+    "quickView": "Быстрый просмотр",
+    "secureDeal": "Безопасная сделка",
     "publishing": "Публикация...",
     "publish": "Опубликовать",
     "free_above": "Бесплатно от",
@@ -326,6 +341,13 @@
     "description": "Находите лучшие предложения от частных лиц и магазинов",
     "privateListingsOnly": "Только частные объявления",
     "privateListingsOnlyDescription": "Показывать только товары от частных продавцов"
+  },
+  "navigation": {
+    "home": "Главная",
+    "search": "Поиск",
+    "create": "Создать",
+    "chats": "Чаты",
+    "profile": "Профиль"
   },
   "header": {
     "nav": {

@@ -53,6 +53,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, authMiddleware *middleware.Midd
 	gis.Post("/geocode/validate", h.geocodingHandler.ValidateGeocode)
 	gis.Get("/geocode/suggestions", h.geocodingHandler.SearchAddressSuggestions)
 	gis.Get("/geocode/reverse", h.geocodingHandler.ReverseGeocode)
+	gis.Post("/geocode/multilingual", h.geocodingHandler.MultilingualReverseGeocode)
 	gis.Get("/geocode/cache/stats", h.geocodingHandler.GetCacheStats)
 
 	// ========== Публичные маршруты поиска ==========

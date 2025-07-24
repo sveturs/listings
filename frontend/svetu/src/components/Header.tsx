@@ -11,6 +11,7 @@ import { SearchBar } from './SearchBar';
 import { useAuthContext } from '@/contexts/AuthContext';
 import CartIcon from './cart/CartIcon';
 import ShoppingCartModal from './cart/ShoppingCartModal';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function Header() {
   const t = useTranslations('header');
@@ -43,8 +44,13 @@ export default function Header() {
       ? extractStorefrontIdFromPath(pathname)
       : null;
 
-  // Не показываем мобильный поиск на странице поиска
+  // Не показываем мобильный поиск на странице поиска и главной
   const isSearchPage = pathname?.includes('/search');
+  const isHomePage =
+    pathname === '/' ||
+    pathname === '/en' ||
+    pathname === '/ru' ||
+    pathname === '/sr';
 
   // Проверяем, что компонент смонтирован на клиенте
   useEffect(() => {
@@ -142,7 +148,7 @@ export default function Header() {
             {mounted && isAuthenticated && user && (
               <Link
                 href="/create-listing"
-                className="btn btn-primary btn-sm hidden sm:flex"
+                className="btn btn-primary btn-sm hidden md:flex"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -163,6 +169,7 @@ export default function Header() {
                 </span>
               </Link>
             )}
+            <ThemeToggle />
             <LanguageSwitcher />
             <AuthButton onLoginClick={() => setIsLoginModalOpen(true)} />
           </div>
@@ -184,8 +191,8 @@ export default function Header() {
         />
       )}
 
-      {/* Мобильная поисковая строка - скрываем на странице поиска */}
-      {!isSearchPage && (
+      {/* Мобильная поисковая строка - скрываем на странице поиска и главной */}
+      {!isSearchPage && !isHomePage && (
         <div className="lg:hidden bg-base-100 border-t border-base-300 px-4 py-2 fixed top-16 left-0 right-0 z-[99]">
           <SearchBar className="w-full" placeholder={t('search.placeholder')} />
         </div>

@@ -144,12 +144,24 @@ export default function MarketplaceCard({
 
   if (viewMode === 'list') {
     return (
-      <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+      <div className="card bg-base-100 shadow-xl hover:shadow-2xl border border-base-300 dark:border-base-600 transition-shadow">
         <Link href={getItemUrl()} className="block">
           <div className="card-body p-4">
             <div className="flex gap-4">
               {/* Изображение слева */}
               <figure className="relative w-20 h-20 sm:w-32 sm:h-32 flex-shrink-0 bg-base-200 rounded-lg overflow-hidden">
+                {/* Эко-бейдж для товаров второй руки в list view */}
+                {(item.condition === 'used' ||
+                  item.condition === 'refurbished') && (
+                  <div className="absolute top-1 left-1 z-10">
+                    <div className="badge badge-success badge-sm gap-0.5 shadow">
+                      <span className="text-xs">♻️</span>
+                      <span className="text-xs font-semibold">
+                        {item.condition === 'used' ? 'Б/У' : 'Восст.'}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <SafeImage
                   src={imageUrl}
                   alt={item.title}
@@ -285,7 +297,21 @@ export default function MarketplaceCard({
 
   // Grid view (default)
   return (
-    <div className="card card-compact bg-base-100 shadow-xl hover:shadow-2xl transition-shadow relative">
+    <div className="card card-compact bg-base-100 shadow-xl hover:shadow-2xl border border-base-300 dark:border-base-600 transition-shadow relative">
+      {/* Эко-бейдж для товаров второй руки */}
+      {(item.condition === 'used' || item.condition === 'refurbished') && (
+        <div className="absolute top-3 left-3 z-10">
+          <div className="badge badge-success gap-1 shadow-lg">
+            <span className="text-base">♻️</span>
+            <span className="font-semibold">
+              {item.condition === 'used'
+                ? t('eco.secondHand')
+                : t('eco.refurbished')}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Кнопки действий - показываем только после монтирования */}
       {mounted && isAuthenticated && item.user_id !== user?.id && (
         <div className="absolute top-3 right-3 flex gap-2 z-10">

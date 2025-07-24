@@ -3,9 +3,19 @@
 @import '../styles/chat-patterns.css';
 @import '../styles/chat-bubble.css';
 
+/* Tailwind v4 требует явного определения breakpoints */
+@theme {
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* Используем переменные DaisyUI для совместимости с темами */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(var(--b1));
+  --foreground: oklch(var(--bc));
 }
 
 @theme inline {
@@ -15,16 +25,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Стили для body теперь автоматически адаптируются к выбранной теме */
 body {
-  background: var(--background);
-  color: var(--foreground);
+  @apply bg-base-100 text-base-content;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -54,4 +57,75 @@ body {
 .animate-gradient {
   background-size: 400% 400%;
   animation: gradient 6s ease infinite;
+}
+
+/* Shimmer animation for skeleton loading */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Pulse animation variation */
+@keyframes gentle-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-gentle-pulse {
+  animation: gentle-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Fade in up animation for Bento Grid */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
 }

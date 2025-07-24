@@ -11,6 +11,7 @@ import {
 } from '@/constants/validation';
 import LoginForm from './auth/LoginForm';
 import RegisterForm from './auth/RegisterForm';
+import { toast } from '@/utils/toast';
 
 // Map server error messages to client error keys
 const mapServerErrorToClientError = (
@@ -200,6 +201,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
             // Refresh session to ensure UI updates
             await refreshSession();
             // Login successful, close modal
+            toast.success(t('loginForm.successMessage'));
             onClose();
           }, 100);
         } else {
@@ -226,7 +228,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
             });
           }
 
-          setSuccess(t('registerForm.successMessage'));
+          toast.success(t('registerForm.successMessage'));
 
           // Close modal after successful registration
           setTimeout(async () => {
@@ -241,29 +243,30 @@ const LoginModal: React.FC<LoginModalProps> = ({
           const errorMessage = error.message;
 
           if (errorMessage === 'users.errors.tooManyAttempts') {
-            setError('general', VALIDATION_MESSAGES.TOO_MANY_ATTEMPTS);
+            toast.error(t(VALIDATION_MESSAGES.TOO_MANY_ATTEMPTS));
           } else if (errorMessage === 'users.errors.accountTemporarilyLocked') {
-            setError('general', VALIDATION_MESSAGES.ACCOUNT_TEMPORARILY_LOCKED);
+            toast.error(t(VALIDATION_MESSAGES.ACCOUNT_TEMPORARILY_LOCKED));
           } else if (errorMessage === 'users.register.error.tooManyAttempts') {
-            setError('general', VALIDATION_MESSAGES.REGISTER_TOO_MANY_ATTEMPTS);
+            toast.error(t(VALIDATION_MESSAGES.REGISTER_TOO_MANY_ATTEMPTS));
           } else if (errorMessage === 'users.login.error.invalid_credentials') {
-            setError('general', VALIDATION_MESSAGES.INVALID_CREDENTIALS);
+            toast.error(t(VALIDATION_MESSAGES.INVALID_CREDENTIALS));
           } else if (errorMessage === 'users.register.error.email_exists') {
-            setError('general', VALIDATION_MESSAGES.EMAIL_EXISTS);
+            toast.error(t(VALIDATION_MESSAGES.EMAIL_EXISTS));
           } else if (
             errorMessage.startsWith('users.register.error.') ||
             errorMessage.startsWith('users.login.error.')
           ) {
             // Handle other specific registration/login errors by mapping them
             const mappedError = mapServerErrorToClientError(errorMessage);
-            setError('general', mappedError);
+            toast.error(t(mappedError));
           } else {
             // Default fallback errors
-            setError(
-              'general',
-              mode === 'login'
-                ? VALIDATION_MESSAGES.LOGIN_FAILED
-                : VALIDATION_MESSAGES.REGISTER_FAILED
+            toast.error(
+              t(
+                mode === 'login'
+                  ? VALIDATION_MESSAGES.LOGIN_FAILED
+                  : VALIDATION_MESSAGES.REGISTER_FAILED
+              )
             );
           }
         }
@@ -294,9 +297,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
     try {
       await AuthService.loginWithGoogle();
     } catch {
-      setError('general', VALIDATION_MESSAGES.LOGIN_FAILED);
+      toast.error(t(VALIDATION_MESSAGES.LOGIN_FAILED));
     }
-  }, [isLoading, setError]);
+  }, [isLoading, t]);
 
   // Handle field changes
   const handleFieldChange = useCallback(

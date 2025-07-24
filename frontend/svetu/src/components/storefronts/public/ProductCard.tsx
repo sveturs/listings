@@ -31,7 +31,7 @@ export default function ProductCard({
 
   if (viewMode === 'list') {
     return (
-      <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all card-side">
+      <div className="card bg-base-100 shadow-xl hover:shadow-2xl border border-base-300 dark:border-base-600 transition-all card-side">
         {/* Image */}
         <figure className="w-48 h-32">
           {mainImage ? (
@@ -100,7 +100,7 @@ export default function ProductCard({
   }
 
   return (
-    <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all">
+    <div className="card bg-base-100 shadow-xl hover:shadow-2xl border border-base-300 dark:border-base-600 transition-all">
       {/* Image */}
       <figure className="relative pb-[75%]">
         {mainImage ? (
