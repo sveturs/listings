@@ -116,7 +116,7 @@ export default function HomePageClient({
           </div>
 
           {/* Новая секция BentoGrid с категориями и объявлениями */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 pb-24 lg:pb-4">
             <BentoGridCategories 
               onCategorySelect={handleCategorySelect}
               selectedCategoryId={selectedCategoryId}

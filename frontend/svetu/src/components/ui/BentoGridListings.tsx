@@ -142,7 +142,7 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
   const displayItems = showAll ? items : items.slice(0, 8);
 
   return (
-    <div className="col-span-3 row-span-3 bg-base-100 rounded-2xl shadow-xl p-6 overflow-hidden">
+    <div className="col-span-1 lg:col-span-3 row-span-3 bg-base-100 rounded-2xl shadow-xl p-4 lg:p-6 overflow-hidden">
       {/* Заголовок */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">

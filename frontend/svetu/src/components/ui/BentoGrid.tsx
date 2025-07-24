@@ -62,7 +62,36 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   const animatedDeals = useCountAnimation(stats?.successfulDeals || 0, 2000);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 max-w-7xl mx-auto">
+    <>
+      {/* Мобильная версия - только поиск */}
+      <div className="lg:hidden p-4">
+        <div className="card bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20 shadow-lg">
+          <div className="card-body">
+            <h2 className="text-xl font-bold mb-4">
+              Найдите то, что нужно именно вам
+            </h2>
+            <SearchBar variant="minimal" showTrending={true} />
+            
+            <div className="mt-4 grid grid-cols-2 gap-4 text-center">
+              <div>
+                <p className="text-sm text-base-content/60">Объявлений</p>
+                <p className="text-lg font-bold text-primary">
+                  {animatedListings.toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-base-content/60">Продавцов</p>
+                <p className="text-lg font-bold text-secondary">
+                  {animatedUsers.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Десктопная версия - полный BentoGrid */}
+      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 max-w-7xl mx-auto">
       {/* Hero Card - Большая карточка с поиском */}
       <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-1 group">
         <div className="card h-full bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 overflow-hidden">
@@ -285,5 +314,6 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         </div>
       </div>
     </div>
+    </>
   );
 };

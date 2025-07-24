@@ -5,6 +5,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { MarketplaceService } from '@/services/marketplace';
 import { ChevronRight, Grid3X3, Filter } from 'lucide-react';
 import type { components } from '@/types/generated/api';
+import { CategoryModal } from './CategoryModal';
+import { FilterModal } from './FilterModal';
 
 type MarketplaceCategory =
   components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -34,6 +36,8 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
     new Set()
   );
   const [showFilters, setShowFilters] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   // Построение дерева категорий
   const buildCategoryTree = (
@@ -177,8 +181,36 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
 
   return (
     <>
-      {/* Категории */}
-      <div className="col-span-1 row-span-3 bg-base-100 rounded-2xl shadow-xl p-6 overflow-hidden">
+      {/* Мобильная версия - кнопки внизу экрана */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-base-100 border-t border-base-200 p-4">
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setShowCategoryModal(true)}
+            className="btn btn-primary"
+          >
+            <Grid3X3 className="w-5 h-5" />
+            {t('categories')}
+            {selectedCategoryId && (
+              <span className="badge badge-secondary badge-sm">1</span>
+            )}
+          </button>
+          <button
+            onClick={() => setShowFilterModal(true)}
+            className="btn btn-outline"
+          >
+            <Filter className="w-5 h-5" />
+            {t('filters.title')}
+            {Object.keys(filters).filter(k => filters[k]).length > 0 && (
+              <span className="badge badge-primary badge-sm">
+                {Object.keys(filters).filter(k => filters[k]).length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Десктопная версия - категории */}
+      <div className="hidden lg:block col-span-1 row-span-3 bg-base-100 rounded-2xl shadow-xl p-6 overflow-hidden">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-primary/10 rounded-xl">
@@ -220,8 +252,8 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
         </div>
       </div>
 
-      {/* Фильтры */}
-      <div className="col-span-1 row-span-1 bg-base-100 rounded-2xl shadow-xl p-6">
+      {/* Десктопная версия - фильтры */}
+      <div className="hidden lg:block col-span-1 row-span-1 bg-base-100 rounded-2xl shadow-xl p-6">
         <div className="flex items-center justify-between h-full">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-secondary/10 rounded-xl">
@@ -242,6 +274,26 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Модальные окна */}
+      <CategoryModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        categories={categories}
+        expandedCategories={expandedCategories}
+        onToggleExpanded={toggleExpanded}
+        selectedCategoryId={selectedCategoryId}
+        onCategorySelect={onCategorySelect}
+        title={t('categories')}
+      />
+
+      <FilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        filters={filters}
+        onFiltersChange={onFiltersChange!}
+        selectedCategoryId={selectedCategoryId}
+      />
     </>
   );
 };
