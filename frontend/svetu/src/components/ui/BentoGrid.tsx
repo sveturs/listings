@@ -10,8 +10,9 @@ import {
   Clock,
   Users,
   Sparkles,
-  ArrowRight,
 } from 'lucide-react';
+import { useCountAnimation } from '@/hooks/useCountAnimation';
+import SearchBar from '@/components/SearchBar/SearchBar';
 
 interface BentoGridProps {
   categories?: Array<{
@@ -31,6 +32,10 @@ interface BentoGridProps {
     totalListings: number;
     activeUsers: number;
     successfulDeals: number;
+    newUsersToday?: number;
+    nearbyListings?: number;
+    newListingsLastHour?: number;
+    priceDropsToday?: number;
   };
 }
 
@@ -39,39 +44,43 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   featuredListing,
   stats,
 }) => {
+  const animatedListings = useCountAnimation(stats?.totalListings || 0, 2000);
+  const animatedUsers = useCountAnimation(stats?.activeUsers || 0, 2000);
+  const animatedDeals = useCountAnimation(stats?.successfulDeals || 0, 2000);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
-      {/* Hero Card - Большая карточка */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 max-w-7xl mx-auto">
+      {/* Hero Card - Большая карточка с поиском */}
       <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 group">
-        <div className="card h-full bg-gradient-to-br from-primary/10 to-secondary/10 border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-          <div className="card-body p-8 flex flex-col justify-between h-full">
+        <div className="card h-full bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 overflow-hidden">
+          <div className="card-body p-6 lg:p-8 flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-6 h-6 text-primary" />
                 <span className="badge badge-primary">Новое</span>
               </div>
-              <h2 className="card-title text-3xl font-bold mb-4">
+              <h2 className="card-title text-2xl lg:text-3xl font-bold mb-6">
                 Найдите то, что нужно именно вам
               </h2>
-              <p className="text-base-content/70 mb-6">
-                Тысячи товаров и услуг от проверенных продавцов в вашем районе
-              </p>
+
+              {/* Интегрированный поиск */}
+              <div className="mb-6">
+                <SearchBar variant="minimal" showTrending={true} />
+              </div>
             </div>
-            <div className="flex justify-between items-end">
-              <Link
-                href="/search"
-                className="btn btn-primary group-hover:scale-105 transition-transform"
-              >
-                Начать поиск
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-              <div className="text-right">
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
                 <p className="text-sm text-base-content/60">
                   Активных объявлений
                 </p>
                 <p className="text-2xl font-bold text-primary">
-                  {stats?.totalListings?.toLocaleString() || '10,000+'}
+                  {animatedListings.toLocaleString()}
                 </p>
+              </div>
+              <div className="text-base-content/70 text-sm text-right">
+                Тысячи товаров и услуг
+                <br className="hidden sm:inline" /> от проверенных продавцов
               </div>
             </div>
           </div>
@@ -80,7 +89,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
 
       {/* Популярные категории */}
       <div className="col-span-1 row-span-1 group">
-        <div className="card h-full bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="card h-full bg-base-100 border border-base-200 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="card-body p-6">
             <div className="flex items-center justify-between mb-4">
               <TrendingUp className="w-6 h-6 text-warning" />
@@ -88,18 +97,24 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             </div>
             <h3 className="font-semibold mb-3">Популярные категории</h3>
             <div className="space-y-2">
-              {categories.slice(0, 3).map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/search?category=${cat.id}`}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-base-200 transition-colors"
-                >
-                  <span className="text-sm">{cat.name}</span>
-                  <span className="text-xs text-base-content/60">
-                    {cat.count}
-                  </span>
-                </Link>
-              ))}
+              {categories.length > 0 ? (
+                categories.slice(0, 3).map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/search?category=${cat.id}`}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-base-200 transition-colors"
+                  >
+                    <span className="text-sm">{cat.name}</span>
+                    <span className="text-xs text-base-content/60">
+                      {cat.count.toLocaleString()}
+                    </span>
+                  </Link>
+                ))
+              ) : (
+                <p className="text-sm text-base-content/60">
+                  Загрузка категорий...
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -107,7 +122,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
 
       {/* Безопасные сделки */}
       <div className="col-span-1 row-span-1 group">
-        <div className="card h-full bg-success/10 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="card h-full bg-gradient-to-br from-success/20 to-success/5 border border-success/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="card-body p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-success/20 rounded-full">
@@ -122,7 +137,15 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             </div>
             <div className="stats stats-vertical shadow-none bg-transparent p-0">
               <div className="stat p-0">
-                <div className="stat-value text-2xl text-success">98%</div>
+                <div className="stat-value text-2xl text-success">
+                  {animatedListings > 0
+                    ? Math.min(
+                        Math.floor((animatedDeals / animatedListings) * 100),
+                        99
+                      )
+                    : 98}
+                  %
+                </div>
                 <div className="stat-desc">успешных сделок</div>
               </div>
             </div>
@@ -131,11 +154,12 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       </div>
 
       {/* Избранное объявление */}
-      {featuredListing && (
+      {featuredListing ? (
         <div className="col-span-1 md:col-span-2 lg:col-span-1 row-span-1 group">
           <Link href={`/listing/${featuredListing.id}`}>
             <div className="card h-full bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
               <figure className="h-32 relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={featuredListing.image}
                   alt={featuredListing.title}
@@ -162,11 +186,22 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             </div>
           </Link>
         </div>
+      ) : (
+        <div className="col-span-1 md:col-span-2 lg:col-span-1 row-span-1">
+          <div className="card h-full bg-base-100 shadow-lg">
+            <div className="skeleton h-32 w-full"></div>
+            <div className="card-body p-4">
+              <div className="skeleton h-4 w-20 mb-2"></div>
+              <div className="skeleton h-4 w-full mb-2"></div>
+              <div className="skeleton h-6 w-24"></div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Статистика пользователей */}
       <div className="col-span-1 row-span-1 group">
-        <div className="card h-full bg-info/10 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="card h-full bg-gradient-to-br from-info/20 to-info/5 border border-info/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="card-body p-6">
             <div className="flex items-center gap-3 mb-4">
               <Users className="w-6 h-6 text-info" />
@@ -178,14 +213,16 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   Активных продавцов
                 </span>
                 <span className="font-bold">
-                  {stats?.activeUsers?.toLocaleString() || '1,500+'}
+                  {animatedUsers.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-base-content/70">
                   Новых сегодня
                 </span>
-                <span className="font-bold text-info">+23</span>
+                <span className="font-bold text-info">
+                  +{stats?.newUsersToday || 12}
+                </span>
               </div>
             </div>
           </div>
@@ -194,7 +231,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
 
       {/* Рядом с вами */}
       <div className="col-span-1 row-span-1 group">
-        <div className="card h-full bg-secondary/10 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="card h-full bg-gradient-to-br from-secondary/20 to-secondary/5 border border-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="card-body p-6">
             <div className="flex items-center gap-3 mb-4">
               <MapPin className="w-6 h-6 text-secondary" />
@@ -204,7 +241,9 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
               </div>
             </div>
             <div className="text-center pt-2">
-              <p className="text-3xl font-bold text-secondary">342</p>
+              <p className="text-3xl font-bold text-secondary">
+                {stats?.nearbyListings || 342}
+              </p>
               <p className="text-sm text-base-content/60">объявления</p>
             </div>
           </div>
@@ -213,7 +252,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
 
       {/* Последние обновления */}
       <div className="col-span-1 row-span-1 group">
-        <div className="card h-full bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="card h-full bg-base-100 border border-base-200 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="card-body p-6">
             <div className="flex items-center gap-3 mb-4">
               <Clock className="w-6 h-6 text-accent" />
@@ -222,11 +261,15 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-                <span className="text-base-content/70">15 новых за час</span>
+                <span className="text-base-content/70">
+                  {stats?.newListingsLastHour || 10} новых за час
+                </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <div className="w-2 h-2 bg-warning rounded-full"></div>
-                <span className="text-base-content/70">8 снижений цен</span>
+                <span className="text-base-content/70">
+                  {stats?.priceDropsToday || 8} снижений цен
+                </span>
               </div>
             </div>
           </div>

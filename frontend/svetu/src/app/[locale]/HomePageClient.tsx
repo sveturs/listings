@@ -3,75 +3,97 @@
 import { PageTransition } from '@/components/ui/PageTransition';
 import HomePage from '@/components/marketplace/HomePage';
 import { Link } from '@/i18n/routing';
-import { SearchBar } from '@/components/SearchBar';
 import { BentoGrid } from '@/components/ui/BentoGrid';
+import { useEffect, useState } from 'react';
+
+interface HomePageData {
+  categories: Array<{
+    id: string;
+    name: string;
+    count: number;
+  }>;
+  featuredListing?: {
+    id: string;
+    title: string;
+    price: string;
+    image: string;
+    category: string;
+  };
+  stats: {
+    totalListings: number;
+    activeUsers: number;
+    successfulDeals: number;
+  };
+  popularSearches: any[];
+  error: Error | null;
+}
 
 interface HomePageClientProps {
   title: string;
   description: string;
   createListingText: string;
   initialData: any;
+  homePageData: HomePageData | null;
   locale: string;
   error: Error | null;
   paymentsEnabled: boolean;
 }
 
 export default function HomePageClient({
-  title,
-  description,
   createListingText,
   initialData,
+  homePageData,
   locale,
   error,
   paymentsEnabled,
 }: HomePageClientProps) {
+  const [bentoData, setBentoData] = useState<HomePageData | null>(homePageData);
+  const [isLoading, setIsLoading] = useState(!homePageData);
+
+  useEffect(() => {
+    // Если данные не были загружены на сервере (dev mode), загружаем на клиенте
+    if (!homePageData && typeof window !== 'undefined') {
+      console.log('[HomePageClient] No SSR data, loading on client...');
+      import('./actions').then(({ getHomePageData }) => {
+        getHomePageData(locale).then((data) => {
+          console.log('[HomePageClient] Client data loaded:', data);
+          setBentoData(data);
+          setIsLoading(false);
+        });
+      });
+    } else if (homePageData) {
+      console.log('[HomePageClient] Using SSR data:', homePageData);
+    }
+  }, [homePageData, locale]);
   return (
     <PageTransition mode="fade">
       <div className="min-h-screen">
-        {/* Hero секция */}
-        <div className="bg-gradient-to-b from-base-200/50 to-base-100 py-12 lg:py-16 mb-8">
-          <div className="container mx-auto px-4">
-            <h1 className="text-4xl lg:text-5xl font-bold text-center mb-4">
-              {title}
-            </h1>
-            <p className="text-center text-base-content/70 text-lg max-w-2xl mx-auto mb-8">
-              {description}
-            </p>
-
-            {/* Search Bar с поддержкой fuzzy search */}
-            <div className="max-w-3xl mx-auto">
-              <SearchBar variant="hero" showTrending={true} />
-            </div>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 pt-8">
           {/* BentoGrid секция */}
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-center mb-8">
-              Популярные категории и рекомендации
-            </h2>
-            <BentoGrid
-              categories={[
-                { id: 'electronics', name: 'Электроника', count: 1243 },
-                { id: 'fashion', name: 'Одежда и обувь', count: 856 },
-                { id: 'home', name: 'Дом и сад', count: 642 },
-                { id: 'auto', name: 'Автотовары', count: 521 },
-                { id: 'books', name: 'Книги', count: 387 },
-              ]}
-              featuredListing={{
-                id: '12345',
-                title: 'iPhone 15 Pro в отличном состоянии',
-                price: '89,000 ₽',
-                image: '/api/placeholder/300/200',
-                category: 'Телефоны',
-              }}
-              stats={{
-                totalListings: 15420,
-                activeUsers: 2840,
-                successfulDeals: 8932,
-              }}
-            />
+            {isLoading ? (
+              // Skeleton loader для BentoGrid
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`skeleton h-40 ${i < 2 ? 'col-span-1 md:col-span-2 lg:col-span-2 row-span-2' : ''}`}
+                  ></div>
+                ))}
+              </div>
+            ) : (
+              <BentoGrid
+                categories={bentoData?.categories || []}
+                featuredListing={bentoData?.featuredListing}
+                stats={
+                  bentoData?.stats || {
+                    totalListings: 0,
+                    activeUsers: 0,
+                    successfulDeals: 0,
+                  }
+                }
+              />
+            )}
           </div>
 
           <HomePage

@@ -73,18 +73,14 @@ export default function SearchBar({
   useEffect(() => {
     if (debouncedQuery.length >= 2) {
       loadSuggestions(debouncedQuery);
-    } else if (
-      debouncedQuery.length === 0 &&
-      (searchHistory.length > 0 || trendingSearches.length > 0)
-    ) {
-      // Показываем историю и тренды когда поле пустое
-      setShowSuggestions(true);
-      setSuggestions([]);
     } else {
       setSuggestions([]);
-      setShowSuggestions(false);
+      // Не показываем предложения автоматически при загрузке
+      if (debouncedQuery.length > 0) {
+        setShowSuggestions(false);
+      }
     }
-  }, [debouncedQuery, searchHistory, trendingSearches]);
+  }, [debouncedQuery]);
 
   // Закрытие предложений при клике вне
   useEffect(() => {
