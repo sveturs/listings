@@ -159,7 +159,9 @@ export async function getHomePageData(locale: string) {
     // Получаем объявления с координатами для карты
     // Берем первые 20 объявлений, у которых есть координаты
     const nearbyListingsData: NearbyListing[] = allListings
-      .filter((listing: any) => listing.latitude && listing.longitude && listing.price)
+      .filter(
+        (listing: any) => listing.latitude && listing.longitude && listing.price
+      )
       .slice(0, 20)
       .map((listing: any) => ({
         id: listing.id,
@@ -167,7 +169,7 @@ export async function getHomePageData(locale: string) {
         longitude: listing.longitude,
         price: listing.price,
       }));
-    
+
     const nearbyListings = nearbyListingsData.length;
 
     // Подсчитываем новых пользователей сегодня (тех, кто создал объявления сегодня)

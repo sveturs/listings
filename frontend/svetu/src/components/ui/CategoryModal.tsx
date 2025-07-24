@@ -71,17 +71,16 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
           {!hasChildren && <div className="w-5" />}
 
-          {category.icon && (
-            <span className="text-lg">{category.icon}</span>
-          )}
+          {category.icon && <span className="text-lg">{category.icon}</span>}
 
           <span className="flex-1">{category.name}</span>
 
-          {category.listing_count !== undefined && category.listing_count > 0 && (
-            <span className="badge badge-ghost badge-sm">
-              {category.listing_count}
-            </span>
-          )}
+          {category.listing_count !== undefined &&
+            category.listing_count > 0 && (
+              <span className="badge badge-ghost badge-sm">
+                {category.listing_count}
+              </span>
+            )}
         </div>
 
         {hasChildren && isExpanded && (

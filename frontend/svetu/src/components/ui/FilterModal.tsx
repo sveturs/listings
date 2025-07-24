@@ -39,27 +39,29 @@ export const FilterModal: React.FC<FilterModalProps> = ({
 
   const handlePriceChange = (field: 'priceMin' | 'priceMax', value: string) => {
     const numValue = value ? parseInt(value) : undefined;
-    setLocalFilters(prev => ({
+    setLocalFilters((prev) => ({
       ...prev,
       [field]: numValue,
     }));
   };
 
   const handleConditionChange = (condition: string) => {
-    setLocalFilters(prev => ({
+    setLocalFilters((prev) => ({
       ...prev,
       condition: prev.condition === condition ? undefined : condition,
     }));
   };
 
   const handleSellerTypeChange = (type: string) => {
-    setLocalFilters(prev => ({
+    setLocalFilters((prev) => ({
       ...prev,
       sellerType: prev.sellerType === type ? undefined : type,
     }));
   };
 
-  const activeFiltersCount = Object.values(localFilters).filter(v => v !== undefined && v !== '').length;
+  const activeFiltersCount = Object.values(localFilters).filter(
+    (v) => v !== undefined && v !== ''
+  ).length;
 
   return (
     <>
@@ -102,7 +104,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   placeholder={t('filters.priceMin')}
                   className="input input-bordered input-sm flex-1"
                   value={localFilters.priceMin || ''}
-                  onChange={(e) => handlePriceChange('priceMin', e.target.value)}
+                  onChange={(e) =>
+                    handlePriceChange('priceMin', e.target.value)
+                  }
                 />
                 <span className="text-base-content/60">—</span>
                 <input
@@ -110,7 +114,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   placeholder={t('filters.priceMax')}
                   className="input input-bordered input-sm flex-1"
                   value={localFilters.priceMax || ''}
-                  onChange={(e) => handlePriceChange('priceMax', e.target.value)}
+                  onChange={(e) =>
+                    handlePriceChange('priceMax', e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -168,10 +174,14 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               <select
                 className="select select-bordered select-sm w-full"
                 value={localFilters.distanceKm || ''}
-                onChange={(e) => setLocalFilters(prev => ({
-                  ...prev,
-                  distanceKm: e.target.value ? parseInt(e.target.value) : undefined,
-                }))}
+                onChange={(e) =>
+                  setLocalFilters((prev) => ({
+                    ...prev,
+                    distanceKm: e.target.value
+                      ? parseInt(e.target.value)
+                      : undefined,
+                  }))
+                }
               >
                 <option value="">{t('filters.anyDistance')}</option>
                 <option value="5">5 км</option>
@@ -192,11 +202,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             >
               {t('filters.reset')}
             </button>
-            <button
-              onClick={handleApply}
-              className="btn btn-primary flex-1"
-            >
-              {t('filters.apply')} {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+            <button onClick={handleApply} className="btn btn-primary flex-1">
+              {t('filters.apply')}{' '}
+              {activeFiltersCount > 0 && `(${activeFiltersCount})`}
             </button>
           </div>
         </div>

@@ -2,16 +2,29 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { ShoppingBag, TrendingUp, ArrowRight, LayoutGrid, List } from 'lucide-react';
-import { UnifiedSearchService, UnifiedSearchItem } from '@/services/unifiedSearch';
+import {
+  ShoppingBag,
+  TrendingUp,
+  ArrowRight,
+  LayoutGrid,
+  List,
+} from 'lucide-react';
+import {
+  UnifiedSearchService,
+  UnifiedSearchItem,
+} from '@/services/unifiedSearch';
 import { MarketplaceItem } from '@/types/marketplace';
 import { EnhancedListingCard } from '@/components/marketplace/EnhancedListingCard';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { ListingGridSkeleton } from '@/components/ui/skeletons';
+import GridColumnsToggle from '@/components/common/GridColumnsToggle';
+import { useGridColumns } from '@/hooks/useGridColumns';
 
 // Адаптер для преобразования UnifiedSearchItem в MarketplaceItem
-function convertToMarketplaceItem(unifiedItem: UnifiedSearchItem): MarketplaceItem {
+function convertToMarketplaceItem(
+  unifiedItem: UnifiedSearchItem
+): MarketplaceItem {
   return {
     id: unifiedItem.product_id,
     title: unifiedItem.name,
@@ -63,62 +76,76 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [viewMode, setViewMode] = useViewPreference('grid');
-  const [showAll, setShowAll] = useState(false);
+  const [gridColumns, setGridColumns] = useGridColumns(1);
+  const showAll = true; // Всегда показываем все объявления
 
   // Конвертация фильтров в формат API
   const searchParams = useMemo(() => {
     const params: Record<string, any> = {};
-    
+
     if (filters?.priceMin) params.priceMin = filters.priceMin;
     if (filters?.priceMax) params.priceMax = filters.priceMax;
     if (filters?.condition) params.condition = filters.condition;
     if (filters?.sellerType) {
-      params.storefrontID = filters.sellerType === 'company' ? 'not_null' : null;
+      params.storefrontID =
+        filters.sellerType === 'company' ? 'not_null' : null;
     }
-    if (filters?.attributeFilters && Object.keys(filters.attributeFilters).length > 0) {
+    if (
+      filters?.attributeFilters &&
+      Object.keys(filters.attributeFilters).length > 0
+    ) {
       params.attributeFilters = filters.attributeFilters;
     }
-    
+
     return params;
-  }, [filters?.priceMin, filters?.priceMax, filters?.condition, filters?.sellerType, filters?.attributeFilters]);
+  }, [
+    filters?.priceMin,
+    filters?.priceMax,
+    filters?.condition,
+    filters?.sellerType,
+    filters?.attributeFilters,
+  ]);
 
   // Загрузка данных
-  const loadData = useCallback(async (pageNum: number = 1) => {
-    try {
-      setLoading(true);
-      
-      const response = await UnifiedSearchService.search({
-        query: '',
-        product_types: productTypes,
-        category_id: selectedCategoryId?.toString(),
-        sort_by: 'date',
-        sort_order: 'desc',
-        page: pageNum,
-        limit: 12,
-        ...searchParams,
-      });
+  const loadData = useCallback(
+    async (pageNum: number = 1) => {
+      try {
+        setLoading(true);
 
-      if (response && response.items) {
-        if (pageNum === 1) {
-          setItems(response.items);
-        } else {
-          setItems((prev) => {
-            const existingIds = new Set(prev.map((item) => item.id));
-            const newItems = response.items.filter(
-              (item) => !existingIds.has(item.id)
-            );
-            return [...prev, ...newItems];
-          });
+        const response = await UnifiedSearchService.search({
+          query: '',
+          product_types: productTypes,
+          category_id: selectedCategoryId?.toString(),
+          sort_by: 'date',
+          sort_order: 'desc',
+          page: pageNum,
+          limit: 12,
+          ...searchParams,
+        });
+
+        if (response && response.items) {
+          if (pageNum === 1) {
+            setItems(response.items);
+          } else {
+            setItems((prev) => {
+              const existingIds = new Set(prev.map((item) => item.id));
+              const newItems = response.items.filter(
+                (item) => !existingIds.has(item.id)
+              );
+              return [...prev, ...newItems];
+            });
+          }
+          setHasMore(response.has_more);
+          setPage(pageNum);
         }
-        setHasMore(response.has_more);
-        setPage(pageNum);
+      } catch (err) {
+        console.error('Failed to load listings:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Failed to load listings:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [productTypes, selectedCategoryId, searchParams]);
+    },
+    [productTypes, selectedCategoryId, searchParams]
+  );
 
   useEffect(() => {
     console.log('BentoGridListings: Filters changed, reloading data');
@@ -142,23 +169,28 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
   const displayItems = showAll ? items : items.slice(0, 8);
 
   return (
-    <div className="col-span-1 lg:col-span-3 row-span-3 bg-base-100 rounded-2xl shadow-xl p-4 lg:p-6 overflow-hidden">
+    <div className="col-span-1 lg:col-span-3 row-span-3 bg-base-100 rounded-2xl shadow-xl p-2 sm:p-4 lg:p-6 overflow-hidden">
       {/* Заголовок */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-accent/10 rounded-xl">
-            <ShoppingBag className="w-6 h-6 text-accent" />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-accent/10 rounded-lg">
+            <ShoppingBag className="w-5 h-5 text-accent" />
           </div>
-          <div>
-            <h3 className="text-xl font-bold">{t('latestListings')}</h3>
-            <p className="text-sm text-base-content/60">
-              {selectedCategoryId ? 'В выбранной категории' : 'Все категории'}
-            </p>
-          </div>
+          <p className="text-sm text-base-content/60">
+            {selectedCategoryId ? 'В выбранной категории' : 'Все категории'}
+          </p>
         </div>
 
         {/* Переключатель вида */}
         <div className="flex items-center gap-2">
+          {viewMode === 'grid' && (
+            <div className="lg:hidden">
+              <GridColumnsToggle
+                currentColumns={gridColumns}
+                onColumnsChange={setGridColumns}
+              />
+            </div>
+          )}
           <div className="join join-sm">
             <button
               className={`btn btn-sm join-item ${viewMode === 'grid' ? 'btn-active' : ''}`}
@@ -173,15 +205,6 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
               <List className="w-4 h-4" />
             </button>
           </div>
-          {!showAll && items.length > 8 && (
-            <button
-              onClick={() => setShowAll(true)}
-              className="btn btn-primary btn-sm gap-1"
-            >
-              Все объявления
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
         </div>
       </div>
 
@@ -201,7 +224,11 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
             <div
               className={
                 viewMode === 'grid'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+                  ? gridColumns === 1
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4'
+                    : gridColumns === 2
+                      ? 'grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5 sm:gap-3'
+                      : 'grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 sm:gap-2'
                   : 'space-y-3'
               }
             >
@@ -211,30 +238,23 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
                   item={convertToMarketplaceItem(item)}
                   locale={locale}
                   viewMode={viewMode}
+                  gridColumns={viewMode === 'grid' ? gridColumns : undefined}
                 />
               ))}
             </div>
 
             {/* Infinite scroll trigger */}
             {showAll && hasMore && (
-              <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+              <div
+                ref={loadMoreRef}
+                className="h-20 flex items-center justify-center"
+              >
                 {loading && (
                   <span className="loading loading-spinner loading-md"></span>
                 )}
               </div>
             )}
 
-            {/* Кнопка "Свернуть" */}
-            {showAll && items.length > 8 && (
-              <div className="mt-6 text-center">
-                <button
-                  onClick={() => setShowAll(false)}
-                  className="btn btn-ghost btn-sm"
-                >
-                  Свернуть
-                </button>
-              </div>
-            )}
           </>
         )}
       </div>
@@ -242,7 +262,9 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
       {/* Статистика внизу */}
       {!loading && items.length > 0 && (
         <div className="mt-4 pt-4 border-t border-base-200 flex items-center justify-between text-sm text-base-content/60">
-          <span>Показано {displayItems.length} из {items.length}</span>
+          <span>
+            Показано {displayItems.length} из {items.length}
+          </span>
           <div className="flex items-center gap-1">
             <TrendingUp className="w-4 h-4" />
             <span>Обновлено только что</span>

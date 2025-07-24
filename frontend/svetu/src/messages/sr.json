@@ -87,6 +87,7 @@
     "share": "Podeli",
     "viewGrid": "Mrežni prikaz",
     "viewList": "Prikaz liste",
+    "columns": "{count, plural, =1 {1 kolona} =2 {2 kolone} other {3 kolone}}",
     "phone": "Telefon",
     "email": "Email",
     "home": "Početna",
@@ -1511,13 +1512,15 @@
       "no": "Не",
       "selectCategory": "Изаберите категорију",
       "loadError": "Грешка при учитавању филтера",
-      "noFilters": "Нема доступних филтера"
+      "noFilters": "Нема доступних филтера",
+      "reset": "Resetuj filtere"
     },
     "imageGallery": {
       "clickToZoom": "Kliknite za uvećanje"
     },
     "condition": {
       "new": "Novo",
+      "like_new": "Kao novo",
       "used": "Korišćeno",
       "refurbished": "Obnovljeno",
       "damaged": "Oštećeno"

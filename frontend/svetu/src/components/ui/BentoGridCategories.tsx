@@ -7,6 +7,7 @@ import { ChevronRight, Grid3X3, Filter } from 'lucide-react';
 import type { components } from '@/types/generated/api';
 import { CategoryModal } from './CategoryModal';
 import { FilterModal } from './FilterModal';
+import { DesktopFilters } from './DesktopFilters';
 
 type MarketplaceCategory =
   components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -35,7 +36,6 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
     new Set()
   );
-  const [showFilters, setShowFilters] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
 
@@ -139,17 +139,16 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
 
           {!hasChildren && <div className="w-5" />}
 
-          {category.icon && (
-            <span className="text-lg">{category.icon}</span>
-          )}
+          {category.icon && <span className="text-lg">{category.icon}</span>}
 
           <span className="flex-1">{category.name}</span>
 
-          {category.listing_count !== undefined && category.listing_count > 0 && (
-            <span className="badge badge-ghost badge-sm">
-              {category.listing_count}
-            </span>
-          )}
+          {category.listing_count !== undefined &&
+            category.listing_count > 0 && (
+              <span className="badge badge-ghost badge-sm">
+                {category.listing_count}
+              </span>
+            )}
         </div>
 
         {hasChildren && isExpanded && (
@@ -200,9 +199,9 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
           >
             <Filter className="w-5 h-5" />
             {t('filters.title')}
-            {Object.keys(filters).filter(k => filters[k]).length > 0 && (
+            {Object.keys(filters).filter((k) => filters[k]).length > 0 && (
               <span className="badge badge-primary badge-sm">
-                {Object.keys(filters).filter(k => filters[k]).length}
+                {Object.keys(filters).filter((k) => filters[k]).length}
               </span>
             )}
           </button>
@@ -210,7 +209,7 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
       </div>
 
       {/* Десктопная версия - категории */}
-      <div className="hidden lg:block col-span-1 row-span-3 bg-base-100 rounded-2xl shadow-xl p-6 overflow-hidden">
+      <div className="hidden lg:block col-span-1 row-span-3 bg-base-100 rounded-2xl shadow-xl p-2 sm:p-4 lg:p-6 overflow-hidden">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-primary/10 rounded-xl">
@@ -253,27 +252,11 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
       </div>
 
       {/* Десктопная версия - фильтры */}
-      <div className="hidden lg:block col-span-1 row-span-1 bg-base-100 rounded-2xl shadow-xl p-6">
-        <div className="flex items-center justify-between h-full">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-secondary/10 rounded-xl">
-              <Filter className="w-6 h-6 text-secondary" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold">{t('filters.title')}</h3>
-              <p className="text-sm text-base-content/60">
-                {Object.keys(filters).filter(k => filters[k]).length} активных
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="btn btn-primary btn-sm"
-          >
-            {showFilters ? 'Скрыть' : 'Показать'}
-          </button>
-        </div>
-      </div>
+      <DesktopFilters
+        filters={filters}
+        onFiltersChange={onFiltersChange!}
+        selectedCategoryId={selectedCategoryId}
+      />
 
       {/* Модальные окна */}
       <CategoryModal

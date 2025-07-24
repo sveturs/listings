@@ -17,6 +17,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru, enUS, sr } from 'date-fns/locale';
 import type { Locale } from 'date-fns';
 import { MarketplaceItem, MarketplaceImage } from '@/types/marketplace';
+import type { GridColumns } from '@/components/common/GridColumnsToggle';
 import SafeImage from '@/components/SafeImage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -35,6 +36,7 @@ interface EnhancedListingCardProps {
   item: MarketplaceItem;
   locale: string;
   viewMode?: 'grid' | 'list';
+  gridColumns?: GridColumns;
   onToggleFavorite?: (id: string) => Promise<void>;
 }
 
@@ -42,6 +44,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   item,
   locale,
   viewMode = 'grid',
+  gridColumns = 1,
   onToggleFavorite,
 }) => {
   const router = useRouter();
@@ -554,7 +557,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
           )}
         </figure>
 
-        <div className="card-body p-3">
+        <div className={`card-body ${gridColumns === 3 ? 'p-2' : 'p-3'}`}>
           {/* Категория */}
           {item.category?.name && (
             <div className="text-xs text-base-content/60">
@@ -563,12 +566,16 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
           )}
 
           {/* Заголовок */}
-          <h3 className="card-title text-sm line-clamp-2 min-h-[2.5rem]">
+          <h3
+            className={`card-title ${
+              gridColumns === 3 ? 'text-xs' : 'text-sm'
+            } line-clamp-2 min-h-[2.5rem]`}
+          >
             {item.title}
           </h3>
 
-          {/* Продавец */}
-          {item.user?.name && (
+          {/* Продавец - скрываем при 3 столбцах */}
+          {item.user?.name && gridColumns < 3 && (
             <div className="flex items-center gap-2 text-xs">
               <div className="avatar placeholder">
                 <div className="bg-neutral text-neutral-content rounded-full w-5">
@@ -584,9 +591,9 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
             </div>
           )}
 
-          {/* Локация и статистика */}
+          {/* Локация и статистика - упрощаем для маленьких карточек */}
           <div className="flex flex-col gap-1 text-xs text-base-content/60">
-            {item.location && (
+            {item.location && gridColumns < 3 && (
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
@@ -598,27 +605,29 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
                 <DistanceBadge distance={getDistance()} variant="compact" />
               </div>
             )}
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {(() => {
-                  const date = new Date(item.created_at);
-                  if (isNaN(date.getTime())) {
-                    return '-';
-                  }
-                  return formatDistanceToNow(date, {
-                    addSuffix: true,
-                    locale: dateLocale,
-                  });
-                })()}
-              </span>
-              {item.views_count !== undefined && (
+            {gridColumns === 1 && (
+              <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
-                  <Eye className="w-3 h-3" />
-                  {item.views_count}
+                  <Clock className="w-3 h-3" />
+                  {(() => {
+                    const date = new Date(item.created_at);
+                    if (isNaN(date.getTime())) {
+                      return '-';
+                    }
+                    return formatDistanceToNow(date, {
+                      addSuffix: true,
+                      locale: dateLocale,
+                    });
+                  })()}
                 </span>
-              )}
-            </div>
+                {item.views_count !== undefined && (
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    {item.views_count}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Цена и действия */}
@@ -639,7 +648,11 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
                       />
                     </div>
                   )}
-                  <div className="text-lg font-bold">
+                  <div
+                    className={`${
+                      gridColumns === 3 ? 'text-base' : 'text-lg'
+                    } font-bold`}
+                  >
                     {formatPrice(item.price, 'RSD')}
                   </div>
                 </>
@@ -653,31 +666,34 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
               )}
             </div>
 
-            {mounted && isAuthenticated && item.user_id !== user?.id && (
-              <div className="flex gap-1">
-                {isOnlinePurchaseAvailable() && (
+            {mounted &&
+              isAuthenticated &&
+              item.user_id !== user?.id &&
+              gridColumns < 3 && (
+                <div className="flex gap-1">
+                  {isOnlinePurchaseAvailable() && (
+                    <button
+                      onClick={handleBuyClick}
+                      className="btn btn-primary btn-xs"
+                    >
+                      <ShoppingBag className="w-3 h-3" />
+                    </button>
+                  )}
                   <button
-                    onClick={handleBuyClick}
-                    className="btn btn-primary btn-xs"
+                    onClick={handleQuickView}
+                    className="btn btn-outline btn-xs"
+                    title={t('quickView')}
                   >
-                    <ShoppingBag className="w-3 h-3" />
+                    <Expand className="w-3 h-3" />
                   </button>
-                )}
-                <button
-                  onClick={handleQuickView}
-                  className="btn btn-outline btn-xs"
-                  title={t('quickView')}
-                >
-                  <Expand className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={handleChatClick}
-                  className="btn btn-outline btn-xs"
-                >
-                  <MessageCircle className="w-3 h-3" />
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={handleChatClick}
+                    className="btn btn-outline btn-xs"
+                  >
+                    <MessageCircle className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
           </div>
         </div>
       </div>

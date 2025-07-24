@@ -122,6 +122,7 @@
     "share": "Share",
     "viewGrid": "Grid view",
     "viewList": "List view",
+    "columns": "{count, plural, =1 {1 column} =2 {2 columns} other {3 columns}}",
     "phone": "Phone",
     "email": "Email",
     "home": "Home",
@@ -1400,13 +1401,15 @@
       "no": "No",
       "selectCategory": "Select category",
       "loadError": "Error loading filters",
-      "noFilters": "No filters available"
+      "noFilters": "No filters available",
+      "reset": "Reset filters"
     },
     "imageGallery": {
       "clickToZoom": "Click to zoom"
     },
     "condition": {
       "new": "New",
+      "like_new": "Like new",
       "used": "Used",
       "refurbished": "Refurbished",
       "damaged": "Damaged"
