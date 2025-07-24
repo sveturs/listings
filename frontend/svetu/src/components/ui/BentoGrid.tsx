@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useCountAnimation } from '@/hooks/useCountAnimation';
 import SearchBar from '@/components/SearchBar/SearchBar';
+import { BentoGridMap } from './BentoGridMap';
 
 interface BentoGridProps {
   categories?: Array<{
@@ -37,12 +38,24 @@ interface BentoGridProps {
     newListingsLastHour?: number;
     priceDropsToday?: number;
   };
+  nearbyListings?: Array<{
+    id: string;
+    latitude: number;
+    longitude: number;
+    price: number;
+  }>;
+  userLocation?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export const BentoGrid: React.FC<BentoGridProps> = ({
   categories = [],
   featuredListing,
   stats,
+  nearbyListings = [],
+  userLocation,
 }) => {
   const animatedListings = useCountAnimation(stats?.totalListings || 0, 2000);
   const animatedUsers = useCountAnimation(stats?.activeUsers || 0, 2000);
@@ -51,7 +64,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 max-w-7xl mx-auto">
       {/* Hero Card - Большая карточка с поиском */}
-      <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 group">
+      <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-1 group">
         <div className="card h-full bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 overflow-hidden">
           <div className="card-body p-6 lg:p-8 flex flex-col justify-between h-full">
             <div>
@@ -229,22 +242,27 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         </div>
       </div>
 
-      {/* Рядом с вами */}
-      <div className="col-span-1 row-span-1 group">
-        <div className="card h-full bg-gradient-to-br from-secondary/20 to-secondary/5 border border-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
-          <div className="card-body p-6">
-            <div className="flex items-center gap-3 mb-4">
+      {/* Рядом с вами - Карта */}
+      <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 group">
+        <div className="card h-full bg-gradient-to-br from-secondary/20 to-secondary/5 border border-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+          <div className="card-body p-4 flex flex-col h-full">
+            <div className="flex items-center gap-3 mb-3">
               <MapPin className="w-6 h-6 text-secondary" />
               <div>
                 <h3 className="font-semibold">Рядом с вами</h3>
-                <p className="text-xs text-base-content/60">В радиусе 5 км</p>
+                <p className="text-xs text-base-content/60">
+                  {nearbyListings.length > 0 
+                    ? `${nearbyListings.length} объявлений в радиусе 5 км`
+                    : 'Загрузка карты...'
+                  }
+                </p>
               </div>
             </div>
-            <div className="text-center pt-2">
-              <p className="text-3xl font-bold text-secondary">
-                {stats?.nearbyListings || 342}
-              </p>
-              <p className="text-sm text-base-content/60">объявления</p>
+            <div className="flex-1 relative rounded-lg overflow-hidden">
+              <BentoGridMap 
+                listings={nearbyListings}
+                userLocation={userLocation}
+              />
             </div>
           </div>
         </div>

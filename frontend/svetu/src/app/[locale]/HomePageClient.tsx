@@ -25,6 +25,12 @@ interface HomePageData {
     successfulDeals: number;
   };
   popularSearches: any[];
+  nearbyListings: Array<{
+    id: string;
+    latitude: number;
+    longitude: number;
+    price: number;
+  }>;
   error: Error | null;
 }
 
@@ -92,6 +98,7 @@ export default function HomePageClient({
                     successfulDeals: 0,
                   }
                 }
+                nearbyListings={bentoData?.nearbyListings || []}
               />
             )}
           </div>

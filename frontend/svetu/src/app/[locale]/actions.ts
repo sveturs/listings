@@ -26,6 +26,13 @@ interface MarketplaceStats {
   priceDropsToday?: number;
 }
 
+interface NearbyListing {
+  id: string;
+  latitude: number;
+  longitude: number;
+  price: number;
+}
+
 export async function getHomePageData(locale: string) {
   console.log('[getHomePageData] Starting to fetch data for locale:', locale);
 
@@ -149,9 +156,19 @@ export async function getHomePageData(locale: string) {
       }
     });
 
-    // Получаем количество объявлений рядом (все, так как нет геолокации)
-    // В будущем можно будет фильтровать по расстоянию
-    const nearbyListings = totalListings;
+    // Получаем объявления с координатами для карты
+    // Берем первые 20 объявлений, у которых есть координаты
+    const nearbyListingsData: NearbyListing[] = allListings
+      .filter((listing: any) => listing.latitude && listing.longitude && listing.price)
+      .slice(0, 20)
+      .map((listing: any) => ({
+        id: listing.id,
+        latitude: listing.latitude,
+        longitude: listing.longitude,
+        price: listing.price,
+      }));
+    
+    const nearbyListings = nearbyListingsData.length;
 
     // Подсчитываем новых пользователей сегодня (тех, кто создал объявления сегодня)
     const todayUserIds = new Set(
@@ -181,6 +198,7 @@ export async function getHomePageData(locale: string) {
       featuredListing,
       stats,
       popularSearches: popularSearchesResponse.data?.data || [],
+      nearbyListings: nearbyListingsData,
       error: null,
     };
 
@@ -197,6 +215,7 @@ export async function getHomePageData(locale: string) {
         successfulDeals: 0,
       },
       popularSearches: [],
+      nearbyListings: [],
       error: error as Error,
     };
   }
