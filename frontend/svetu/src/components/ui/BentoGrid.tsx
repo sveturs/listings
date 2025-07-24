@@ -210,6 +210,32 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         </div>
       </div>
 
+      {/* Рядом с вами - Карта */}
+      <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 group">
+        <div className="card h-full bg-gradient-to-br from-secondary/20 to-secondary/5 border border-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+          <div className="card-body p-4 flex flex-col h-full">
+            <div className="flex items-center gap-3 mb-3">
+              <MapPin className="w-6 h-6 text-secondary" />
+              <div>
+                <h3 className="font-semibold">Рядом с вами</h3>
+                <p className="text-xs text-base-content/60">
+                  {nearbyListings.length > 0 
+                    ? `${nearbyListings.length} объявлений в радиусе 5 км`
+                    : 'Загрузка карты...'
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex-1 relative rounded-lg overflow-hidden">
+              <BentoGridMap 
+                listings={nearbyListings}
+                userLocation={userLocation}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Безопасные сделки */}
       <div className="col-span-1 row-span-1 group">
         <div className="card h-full bg-gradient-to-br from-success/20 to-success/5 border border-success/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
@@ -254,32 +280,6 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   {stats?.priceDropsToday || 8} снижений цен
                 </span>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Рядом с вами - Карта */}
-      <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 group">
-        <div className="card h-full bg-gradient-to-br from-secondary/20 to-secondary/5 border border-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
-          <div className="card-body p-4 flex flex-col h-full">
-            <div className="flex items-center gap-3 mb-3">
-              <MapPin className="w-6 h-6 text-secondary" />
-              <div>
-                <h3 className="font-semibold">Рядом с вами</h3>
-                <p className="text-xs text-base-content/60">
-                  {nearbyListings.length > 0 
-                    ? `${nearbyListings.length} объявлений в радиусе 5 км`
-                    : 'Загрузка карты...'
-                  }
-                </p>
-              </div>
-            </div>
-            <div className="flex-1 relative rounded-lg overflow-hidden">
-              <BentoGridMap 
-                listings={nearbyListings}
-                userLocation={userLocation}
-              />
             </div>
           </div>
         </div>
