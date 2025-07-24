@@ -1,307 +1,313 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { PageTransition } from '@/components/ui/PageTransition';
 import { AnimatedSection } from '@/components/ui/AnimatedSection';
+import { withPageTransition } from '@/components/ui/withPageTransition';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-export default function TransitionsExamplePage() {
-  const [currentTab, setCurrentTab] = useState(0);
+// Пример компонента с HOC
+const ExampleCard = ({
+  title,
+  content,
+}: {
+  title: string;
+  content: string;
+}) => (
+  <div className="card bg-base-200">
+    <div className="card-body">
+      <h3 className="card-title">{title}</h3>
+      <p>{content}</p>
+    </div>
+  </div>
+);
+
+const _AnimatedCard = withPageTransition(ExampleCard, {
+  mode: 'scale',
+  duration: 0.5,
+});
+
+export default function TransitionsPage() {
+  const [currentTransition, setCurrentTransition] = useState<
+    'fade' | 'slide' | 'scale' | 'slideUp'
+  >('fade');
   const [showContent, setShowContent] = useState(true);
 
-  const tabs = ['Overview', 'Features', 'Examples', 'Code'];
-
-  const tabContent = [
-    {
-      title: 'Overview',
-      content:
-        'Smooth page transitions enhance user experience by providing visual continuity between different views.',
-    },
-    {
-      title: 'Features',
-      content:
-        'Multiple animation modes, customizable duration, easy integration with Next.js App Router.',
-    },
-    {
-      title: 'Examples',
-      content:
-        'See various transition effects in action below. Each animation can be customized to match your design.',
-    },
-    {
-      title: 'Code',
-      content:
-        'Simple implementation using HOC pattern or direct component usage.',
-    },
-  ];
+  const toggleContent = () => {
+    setShowContent(false);
+    setTimeout(() => setShowContent(true), 100);
+  };
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      <AnimatedSection animation="fadeIn">
-        <h1 className="text-4xl font-bold mb-8">
-          Page Transitions & Animations
-        </h1>
-      </AnimatedSection>
+    <div className="container mx-auto px-4 py-8">
+      <PageTransition mode="slideUp">
+        <h1 className="text-4xl font-bold mb-8">Анимации переходов</h1>
+      </PageTransition>
 
-      {/* Tab Navigation Example */}
-      <AnimatedSection animation="slideUp" delay={0.1}>
-        <section className="card bg-base-100 shadow-xl mb-8">
-          <div className="card-body">
-            <h2 className="card-title mb-4">Tab Transitions</h2>
+      {/* Примеры PageTransition */}
+      <section className="mb-12">
+        <AnimatedSection animation="fadeIn">
+          <h2 className="text-2xl font-semibold mb-6">Page Transitions</h2>
+        </AnimatedSection>
 
-            <div className="tabs tabs-boxed mb-4">
-              {tabs.map((tab, index) => (
-                <button
-                  key={tab}
-                  className={`tab ${currentTab === index ? 'tab-active' : ''}`}
-                  onClick={() => setCurrentTab(index)}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+        <AnimatedSection animation="slideUp" delay={0.1}>
+          <p className="text-base-content/70 mb-6">
+            Компонент PageTransition автоматически анимирует переходы между
+            страницами
+          </p>
+        </AnimatedSection>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="p-4 bg-base-200 rounded-lg"
-              >
-                <h3 className="text-lg font-semibold mb-2">
-                  {tabContent[currentTab].title}
-                </h3>
-                <p>{tabContent[currentTab].content}</p>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </section>
-      </AnimatedSection>
-
-      {/* Animation Types */}
-      <AnimatedSection animation="slideUp" delay={0.2}>
-        <section className="card bg-base-100 shadow-xl mb-8">
-          <div className="card-body">
-            <h2 className="card-title mb-4">Animation Types</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <AnimatedSection animation="fadeIn" delay={0.3}>
-                <div className="p-4 bg-primary/10 rounded-lg">
-                  <h3 className="font-semibold mb-2">Fade Animation</h3>
-                  <p className="text-sm">Simple opacity transition</p>
-                </div>
-              </AnimatedSection>
-
-              <AnimatedSection animation="slideIn" delay={0.4}>
-                <div className="p-4 bg-secondary/10 rounded-lg">
-                  <h3 className="font-semibold mb-2">Slide Animation</h3>
-                  <p className="text-sm">Horizontal slide with fade</p>
-                </div>
-              </AnimatedSection>
-
-              <AnimatedSection animation="slideUp" delay={0.5}>
-                <div className="p-4 bg-accent/10 rounded-lg">
-                  <h3 className="font-semibold mb-2">Slide Up Animation</h3>
-                  <p className="text-sm">Vertical slide from bottom</p>
-                </div>
-              </AnimatedSection>
-
-              <AnimatedSection animation="zoomIn" delay={0.6}>
-                <div className="p-4 bg-info/10 rounded-lg">
-                  <h3 className="font-semibold mb-2">Zoom Animation</h3>
-                  <p className="text-sm">Scale with opacity effect</p>
-                </div>
-              </AnimatedSection>
-            </div>
-          </div>
-        </section>
-      </AnimatedSection>
-
-      {/* Interactive Demo */}
-      <AnimatedSection animation="slideUp" delay={0.3}>
-        <section className="card bg-base-100 shadow-xl mb-8">
-          <div className="card-body">
-            <h2 className="card-title mb-4">Interactive Demo</h2>
-
+        <AnimatedSection animation="slideUp" delay={0.2}>
+          <div className="flex gap-4 mb-6 flex-wrap">
             <button
-              className="btn btn-primary mb-4"
-              onClick={() => setShowContent(!showContent)}
+              onClick={() => {
+                setCurrentTransition('fade');
+                toggleContent();
+              }}
+              className={`btn ${currentTransition === 'fade' ? 'btn-primary' : 'btn-outline'}`}
             >
-              Toggle Content
+              Fade
             </button>
-
-            <AnimatePresence>
-              {showContent && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="p-4 bg-base-200 rounded-lg">
-                    <h3 className="font-semibold mb-2">Animated Content</h3>
-                    <p>
-                      This content smoothly animates in and out when toggled.
-                    </p>
-                    <div className="mt-4 space-y-2">
-                      <div className="skeleton h-4 w-full"></div>
-                      <div className="skeleton h-4 w-3/4"></div>
-                      <div className="skeleton h-4 w-1/2"></div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <button
+              onClick={() => {
+                setCurrentTransition('slide');
+                toggleContent();
+              }}
+              className={`btn ${currentTransition === 'slide' ? 'btn-primary' : 'btn-outline'}`}
+            >
+              Slide
+            </button>
+            <button
+              onClick={() => {
+                setCurrentTransition('scale');
+                toggleContent();
+              }}
+              className={`btn ${currentTransition === 'scale' ? 'btn-primary' : 'btn-outline'}`}
+            >
+              Scale
+            </button>
+            <button
+              onClick={() => {
+                setCurrentTransition('slideUp');
+                toggleContent();
+              }}
+              className={`btn ${currentTransition === 'slideUp' ? 'btn-primary' : 'btn-outline'}`}
+            >
+              Slide Up
+            </button>
           </div>
-        </section>
-      </AnimatedSection>
+        </AnimatedSection>
 
-      {/* Stagger Animation */}
-      <AnimatedSection animation="slideUp" delay={0.4}>
-        <section className="card bg-base-100 shadow-xl mb-8">
-          <div className="card-body">
-            <h2 className="card-title mb-4">Stagger Animation</h2>
-            <p className="mb-4">Elements animate in sequence</p>
-
-            <div className="space-y-2">
-              {[1, 2, 3, 4, 5].map((item, index) => (
-                <AnimatedSection
-                  key={item}
-                  animation="slideIn"
-                  delay={0.1 * index}
-                  className="p-3 bg-base-200 rounded"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                      {item}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Item {item}</h4>
-                      <p className="text-sm text-base-content/70">
-                        This item animates with a {0.1 * index}s delay
-                      </p>
-                    </div>
-                  </div>
-                </AnimatedSection>
-              ))}
-            </div>
-          </div>
-        </section>
-      </AnimatedSection>
-
-      {/* Code Examples */}
-      <AnimatedSection animation="slideUp" delay={0.5}>
-        <section className="card bg-base-100 shadow-xl">
-          <div className="card-body">
-            <h2 className="card-title mb-4">Implementation Examples</h2>
-
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">
-                  Using PageTransition Component
+        {showContent && (
+          <PageTransition mode={currentTransition} duration={0.4}>
+            <div className="mockup-window bg-base-300 mb-8">
+              <div className="px-6 py-8">
+                <h3 className="text-xl font-semibold mb-4">
+                  Контент с анимацией: {currentTransition}
                 </h3>
-                <div className="mockup-code">
-                  <pre data-prefix="1">
-                    <code>{`import { PageTransition } from '@/components/ui/PageTransition';`}</code>
-                  </pre>
-                  <pre data-prefix="2">
-                    <code>{``}</code>
-                  </pre>
-                  <pre data-prefix="3">
-                    <code>{`export default function MyPage() {`}</code>
-                  </pre>
-                  <pre data-prefix="4">
-                    <code>{`  return (`}</code>
-                  </pre>
-                  <pre data-prefix="5">
-                    <code>{`    <PageTransition mode="slide" duration={0.3}>`}</code>
-                  </pre>
-                  <pre data-prefix="6">
-                    <code>{`      <div>Your page content</div>`}</code>
-                  </pre>
-                  <pre data-prefix="7">
-                    <code>{`    </PageTransition>`}</code>
-                  </pre>
-                  <pre data-prefix="8">
-                    <code>{`  );`}</code>
-                  </pre>
-                  <pre data-prefix="9">
-                    <code>{`}`}</code>
-                  </pre>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">Using HOC Pattern</h3>
-                <div className="mockup-code">
-                  <pre data-prefix="1">
-                    <code>{`import { withPageTransition } from '@/components/ui/withPageTransition';`}</code>
-                  </pre>
-                  <pre data-prefix="2">
-                    <code>{``}</code>
-                  </pre>
-                  <pre data-prefix="3">
-                    <code>{`function MyPage() {`}</code>
-                  </pre>
-                  <pre data-prefix="4">
-                    <code>{`  return <div>Your page content</div>;`}</code>
-                  </pre>
-                  <pre data-prefix="5">
-                    <code>{`}`}</code>
-                  </pre>
-                  <pre data-prefix="6">
-                    <code>{``}</code>
-                  </pre>
-                  <pre data-prefix="7">
-                    <code>{`export default withPageTransition(MyPage, {`}</code>
-                  </pre>
-                  <pre data-prefix="8">
-                    <code>{`  mode: 'fade',`}</code>
-                  </pre>
-                  <pre data-prefix="9">
-                    <code>{`  duration: 0.5`}</code>
-                  </pre>
-                  <pre data-prefix="10">
-                    <code>{`});`}</code>
-                  </pre>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">Using AnimatedSection</h3>
-                <div className="mockup-code">
-                  <pre data-prefix="1">
-                    <code>{`import { AnimatedSection } from '@/components/ui/AnimatedSection';`}</code>
-                  </pre>
-                  <pre data-prefix="2">
-                    <code>{``}</code>
-                  </pre>
-                  <pre data-prefix="3">
-                    <code>{`<AnimatedSection animation="slideUp" delay={0.2}>`}</code>
-                  </pre>
-                  <pre data-prefix="4">
-                    <code>{`  <h2>This will slide up when scrolled into view</h2>`}</code>
-                  </pre>
-                  <pre data-prefix="5">
-                    <code>{`</AnimatedSection>`}</code>
-                  </pre>
-                </div>
+                <p className="text-base-content/70">
+                  Этот контент анимируется при изменении типа перехода.
+                  PageTransition автоматически применяет выбранную анимацию.
+                </p>
               </div>
             </div>
-          </div>
-        </section>
-      </AnimatedSection>
+          </PageTransition>
+        )}
+      </section>
 
-      {/* Navigation Links */}
-      <AnimatedSection animation="fadeIn" delay={0.6}>
-        <div className="mt-8 flex flex-wrap gap-2">
-          <Link href="/examples" className="btn btn-ghost">
-            ← Back to Examples
+      {/* Примеры AnimatedSection */}
+      <section className="mb-12">
+        <AnimatedSection animation="fadeIn">
+          <h2 className="text-2xl font-semibold mb-6">Animated Sections</h2>
+        </AnimatedSection>
+
+        <AnimatedSection animation="slideUp" delay={0.1}>
+          <p className="text-base-content/70 mb-6">
+            Секции с анимацией при прокрутке страницы (viewport animations)
+          </p>
+        </AnimatedSection>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <AnimatedSection animation="slideIn" delay={0.2}>
+            <div className="card bg-primary text-primary-content">
+              <div className="card-body">
+                <h3 className="card-title">Slide In Animation</h3>
+                <p>Эта карточка появляется слева при прокрутке</p>
+              </div>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection animation="zoomIn" delay={0.3}>
+            <div className="card bg-secondary text-secondary-content">
+              <div className="card-body">
+                <h3 className="card-title">Zoom In Animation</h3>
+                <p>Эта карточка увеличивается при появлении</p>
+              </div>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection animation="fadeIn" delay={0.4}>
+            <div className="card bg-accent text-accent-content">
+              <div className="card-body">
+                <h3 className="card-title">Fade In Animation</h3>
+                <p>Эта карточка плавно появляется</p>
+              </div>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection animation="slideUp" delay={0.5}>
+            <div className="card bg-info text-info-content">
+              <div className="card-body">
+                <h3 className="card-title">Slide Up Animation</h3>
+                <p>Эта карточка поднимается снизу</p>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* Примеры микро-анимаций */}
+      <section className="mb-12">
+        <AnimatedSection animation="fadeIn">
+          <h2 className="text-2xl font-semibold mb-6">Микро-анимации</h2>
+        </AnimatedSection>
+
+        <AnimatedSection animation="slideUp" delay={0.1}>
+          <p className="text-base-content/70 mb-6">
+            Мелкие анимации для улучшения UX
+          </p>
+        </AnimatedSection>
+
+        <div className="flex flex-wrap gap-4">
+          <motion.button
+            className="btn btn-primary"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Hover & Tap
+          </motion.button>
+
+          <motion.button
+            className="btn btn-secondary"
+            whileHover={{ rotate: 5 }}
+            whileTap={{ rotate: -5 }}
+          >
+            Rotate on Hover
+          </motion.button>
+
+          <motion.div
+            className="btn btn-accent"
+            animate={{
+              scale: [1, 1.1, 1],
+              transition: { repeat: Infinity, duration: 2 },
+            }}
+          >
+            Pulse Animation
+          </motion.div>
+
+          <motion.button
+            className="btn btn-info"
+            whileHover={{
+              backgroundColor: '#3b82f6',
+              color: '#ffffff',
+              transition: { duration: 0.3 },
+            }}
+          >
+            Color Change
+          </motion.button>
+        </div>
+      </section>
+
+      {/* Примеры кода */}
+      <section className="mb-12">
+        <AnimatedSection animation="fadeIn">
+          <h2 className="text-2xl font-semibold mb-6">Примеры использования</h2>
+        </AnimatedSection>
+
+        <div className="space-y-6">
+          <AnimatedSection animation="slideUp" delay={0.1}>
+            <div className="mockup-code">
+              <pre data-prefix="1">
+                <code>{`// Page Transition`}</code>
+              </pre>
+              <pre data-prefix="2">
+                <code>{`import { PageTransition } from '@/components/ui/PageTransition';`}</code>
+              </pre>
+              <pre data-prefix="3">
+                <code>{``}</code>
+              </pre>
+              <pre data-prefix="4">
+                <code>{`<PageTransition mode="slideUp">`}</code>
+              </pre>
+              <pre data-prefix="5">
+                <code>{`  <YourPageContent />`}</code>
+              </pre>
+              <pre data-prefix="6">
+                <code>{`</PageTransition>`}</code>
+              </pre>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection animation="slideUp" delay={0.2}>
+            <div className="mockup-code">
+              <pre data-prefix="1">
+                <code>{`// Animated Section`}</code>
+              </pre>
+              <pre data-prefix="2">
+                <code>{`import { AnimatedSection } from '@/components/ui/AnimatedSection';`}</code>
+              </pre>
+              <pre data-prefix="3">
+                <code>{``}</code>
+              </pre>
+              <pre data-prefix="4">
+                <code>{`<AnimatedSection animation="slideUp" delay={0.2}>`}</code>
+              </pre>
+              <pre data-prefix="5">
+                <code>{`  <Card />`}</code>
+              </pre>
+              <pre data-prefix="6">
+                <code>{`</AnimatedSection>`}</code>
+              </pre>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection animation="slideUp" delay={0.3}>
+            <div className="mockup-code">
+              <pre data-prefix="1">
+                <code>{`// With HOC`}</code>
+              </pre>
+              <pre data-prefix="2">
+                <code>{`import { withPageTransition } from '@/components/ui/withPageTransition';`}</code>
+              </pre>
+              <pre data-prefix="3">
+                <code>{``}</code>
+              </pre>
+              <pre data-prefix="4">
+                <code>{`const AnimatedComponent = withPageTransition(YourComponent, {`}</code>
+              </pre>
+              <pre data-prefix="5">
+                <code>{`  mode: 'scale',`}</code>
+              </pre>
+              <pre data-prefix="6">
+                <code>{`  duration: 0.5`}</code>
+              </pre>
+              <pre data-prefix="7">
+                <code>{`});`}</code>
+              </pre>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* Навигация */}
+      <AnimatedSection animation="fadeIn" delay={0.4}>
+        <div className="flex gap-4 mt-8">
+          <Link href="/examples" className="btn btn-outline">
+            ← Назад к примерам
           </Link>
-          <Link href="/examples/toast" className="btn btn-ghost">
-            Toast Examples →
+          <Link href="/examples/toast" className="btn btn-primary">
+            Toast уведомления →
           </Link>
         </div>
       </AnimatedSection>

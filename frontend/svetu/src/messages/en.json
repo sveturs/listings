@@ -44,6 +44,7 @@
     "notSpecified": "Not specified",
     "daysAgo": "d ago",
     "daysAgoWithCount": "{count} days ago",
+    "dateUnknown": "Date unknown",
     "chat": "Chat",
     "sendMessage": "Send message",
     "viewAll": "View all",

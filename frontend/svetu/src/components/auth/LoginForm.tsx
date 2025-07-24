@@ -83,13 +83,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
         />
       </FormField>
 
-      {/* General Error */}
-      {errors.general && (
-        <div className="alert alert-error">
-          <span>{t(errors.general)}</span>
-        </div>
-      )}
-
       {/* Login Button */}
       <button
         type="submit"

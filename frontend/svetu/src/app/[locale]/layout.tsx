@@ -10,7 +10,7 @@ import { ReduxProvider } from '@/components/ReduxProvider';
 import WebSocketManager from '@/components/WebSocketManager';
 import AuthStateManager from '@/components/AuthStateManager';
 import { VisibleCitiesProvider } from '@/components/GIS/contexts/VisibleCitiesContext';
-import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
+import { SmartMobileBottomNav } from '@/components/navigation/SmartMobileBottomNav';
 import { themeInitScript } from '@/scripts/theme-init';
 import '../globals.css';
 
@@ -27,6 +27,13 @@ const geistMono = Geist_Mono({
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export async function generateMetadata({
   params,
@@ -98,10 +105,10 @@ export default async function RootLayout({
                 <AuthStateManager />
                 <WebSocketManager />
                 <Header />
-                <main className="min-h-screen pt-28 lg:pt-16 pb-16 md:pb-0">
+                <main className="min-h-screen pt-16 pb-16 md:pb-0">
                   {children}
                 </main>
-                <MobileBottomNav />
+                <SmartMobileBottomNav />
               </VisibleCitiesProvider>
             </AuthProvider>
           </ReduxProvider>

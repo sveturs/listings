@@ -103,9 +103,9 @@ export default function HomePage({
       )}
 
       {/* Основной контент с сайдбаром */}
-      <div className="flex gap-6">
-        {/* Сайдбар с категориями и фильтрами */}
-        <div className="w-80 flex-shrink-0 space-y-6">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Сайдбар с категориями и фильтрами - скрыт на мобильных */}
+        <div className="hidden lg:block lg:w-80 flex-shrink-0 space-y-6">
           <CategorySidebar
             onCategorySelect={handleCategorySelect}
             selectedCategoryId={selectedCategoryId}

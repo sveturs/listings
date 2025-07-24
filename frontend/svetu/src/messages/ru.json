@@ -52,6 +52,7 @@
     "notSpecified": "Не указано",
     "daysAgo": "д. назад",
     "daysAgoWithCount": "{count} д. назад",
+    "dateUnknown": "Дата неизвестна",
     "chat": "Чат",
     "sendMessage": "Написать сообщение",
     "viewAll": "Посмотреть все",

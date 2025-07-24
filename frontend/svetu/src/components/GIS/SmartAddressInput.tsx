@@ -5,6 +5,7 @@ import {
   useAddressGeocoding,
   AddressGeocodingResult,
 } from '@/hooks/useAddressGeocoding';
+import { toast } from '@/utils/toast';
 
 export interface SmartAddressInputProps {
   value: string;
@@ -165,7 +166,7 @@ export default function SmartAddressInput({
   // Получение текущего местоположения
   const getCurrentLocation = useCallback(async () => {
     if (!navigator.geolocation) {
-      alert('Геолокация не поддерживается вашим браузером');
+      toast.error('Геолокация не поддерживается вашим браузером');
       return;
     }
 
@@ -189,11 +190,13 @@ export default function SmartAddressInput({
               });
             }
           } else {
-            alert('Не удалось определить адрес по вашему местоположению');
+            toast.warning(
+              'Не удалось определить адрес по вашему местоположению'
+            );
           }
         } catch (err) {
           console.error('Error getting current location:', err);
-          alert('Ошибка при определении местоположения');
+          toast.error('Ошибка при определении местоположения');
         } finally {
           setIsGettingLocation(false);
         }
@@ -215,7 +218,7 @@ export default function SmartAddressInput({
             break;
         }
 
-        alert(message);
+        toast.error(message);
         setIsGettingLocation(false);
       },
       {

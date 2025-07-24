@@ -12,6 +12,7 @@ import {
   useUploadReviewPhotos,
 } from '@/hooks/useReviews';
 import type { CreateReviewRequest } from '@/types/review';
+import { toast } from '@/utils/toast';
 
 interface ReviewFormProps {
   // Entity data for creating review
@@ -83,6 +84,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     });
 
     if (validFiles.length + photos.length > 5) {
+      toast.error(t('photos.maxFiles'));
       setErrors((prev) => ({
         ...prev,
         photos: t('photos.maxFiles'),
@@ -120,6 +122,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     );
 
     if (files.length + photos.length > 5) {
+      toast.error(t('photos.maxFiles'));
       setErrors((prev) => ({
         ...prev,
         photos: t('photos.maxFiles'),
@@ -162,7 +165,6 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     // Support legacy behavior if legacyOnSubmit is provided
     if (legacyOnSubmit) {
       console.log('🔥 ИСПОЛЬЗУЕТСЯ LEGACY РЕЖИМ!');
-      alert('LEGACY РЕЖИМ АКТИВЕН!');
 
       try {
         let uploadedPhotoUrls: string[] = [];
@@ -180,8 +182,10 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           cons: cons.trim() || undefined,
           photos: uploadedPhotoUrls.length > 0 ? uploadedPhotoUrls : undefined,
         });
+        toast.success(t('success'));
       } catch (error) {
         console.error('Failed to submit review (legacy):', error);
+        toast.error(t('error'));
       }
       return;
     }
@@ -220,9 +224,11 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
       await publishReviewMutation.mutateAsync(draftReview.id);
 
       // Success - call callback
+      toast.success(t('success'));
       onSuccess?.();
     } catch (error) {
       console.error('Failed to submit review:', error);
+      toast.error(t('error'));
       setCurrentStep('form');
     }
   };

@@ -44,8 +44,13 @@ export default function Header() {
       ? extractStorefrontIdFromPath(pathname)
       : null;
 
-  // Не показываем мобильный поиск на странице поиска
+  // Не показываем мобильный поиск на странице поиска и главной
   const isSearchPage = pathname?.includes('/search');
+  const isHomePage =
+    pathname === '/' ||
+    pathname === '/en' ||
+    pathname === '/ru' ||
+    pathname === '/sr';
 
   // Проверяем, что компонент смонтирован на клиенте
   useEffect(() => {
@@ -186,8 +191,8 @@ export default function Header() {
         />
       )}
 
-      {/* Мобильная поисковая строка - скрываем на странице поиска */}
-      {!isSearchPage && (
+      {/* Мобильная поисковая строка - скрываем на странице поиска и главной */}
+      {!isSearchPage && !isHomePage && (
         <div className="lg:hidden bg-base-100 border-t border-base-300 px-4 py-2 fixed top-16 left-0 right-0 z-[99]">
           <SearchBar className="w-full" placeholder={t('search.placeholder')} />
         </div>

@@ -18,6 +18,7 @@ import {
   UnifiedSearchParams,
 } from '@/services/unifiedSearch';
 import { MarketplaceItem } from '@/types/marketplace';
+import { PageTransition } from '@/components/ui/PageTransition';
 
 interface SearchFilters {
   category_id?: string;
@@ -348,219 +349,262 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base-100">
-      {/* Компактный хедер с поиском */}
-      <div className="bg-base-100 border-b border-base-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="max-w-2xl mx-auto">
-            <SearchBar
-              initialQuery={query}
-              onSearch={handleSearch}
-              variant="minimal"
-              showTrending={false}
-              fuzzy={fuzzy}
-              onFuzzyChange={setFuzzy}
-            />
+    <PageTransition mode="fade">
+      <div className="min-h-screen bg-base-100">
+        {/* Компактный хедер с поиском */}
+        <div className="bg-base-100 border-b border-base-200 sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4">
+            <div className="max-w-2xl mx-auto">
+              <SearchBar
+                initialQuery={query}
+                onSearch={handleSearch}
+                variant="minimal"
+                showTrending={false}
+                fuzzy={fuzzy}
+                onFuzzyChange={setFuzzy}
+              />
 
-            {/* Быстрые фильтры */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              <button
-                className={`btn btn-xs sm:btn-sm ${filters.product_types?.includes('marketplace') ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => {
-                  const types = filters.product_types || [];
-                  if (types.includes('marketplace') && types.length > 1) {
-                    handleFilterChange({
-                      product_types: types.filter((t) => t !== 'marketplace'),
-                    });
-                  } else if (!types.includes('marketplace')) {
-                    handleFilterChange({
-                      product_types: [...types, 'marketplace'],
-                    });
-                  }
-                }}
-              >
-                {t('search.listings')}
-              </button>
-              <button
-                className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.product_types?.includes('storefront') ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
-                onClick={() => {
-                  const types = filters.product_types || [];
-                  if (types.includes('storefront') && types.length > 1) {
-                    handleFilterChange({
-                      product_types: types.filter((t) => t !== 'storefront'),
-                    });
-                  } else if (!types.includes('storefront')) {
-                    handleFilterChange({
-                      product_types: [...types, 'storefront'],
-                    });
-                  }
-                }}
-              >
-                {t('search.storeProducts')}
-              </button>
-              <button
-                className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'price' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
-                onClick={async () => {
-                  const newSortBy =
-                    filters.sort_by === 'price' ? 'relevance' : 'price';
-                  const previousSort = filters.sort_by;
-
-                  // Трекинг изменения сортировки
-                  if (query) {
-                    try {
-                      await trackSearchSortChanged({
-                        search_query: query,
-                        sort_type: newSortBy,
-                        previous_sort: previousSort,
-                        results_count: results?.total || 0,
+              {/* Быстрые фильтры */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                <button
+                  className={`btn btn-xs sm:btn-sm ${filters.product_types?.includes('marketplace') ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => {
+                    const types = filters.product_types || [];
+                    if (types.includes('marketplace') && types.length > 1) {
+                      handleFilterChange({
+                        product_types: types.filter((t) => t !== 'marketplace'),
                       });
-                    } catch (error) {
-                      console.error('Failed to track sort change:', error);
-                    }
-                  }
-
-                  handleFilterChange({
-                    sort_by: newSortBy,
-                  });
-                }}
-              >
-                <svg
-                  className="w-4 h-4 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                {t('search.byPrice')}
-              </button>
-              <button
-                className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'date' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
-                onClick={async () => {
-                  const newSortBy =
-                    filters.sort_by === 'date' ? 'relevance' : 'date';
-                  const previousSort = filters.sort_by;
-
-                  // Трекинг изменения сортировки
-                  if (query) {
-                    try {
-                      await trackSearchSortChanged({
-                        search_query: query,
-                        sort_type: newSortBy,
-                        previous_sort: previousSort,
-                        results_count: results?.total || 0,
+                    } else if (!types.includes('marketplace')) {
+                      handleFilterChange({
+                        product_types: [...types, 'marketplace'],
                       });
-                    } catch (error) {
-                      console.error('Failed to track sort change:', error);
                     }
-                  }
-
-                  handleFilterChange({
-                    sort_by: newSortBy,
-                  });
-                }}
-              >
-                <svg
-                  className="w-4 h-4 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                {t('search.byDate')}
-              </button>
+                  {t('search.listings')}
+                </button>
+                <button
+                  className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.product_types?.includes('storefront') ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
+                  onClick={() => {
+                    const types = filters.product_types || [];
+                    if (types.includes('storefront') && types.length > 1) {
+                      handleFilterChange({
+                        product_types: types.filter((t) => t !== 'storefront'),
+                      });
+                    } else if (!types.includes('storefront')) {
+                      handleFilterChange({
+                        product_types: [...types, 'storefront'],
+                      });
+                    }
+                  }}
+                >
+                  {t('search.storeProducts')}
+                </button>
+                <button
+                  className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'price' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
+                  onClick={async () => {
+                    const newSortBy =
+                      filters.sort_by === 'price' ? 'relevance' : 'price';
+                    const previousSort = filters.sort_by;
+
+                    // Трекинг изменения сортировки
+                    if (query) {
+                      try {
+                        await trackSearchSortChanged({
+                          search_query: query,
+                          sort_type: newSortBy,
+                          previous_sort: previousSort,
+                          results_count: results?.total || 0,
+                        });
+                      } catch (error) {
+                        console.error('Failed to track sort change:', error);
+                      }
+                    }
+
+                    handleFilterChange({
+                      sort_by: newSortBy,
+                    });
+                  }}
+                >
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  {t('search.byPrice')}
+                </button>
+                <button
+                  className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'date' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
+                  onClick={async () => {
+                    const newSortBy =
+                      filters.sort_by === 'date' ? 'relevance' : 'date';
+                    const previousSort = filters.sort_by;
+
+                    // Трекинг изменения сортировки
+                    if (query) {
+                      try {
+                        await trackSearchSortChanged({
+                          search_query: query,
+                          sort_type: newSortBy,
+                          previous_sort: previousSort,
+                          results_count: results?.total || 0,
+                        });
+                      } catch (error) {
+                        console.error('Failed to track sort change:', error);
+                      }
+                    }
+
+                    handleFilterChange({
+                      sort_by: newSortBy,
+                    });
+                  }}
+                >
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  {t('search.byDate')}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Результаты поиска */}
-      <div className="container mx-auto px-4 py-6">
-        {/* Статистика поиска в стиле аналитики */}
-        {query && results && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            {/* Найдено результатов */}
-            <div className="stat bg-base-100 rounded-xl shadow-md">
-              <div className="stat-figure text-primary">
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+        {/* Результаты поиска */}
+        <div className="container mx-auto px-4 py-6">
+          {/* Статистика поиска в стиле аналитики */}
+          {query && results && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              {/* Найдено результатов */}
+              <div className="stat bg-base-100 rounded-xl shadow-md">
+                <div className="stat-figure text-primary">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <div className="stat-title text-sm">{t('search.found')}</div>
+                <div className="stat-value text-2xl">{results.total || 0}</div>
+                <div className="stat-desc">{t('search.results')}</div>
               </div>
-              <div className="stat-title text-sm">{t('search.found')}</div>
-              <div className="stat-value text-2xl">{results.total || 0}</div>
-              <div className="stat-desc">{t('search.results')}</div>
-            </div>
 
-            {/* Время поиска */}
-            <div className="stat bg-base-100 rounded-xl shadow-md">
-              <div className="stat-figure text-secondary">
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+              {/* Время поиска */}
+              <div className="stat bg-base-100 rounded-xl shadow-md">
+                <div className="stat-figure text-secondary">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div className="stat-title text-sm">{t('search.speed')}</div>
+                <div className="stat-value text-2xl">
+                  {results.took_ms || 0}
+                </div>
+                <div className="stat-desc">{t('search.milliseconds')}</div>
               </div>
-              <div className="stat-title text-sm">{t('search.speed')}</div>
-              <div className="stat-value text-2xl">{results.took_ms || 0}</div>
-              <div className="stat-desc">{t('search.milliseconds')}</div>
-            </div>
 
-            {/* Категории */}
-            <div className="stat bg-base-100 rounded-xl shadow-md">
-              <div className="stat-figure text-accent">
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                  />
-                </svg>
+              {/* Категории */}
+              <div className="stat bg-base-100 rounded-xl shadow-md">
+                <div className="stat-figure text-accent">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                    />
+                  </svg>
+                </div>
+                <div className="stat-title text-sm">{t('search.time')}</div>
+                <div className="stat-value text-2xl">
+                  {results.took_ms || 0}
+                </div>
+                <div className="stat-desc">{t('search.ms')}</div>
               </div>
-              <div className="stat-title text-sm">{t('search.time')}</div>
-              <div className="stat-value text-2xl">{results.took_ms || 0}</div>
-              <div className="stat-desc">{t('search.ms')}</div>
-            </div>
 
-            {/* Фильтры */}
-            <div className="stat bg-base-100 rounded-xl shadow-md">
-              <div className="stat-figure text-info">
+              {/* Фильтры */}
+              <div className="stat bg-base-100 rounded-xl shadow-md">
+                <div className="stat-figure text-info">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                    />
+                  </svg>
+                </div>
+                <div className="stat-title text-sm">
+                  {t('search.activeFilters')}
+                </div>
+                <div className="stat-value text-2xl">
+                  {activeFiltersCount()}
+                </div>
+                <div className="stat-desc">{t('search.applied')}</div>
+              </div>
+            </div>
+          )}
+
+          {query && (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+              <div>
+                <h2 className="text-2xl font-bold">
+                  {t('search.resultsFor')} &quot;{query}&quot;
+                </h2>
+              </div>
+
+              {/* Кнопка фильтров для мобильных */}
+              <button
+                className="btn btn-outline btn-xs sm:btn-sm lg:hidden"
+                onClick={() => setShowFilters(!showFilters)}
+              >
                 <svg
-                  className="w-8 h-8"
+                  className="w-4 h-4 mr-2"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -572,65 +616,327 @@ export default function SearchPage() {
                     d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
                   />
                 </svg>
-              </div>
-              <div className="stat-title text-sm">
-                {t('search.activeFilters')}
-              </div>
-              <div className="stat-value text-2xl">{activeFiltersCount()}</div>
-              <div className="stat-desc">{t('search.applied')}</div>
+                {t('search.filters')}
+                {activeFiltersCount() > 0 && (
+                  <span className="badge badge-primary badge-sm ml-2">
+                    {activeFiltersCount()}
+                  </span>
+                )}
+              </button>
             </div>
-          </div>
-        )}
+          )}
 
-        {query && (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-            <div>
-              <h2 className="text-2xl font-bold">
-                {t('search.resultsFor')} &quot;{query}&quot;
-              </h2>
-            </div>
-
-            {/* Кнопка фильтров для мобильных */}
-            <button
-              className="btn btn-outline btn-xs sm:btn-sm lg:hidden"
-              onClick={() => setShowFilters(!showFilters)}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Боковая панель с фильтрами - современный дизайн */}
+            <aside
+              className={`lg:w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}
             >
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                />
-              </svg>
-              {t('search.filters')}
-              {activeFiltersCount() > 0 && (
-                <span className="badge badge-primary badge-sm ml-2">
-                  {activeFiltersCount()}
-                </span>
-              )}
-            </button>
-          </div>
-        )}
+              <div className="space-y-6">
+                {/* Карточка фильтров */}
+                <div className="card bg-base-100 shadow-md">
+                  <div className="card-body">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="card-title text-lg flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5 text-primary"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                          />
+                        </svg>
+                        {t('filters')}
+                      </h3>
+                      {activeFiltersCount() > 0 && (
+                        <button
+                          className="btn btn-ghost btn-xs text-error"
+                          onClick={() => {
+                            setFilters({
+                              product_types: ['marketplace', 'storefront'],
+                              sort_by: 'relevance',
+                              sort_order: 'desc',
+                            });
+                          }}
+                        >
+                          <svg
+                            className="w-4 h-4 mr-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                          {t('search.reset')}
+                        </button>
+                      )}
+                    </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Боковая панель с фильтрами - современный дизайн */}
-          <aside
-            className={`lg:w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}
-          >
-            <div className="space-y-6">
-              {/* Карточка фильтров */}
-              <div className="card bg-base-100 shadow-md">
-                <div className="card-body">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="card-title text-lg flex items-center gap-2">
+                    <div className="space-y-6">
+                      {/* Тип товаров - карточки вместо чекбоксов */}
+                      <div>
+                        <label className="label">
+                          <span className="label-text font-medium">
+                            {t('search.productTypes')}
+                          </span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div
+                            className={`card card-compact cursor-pointer transition-all ${
+                              filters.product_types?.includes('marketplace')
+                                ? 'ring-2 ring-primary bg-primary/5'
+                                : 'bg-base-200 hover:bg-base-300'
+                            }`}
+                            onClick={() => {
+                              const types = filters.product_types || [];
+                              if (
+                                types.includes('marketplace') &&
+                                types.length > 1
+                              ) {
+                                handleFilterChange({
+                                  product_types: types.filter(
+                                    (t) => t !== 'marketplace'
+                                  ),
+                                });
+                              } else if (!types.includes('marketplace')) {
+                                handleFilterChange({
+                                  product_types: [...types, 'marketplace'],
+                                });
+                              }
+                            }}
+                          >
+                            <div className="card-body items-center text-center">
+                              <svg
+                                className="w-6 h-6 text-primary mb-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                />
+                              </svg>
+                              <span className="text-xs font-medium">
+                                {t('search.private')}
+                              </span>
+                            </div>
+                          </div>
+                          <div
+                            className={`card card-compact cursor-pointer transition-all ${
+                              filters.product_types?.includes('storefront')
+                                ? 'ring-2 ring-primary bg-primary/5'
+                                : 'bg-base-200 hover:bg-base-300'
+                            }`}
+                            onClick={() => {
+                              const types = filters.product_types || [];
+                              if (
+                                types.includes('storefront') &&
+                                types.length > 1
+                              ) {
+                                handleFilterChange({
+                                  product_types: types.filter(
+                                    (t) => t !== 'storefront'
+                                  ),
+                                });
+                              } else if (!types.includes('storefront')) {
+                                handleFilterChange({
+                                  product_types: [...types, 'storefront'],
+                                });
+                              }
+                            }}
+                          >
+                            <div className="card-body items-center text-center">
+                              <svg
+                                className="w-6 h-6 text-secondary mb-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                />
+                              </svg>
+                              <span className="text-xs font-medium">
+                                {t('search.stores')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="divider my-4"></div>
+
+                      {/* Диапазон цен - улучшенный дизайн */}
+                      <div>
+                        <label className="label">
+                          <span className="label-text font-medium flex items-center gap-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            {t('priceRange')}
+                          </span>
+                        </label>
+                        <div className="flex gap-2">
+                          <div className="form-control flex-1">
+                            <label className="input-group">
+                              <span className="bg-base-200">
+                                {t('search.from')}
+                              </span>
+                              <input
+                                type="number"
+                                className="input input-bordered w-full"
+                                value={filters.price_min || ''}
+                                onChange={(e) =>
+                                  handleFilterChange({
+                                    price_min: e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined,
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                          <div className="form-control flex-1">
+                            <label className="input-group">
+                              <span className="bg-base-200">
+                                {t('search.to')}
+                              </span>
+                              <input
+                                type="number"
+                                className="input input-bordered w-full"
+                                value={filters.price_max || ''}
+                                onChange={(e) =>
+                                  handleFilterChange({
+                                    price_max: e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined,
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="divider my-4"></div>
+
+                      {/* Сортировка - современный селект */}
+                      <div>
+                        <label className="label">
+                          <span className="label-text font-medium flex items-center gap-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+                              />
+                            </svg>
+                            {t('sortBy')}
+                          </span>
+                        </label>
+                        <select
+                          className="select select-bordered w-full bg-base-100"
+                          value={filters.sort_by}
+                          onChange={async (e) => {
+                            const newSortBy = e.target.value;
+                            const previousSort = filters.sort_by;
+
+                            // Трекинг изменения сортировки
+                            if (query) {
+                              try {
+                                await trackSearchSortChanged({
+                                  search_query: query,
+                                  sort_type: newSortBy,
+                                  previous_sort: previousSort,
+                                  results_count: results?.total || 0,
+                                });
+                              } catch (error) {
+                                console.error(
+                                  'Failed to track sort change:',
+                                  error
+                                );
+                              }
+                            }
+
+                            handleFilterChange({ sort_by: newSortBy });
+                          }}
+                        >
+                          <option value="relevance">{t('relevance')}</option>
+                          <option value="price">{t('price')}</option>
+                          <option value="date">{t('date')}</option>
+                          <option value="popularity">{t('popularity')}</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            {/* Основной контент */}
+            <main className="flex-1">
+              {loading && allItems.length === 0 && (
+                <div className="py-4">
+                  <ListingGridSkeleton count={8} viewMode={viewMode} />
+                </div>
+              )}
+
+              {error && (
+                <div role="alert" className="alert alert-error mb-6">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="stroke-current shrink-0 h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {!loading && allItems.length === 0 && query && (
+                <div className="card bg-base-100 shadow-xl mx-auto max-w-2xl">
+                  <div className="card-body text-center py-16">
+                    <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 mb-8 mx-auto">
                       <svg
-                        className="w-5 h-5 text-primary"
+                        className="w-16 h-16 text-primary"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -639,14 +945,39 @@ export default function SearchPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      {t('filters')}
+                    </div>
+                    <h3 className="text-3xl font-bold mb-4">
+                      {t('search.noResults')}
                     </h3>
-                    {activeFiltersCount() > 0 && (
+                    <p className="text-base-content/60 mb-8 max-w-md mx-auto">
+                      {t('search.noResultsDescription')}
+                    </p>
+
+                    <div className="divider">
+                      {locale === 'ru' ? 'Попробуйте' : 'Try'}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 justify-center mb-8">
+                      <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
+                        {locale === 'ru' ? 'Электроника' : 'Electronics'}
+                      </button>
+                      <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
+                        {locale === 'ru' ? 'Одежда' : 'Clothing'}
+                      </button>
+                      <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
+                        {locale === 'ru' ? 'Дом и сад' : 'Home & Garden'}
+                      </button>
+                      <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
+                        {locale === 'ru' ? 'Авто' : 'Auto'}
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <button
-                        className="btn btn-ghost btn-xs text-error"
+                        className="btn btn-outline btn-primary"
                         onClick={() => {
                           setFilters({
                             product_types: ['marketplace', 'storefront'],
@@ -656,7 +987,7 @@ export default function SearchPage() {
                         }}
                       >
                         <svg
-                          className="w-4 h-4 mr-1"
+                          className="w-4 h-4 mr-2"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -665,418 +996,96 @@ export default function SearchPage() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                           />
                         </svg>
-                        {t('search.reset')}
+                        {t('search.clearFilters')}
                       </button>
-                    )}
-                  </div>
-
-                  <div className="space-y-6">
-                    {/* Тип товаров - карточки вместо чекбоксов */}
-                    <div>
-                      <label className="label">
-                        <span className="label-text font-medium">
-                          {t('search.productTypes')}
-                        </span>
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div
-                          className={`card card-compact cursor-pointer transition-all ${
-                            filters.product_types?.includes('marketplace')
-                              ? 'ring-2 ring-primary bg-primary/5'
-                              : 'bg-base-200 hover:bg-base-300'
-                          }`}
-                          onClick={() => {
-                            const types = filters.product_types || [];
-                            if (
-                              types.includes('marketplace') &&
-                              types.length > 1
-                            ) {
-                              handleFilterChange({
-                                product_types: types.filter(
-                                  (t) => t !== 'marketplace'
-                                ),
-                              });
-                            } else if (!types.includes('marketplace')) {
-                              handleFilterChange({
-                                product_types: [...types, 'marketplace'],
-                              });
-                            }
-                          }}
-                        >
-                          <div className="card-body items-center text-center">
-                            <svg
-                              className="w-6 h-6 text-primary mb-1"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                              />
-                            </svg>
-                            <span className="text-xs font-medium">
-                              {t('search.private')}
-                            </span>
-                          </div>
-                        </div>
-                        <div
-                          className={`card card-compact cursor-pointer transition-all ${
-                            filters.product_types?.includes('storefront')
-                              ? 'ring-2 ring-primary bg-primary/5'
-                              : 'bg-base-200 hover:bg-base-300'
-                          }`}
-                          onClick={() => {
-                            const types = filters.product_types || [];
-                            if (
-                              types.includes('storefront') &&
-                              types.length > 1
-                            ) {
-                              handleFilterChange({
-                                product_types: types.filter(
-                                  (t) => t !== 'storefront'
-                                ),
-                              });
-                            } else if (!types.includes('storefront')) {
-                              handleFilterChange({
-                                product_types: [...types, 'storefront'],
-                              });
-                            }
-                          }}
-                        >
-                          <div className="card-body items-center text-center">
-                            <svg
-                              className="w-6 h-6 text-secondary mb-1"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                              />
-                            </svg>
-                            <span className="text-xs font-medium">
-                              {t('search.stores')}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="divider my-4"></div>
-
-                    {/* Диапазон цен - улучшенный дизайн */}
-                    <div>
-                      <label className="label">
-                        <span className="label-text font-medium flex items-center gap-2">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          {t('priceRange')}
-                        </span>
-                      </label>
-                      <div className="flex gap-2">
-                        <div className="form-control flex-1">
-                          <label className="input-group">
-                            <span className="bg-base-200">
-                              {t('search.from')}
-                            </span>
-                            <input
-                              type="number"
-                              className="input input-bordered w-full"
-                              value={filters.price_min || ''}
-                              onChange={(e) =>
-                                handleFilterChange({
-                                  price_min: e.target.value
-                                    ? Number(e.target.value)
-                                    : undefined,
-                                })
-                              }
-                            />
-                          </label>
-                        </div>
-                        <div className="form-control flex-1">
-                          <label className="input-group">
-                            <span className="bg-base-200">
-                              {t('search.to')}
-                            </span>
-                            <input
-                              type="number"
-                              className="input input-bordered w-full"
-                              value={filters.price_max || ''}
-                              onChange={(e) =>
-                                handleFilterChange({
-                                  price_max: e.target.value
-                                    ? Number(e.target.value)
-                                    : undefined,
-                                })
-                              }
-                            />
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="divider my-4"></div>
-
-                    {/* Сортировка - современный селект */}
-                    <div>
-                      <label className="label">
-                        <span className="label-text font-medium flex items-center gap-2">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
-                            />
-                          </svg>
-                          {t('sortBy')}
-                        </span>
-                      </label>
-                      <select
-                        className="select select-bordered w-full bg-base-100"
-                        value={filters.sort_by}
-                        onChange={async (e) => {
-                          const newSortBy = e.target.value;
-                          const previousSort = filters.sort_by;
-
-                          // Трекинг изменения сортировки
-                          if (query) {
-                            try {
-                              await trackSearchSortChanged({
-                                search_query: query,
-                                sort_type: newSortBy,
-                                previous_sort: previousSort,
-                                results_count: results?.total || 0,
-                              });
-                            } catch (error) {
-                              console.error(
-                                'Failed to track sort change:',
-                                error
-                              );
-                            }
-                          }
-
-                          handleFilterChange({ sort_by: newSortBy });
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                          setQuery('');
+                          setAllItems([]);
+                          setResults(null);
+                          router.push(`/${locale}`);
                         }}
                       >
-                        <option value="relevance">{t('relevance')}</option>
-                        <option value="price">{t('price')}</option>
-                        <option value="date">{t('date')}</option>
-                        <option value="popularity">{t('popularity')}</option>
-                      </select>
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                          />
+                        </svg>
+                        {locale === 'ru' ? 'На главную' : 'Home'}
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </aside>
+              )}
 
-          {/* Основной контент */}
-          <main className="flex-1">
-            {loading && allItems.length === 0 && (
-              <div className="py-4">
-                <ListingGridSkeleton count={8} viewMode={viewMode} />
-              </div>
-            )}
-
-            {error && (
-              <div role="alert" className="alert alert-error mb-6">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="stroke-current shrink-0 h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span>{error}</span>
-              </div>
-            )}
-
-            {!loading && allItems.length === 0 && query && (
-              <div className="card bg-base-100 shadow-xl mx-auto max-w-2xl">
-                <div className="card-body text-center py-16">
-                  <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 mb-8 mx-auto">
-                    <svg
-                      className="w-16 h-16 text-primary"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+              {allItems.length > 0 && (
+                <>
+                  <div className="flex justify-end mb-4">
+                    <ViewToggle
+                      currentView={viewMode}
+                      onViewChange={setViewMode}
+                    />
                   </div>
-                  <h3 className="text-3xl font-bold mb-4">
-                    {t('search.noResults')}
-                  </h3>
-                  <p className="text-base-content/60 mb-8 max-w-md mx-auto">
-                    {t('search.noResultsDescription')}
-                  </p>
-
-                  <div className="divider">
-                    {locale === 'ru' ? 'Попробуйте' : 'Try'}
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 justify-center mb-8">
-                    <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                      {locale === 'ru' ? 'Электроника' : 'Electronics'}
-                    </button>
-                    <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                      {locale === 'ru' ? 'Одежда' : 'Clothing'}
-                    </button>
-                    <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                      {locale === 'ru' ? 'Дом и сад' : 'Home & Garden'}
-                    </button>
-                    <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                      {locale === 'ru' ? 'Авто' : 'Auto'}
-                    </button>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <button
-                      className="btn btn-outline btn-primary"
-                      onClick={() => {
-                        setFilters({
-                          product_types: ['marketplace', 'storefront'],
-                          sort_by: 'relevance',
-                          sort_order: 'desc',
-                        });
-                      }}
-                    >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                  <div
+                    className={
+                      viewMode === 'grid'
+                        ? 'grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                        : 'space-y-4'
+                    }
+                  >
+                    {allItems.map((item, index) => (
+                      <SearchResultCard
+                        key={`${item.id}-${index}`}
+                        searchQuery={query}
+                        itemId={item.product_id?.toString() || item.id}
+                        position={index + 1}
+                        totalResults={allItems.length}
+                        searchStartTime={searchStartTimeRef.current}
+                        productType={
+                          item.product_type as 'marketplace' | 'storefront'
+                        }
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        <EnhancedListingCard
+                          item={convertToMarketplaceItem(item)}
+                          locale={locale}
+                          viewMode={viewMode}
                         />
-                      </svg>
-                      {t('search.clearFilters')}
-                    </button>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => {
-                        setQuery('');
-                        setAllItems([]);
-                        setResults(null);
-                        router.push(`/${locale}`);
-                      }}
-                    >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                        />
-                      </svg>
-                      {locale === 'ru' ? 'На главную' : 'Home'}
-                    </button>
+                      </SearchResultCard>
+                    ))}
                   </div>
-                </div>
-              </div>
-            )}
 
-            {allItems.length > 0 && (
-              <>
-                <div className="flex justify-end mb-4">
-                  <ViewToggle
-                    currentView={viewMode}
-                    onViewChange={setViewMode}
+                  {/* Показываем скелетоны при подгрузке */}
+                  {loading && allItems.length > 0 && (
+                    <div className="mt-6">
+                      <ListingGridSkeleton count={4} viewMode={viewMode} />
+                    </div>
+                  )}
+
+                  <InfiniteScrollTrigger
+                    ref={loadMoreRef}
+                    loading={loading}
+                    hasMore={results?.has_more || false}
+                    onLoadMore={handleLoadMore}
+                    loadMoreText={tCommon('loadMore')}
                   />
-                </div>
-                <div
-                  className={
-                    viewMode === 'grid'
-                      ? 'grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                      : 'space-y-4'
-                  }
-                >
-                  {allItems.map((item, index) => (
-                    <SearchResultCard
-                      key={`${item.id}-${index}`}
-                      searchQuery={query}
-                      itemId={item.product_id?.toString() || item.id}
-                      position={index + 1}
-                      totalResults={allItems.length}
-                      searchStartTime={searchStartTimeRef.current}
-                      productType={
-                        item.product_type as 'marketplace' | 'storefront'
-                      }
-                    >
-                      <EnhancedListingCard
-                        item={convertToMarketplaceItem(item)}
-                        locale={locale}
-                        viewMode={viewMode}
-                      />
-                    </SearchResultCard>
-                  ))}
-                </div>
-
-                {/* Показываем скелетоны при подгрузке */}
-                {loading && allItems.length > 0 && (
-                  <div className="mt-6">
-                    <ListingGridSkeleton count={4} viewMode={viewMode} />
-                  </div>
-                )}
-
-                <InfiniteScrollTrigger
-                  ref={loadMoreRef}
-                  loading={loading}
-                  hasMore={results?.has_more || false}
-                  onLoadMore={handleLoadMore}
-                  loadMoreText={tCommon('loadMore')}
-                />
-              </>
-            )}
-          </main>
+                </>
+              )}
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

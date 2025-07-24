@@ -6,6 +6,7 @@ import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { balanceService } from '@/services/balance';
 import { BalanceWidget } from '@/components/balance/BalanceWidget';
+import { toast } from '@/utils/toast';
 // Убираем дублирующий useBalance - используем данные из BalanceWidget
 
 export default function WithdrawPage() {
@@ -34,7 +35,7 @@ export default function WithdrawPage() {
       // const response = await balanceService.createWithdrawal({...});
 
       // Пока что показываем успешное сообщение
-      alert(
+      toast.success(
         'Заявка на вывод средств создана. Обработка займет 1-3 рабочих дня.'
       );
 
@@ -45,7 +46,9 @@ export default function WithdrawPage() {
       setAccountHolder('');
     } catch (error) {
       console.error('Withdrawal error:', error);
-      alert('Ошибка при создании заявки на вывод средств. Попробуйте еще раз.');
+      toast.error(
+        'Ошибка при создании заявки на вывод средств. Попробуйте еще раз.'
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -62,7 +65,7 @@ export default function WithdrawPage() {
 
   const setMaxAmount = () => {
     // Функция временно отключена - баланс получаем из BalanceWidget
-    alert('Используйте данные из виджета баланса');
+    toast.info('Используйте данные из виджета баланса');
   };
 
   return (

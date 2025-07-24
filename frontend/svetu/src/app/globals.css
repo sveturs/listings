@@ -3,6 +3,15 @@
 @import '../styles/chat-patterns.css';
 @import '../styles/chat-bubble.css';
 
+/* Tailwind v4 требует явного определения breakpoints */
+@theme {
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
 /* Используем переменные DaisyUI для совместимости с темами */
 :root {
   --background: oklch(var(--b1));

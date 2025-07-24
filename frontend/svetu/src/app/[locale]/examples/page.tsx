@@ -55,6 +55,14 @@ export default function ExamplesPage() {
       color: 'bg-error',
       icon: '✨',
     },
+    {
+      title: 'Discount System',
+      description:
+        'Interactive discount badges and price history visualization',
+      href: '/examples/discounts',
+      color: 'bg-gradient-to-r from-red-500 to-orange-500',
+      icon: '🏷️',
+    },
   ];
 
   return (

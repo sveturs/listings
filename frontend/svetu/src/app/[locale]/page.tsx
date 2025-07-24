@@ -1,9 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { UnifiedSearchService } from '@/services/unifiedSearch';
-import HomePage from '@/components/marketplace/HomePage';
-import { Link } from '@/i18n/routing';
 import configManager from '@/config';
-import { SearchBar } from '@/components/SearchBar';
+import HomePageClient from './HomePageClient';
 
 export default async function Home({
   params,
@@ -45,54 +43,14 @@ export default async function Home({
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Hero секция */}
-      <div className="bg-gradient-to-b from-base-200/50 to-base-100 py-12 lg:py-16 mb-8">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl lg:text-5xl font-bold text-center mb-4">
-            {t('marketplace')}
-          </h1>
-          <p className="text-center text-base-content/70 text-lg max-w-2xl mx-auto mb-8">
-            {t('description')}
-          </p>
-
-          {/* Search Bar с поддержкой fuzzy search */}
-          <div className="max-w-3xl mx-auto">
-            <SearchBar variant="hero" showTrending={true} />
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4">
-        <HomePage
-          initialData={marketplaceData}
-          locale={locale}
-          error={error}
-          paymentsEnabled={paymentsEnabled}
-        />
-
-        {/* Плавающая кнопка создания объявления */}
-        <Link
-          href="/create-listing"
-          className="fixed bottom-6 right-6 btn btn-primary btn-circle btn-lg shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-200 z-50"
-          title={t('createListing')}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </Link>
-      </div>
-    </div>
+    <HomePageClient
+      title={t('marketplace')}
+      description={t('description')}
+      createListingText={t('createListing')}
+      initialData={marketplaceData}
+      locale={locale}
+      error={error}
+      paymentsEnabled={paymentsEnabled}
+    />
   );
 }
