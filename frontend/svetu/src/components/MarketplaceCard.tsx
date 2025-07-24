@@ -144,7 +144,7 @@ export default function MarketplaceCard({
 
   if (viewMode === 'list') {
     return (
-      <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+      <div className="card bg-base-100 shadow-xl hover:shadow-2xl border border-base-300 dark:border-base-600 transition-shadow">
         <Link href={getItemUrl()} className="block">
           <div className="card-body p-4">
             <div className="flex gap-4">
@@ -297,7 +297,7 @@ export default function MarketplaceCard({
 
   // Grid view (default)
   return (
-    <div className="card card-compact bg-base-100 shadow-xl hover:shadow-2xl transition-shadow relative">
+    <div className="card card-compact bg-base-100 shadow-xl hover:shadow-2xl border border-base-300 dark:border-base-600 transition-shadow relative">
       {/* Эко-бейдж для товаров второй руки */}
       {(item.condition === 'used' || item.condition === 'refurbished') && (
         <div className="absolute top-3 left-3 z-10">

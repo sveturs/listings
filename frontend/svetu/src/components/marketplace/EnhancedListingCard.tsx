@@ -193,7 +193,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   if (viewMode === 'list') {
     return (
       <>
-        <div className="card bg-base-100 shadow-sm hover:shadow-lg transition-all duration-300 group">
+        <div className="card bg-base-100 shadow-sm hover:shadow-lg border border-base-300 dark:border-base-600 transition-all duration-300 group">
           <Link href={getItemUrl()} className="block">
             <div className="card-body p-4">
               <div className="flex gap-4">
@@ -474,7 +474,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   // Grid view (default)
   return (
     <>
-      <div className="card card-compact bg-base-100 shadow-sm hover:shadow-lg transition-all duration-300 group">
+      <div className="card card-compact bg-base-100 shadow-sm hover:shadow-lg border border-base-300 dark:border-base-600 transition-all duration-300 group">
         {/* Изображение с оверлеями */}
         <figure className="relative aspect-square overflow-hidden">
           <Link href={getItemUrl()}>
