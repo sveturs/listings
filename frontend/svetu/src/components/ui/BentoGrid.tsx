@@ -101,7 +101,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       </div>
 
       {/* Популярные категории */}
-      <div className="col-span-1 row-span-1 group">
+      <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-1 group">
         <div className="card h-full bg-base-100 border border-base-200 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="card-body p-6">
             <div className="flex items-center justify-between mb-4">
@@ -111,7 +111,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             <h3 className="font-semibold mb-3">Популярные категории</h3>
             <div className="space-y-2">
               {categories.length > 0 ? (
-                categories.slice(0, 3).map((cat) => (
+                categories.slice(0, 4).map((cat) => (
                   <Link
                     key={cat.id}
                     href={`/search?category=${cat.id}`}
@@ -133,38 +133,6 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         </div>
       </div>
 
-      {/* Безопасные сделки */}
-      <div className="col-span-1 row-span-1 group">
-        <div className="card h-full bg-gradient-to-br from-success/20 to-success/5 border border-success/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
-          <div className="card-body p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-success/20 rounded-full">
-                <Shield className="w-6 h-6 text-success" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold">Безопасные сделки</h3>
-                <p className="text-xs text-base-content/60">
-                  Защита покупателей
-                </p>
-              </div>
-            </div>
-            <div className="stats stats-vertical shadow-none bg-transparent p-0">
-              <div className="stat p-0">
-                <div className="stat-value text-2xl text-success">
-                  {animatedListings > 0
-                    ? Math.min(
-                        Math.floor((animatedDeals / animatedListings) * 100),
-                        99
-                      )
-                    : 98}
-                  %
-                </div>
-                <div className="stat-desc">успешных сделок</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Избранное объявление */}
       {featuredListing ? (
@@ -242,27 +210,24 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         </div>
       </div>
 
-      {/* Рядом с вами - Карта */}
-      <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 group">
-        <div className="card h-full bg-gradient-to-br from-secondary/20 to-secondary/5 border border-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
-          <div className="card-body p-4 flex flex-col h-full">
-            <div className="flex items-center gap-3 mb-3">
-              <MapPin className="w-6 h-6 text-secondary" />
-              <div>
-                <h3 className="font-semibold">Рядом с вами</h3>
-                <p className="text-xs text-base-content/60">
-                  {nearbyListings.length > 0 
-                    ? `${nearbyListings.length} объявлений в радиусе 5 км`
-                    : 'Загрузка карты...'
-                  }
-                </p>
-              </div>
+      {/* Безопасные сделки */}
+      <div className="col-span-1 row-span-1 group">
+        <div className="card h-full bg-gradient-to-br from-success/20 to-success/5 border border-success/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+          <div className="card-body p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="w-6 h-6 text-success" />
+              <h3 className="font-semibold">Безопасные сделки</h3>
             </div>
-            <div className="flex-1 relative rounded-lg overflow-hidden">
-              <BentoGridMap 
-                listings={nearbyListings}
-                userLocation={userLocation}
-              />
+            <div className="text-center">
+              <p className="text-3xl font-bold text-success">
+                {animatedListings > 0
+                  ? Math.min(
+                      Math.floor((animatedDeals / animatedListings) * 100),
+                      99
+                    )
+                  : 98}%
+              </p>
+              <p className="text-sm text-base-content/60 mt-1">успешных сделок</p>
             </div>
           </div>
         </div>
@@ -289,6 +254,32 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   {stats?.priceDropsToday || 8} снижений цен
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Рядом с вами - Карта */}
+      <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 group">
+        <div className="card h-full bg-gradient-to-br from-secondary/20 to-secondary/5 border border-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+          <div className="card-body p-4 flex flex-col h-full">
+            <div className="flex items-center gap-3 mb-3">
+              <MapPin className="w-6 h-6 text-secondary" />
+              <div>
+                <h3 className="font-semibold">Рядом с вами</h3>
+                <p className="text-xs text-base-content/60">
+                  {nearbyListings.length > 0 
+                    ? `${nearbyListings.length} объявлений в радиусе 5 км`
+                    : 'Загрузка карты...'
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex-1 relative rounded-lg overflow-hidden">
+              <BentoGridMap 
+                listings={nearbyListings}
+                userLocation={userLocation}
+              />
             </div>
           </div>
         </div>
