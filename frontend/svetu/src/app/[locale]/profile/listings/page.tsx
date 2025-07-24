@@ -6,6 +6,7 @@ import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { apiClient } from '@/services/api-client';
+import { toast } from '@/utils/toast';
 
 interface UserListing {
   id: number;
@@ -57,6 +58,8 @@ export default function MyListingsPage() {
   const [listings, setListings] = useState<UserListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const fetchMyListings = useCallback(async () => {
     try {
@@ -137,6 +140,67 @@ export default function MyListingsPage() {
         return <span className="badge badge-neutral">Sold</span>;
       default:
         return <span className="badge badge-ghost">{status}</span>;
+    }
+  };
+
+  const handleDelete = async (listingId: number, listingTitle: string) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${listingTitle}"? This action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setDeletingId(listingId);
+
+      const response = await apiClient.delete(
+        `/api/v1/marketplace/listings/${listingId}`
+      );
+
+      if (!response.error) {
+        toast.success('Listing deleted successfully');
+        // Remove the listing from the local state
+        setListings(listings.filter((listing) => listing.id !== listingId));
+      } else {
+        toast.error(response.error.message || 'Failed to delete listing');
+      }
+    } catch (err) {
+      console.error('Error deleting listing:', err);
+      toast.error('Failed to delete listing. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleUpdateStatus = async (listingId: number, newStatus: string) => {
+    try {
+      setUpdatingId(listingId);
+
+      const response = await apiClient.patch(
+        `/api/v1/marketplace/listings/${listingId}`,
+        { status: newStatus }
+      );
+
+      if (!response.error) {
+        toast.success(`Listing marked as ${newStatus}`);
+        // Update the listing status in local state
+        setListings(
+          listings.map((listing) =>
+            listing.id === listingId
+              ? { ...listing, status: newStatus }
+              : listing
+          )
+        );
+      } else {
+        toast.error(
+          response.error.message || 'Failed to update listing status'
+        );
+      }
+    } catch (err) {
+      console.error('Error updating listing status:', err);
+      toast.error('Failed to update listing status. Please try again.');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -237,7 +301,11 @@ export default function MyListingsPage() {
                 {listings.map((listing) => (
                   <div
                     key={listing.id}
-                    className="card card-side bg-base-100 shadow-xl"
+                    className={`card card-side bg-base-100 shadow-xl transition-opacity ${
+                      deletingId === listing.id || updatingId === listing.id
+                        ? 'opacity-50'
+                        : ''
+                    }`}
                   >
                     {/* Image */}
                     <figure className="w-48 h-36">
@@ -340,14 +408,61 @@ export default function MyListingsPage() {
                                   Edit Listing
                                 </Link>
                               </li>
+                              {listing.status !== 'sold' && (
+                                <li>
+                                  <button
+                                    onClick={() =>
+                                      handleUpdateStatus(
+                                        listing.id,
+                                        listing.status === 'active'
+                                          ? 'inactive'
+                                          : 'active'
+                                      )
+                                    }
+                                    disabled={updatingId === listing.id}
+                                  >
+                                    {updatingId === listing.id ? (
+                                      <span className="loading loading-spinner loading-xs"></span>
+                                    ) : listing.status === 'active' ? (
+                                      'Deactivate'
+                                    ) : (
+                                      'Activate'
+                                    )}
+                                  </button>
+                                </li>
+                              )}
                               <li>
-                                <button className="text-warning">
-                                  Mark as Sold
+                                <button
+                                  className="text-warning"
+                                  onClick={() =>
+                                    handleUpdateStatus(listing.id, 'sold')
+                                  }
+                                  disabled={
+                                    updatingId === listing.id ||
+                                    listing.status === 'sold'
+                                  }
+                                >
+                                  {updatingId === listing.id ? (
+                                    <span className="loading loading-spinner loading-xs"></span>
+                                  ) : (
+                                    'Mark as Sold'
+                                  )}
                                 </button>
                               </li>
+                              <li className="divider my-0"></li>
                               <li>
-                                <button className="text-error">
-                                  Delete Listing
+                                <button
+                                  className="text-error"
+                                  onClick={() =>
+                                    handleDelete(listing.id, listing.title)
+                                  }
+                                  disabled={deletingId === listing.id}
+                                >
+                                  {deletingId === listing.id ? (
+                                    <span className="loading loading-spinner loading-xs"></span>
+                                  ) : (
+                                    'Delete Listing'
+                                  )}
                                 </button>
                               </li>
                             </ul>
