@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -33,6 +34,21 @@ import (
 	osClient "backend/internal/storage/opensearch"
 )
 
+// ErrSessionNotFound возвращается когда сессия не найдена
+var ErrSessionNotFound = errors.New("session not found")
+
+// ErrAttributeTranslationNotFound возвращается когда перевод атрибута не найден
+var ErrAttributeTranslationNotFound = errors.New("attribute translation not found")
+
+// ErrReviewConfirmationNotFound возвращается когда подтверждение отзыва не найдено
+var ErrReviewConfirmationNotFound = errors.New("review confirmation not found")
+
+// ErrReviewDisputeNotFound возвращается когда спор по отзыву не найден
+var ErrReviewDisputeNotFound = errors.New("review dispute not found")
+
+// ErrStorefrontNotFound возвращается когда витрина не найдена
+var ErrStorefrontNotFound = errors.New("storefront not found")
+
 type Database struct {
 	pool          *pgxpool.Pool
 	marketplaceDB *marketplaceStorage.Storage
@@ -58,7 +74,7 @@ type Database struct {
 	productSearchRepo    storefrontOpenSearch.ProductSearchRepository // Репозиторий для поиска товаров витрин
 }
 
-func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights) (*Database, error) {
+func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights) (*Database, error) {
 	// Настраиваем конфигурацию пула
 	poolConfig, err := pgxpool.ParseConfig(dbURL)
 	if err != nil {
@@ -69,7 +85,7 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 	poolConfig.MaxConns = 50 // Увеличиваем максимальное количество соединений
 	poolConfig.MinConns = 10 // Минимальное количество соединений
 
-	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error creating connection pool: %w", err)
 	}
@@ -118,21 +134,21 @@ func NewDatabase(dbURL string, osClient *osClient.OpenSearchClient, indexName st
 	if osClient != nil {
 		db.osMarketplaceRepo = opensearch.NewRepository(osClient, indexName, db, searchWeights)
 		// Подготавливаем индекс
-		if err := db.osMarketplaceRepo.PrepareIndex(context.Background()); err != nil {
+		if err := db.osMarketplaceRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса OpenSearch: %v", err)
 		}
 
 		// Инициализируем репозиторий витрин в OpenSearch
 		db.osStorefrontRepo = storefrontOpenSearch.NewStorefrontRepository(osClient, db.storefrontIndex)
 		// Подготавливаем индекс витрин
-		if err := db.osStorefrontRepo.PrepareIndex(context.Background()); err != nil {
+		if err := db.osStorefrontRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса витрин в OpenSearch: %v", err)
 		}
 
 		// Инициализируем репозиторий товаров витрин в OpenSearch
 		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "storefront_products")
 		// Подготавливаем индекс товаров витрин
-		if err := db.productSearchRepo.PrepareIndex(context.Background()); err != nil {
+		if err := db.productSearchRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
 		}
 	}
@@ -185,7 +201,7 @@ func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search
 
 // GetOpenSearchClient возвращает клиент OpenSearch для прямого выполнения запросов
 func (db *Database) GetOpenSearchClient() (interface {
-	Execute(method, path string, body []byte) ([]byte, error)
+	Execute(ctx context.Context, method, path string, body []byte) ([]byte, error)
 }, error,
 ) {
 	if db.osClient == nil {
@@ -240,7 +256,7 @@ func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*mode
 		&image.PublicURL, &image.CreatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("image not found")
 		}
 		return nil, err
@@ -336,8 +352,8 @@ func (db *Database) GetSession(ctx context.Context, token string) (*types.Sessio
 		&session.Provider,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrSessionNotFound
 		}
 		return nil, err
 	}
@@ -698,8 +714,8 @@ func (db *Database) GetAttributeOptionTranslations(ctx context.Context, attribut
 		&optValue, &enTrans, &srTrans,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrAttributeTranslationNotFound
 		}
 		return nil, fmt.Errorf("error getting attribute translations: %w", err)
 	}
@@ -814,7 +830,8 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 	var viewExists bool
 	var err error
 
-	if userID > 0 {
+	switch {
+	case userID > 0:
 		// Для авторизованных пользователей проверяем по ID
 		err = db.pool.QueryRow(ctx, `
 			SELECT EXISTS (
@@ -822,7 +839,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 				WHERE listing_id = $1 AND user_id = $2
 			)
 		`, id, userID).Scan(&viewExists)
-	} else if userIdentifier != "" {
+	case userIdentifier != "":
 		// Для неавторизованных пользователей проверяем строго по IP-адресу,
 		// убедившись, что user_id IS NULL (чтобы не конфликтовать с ограничением уникальности)
 		err = db.pool.QueryRow(ctx, `
@@ -831,7 +848,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 				WHERE listing_id = $1 AND ip_hash = $2 AND user_id IS NULL
 			)
 		`, id, userIdentifier).Scan(&viewExists)
-	} else {
+	default:
 		// Если нет ни ID пользователя, ни IP - считаем, что просмотр уже был (перестраховка)
 		return nil
 	}
@@ -896,7 +913,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 				// Не прерываем выполнение, так как главное - обновить в PostgreSQL
 			} else {
 				// Обновляем данные в OpenSearch
-				go db.updateViewCountInOpenSearch(id, viewsCount)
+				go db.updateViewCountInOpenSearch(id, viewsCount) //nolint:contextcheck // фоновое обновление
 			}
 		}
 	}
@@ -1094,7 +1111,7 @@ func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, selle
 		&stats.DaysSinceLastMsg,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		// Чат не существует, возвращаем пустую статистику
 		return stats, nil
 	}
@@ -1124,7 +1141,7 @@ func (db *Database) GetUserAggregatedRating(ctx context.Context, userID int) (*m
 		&rating.RecentReviews, &rating.LastReviewAt,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		// Если нет данных в материализованном представлении, возвращаем пустой рейтинг
 		return rating, nil
 	}
@@ -1154,7 +1171,7 @@ func (db *Database) GetStorefrontAggregatedRating(ctx context.Context, storefron
 		&rating.RecentReviews, &rating.LastReviewAt, &rating.OwnerID,
 	)
 
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return rating, nil
 	}
 
@@ -1200,8 +1217,8 @@ func (db *Database) GetReviewConfirmation(ctx context.Context, reviewID int) (*m
 		&confirmation.ConfirmationStatus, &confirmation.ConfirmedAt, &confirmation.Notes,
 	)
 
-	if err == pgx.ErrNoRows {
-		return nil, nil
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrReviewConfirmationNotFound
 	}
 
 	return confirmation, err
@@ -1256,8 +1273,8 @@ func (db *Database) GetReviewDispute(ctx context.Context, reviewID int) (*models
 		&dispute.UpdatedAt, &dispute.ResolvedAt,
 	)
 
-	if err == pgx.ErrNoRows {
-		return nil, nil
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrReviewDisputeNotFound
 	}
 
 	return dispute, err
@@ -1283,7 +1300,7 @@ func (db *Database) UpdateReviewDispute(ctx context.Context, dispute *models.Rev
 	// Если спор разрешен, обновляем флаг в reviews
 	if dispute.Status == "resolved_keep_review" ||
 		dispute.Status == "resolved_remove_review" ||
-		dispute.Status == "cancelled" {
+		dispute.Status == "canceled" {
 		_, err = db.pool.Exec(ctx,
 			"UPDATE reviews SET has_active_dispute = false WHERE id = $1",
 			dispute.ReviewID,
@@ -1309,7 +1326,7 @@ func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityT
 	`
 
 	err := db.pool.QueryRow(ctx, query, userID, entityType, entityID).Scan(&existingReviewID)
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
@@ -1495,8 +1512,8 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 		&s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrStorefrontNotFound
 		}
 		return nil, err
 	}

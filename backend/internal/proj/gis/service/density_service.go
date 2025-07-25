@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/jmoiron/sqlx"
+
 	"backend/internal/logger"
 	"backend/internal/proj/gis/types"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // DensityService сервис для анализа плотности объявлений
@@ -28,49 +28,49 @@ func (s *DensityService) AnalyzeDensity(ctx context.Context, bbox *types.Boundin
 	// Создаем сетку для анализа
 	query := `
 		WITH grid AS (
-			SELECT 
+			SELECT
 				row_number() OVER () as id,
 				x,
 				y,
 				ST_MakeEnvelope(
-					x, 
-					y, 
-					x + $5, 
+					x,
+					y,
+					x + $5,
 					y + $5,
 					4326
 				) as cell
 			FROM generate_series(
-				$1::numeric, 
-				$2::numeric, 
+				$1::numeric,
+				$2::numeric,
 				$5::numeric
 			) as x,
 			generate_series(
-				$3::numeric, 
-				$4::numeric, 
+				$3::numeric,
+				$4::numeric,
 				$5::numeric
 			) as y
 		),
 		density_data AS (
-			SELECT 
+			SELECT
 				g.id as grid_cell_id,
 				ST_X(ST_Centroid(g.cell)) as center_lng,
 				ST_Y(ST_Centroid(g.cell)) as center_lat,
 				COUNT(l.id) as listing_count,
 				ST_Area(g.cell::geography) / 1000000.0 as area_km2
 			FROM grid g
-			LEFT JOIN marketplace_listings l ON 
-				l.location IS NOT NULL 
+			LEFT JOIN marketplace_listings l ON
+				l.location IS NOT NULL
 				AND ST_Within(l.location::geometry, g.cell)
 				AND l.status = 'active'
 			GROUP BY g.id, g.cell
 		)
-		SELECT 
+		SELECT
 			grid_cell_id::text,
 			center_lat,
 			center_lng,
 			listing_count,
 			area_km2,
-			CASE 
+			CASE
 				WHEN area_km2 > 0 THEN listing_count / area_km2
 				ELSE 0
 			END as density
@@ -98,7 +98,7 @@ func (s *DensityService) FilterListingsByDensity(ctx context.Context, filter *ty
 	// Сначала анализируем плотность для каждого объявления
 	query := `
 		WITH listing_density AS (
-			SELECT 
+			SELECT
 				l1.id,
 				l1.location,
 				COUNT(l2.id) as nearby_count,
@@ -112,26 +112,26 @@ func (s *DensityService) FilterListingsByDensity(ctx context.Context, filter *ty
 					)::geography
 				) / 1000000.0 as area_km2
 			FROM marketplace_listings l1
-			LEFT JOIN marketplace_listings l2 ON 
+			LEFT JOIN marketplace_listings l2 ON
 				l2.id != l1.id
 				AND l2.status = 'active'
 				AND l2.location IS NOT NULL
 				AND ST_DWithin(
-					l1.location::geography, 
-					l2.location::geography, 
+					l1.location::geography,
+					l2.location::geography,
 					500 -- радиус 500м для подсчета плотности
 				)
-			WHERE 
+			WHERE
 				l1.id = ANY($1)
 				AND l1.location IS NOT NULL
 			GROUP BY l1.id, l1.location
 		),
 		density_calc AS (
-			SELECT 
+			SELECT
 				id,
 				nearby_count,
 				area_km2,
-				CASE 
+				CASE
 					WHEN area_km2 > 0 THEN nearby_count / area_km2
 					ELSE 0
 				END as density
@@ -174,12 +174,12 @@ func (s *DensityService) FilterListingsByDensity(ctx context.Context, filter *ty
 // GetDensityHeatmap возвращает данные для тепловой карты плотности
 func (s *DensityService) GetDensityHeatmap(ctx context.Context, bbox *types.BoundingBox) ([]map[string]interface{}, error) {
 	query := `
-		SELECT 
+		SELECT
 			ST_X(location::geometry) as lng,
 			ST_Y(location::geometry) as lat,
 			1.0 as weight
 		FROM marketplace_listings
-		WHERE 
+		WHERE
 			location IS NOT NULL
 			AND status = 'active'
 			AND ST_Within(
@@ -215,6 +215,11 @@ func (s *DensityService) GetDensityHeatmap(ctx context.Context, bbox *types.Boun
 			"lng":    lng,
 			"weight": weight,
 		})
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over density data: %w", err)
 	}
 
 	return points, nil

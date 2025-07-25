@@ -20,13 +20,13 @@ func main() {
 	}
 
 	// Создаем файловое хранилище
-	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	fileStorage, err := filestorage.NewFileStorage(context.Background(), cfg.FileStorage)
 	if err != nil {
 		log.Fatal("Failed to create file storage:", err)
 	}
 
 	// Подключаемся к базе данных
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(context.Background(), cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -49,19 +49,22 @@ func main() {
 	// Получаем пользователя
 	user, err := db.GetUserByEmail(ctx, targetEmail)
 	if err != nil || user == nil {
-		log.Fatal("User not found:", err)
+		log.Printf("User not found: %v", err)
+		return
 	}
 
 	// Генерируем JWT токен
 	jwtToken, err := authService.GenerateJWT(user.ID, user.Email)
 	if err != nil {
-		log.Fatal("Failed to generate JWT token:", err)
+		log.Printf("Failed to generate JWT token: %v", err)
+		return
 	}
 
 	// Генерируем refresh токен
 	refreshToken, _, err := authService.GenerateTokensForOAuth(ctx, user.ID, user.Email, "127.0.0.1", "CLI Tool")
 	if err != nil {
-		log.Fatal("Failed to generate refresh token:", err)
+		log.Printf("Failed to generate refresh token: %v", err)
+		return
 	}
 
 	// Выводим результат

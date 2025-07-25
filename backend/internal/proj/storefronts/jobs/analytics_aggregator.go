@@ -295,7 +295,8 @@ func (a *AnalyticsAggregator) getTopProducts(ctx context.Context, storefrontID i
 	var result json.RawMessage
 	err := a.db.QueryRowContext(ctx, query, storefrontID, from, to, limit).Scan(&result)
 	if err != nil {
-		// Если нет данных, возвращаем пустой массив
+		// Если нет данных, логируем и возвращаем пустой массив
+		a.logger.Info("No top products data found, returning empty array: %v", err)
 		return json.RawMessage("[]"), nil
 	}
 	return result, err
@@ -321,7 +322,8 @@ func (a *AnalyticsAggregator) getOrdersByCity(ctx context.Context, storefrontID 
 	var result json.RawMessage
 	err := a.db.QueryRowContext(ctx, query, storefrontID, from, to).Scan(&result)
 	if err != nil {
-		// Если нет данных, возвращаем пустой объект
+		// Если нет данных, логируем и возвращаем пустой объект
+		a.logger.Info("No orders by city data found, returning empty object: %v", err)
 		return json.RawMessage("{}"), nil
 	}
 	return result, err

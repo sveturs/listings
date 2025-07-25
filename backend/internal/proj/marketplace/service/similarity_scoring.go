@@ -85,21 +85,22 @@ func (sc *SimilarityCalculator) CalculateSimilarity(
 	// Адаптивные веса в зависимости от категории
 	var categoryWeight, priceWeight, textWeight, attrWeight, locationWeight float64
 
-	if score.CategoryScore >= 1.0 {
+	switch {
+	case score.CategoryScore >= 1.0:
 		// Та же категория - стандартные веса
 		categoryWeight = sc.scoringWeights.SameCategoryWeights.Category
 		attrWeight = sc.scoringWeights.SameCategoryWeights.Attributes
 		textWeight = sc.scoringWeights.SameCategoryWeights.Text
 		priceWeight = sc.scoringWeights.SameCategoryWeights.Price
 		locationWeight = sc.scoringWeights.SameCategoryWeights.Location
-	} else if score.CategoryScore >= 0.6 {
+	case score.CategoryScore >= 0.6:
 		// Категории из одной группы - больше веса цене и тексту
 		categoryWeight = sc.scoringWeights.SimilarCategoryWeights.Category
 		attrWeight = sc.scoringWeights.SimilarCategoryWeights.Attributes
 		textWeight = sc.scoringWeights.SimilarCategoryWeights.Text
 		priceWeight = sc.scoringWeights.SimilarCategoryWeights.Price
 		locationWeight = sc.scoringWeights.SimilarCategoryWeights.Location
-	} else {
+	default:
 		// Разные категории - максимальный вес цене и местоположению
 		categoryWeight = sc.scoringWeights.DifferentCategoryWeights.Category
 		attrWeight = sc.scoringWeights.DifferentCategoryWeights.Attributes

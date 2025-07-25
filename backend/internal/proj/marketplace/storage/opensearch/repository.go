@@ -4,6 +4,7 @@ package opensearch
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -120,7 +121,7 @@ func (r *Repository) getBoostWeight(weightName string, defaultValue float64) flo
 
 // PrepareIndex подготавливает индекс (создает, если не существует)
 func (r *Repository) PrepareIndex(ctx context.Context) error {
-	exists, err := r.client.IndexExists(r.indexName)
+	exists, err := r.client.IndexExists(ctx, r.indexName)
 	if err != nil {
 		return fmt.Errorf("ошибка проверки индекса: %w", err)
 	}
@@ -129,7 +130,7 @@ func (r *Repository) PrepareIndex(ctx context.Context) error {
 
 	if !exists {
 		logger.Info().Str("indexName", r.indexName).Msg("Создание индекса...")
-		if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
+		if err := r.client.CreateIndex(ctx, r.indexName, osClient.ListingMapping); err != nil {
 			return fmt.Errorf("ошибка создания индекса: %w", err)
 		}
 		logger.Info().Str("indexName", r.indexName).Msg("Индекс успешно создан")
@@ -157,10 +158,10 @@ func (r *Repository) PrepareIndex(ctx context.Context) error {
 }
 
 func (r *Repository) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	doc := r.listingToDoc(listing)
+	doc := r.listingToDoc(ctx, listing)
 	docJSON, _ := json.MarshalIndent(doc, "", "  ")
 	logger.Info().Msgf("Индексация объявления %d с данными: %s", listing.ID, string(docJSON))
-	return r.client.IndexDocument(r.indexName, fmt.Sprintf("%d", listing.ID), doc)
+	return r.client.IndexDocument(ctx, r.indexName, fmt.Sprintf("%d", listing.ID), doc)
 }
 
 // BulkIndexListings индексирует несколько объявлений
@@ -168,7 +169,7 @@ func (r *Repository) BulkIndexListings(ctx context.Context, listings []*models.M
 	docs := make([]map[string]interface{}, 0, len(listings))
 
 	for _, listing := range listings {
-		doc := r.listingToDoc(listing)
+		doc := r.listingToDoc(ctx, listing)
 		logger.Info().Msgf("Индексация объявления с ID: %d, категория: %d, название: %s",
 			listing.ID, listing.CategoryID, listing.Title)
 
@@ -181,40 +182,17 @@ func (r *Repository) BulkIndexListings(ctx context.Context, listings []*models.M
 		docs = append(docs, doc)
 	}
 
-	return r.client.BulkIndex(r.indexName, docs)
+	return r.client.BulkIndex(ctx, r.indexName, docs)
 }
 
 // DeleteListing удаляет объявление из индекса
 func (r *Repository) DeleteListing(ctx context.Context, listingID string) error {
-	return r.client.DeleteDocument(r.indexName, listingID)
+	return r.client.DeleteDocument(ctx, r.indexName, listingID)
 }
 
 // GetClient возвращает клиент OpenSearch
 func (r *Repository) GetClient() *osClient.OpenSearchClient {
 	return r.client
-}
-
-// Метод для извлечения ID из документа OpenSearch
-func (r *Repository) extractDocumentID(hit map[string]interface{}) (int, error) {
-	if idStr, ok := hit["_id"].(string); ok {
-		if id, err := strconv.Atoi(idStr); err == nil {
-			return id, nil
-		}
-	}
-
-	if source, ok := hit["_source"].(map[string]interface{}); ok {
-		if idFloat, ok := source["id"].(float64); ok {
-			return int(idFloat), nil
-		} else if idInt, ok := source["id"].(int); ok {
-			return idInt, nil
-		} else if idStr, ok := source["id"].(string); ok {
-			if id, err := strconv.Atoi(idStr); err == nil {
-				return id, nil
-			}
-		}
-	}
-
-	return 0, fmt.Errorf("не удалось получить ID объявления из документа")
 }
 
 // SearchListings выполняет поиск объявлений
@@ -228,10 +206,10 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 		queryJSON, _ := json.MarshalIndent(query, "", "  ")
 		logger.Info().Msgf("Используем специальный запрос для поиска: %s", string(queryJSON))
 	} else {
-		query = r.buildSearchQuery(params)
+		query = r.buildSearchQuery(ctx, params)
 	}
 
-	response, err := r.client.Search(r.indexName, query)
+	response, err := r.client.Search(ctx, r.indexName, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска: %w", err)
 	}
@@ -449,7 +427,7 @@ func (r *Repository) SuggestListings(ctx context.Context, prefix string, size in
 		},
 	}
 
-	responseBytes, err := r.client.Search(r.indexName, query)
+	responseBytes, err := r.client.Search(ctx, r.indexName, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска для автопродления: %w", err)
 	}
@@ -573,32 +551,23 @@ func extractBucketsFromAgg(agg map[string]interface{}, suggestions map[string]bo
 	}
 }
 
-func contains(arr []string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
-		}
-	}
-	return false
-}
-
 // ReindexAll переиндексирует все объявления
 func (r *Repository) ReindexAll(ctx context.Context) error {
-	exists, err := r.client.IndexExists(r.indexName)
+	exists, err := r.client.IndexExists(ctx, r.indexName)
 	if err != nil {
 		return fmt.Errorf("ошибка проверки индекса: %w", err)
 	}
 
 	if exists {
 		logger.Info().Msgf("Удаляем существующий индекс %s", r.indexName)
-		if err := r.client.DeleteIndex(r.indexName); err != nil {
+		if err := r.client.DeleteIndex(ctx, r.indexName); err != nil {
 			return fmt.Errorf("ошибка удаления индекса: %w", err)
 		}
 		time.Sleep(1 * time.Second)
 	}
 
 	logger.Info().Msgf("Создаем индекс %s заново", r.indexName)
-	if err := r.client.CreateIndex(r.indexName, osClient.ListingMapping); err != nil {
+	if err := r.client.CreateIndex(ctx, r.indexName, osClient.ListingMapping); err != nil {
 		return fmt.Errorf("ошибка создания индекса: %w", err)
 	}
 
@@ -666,8 +635,7 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 	return nil
 }
 
-func (r *Repository) getAttributeOptionTranslations(attrName, value string) (map[string]string, error) {
-	ctx := context.Background()
+func (r *Repository) getAttributeOptionTranslations(ctx context.Context, attrName, value string) (map[string]string, error) {
 	query := `
         SELECT option_value, en_translation, sr_translation
         FROM attribute_option_translations
@@ -679,7 +647,7 @@ func (r *Repository) getAttributeOptionTranslations(attrName, value string) (map
 		&optionValue, &enTranslation, &srTranslation,
 	)
 	if err != nil {
-		if err != pgx.ErrNoRows {
+		if !errors.Is(err, pgx.ErrNoRows) {
 			logger.Info().Msgf("Ошибка получения переводов для атрибута %s, значение %s: %v", attrName, value, err)
 		}
 		return nil, err
@@ -693,7 +661,7 @@ func (r *Repository) getAttributeOptionTranslations(attrName, value string) (map
 	return translations, nil
 }
 
-func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string]interface{} {
+func (r *Repository) listingToDoc(ctx context.Context, listing *models.MarketplaceListing) map[string]interface{} {
 	doc := map[string]interface{}{
 		"id":                listing.ID,
 		"title":             listing.Title,
@@ -726,17 +694,17 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	importantAttrs := createImportantAttributesMap()
 
 	if len(listing.Attributes) > 0 {
-		processAttributesForIndex(doc, listing.Attributes, importantAttrs, realEstateFields, carFields, listing.ID, r)
+		processAttributesForIndex(ctx, doc, listing.Attributes, importantAttrs, realEstateFields, carFields, listing.ID, r)
 	}
 
 	processDiscountData(doc, listing)
 	processMetadata(doc, listing)
-	processStorefrontData(doc, listing, r.storage)
+	processStorefrontData(doc, listing, r.storage) //nolint:contextcheck
 	processCoordinates(doc, listing, r)
-	processCategoryPath(doc, listing, r.storage)
+	processCategoryPath(doc, listing, r.storage) //nolint:contextcheck
 	processCategory(doc, listing)
 	processUser(doc, listing)
-	processImages(doc, listing, r.storage)
+	processImages(doc, listing, r.storage) //nolint:contextcheck
 
 	docJSON, _ := json.MarshalIndent(doc, "", "  ")
 	logger.Info().Msgf("FINAL DOC for listing %d [size=%d bytes]: %s", listing.ID, len(docJSON), string(docJSON))
@@ -744,7 +712,7 @@ func (r *Repository) listingToDoc(listing *models.MarketplaceListing) map[string
 	return doc
 }
 
-func processAttributesForIndex(doc map[string]interface{}, attributes []models.ListingAttributeValue,
+func processAttributesForIndex(ctx context.Context, doc map[string]interface{}, attributes []models.ListingAttributeValue,
 	importantAttrs, realEstateFields, carFields map[string]bool, listingID int, r *Repository,
 ) {
 	realEstateText := make([]string, 0)
@@ -829,7 +797,7 @@ func processAttributesForIndex(doc map[string]interface{}, attributes []models.L
 					value = attr.DisplayValue
 				}
 				if value != "" {
-					translations, err := r.getAttributeOptionTranslations(attr.AttributeName, value)
+					translations, err := r.getAttributeOptionTranslations(ctx, attr.AttributeName, value)
 					if err == nil && len(translations) > 0 {
 						attrDoc["translations"] = translations
 						for lang, translation := range translations {
@@ -985,15 +953,16 @@ func addRangesForAttribute(doc map[string]interface{}, attr models.ListingAttrib
 	case "mileage":
 		doc["mileage_range"] = getMileageRange(int(numVal))
 	case "area":
-		if numVal <= 30 {
+		switch {
+		case numVal <= 30:
 			doc["area_range"] = "do 30 m²"
-		} else if numVal <= 50 {
+		case numVal <= 50:
 			doc["area_range"] = "30-50 m²"
-		} else if numVal <= 80 {
+		case numVal <= 80:
 			doc["area_range"] = "50-80 m²"
-		} else if numVal <= 120 {
+		case numVal <= 120:
 			doc["area_range"] = "80-120 m²"
-		} else {
+		default:
 			doc["area_range"] = "od 120 m²"
 		}
 	}
@@ -1366,17 +1335,6 @@ func processImages(doc map[string]interface{}, listing *models.MarketplaceListin
 	}
 }
 
-func getLocalizedRoomText(rooms float64) string {
-	switch int(rooms) {
-	case 1:
-		return "комната"
-	case 2, 3, 4:
-		return "комнаты"
-	default:
-		return "комнат"
-	}
-}
-
 func getMileageRange(mileage int) string {
 	switch {
 	case mileage <= 5000:
@@ -1413,29 +1371,6 @@ func getPriceRange(price int) string {
 	default:
 		return "500001+"
 	}
-}
-
-func isImportantAttribute(attrName string) bool {
-	importantAttrs := map[string]bool{
-		"make":            true,
-		"model":           true,
-		"brand":           true,
-		"year":            true,
-		"color":           true,
-		"rooms":           true,
-		"property_type":   true,
-		"body_type":       true,
-		"engine_capacity": true,
-		"fuel_type":       true,
-		"transmission":    true,
-		"cpu":             true,
-		"gpu":             true,
-		"memory":          true,
-		"ram":             true,
-		"storage_type":    true,
-		"screen_size":     true,
-	}
-	return importantAttrs[attrName]
 }
 
 func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float64 }, error) {
@@ -1500,7 +1435,7 @@ func (r *Repository) geocodeCity(city, country string) (*struct{ Lat, Lon float6
 	return &struct{ Lat, Lon float64 }{lat, lon}, nil
 }
 
-func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]interface{} {
+func (r *Repository) buildSearchQuery(ctx context.Context, params *search.SearchParams) map[string]interface{} {
 	logger.Info().Msgf("Строим запрос: категория = %v, язык = %s, поисковый запрос = %s",
 		params.CategoryID, params.Language, params.Query)
 
@@ -1642,7 +1577,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 		if params.UseSynonyms {
 			// Попробуем расширить запрос синонимами через PostgreSQL
 			if r.storage != nil {
-				expandedQuery, err := r.storage.ExpandSearchQuery(context.Background(), params.Query, params.Language)
+				expandedQuery, err := r.storage.ExpandSearchQuery(ctx, params.Query, params.Language)
 				if err == nil && expandedQuery != params.Query {
 					logger.Info().Str("original", params.Query).Str("expanded", expandedQuery).Msg("Using expanded query with synonyms")
 					// Добавляем расширенный запрос как дополнительные условия поиска
@@ -2202,7 +2137,8 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 			}
 
 			if realEstateAttrs[attrName] {
-				if strings.Contains(attrValue, ",") {
+				switch {
+				case strings.Contains(attrValue, ","):
 					parts := strings.Split(attrValue, ",")
 					if len(parts) == 2 {
 						minVal, minErr := strconv.ParseFloat(parts[0], 64)
@@ -2221,7 +2157,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 								attrName, minVal, maxVal)
 						}
 					}
-				} else if attrName == "property_type" || attrName == "building_type" {
+				case attrName == "property_type" || attrName == "building_type":
 					filter = append(filter, map[string]interface{}{
 						"term": map[string]interface{}{
 							attrName: attrValue,
@@ -2229,7 +2165,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					})
 					logger.Info().Msgf("Added term filter for text real estate attribute %s = %s",
 						attrName, attrValue)
-				} else if attrValue == boolValueTrue || attrValue == "false" {
+				case attrValue == boolValueTrue || attrValue == "false":
 					boolVal := attrValue == boolValueTrue
 					filter = append(filter, map[string]interface{}{
 						"term": map[string]interface{}{
@@ -2238,7 +2174,7 @@ func (r *Repository) buildSearchQuery(params *search.SearchParams) map[string]in
 					})
 					logger.Info().Msgf("Added boolean filter for real estate attribute %s = %v",
 						attrName, boolVal)
-				} else {
+				default:
 					if numVal, err := strconv.ParseFloat(attrValue, 64); err == nil {
 						filter = append(filter, map[string]interface{}{
 							"term": map[string]interface{}{
@@ -2550,13 +2486,14 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 							from, fromOk := bucket["from"].(float64)
 							to, toOk := bucket["to"].(float64)
 
-							if fromOk && toOk {
+							switch {
+							case fromOk && toOk:
 								key = fmt.Sprintf("%v-%v", from, to)
-							} else if fromOk {
+							case fromOk:
 								key = fmt.Sprintf("%v+", from)
-							} else if toOk {
+							case toOk:
 								key = fmt.Sprintf("0-%v", to)
-							} else {
+							default:
 								continue
 							}
 

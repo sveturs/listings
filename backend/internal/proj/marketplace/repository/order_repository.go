@@ -3,13 +3,17 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
+	pkgErrors "github.com/pkg/errors"
 
 	"backend/internal/domain/models"
 )
+
+// ErrOrderNotFound возвращается когда заказ не найден
+var ErrOrderNotFound = errors.New("order not found")
 
 // OrderRepository предоставляет методы для работы с заказами
 type OrderRepository struct {
@@ -19,30 +23,6 @@ type OrderRepository struct {
 // NewOrderRepository создает новый репозиторий заказов
 func NewOrderRepository(db *sqlx.DB) *OrderRepository {
 	return &OrderRepository{db: db}
-}
-
-// OrderRepositoryWrapper обертка для postgres-репозитория
-type OrderRepositoryWrapper struct {
-	repo interface {
-		Create(ctx context.Context, order *models.MarketplaceOrder) error
-		GetByID(ctx context.Context, id int64) (*models.MarketplaceOrder, error)
-		GetByPaymentTransactionID(ctx context.Context, transactionID int64) (*models.MarketplaceOrder, error)
-		UpdateStatus(ctx context.Context, orderID int64, newStatus models.MarketplaceOrderStatus, reason string, userID *int64) error
-		GetOrdersForAutoCapture(ctx context.Context) ([]*models.MarketplaceOrder, error)
-		GetBuyerOrders(ctx context.Context, buyerID int64, limit, offset int) ([]*models.MarketplaceOrder, int, error)
-		GetSellerOrders(ctx context.Context, sellerID int64, limit, offset int) ([]*models.MarketplaceOrder, int, error)
-		UpdateShippingInfo(ctx context.Context, orderID int64, shippingMethod string, trackingNumber string) error
-		AddMessage(ctx context.Context, message *models.OrderMessage) error
-		GetOrderMessages(ctx context.Context, orderID int64) ([]*models.OrderMessage, error)
-	}
-}
-
-// NewOrderRepositoryWrapper создает обертку для postgres-репозитория
-func NewOrderRepositoryWrapper(repo interface{}) *OrderRepository {
-	// Возвращаем обертку, которая реализует все нужные методы
-	return &OrderRepository{
-		db: nil, // db не используется в обертке
-	}
 }
 
 // Create создает новый заказ
@@ -62,7 +42,7 @@ func (r *OrderRepository) Create(ctx context.Context, order *models.MarketplaceO
 
 	rows, err := r.db.NamedQueryContext(ctx, query, order)
 	if err != nil {
-		return errors.Wrap(err, "failed to create order")
+		return pkgErrors.Wrap(err, "failed to create order")
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -73,7 +53,7 @@ func (r *OrderRepository) Create(ctx context.Context, order *models.MarketplaceO
 	if rows.Next() {
 		err = rows.Scan(&order.ID, &order.CreatedAt, &order.UpdatedAt)
 		if err != nil {
-			return errors.Wrap(err, "failed to scan order id")
+			return pkgErrors.Wrap(err, "failed to scan order id")
 		}
 	}
 
@@ -95,10 +75,10 @@ func (r *OrderRepository) GetByID(ctx context.Context, id int64) (*models.Market
 
 	err := r.db.GetContext(ctx, &order, query, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("order not found")
 		}
-		return nil, errors.Wrap(err, "failed to get order")
+		return nil, pkgErrors.Wrap(err, "failed to get order")
 	}
 
 	return &order, nil
@@ -119,10 +99,10 @@ func (r *OrderRepository) GetByPaymentTransactionID(ctx context.Context, transac
 
 	err := r.db.GetContext(ctx, &order, query, transactionID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrOrderNotFound
 		}
-		return nil, errors.Wrap(err, "failed to get order by transaction id")
+		return nil, pkgErrors.Wrap(err, "failed to get order by transaction id")
 	}
 
 	return &order, nil
@@ -132,10 +112,10 @@ func (r *OrderRepository) GetByPaymentTransactionID(ctx context.Context, transac
 func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newStatus models.MarketplaceOrderStatus, reason string, userID *int64) error {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(err, "failed to begin transaction")
+		return pkgErrors.Wrap(err, "failed to begin transaction")
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			// Transaction was already committed or rolled back, ignore
 			_ = err // Explicitly ignore error
 		}
@@ -146,7 +126,7 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 	err = tx.GetContext(ctx, &currentStatus,
 		"SELECT status FROM marketplace_orders WHERE id = $1 FOR UPDATE", orderID)
 	if err != nil {
-		return errors.Wrap(err, "failed to get current status")
+		return pkgErrors.Wrap(err, "failed to get current status")
 	}
 
 	// Проверяем возможность перехода
@@ -160,7 +140,7 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 		"UPDATE marketplace_orders SET status = $1, updated_at = NOW() WHERE id = $2",
 		newStatus, orderID)
 	if err != nil {
-		return errors.Wrap(err, "failed to update status")
+		return pkgErrors.Wrap(err, "failed to update status")
 	}
 
 	// Записываем в историю
@@ -169,11 +149,17 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 		VALUES ($1, $2, $3, $4, $5)`,
 		orderID, currentStatus, newStatus, reason, userID)
 	if err != nil {
-		return errors.Wrap(err, "failed to insert status history")
+		return pkgErrors.Wrap(err, "failed to insert status history")
 	}
 
 	// Обновляем специфичные поля в зависимости от статуса
 	switch newStatus {
+	case models.MarketplaceOrderStatusPending:
+		// Нет дополнительных действий для статуса pending
+	case models.MarketplaceOrderStatusPaid:
+		// Нет дополнительных действий для статуса paid
+	case models.MarketplaceOrderStatusCompleted:
+		// Нет дополнительных действий для статуса completed
 	case models.MarketplaceOrderStatusShipped:
 		_, err = tx.ExecContext(ctx,
 			"UPDATE marketplace_orders SET shipped_at = NOW() WHERE id = $1", orderID)
@@ -183,9 +169,15 @@ func (r *OrderRepository) UpdateStatus(ctx context.Context, orderID int64, newSt
 			SET delivered_at = NOW(), 
 			    protection_expires_at = NOW() + INTERVAL '%d days' 
 			WHERE id = $1`, orderID)
+	case models.MarketplaceOrderStatusDisputed:
+		// Нет дополнительных действий для статуса disputed
+	case models.MarketplaceOrderStatusCancelled:
+		// Нет дополнительных действий для статуса canceled
+	case models.MarketplaceOrderStatusRefunded:
+		// Нет дополнительных действий для статуса refunded
 	}
 	if err != nil {
-		return errors.Wrap(err, "failed to update status-specific fields")
+		return pkgErrors.Wrap(err, "failed to update status-specific fields")
 	}
 
 	return tx.Commit()
@@ -216,7 +208,7 @@ func (r *OrderRepository) GetOrdersForAutoCapture(ctx context.Context) ([]*model
 	var orders []*models.MarketplaceOrder
 	err := r.db.SelectContext(ctx, &orders, query)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get orders for auto capture")
+		return nil, pkgErrors.Wrap(err, "failed to get orders for auto capture")
 	}
 
 	return orders, nil
@@ -240,7 +232,7 @@ func (r *OrderRepository) GetBuyerOrders(ctx context.Context, buyerID int64, lim
 
 	err := r.db.SelectContext(ctx, &orders, query, buyerID, limit, offset)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get buyer orders")
+		return nil, 0, pkgErrors.Wrap(err, "failed to get buyer orders")
 	}
 
 	// Получаем общее количество
@@ -248,7 +240,7 @@ func (r *OrderRepository) GetBuyerOrders(ctx context.Context, buyerID int64, lim
 	err = r.db.GetContext(ctx, &total,
 		"SELECT COUNT(*) FROM marketplace_orders WHERE buyer_id = $1", buyerID)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get total count")
+		return nil, 0, pkgErrors.Wrap(err, "failed to get total count")
 	}
 
 	return orders, total, nil
@@ -272,7 +264,7 @@ func (r *OrderRepository) GetSellerOrders(ctx context.Context, sellerID int64, l
 
 	err := r.db.SelectContext(ctx, &orders, query, sellerID, limit, offset)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get seller orders")
+		return nil, 0, pkgErrors.Wrap(err, "failed to get seller orders")
 	}
 
 	// Получаем общее количество
@@ -280,7 +272,7 @@ func (r *OrderRepository) GetSellerOrders(ctx context.Context, sellerID int64, l
 	err = r.db.GetContext(ctx, &total,
 		"SELECT COUNT(*) FROM marketplace_orders WHERE seller_id = $1", sellerID)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get total count")
+		return nil, 0, pkgErrors.Wrap(err, "failed to get total count")
 	}
 
 	return orders, total, nil
@@ -294,7 +286,7 @@ func (r *OrderRepository) UpdateShippingInfo(ctx context.Context, orderID int64,
 		WHERE id = $3`,
 		shippingMethod, trackingNumber, orderID)
 	if err != nil {
-		return errors.Wrap(err, "failed to update shipping info")
+		return pkgErrors.Wrap(err, "failed to update shipping info")
 	}
 
 	return nil
@@ -311,7 +303,7 @@ func (r *OrderRepository) AddMessage(ctx context.Context, message *models.OrderM
 
 	rows, err := r.db.NamedQueryContext(ctx, query, message)
 	if err != nil {
-		return errors.Wrap(err, "failed to add message")
+		return pkgErrors.Wrap(err, "failed to add message")
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -322,7 +314,7 @@ func (r *OrderRepository) AddMessage(ctx context.Context, message *models.OrderM
 	if rows.Next() {
 		err = rows.Scan(&message.ID, &message.CreatedAt)
 		if err != nil {
-			return errors.Wrap(err, "failed to scan message id")
+			return pkgErrors.Wrap(err, "failed to scan message id")
 		}
 	}
 
@@ -342,7 +334,7 @@ func (r *OrderRepository) GetOrderMessages(ctx context.Context, orderID int64) (
 
 	err := r.db.SelectContext(ctx, &messages, query, orderID)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get order messages")
+		return nil, pkgErrors.Wrap(err, "failed to get order messages")
 	}
 
 	return messages, nil

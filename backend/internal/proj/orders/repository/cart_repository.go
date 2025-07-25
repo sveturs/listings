@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -48,7 +49,7 @@ func (r *CartRepository) GetByID(ctx context.Context, cartID int64) (*models.Sho
 	var cart models.ShoppingCart
 	err := r.db.GetContext(ctx, &cart, query, cartID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("cart not found")
 		}
 		return nil, fmt.Errorf("failed to get cart: %w", err)
@@ -74,7 +75,7 @@ func (r *CartRepository) GetByUser(ctx context.Context, userID int, storefrontID
 	var cart models.ShoppingCart
 	err := r.db.GetContext(ctx, &cart, query, userID, storefrontID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("cart not found")
 		}
 		return nil, fmt.Errorf("failed to get cart: %w", err)
@@ -100,7 +101,7 @@ func (r *CartRepository) GetBySession(ctx context.Context, sessionID string, sto
 	var cart models.ShoppingCart
 	err := r.db.GetContext(ctx, &cart, query, sessionID, storefrontID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("cart not found")
 		}
 		return nil, fmt.Errorf("failed to get cart: %w", err)
@@ -205,7 +206,7 @@ func (r *CartRepository) AddItem(ctx context.Context, item *models.ShoppingCartI
 			return nil, err
 		}
 		return item, nil
-	} else if err != sql.ErrNoRows {
+	} else if !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to check existing item: %w", err)
 	}
 

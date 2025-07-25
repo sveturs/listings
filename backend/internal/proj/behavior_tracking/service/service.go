@@ -30,8 +30,8 @@ type behaviorTrackingService struct {
 }
 
 // NewBehaviorTrackingService создает новый сервис
-func NewBehaviorTrackingService(repo postgres.BehaviorTrackingRepository) BehaviorTrackingService {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewBehaviorTrackingService(ctx context.Context, repo postgres.BehaviorTrackingRepository) BehaviorTrackingService {
+	ctx, cancel := context.WithCancel(ctx)
 
 	s := &behaviorTrackingService{
 		repo:        repo,
@@ -44,7 +44,7 @@ func NewBehaviorTrackingService(repo postgres.BehaviorTrackingRepository) Behavi
 	}
 
 	// Запускаем горутину для периодического флаша буфера
-	go s.flushWorker()
+	go s.flushWorker() //nolint:contextcheck // использует внутренний контекст s.ctx
 
 	return s
 }
@@ -54,12 +54,12 @@ func (s *behaviorTrackingService) flushWorker() {
 	for {
 		select {
 		case <-s.flushTicker.C:
-			if err := s.flushBuffer(); err != nil {
+			if err := s.flushBuffer(context.Background()); err != nil {
 				logger.Error().Err(err).Msg("Failed to flush event buffer")
 			}
 		case <-s.ctx.Done():
 			// Сохраняем оставшиеся события перед завершением
-			if err := s.flushBuffer(); err != nil {
+			if err := s.flushBuffer(context.Background()); err != nil {
 				logger.Error().Err(err).Msg("Failed to flush event buffer on shutdown")
 			}
 			return
@@ -68,7 +68,7 @@ func (s *behaviorTrackingService) flushWorker() {
 }
 
 // flushBuffer сохраняет накопленные события в БД
-func (s *behaviorTrackingService) flushBuffer() error {
+func (s *behaviorTrackingService) flushBuffer(ctx context.Context) error {
 	s.bufferMutex.Lock()
 	defer s.bufferMutex.Unlock()
 
@@ -84,14 +84,14 @@ func (s *behaviorTrackingService) flushBuffer() error {
 	s.eventBuffer = s.eventBuffer[:0]
 
 	// Сохраняем события пакетом с увеличенным таймаутом
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	flushCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	logger.Info().
 		Int("events_to_save", len(events)).
 		Msg("flushBuffer: attempting to save behavior events to database")
 
-	if err := s.repo.SaveEventsBatch(ctx, events); err != nil {
+	if err := s.repo.SaveEventsBatch(flushCtx, events); err != nil {
 		// При ошибке conn busy просто логируем и не возвращаем события в буфер
 		// чтобы избежать накопления событий
 		if strings.Contains(err.Error(), "conn busy") {
@@ -158,7 +158,7 @@ func (s *behaviorTrackingService) TrackEvent(ctx context.Context, userID *int, r
 	if shouldFlush {
 		logger.Info().Msg("Buffer is full, triggering flush")
 		go func() {
-			if err := s.flushBuffer(); err != nil {
+			if err := s.flushBuffer(ctx); err != nil {
 				logger.Error().Err(err).Msg("Failed to flush full buffer")
 			}
 		}()
@@ -237,7 +237,7 @@ func (s *behaviorTrackingService) GetItemMetrics(ctx context.Context, query *beh
 // UpdateSearchMetrics обновляет агрегированные метрики поиска за период
 func (s *behaviorTrackingService) UpdateSearchMetrics(ctx context.Context, periodStart, periodEnd time.Time) error {
 	// Форсируем сохранение буфера перед обновлением метрик
-	if err := s.flushBuffer(); err != nil {
+	if err := s.flushBuffer(ctx); err != nil {
 		logger.Error().Err(err).Msg("Failed to flush buffer before updating metrics")
 	}
 
@@ -309,5 +309,5 @@ func (s *behaviorTrackingService) Close() error {
 	time.Sleep(100 * time.Millisecond)
 
 	// Финальный флаш буфера
-	return s.flushBuffer()
+	return s.flushBuffer(context.Background())
 }

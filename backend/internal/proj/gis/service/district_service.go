@@ -3,14 +3,21 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"sort"
 
 	"backend/internal/proj/gis/repository"
 	"backend/internal/proj/gis/types"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
+	pkgErrors "github.com/pkg/errors"
 )
+
+// ErrDistrictNotFoundByPoint возвращается когда район не найден по координатам
+var ErrDistrictNotFoundByPoint = errors.New("district not found by point")
+
+// ErrMunicipalityNotFoundByPoint возвращается когда муниципалитет не найден по координатам
+var ErrMunicipalityNotFoundByPoint = errors.New("municipality not found by point")
 
 // DistrictService handles business logic for districts and municipalities
 type DistrictService struct {
@@ -26,7 +33,7 @@ func NewDistrictService(repo *repository.DistrictRepository) *DistrictService {
 func (s *DistrictService) GetDistricts(ctx context.Context, params types.DistrictSearchParams) ([]types.District, error) {
 	districts, err := s.repo.GetDistricts(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get districts")
+		return nil, pkgErrors.Wrap(err, "failed to get districts")
 	}
 	return districts, nil
 }
@@ -35,7 +42,7 @@ func (s *DistrictService) GetDistricts(ctx context.Context, params types.Distric
 func (s *DistrictService) GetDistrictByID(ctx context.Context, id uuid.UUID) (*types.District, error) {
 	district, err := s.repo.GetDistrictByID(ctx, id)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get district by ID")
+		return nil, pkgErrors.Wrap(err, "failed to get district by ID")
 	}
 	if district == nil {
 		return nil, errors.New("district not found")
@@ -47,7 +54,7 @@ func (s *DistrictService) GetDistrictByID(ctx context.Context, id uuid.UUID) (*t
 func (s *DistrictService) GetMunicipalities(ctx context.Context, params types.MunicipalitySearchParams) ([]types.Municipality, error) {
 	municipalities, err := s.repo.GetMunicipalities(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get municipalities")
+		return nil, pkgErrors.Wrap(err, "failed to get municipalities")
 	}
 	return municipalities, nil
 }
@@ -56,7 +63,7 @@ func (s *DistrictService) GetMunicipalities(ctx context.Context, params types.Mu
 func (s *DistrictService) GetMunicipalityByID(ctx context.Context, id uuid.UUID) (*types.Municipality, error) {
 	municipality, err := s.repo.GetMunicipalityByID(ctx, id)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get municipality by ID")
+		return nil, pkgErrors.Wrap(err, "failed to get municipality by ID")
 	}
 	if municipality == nil {
 		return nil, errors.New("municipality not found")
@@ -87,7 +94,7 @@ func (s *DistrictService) SearchListingsByDistrict(ctx context.Context, district
 
 	results, err := s.repo.SearchListingsByDistrict(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to search listings by district")
+		return nil, pkgErrors.Wrap(err, "failed to search listings by district")
 	}
 
 	return results, nil
@@ -116,7 +123,7 @@ func (s *DistrictService) SearchListingsByMunicipality(ctx context.Context, muni
 
 	results, err := s.repo.SearchListingsByMunicipality(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to search listings by municipality")
+		return nil, pkgErrors.Wrap(err, "failed to search listings by municipality")
 	}
 
 	return results, nil
@@ -133,11 +140,11 @@ func (s *DistrictService) GetDistrictByPoint(ctx context.Context, lat, lng float
 
 	districts, err := s.repo.GetDistricts(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to find district by point")
+		return nil, pkgErrors.Wrap(err, "failed to find district by point")
 	}
 
 	if len(districts) == 0 {
-		return nil, nil
+		return nil, ErrDistrictNotFoundByPoint
 	}
 
 	return &districts[0], nil
@@ -154,11 +161,11 @@ func (s *DistrictService) GetMunicipalityByPoint(ctx context.Context, lat, lng f
 
 	municipalities, err := s.repo.GetMunicipalities(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to find municipality by point")
+		return nil, pkgErrors.Wrap(err, "failed to find municipality by point")
 	}
 
 	if len(municipalities) == 0 {
-		return nil, nil
+		return nil, ErrMunicipalityNotFoundByPoint
 	}
 
 	return &municipalities[0], nil
@@ -168,7 +175,7 @@ func (s *DistrictService) GetMunicipalityByPoint(ctx context.Context, lat, lng f
 func (s *DistrictService) GetDistrictBoundary(ctx context.Context, districtID uuid.UUID) (*types.DistrictBoundaryResponse, error) {
 	district, err := s.repo.GetDistrictByID(ctx, districtID)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get district for boundary")
+		return nil, pkgErrors.Wrap(err, "failed to get district for boundary")
 	}
 	if district == nil {
 		return nil, errors.New("district not found")
@@ -177,7 +184,7 @@ func (s *DistrictService) GetDistrictBoundary(ctx context.Context, districtID uu
 	// Get boundary from repository as GeoJSON string
 	boundaryGeoJSON, err := s.repo.GetDistrictBoundaryGeoJSON(ctx, districtID)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get district boundary")
+		return nil, pkgErrors.Wrap(err, "failed to get district boundary")
 	}
 
 	response := &types.DistrictBoundaryResponse{
@@ -198,7 +205,7 @@ func (s *DistrictService) GetDistrictBoundary(ctx context.Context, districtID uu
 func (s *DistrictService) GetCities(ctx context.Context, params types.CitySearchParams) ([]types.City, error) {
 	cities, err := s.repo.GetCities(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get cities")
+		return nil, pkgErrors.Wrap(err, "failed to get cities")
 	}
 	return cities, nil
 }
@@ -215,7 +222,7 @@ func (s *DistrictService) GetVisibleCities(ctx context.Context, req types.Visibl
 
 	allCities, err := s.repo.GetCities(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get cities in viewport")
+		return nil, pkgErrors.Wrap(err, "failed to get cities in viewport")
 	}
 
 	// Calculate distances and sort

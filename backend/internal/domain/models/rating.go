@@ -109,6 +109,6 @@ type CreateReviewConfirmationRequest struct {
 
 // CreateReviewDisputeRequest запрос на создание спора
 type CreateReviewDisputeRequest struct {
-	Reason      string `json:"reason" validate:"required,oneof=not_a_customer false_information deal_cancelled spam other"`
+	Reason      string `json:"reason" validate:"required,oneof=not_a_customer false_information deal_canceled spam other"`
 	Description string `json:"description" validate:"required,min=10,max=1000"`
 }

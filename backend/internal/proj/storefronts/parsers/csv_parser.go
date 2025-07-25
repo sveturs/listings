@@ -125,11 +125,12 @@ func (p *CSVParser) parseCSVRecord(record []string, headerMap map[string]int, li
 		addError("price", "Price is required", "")
 	} else {
 		price, err := strconv.ParseFloat(priceStr, 64)
-		if err != nil {
+		switch {
+		case err != nil:
 			addError("price", fmt.Sprintf("Invalid price format: %v", err), priceStr)
-		} else if price <= 0 {
+		case price <= 0:
 			addError("price", "Price must be greater than 0", price)
-		} else {
+		default:
 			product.Price = price
 		}
 	}
@@ -151,11 +152,12 @@ func (p *CSVParser) parseCSVRecord(record []string, headerMap map[string]int, li
 	wholesalePriceStr := getField("wholesale_price")
 	if wholesalePriceStr != "" {
 		wholesalePrice, err := strconv.ParseFloat(wholesalePriceStr, 64)
-		if err != nil {
+		switch {
+		case err != nil:
 			addError("wholesale_price", fmt.Sprintf("Invalid wholesale price format: %v", err), wholesalePriceStr)
-		} else if wholesalePrice < 0 {
+		case wholesalePrice < 0:
 			addError("wholesale_price", "Wholesale price cannot be negative", wholesalePrice)
-		} else {
+		default:
 			product.WholesalePrice = &wholesalePrice
 		}
 	}
@@ -166,11 +168,12 @@ func (p *CSVParser) parseCSVRecord(record []string, headerMap map[string]int, li
 		product.StockQuantity = 0
 	} else {
 		stock, err := strconv.Atoi(stockStr)
-		if err != nil {
+		switch {
+		case err != nil:
 			addError("stock_quantity", fmt.Sprintf("Invalid stock quantity format: %v", err), stockStr)
-		} else if stock < 0 {
+		case stock < 0:
 			addError("stock_quantity", "Stock quantity cannot be negative", stock)
-		} else {
+		default:
 			product.StockQuantity = stock
 		}
 	}
@@ -183,11 +186,12 @@ func (p *CSVParser) parseCSVRecord(record []string, headerMap map[string]int, li
 	salePriceStr := getField("sale_price")
 	if salePriceStr != "" {
 		salePrice, err := strconv.ParseFloat(salePriceStr, 64)
-		if err != nil {
+		switch {
+		case err != nil:
 			addError("sale_price", fmt.Sprintf("Invalid sale price format: %v", err), salePriceStr)
-		} else if salePrice < 0 {
+		case salePrice < 0:
 			addError("sale_price", "Sale price cannot be negative", salePrice)
-		} else {
+		default:
 			product.SalePrice = &salePrice
 		}
 	}

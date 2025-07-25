@@ -1,6 +1,8 @@
 package behavior_tracking
 
 import (
+	"context"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -17,12 +19,12 @@ type Module struct {
 }
 
 // NewModule создает новый модуль поведенческой аналитики
-func NewModule(pool *pgxpool.Pool) *Module {
+func NewModule(ctx context.Context, pool *pgxpool.Pool) *Module {
 	// Создаем репозиторий
 	repo := postgres.NewBehaviorTrackingRepository(pool)
 
 	// Создаем сервис
-	svc := service.NewBehaviorTrackingService(repo)
+	svc := service.NewBehaviorTrackingService(ctx, repo)
 
 	// Создаем обработчик
 	h := handler.NewBehaviorTrackingHandler(svc)

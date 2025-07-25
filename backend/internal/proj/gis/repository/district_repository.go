@@ -16,6 +16,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ErrDistrictNotFound возвращается когда район не найден
+var ErrDistrictNotFound = errors.New("district not found")
+
+// ErrMunicipalityNotFound возвращается когда муниципалитет не найден
+var ErrMunicipalityNotFound = errors.New("municipality not found")
+
 // DistrictRepository handles district and municipality data access
 type DistrictRepository struct {
 	db *sqlx.DB
@@ -73,7 +79,6 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.Dist
 		argCount++
 		query += fmt.Sprintf(" AND ST_Contains(boundary, ST_SetSRID(ST_MakePoint($%d, $%d), 4326))", argCount, argCount+1)
 		args = append(args, params.Point.Lng, params.Point.Lat)
-		argCount++
 	}
 
 	query += " ORDER BY name"
@@ -122,6 +127,11 @@ func (r *DistrictRepository) GetDistricts(ctx context.Context, params types.Dist
 		districts = append(districts, d)
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over districts")
+	}
+
 	return districts, nil
 }
 
@@ -149,7 +159,7 @@ func (r *DistrictRepository) GetDistrictByID(ctx context.Context, id uuid.UUID) 
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, ErrDistrictNotFound
 		}
 		return nil, errors.Wrap(err, "failed to get district by ID")
 	}
@@ -210,7 +220,6 @@ func (r *DistrictRepository) GetMunicipalities(ctx context.Context, params types
 		argCount++
 		query += fmt.Sprintf(" AND ST_Contains(boundary, ST_SetSRID(ST_MakePoint($%d, $%d), 4326))", argCount, argCount+1)
 		args = append(args, params.Point.Lng, params.Point.Lat)
-		argCount++
 	}
 
 	query += " ORDER BY name"
@@ -259,6 +268,11 @@ func (r *DistrictRepository) GetMunicipalities(ctx context.Context, params types
 		municipalities = append(municipalities, m)
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over municipalities")
+	}
+
 	return municipalities, nil
 }
 
@@ -286,7 +300,7 @@ func (r *DistrictRepository) GetMunicipalityByID(ctx context.Context, id uuid.UU
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, ErrMunicipalityNotFound
 		}
 		return nil, errors.Wrap(err, "failed to get municipality by ID")
 	}
@@ -424,6 +438,11 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 		results = append(results, result)
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over district listings")
+	}
+
 	return results, nil
 }
 
@@ -538,6 +557,11 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 			result.Images = []string{firstImageURL.String}
 		}
 		results = append(results, result)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over municipality listings")
 	}
 
 	return results, nil
@@ -678,6 +702,11 @@ func (r *DistrictRepository) GetCities(ctx context.Context, params types.CitySea
 		}
 
 		cities = append(cities, c)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating over cities")
 	}
 
 	return cities, nil

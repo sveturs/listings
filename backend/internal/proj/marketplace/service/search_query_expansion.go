@@ -70,15 +70,16 @@ func AnalyzeSearchQuery(query string) QueryAnalysis {
 	}
 
 	// Определяем тип запроса
-	if len(words) == 0 {
+	switch {
+	case len(words) == 0:
 		analysis.QueryType = "empty"
-	} else if len(words) == 1 {
+	case len(words) == 1:
 		analysis.QueryType = "single_word"
-	} else if len(words) == 2 {
+	case len(words) == 2:
 		analysis.QueryType = "two_words"
 		// Для двухсловных запросов часто это марка+модель
 		analysis.PossibleMakeModel = true
-	} else {
+	default:
 		analysis.QueryType = "multi_word"
 	}
 

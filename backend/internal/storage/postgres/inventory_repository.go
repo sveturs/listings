@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -57,7 +58,7 @@ func (r *inventoryRepository) GetStock(ctx context.Context, productID int64, var
 		&stock.UpdatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			// Если записи нет, возвращаем пустой stock
 			return &models.InventoryStock{
 				ProductID:         productID,
@@ -129,7 +130,7 @@ func (r *inventoryRepository) ReserveStock(ctx context.Context, reservation *mod
 		reservation.VariantID,
 	).Scan(&newAvailable)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("insufficient stock")
 		}
 		return fmt.Errorf("failed to reserve stock: %w", err)
@@ -208,7 +209,7 @@ func (r *inventoryRepository) ReleaseReservation(ctx context.Context, reservatio
 		&reservation.Status,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("reservation not found or already processed")
 		}
 		return fmt.Errorf("failed to get reservation: %w", err)
@@ -297,7 +298,7 @@ func (r *inventoryRepository) ConfirmReservation(ctx context.Context, reservatio
 		&reservation.OrderID,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("reservation not found or already processed")
 		}
 		return fmt.Errorf("failed to get reservation: %w", err)

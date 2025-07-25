@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 
 	"backend/internal/domain/models"
@@ -51,10 +52,10 @@ func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
 
 	err = h.service.AddStaff(c.Context(), userID, storefrontID, req.UserID, req.Role)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		switch {
+		case errors.Is(err, service.ErrInsufficientPermissions):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		case service.ErrStaffLimitReached:
+		case errors.Is(err, service.ErrStaffLimitReached):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.staff_limit_reached")
 		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.add_staff_failed")
@@ -98,10 +99,10 @@ func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
 
 	err = h.service.UpdateStaffPermissions(c.Context(), userID, staffID, permissions)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		switch {
+		case errors.Is(err, service.ErrInsufficientPermissions):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		case postgres.ErrNotFound:
+		case errors.Is(err, postgres.ErrNotFound):
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.staff_not_found")
 		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_permissions_failed")
@@ -144,10 +145,10 @@ func (h *StorefrontHandler) RemoveStaff(c *fiber.Ctx) error {
 
 	err = h.service.RemoveStaff(c.Context(), userID, storefrontID, staffUserID)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		switch {
+		case errors.Is(err, service.ErrInsufficientPermissions):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		case postgres.ErrNotFound:
+		case errors.Is(err, postgres.ErrNotFound):
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.staff_not_found")
 		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.remove_staff_failed")

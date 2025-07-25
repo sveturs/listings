@@ -29,7 +29,7 @@ func NewStorefrontRepository(client *osClient.OpenSearchClient, indexName string
 
 // PrepareIndex подготавливает индекс для витрин (создает, если не существует)
 func (r *StorefrontRepository) PrepareIndex(ctx context.Context) error {
-	exists, err := r.client.IndexExists(r.indexName)
+	exists, err := r.client.IndexExists(ctx, r.indexName)
 	if err != nil {
 		return fmt.Errorf("ошибка проверки индекса витрин: %w", err)
 	}
@@ -38,7 +38,7 @@ func (r *StorefrontRepository) PrepareIndex(ctx context.Context) error {
 
 	if !exists {
 		logger.Info().Str("indexName", r.indexName).Msg("Создание индекса витрин...")
-		if err := r.client.CreateIndex(r.indexName, storefrontMapping); err != nil {
+		if err := r.client.CreateIndex(ctx, r.indexName, storefrontMapping); err != nil {
 			return fmt.Errorf("ошибка создания индекса витрин: %w", err)
 		}
 		logger.Info().Str("indexName", r.indexName).Msg("Индекс витрин успешно создан")
@@ -56,7 +56,7 @@ func (r *StorefrontRepository) PrepareIndex(ctx context.Context) error {
 // Index индексирует одну витрину
 func (r *StorefrontRepository) Index(ctx context.Context, storefront *models.Storefront) error {
 	doc := r.storefrontToDoc(storefront)
-	return r.client.IndexDocument(r.indexName, strconv.Itoa(storefront.ID), doc)
+	return r.client.IndexDocument(ctx, r.indexName, strconv.Itoa(storefront.ID), doc)
 }
 
 // BulkIndex индексирует несколько витрин
@@ -72,19 +72,19 @@ func (r *StorefrontRepository) BulkIndex(ctx context.Context, storefronts []*mod
 		docs = append(docs, doc)
 	}
 
-	return r.client.BulkIndex(r.indexName, docs)
+	return r.client.BulkIndex(ctx, r.indexName, docs)
 }
 
 // Delete удаляет витрину из индекса
 func (r *StorefrontRepository) Delete(ctx context.Context, storefrontID int) error {
-	return r.client.DeleteDocument(r.indexName, strconv.Itoa(storefrontID))
+	return r.client.DeleteDocument(ctx, r.indexName, strconv.Itoa(storefrontID))
 }
 
 // Search выполняет поиск витрин
 func (r *StorefrontRepository) Search(ctx context.Context, params *StorefrontSearchParams) (*StorefrontSearchResult, error) {
 	query := r.buildSearchQuery(params)
 
-	responseBytes, err := r.client.Search(r.indexName, query)
+	responseBytes, err := r.client.Search(ctx, r.indexName, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска витрин: %w", err)
 	}
@@ -596,15 +596,6 @@ type StorefrontSearchItem struct {
 
 // Helper functions
 
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
-
 func deduplicate(slice []string) []string {
 	seen := make(map[string]bool)
 	result := []string{}
@@ -615,10 +606,6 @@ func deduplicate(slice []string) []string {
 		}
 	}
 	return result
-}
-
-func boolPtr(b bool) *bool {
-	return &b
 }
 
 // storefrontMapping маппинг для индекса витрин

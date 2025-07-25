@@ -41,7 +41,8 @@ func main() {
 	fmt.Println("\n2️⃣  Добавление синонима:")
 	fmt.Printf("   curl -X POST -H \"Authorization: Bearer %s\" \\\n", jwtToken)
 	fmt.Println("        -H \"Content-Type: application/json\" \\")
-	fmt.Println("        -d '{\"word\": \"телефон\", \"synonyms\": [\"смартфон\", \"мобильный\"], \"language\": \"ru\"}' \\")
+	fmt.Println("        -d '{\"word\": \"телефон\", \"synonyms\": [\"смартфон\", \"мобильный\"], " +
+		"\"language\": \"ru\"}' \\")
 	fmt.Println("        'http://localhost:3000/api/v1/admin/search/synonyms'")
 
 	fmt.Println("\n3️⃣  Для использования в браузере (установка в localStorage):")

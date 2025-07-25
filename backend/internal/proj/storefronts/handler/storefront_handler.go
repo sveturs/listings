@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -51,10 +52,10 @@ func (h *StorefrontHandler) CreateStorefront(c *fiber.Ctx) error {
 
 	storefront, err := h.service.CreateStorefront(c.Context(), userID, &dto)
 	if err != nil {
-		switch err {
-		case service.ErrStorefrontLimitReached:
+		switch {
+		case errors.Is(err, service.ErrStorefrontLimitReached):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.limit_reached")
-		case service.ErrInvalidLocation:
+		case errors.Is(err, service.ErrInvalidLocation):
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_location")
 		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.create_failed")
@@ -83,7 +84,7 @@ func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 
 	storefront, err := h.service.GetByID(c.Context(), id)
 	if err != nil {
-		if err == postgres.ErrNotFound {
+		if errors.Is(err, postgres.ErrNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_failed")
@@ -108,7 +109,7 @@ func (h *StorefrontHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
 
 	storefront, err := h.service.GetBySlug(c.Context(), slug)
 	if err != nil {
-		if err == postgres.ErrNotFound {
+		if errors.Is(err, postgres.ErrNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_failed")
@@ -148,12 +149,12 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 
 	err = h.service.Update(c.Context(), userID, id, &dto)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		switch {
+		case errors.Is(err, service.ErrInsufficientPermissions):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		case service.ErrFeatureNotAvailable:
+		case errors.Is(err, service.ErrFeatureNotAvailable):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.feature_not_available")
-		case postgres.ErrNotFound:
+		case errors.Is(err, postgres.ErrNotFound):
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
 		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_failed")
@@ -189,10 +190,10 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 
 	err = h.service.Delete(c.Context(), userID, id)
 	if err != nil {
-		switch err {
-		case service.ErrUnauthorized:
+		switch {
+		case errors.Is(err, service.ErrUnauthorized):
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.only_owner_can_delete")
-		case postgres.ErrNotFound:
+		case errors.Is(err, postgres.ErrNotFound):
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
 		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.delete_failed")
@@ -316,12 +317,10 @@ func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
 		logger.Error().Err(err).Int("userID", userID).Msg("Failed to get user storefronts")
 
 		// Обрабатываем специфичные ошибки
-		switch err {
-		case service.ErrRepositoryNotInitialized:
+		if errors.Is(err, service.ErrRepositoryNotInitialized) {
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.repository_not_initialized")
-		default:
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_user_storefronts_failed")
 		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_user_storefronts_failed")
 	}
 
 	return c.JSON(storefronts)
@@ -559,12 +558,10 @@ func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
 
 	err = h.service.UpdateWorkingHours(c.Context(), userID, id, hours)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		if errors.Is(err, service.ErrInsufficientPermissions) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		default:
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_working_hours_failed")
 		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_working_hours_failed")
 	}
 
 	return c.JSON(fiber.Map{
@@ -602,12 +599,10 @@ func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
 
 	err = h.service.UpdatePaymentMethods(c.Context(), userID, id, methods)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		if errors.Is(err, service.ErrInsufficientPermissions) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		default:
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_payment_methods_failed")
 		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_payment_methods_failed")
 	}
 
 	return c.JSON(fiber.Map{
@@ -645,12 +640,10 @@ func (h *StorefrontHandler) UpdateDeliveryOptions(c *fiber.Ctx) error {
 
 	err = h.service.UpdateDeliveryOptions(c.Context(), userID, id, options)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		if errors.Is(err, service.ErrInsufficientPermissions) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		default:
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_delivery_options_failed")
 		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.update_delivery_options_failed")
 	}
 
 	return c.JSON(fiber.Map{
@@ -724,12 +717,10 @@ func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
 
 	analytics, err := h.service.GetAnalytics(c.Context(), userID, id, from, to)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		if errors.Is(err, service.ErrInsufficientPermissions) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		default:
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_analytics_failed")
 		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.get_analytics_failed")
 	}
 
 	return c.JSON(analytics)
@@ -792,12 +783,10 @@ func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
 
 	url, err := h.service.UploadLogo(c.Context(), userID, storefrontID, data, file.Filename)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		if errors.Is(err, service.ErrInsufficientPermissions) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		default:
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_upload_logo")
 		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_upload_logo")
 	}
 
 	return c.JSON(fiber.Map{
@@ -847,18 +836,16 @@ func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 
 	// Читаем данные
 	data := make([]byte, file.Size)
-	if _, err := src.Read(data); err != nil {
+	if _, readErr := src.Read(data); readErr != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_read_file")
 	}
 
 	url, err := h.service.UploadBanner(c.Context(), userID, storefrontID, data, file.Filename)
 	if err != nil {
-		switch err {
-		case service.ErrInsufficientPermissions:
+		if errors.Is(err, service.ErrInsufficientPermissions) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		default:
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_upload_banner")
 		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_upload_banner")
 	}
 
 	return c.JSON(fiber.Map{
@@ -919,15 +906,14 @@ func (h *StorefrontHandler) GetStorefrontAnalytics(c *fiber.Ctx) error {
 
 	analytics, err := h.service.GetAnalytics(c.Context(), userID, storefrontID, from, to)
 	if err != nil {
-		switch err {
-		case service.ErrStorefrontNotFound:
+		if errors.Is(err, service.ErrStorefrontNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
-		case service.ErrInsufficientPermissions:
-			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
-		default:
-			logger.Error().Err(err).Int("storefront_id", storefrontID).Msg("Failed to get storefront analytics")
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_get_analytics")
 		}
+		if errors.Is(err, service.ErrInsufficientPermissions) {
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.insufficient_permissions")
+		}
+		logger.Error().Err(err).Int("storefront_id", storefrontID).Msg("Failed to get storefront analytics")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_get_analytics")
 	}
 
 	return c.JSON(analytics)

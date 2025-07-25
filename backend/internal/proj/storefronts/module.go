@@ -1,6 +1,8 @@
 package storefronts
 
 import (
+	"errors"
+
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	"backend/internal/proj/global/service"
@@ -214,7 +216,7 @@ func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 			Str("slug", slug).
 			Msg("Failed to get storefront")
 
-		if err == postgres.ErrNotFound {
+		if errors.Is(err, postgres.ErrNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "Storefront not found",
 				"slug":  slug,
@@ -349,7 +351,7 @@ func (m *Module) setStorefrontIDBySlug(c *fiber.Ctx) error {
 	// Получаем витрину через сервис по slug
 	storefront, err := m.services.Storefront().GetBySlug(c.Context(), slug)
 	if err != nil {
-		if err == postgres.ErrNotFound {
+		if errors.Is(err, postgres.ErrNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "Storefront not found",
 				"slug":  slug,
@@ -589,13 +591,6 @@ func (m *Module) bulkUpdateStatusBySlug(c *fiber.Ctx) error {
 
 	// Storefront ID уже в locals, ProductHandler его оттуда возьмет
 	return m.productHandler.BulkUpdateStatus(c)
-}
-
-// withStorefrontAccess создает middleware для проверки доступа к витрине
-func (m *Module) withStorefrontAccess() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		return m.checkStorefrontAccess(c)
-	}
 }
 
 // Функции-обертки для изображений товаров

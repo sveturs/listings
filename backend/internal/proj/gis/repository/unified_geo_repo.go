@@ -121,7 +121,11 @@ func (r *UnifiedGeoRepository) SearchListings(ctx context.Context, params types.
 	}
 
 	// Подсчет общего количества
-	countQuery := "SELECT COUNT(*) " + strings.Replace(query, query[:strings.Index(query, "FROM")], "", 1)
+	fromIndex := strings.Index(query, "FROM")
+	if fromIndex == -1 {
+		fromIndex = 0
+	}
+	countQuery := "SELECT COUNT(*) " + strings.Replace(query, query[:fromIndex], "", 1)
 	var totalCount int64
 	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
 	if err != nil {
@@ -225,6 +229,11 @@ func (r *UnifiedGeoRepository) SearchListings(ctx context.Context, params types.
 		listing.Images = images
 
 		listings = append(listings, listing)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating over unified geo listings: %w", err)
 	}
 
 	return listings, totalCount, nil
@@ -358,6 +367,11 @@ func (r *UnifiedGeoRepository) GetStorefrontProducts(ctx context.Context, storef
 		product.Images = images
 
 		products = append(products, product)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over storefront products: %w", err)
 	}
 
 	return products, nil

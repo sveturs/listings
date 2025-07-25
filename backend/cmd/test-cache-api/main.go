@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,12 +15,14 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	// Создаем логгер
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
 
 	// Подключаемся к Redis
-	redisCache, err := cache.NewRedisCache("localhost:6379", "", 0, 10, logger)
+	redisCache, err := cache.NewRedisCache(ctx, "localhost:6379", "", 0, 10, logger)
 	if err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
@@ -69,11 +72,12 @@ func main() {
 		// Проверяем, есть ли уже данные в кеше
 		var cachedCategories []map[string]interface{}
 		err := cacheAdapter.Get(ctx, cacheKey, &cachedCategories)
-		if err == cache.ErrCacheMiss {
+		switch {
+		case errors.Is(err, cache.ErrCacheMiss):
 			fmt.Println("Status: NOT in cache")
-		} else if err != nil {
+		case err != nil:
 			fmt.Printf("Status: Error checking cache: %v\n", err)
-		} else {
+		default:
 			fmt.Printf("Status: FOUND in cache (%d categories)\n", len(cachedCategories))
 		}
 
@@ -84,11 +88,12 @@ func main() {
 		// Проверяем кеш снова
 		time.Sleep(100 * time.Millisecond) // Даем время на обработку
 		err = cacheAdapter.Get(ctx, cacheKey, &cachedCategories)
-		if err == cache.ErrCacheMiss {
+		switch {
+		case errors.Is(err, cache.ErrCacheMiss):
 			fmt.Println("After API call: Still NOT in cache")
-		} else if err != nil {
+		case err != nil:
 			fmt.Printf("After API call: Error: %v\n", err)
-		} else {
+		default:
 			fmt.Printf("After API call: NOW in cache (%d categories)\n", len(cachedCategories))
 		}
 	}
@@ -96,8 +101,6 @@ func main() {
 	// Проверяем все ключи категорий в Redis
 	fmt.Println("\n\nFinal cache state:")
 	fmt.Println(strings.Repeat("=", 50))
-
-	ctx := context.Background()
 
 	// Проверяем ключи категорий
 	foundKeys := []string{}

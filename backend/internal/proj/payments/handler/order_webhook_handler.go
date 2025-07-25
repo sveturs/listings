@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"github.com/gofiber/fiber/v2"
+
 	"backend/internal/proj/payments/service"
 	"backend/pkg/logger"
 	"backend/pkg/utils"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 // OrderWebhookHandler обрабатывает webhooks для платежей заказов

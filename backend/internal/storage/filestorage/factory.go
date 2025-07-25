@@ -13,7 +13,7 @@ import (
 )
 
 // Factory создает и возвращает соответствующую реализацию FileStorageInterface
-func NewFileStorage(cfg config.FileStorageConfig) (FileStorageInterface, error) {
+func NewFileStorage(ctx context.Context, cfg config.FileStorageConfig) (FileStorageInterface, error) {
 	logger.Info().Str("provider", cfg.Provider).Msg("Инициализация хранилища файлов.")
 
 	switch cfg.Provider {
@@ -22,7 +22,7 @@ func NewFileStorage(cfg config.FileStorageConfig) (FileStorageInterface, error) 
 			Bool("useSSL", cfg.MinioUseSSL).Str("publicBaseURL", cfg.PublicBaseURL).
 			Msgf("Настройка MinIO")
 
-		minioClient, err := minio.NewMinioClient(minio.MinioConfig{
+		minioClient, err := minio.NewMinioClient(ctx, minio.MinioConfig{
 			Endpoint:        cfg.MinioEndpoint,
 			AccessKeyID:     cfg.MinioAccessKey,
 			SecretAccessKey: cfg.MinioSecretKey,

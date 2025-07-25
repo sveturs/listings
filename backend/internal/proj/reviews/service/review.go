@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -326,7 +327,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 			&stats.PhotoReviews,
 		)
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			if errors.Is(err, pgx.ErrNoRows) {
 				// Если нет записи в материализованном представлении, возвращаем пустую статистику
 				return stats, nil
 			}
@@ -375,7 +376,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 			&stats.PhotoReviews,
 		)
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return stats, nil
 			}
 			return nil, err
@@ -618,11 +619,12 @@ func (s *ReviewService) GetUserAggregatedRating(ctx context.Context, userID int)
 	// Определяем тренд
 	if data.RecentRating != nil && data.RecentReviews >= 5 {
 		diff := *data.RecentRating - data.AverageRating
-		if diff > 0.2 {
+		switch {
+		case diff > 0.2:
 			rating.RecentTrend = "up"
-		} else if diff < -0.2 {
+		case diff < -0.2:
 			rating.RecentTrend = "down"
-		} else {
+		default:
 			rating.RecentTrend = trendStable
 		}
 	} else {
@@ -673,11 +675,12 @@ func (s *ReviewService) GetStorefrontAggregatedRating(ctx context.Context, store
 
 	if data.RecentRating != nil && data.RecentReviews >= 5 {
 		diff := *data.RecentRating - data.AverageRating
-		if diff > 0.2 {
+		switch {
+		case diff > 0.2:
 			rating.RecentTrend = "up"
-		} else if diff < -0.2 {
+		case diff < -0.2:
 			rating.RecentTrend = "down"
-		} else {
+		default:
 			rating.RecentTrend = trendStable
 		}
 	} else {

@@ -4,13 +4,14 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"github.com/gofiber/websocket/v2"
-	"github.com/pkg/errors"
+	pkgErrors "github.com/pkg/errors"
 
 	_ "backend/docs"
 	"backend/internal/config"
@@ -65,21 +66,21 @@ type Server struct {
 	fileStorage        filestorage.FileStorageInterface
 }
 
-func NewServer(cfg *config.Config) (*Server, error) {
-	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
+	fileStorage, err := filestorage.NewFileStorage(ctx, cfg.FileStorage)
 	if err != nil {
-		return nil, errors.Wrap(err, "Ошибка инициализации файлового хранилища")
+		return nil, pkgErrors.Wrap(err, "Ошибка инициализации файлового хранилища")
 	}
 
 	osClient, err := initializeOpenSearch(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "OpenSearch initialization failed")
+		return nil, pkgErrors.Wrap(err, "OpenSearch initialization failed")
 	} else {
 		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize database")
+		return nil, pkgErrors.Wrap(err, "failed to initialize database")
 	}
 
 	translationService, err := initializeTranslationService(cfg, db)
@@ -87,7 +88,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to initialize translation service: %w", err)
 	}
 
-	services := globalService.NewService(db, cfg, translationService)
+	services := globalService.NewService(ctx, db, cfg, translationService)
 
 	usersHandler := userHandler.NewHandler(services)
 	reviewHandler := reviewHandler.NewHandler(services)
@@ -97,7 +98,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	storefrontModule := storefronts.NewModule(services)
 	ordersModule, err := orders.NewModule(db)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize orders module")
+		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
 	}
 	contactsHandler := contactsHandler.NewHandler(services)
 	paymentsHandler := paymentHandler.NewHandler(services)
@@ -106,7 +107,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	geocodeHandler := geocodeHandler.NewHandler(services)
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db)
-	behaviorTrackingModule := behavior_tracking.NewModule(db.GetPool())
+	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool())
 	searchAdminModule := search_admin.NewModule(db)
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())
@@ -122,7 +123,8 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 			// Стандартная обработка ошибки
 			code := fiber.StatusInternalServerError
-			if e, ok := err.(*fiber.Error); ok {
+			var e *fiber.Error
+			if errors.As(err, &e) {
 				code = e.Code
 			}
 
@@ -163,7 +165,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	notificationsHandler.ConnectTelegramWebhook()
 	server.setupMiddleware()
-	server.setupRoutes()
+	server.setupRoutes() //nolint:contextcheck
 
 	return server, nil
 }
@@ -202,7 +204,7 @@ func initializeOpenSearch(cfg *config.Config) (*opensearch.OpenSearchClient, err
 		Password: cfg.OpenSearch.Password,
 	})
 	if err != nil {
-		return nil, errors.New("Ошибка подключения к OpenSearch")
+		return nil, errors.New("ошибка подключения к OpenSearch")
 	}
 
 	return osClient, nil
@@ -223,7 +225,7 @@ func (s *Server) setupMiddleware() {
 	s.app.Use("/ws", s.middleware.AuthRequiredJWT)
 }
 
-func (s *Server) setupRoutes() {
+func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние маршруты
 	s.app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Svetu API")
 	})

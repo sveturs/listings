@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -12,6 +13,9 @@ import (
 
 	"github.com/lib/pq"
 )
+
+// ErrStorefrontProductNotFound возвращается когда товар витрины не найден
+var ErrStorefrontProductNotFound = errors.New("storefront product not found")
 
 // GetBySlug retrieves a storefront by slug
 func (s *Database) GetBySlug(ctx context.Context, slug string) (*models.Storefront, error) {
@@ -228,16 +232,16 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 		&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
 	)
 
-	if err == sql.ErrNoRows {
-		return nil, nil
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrStorefrontProductNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get storefront product: %w", err)
 	}
 
 	if attributesJSON != nil {
-		if err := json.Unmarshal(attributesJSON, &p.Attributes); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal attributes: %w", err)
+		if unmarshalErr := json.Unmarshal(attributesJSON, &p.Attributes); unmarshalErr != nil {
+			return nil, fmt.Errorf("failed to unmarshal attributes: %w", unmarshalErr)
 		}
 	}
 
@@ -301,7 +305,7 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 		INSERT INTO storefront_products (
 			storefront_id, name, description, price, currency, category_id,
 			sku, barcode, stock_quantity, is_active, attributes,
-			has_individual_location, individual_address, individual_latitude, 
+			has_individual_location, individual_address, individual_latitude,
 			individual_longitude, location_privacy, show_on_map
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 		RETURNING id, stock_status, created_at, updated_at`
@@ -549,9 +553,9 @@ func (s *Database) UpdateProductInventory(ctx context.Context, storefrontID, pro
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
-			_ = err // Explicitly ignore error
+			_ = rollbackErr // Explicitly ignore error
 		}
 	}()
 
@@ -790,9 +794,9 @@ func (s *Database) BulkUpdateProducts(ctx context.Context, storefrontID int, upd
 		return nil, []error{fmt.Errorf("failed to begin transaction: %w", err)}
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
-			_ = err // Explicitly ignore error
+			_ = rollbackErr // Explicitly ignore error
 		}
 	}()
 
@@ -922,9 +926,9 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 		return nil, []error{fmt.Errorf("failed to begin transaction: %w", err)}
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
-			_ = err // Explicitly ignore error
+			_ = rollbackErr // Explicitly ignore error
 		}
 	}()
 

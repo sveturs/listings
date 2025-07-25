@@ -55,7 +55,8 @@ func main() {
 		LIMIT 1
 	`).Scan(&id, &email)
 	if err != nil {
-		log.Fatalf("Failed to get admin user: %v", err)
+		log.Printf("Failed to get admin user: %v", err)
+		return
 	}
 
 	fmt.Printf("Found admin user: ID=%d, Email=%s\n", id, email)
@@ -80,7 +81,8 @@ func main() {
 	// Sign token
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		log.Fatalf("Failed to sign token: %v", err)
+		log.Printf("Failed to sign token: %v", err)
+		return
 	}
 
 	fmt.Printf("\n=== Generated JWT token ===\n")

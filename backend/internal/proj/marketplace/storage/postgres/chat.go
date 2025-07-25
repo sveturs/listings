@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -532,7 +533,7 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 			LIMIT 1
 		`, buyerID, sellerID).Scan(&msg.ChatID)
 
-		if err != nil && err != pgx.ErrNoRows {
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("error checking existing direct chat: %w", err)
 		}
 		// Если нашли чат, msg.ChatID теперь заполнен
@@ -548,7 +549,7 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
             WHERE id = $1
         `, msg.ChatID).Scan(&buyerID, &sellerID)
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return fmt.Errorf("chat not found: %d", msg.ChatID)
 			}
 			return fmt.Errorf("error getting chat info: %w", err)
@@ -563,7 +564,7 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
                 WHERE id = $1
             `, msg.ListingID).Scan(&sellerID)
 			if err != nil {
-				if err == pgx.ErrNoRows {
+				if errors.Is(err, pgx.ErrNoRows) {
 					return fmt.Errorf("listing not found: %d", msg.ListingID)
 				}
 				return fmt.Errorf("error getting listing seller: %w", err)

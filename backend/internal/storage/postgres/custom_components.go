@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -44,7 +45,7 @@ func (db *Database) GetComponent(ctx context.Context, id int) (*models.CustomUIC
 		&component.CreatedBy, &component.UpdatedBy,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("component not found")
 	}
 
@@ -110,11 +111,9 @@ func (db *Database) ListComponents(ctx context.Context, filters map[string]inter
 		case "true":
 			query += fmt.Sprintf(" AND is_active = $%d", argNum)
 			args = append(args, true)
-			argNum++
 		case "false":
 			query += fmt.Sprintf(" AND is_active = $%d", argNum)
 			args = append(args, false)
-			argNum++
 		}
 	}
 
@@ -194,7 +193,6 @@ func (db *Database) GetComponentUsages(ctx context.Context, componentID, categor
 	if categoryID != nil {
 		query += fmt.Sprintf(" AND ucu.category_id = $%d", argNum)
 		args = append(args, *categoryID)
-		argNum++
 	}
 
 	query += " ORDER BY ucu.created_at DESC"

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"strconv"
 
@@ -119,7 +120,7 @@ func (h *Handler) UpdateWeight(c *fiber.Ctx) error {
 
 	err = h.service.UpdateWeight(c.Context(), id, &weight)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "errors.weightNotFound")
 		}
 		// h.log.Error("Failed to update weight", "id", id, "error", err)
@@ -150,7 +151,7 @@ func (h *Handler) DeleteWeight(c *fiber.Ctx) error {
 
 	err = h.service.DeleteWeight(c.Context(), id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "errors.weightNotFound")
 		}
 		// h.log.Error("Failed to delete weight", "id", id, "error", err)
@@ -241,7 +242,7 @@ func (h *Handler) UpdateSynonym(c *fiber.Ctx) error {
 
 	err = h.service.UpdateSynonym(c.Context(), id, &synonym)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "errors.synonymNotFound")
 		}
 		// h.log.Error("Failed to update synonym", "id", id, "error", err)
@@ -272,7 +273,7 @@ func (h *Handler) DeleteSynonym(c *fiber.Ctx) error {
 
 	err = h.service.DeleteSynonym(c.Context(), id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "errors.synonymNotFound")
 		}
 		// h.log.Error("Failed to delete synonym", "id", id, "error", err)
@@ -353,7 +354,7 @@ func (h *Handler) UpdateTransliterationRule(c *fiber.Ctx) error {
 
 	err = h.service.UpdateTransliterationRule(c.Context(), id, &rule)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "errors.ruleNotFound")
 		}
 		// h.log.Error("Failed to update transliteration rule", "id", id, "error", err)
@@ -384,7 +385,7 @@ func (h *Handler) DeleteTransliterationRule(c *fiber.Ctx) error {
 
 	err = h.service.DeleteTransliterationRule(c.Context(), id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "errors.ruleNotFound")
 		}
 		// h.log.Error("Failed to delete transliteration rule", "id", id, "error", err)

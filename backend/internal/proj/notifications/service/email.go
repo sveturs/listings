@@ -68,7 +68,7 @@ func (e *EmailService) SendEmail(to, subject, body string) error {
 	conn, err := smtp.Dial(addr)
 	if err != nil {
 		log.Printf("Error connecting to mail server: %v", err)
-		return fmt.Errorf("all email sending methods failed: %v", lastErr)
+		return fmt.Errorf("all email sending methods failed: %w", lastErr)
 	}
 	defer func() {
 		if err := conn.Quit(); err != nil {
@@ -79,29 +79,29 @@ func (e *EmailService) SendEmail(to, subject, body string) error {
 	// Установка параметров отправки
 	if err = conn.Mail(e.senderEmail); err != nil {
 		log.Printf("Error in MAIL FROM command: %v", err)
-		return fmt.Errorf("MAIL FROM error: %v", err)
+		return fmt.Errorf("MAIL FROM error: %w", err)
 	}
 
 	if err = conn.Rcpt(to); err != nil {
 		log.Printf("Error in RCPT TO command: %v", err)
-		return fmt.Errorf("RCPT TO error: %v", err)
+		return fmt.Errorf("RCPT TO error: %w", err)
 	}
 
 	w, err := conn.Data()
 	if err != nil {
 		log.Printf("Error getting data writer: %v", err)
-		return fmt.Errorf("DATA command error: %v", err)
+		return fmt.Errorf("DATA command error: %w", err)
 	}
 
 	_, err = w.Write([]byte(message))
 	if err != nil {
 		log.Printf("Error writing message body: %v", err)
-		return fmt.Errorf("message writing error: %v", err)
+		return fmt.Errorf("message writing error: %w", err)
 	}
 
 	if err = w.Close(); err != nil {
 		log.Printf("Error closing message writer: %v", err)
-		return fmt.Errorf("error finalizing message: %v", err)
+		return fmt.Errorf("error finalizing message: %w", err)
 	}
 
 	log.Printf("Email sent successfully to %s using manual connection", to)

@@ -21,13 +21,13 @@ func main() {
 	}
 
 	// Создаем файловое хранилище
-	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	fileStorage, err := filestorage.NewFileStorage(context.Background(), cfg.FileStorage)
 	if err != nil {
 		log.Fatal("Failed to create file storage:", err)
 	}
 
 	// Подключаемся к базе данных
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(context.Background(), cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -50,13 +50,15 @@ func main() {
 	// Получаем пользователя
 	user, err := db.GetUserByEmail(ctx, targetEmail)
 	if err != nil || user == nil {
-		log.Fatal("User not found:", err)
+		log.Printf("User not found: %v", err)
+		return
 	}
 
 	// Генерируем JWT токен
 	jwtToken, err := authService.GenerateJWT(user.ID, user.Email)
 	if err != nil {
-		log.Fatal("Failed to generate JWT token:", err)
+		log.Printf("Failed to generate JWT token: %v", err)
+		return
 	}
 
 	fmt.Printf("Generated JWT token for %s (ID: %d)\n", user.Email, user.ID)
@@ -65,7 +67,8 @@ func main() {
 	// Выполняем GET запрос к /api/v1/auth/session
 	req, err := http.NewRequest("GET", "http://localhost:3000/api/v1/auth/session", nil)
 	if err != nil {
-		log.Fatal("Failed to create request:", err)
+		log.Printf("Failed to create request: %v", err)
+		return
 	}
 
 	req.Header.Set("Authorization", "Bearer "+jwtToken)
@@ -73,7 +76,8 @@ func main() {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("Failed to execute request:", err)
+		log.Printf("Failed to execute request: %v", err)
+		return
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -83,7 +87,8 @@ func main() {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("Failed to read response:", err)
+		log.Printf("Failed to read response: %v", err)
+		return
 	}
 
 	fmt.Printf("Response status: %d\n", resp.StatusCode)

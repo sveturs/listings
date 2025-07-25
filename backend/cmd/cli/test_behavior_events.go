@@ -137,7 +137,8 @@ func sendEvent(apiURL string, event BehaviorEvent) error {
 
 	req.Header.Set("Content-Type", "application/json")
 	// Добавляем токен авторизации (можно получить из окружения или использовать тестовый)
-	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEwMSIsImV4cCI6MTczNjQxNTgzOX0.FAKE_TOKEN")
+	req.Header.Set("Authorization",
+		"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEwMSIsImV4cCI6MTczNjQxNTgzOX0.FAKE_TOKEN")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

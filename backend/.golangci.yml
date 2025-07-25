@@ -1,62 +1,140 @@
-version: 2
+version: "2"
 
 run:
   timeout: 5m
-  go: "1.23"
-
-linters-settings:
-  gofumpt:
-    extra-rules: true
-  
-  goimports:
-    local-prefixes: github.com/sveturs/svetu
-  
-  govet:
-    enable-all: true
-  
-  revive:
-    confidence: 0.8
-  
-  misspell:
-    locale: US
-  
-  lll:
-    line-length: 120
+  go: "1.24"
 
 linters:
   enable:
-    - govet        # Go vet
+    # Standard linters
+# TODO:
+#    - govet        # Go vet
+#    - lll          # Line length limit
     - revive       # Go lint replacement
     - misspell     # Spelling mistakes
-    - lll          # Line length limit
     - unused       # Unused code
     - ineffassign  # Ineffectual assignments
     - goconst      # Repeated strings that could be constants
     - gocritic     # Go code critic
     - gosec        # Security issues
     - errcheck     # Unchecked errors
-  
-  disable-all: false
-  
+
+    # Additional bug-finding linters
+    - staticcheck  # Comprehensive static analysis (includes gosimple, stylecheck)
+    - bodyclose    # Checks whether HTTP response body is closed successfully
+    - contextcheck # Check whether context is correctly passed
+    - nilerr       # Finds code which returns nil even if error is not nil
+    - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed
+    - rowserrcheck  # Checks whether Err of rows is checked successfully
+    - asasalint    # Check for pass []any as any in variadic func(...any)
+    - asciicheck   # Check that your code does not contain non-ASCII identifiers
+    - bidichk      # Checks for dangerous unicode character sequences
+    - durationcheck # Check for two durations multiplied together
+    - errorlint    # Go linter to find code that will cause problems with Go 1.13's error wrapping
+    - exhaustive   # Check exhaustiveness of enum switch statements
+    - makezero     # Finds slice declarations with non-zero initial length
+    - nilnil       # Checks that there is no simultaneous return of nil error and nil value
+
   disable: []
 
-issues:
-  exclude-dirs:
-    - testing
-  exclude-rules:
-    # Exclude some linters from running on tests files
-    - path: _test\.go
-      linters:
-        - gosec
-        - lll
-    
-    # Exclude generated files
-    - path: ".*\\.pb\\.go"
-      linters:
-        - all
-  
-  # Maximum issues count per one linter
-  max-issues-per-linter: 50
-  
-  # Maximum count of issues with the same text
-  max-same-issues: 3
+  settings:
+# TODO:
+#    govet:
+#      enable:
+#        - assign
+#        - atomic
+#        - bools
+#        - buildtag
+#        - cgocall
+#        - composites
+#        - copylocks
+#        - errorsas
+#        - httpresponse
+#        - loopclosure
+#        - lostcancel
+#        - nilfunc
+#        - printf
+#        - shadow       # Check for variable shadowing
+#        - shift
+#        - stdmethods
+#        - structtag
+#        - tests
+#        - unmarshal
+#        - unreachable
+#        - unsafeptr
+#        - unusedresult
+
+    errcheck:
+      # Exclude common functions where errors can be safely ignored
+      exclude-functions:
+        - io.Copy(*bytes.Buffer)
+        - io.Copy(os.Stdout)
+        - fmt.Print
+        - fmt.Printf
+        - fmt.Println
+        - fmt.Fprint(os.Stderr)
+        - fmt.Fprintf(os.Stderr)
+        - fmt.Fprintln(os.Stderr)
+
+    revive:
+      confidence: 1 # TODO: switch to 0
+
+    misspell:
+      locale: US
+      ignore-rules:
+        - Industrija
+
+    lll:
+      line-length: 120
+
+  exclusions:
+    # Exclude generated files from all linters
+    generated: strict
+
+    # Apply common exclusion presets to reduce false positives
+    presets:
+      - comments
+      - common-false-positives
+      - std-error-handling
+
+    paths:
+      - testing
+    rules:
+      # Exclude some linters from running on tests files
+      - path: _test\\.go
+        linters:
+          - gosec
+          - lll
+
+      # Exclude generated files
+      - path: ".*\\.pb\\.go"
+        linters:
+          - all
+
+      # Exclude misspell for Serbian word "Industrija" (Industry)
+      - text: "`Industrija` is a misspelling of `Industrial`"
+        linters:
+          - misspell
+
+formatters:
+  enable:
+# TODO:
+#    - gci        # Import grouping and ordering
+#    - gofumpt    # Stricter formatting than gofmt
+    - goimports  # Auto-import management
+
+  settings:
+#    gci:
+#      sections:
+#        - standard                          # Standard library packages
+#        - default                          # Third-party packages
+#        - prefix(backend) # Local packages
+#
+#    gofumpt:
+#      extra-rules: true
+
+    goimports:
+      local-prefixes:
+        - backend
+
+

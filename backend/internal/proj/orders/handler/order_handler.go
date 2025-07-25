@@ -166,12 +166,12 @@ func (h *OrdersHandler) GetOrder(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Order ID"
 // @Param cancel body models.CancelOrderRequest true "Cancellation reason"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Cancelled order"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Canceled order"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
 // @Failure 404 {object} utils.ErrorResponseSwag "Order not found"
-// @Failure 409 {object} utils.ErrorResponseSwag "Order cannot be cancelled"
+// @Failure 409 {object} utils.ErrorResponseSwag "Order cannot be canceled"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/orders/{id}/cancel [put]
@@ -199,7 +199,7 @@ func (h *OrdersHandler) CancelOrder(c *fiber.Ctx) error {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "orders.error.not_found")
 		case errAccessDenied:
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.error.access_denied")
-		case "order cannot be cancelled":
+		case "order cannot be canceled":
 			return utils.ErrorResponse(c, fiber.StatusConflict, "orders.error.cannot_cancel")
 		default:
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "orders.error.cancel_failed")

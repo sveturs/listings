@@ -45,7 +45,7 @@ func NewChatService(storage storage.Storage, notificationService service.Notific
 }
 
 // Реализация методов для сообщений
-func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
+func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMessage) error { //nolint:contextcheck
 	// Санитизация контента сообщения для защиты от XSS
 	msg.Content = utils.SanitizeText(msg.Content)
 

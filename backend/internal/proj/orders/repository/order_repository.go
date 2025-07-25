@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -94,7 +95,7 @@ func (r *OrderRepository) Update(ctx context.Context, order *models.StorefrontOr
 			confirmed_at = :confirmed_at,
 			shipped_at = :shipped_at,
 			delivered_at = :delivered_at,
-			cancelled_at = :cancelled_at,
+			canceled_at = :canceled_at,
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = :id`
 
@@ -124,7 +125,7 @@ func (r *OrderRepository) GetByID(ctx context.Context, orderID int64) (*models.S
 			   commission_amount, seller_amount, currency, status,
 			   escrow_release_date, escrow_days, shipping_address, shipping_method,
 			   shipping_provider, tracking_number, customer_notes, seller_notes,
-			   confirmed_at, shipped_at, delivered_at, cancelled_at,
+			   confirmed_at, shipped_at, delivered_at, canceled_at,
 			   created_at, updated_at
 		FROM storefront_orders 
 		WHERE id = $1`
@@ -132,7 +133,7 @@ func (r *OrderRepository) GetByID(ctx context.Context, orderID int64) (*models.S
 	var order models.StorefrontOrder
 	err := r.db.GetContext(ctx, &order, query, orderID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("order not found")
 		}
 		return nil, fmt.Errorf("failed to get order: %w", err)
@@ -268,7 +269,7 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 			   commission_amount, seller_amount, currency, status,
 			   escrow_release_date, escrow_days, shipping_address, shipping_method,
 			   shipping_provider, tracking_number, customer_notes, seller_notes,
-			   confirmed_at, shipped_at, delivered_at, cancelled_at,
+			   confirmed_at, shipped_at, delivered_at, canceled_at,
 			   created_at, updated_at
 		FROM storefront_orders 
 		%s

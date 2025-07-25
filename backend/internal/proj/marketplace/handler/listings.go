@@ -583,32 +583,6 @@ func (h *ListingsHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 	})
 }
 
-// isSignificantAttribute определяет, является ли атрибут значимым для поиска похожих объявлений
-func isSignificantAttribute(attrName string) bool {
-	// Список значимых атрибутов
-	significantAttrs := map[string]bool{
-		"brand":           true,
-		"model":           true,
-		"year":            true,
-		"mileage":         true,
-		"engine_capacity": true,
-		"power":           true,
-		"area":            true,
-		"land_area":       true,
-		"rooms":           true,
-		"floor":           true,
-		"total_floors":    true,
-		"walls":           true,
-		"condition":       true,
-		"property_type":   true,
-		"vehicle_type":    true,
-		"screen_size":     true,
-		"memory":          true,
-	}
-
-	return significantAttrs[attrName]
-}
-
 // processAttributesFromRequest обрабатывает атрибуты из запроса
 func processAttributesFromRequest(requestBody map[string]interface{}, listing *models.MarketplaceListing) {
 	// Проверяем наличие атрибутов в запросе

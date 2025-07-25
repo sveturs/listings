@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -25,6 +26,8 @@ type Category struct {
 }
 
 func main() {
+	ctx := context.Background()
+
 	// Загружаем конфигурацию
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -40,6 +43,7 @@ func main() {
 
 	// Создаем Redis кеш
 	redisCache, err := cache.NewRedisCache(
+		ctx,
 		cfg.Redis.URL,
 		cfg.Redis.Password,
 		cfg.Redis.DB,
@@ -60,8 +64,6 @@ func main() {
 
 	fmt.Println("=== Redis Cache Test ===")
 	fmt.Printf("Connected to Redis at: %s\n\n", cfg.Redis.URL)
-
-	ctx := context.Background()
 
 	// 1. Тест базовых операций
 	fmt.Println("1. Testing basic Set/Get operations:")
@@ -183,11 +185,12 @@ func main() {
 		key := cache.BuildCategoriesKey(locale)
 		var temp []Category
 		err = cacheAdapter.Get(ctx, key, &temp)
-		if err == cache.ErrCacheMiss {
+		switch {
+		case errors.Is(err, cache.ErrCacheMiss):
 			fmt.Printf("   ✓ Key %s successfully deleted\n", key)
-		} else if err != nil {
+		case err != nil:
 			fmt.Printf("   × Error checking key %s: %v\n", key, err)
-		} else {
+		default:
 			fmt.Printf("   × Key %s still exists!\n", key)
 		}
 	}
@@ -268,5 +271,13 @@ func main() {
 	})
 
 	fmt.Println("\n   Server starting on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	server := &http.Server{
+		Addr:         ":8080",
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil {
+		log.Printf("Server failed: %v", err)
+	}
 }

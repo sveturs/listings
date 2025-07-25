@@ -138,8 +138,10 @@ func (s *IsochroneService) mapTransportMode(mode types.TransportMode) string {
 		return "driving"
 	case types.TransportCycling:
 		return "cycling"
-	default:
+	case types.TransportTransit:
 		return "driving-traffic" // для общественного транспорта используем driving с трафиком
+	default:
+		return "driving-traffic"
 	}
 }
 

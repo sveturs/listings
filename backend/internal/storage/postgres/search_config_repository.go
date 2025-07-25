@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"backend/internal/domain"
@@ -10,6 +11,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
+
+// ErrSearchWeightNotFound возвращается когда вес поиска не найден
+var ErrSearchWeightNotFound = errors.New("search weight not found")
+
+// ErrSearchConfigNotFound возвращается когда конфигурация поиска не найдена
+var ErrSearchConfigNotFound = errors.New("search config not found")
 
 type SearchConfigRepository struct {
 	db *sqlx.DB
@@ -40,8 +47,8 @@ func (r *SearchConfigRepository) GetWeightByField(ctx context.Context, fieldName
 
 	err := r.db.GetContext(ctx, &weight, query, fieldName)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrSearchWeightNotFound
 		}
 		return nil, fmt.Errorf("failed to get weight for field %s: %w", fieldName, err)
 	}
@@ -126,6 +133,11 @@ func (r *SearchConfigRepository) GetSynonyms(ctx context.Context, language strin
 			return nil, fmt.Errorf("failed to scan synonym: %w", err)
 		}
 		synonyms = append(synonyms, synonym)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over synonyms: %w", err)
 	}
 
 	return synonyms, nil
@@ -320,6 +332,11 @@ func (r *SearchConfigRepository) GetPopularSearches(ctx context.Context, limit i
 		})
 	}
 
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over popular searches: %w", err)
+	}
+
 	return results, nil
 }
 
@@ -333,8 +350,8 @@ func (r *SearchConfigRepository) GetConfig(ctx context.Context) (*domain.SearchC
 
 	err := r.db.GetContext(ctx, &config, query)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrSearchConfigNotFound
 		}
 		return nil, fmt.Errorf("failed to get search config: %w", err)
 	}

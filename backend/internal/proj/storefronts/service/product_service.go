@@ -368,7 +368,7 @@ func (s *ProductService) BulkCreateProducts(ctx context.Context, storefrontID, u
 
 	// Index created products in OpenSearch
 	if len(createdIDs) > 0 && s.searchRepo != nil {
-		go func() {
+		go func() { //nolint:contextcheck // фоновая индексация
 			for _, id := range createdIDs {
 				product, err := s.storage.GetStorefrontProduct(context.Background(), storefrontID, id)
 				if err != nil {
@@ -418,7 +418,7 @@ func (s *ProductService) BulkUpdateProducts(ctx context.Context, storefrontID, u
 
 	// Re-index updated products in OpenSearch
 	if len(updatedIDs) > 0 && s.searchRepo != nil {
-		go func() {
+		go func() { //nolint:contextcheck // фоновая индексация
 			for _, id := range updatedIDs {
 				product, err := s.storage.GetStorefrontProduct(context.Background(), storefrontID, id)
 				if err != nil {
@@ -461,7 +461,7 @@ func (s *ProductService) BulkDeleteProducts(ctx context.Context, storefrontID, u
 
 	// Remove deleted products from OpenSearch
 	if len(deletedIDs) > 0 && s.searchRepo != nil {
-		go func() {
+		go func() { //nolint:contextcheck // фоновое удаление из индекса
 			for _, id := range deletedIDs {
 				if err := s.searchRepo.DeleteProduct(context.Background(), id); err != nil {
 					logger.Error().Err(err).Msgf("Failed to delete product %d from OpenSearch", id)
@@ -499,7 +499,7 @@ func (s *ProductService) BulkUpdateStatus(ctx context.Context, storefrontID, use
 
 	// Re-index updated products in OpenSearch
 	if len(updatedIDs) > 0 && s.searchRepo != nil {
-		go func() {
+		go func() { //nolint:contextcheck // фоновая индексация
 			for _, id := range updatedIDs {
 				product, err := s.storage.GetStorefrontProduct(context.Background(), storefrontID, id)
 				if err != nil {

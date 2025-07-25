@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -108,7 +109,7 @@ func writeCategoriesFile(filePath string, categories []*SimplifiedCategory) erro
 	}
 
 	// Записываем в файл
-	if err := os.WriteFile(filePath, yamlData, 0o644); err != nil {
+	if err := os.WriteFile(filePath, yamlData, 0o600); err != nil {
 		return fmt.Errorf("ошибка записи файла: %w", err)
 	}
 
@@ -119,7 +120,7 @@ func run(cfg *config.Config) error {
 	ctx := context.Background()
 
 	// Инициализируем файловое хранилище
-	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	fileStorage, err := filestorage.NewFileStorage(context.Background(), cfg.FileStorage)
 	if err != nil {
 		log.Printf("Ошибка инициализации файлового хранилища: %v. Функции загрузки файлов могут быть недоступны.", err)
 
@@ -145,7 +146,8 @@ func run(cfg *config.Config) error {
 	}
 
 	// Инициализируем базу данных с OpenSearch и файловым хранилищем
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient,
+		cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
@@ -153,14 +155,16 @@ func run(cfg *config.Config) error {
 
 	// Получаем путь к YAML файлу из аргументов командной строки
 	if len(os.Args) < 2 {
-		log.Fatal("Укажите путь для сохранения YAML файла с категориями")
+		log.Printf("Укажите путь для сохранения YAML файла с категориями")
+		return errors.New("missing yaml file path argument")
 	}
 	yamlFilePath := os.Args[1]
 
 	// Получаем все категории из базы данных
 	flatCategories, err := db.GetCategories(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to get categories: %v", err)
+		return err
 	}
 
 	// Конвертируем категории в упрощенный формат
@@ -174,7 +178,8 @@ func run(cfg *config.Config) error {
 
 	// Записываем категории в YAML файл
 	if err := writeCategoriesFile(yamlFilePath, rootCategories); err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to write categories file: %v", err)
+		return err
 	}
 
 	fmt.Printf("Успешно экспортировано %d категорий в файл %s\n",

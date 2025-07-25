@@ -78,6 +78,14 @@ func (h *Handler) GetFileContent(c *fiber.Ctx) error {
 
 	fullPath := filepath.Join(h.cfg.RootPath, cleanPath)
 
+	// Additional security: ensure the resolved path is within the root directory
+	absRootPath, _ := filepath.Abs(h.cfg.RootPath)
+	absFullPath, _ := filepath.Abs(fullPath)
+	if !strings.HasPrefix(absFullPath, absRootPath) {
+		logger.Warn().Str("path", filePath).Msg("Attempt to access file outside root directory")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "docs.invalidPath")
+	}
+
 	// Check if file exists and is a markdown file
 	info, err := os.Stat(fullPath)
 	if err != nil || info.IsDir() {
@@ -91,7 +99,7 @@ func (h *Handler) GetFileContent(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "docs.onlyMarkdownAllowed")
 	}
 
-	content, err := os.ReadFile(fullPath)
+	content, err := os.ReadFile(fullPath) // #nosec G304 -- path validated above
 	if err != nil {
 		logger.Error().Err(err).Str("path", cleanPath).Msg("Failed to read file")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "docs.readError")

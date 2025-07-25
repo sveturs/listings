@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -17,7 +18,7 @@ type RedisCache struct {
 }
 
 // NewRedisCache создает новый экземпляр Redis кеша
-func NewRedisCache(url string, password string, db int, poolSize int, logger *logrus.Logger) (*RedisCache, error) {
+func NewRedisCache(ctx context.Context, url string, password string, db int, poolSize int, logger *logrus.Logger) (*RedisCache, error) {
 	options := &redis.Options{
 		Addr:     url,
 		Password: password,
@@ -28,10 +29,10 @@ func NewRedisCache(url string, password string, db int, poolSize int, logger *lo
 	client := redis.NewClient(options)
 
 	// Проверяем подключение
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	testCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := client.Ping(ctx).Err(); err != nil {
+	if err := client.Ping(testCtx).Err(); err != nil {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 
@@ -44,7 +45,7 @@ func NewRedisCache(url string, password string, db int, poolSize int, logger *lo
 // Get получает значение из кеша
 func (r *RedisCache) Get(ctx context.Context, key string, dest interface{}) error {
 	val, err := r.client.Get(ctx, key).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return ErrCacheMiss
 	}
 	if err != nil {
@@ -147,7 +148,7 @@ func (r *RedisCache) GetOrSet(ctx context.Context, key string, dest interface{},
 		return nil
 	}
 
-	if err != ErrCacheMiss {
+	if !errors.Is(err, ErrCacheMiss) {
 		// Если ошибка не cache miss, логируем но продолжаем
 		r.logger.WithError(err).WithField("key", key).Warn("Cache get error, loading fresh data")
 	}
@@ -169,7 +170,7 @@ func (r *RedisCache) GetOrSet(ctx context.Context, key string, dest interface{},
 
 	// Асинхронно сохраняем в кеш
 	go func() {
-		if err := r.Set(context.Background(), key, data, ttl); err != nil {
+		if err := r.Set(ctx, key, data, ttl); err != nil {
 			r.logger.WithError(err).WithField("key", key).Warn("Failed to cache value")
 		}
 	}()

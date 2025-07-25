@@ -21,7 +21,7 @@ func setupTestRedis(t *testing.T) (*RedisCache, *miniredis.Miniredis) {
 	logger.SetLevel(logrus.DebugLevel)
 
 	// Create Redis cache pointing to mock server
-	cache, err := NewRedisCache(mr.Addr(), "", 0, 10, logger)
+	cache, err := NewRedisCache(context.Background(), mr.Addr(), "", 0, 10, logger)
 	require.NoError(t, err)
 
 	return cache, mr
@@ -374,7 +374,7 @@ func TestRedisCache_ConnectionFailure(t *testing.T) {
 	logger := logrus.New()
 
 	// Try to create cache with invalid connection
-	_, err := NewRedisCache("localhost:99999", "", 0, 10, logger)
+	_, err := NewRedisCache(context.Background(), "localhost:99999", "", 0, 10, logger)
 	assert.Error(t, err)
 }
 
@@ -587,7 +587,7 @@ func TestRedisCache_GetOrSetCacheError(t *testing.T) {
 		mr.Close()
 	}()
 
-	cache, err := NewRedisCache(mr.Addr(), "", 0, 10, logger)
+	cache, err := NewRedisCache(context.Background(), mr.Addr(), "", 0, 10, logger)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -629,7 +629,7 @@ func BenchmarkRedisCache_Set(b *testing.B) {
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
 
-	cache, err := NewRedisCache(mr.Addr(), "", 0, 10, logger)
+	cache, err := NewRedisCache(context.Background(), mr.Addr(), "", 0, 10, logger)
 	require.NoError(b, err)
 	defer func() {
 		if err := cache.Close(); err != nil {
@@ -665,7 +665,7 @@ func BenchmarkRedisCache_Get(b *testing.B) {
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
 
-	cache, err := NewRedisCache(mr.Addr(), "", 0, 10, logger)
+	cache, err := NewRedisCache(context.Background(), mr.Addr(), "", 0, 10, logger)
 	require.NoError(b, err)
 	defer func() {
 		if err := cache.Close(); err != nil {
@@ -708,7 +708,7 @@ func BenchmarkRedisCache_GetOrSet(b *testing.B) {
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
 
-	cache, err := NewRedisCache(mr.Addr(), "", 0, 10, logger)
+	cache, err := NewRedisCache(context.Background(), mr.Addr(), "", 0, 10, logger)
 	require.NoError(b, err)
 	defer func() {
 		if err := cache.Close(); err != nil {

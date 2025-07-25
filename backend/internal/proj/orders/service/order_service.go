@@ -290,7 +290,7 @@ func (s *OrderService) ConfirmOrder(ctx context.Context, orderID int64) error {
 
 // CancelOrder отменяет заказ
 func (s *OrderService) CancelOrder(ctx context.Context, orderID int64, userID int, reason string) (*models.StorefrontOrder, error) {
-	s.logger.Info("Cancelling order (order_id: %d, user_id: %d)", orderID, userID)
+	s.logger.Info("Canceling order (order_id: %d, user_id: %d)", orderID, userID)
 
 	order, err := s.orderRepo.GetByID(ctx, orderID)
 	if err != nil {
@@ -303,7 +303,7 @@ func (s *OrderService) CancelOrder(ctx context.Context, orderID int64, userID in
 	}
 
 	if !order.CanBeCancelled() {
-		return nil, fmt.Errorf("order cannot be cancelled in current status: %s", order.Status)
+		return nil, fmt.Errorf("order cannot be canceled in current status: %s", order.Status)
 	}
 
 	// Освобождаем резервирования
@@ -323,7 +323,7 @@ func (s *OrderService) CancelOrder(ctx context.Context, orderID int64, userID in
 		return nil, fmt.Errorf("failed to update order status: %w", err)
 	}
 
-	s.logger.Info("Order cancelled successfully (order_id: %d)", orderID)
+	s.logger.Info("Order canceled successfully (order_id: %d)", orderID)
 	return order, nil
 }
 
@@ -390,6 +390,10 @@ func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int64, sto
 	order.Status = status
 
 	switch status {
+	case models.OrderStatusPending:
+		// Заказ в ожидании
+	case models.OrderStatusConfirmed:
+		// Заказ подтвержден
 	case models.OrderStatusProcessing:
 		// Заказ взят в обработку
 	case models.OrderStatusShipped:
@@ -399,6 +403,10 @@ func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int64, sto
 		}
 	case models.OrderStatusDelivered:
 		order.DeliveredAt = &now
+	case models.OrderStatusCancelled:
+		// Заказ отменен
+	case models.OrderStatusRefunded:
+		// Заказ возвращен
 	}
 
 	if notes != nil {
@@ -462,8 +470,10 @@ func (s *OrderService) calculateEscrowDays(storefront *models.Storefront) int {
 		return 3 // Минимальный срок для бизнес-планов
 	case models.SubscriptionPlanProfessional:
 		return 5 // Средний срок
+	case models.SubscriptionPlanStarter:
+		return 7 // Максимальный срок для starter плана
 	default:
-		return 7 // Максимальный срок для starter/бесплатного плана
+		return 7 // Максимальный срок для неизвестного плана
 	}
 }
 
@@ -574,11 +584,12 @@ func (s *OrderService) UpdateCartItemQuantity(ctx context.Context, itemID int, s
 	var cart *models.ShoppingCart
 	var err error
 
-	if userID != nil {
+	switch {
+	case userID != nil:
 		cart, err = s.cartRepo.GetByUser(ctx, *userID, storefrontID)
-	} else if sessionID != nil {
+	case sessionID != nil:
 		cart, err = s.cartRepo.GetBySession(ctx, *sessionID, storefrontID)
-	} else {
+	default:
 		return nil, fmt.Errorf("either user_id or session_id must be provided")
 	}
 

@@ -653,6 +653,21 @@ func (s *StorefrontServiceImpl) getDefaultPermissions(role models.StaffRole) mod
 			"can_reply_to_reviews": true,
 			"can_send_messages":    true,
 		}
+	case models.StaffRoleModerator:
+		return models.JSONB{
+			"can_add_products":     false,
+			"can_edit_products":    false,
+			"can_delete_products":  false,
+			"can_view_orders":      true,
+			"can_process_orders":   false,
+			"can_refund_orders":    false,
+			"can_edit_storefront":  false,
+			"can_manage_staff":     false,
+			"can_view_analytics":   false,
+			"can_manage_payments":  false,
+			"can_reply_to_reviews": true,
+			"can_send_messages":    true,
+		}
 	default:
 		return models.JSONB{}
 	}

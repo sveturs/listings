@@ -211,7 +211,7 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 		&s.CreatedAt, &s.UpdatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
 	if err != nil {
@@ -251,7 +251,7 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 func (r *storefrontRepo) GetBySlug(ctx context.Context, slug string) (*models.Storefront, error) {
 	var id int
 	err := r.db.pool.QueryRow(ctx, "SELECT id FROM storefronts WHERE slug = $1", slug).Scan(&id)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
 	if err != nil {
@@ -707,7 +707,7 @@ func (r *storefrontRepo) HasPermission(ctx context.Context, storefrontID, userID
 		WHERE storefront_id = $1 AND user_id = $2
 	`, storefrontID, userID).Scan(&permissions)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
 	if err != nil {
@@ -725,14 +725,6 @@ func (r *storefrontRepo) HasPermission(ctx context.Context, storefrontID, userID
 }
 
 // Helper функции
-
-func generateSlug(name string) string {
-	// Простая генерация slug - в продакшене нужно использовать библиотеку
-	slug := strings.ToLower(name)
-	slug = strings.ReplaceAll(slug, " ", "-")
-	// Добавляем timestamp для уникальности
-	return fmt.Sprintf("%s-%d", slug, time.Now().Unix())
-}
 
 func getOwnerPermissions() models.JSONB {
 	return models.JSONB{

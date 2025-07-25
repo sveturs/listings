@@ -317,11 +317,12 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	end := offset + params.Limit
 
 	var pagedItems []UnifiedSearchItem
-	if offset >= len(rankedItems) {
+	switch {
+	case offset >= len(rankedItems):
 		pagedItems = []UnifiedSearchItem{}
-	} else if end > len(rankedItems) {
+	case end > len(rankedItems):
 		pagedItems = rankedItems[offset:]
-	} else {
+	default:
 		pagedItems = rankedItems[offset:end]
 	}
 
@@ -340,11 +341,6 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 		HasMore:    hasMore,
 		TookMs:     tookMs,
 	}, nil
-}
-
-// searchMarketplace поиск в marketplace
-func (h *UnifiedSearchHandler) searchMarketplace(ctx context.Context, params *UnifiedSearchParams) ([]UnifiedSearchItem, int, int64, error) {
-	return h.searchMarketplaceWithLimit(ctx, params, params.Limit*2)
 }
 
 // searchMarketplaceWithLimit поиск в marketplace с указанным лимитом
@@ -395,11 +391,6 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 	}
 
 	return items, results.Total, results.Took, nil
-}
-
-// searchStorefront поиск в storefront
-func (h *UnifiedSearchHandler) searchStorefront(ctx context.Context, params *UnifiedSearchParams) ([]UnifiedSearchItem, int, int64, error) {
-	return h.searchStorefrontWithLimit(ctx, params, params.Limit*2)
 }
 
 // searchStorefrontWithLimit поиск в storefront с указанным лимитом
@@ -585,11 +576,12 @@ func (h *UnifiedSearchHandler) calculateRelevanceScore(item *UnifiedSearchItem, 
 	// Учитываем свежесть объявления (до 0.5 балла)
 	if item.CreatedAt != nil {
 		daysSinceCreated := time.Since(*item.CreatedAt).Hours() / 24
-		if daysSinceCreated < 7 {
+		switch {
+		case daysSinceCreated < 7:
 			score += 0.5 // Новые объявления получают бонус
-		} else if daysSinceCreated < 30 {
+		case daysSinceCreated < 30:
 			score += 0.3
-		} else if daysSinceCreated < 90 {
+		case daysSinceCreated < 90:
 			score += 0.1
 		}
 	}
@@ -747,10 +739,11 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 	var itemType behavior.ItemType
 
 	// Проверяем, что у нас есть типы товаров
-	if len(params.ProductTypes) == 0 {
+	switch {
+	case len(params.ProductTypes) == 0:
 		// По умолчанию используем marketplace
 		itemType = behavior.ItemTypeMarketplace
-	} else if len(params.ProductTypes) == 1 {
+	case len(params.ProductTypes) == 1:
 		// Если ищем только один тип, устанавливаем его
 		switch params.ProductTypes[0] {
 		case "marketplace":
@@ -761,7 +754,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 			// Если неизвестный тип, используем marketplace по умолчанию
 			itemType = behavior.ItemTypeMarketplace
 		}
-	} else {
+	default:
 		// Если ищем несколько типов или все типы, выбираем тип с большим количеством результатов
 		marketplaceCount := 0
 		storefrontCount := 0

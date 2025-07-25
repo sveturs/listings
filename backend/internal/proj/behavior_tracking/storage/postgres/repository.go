@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -102,7 +103,7 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 	committed := false
 	defer func() {
 		if !committed {
-			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != pgx.ErrTxClosed {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
 				logger.Error().Err(rollbackErr).Msg("Failed to rollback transaction")
 			}
 		}
@@ -189,7 +190,8 @@ func (r *behaviorTrackingRepository) GetSearchMetrics(ctx context.Context, query
 	// Метрика пересекается с запрашиваемым периодом если:
 	// - period_start метрики <= period_end запроса
 	// - period_end метрики >= period_start запроса
-	if !query.PeriodStart.IsZero() && !query.PeriodEnd.IsZero() {
+	switch {
+	case !query.PeriodStart.IsZero() && !query.PeriodEnd.IsZero():
 		argCount++
 		conditions = append(conditions, fmt.Sprintf("period_start <= $%d", argCount))
 		args = append(args, query.PeriodEnd)
@@ -197,11 +199,11 @@ func (r *behaviorTrackingRepository) GetSearchMetrics(ctx context.Context, query
 		argCount++
 		conditions = append(conditions, fmt.Sprintf("period_end >= $%d", argCount))
 		args = append(args, query.PeriodStart)
-	} else if !query.PeriodStart.IsZero() {
+	case !query.PeriodStart.IsZero():
 		argCount++
 		conditions = append(conditions, fmt.Sprintf("period_end >= $%d", argCount))
 		args = append(args, query.PeriodStart)
-	} else if !query.PeriodEnd.IsZero() {
+	case !query.PeriodEnd.IsZero():
 		argCount++
 		conditions = append(conditions, fmt.Sprintf("period_start <= $%d", argCount))
 		args = append(args, query.PeriodEnd)
@@ -633,7 +635,7 @@ func (r *behaviorTrackingRepository) GetAggregatedSearchMetrics(ctx context.Cont
 		&metrics.UniqueSearches,
 		&metrics.AverageSearchDurationMs,
 	)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get general metrics: %w", err)
 	}
 
@@ -728,7 +730,7 @@ func (r *behaviorTrackingRepository) GetAggregatedSearchMetrics(ctx context.Cont
 		&avgPosition,
 		&conversions,
 	)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get click metrics: %w", err)
 	}
 

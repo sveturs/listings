@@ -5,6 +5,7 @@ package balance
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -49,11 +50,15 @@ func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*models.Us
 		&balance.UpdatedAt,
 	)
 	if err != nil {
-		return &models.UserBalance{
-			UserID:   userID,
-			Balance:  0,
-			Currency: "RSD",
-		}, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			// Если баланс не найден, создаем новый с нулевым балансом
+			return &models.UserBalance{
+				UserID:   userID,
+				Balance:  0,
+				Currency: "RSD",
+			}, nil
+		}
+		return nil, fmt.Errorf("failed to get user balance: %w", err)
 	}
 
 	return &balance, nil
@@ -94,8 +99,8 @@ func (s *BalanceService) CreateDeposit(ctx context.Context, userID int, amount f
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-			s.logger.Error("Failed to rollback transaction", "error", err)
+		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			s.logger.Error("Failed to rollback transaction", "error", rollbackErr)
 		}
 	}()
 
@@ -166,8 +171,8 @@ func (s *BalanceService) ProcessDeposit(ctx context.Context, transactionID int) 
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-			s.logger.Error("Failed to rollback transaction", "error", err)
+		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			s.logger.Error("Failed to rollback transaction", "error", rollbackErr)
 		}
 	}()
 
@@ -278,31 +283,4 @@ func (s *BalanceService) GetPaymentMethods(ctx context.Context) ([]models.Paymen
 	}
 
 	return methods, nil
-}
-
-func (s *BalanceService) validateDeposit(amount float64, method string) error {
-	if amount <= 0 {
-		return fmt.Errorf("amount must be greater than 0")
-	}
-
-	// Проверяем метод оплаты
-	var paymentMethod models.PaymentMethod
-	err := s.storage.QueryRow(context.Background(), `
-        SELECT minimum_amount, maximum_amount
-        FROM payment_methods
-        WHERE code = $1 AND is_active = true
-    `, method).Scan(&paymentMethod.MinimumAmount, &paymentMethod.MaximumAmount)
-	if err != nil {
-		return fmt.Errorf("invalid payment method")
-	}
-
-	if amount < paymentMethod.MinimumAmount {
-		return fmt.Errorf("amount must be at least %v", paymentMethod.MinimumAmount)
-	}
-
-	if paymentMethod.MaximumAmount > 0 && amount > paymentMethod.MaximumAmount {
-		return fmt.Errorf("amount cannot exceed %v", paymentMethod.MaximumAmount)
-	}
-
-	return nil
 }

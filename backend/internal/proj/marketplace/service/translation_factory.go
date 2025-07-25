@@ -114,6 +114,8 @@ func (f *TranslationServiceFactory) GetTranslationService(provider TranslationPr
 			return nil, fmt.Errorf("сервис OpenAI недоступен")
 		}
 		return f.openAIService, nil
+	case Manual:
+		return nil, fmt.Errorf("ручной перевод не поддерживается в автоматическом режиме")
 	default:
 		// Возвращаем сервис по умолчанию
 		if f.defaultProvider == GoogleTranslate && f.googleService != nil {
@@ -147,6 +149,8 @@ func (f *TranslationServiceFactory) SetDefaultProvider(provider TranslationProvi
 		if f.openAIService == nil {
 			return fmt.Errorf("сервис OpenAI недоступен")
 		}
+	case Manual:
+		return fmt.Errorf("ручной перевод не может быть установлен как провайдер по умолчанию")
 	default:
 		return fmt.Errorf("неизвестный провайдер перевода: %s", provider)
 	}
@@ -187,6 +191,9 @@ func (f *TranslationServiceFactory) GetTranslationCount(provider TranslationProv
 		return f.googleService.TranslationCount(), f.googleService.TranslationLimit(), nil
 	case OpenAI:
 		// OpenAI не имеет встроенного ограничения по количеству, но может иметь внешние ограничения
+		return 0, 0, nil
+	case Manual:
+		// Ручной перевод не имеет счетчика
 		return 0, 0, nil
 	default:
 		return 0, 0, fmt.Errorf("неизвестный провайдер перевода: %s", provider)

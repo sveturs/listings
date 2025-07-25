@@ -8,6 +8,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ErrSearchWeightNotFound возвращается когда вес поиска не найден
+var ErrSearchWeightNotFound = errors.New("search weight not found")
+
 // Временная заглушка для быстрой компиляции
 // TODO: Заменить на полную реализацию
 
@@ -25,7 +28,7 @@ func (r *PostgresSearchOptimizationRepository) GetSearchWeights(ctx context.Cont
 }
 
 func (r *PostgresSearchOptimizationRepository) GetSearchWeightByField(ctx context.Context, fieldName, searchType, itemType string, categoryID *int) (*SearchWeight, error) {
-	return nil, nil
+	return nil, ErrSearchWeightNotFound
 }
 
 func (r *PostgresSearchOptimizationRepository) UpdateSearchWeight(ctx context.Context, id int64, weight float64, updatedBy int) error {

@@ -172,11 +172,11 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 		}
 
 		// Сохраняем переводы адресов асинхронно, чтобы не замедлять создание объявления
-		go func() {
-			if err := s.SaveAddressTranslations(context.Background(), listingID, addressFields, listing.OriginalLanguage, filteredTargetLanguages); err != nil {
+		go func(ctx context.Context) {
+			if err := s.SaveAddressTranslations(ctx, listingID, addressFields, listing.OriginalLanguage, filteredTargetLanguages); err != nil {
 				log.Printf("Error saving address translations for listing %d: %v", listingID, err)
 			}
-		}()
+		}(ctx)
 	}
 
 	fullListing, err := s.storage.GetListingByID(ctx, listingID)
@@ -321,15 +321,16 @@ func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.Marketpla
 	}
 
 	// Добавляем локацию в зависимости от попытки
-	if listing.City != "" && tryNumber < 2 {
+	switch {
+	case listing.City != "" && tryNumber < 2:
 		// Первые 2 попытки - ищем в том же городе
 		params.City = listing.City
 		log.Printf("Попытка %d: поиск в городе %s", tryNumber, listing.City)
-	} else if listing.Country != "" && tryNumber == 2 {
+	case listing.Country != "" && tryNumber == 2:
 		// Третья попытка - ищем в той же стране
 		params.Country = listing.Country
 		log.Printf("Попытка %d: поиск в стране %s", tryNumber, listing.Country)
-	} else {
+	default:
 		// Последняя попытка - без географических ограничений
 		log.Printf("Попытка %d: поиск без географических ограничений", tryNumber)
 	}
@@ -574,12 +575,9 @@ func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.
 	}
 
 	// Проверяем, изменились ли адресные поля
-	addressChanged := false
-	if currentListing.Location != listing.Location ||
+	addressChanged := currentListing.Location != listing.Location ||
 		currentListing.City != listing.City ||
-		currentListing.Country != listing.Country {
-		addressChanged = true
-	}
+		currentListing.Country != listing.Country
 
 	// Если адресные поля изменились, обновляем переводы
 	if addressChanged {
@@ -616,11 +614,11 @@ func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.
 			}
 
 			// Обновляем переводы адресов асинхронно
-			go func() {
-				if err := s.SaveAddressTranslations(context.Background(), listing.ID, addressFields, sourceLanguage, filteredTargetLanguages); err != nil {
+			go func(ctx context.Context) {
+				if err := s.SaveAddressTranslations(ctx, listing.ID, addressFields, sourceLanguage, filteredTargetLanguages); err != nil {
 					log.Printf("Error updating address translations for listing %d: %v", listing.ID, err)
 				}
-			}()
+			}(ctx)
 		}
 	}
 
@@ -764,25 +762,23 @@ func (s *MarketplaceService) SynchronizeDiscountData(ctx context.Context, listin
 
 				log.Printf("Создана информация о скидке для объявления %d из истории цен: %d%%, старая цена: %.2f",
 					listingID, discountPercent, maxPrice)
-			} else {
+			} else if listing.Metadata != nil && listing.Metadata["discount"] != nil {
 				// Если скидка меньше 5%, удаляем информацию о скидке
-				if listing.Metadata != nil && listing.Metadata["discount"] != nil {
-					delete(listing.Metadata, "discount")
+				delete(listing.Metadata, "discount")
 
-					// Обновляем объявление в БД
-					_, err := s.storage.Exec(ctx, `
+				// Обновляем объявление в БД
+				_, err := s.storage.Exec(ctx, `
                         UPDATE marketplace_listings
                         SET metadata = $1
                         WHERE id = $2
                     `, listing.Metadata, listingID)
-					if err != nil {
-						log.Printf("Ошибка удаления метаданных о малой скидке: %v", err)
-						return err
-					}
-
-					log.Printf("Удалена информация о малой скидке (%.1f%%) для объявления %d",
-						float64(discountPercent), listingID)
+				if err != nil {
+					log.Printf("Ошибка удаления метаданных о малой скидке: %v", err)
+					return err
 				}
+
+				log.Printf("Удалена информация о малой скидке (%.1f%%) для объявления %d",
+					float64(discountPercent), listingID)
 			}
 		} else if listing.Metadata != nil && listing.Metadata["discount"] != nil {
 			// Если максимальная цена не найдена или текущая цена не ниже максимальной,
@@ -1119,9 +1115,15 @@ func (s *MarketplaceService) MigrateImagesToMinio(ctx context.Context) error {
 		// Создаем новый путь для изображения в MinIO
 		newPath := fmt.Sprintf("listings/%d/%s", image.ListingID, filepath.Base(image.FilePath))
 
+		// Security check: validate file path
+		if strings.Contains(image.FilePath, "..") {
+			log.Printf("Skipping image with invalid path: %s", image.FilePath)
+			continue
+		}
+
 		// Открываем исходный файл
 		localPath := fmt.Sprintf("./uploads/%s", image.FilePath)
-		file, err := os.Open(localPath)
+		file, err := os.Open(localPath) // #nosec G304 -- path validated above
 		if err != nil {
 			log.Printf("Ошибка открытия файла %s: %v", localPath, err)
 			continue

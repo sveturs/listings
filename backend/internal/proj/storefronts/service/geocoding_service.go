@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"backend/internal/domain/models"
+	"backend/pkg/logger"
 )
 
 // GeocodingService интерфейс сервиса геокодирования
@@ -226,6 +227,7 @@ func (g *geocodingService) SmartGeocode(ctx context.Context, userLat, userLng fl
 func (g *geocodingService) ValidateAddress(ctx context.Context, address string) (bool, error) {
 	location, err := g.GeocodeAddress(ctx, address)
 	if err != nil {
+		logger.GetLogger().Info("Failed to geocode address for validation: %v, address: %s", err, address)
 		return false, nil
 	}
 
@@ -316,24 +318,3 @@ func (g *geocodingService) parseNominatimResponse(resp *nominatimResponse) *mode
 }
 
 // Вспомогательные функции для работы с сербскими адресами
-
-// normalizeAddress нормализует адрес для Балкан
-func normalizeAddress(address string) string {
-	// Заменяем распространенные сокращения
-	replacements := map[string]string{
-		"ул.":   "улица",
-		"бул.":  "булевар",
-		"тргпј": "трг",
-		"бр.":   "",
-		"br.":   "",
-		"ul.":   "ulica",
-		"bul.":  "bulevar",
-	}
-
-	normalized := strings.ToLower(address)
-	for old, new := range replacements {
-		normalized = strings.ReplaceAll(normalized, old, new)
-	}
-
-	return normalized
-}

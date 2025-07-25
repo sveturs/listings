@@ -5,11 +5,11 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
-
 	"backend/internal/domain/models"
 	"backend/internal/proj/geocode/service"
 	"backend/pkg/utils"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type GeocodeHandler struct {

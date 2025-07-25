@@ -31,7 +31,8 @@ func main() {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		log.Fatal("Query failed:", err)
+		log.Printf("Query failed: %v", err)
+		return
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -41,7 +42,8 @@ func main() {
 
 	cols, err := rows.Columns()
 	if err != nil {
-		log.Fatal("Failed to get columns:", err)
+		log.Printf("Failed to get columns: %v", err)
+		return
 	}
 
 	// Print column headers
@@ -64,7 +66,8 @@ func main() {
 	for rows.Next() {
 		err = rows.Scan(scanArgs...)
 		if err != nil {
-			log.Fatal("Failed to scan row:", err)
+			log.Printf("Failed to scan row: %v", err)
+			return
 		}
 
 		for i, value := range values {
@@ -81,5 +84,10 @@ func main() {
 			}
 		}
 		fmt.Println()
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		log.Printf("Error iterating over rows: %v", err)
 	}
 }

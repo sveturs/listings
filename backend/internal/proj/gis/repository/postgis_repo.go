@@ -185,7 +185,11 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 	}
 
 	// Подсчет общего количества
-	countQuery := "SELECT COUNT(*) " + strings.Replace(query, query[:strings.Index(query, "FROM")], "", 1)
+	fromIndex := strings.Index(query, "FROM")
+	if fromIndex == -1 {
+		fromIndex = 0
+	}
+	countQuery := "SELECT COUNT(*) " + strings.Replace(query, query[:fromIndex], "", 1)
 	var totalCount int64
 	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
 	if err != nil {
@@ -267,6 +271,11 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 		listing.Images = images
 
 		listings = append(listings, listing)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating over unified geo listings: %w", err)
 	}
 
 	return listings, totalCount, nil
@@ -547,6 +556,11 @@ func (r *PostGISRepository) searchLegacy(ctx context.Context, params types.Searc
 		listing.Images, _ = r.getListingImages(ctx, listing.ID, "marketplace_listing")
 
 		listings = append(listings, listing)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating over legacy listings: %w", err)
 	}
 
 	return listings, totalCount, nil

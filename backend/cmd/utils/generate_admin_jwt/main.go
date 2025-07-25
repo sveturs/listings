@@ -22,13 +22,13 @@ func main() {
 	}
 
 	// Создаем файловое хранилище
-	fileStorage, err := filestorage.NewFileStorage(cfg.FileStorage)
+	fileStorage, err := filestorage.NewFileStorage(context.Background(), cfg.FileStorage)
 	if err != nil {
 		log.Fatal("Failed to create file storage:", err)
 	}
 
 	// Подключаемся к базе данных
-	db, err := postgres.NewDatabase(cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(context.Background(), cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -41,24 +41,28 @@ func main() {
 	// Получаем пользователя
 	user, err := db.GetUserByEmail(ctx, targetEmail)
 	if err != nil || user == nil {
-		log.Fatal("Admin user not found:", err)
+		log.Printf("Admin user not found: %v", err)
+		return
 	}
 
 	// Получаем профиль пользователя с полем is_admin
 	userProfile, err := db.GetUserProfile(ctx, user.ID)
 	if err != nil {
-		log.Fatal("Failed to get user profile:", err)
+		log.Printf("Failed to get user profile: %v", err)
+		return
 	}
 
 	// Проверяем, что пользователь является администратором
 	if !userProfile.IsAdmin {
-		log.Fatal("User is not an admin")
+		log.Printf("User is not an admin")
+		return
 	}
 
 	// Генерируем JWT токен
 	jwtToken, err := generateJWT(int64(user.ID), user.Email, cfg.JWTSecret, cfg.JWTExpirationHours)
 	if err != nil {
-		log.Fatal("Failed to generate JWT token:", err)
+		log.Printf("Failed to generate JWT token: %v", err)
+		return
 	}
 
 	// Выводим результат
@@ -83,7 +87,8 @@ func main() {
 	fmt.Println("\n2️⃣  Добавление синонима:")
 	fmt.Printf("   curl -X POST -H \"Authorization: Bearer %s\" \\\n", jwtToken)
 	fmt.Println("        -H \"Content-Type: application/json\" \\")
-	fmt.Println("        -d '{\"word\": \"телефон\", \"synonyms\": [\"смартфон\", \"мобильный\"], \"language\": \"ru\"}' \\")
+	fmt.Println("        -d '{\"word\": \"телефон\", \"synonyms\": [\"смартфон\", \"мобильный\"], " +
+		"\"language\": \"ru\"}' \\")
 	fmt.Println("        'http://localhost:3000/api/v1/admin/search/synonyms'")
 
 	fmt.Println("\n3️⃣  Для использования в браузере (установка в localStorage):")

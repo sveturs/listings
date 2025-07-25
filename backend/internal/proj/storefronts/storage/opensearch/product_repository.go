@@ -29,7 +29,7 @@ func NewProductRepository(client *osClient.OpenSearchClient, indexName string) *
 
 // PrepareIndex подготавливает индекс для товаров витрин (создает, если не существует)
 func (r *ProductRepository) PrepareIndex(ctx context.Context) error {
-	exists, err := r.client.IndexExists(r.indexName)
+	exists, err := r.client.IndexExists(ctx, r.indexName)
 	if err != nil {
 		return fmt.Errorf("ошибка проверки индекса товаров витрин: %w", err)
 	}
@@ -38,7 +38,7 @@ func (r *ProductRepository) PrepareIndex(ctx context.Context) error {
 
 	if !exists {
 		logger.Info().Str("indexName", r.indexName).Msg("Создание индекса товаров витрин...")
-		if err := r.client.CreateIndex(r.indexName, storefrontProductMapping); err != nil {
+		if err := r.client.CreateIndex(ctx, r.indexName, storefrontProductMapping); err != nil {
 			return fmt.Errorf("ошибка создания индекса товаров витрин: %w", err)
 		}
 		logger.Info().Str("indexName", r.indexName).Msg("Индекс товаров витрин успешно создан")
@@ -55,7 +55,7 @@ func (r *ProductRepository) IndexProduct(ctx context.Context, product *models.St
 	logger.Info().Msgf("Индексация товара витрины: ID=%d, Name=%s, StorefrontID=%d",
 		product.ID, product.Name, product.StorefrontID)
 
-	return r.client.IndexDocument(r.indexName, docID, doc)
+	return r.client.IndexDocument(ctx, r.indexName, docID, doc)
 }
 
 // BulkIndexProducts индексирует несколько товаров витрин
@@ -72,13 +72,13 @@ func (r *ProductRepository) BulkIndexProducts(ctx context.Context, products []*m
 	}
 
 	logger.Info().Msgf("Массовая индексация %d товаров витрин", len(products))
-	return r.client.BulkIndex(r.indexName, docs)
+	return r.client.BulkIndex(ctx, r.indexName, docs)
 }
 
 // DeleteProduct удаляет товар из индекса
 func (r *ProductRepository) DeleteProduct(ctx context.Context, productID int) error {
 	docID := fmt.Sprintf("sp_%d", productID)
-	return r.client.DeleteDocument(r.indexName, docID)
+	return r.client.DeleteDocument(ctx, r.indexName, docID)
 }
 
 // UpdateProduct обновляет товар в индексе
@@ -251,7 +251,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 func (r *ProductRepository) SearchProducts(ctx context.Context, params *ProductSearchParams) (*ProductSearchResult, error) {
 	query := r.buildSearchQuery(params)
 
-	responseBytes, err := r.client.Search(r.indexName, query)
+	responseBytes, err := r.client.Search(ctx, r.indexName, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска товаров витрин: %w", err)
 	}
@@ -1120,15 +1120,15 @@ func (r *ProductRepository) SearchSimilarProducts(ctx context.Context, productID
 		"size": 1,
 	}
 
-	getResponseBytes, err := r.client.Search(r.indexName, getQuery)
+	getResponseBytes, err := r.client.Search(ctx, r.indexName, getQuery)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения товара из индекса: %w", err)
 	}
 
 	// Парсим ответ для получения информации о товаре
 	var getResult map[string]interface{}
-	if err := json.Unmarshal(getResponseBytes, &getResult); err != nil {
-		return nil, fmt.Errorf("ошибка парсинга ответа получения товара: %w", err)
+	if unmarshalErr := json.Unmarshal(getResponseBytes, &getResult); unmarshalErr != nil {
+		return nil, fmt.Errorf("ошибка парсинга ответа получения товара: %w", unmarshalErr)
 	}
 
 	hits, ok := getResult["hits"].(map[string]interface{})
@@ -1238,7 +1238,7 @@ func (r *ProductRepository) SearchSimilarProducts(ctx context.Context, productID
 	}
 
 	// Выполняем поиск
-	responseBytes, err := r.client.Search(r.indexName, query)
+	responseBytes, err := r.client.Search(ctx, r.indexName, query)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения поиска похожих товаров: %w", err)
 	}

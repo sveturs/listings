@@ -22,7 +22,7 @@ func TestRedisCacheRealIntegration(t *testing.T) {
 	logger.SetLevel(logrus.DebugLevel)
 
 	// Подключаемся к реальному Redis
-	cache, err := NewRedisCache("localhost:6379", "", 0, 10, logger)
+	cache, err := NewRedisCache(context.Background(), "localhost:6379", "", 0, 10, logger)
 	if err != nil {
 		t.Skipf("Skipping test: Redis not available: %v", err)
 	}
@@ -309,7 +309,7 @@ func BenchmarkRedisCacheOperations(b *testing.B) {
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
 
-	cache, err := NewRedisCache("localhost:6379", "", 0, 10, logger)
+	cache, err := NewRedisCache(context.Background(), "localhost:6379", "", 0, 10, logger)
 	if err != nil {
 		b.Skipf("Skipping benchmark: Redis not available: %v", err)
 	}

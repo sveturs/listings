@@ -62,7 +62,7 @@ type JSONB map[string]interface{}
 // Value реализует интерфейс driver.Valuer
 func (j JSONB) Value() (driver.Value, error) {
 	if j == nil {
-		return nil, nil
+		return nil, nil // nolint:nilnil // Valid pattern for driver.Valuer when nil is expected
 	}
 	return json.Marshal(j)
 }

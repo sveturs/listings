@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -61,7 +62,7 @@ func (r *cartRepository) GetByID(ctx context.Context, cartID int64) (*models.Sho
 		&cart.UpdatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("cart not found")
 		}
 		return nil, fmt.Errorf("failed to get cart: %w", err)
@@ -106,7 +107,7 @@ func (r *cartRepository) GetByUser(ctx context.Context, userID int, storefrontID
 		&cart.UpdatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("cart not found")
 		}
 		return nil, fmt.Errorf("failed to get cart: %w", err)
@@ -151,7 +152,7 @@ func (r *cartRepository) GetBySession(ctx context.Context, sessionID string, sto
 		&cart.UpdatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("cart not found")
 		}
 		return nil, fmt.Errorf("failed to get cart: %w", err)
@@ -259,7 +260,7 @@ func (r *cartRepository) AddItem(ctx context.Context, item *models.ShoppingCartI
 			return nil, err
 		}
 		return item, nil
-	} else if err != pgx.ErrNoRows {
+	} else if !errors.Is(err, pgx.ErrNoRows) {
 		return nil, fmt.Errorf("failed to check existing item: %w", err)
 	}
 
@@ -337,7 +338,7 @@ func (r *cartRepository) UpdateItemQuantity(ctx context.Context, cartID int64, p
 
 	err := r.pool.QueryRow(ctx, query, cartID, productID, variantID).Scan(&itemID, &pricePerUnit)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("cart item not found")
 		}
 		return fmt.Errorf("failed to get cart item: %w", err)

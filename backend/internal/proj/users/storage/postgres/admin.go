@@ -132,8 +132,8 @@ func (s *Storage) DeleteUser(ctx context.Context, id int) error {
 		return err
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
-			log.Printf("Failed to rollback transaction: %v", err)
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			log.Printf("Failed to rollback transaction: %v", rollbackErr)
 		}
 	}()
 
@@ -142,7 +142,7 @@ func (s *Storage) DeleteUser(ctx context.Context, id int) error {
 
 	// Удаляем все изображения для объявлений пользователя одним запросом
 	result, err := tx.Exec(ctx, `
-		DELETE FROM marketplace_images 
+		DELETE FROM marketplace_images
 		WHERE listing_id IN (
 			SELECT id FROM marketplace_listings WHERE user_id = $1
 		)`, id)
@@ -191,9 +191,9 @@ func (s *Storage) DeleteUser(ctx context.Context, id int) error {
 	// Удаляем историю импортов для всех витрин пользователя одним запросом
 	log.Printf("Deleting import_history for all user's storefronts")
 	_, err = tx.Exec(ctx, `
-		DELETE FROM import_history 
+		DELETE FROM import_history
 		WHERE source_id IN (
-			SELECT is.id 
+			SELECT is.id
 			FROM import_sources is
 			JOIN user_storefronts us ON is.storefront_id = us.id
 			WHERE us.user_id = $1
@@ -206,7 +206,7 @@ func (s *Storage) DeleteUser(ctx context.Context, id int) error {
 	// Удаляем источники импорта
 	log.Printf("Deleting import_sources")
 	_, err = tx.Exec(ctx, `
-		DELETE FROM import_sources 
+		DELETE FROM import_sources
 		WHERE storefront_id IN (
 			SELECT id FROM user_storefronts WHERE user_id = $1
 		)`, id)

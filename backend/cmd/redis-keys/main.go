@@ -27,7 +27,8 @@ func main() {
 
 	// Проверяем подключение
 	if err := client.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		log.Printf("Failed to connect to Redis: %v", err)
+		return
 	}
 
 	fmt.Println("=== Redis Keys Analysis ===")
@@ -41,7 +42,8 @@ func main() {
 	for {
 		keys, nextCursor, err := client.Scan(ctx, cursor, "*", 100).Result()
 		if err != nil {
-			log.Fatalf("Error scanning keys: %v", err)
+			log.Printf("Error scanning keys: %v", err)
+			return
 		}
 
 		allKeys = append(allKeys, keys...)

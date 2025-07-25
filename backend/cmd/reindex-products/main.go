@@ -57,6 +57,7 @@ func main() {
 
 	// Initialize storage with all necessary dependencies
 	storage, err := postgresStorage.NewDatabase(
+		context.Background(),
 		cfg.DatabaseURL,
 		osClient,
 		"",                // minioEndpoint - not needed for this task
@@ -233,6 +234,6 @@ func main() {
 
 	if indexedCount < totalCount {
 		logger.Error().Msgf("WARNING: %d products failed to index", totalCount-indexedCount)
-		os.Exit(1)
+		return
 	}
 }

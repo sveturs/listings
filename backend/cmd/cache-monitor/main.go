@@ -36,7 +36,8 @@ func main() {
 
 	// Проверяем подключение
 	if err := client.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		log.Printf("Failed to connect to Redis: %v", err)
+		return
 	}
 
 	fmt.Println("✓ Connected to Redis!")
@@ -178,7 +179,7 @@ func testCachePerformance(ctx context.Context, client *redis.Client) {
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
 
-	redisCache, err := cache.NewRedisCache("localhost:6379", "", 0, 10, logger)
+	redisCache, err := cache.NewRedisCache(ctx, "localhost:6379", "", 0, 10, logger)
 	if err != nil {
 		log.Printf("Failed to create cache for performance test: %v", err)
 		return

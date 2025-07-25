@@ -158,7 +158,7 @@ func (h *OrderPaymentHandler) GetOrderPaymentStatus(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "Order ID"
-// @Success 200 {object} utils.SuccessResponseSwag "Payment cancelled successfully"
+// @Success 200 {object} utils.SuccessResponseSwag "Payment canceled successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid order ID"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 404 {object} utils.ErrorResponseSwag "Order or payment not found"
@@ -181,5 +181,5 @@ func (h *OrderPaymentHandler) CancelOrderPayment(c *fiber.Ctx) error {
 	h.logger.Info("Order payment cancellation requested (orderID: %d, userID: %v)", orderID, userID)
 
 	// TODO: Реализовать отмену платежа заказа
-	return utils.SuccessResponse(c, "payment cancelled")
+	return utils.SuccessResponse(c, "payment canceled")
 }

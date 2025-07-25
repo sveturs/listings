@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	// Создаем логгер
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
@@ -24,6 +26,7 @@ func main() {
 	fmt.Println("Connecting to Redis at localhost:6379...")
 
 	redisCache, err := cache.NewRedisCache(
+		ctx,
 		"localhost:6379",
 		"", // password
 		0,  // db
@@ -43,7 +46,6 @@ func main() {
 
 	// Создаем адаптер
 	cacheAdapter := cache.NewAdapter(redisCache)
-	ctx := context.Background()
 
 	// 1. Тест базовых операций
 	fmt.Println("\n1. Testing basic operations:")
@@ -166,11 +168,12 @@ func main() {
 	for _, locale := range []string{"en", "ru", "sr"} {
 		key := cache.BuildCategoriesKey(locale)
 		exists, err := redisCache.Exists(ctx, key)
-		if err != nil {
+		switch {
+		case err != nil:
 			log.Printf("Error checking key %s: %v", key, err)
-		} else if !exists {
+		case !exists:
 			fmt.Printf("   ✓ Key deleted: %s\n", key)
-		} else {
+		default:
 			fmt.Printf("   × Key still exists: %s\n", key)
 		}
 	}
