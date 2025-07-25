@@ -20,6 +20,7 @@ type Module struct {
 	productHandler    *handler.ProductHandler
 	importHandler     *handler.ImportHandler
 	imageHandler      *handler.ImageHandler
+	dashboardHandler  *handler.DashboardHandler
 }
 
 // NewModule создает новый модуль витрин
@@ -47,12 +48,16 @@ func NewModule(services service.ServicesInterface) *Module {
 	imageRepo := postgres.NewImageRepository(db.GetSQLXDB())
 	imageService := services.NewImageService(services.FileStorage(), imageRepo)
 
+	// Получаем storefront repository
+	storefrontRepo := services.Storage().Storefront().(postgres.StorefrontRepository)
+
 	return &Module{
 		services:          services,
 		storefrontHandler: handler.NewStorefrontHandler(storefrontSvc),
 		productHandler:    handler.NewProductHandler(productSvc),
 		importHandler:     handler.NewImportHandler(importSvc),
 		imageHandler:      handler.NewImageHandler(imageService, productSvc),
+		dashboardHandler:  handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
 	}
 }
 
@@ -170,6 +175,12 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Post("/:slug/products/:product_id/images", m.uploadProductImageBySlugDirect)
 		protected.Delete("/:slug/products/:product_id/images/:image_id", m.deleteProductImageBySlugDirect)
 		protected.Post("/:slug/products/:product_id/images/:image_id/main", m.setMainProductImageBySlugDirect)
+
+		// Dashboard маршруты
+		protected.Get("/:slug/dashboard/stats", m.dashboardHandler.GetDashboardStats)
+		protected.Get("/:slug/dashboard/recent-orders", m.dashboardHandler.GetRecentOrders)
+		protected.Get("/:slug/dashboard/low-stock", m.dashboardHandler.GetLowStockProducts)
+		protected.Get("/:slug/dashboard/notifications", m.dashboardHandler.GetDashboardNotifications)
 	}
 
 	// Публичные маршруты импорта (для получения шаблонов и документации)

@@ -920,7 +920,7 @@ definitions:
         enum:
         - not_a_customer
         - false_information
-        - deal_cancelled
+        - deal_canceled
         - spam
         - other
         type: string
@@ -1660,7 +1660,7 @@ definitions:
     - delivered
     - completed
     - disputed
-    - cancelled
+    - canceled
     - refunded
     type: string
     x-enum-varnames:
@@ -1771,7 +1771,7 @@ definitions:
     - processing
     - shipped
     - delivered
-    - cancelled
+    - canceled
     - refunded
     type: string
     x-enum-comments:
@@ -2550,7 +2550,7 @@ definitions:
     properties:
       billing_address:
         $ref: '#/definitions/backend_internal_domain_models.JSONB'
-      cancelled_at:
+      canceled_at:
         type: string
       commission_amount:
         type: number
@@ -4172,6 +4172,49 @@ definitions:
       thumbnail_url:
         type: string
     type: object
+  backend_internal_storage_postgres.DashboardOrder:
+    properties:
+      created_at:
+        type: string
+      currency:
+        type: string
+      customer:
+        type: string
+      id:
+        type: integer
+      items_count:
+        type: integer
+      order_id:
+        type: string
+      status:
+        type: string
+      total:
+        type: number
+    type: object
+  backend_internal_storage_postgres.DashboardStats:
+    properties:
+      active_products:
+        type: integer
+      low_stock_products:
+        type: integer
+      pending_orders:
+        type: integer
+      total_products:
+        type: integer
+      unread_messages:
+        type: integer
+    type: object
+  backend_internal_storage_postgres.LowStockProduct:
+    properties:
+      id:
+        type: integer
+      min_stock:
+        type: integer
+      name:
+        type: string
+      stock_quantity:
+        type: integer
+    type: object
   backend_pkg_utils.ErrorResponseSwag:
     properties:
       error:
@@ -5519,6 +5562,22 @@ definitions:
     required:
     - role
     - user_id
+    type: object
+  internal_proj_storefronts_handler.DashboardNotification:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_read:
+        type: boolean
+      message:
+        type: string
+      title:
+        type: string
+      type:
+        description: order, message, stock
+        type: string
     type: object
   internal_proj_storefronts_handler.ImageOrderUpdate:
     properties:
@@ -11699,7 +11758,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Job cancelled successfully
+          description: Job canceled successfully
           schema:
             $ref: '#/definitions/SuccessResponse'
         "400":
@@ -14778,7 +14837,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Cancelled order
+          description: Canceled order
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
@@ -14803,7 +14862,7 @@ paths:
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "409":
-          description: Order cannot be cancelled
+          description: Order cannot be canceled
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
@@ -14873,7 +14932,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Payment cancelled successfully
+          description: Payment canceled successfully
           schema:
             $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
         "400":
@@ -17577,6 +17636,181 @@ paths:
       summary: Record storefront view
       tags:
       - storefronts
+  /api/v1/storefronts/{slug}/dashboard/low-stock:
+    get:
+      consumes:
+      - application/json
+      description: Returns products with low stock for storefront dashboard
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Low stock products
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_storage_postgres.LowStockProduct'
+                  type: array
+              type: object
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Storefront not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get low stock products
+      tags:
+      - storefronts
+      - dashboard
+  /api/v1/storefronts/{slug}/dashboard/notifications:
+    get:
+      consumes:
+      - application/json
+      description: Returns notifications for storefront dashboard
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard notifications
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/internal_proj_storefronts_handler.DashboardNotification'
+                  type: array
+              type: object
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Storefront not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard notifications
+      tags:
+      - storefronts
+      - dashboard
+  /api/v1/storefronts/{slug}/dashboard/recent-orders:
+    get:
+      consumes:
+      - application/json
+      description: Returns recent orders for storefront dashboard
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - default: 5
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recent orders
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_storage_postgres.DashboardOrder'
+                  type: array
+              type: object
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Storefront not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get recent orders
+      tags:
+      - storefronts
+      - dashboard
+  /api/v1/storefronts/{slug}/dashboard/stats:
+    get:
+      consumes:
+      - application/json
+      description: Returns statistics for storefront dashboard
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard statistics
+          schema:
+            $ref: '#/definitions/backend_internal_storage_postgres.DashboardStats'
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Storefront not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard statistics
+      tags:
+      - storefronts
+      - dashboard
   /api/v1/storefronts/{slug}/products:
     get:
       consumes:

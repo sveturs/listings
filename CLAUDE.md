@@ -93,6 +93,8 @@ sudo systemctl restart postgresql
 - **STOREFRONT_PRODUCT_CATEGORY_SELECTION.md** - реализация выбора категорий при создании товара в витрине
 - **PRODUCT_LOCATION_IMPLEMENTATION_PLAN.md** - управление местоположением и приватностью адресов товаров
 - **LOCATION_PICKER_INSTRUCTION.md** - использование компонента LocationPicker для выбора адреса
+- **memory-bank/tasks/004-storefront-dashboard-improvements.md** - план улучшений панели управления витринами
+- **memory-bank/current-task.md** - текущий прогресс работы над dashboard
 
 ## IMPORTANT INSTRUCTIONS
 

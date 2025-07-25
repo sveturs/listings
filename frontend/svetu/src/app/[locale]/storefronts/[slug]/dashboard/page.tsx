@@ -4,7 +4,18 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchStorefrontBySlug } from '@/store/slices/storefrontSlice';
+import {
+  fetchStorefrontBySlug,
+  fetchDashboardStats,
+  fetchRecentOrders,
+  fetchLowStockProducts,
+  fetchDashboardNotifications,
+  selectDashboardStats,
+  selectRecentOrders,
+  selectLowStockProducts,
+  selectDashboardNotifications,
+  selectIsLoadingDashboard,
+} from '@/store/slices/storefrontSlice';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import {
@@ -37,6 +48,12 @@ export default function StorefrontDashboardPage() {
     (state) => state.storefronts
   );
 
+  const dashboardStats = useAppSelector(selectDashboardStats);
+  const recentOrders = useAppSelector(selectRecentOrders);
+  const lowStockProducts = useAppSelector(selectLowStockProducts);
+  const notifications = useAppSelector(selectDashboardNotifications);
+  const isLoadingDashboard = useAppSelector(selectIsLoadingDashboard);
+
   const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
@@ -60,6 +77,16 @@ export default function StorefrontDashboardPage() {
       }
     }
   }, [currentStorefront, user, isLoading, router, slug, locale]);
+
+  // Загрузка данных dashboard
+  useEffect(() => {
+    if (currentStorefront && slug && !accessDenied) {
+      dispatch(fetchDashboardStats(slug));
+      dispatch(fetchRecentOrders({ slug, limit: 5 }));
+      dispatch(fetchLowStockProducts(slug));
+      dispatch(fetchDashboardNotifications({ slug, limit: 10 }));
+    }
+  }, [dispatch, currentStorefront, slug, accessDenied]);
 
   if (accessDenied) {
     return (
@@ -145,9 +172,17 @@ export default function StorefrontDashboardPage() {
               <ShoppingBagIcon className="w-8 h-8" />
             </div>
             <div className="stat-title">{t('storefronts.activeProducts')}</div>
-            <div className="stat-value text-primary">48</div>
+            <div className="stat-value text-primary">
+              {isLoadingDashboard ? (
+                <span className="loading loading-dots loading-sm"></span>
+              ) : (
+                dashboardStats?.activeProducts || 0
+              )}
+            </div>
             <div className="stat-desc">
-              {t('storefronts.totalProducts', { count: 52 })}
+              {t('storefronts.totalProducts', {
+                count: dashboardStats?.totalProducts || 0,
+              })}
             </div>
           </div>
 
@@ -156,7 +191,13 @@ export default function StorefrontDashboardPage() {
               <ClipboardDocumentListIcon className="w-8 h-8" />
             </div>
             <div className="stat-title">{t('storefronts.pendingOrders')}</div>
-            <div className="stat-value text-secondary">12</div>
+            <div className="stat-value text-secondary">
+              {isLoadingDashboard ? (
+                <span className="loading loading-dots loading-sm"></span>
+              ) : (
+                dashboardStats?.pendingOrders || 0
+              )}
+            </div>
             <div className="stat-desc">{t('storefronts.requiresAction')}</div>
           </div>
 
@@ -165,7 +206,13 @@ export default function StorefrontDashboardPage() {
               <ChatBubbleLeftRightIcon className="w-8 h-8" />
             </div>
             <div className="stat-title">{t('storefronts.unreadMessages')}</div>
-            <div className="stat-value text-accent">7</div>
+            <div className="stat-value text-accent">
+              {isLoadingDashboard ? (
+                <span className="loading loading-dots loading-sm"></span>
+              ) : (
+                dashboardStats?.unreadMessages || 0
+              )}
+            </div>
             <div className="stat-desc">{t('storefronts.fromCustomers')}</div>
           </div>
 
@@ -174,7 +221,13 @@ export default function StorefrontDashboardPage() {
               <ExclamationTriangleIcon className="w-8 h-8" />
             </div>
             <div className="stat-title">{t('storefronts.lowStock')}</div>
-            <div className="stat-value text-warning">3</div>
+            <div className="stat-value text-warning">
+              {isLoadingDashboard ? (
+                <span className="loading loading-dots loading-sm"></span>
+              ) : (
+                dashboardStats?.lowStockProducts || 0
+              )}
+            </div>
             <div className="stat-desc">{t('storefronts.productsLowStock')}</div>
           </div>
         </div>
@@ -252,73 +305,77 @@ export default function StorefrontDashboardPage() {
                   </Link>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="table table-zebra">
-                    <thead>
-                      <tr>
-                        <th>{t('storefronts.orderId')}</th>
-                        <th>{t('storefronts.customer')}</th>
-                        <th>{t('storefronts.products.title')}</th>
-                        <th>{t('storefronts.total')}</th>
-                        <th>{t('common.status')}</th>
-                        <th>{t('common.actions')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>#1234</td>
-                        <td>John Doe</td>
-                        <td>2 items</td>
-                        <td>$89.99</td>
-                        <td>
-                          <span className="badge badge-warning badge-sm">
-                            <ClockIcon className="w-3 h-3 mr-1" />
-                            {t('storefronts.pending')}
-                          </span>
-                        </td>
-                        <td>
-                          <button className="btn btn-ghost btn-xs">
-                            {t('common.viewAll')}
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>#1233</td>
-                        <td>Jane Smith</td>
-                        <td>1 item</td>
-                        <td>$45.00</td>
-                        <td>
-                          <span className="badge badge-info badge-sm">
-                            <TruckIcon className="w-3 h-3 mr-1" />
-                            {t('storefronts.shipping')}
-                          </span>
-                        </td>
-                        <td>
-                          <button className="btn btn-ghost btn-xs">
-                            {t('common.viewAll')}
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>#1232</td>
-                        <td>Bob Wilson</td>
-                        <td>3 items</td>
-                        <td>$125.50</td>
-                        <td>
-                          <span className="badge badge-success badge-sm">
-                            <CheckCircleIcon className="w-3 h-3 mr-1" />
-                            {t('storefronts.completed')}
-                          </span>
-                        </td>
-                        <td>
-                          <button className="btn btn-ghost btn-xs">
-                            {t('common.viewAll')}
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                {recentOrders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-base-content/60">
+                      {t('storefronts.noRecentOrders')}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="table table-zebra">
+                      <thead>
+                        <tr>
+                          <th>{t('storefronts.orderId')}</th>
+                          <th>{t('storefronts.customer')}</th>
+                          <th>{t('storefronts.products.title')}</th>
+                          <th>{t('storefronts.total')}</th>
+                          <th>{t('common.status')}</th>
+                          <th>{t('common.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentOrders.map((order) => (
+                          <tr key={order.id}>
+                            <td>{order.order_id}</td>
+                            <td>{order.customer}</td>
+                            <td>
+                              {t('storefronts.itemsCount', {
+                                count: order.items_count,
+                              })}
+                            </td>
+                            <td>
+                              {order.currency} {order.total.toFixed(2)}
+                            </td>
+                            <td>
+                              {order.status === 'pending' && (
+                                <span className="badge badge-warning badge-sm">
+                                  <ClockIcon className="w-3 h-3 mr-1" />
+                                  {t('storefronts.pending')}
+                                </span>
+                              )}
+                              {order.status === 'shipping' && (
+                                <span className="badge badge-info badge-sm">
+                                  <TruckIcon className="w-3 h-3 mr-1" />
+                                  {t('storefronts.shipping')}
+                                </span>
+                              )}
+                              {order.status === 'completed' && (
+                                <span className="badge badge-success badge-sm">
+                                  <CheckCircleIcon className="w-3 h-3 mr-1" />
+                                  {t('storefronts.completed')}
+                                </span>
+                              )}
+                              {order.status === 'cancelled' && (
+                                <span className="badge badge-error badge-sm">
+                                  {t('storefronts.cancelled')}
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              <Link
+                                href={`/${locale}/storefronts/${currentStorefront.slug}/orders/${order.id}`}
+                                className="btn btn-ghost btn-xs"
+                              >
+                                {t('common.view')}
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -332,26 +389,37 @@ export default function StorefrontDashboardPage() {
                   </h2>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-base-100 rounded">
-                    <span>iPhone 15 Pro Max</span>
-                    <span className="badge badge-warning">
-                      {t('storefronts.stockLeft', { count: 2 })}
-                    </span>
+                {lowStockProducts.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-base-content/60">
+                      {t('storefronts.allProductsInStock')}
+                    </p>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-base-100 rounded">
-                    <span>MacBook Pro M3</span>
-                    <span className="badge badge-warning">
-                      {t('storefronts.stockLeft', { count: 1 })}
-                    </span>
+                ) : (
+                  <div className="space-y-2">
+                    {lowStockProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex justify-between items-center p-2 bg-base-100 rounded"
+                      >
+                        <span className="truncate flex-1 mr-2">
+                          {product.name}
+                        </span>
+                        {product.stock_quantity === 0 ? (
+                          <span className="badge badge-error">
+                            {t('storefronts.outOfStock')}
+                          </span>
+                        ) : (
+                          <span className="badge badge-warning">
+                            {t('storefronts.stockLeft', {
+                              count: product.stock_quantity,
+                            })}
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-base-100 rounded">
-                    <span>Sony WH-1000XM5</span>
-                    <span className="badge badge-error">
-                      {t('storefronts.outOfStock')}
-                    </span>
-                  </div>
-                </div>
+                )}
 
                 <Link
                   href={`/${locale}/storefronts/${currentStorefront.slug}/inventory`}
@@ -373,60 +441,87 @@ export default function StorefrontDashboardPage() {
                     <BellIcon className="w-5 h-5" />
                     {t('storefronts.notifications')}
                   </h2>
-                  <span className="badge badge-primary">
-                    5 {t('common.new')}
-                  </span>
+                  {notifications.filter((n) => !n.is_read).length > 0 && (
+                    <span className="badge badge-primary">
+                      {notifications.filter((n) => !n.is_read).length}{' '}
+                      {t('common.new')}
+                    </span>
+                  )}
                 </div>
 
-                <div className="space-y-3">
-                  <div className="p-3 bg-base-200 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <div className="p-1 bg-primary/10 rounded">
-                        <ShoppingBagIcon className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          {t('storefronts.newOrderReceived')}
-                        </p>
-                        <p className="text-xs text-base-content/60">
-                          {t('common.minutesAgo', { minutes: 5 })}
-                        </p>
-                      </div>
-                    </div>
+                {notifications.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-base-content/60">
+                      {t('storefronts.noNotifications')}
+                    </p>
                   </div>
+                ) : (
+                  <div className="space-y-3">
+                    {notifications.slice(0, 5).map((notification) => {
+                      const getNotificationIcon = () => {
+                        switch (notification.type) {
+                          case 'order':
+                            return (
+                              <ShoppingBagIcon className="w-4 h-4 text-primary" />
+                            );
+                          case 'message':
+                            return (
+                              <ChatBubbleLeftRightIcon className="w-4 h-4 text-accent" />
+                            );
+                          case 'stock':
+                            return (
+                              <ExclamationTriangleIcon className="w-4 h-4 text-warning" />
+                            );
+                          default:
+                            return (
+                              <BellIcon className="w-4 h-4 text-base-content" />
+                            );
+                        }
+                      };
 
-                  <div className="p-3 bg-base-200 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <div className="p-1 bg-accent/10 rounded">
-                        <ChatBubbleLeftRightIcon className="w-4 h-4 text-accent" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          {t('storefronts.newMessage')}
-                        </p>
-                        <p className="text-xs text-base-content/60">
-                          {t('common.minutesAgo', { minutes: 15 })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                      const getIconBgColor = () => {
+                        switch (notification.type) {
+                          case 'order':
+                            return 'bg-primary/10';
+                          case 'message':
+                            return 'bg-accent/10';
+                          case 'stock':
+                            return 'bg-warning/10';
+                          default:
+                            return 'bg-base-300';
+                        }
+                      };
 
-                  <div className="p-3 bg-base-200 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <div className="p-1 bg-warning/10 rounded">
-                        <ExclamationTriangleIcon className="w-4 h-4 text-warning" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          {t('storefronts.productLowStock')}
-                        </p>
-                        <p className="text-xs text-base-content/60">
-                          {t('common.hourAgo', { hours: 1 })}
-                        </p>
-                      </div>
-                    </div>
+                      return (
+                        <div
+                          key={notification.id}
+                          className={`p-3 bg-base-200 rounded-lg ${!notification.is_read ? 'border-l-4 border-primary' : ''}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`p-1 ${getIconBgColor()} rounded`}>
+                              {getNotificationIcon()}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">
+                                {notification.title}
+                              </p>
+                              {notification.message && (
+                                <p className="text-xs text-base-content/70 mt-1">
+                                  {notification.message}
+                                </p>
+                              )}
+                              <p className="text-xs text-base-content/60 mt-1">
+                                {new Date(
+                                  notification.created_at
+                                ).toLocaleString(locale)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
+                )}
 
                 <button className="btn btn-ghost btn-sm w-full mt-4">
                   {t('storefronts.viewAllNotifications')}

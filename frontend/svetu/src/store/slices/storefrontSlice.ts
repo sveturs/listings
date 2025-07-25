@@ -6,6 +6,7 @@ import {
 } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/lib/api-client';
 import type { components } from '@/types/generated/api';
 import type { PaymentMethodType } from '@/types/storefront';
 
@@ -76,6 +77,18 @@ export interface StorefrontState {
   analytics: StorefrontAnalytics[] | null;
   ratingSummary: StorefrontRatingSummary | null;
 
+  // Dashboard данные
+  dashboardStats: {
+    activeProducts: number;
+    totalProducts: number;
+    pendingOrders: number;
+    unreadMessages: number;
+    lowStockProducts: number;
+  } | null;
+  recentOrders: any[];
+  lowStockProducts: any[];
+  dashboardNotifications: any[];
+
   // Настройки витрины
   deliveryOptions: StorefrontDeliveryOption[];
   paymentMethods: StorefrontPaymentMethod[];
@@ -84,6 +97,7 @@ export interface StorefrontState {
   // Состояние загрузки дополнительных данных
   isLoadingAnalytics: boolean;
   isLoadingSettings: boolean;
+  isLoadingDashboard: boolean;
 }
 
 // Начальное состояние
@@ -122,12 +136,18 @@ const initialState: StorefrontState = {
   analytics: null,
   ratingSummary: null,
 
+  dashboardStats: null,
+  recentOrders: [],
+  lowStockProducts: [],
+  dashboardNotifications: [],
+
   deliveryOptions: [],
   paymentMethods: [],
   workingHours: [],
 
   isLoadingAnalytics: false,
   isLoadingSettings: false,
+  isLoadingDashboard: false,
 };
 
 // Async thunks
@@ -474,6 +494,81 @@ export const fetchStorefrontAnalytics = createAsyncThunk<
   }
 );
 
+// Dashboard thunks
+export const fetchDashboardStats = createAsyncThunk<
+  any,
+  string,
+  { rejectValue: string }
+>('storefronts/fetchDashboardStats', async (slug, { rejectWithValue }) => {
+  try {
+    const response = await apiClient.get(
+      `/api/v1/storefronts/${slug}/dashboard/stats`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.error || 'Failed to fetch dashboard stats'
+    );
+  }
+});
+
+export const fetchRecentOrders = createAsyncThunk<
+  any,
+  { slug: string; limit?: number },
+  { rejectValue: string }
+>(
+  'storefronts/fetchRecentOrders',
+  async ({ slug, limit = 5 }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.get(
+        `/api/v1/storefronts/${slug}/dashboard/recent-orders?limit=${limit}`
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.error || 'Failed to fetch recent orders'
+      );
+    }
+  }
+);
+
+export const fetchLowStockProducts = createAsyncThunk<
+  any,
+  string,
+  { rejectValue: string }
+>('storefronts/fetchLowStockProducts', async (slug, { rejectWithValue }) => {
+  try {
+    const response = await apiClient.get(
+      `/api/v1/storefronts/${slug}/dashboard/low-stock`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.error || 'Failed to fetch low stock products'
+    );
+  }
+});
+
+export const fetchDashboardNotifications = createAsyncThunk<
+  any,
+  { slug: string; limit?: number },
+  { rejectValue: string }
+>(
+  'storefronts/fetchDashboardNotifications',
+  async ({ slug, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.get(
+        `/api/v1/storefronts/${slug}/dashboard/notifications?limit=${limit}`
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.error || 'Failed to fetch notifications'
+      );
+    }
+  }
+);
+
 // Создание slice
 const storefrontSlice = createSlice({
   name: 'storefronts',
@@ -709,6 +804,47 @@ const storefrontSlice = createSlice({
         state.isLoadingAnalytics = false;
         state.error = action.payload || 'Failed to fetch analytics';
       });
+
+    // Dashboard stats
+    builder
+      .addCase(fetchDashboardStats.pending, (state) => {
+        state.isLoadingDashboard = true;
+      })
+      .addCase(fetchDashboardStats.fulfilled, (state, action) => {
+        state.isLoadingDashboard = false;
+        state.dashboardStats = action.payload;
+      })
+      .addCase(fetchDashboardStats.rejected, (state, action) => {
+        state.isLoadingDashboard = false;
+        state.error = action.payload || 'Failed to fetch dashboard stats';
+      });
+
+    // Recent orders
+    builder
+      .addCase(fetchRecentOrders.fulfilled, (state, action) => {
+        state.recentOrders = action.payload;
+      })
+      .addCase(fetchRecentOrders.rejected, (state, action) => {
+        state.error = action.payload || 'Failed to fetch recent orders';
+      });
+
+    // Low stock products
+    builder
+      .addCase(fetchLowStockProducts.fulfilled, (state, action) => {
+        state.lowStockProducts = action.payload;
+      })
+      .addCase(fetchLowStockProducts.rejected, (state, action) => {
+        state.error = action.payload || 'Failed to fetch low stock products';
+      });
+
+    // Dashboard notifications
+    builder
+      .addCase(fetchDashboardNotifications.fulfilled, (state, action) => {
+        state.dashboardNotifications = action.payload;
+      })
+      .addCase(fetchDashboardNotifications.rejected, (state, action) => {
+        state.error = action.payload || 'Failed to fetch notifications';
+      });
   },
 });
 
@@ -749,6 +885,18 @@ export const selectAnalytics = (state: RootState) =>
   state.storefronts.analytics;
 export const selectIsLoadingAnalytics = (state: RootState) =>
   state.storefronts.isLoadingAnalytics;
+
+// Dashboard селекторы
+export const selectDashboardStats = (state: RootState) =>
+  state.storefronts.dashboardStats;
+export const selectRecentOrders = (state: RootState) =>
+  state.storefronts.recentOrders;
+export const selectLowStockProducts = (state: RootState) =>
+  state.storefronts.lowStockProducts;
+export const selectDashboardNotifications = (state: RootState) =>
+  state.storefronts.dashboardNotifications;
+export const selectIsLoadingDashboard = (state: RootState) =>
+  state.storefronts.isLoadingDashboard;
 
 // Фильтрованные селекторы (мемоизированные)
 

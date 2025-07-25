@@ -500,7 +500,7 @@ func (s *StorefrontServiceImpl) GetAnalytics(ctx context.Context, userID int, st
 		return nil, ErrInsufficientPermissions
 	}
 
-	return s.repo.GetAnalytics(ctx, storefrontID, from, to)
+	return s.repo.GetAnalyticsData(ctx, storefrontID, from, to)
 }
 
 // CanCreateStorefront проверяет может ли пользователь создать витрину

@@ -705,14 +705,23 @@ func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
 	fromStr := c.Query("from")
 	toStr := c.Query("to")
 
-	from, err := time.Parse("2006-01-02", fromStr)
+	// Парсим ISO формат даты (RFC3339) который приходит с frontend
+	from, err := time.Parse(time.RFC3339, fromStr)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_from_date")
+		// Попробуем короткий формат
+		from, err = time.Parse("2006-01-02", fromStr)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_from_date")
+		}
 	}
 
-	to, err := time.Parse("2006-01-02", toStr)
+	to, err := time.Parse(time.RFC3339, toStr)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_to_date")
+		// Попробуем короткий формат
+		to, err = time.Parse("2006-01-02", toStr)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_to_date")
+		}
 	}
 
 	analytics, err := h.service.GetAnalytics(c.Context(), userID, id, from, to)
