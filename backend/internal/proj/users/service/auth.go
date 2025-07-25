@@ -279,8 +279,8 @@ func (s *AuthService) RegisterWithRefreshToken(ctx context.Context, name, email,
 	}
 
 	// Установка пароля (хеширование происходит внутри метода)
-	if err := newUser.SetPassword(password); err != nil {
-		return "", "", nil, err
+	if setpassErr := newUser.SetPassword(password); setpassErr != nil {
+		return "", "", nil, setpassErr
 	}
 
 	savedUser, err := s.storage.CreateUser(ctx, newUser)

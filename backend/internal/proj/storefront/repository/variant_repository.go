@@ -53,9 +53,9 @@ func (r *VariantRepository) CreateVariant(ctx context.Context, req *types.Create
 		return nil, err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
 			// Transaction was already committed or rolled back, ignore
-			_ = err // Explicitly ignore the error
+			_ = rollbackErr // Explicitly ignore the error
 		}
 	}()
 
@@ -218,9 +218,9 @@ func (r *VariantRepository) GetVariantsByProductID(ctx context.Context, productI
 		return nil, err
 	}
 	defer func() {
-		if err := rows.Close(); err != nil {
+		if closeErr := rows.Close(); closeErr != nil {
 			// Логируем ошибку закрытия rows
-			_ = err // Explicitly ignore error
+			_ = closeErr // Explicitly ignore error
 		}
 	}()
 
@@ -413,9 +413,9 @@ func (r *VariantRepository) SetupProductAttributes(ctx context.Context, req *typ
 		return err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
 			// Transaction was already committed or rolled back, ignore
-			_ = err // Explicitly ignore the error
+			_ = rollbackErr // Explicitly ignore the error
 		}
 	}()
 
@@ -436,9 +436,9 @@ func (r *VariantRepository) SetupProductAttributes(ctx context.Context, req *typ
 
 		// Add selected global values
 		if len(attr.SelectedGlobalValues) > 0 {
-			globalValues, err := r.GetVariantAttributeValues(ctx, attr.AttributeID)
-			if err != nil {
-				return err
+			globalValues, attrErr := r.GetVariantAttributeValues(ctx, attr.AttributeID)
+			if attrErr != nil {
+				return attrErr
 			}
 
 			for _, globalVal := range globalValues {
@@ -492,9 +492,9 @@ func (r *VariantRepository) GetProductAttributes(ctx context.Context, productID 
 		return nil, err
 	}
 	defer func() {
-		if err := rows.Close(); err != nil {
+		if closeErr := rows.Close(); closeErr != nil {
 			// Логируем ошибку закрытия rows
-			_ = err // Explicitly ignore error
+			_ = closeErr // Explicitly ignore error
 		}
 	}()
 

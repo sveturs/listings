@@ -836,7 +836,7 @@ func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 
 	// Читаем данные
 	data := make([]byte, file.Size)
-	if _, err := src.Read(data); err != nil {
+	if _, readErr := src.Read(data); readErr != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.failed_to_read_file")
 	}
 

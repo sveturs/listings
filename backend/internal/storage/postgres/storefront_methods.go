@@ -84,7 +84,7 @@ func (r *storefrontRepo) IsOpenNow(ctx context.Context, storefrontID int) (bool,
 			WHERE storefront_id = $1
 			AND (
 				-- Обычные часы работы
-				(special_date IS NULL 
+				(special_date IS NULL
 				 AND day_of_week = EXTRACT(DOW FROM CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Belgrade')
 				 AND NOT is_closed
 				 AND CURRENT_TIME AT TIME ZONE 'Europe/Belgrade' BETWEEN open_time AND close_time)
@@ -111,9 +111,9 @@ func (r *storefrontRepo) SetPaymentMethods(ctx context.Context, methods []*model
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
-			_ = err // Explicitly ignore error
+			_ = rollbackErr // Explicitly ignore error
 		}
 	}()
 
@@ -195,9 +195,9 @@ func (r *storefrontRepo) SetDeliveryOptions(ctx context.Context, options []*mode
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
-			_ = err // Explicitly ignore error
+			_ = rollbackErr // Explicitly ignore error
 		}
 	}()
 
@@ -334,7 +334,7 @@ func (r *storefrontRepo) AddStaff(ctx context.Context, staff *models.StorefrontS
 	_, err := r.db.pool.Exec(ctx, `
 		INSERT INTO storefront_staff (storefront_id, user_id, role, permissions)
 		VALUES ($1, $2, $3, $4)
-		ON CONFLICT (storefront_id, user_id) 
+		ON CONFLICT (storefront_id, user_id)
 		DO UPDATE SET role = EXCLUDED.role, permissions = EXCLUDED.permissions, updated_at = CURRENT_TIMESTAMP
 	`, staff.StorefrontID, staff.UserID, staff.Role, permissionsJSON)
 
@@ -346,7 +346,7 @@ func (r *storefrontRepo) UpdateStaff(ctx context.Context, id int, permissions mo
 	permissionsJSON, _ := json.Marshal(permissions)
 
 	result, err := r.db.pool.Exec(ctx, `
-		UPDATE storefront_staff 
+		UPDATE storefront_staff
 		SET permissions = $2, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1
 	`, id, permissionsJSON)
@@ -363,7 +363,7 @@ func (r *storefrontRepo) UpdateStaff(ctx context.Context, id int, permissions mo
 // RemoveStaff удаляет сотрудника
 func (r *storefrontRepo) RemoveStaff(ctx context.Context, storefrontID, userID int) error {
 	result, err := r.db.pool.Exec(ctx, `
-		DELETE FROM storefront_staff 
+		DELETE FROM storefront_staff
 		WHERE storefront_id = $1 AND user_id = $2 AND role != 'owner'
 	`, storefrontID, userID)
 	if err != nil {
@@ -416,7 +416,7 @@ func (r *storefrontRepo) GetStaff(ctx context.Context, storefrontID int) ([]*mod
 // RecordView записывает просмотр витрины
 func (r *storefrontRepo) RecordView(ctx context.Context, storefrontID int) error {
 	_, err := r.db.pool.Exec(ctx, `
-		UPDATE storefronts 
+		UPDATE storefronts
 		SET views_count = views_count + 1
 		WHERE id = $1
 	`, storefrontID)
@@ -449,15 +449,15 @@ func (r *storefrontRepo) RecordAnalytics(ctx context.Context, analytics *models.
 			avg_session_time = (storefront_analytics.avg_session_time + EXCLUDED.avg_session_time) / 2,
 			orders_count = storefront_analytics.orders_count + EXCLUDED.orders_count,
 			revenue = storefront_analytics.revenue + EXCLUDED.revenue,
-			avg_order_value = CASE 
-				WHEN (storefront_analytics.orders_count + EXCLUDED.orders_count) > 0 
+			avg_order_value = CASE
+				WHEN (storefront_analytics.orders_count + EXCLUDED.orders_count) > 0
 				THEN (storefront_analytics.revenue + EXCLUDED.revenue) / (storefront_analytics.orders_count + EXCLUDED.orders_count)
-				ELSE 0 
+				ELSE 0
 			END,
-			conversion_rate = CASE 
-				WHEN (storefront_analytics.unique_visitors + EXCLUDED.unique_visitors) > 0 
+			conversion_rate = CASE
+				WHEN (storefront_analytics.unique_visitors + EXCLUDED.unique_visitors) > 0
 				THEN (storefront_analytics.orders_count + EXCLUDED.orders_count)::float / (storefront_analytics.unique_visitors + EXCLUDED.unique_visitors) * 100
-				ELSE 0 
+				ELSE 0
 			END,
 			payment_methods_usage = EXCLUDED.payment_methods_usage,
 			product_views = storefront_analytics.product_views + EXCLUDED.product_views,
@@ -482,7 +482,7 @@ func (r *storefrontRepo) RecordAnalytics(ctx context.Context, analytics *models.
 // GetAnalytics получает аналитику за период
 func (r *storefrontRepo) GetAnalytics(ctx context.Context, storefrontID int, from, to time.Time) ([]*models.StorefrontAnalytics, error) {
 	rows, err := r.db.pool.Query(ctx, `
-		SELECT 
+		SELECT
 			id, storefront_id, date,
 			page_views, unique_visitors, bounce_rate, avg_session_time,
 			orders_count, revenue, avg_order_value, conversion_rate,
@@ -571,7 +571,7 @@ func (r *storefrontRepo) GetClusters(ctx context.Context, bounds GeoBounds, zoom
 	}
 
 	rows, err := r.db.pool.Query(ctx, `
-		SELECT 
+		SELECT
 			ROUND(latitude/$1)*$1 as cluster_lat,
 			ROUND(longitude/$1)*$1 as cluster_lng,
 			COUNT(*) as count

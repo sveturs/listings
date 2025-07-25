@@ -322,9 +322,9 @@ func (c *OpenSearchClient) Execute(ctx context.Context, method, path string, bod
 		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
+		if closeErr := resp.Body.Close(); closeErr != nil {
 			// Логируем ошибку закрытия response body
-			_ = err // Explicitly ignore error
+			_ = closeErr // Explicitly ignore error
 		}
 	}()
 

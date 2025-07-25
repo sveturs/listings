@@ -1127,8 +1127,8 @@ func (r *ProductRepository) SearchSimilarProducts(ctx context.Context, productID
 
 	// Парсим ответ для получения информации о товаре
 	var getResult map[string]interface{}
-	if err := json.Unmarshal(getResponseBytes, &getResult); err != nil {
-		return nil, fmt.Errorf("ошибка парсинга ответа получения товара: %w", err)
+	if unmarshalErr := json.Unmarshal(getResponseBytes, &getResult); unmarshalErr != nil {
+		return nil, fmt.Errorf("ошибка парсинга ответа получения товара: %w", unmarshalErr)
 	}
 
 	hits, ok := getResult["hits"].(map[string]interface{})

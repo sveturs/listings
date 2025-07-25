@@ -47,7 +47,7 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
 	// Создаем запись отзыва с модерированным текстом
 	err = tx.QueryRow(ctx, `
         INSERT INTO reviews (
-            user_id, entity_type, entity_id, rating, comment, 
+            user_id, entity_type, entity_id, rating, comment,
             pros, cons, photos, is_verified_purchase, status,
             original_language, entity_origin_type, entity_origin_id
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
@@ -102,8 +102,8 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
 	// Загружаем все переводы в структуру отзыва
 	translations := make(map[string]map[string]string)
 	rows, err := s.pool.Query(ctx, `
-        SELECT language, field_name, translated_text 
-        FROM translations 
+        SELECT language, field_name, translated_text
+        FROM translations
         WHERE entity_type = 'review' AND entity_id = $1
     `, review.ID)
 	if err != nil {
@@ -134,15 +134,15 @@ func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) (
 
 	baseQuery := `
     WITH vote_counts AS (
-        SELECT 
+        SELECT
             review_id,
             COUNT(*) FILTER (WHERE vote_type = 'helpful') as helpful_votes,
             COUNT(*) FILTER (WHERE vote_type = 'not_helpful') as not_helpful_votes
-        FROM review_votes 
+        FROM review_votes
         GROUP BY review_id
     ),
     translations_agg AS (
-        SELECT 
+        SELECT
             entity_id,
             jsonb_object_agg(
                 t.language,
@@ -152,8 +152,8 @@ func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) (
         WHERE entity_type = 'review'
         GROUP BY entity_id
     )
-    SELECT 
-        r.id, r.user_id, r.entity_type, r.entity_id, r.rating, 
+    SELECT
+        r.id, r.user_id, r.entity_type, r.entity_id, r.rating,
         r.comment, r.pros, r.cons, r.photos, r.likes_count,
         r.is_verified_purchase, r.status, r.created_at, r.updated_at,
         r.original_language,
@@ -163,8 +163,8 @@ func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) (
         COUNT(*) OVER() as total_count,
         COALESCE(ta.translations, '{}'::jsonb) as translations,
         (
-            SELECT vote_type 
-            FROM review_votes 
+            SELECT vote_type
+            FROM review_votes
             WHERE review_id = r.id AND user_id = $1
         ) as current_user_vote
     FROM reviews r
@@ -317,21 +317,21 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
 
 	err := s.pool.QueryRow(ctx, `
         WITH votes_summary AS (
-            SELECT 
+            SELECT
                 COUNT(*) FILTER (WHERE vote_type = 'helpful') as helpful_count,
                 COUNT(*) FILTER (WHERE vote_type = 'not_helpful') as not_helpful_count
             FROM review_votes
             WHERE review_id = $1
         )
-        SELECT 
+        SELECT
             r.id, r.user_id, r.entity_type, r.entity_id, r.rating,
             r.comment, r.pros, r.cons, r.photos, r.likes_count,
             r.is_verified_purchase, r.status, r.created_at, r.updated_at,
             u.name, u.email, u.picture_url,
             vs.helpful_count, vs.not_helpful_count,
             (
-                SELECT vote_type 
-                FROM review_votes 
+                SELECT vote_type
+                FROM review_votes
                 WHERE review_id = r.id AND user_id = $2
             ) as current_user_vote
         FROM reviews r
@@ -389,7 +389,7 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
 
 	// Загружаем ответы на отзыв
 	rows, err := s.pool.Query(ctx, `
-        SELECT 
+        SELECT
             rr.id, rr.user_id, rr.response, rr.created_at, rr.updated_at,
             u.name, u.email, u.picture_url
         FROM review_responses rr
@@ -422,12 +422,12 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
 
 func (s *Storage) UpdateReview(ctx context.Context, review *models.Review) error {
 	_, err := s.pool.Exec(ctx, `
-        UPDATE reviews 
-        SET rating = $1, 
-            comment = $2, 
-            pros = $3, 
-            cons = $4, 
-            photos = $5, 
+        UPDATE reviews
+        SET rating = $1,
+            comment = $2,
+            pros = $3,
+            cons = $4,
+            photos = $5,
             status = $6,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $7
@@ -440,7 +440,7 @@ func (s *Storage) UpdateReview(ctx context.Context, review *models.Review) error
 
 func (s *Storage) UpdateReviewStatus(ctx context.Context, reviewId int, status string) error {
 	_, err := s.pool.Exec(ctx, `
-        UPDATE reviews 
+        UPDATE reviews
         SET status = $1,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $2
@@ -480,8 +480,8 @@ func (s *Storage) AddReviewVote(ctx context.Context, vote *models.ReviewVote) er
 	// Сначала проверим, существует ли уже такой голос
 	var existingVoteType sql.NullString
 	err = tx.QueryRow(ctx, `
-        SELECT vote_type 
-        FROM review_votes 
+        SELECT vote_type
+        FROM review_votes
         WHERE review_id = $1 AND user_id = $2
     `, vote.ReviewID, vote.UserID).Scan(&existingVoteType)
 
@@ -492,7 +492,7 @@ func (s *Storage) AddReviewVote(ctx context.Context, vote *models.ReviewVote) er
 	if existingVoteType.Valid && existingVoteType.String == vote.VoteType {
 		// Если такой же голос уже есть - удаляем его (снимаем голос)
 		_, err = tx.Exec(ctx, `
-            DELETE FROM review_votes 
+            DELETE FROM review_votes
             WHERE review_id = $1 AND user_id = $2
         `, vote.ReviewID, vote.UserID)
 	} else {
@@ -500,7 +500,7 @@ func (s *Storage) AddReviewVote(ctx context.Context, vote *models.ReviewVote) er
 		_, err = tx.Exec(ctx, `
             INSERT INTO review_votes (review_id, user_id, vote_type)
             VALUES ($1, $2, $3)
-            ON CONFLICT (review_id, user_id) 
+            ON CONFLICT (review_id, user_id)
             DO UPDATE SET vote_type = EXCLUDED.vote_type
         `, vote.ReviewID, vote.UserID, vote.VoteType)
 	}
@@ -512,13 +512,13 @@ func (s *Storage) AddReviewVote(ctx context.Context, vote *models.ReviewVote) er
 	// Обновляем счетчики
 	_, err = tx.Exec(ctx, `
         UPDATE reviews r
-        SET 
+        SET
             helpful_votes = (
-                SELECT COUNT(*) FROM review_votes 
+                SELECT COUNT(*) FROM review_votes
                 WHERE review_id = $1 AND vote_type = 'helpful'
             ),
             not_helpful_votes = (
-                SELECT COUNT(*) FROM review_votes 
+                SELECT COUNT(*) FROM review_votes
                 WHERE review_id = $1 AND vote_type = 'not_helpful'
             )
         WHERE id = $1
@@ -537,16 +537,16 @@ func (s *Storage) UpdateReviewVotes(ctx context.Context, reviewId int) error {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			// Игнорируем ошибку если транзакция уже была завершена
-			_ = err // Explicitly ignore error
+			_ = rollbackErr // Explicitly ignore error
 		}
 	}()
 
 	// Сначала получаем актуальное количество голосов
 	var helpfulCount, notHelpfulCount int
 	err = tx.QueryRow(ctx, `
-        SELECT 
+        SELECT
             COUNT(*) FILTER (WHERE vote_type = 'helpful'),
             COUNT(*) FILTER (WHERE vote_type = 'not_helpful')
         FROM review_votes
@@ -559,7 +559,7 @@ func (s *Storage) UpdateReviewVotes(ctx context.Context, reviewId int) error {
 	// Обновляем количество голосов в таблице reviews
 	_, err = tx.Exec(ctx, `
         UPDATE reviews
-        SET 
+        SET
             helpful_votes = $1,
             not_helpful_votes = $2,
             updated_at = CURRENT_TIMESTAMP
@@ -579,7 +579,7 @@ func (s *Storage) UpdateReviewVotes(ctx context.Context, reviewId int) error {
 
 func (s *Storage) GetReviewVotes(ctx context.Context, reviewId int) (helpful int, notHelpful int, err error) {
 	err = s.pool.QueryRow(ctx, `
-        SELECT 
+        SELECT
             COUNT(CASE WHEN vote_type = 'helpful' THEN 1 END) as helpful,
             COUNT(CASE WHEN vote_type = 'not_helpful' THEN 1 END) as not_helpful
         FROM review_votes
@@ -618,13 +618,13 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 	}
 
 	err := s.pool.QueryRow(ctx, `
-        SELECT 
+        SELECT
             COUNT(*) as total,
             COALESCE(AVG(rating), 0) as avg_rating,
             COUNT(*) FILTER (WHERE is_verified_purchase) as verified,
             COUNT(*) FILTER (WHERE array_length(photos, 1) > 0) as with_photos
         FROM reviews
-        WHERE entity_type = $1 
+        WHERE entity_type = $1
         AND entity_id = $2
         AND status = 'published'
     `, entityType, entityId).Scan(
@@ -641,7 +641,7 @@ func (s *Storage) GetReviewStats(ctx context.Context, entityType string, entityI
 	rows, err := s.pool.Query(ctx, `
         SELECT rating, COUNT(*)
         FROM reviews
-        WHERE entity_type = $1 
+        WHERE entity_type = $1
         AND entity_id = $2
         AND status = 'published'
         GROUP BY rating
@@ -667,15 +667,15 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
 	// Базовый запрос для получения отзывов, связанных с пользователем
 	query := `
     WITH vote_counts AS (
-        SELECT 
+        SELECT
             review_id,
             COUNT(*) FILTER (WHERE vote_type = 'helpful') as helpful_votes,
             COUNT(*) FILTER (WHERE vote_type = 'not_helpful') as not_helpful_votes
-        FROM review_votes 
+        FROM review_votes
         GROUP BY review_id
     ),
     translations_agg AS (
-        SELECT 
+        SELECT
             entity_id,
             jsonb_object_agg(
                 t.language,
@@ -685,8 +685,8 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
         WHERE entity_type = 'review'
         GROUP BY entity_id
     )
-    SELECT 
-        r.id, r.user_id, r.entity_type, r.entity_id, r.rating, 
+    SELECT
+        r.id, r.user_id, r.entity_type, r.entity_id, r.rating,
         r.comment, r.pros, r.cons, r.photos, r.likes_count,
         r.is_verified_purchase, r.status, r.created_at, r.updated_at,
         r.original_language, r.entity_origin_type, r.entity_origin_id,
@@ -695,8 +695,8 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
         u.name as user_name, u.email as user_email, u.picture_url as user_picture,
         COALESCE(ta.translations, '{}'::jsonb) as translations,
         (
-            SELECT vote_type 
-            FROM review_votes 
+            SELECT vote_type
+            FROM review_votes
             WHERE review_id = r.id AND user_id = $1
             LIMIT 1
         ) as current_user_vote
@@ -705,7 +705,7 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
     LEFT JOIN vote_counts vc ON vc.review_id = r.id
     LEFT JOIN translations_agg ta ON ta.entity_id = r.id
     WHERE (r.entity_origin_type = 'user' AND r.entity_origin_id = $2)
-       OR (r.entity_type = 'listing' AND 
+       OR (r.entity_type = 'listing' AND
            EXISTS (SELECT 1 FROM marketplace_listings ml WHERE ml.id = r.entity_id AND ml.user_id = $2)
           )
     ORDER BY r.created_at DESC
@@ -791,15 +791,15 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
 	// Базовый запрос для получения отзывов, связанных с витриной
 	query := `
     WITH vote_counts AS (
-        SELECT 
+        SELECT
             review_id,
             COUNT(*) FILTER (WHERE vote_type = 'helpful') as helpful_votes,
             COUNT(*) FILTER (WHERE vote_type = 'not_helpful') as not_helpful_votes
-        FROM review_votes 
+        FROM review_votes
         GROUP BY review_id
     ),
     translations_agg AS (
-        SELECT 
+        SELECT
             entity_id,
             jsonb_object_agg(
                 t.language,
@@ -809,8 +809,8 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
         WHERE entity_type = 'review'
         GROUP BY entity_id
     )
-    SELECT 
-        r.id, r.user_id, r.entity_type, r.entity_id, r.rating, 
+    SELECT
+        r.id, r.user_id, r.entity_type, r.entity_id, r.rating,
         r.comment, r.pros, r.cons, r.photos, r.likes_count,
         r.is_verified_purchase, r.status, r.created_at, r.updated_at,
         r.original_language, r.entity_origin_type, r.entity_origin_id,
@@ -819,8 +819,8 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
         u.name as user_name, u.email as user_email, u.picture_url as user_picture,
         COALESCE(ta.translations, '{}'::jsonb) as translations,
         (
-            SELECT vote_type 
-            FROM review_votes 
+            SELECT vote_type
+            FROM review_votes
             WHERE review_id = r.id AND user_id = $1
             LIMIT 1
         ) as current_user_vote
@@ -938,7 +938,7 @@ func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models
 	// Получаем данные о рейтинге из отзывов к пользователю
 	// Теперь запрос включает как отзывы с entity_type='user', так и отзывы на объявления пользователя
 	query := `
-    SELECT 
+    SELECT
         COUNT(*) as total_reviews,
         COALESCE(AVG(rating), 0) as average_rating,
         COUNT(*) FILTER (WHERE rating = 1) as rating_1,
@@ -947,9 +947,9 @@ func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models
         COUNT(*) FILTER (WHERE rating = 4) as rating_4,
         COUNT(*) FILTER (WHERE rating = 5) as rating_5
     FROM reviews
-    WHERE 
-        ((entity_type = 'user' AND entity_id = $1) OR 
-         (entity_type = 'listing' AND EXISTS 
+    WHERE
+        ((entity_type = 'user' AND entity_id = $1) OR
+         (entity_type = 'listing' AND EXISTS
             (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
         AND status = 'published'
     `
@@ -1000,7 +1000,7 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
 
 	// Получаем данные о рейтинге из отзывов к витрине
 	query := `
-    SELECT 
+    SELECT
         COUNT(*) as total_reviews,
         COALESCE(AVG(rating), 0) as average_rating,
         COUNT(*) FILTER (WHERE rating = 1) as rating_1,
@@ -1009,9 +1009,9 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
         COUNT(*) FILTER (WHERE rating = 4) as rating_4,
         COUNT(*) FILTER (WHERE rating = 5) as rating_5
     FROM reviews
-    WHERE 
-        ((entity_type = 'storefront' AND entity_id = $1) OR 
-         (entity_type = 'listing' AND EXISTS 
+    WHERE
+        ((entity_type = 'storefront' AND entity_id = $1) OR
+         (entity_type = 'listing' AND EXISTS
             (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.storefront_id = $1)))
         AND status = 'published'
     `

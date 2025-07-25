@@ -203,10 +203,10 @@ func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 			}
 
 			// Проверяем JWT токен
-			claims, err := utils.ValidateJWTToken(jwtToken, h.services.Config().JWTSecret)
-			if err != nil {
+			claims, validateErr := utils.ValidateJWTToken(jwtToken, h.services.Config().JWTSecret)
+			if validateErr != nil {
 				logger.Info().
-					Err(err).
+					Err(validateErr).
 					Str("ip", c.IP()).
 					Str("user_agent", c.Get("User-Agent")).
 					Msg("JWT token validation failed")
