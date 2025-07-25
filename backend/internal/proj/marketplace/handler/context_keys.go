@@ -1,11 +1,13 @@
 package handler
 
+import "backend/internal/common"
+
 // ContextKey is a type for context keys to avoid collisions
-type ContextKey string
+type ContextKey = common.ContextKey
 
 const (
 	// Context keys
-	ContextKeyLocale    ContextKey = "locale"
-	ContextKeyUserID    ContextKey = "user_id"
-	ContextKeyIPAddress ContextKey = "ip_address"
+	ContextKeyLocale    = common.ContextKeyLocale
+	ContextKeyUserID    = common.ContextKeyUserID
+	ContextKeyIPAddress = common.ContextKeyIPAddress
 )

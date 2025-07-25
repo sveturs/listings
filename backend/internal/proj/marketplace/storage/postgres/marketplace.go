@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"backend/internal/common"
 	"backend/internal/domain/models"
 	"backend/internal/proj/marketplace/service"
 
@@ -652,7 +653,7 @@ func (s *Storage) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNod
 
 	// Получаем язык из контекста (по умолчанию "sr")
 	locale := "sr"
-	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+	if lang, ok := ctx.Value(common.ContextKeyLocale).(string); ok && lang != "" {
 		locale = lang
 	}
 	log.Printf("GetCategoryTree: using locale: %s", locale)
@@ -1951,7 +1952,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 
 	// Получаем язык из контекста (по умолчанию "sr")
 	locale := "sr"
-	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+	if lang, ok := ctx.Value(common.ContextKeyLocale).(string); ok && lang != "" {
 		locale = lang
 	}
 	log.Printf("GetCategories: using locale: %s", locale)
@@ -2064,7 +2065,7 @@ func (s *Storage) GetAllCategories(ctx context.Context) ([]models.MarketplaceCat
 
 	// Получаем язык из контекста (по умолчанию "sr")
 	locale := "sr"
-	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+	if lang, ok := ctx.Value(common.ContextKeyLocale).(string); ok && lang != "" {
 		locale = lang
 	}
 	log.Printf("GetAllCategories: using locale: %s", locale)
@@ -2667,7 +2668,7 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 
 	// Получаем язык из контекста (по умолчанию "sr")
 	locale := "sr"
-	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+	if lang, ok := ctx.Value(common.ContextKeyLocale).(string); ok && lang != "" {
 		locale = lang
 	}
 	log.Printf("SearchCategories: using locale: %s", locale)

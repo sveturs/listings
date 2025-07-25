@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"backend/internal/cache"
+	"backend/internal/common"
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
@@ -909,7 +910,7 @@ func (s *MarketplaceService) GetCategoryTree(ctx context.Context) ([]models.Cate
 
 	// Получаем язык из контекста (по умолчанию "en")
 	locale := "en"
-	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+	if lang, ok := ctx.Value(common.ContextKeyLocale).(string); ok && lang != "" {
 		locale = lang
 	}
 
@@ -1190,7 +1191,7 @@ func (s *MarketplaceService) GetCategories(ctx context.Context) ([]models.Market
 
 	// Получаем язык из контекста (по умолчанию "en")
 	locale := "en"
-	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+	if lang, ok := ctx.Value(common.ContextKeyLocale).(string); ok && lang != "" {
 		locale = lang
 	}
 
@@ -1218,7 +1219,7 @@ func (s *MarketplaceService) GetAllCategories(ctx context.Context) ([]models.Mar
 
 	// Получаем язык из контекста (по умолчанию "en")
 	locale := "en"
-	if lang, ok := ctx.Value("locale").(string); ok && lang != "" {
+	if lang, ok := ctx.Value(common.ContextKeyLocale).(string); ok && lang != "" {
 		locale = lang
 	}
 

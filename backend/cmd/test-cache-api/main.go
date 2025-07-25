@@ -10,11 +10,8 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"backend/internal/cache"
+	"backend/internal/common"
 )
-
-type contextKey string
-
-const localeKey contextKey = "locale"
 
 func main() {
 	// Создаем логгер
@@ -55,17 +52,17 @@ func main() {
 		// Создаем контекст с locale
 		ctx := context.Background()
 		if scenario.locale != "" {
-			ctx = context.WithValue(ctx, localeKey, scenario.locale)
+			ctx = context.WithValue(ctx, common.ContextKeyLocale, scenario.locale)
 		}
 
 		// Формируем ключ кеша
 		locale := "en" // по умолчанию
-		if l, ok := ctx.Value("locale").(string); ok && l != "" {
+		if l, ok := ctx.Value(common.ContextKeyLocale).(string); ok && l != "" {
 			locale = l
 		}
 		cacheKey := cache.BuildCategoriesKey(locale)
 
-		fmt.Printf("Context locale: %v\n", ctx.Value("locale"))
+		fmt.Printf("Context locale: %v\n", ctx.Value(common.ContextKeyLocale))
 		fmt.Printf("Effective locale: %s\n", locale)
 		fmt.Printf("Cache key: %s\n", cacheKey)
 
