@@ -172,11 +172,11 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 		}
 
 		// Сохраняем переводы адресов асинхронно, чтобы не замедлять создание объявления
-		go func() {
-			if err := s.SaveAddressTranslations(context.Background(), listingID, addressFields, listing.OriginalLanguage, filteredTargetLanguages); err != nil {
+		go func(ctx context.Context) {
+			if err := s.SaveAddressTranslations(ctx, listingID, addressFields, listing.OriginalLanguage, filteredTargetLanguages); err != nil {
 				log.Printf("Error saving address translations for listing %d: %v", listingID, err)
 			}
-		}()
+		}(ctx)
 	}
 
 	fullListing, err := s.storage.GetListingByID(ctx, listingID)
@@ -575,12 +575,9 @@ func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.
 	}
 
 	// Проверяем, изменились ли адресные поля
-	addressChanged := false
-	if currentListing.Location != listing.Location ||
+	addressChanged := currentListing.Location != listing.Location ||
 		currentListing.City != listing.City ||
-		currentListing.Country != listing.Country {
-		addressChanged = true
-	}
+		currentListing.Country != listing.Country
 
 	// Если адресные поля изменились, обновляем переводы
 	if addressChanged {
@@ -617,11 +614,11 @@ func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.
 			}
 
 			// Обновляем переводы адресов асинхронно
-			go func() {
-				if err := s.SaveAddressTranslations(context.Background(), listing.ID, addressFields, sourceLanguage, filteredTargetLanguages); err != nil {
+			go func(ctx context.Context) {
+				if err := s.SaveAddressTranslations(ctx, listing.ID, addressFields, sourceLanguage, filteredTargetLanguages); err != nil {
 					log.Printf("Error updating address translations for listing %d: %v", listing.ID, err)
 				}
-			}()
+			}(ctx)
 		}
 	}
 

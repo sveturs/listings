@@ -239,7 +239,7 @@ func (s *GeocodingService) GetMultilingualAddress(ctx context.Context, lat, lng 
 
 	// Проверяем что хотя бы один запрос успешен
 	if errSr != nil && errEn != nil && errRu != nil {
-		return nil, fmt.Errorf("failed to get address in any language: sr=%v, en=%v, ru=%v", errSr, errEn, errRu)
+		return nil, fmt.Errorf("failed to get address in any language: sr=%w, en=%w, ru=%w", errSr, errEn, errRu)
 	}
 
 	// Если какой-то адрес не получен, используем английский как fallback
