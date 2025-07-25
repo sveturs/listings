@@ -31,6 +31,10 @@ interface NearbyListing {
   latitude: number;
   longitude: number;
   price: number;
+  isStorefront?: boolean;
+  storeName?: string;
+  imageUrl?: string;
+  category?: string;
 }
 
 export async function getHomePageData(locale: string) {
@@ -75,13 +79,22 @@ export async function getHomePageData(locale: string) {
     //   '/api/v1/analytics/metrics/items?item_type=marketplace&sort_by=views&limit=5'
     // );
 
-    // Обрабатываем категории и добавляем количество (пока моковые данные)
+    // Обрабатываем категории и добавляем количество
     const categoriesWithCount: CategoryWithCount[] =
-      categoriesResponse.data?.data?.slice(0, 5).map((cat: any) => ({
-        id: cat.id,
-        name: cat.name,
-        count: Math.floor(Math.random() * 1000) + 100, // Временно, пока нет реального подсчета
-      })) || [];
+      categoriesResponse.data?.data?.slice(0, 5).map((cat: any) => {
+        console.log('[getHomePageData] Category:', cat);
+        console.log('[getHomePageData] Translations:', cat.translations);
+        console.log('[getHomePageData] Looking for locale:', locale);
+
+        return {
+          id: cat.id,
+          name: cat.translations?.[locale] || cat.name || cat.id, // Используем перевод для текущей локали
+          count:
+            cat.listing_count ||
+            cat.count ||
+            Math.floor(Math.random() * 1000) + 100, // Используем реальное количество если есть
+        };
+      }) || [];
 
     // Обрабатываем featured listing
     let featuredListing: FeaturedListing | undefined;
@@ -107,7 +120,10 @@ export async function getHomePageData(locale: string) {
             ? `${process.env.NEXT_PUBLIC_MINIO_URL || 'http://localhost:9000'}${listing.images[0].public_url}`
             : '/api/placeholder/300/200'),
         category:
-          listing.category_name || listing.category?.name || 'Без категории',
+          listing.category?.translations?.[locale] ||
+          listing.category_name ||
+          listing.category?.name ||
+          'Без категории',
       };
     }
 
@@ -168,6 +184,11 @@ export async function getHomePageData(locale: string) {
         latitude: listing.latitude,
         longitude: listing.longitude,
         price: listing.price,
+        isStorefront:
+          listing.is_storefront || listing.storefront_id ? true : false,
+        storeName: listing.storefront_name || listing.storefront?.name,
+        imageUrl: listing.images?.[0]?.url || listing.images?.[0]?.public_url,
+        category: listing.category_name || listing.category?.name,
       }));
 
     const nearbyListings = nearbyListingsData.length;

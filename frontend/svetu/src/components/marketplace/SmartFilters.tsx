@@ -35,7 +35,7 @@ export function SmartFilters({
   useEffect(() => {
     setFilterValues({});
     onChange({});
-  }, [categoryId, onChange]);
+  }, [categoryId]); // onChange не должен быть в зависимостях
 
   const handleFilterChange = (attributeId: string, value: any) => {
     const newFilters = {
@@ -133,17 +133,17 @@ export function SmartFilters({
           } catch {}
         }
 
-        // Если нет translated_options, парсим обычные options
-        if (options.length === 0 && attribute.options) {
-          try {
-            const parsedOptions = JSON.parse(attribute.options.toString());
-            if (Array.isArray(parsedOptions)) {
-              options = parsedOptions.map((opt) => ({
-                value: opt.value || opt,
-                label: opt.label || opt.value || opt,
-              }));
-            }
-          } catch {}
+        // Если нет translated_options, используем options как массив чисел
+        if (
+          options.length === 0 &&
+          attribute.options &&
+          Array.isArray(attribute.options)
+        ) {
+          // options это массив чисел, используем их как значения
+          options = attribute.options.map((val) => ({
+            value: val.toString(),
+            label: val.toString(),
+          }));
         }
 
         return (
@@ -173,16 +173,16 @@ export function SmartFilters({
           } catch {}
         }
 
-        if (multiOptions.length === 0 && attribute.options) {
-          try {
-            const parsedOptions = JSON.parse(attribute.options.toString());
-            if (Array.isArray(parsedOptions)) {
-              multiOptions = parsedOptions.map((opt) => ({
-                value: opt.value || opt,
-                label: opt.label || opt.value || opt,
-              }));
-            }
-          } catch {}
+        if (
+          multiOptions.length === 0 &&
+          attribute.options &&
+          Array.isArray(attribute.options)
+        ) {
+          // options это массив чисел, используем их как значения
+          multiOptions = attribute.options.map((val) => ({
+            value: val.toString(),
+            label: val.toString(),
+          }));
         }
 
         const selectedValues = Array.isArray(value) ? value : [];

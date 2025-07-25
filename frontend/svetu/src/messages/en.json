@@ -3097,6 +3097,17 @@
     "title": "Listings Map",
     "description": "Find products and services near you",
     "loading": "Loading map...",
+    "listings": "Listings",
+    "storefronts": "Storefronts",
+    "total": "Total: {count}",
+    "showing": "Showing: {shown} of {total}",
+    "showZone": "Show zone",
+    "minutesWalking": "{minutes} minutes walking",
+    "loadingIsochrone": "Loading accessibility zone...",
+    "clickToChangeMode": "Click icon to change mode",
+    "holdForSettings": "Hold for settings",
+    "searchRadius": "Search radius",
+    "walkingAccessibility": "Walking accessibility",
     "search": {
       "address": "Address search",
       "addressPlaceholder": "Enter address or place name",
@@ -3249,6 +3260,43 @@
       "zoomIn": "Zoom in",
       "addressHidden": "Address hidden",
       "withoutTitle": "Untitled"
+    }
+  },
+  "bentoGrid": {
+    "search": {
+      "title": "Find exactly what you need",
+      "subtitle": {
+        "line1": "Thousands of products and services",
+        "line2": "from verified sellers"
+      }
+    },
+    "badges": {
+      "new": "New",
+      "updated": "Updated",
+      "recommended": "Recommended"
+    },
+    "stats": {
+      "listings": "Listings",
+      "sellers": "Sellers",
+      "activeListings": "Active listings"
+    },
+    "categories": {
+      "title": "Popular categories",
+      "loading": "Loading categories..."
+    },
+    "community": {
+      "title": "Community",
+      "activeSellers": "Active sellers",
+      "newToday": "New today"
+    },
+    "deals": {
+      "title": "Safe deals",
+      "successfulDeals": "successful deals"
+    },
+    "updates": {
+      "title": "Updates",
+      "newPerHour": "{count} new per hour",
+      "priceDrops": "{count} price drops"
     }
   }
 }

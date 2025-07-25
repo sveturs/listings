@@ -3000,6 +3000,17 @@
     "title": "Mapa oglasa",
     "description": "Pronađite proizvode i usluge u vašoj blizini",
     "loading": "Učitavanje mape...",
+    "listings": "Oglasi",
+    "storefronts": "Vitrine",
+    "total": "Ukupno: {count}",
+    "showing": "Prikazano: {shown} od {total}",
+    "showZone": "Prikaži zonu",
+    "minutesWalking": "{minutes} minuta peške",
+    "loadingIsochrone": "Učitavanje zone dostupnosti...",
+    "clickToChangeMode": "Kliknite na ikonu za promenu režima",
+    "holdForSettings": "Držite za podešavanja",
+    "searchRadius": "Radijus pretrage",
+    "walkingAccessibility": "Pešačka dostupnost",
     "search": {
       "title": "Pretraga mesta",
       "address": "Pretraga po adresi",
@@ -3175,5 +3186,42 @@
     },
     "showHeader": "Prikaži zaglavlje",
     "hideHeader": "Sakrij zaglavlje"
+  },
+  "bentoGrid": {
+    "search": {
+      "title": "Pronađite baš ono što vam treba",
+      "subtitle": {
+        "line1": "Hiljade proizvoda i usluga",
+        "line2": "od proverenih prodavaca"
+      }
+    },
+    "badges": {
+      "new": "Novo",
+      "updated": "Ažurirano",
+      "recommended": "Preporučujemo"
+    },
+    "stats": {
+      "listings": "Oglasa",
+      "sellers": "Prodavaca",
+      "activeListings": "Aktivnih oglasa"
+    },
+    "categories": {
+      "title": "Popularne kategorije",
+      "loading": "Učitavanje kategorija..."
+    },
+    "community": {
+      "title": "Zajednica",
+      "activeSellers": "Aktivnih prodavaca",
+      "newToday": "Novih danas"
+    },
+    "deals": {
+      "title": "Bezbedne transakcije",
+      "successfulDeals": "uspešnih transakcija"
+    },
+    "updates": {
+      "title": "Ažuriranja",
+      "newPerHour": "{count} novih po satu",
+      "priceDrops": "{count} sniženja cena"
+    }
   }
 }

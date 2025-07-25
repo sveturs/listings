@@ -3250,6 +3250,15 @@
     "title": "Карта объявлений",
     "description": "Найдите товары и услуги рядом с вами",
     "loading": "Загрузка карты...",
+    "listings": "Объявления",
+    "storefronts": "Витрины",
+    "total": "Всего: {count}",
+    "showing": "Показано: {shown} из {total}",
+    "showZone": "Показать зону",
+    "minutesWalking": "{minutes} минут пешком",
+    "loadingIsochrone": "Загрузка зоны доступности...",
+    "clickToChangeMode": "Нажмите на иконку для смены режима",
+    "holdForSettings": "Удерживайте для настроек",
     "search": {
       "address": "Поиск по адресу",
       "addressPlaceholder": "Введите адрес или название места",
@@ -3418,5 +3427,42 @@
   "listing": {
     "listingDetails": "Детали объявления",
     "delivery": "Доставка"
+  },
+  "bentoGrid": {
+    "search": {
+      "title": "Найдите то, что нужно именно вам",
+      "subtitle": {
+        "line1": "Тысячи товаров и услуг",
+        "line2": "от проверенных продавцов"
+      }
+    },
+    "badges": {
+      "new": "Новое",
+      "updated": "Обновлено",
+      "recommended": "Рекомендуем"
+    },
+    "stats": {
+      "listings": "Объявлений",
+      "sellers": "Продавцов",
+      "activeListings": "Активных объявлений"
+    },
+    "categories": {
+      "title": "Популярные категории",
+      "loading": "Загрузка категорий..."
+    },
+    "community": {
+      "title": "Сообщество",
+      "activeSellers": "Активных продавцов",
+      "newToday": "Новых сегодня"
+    },
+    "deals": {
+      "title": "Безопасные сделки",
+      "successfulDeals": "успешных сделок"
+    },
+    "updates": {
+      "title": "Обновления",
+      "newPerHour": "{count} новых за час",
+      "priceDrops": "{count} снижений цен"
+    }
   }
 }
