@@ -165,7 +165,7 @@ func (r *MarketplaceOrderRepository) UpdateStatus(ctx context.Context, orderID i
 			SET delivered_at = NOW(), 
 			    protection_expires_at = NOW() + INTERVAL '7 days' 
 			WHERE id = $1`, orderID)
-	case models.MarketplaceOrderStatusPending, 
+	case models.MarketplaceOrderStatusPending,
 		models.MarketplaceOrderStatusPaid,
 		models.MarketplaceOrderStatusCompleted,
 		models.MarketplaceOrderStatusDisputed,

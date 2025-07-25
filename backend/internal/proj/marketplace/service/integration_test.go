@@ -125,8 +125,10 @@ func (m *MockStorage) GetAllUsers(ctx context.Context, limit, offset int) ([]*mo
 func (m *MockStorage) UpdateUserStatus(ctx context.Context, id int, status string) error { return nil }
 func (m *MockStorage) DeleteUser(ctx context.Context, id int) error                      { return nil }
 func (m *MockStorage) IsUserAdmin(ctx context.Context, email string) (bool, error)       { return false, nil }
-func (m *MockStorage) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error)     { return nil, ErrNotImplemented }
-func (m *MockStorage) RemoveAdmin(ctx context.Context, email string) error               { return nil }
+func (m *MockStorage) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error) {
+	return nil, ErrNotImplemented
+}
+func (m *MockStorage) RemoveAdmin(ctx context.Context, email string) error { return nil }
 func (m *MockStorage) CreateReview(ctx context.Context, review *models.Review) (*models.Review, error) {
 	return nil, ErrNotImplemented
 }

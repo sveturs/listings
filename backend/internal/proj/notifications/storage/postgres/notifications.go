@@ -7,8 +7,6 @@ import (
 
 	"backend/internal/domain/models"
 
-	//    "encoding/json"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -53,17 +51,17 @@ func (s *Storage) GetNotificationSettings(ctx context.Context, userID int) ([]mo
 func (s *Storage) UpdateNotificationSettings(ctx context.Context, settings *models.NotificationSettings) error {
 	_, err := s.pool.Exec(ctx, `
         INSERT INTO notification_settings (
-            user_id, 
-            notification_type, 
+            user_id,
+            notification_type,
             telegram_enabled,
             email_enabled
         ) VALUES (
-            $1, 
-            $2, 
+            $1,
+            $2,
             $3,
             $4
         )
-        ON CONFLICT (user_id, notification_type) 
+        ON CONFLICT (user_id, notification_type)
         DO UPDATE SET
             telegram_enabled = EXCLUDED.telegram_enabled,
             email_enabled = EXCLUDED.email_enabled,
@@ -85,7 +83,7 @@ func (s *Storage) SaveTelegramConnection(ctx context.Context, userID int, chatID
 	result, err := s.pool.Exec(ctx, `
         INSERT INTO user_telegram_connections (user_id, telegram_chat_id, telegram_username)
         VALUES ($1, $2, $3)
-        ON CONFLICT (user_id) 
+        ON CONFLICT (user_id)
         DO UPDATE SET
             telegram_chat_id = $2,
             telegram_username = $3,

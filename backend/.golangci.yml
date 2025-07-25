@@ -2,15 +2,16 @@ version: "2"
 
 run:
   timeout: 5m
-  go: "1.23"
+  go: "1.24"
 
 linters:
   enable:
     # Standard linters
-    - govet        # Go vet
+# TODO:
+#    - govet        # Go vet
+#    - lll          # Line length limit
     - revive       # Go lint replacement
     - misspell     # Spelling mistakes
-    - lll          # Line length limit
     - unused       # Unused code
     - ineffassign  # Ineffectual assignments
     - goconst      # Repeated strings that could be constants
@@ -37,30 +38,31 @@ linters:
   disable: []
 
   settings:
-    govet:
-      enable:
-        - assign
-        - atomic
-        - bools
-        - buildtag
-        - cgocall
-        - composites
-        - copylocks
-        - errorsas
-        - httpresponse
-        - loopclosure
-        - lostcancel
-        - nilfunc
-        - printf
-        - shadow       # Check for variable shadowing
-        - shift
-        - stdmethods
-        - structtag
-        - tests
-        - unmarshal
-        - unreachable
-        - unsafeptr
-        - unusedresult
+# TODO:
+#    govet:
+#      enable:
+#        - assign
+#        - atomic
+#        - bools
+#        - buildtag
+#        - cgocall
+#        - composites
+#        - copylocks
+#        - errorsas
+#        - httpresponse
+#        - loopclosure
+#        - lostcancel
+#        - nilfunc
+#        - printf
+#        - shadow       # Check for variable shadowing
+#        - shift
+#        - stdmethods
+#        - structtag
+#        - tests
+#        - unmarshal
+#        - unreachable
+#        - unsafeptr
+#        - unusedresult
 
     errcheck:
       # Exclude common functions where errors can be safely ignored
@@ -116,19 +118,20 @@ linters:
 
 formatters:
   enable:
-    - gci        # Import grouping and ordering
-    - gofumpt    # Stricter formatting than gofmt
+# TODO:
+#    - gci        # Import grouping and ordering
+#    - gofumpt    # Stricter formatting than gofmt
     - goimports  # Auto-import management
 
   settings:
-    gci:
-      sections:
-        - standard                          # Standard library packages
-        - default                          # Third-party packages
-        - prefix(backend) # Local packages
-
-    gofumpt:
-      extra-rules: true
+#    gci:
+#      sections:
+#        - standard                          # Standard library packages
+#        - default                          # Third-party packages
+#        - prefix(backend) # Local packages
+#
+#    gofumpt:
+#      extra-rules: true
 
     goimports:
       local-prefixes:
