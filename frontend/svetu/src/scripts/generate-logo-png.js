@@ -19,31 +19,47 @@ const offset = (width - (tileSize * 3 + gap * 2)) / 2;
 
 // Tile positions
 const positions = [
-  { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 },
-  { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 },
-  { x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 2, y: 0 },
+  { x: 0, y: 1 },
+  { x: 1, y: 1 },
+  { x: 2, y: 1 },
+  { x: 0, y: 2 },
+  { x: 1, y: 2 },
+  { x: 2, y: 2 },
 ];
 
 // Colors and icons
-const colors = ["#2196F3", "#4CAF50", "#F44336", "#FF9800", "#673AB7", "#00BCD4", "#FFEB3B", "#607D8B", "#9C27B0"];
-const icons = ["🛒", "🏪", "🛍️", "📦", "🏠", "🤝", "📱", "💳", "💰"];
+const colors = [
+  '#2196F3',
+  '#4CAF50',
+  '#F44336',
+  '#FF9800',
+  '#673AB7',
+  '#00BCD4',
+  '#FFEB3B',
+  '#607D8B',
+  '#9C27B0',
+];
+const icons = ['🛒', '🏪', '🛍️', '📦', '🏠', '🤝', '📱', '💳', '💰'];
 
 // Draw tiles
 positions.forEach((pos, index) => {
   const x = offset + pos.x * (tileSize + gap);
   const y = offset + pos.y * (tileSize + gap);
-  
+
   // Create gradient
   const gradient = ctx.createLinearGradient(x, y, x + tileSize, y + tileSize);
   gradient.addColorStop(0, colors[index]);
   gradient.addColorStop(1, colors[index] + 'B3'); // 70% opacity
-  
+
   // Shadow
   ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
   ctx.shadowBlur = 3;
   ctx.shadowOffsetX = 2;
   ctx.shadowOffsetY = 2;
-  
+
   // Draw rounded rectangle
   const radius = tileSize * 0.15;
   ctx.beginPath();
@@ -51,22 +67,27 @@ positions.forEach((pos, index) => {
   ctx.lineTo(x + tileSize - radius, y);
   ctx.quadraticCurveTo(x + tileSize, y, x + tileSize, y + radius);
   ctx.lineTo(x + tileSize, y + tileSize - radius);
-  ctx.quadraticCurveTo(x + tileSize, y + tileSize, x + tileSize - radius, y + tileSize);
+  ctx.quadraticCurveTo(
+    x + tileSize,
+    y + tileSize,
+    x + tileSize - radius,
+    y + tileSize
+  );
   ctx.lineTo(x + radius, y + tileSize);
   ctx.quadraticCurveTo(x, y + tileSize, x, y + tileSize - radius);
   ctx.lineTo(x, y + radius);
   ctx.quadraticCurveTo(x, y, x + radius, y);
   ctx.closePath();
-  
+
   ctx.fillStyle = gradient;
   ctx.fill();
-  
+
   // Reset shadow for text
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 0;
-  
+
   // Draw emoji icon
   ctx.font = `${tileSize * 0.7}px Arial`;
   ctx.fillStyle = 'white';
@@ -77,6 +98,9 @@ positions.forEach((pos, index) => {
 
 // Save as PNG
 const buffer = canvas.toBuffer('image/png');
-fs.writeFileSync('/data/hostel-booking-system/frontend/svetu/public/logos/svetu-gradient-48x48.png', buffer);
+fs.writeFileSync(
+  '/data/hostel-booking-system/frontend/svetu/public/logos/svetu-gradient-48x48.png',
+  buffer
+);
 
 console.log('Logo saved to public/logos/svetu-gradient-48x48.png');

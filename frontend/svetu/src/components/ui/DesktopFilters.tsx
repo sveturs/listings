@@ -13,7 +13,6 @@ interface DesktopFiltersProps {
 export const DesktopFilters: React.FC<DesktopFiltersProps> = ({
   filters,
   onFiltersChange,
-  selectedCategoryId,
 }) => {
   const t = useTranslations('marketplace');
   const [localFilters, setLocalFilters] = useState(filters);

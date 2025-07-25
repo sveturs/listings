@@ -39,20 +39,14 @@ interface HomePageClientProps {
   title: string;
   description: string;
   createListingText: string;
-  initialData: any;
   homePageData: HomePageData | null;
   locale: string;
-  error: Error | null;
-  paymentsEnabled: boolean;
 }
 
 export default function HomePageClient({
   createListingText,
-  initialData,
   homePageData,
   locale,
-  error,
-  paymentsEnabled,
 }: HomePageClientProps) {
   const [bentoData, setBentoData] = useState<HomePageData | null>(homePageData);
   const [isLoading, setIsLoading] = useState(!homePageData);

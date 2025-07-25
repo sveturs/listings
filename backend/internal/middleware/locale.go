@@ -4,12 +4,10 @@ import (
 	"context"
 	"strings"
 
+	"backend/internal/common"
+
 	"github.com/gofiber/fiber/v2"
 )
-
-type contextKey string
-
-const localeKey contextKey = "locale"
 
 // LocaleMiddleware извлекает язык из запроса и добавляет его в контекст
 func (m *Middleware) LocaleMiddleware() fiber.Handler {
@@ -62,7 +60,7 @@ func (m *Middleware) LocaleMiddleware() fiber.Handler {
 		}
 
 		// Добавляем язык в контекст
-		ctx := context.WithValue(c.Context(), localeKey, locale)
+		ctx := context.WithValue(c.Context(), common.ContextKeyLocale, locale)
 		c.SetUserContext(ctx)
 
 		// Добавляем заголовок Content-Language в ответ

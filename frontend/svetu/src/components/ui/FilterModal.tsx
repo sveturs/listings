@@ -17,7 +17,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   onClose,
   filters,
   onFiltersChange,
-  selectedCategoryId,
 }) => {
   const t = useTranslations('marketplace');
   const [localFilters, setLocalFilters] = useState(filters);

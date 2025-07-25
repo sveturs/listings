@@ -2,13 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import {
-  ShoppingBag,
-  TrendingUp,
-  ArrowRight,
-  LayoutGrid,
-  List,
-} from 'lucide-react';
+import { ShoppingBag, TrendingUp, LayoutGrid, List } from 'lucide-react';
 import {
   UnifiedSearchService,
   UnifiedSearchItem,

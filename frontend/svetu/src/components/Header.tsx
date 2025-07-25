@@ -123,10 +123,10 @@ export default function Header() {
               className="btn btn-ghost text-xl px-2 flex items-center gap-2"
             >
               <div className="w-8 h-8 flex items-center justify-center">
-                <Image 
-                  src="/logos/svetu-gradient-48x48.png" 
-                  alt="SveTu Logo" 
-                  width={32} 
+                <Image
+                  src="/logos/svetu-gradient-48x48.png"
+                  alt="SveTu Logo"
+                  width={32}
                   height={32}
                   className="object-contain"
                 />

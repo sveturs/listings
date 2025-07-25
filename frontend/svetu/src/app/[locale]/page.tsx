@@ -70,11 +70,8 @@ export default async function Home({
       title={t('marketplace')}
       description={t('description')}
       createListingText={t('createListing')}
-      initialData={marketplaceData}
       homePageData={homePageData}
       locale={locale}
-      error={error}
-      paymentsEnabled={paymentsEnabled}
     />
   );
 }
