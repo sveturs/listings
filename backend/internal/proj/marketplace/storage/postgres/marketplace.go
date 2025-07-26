@@ -127,6 +127,54 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		log.Printf("Error saving original description translation: %v", err)
 	}
 
+	// Сохраняем переводы title и description, если они есть
+	if len(listing.Translations) > 0 {
+		for lang, fields := range listing.Translations {
+			// Пропускаем исходный язык, так как мы уже сохранили его выше
+			if lang == listing.OriginalLanguage {
+				continue
+			}
+
+			// Сохраняем перевод title
+			if title, ok := fields["title"]; ok && title != "" {
+				_, err = s.pool.Exec(ctx, `
+					INSERT INTO translations (
+						entity_type, entity_id, language, field_name,
+						translated_text, is_machine_translated, is_verified
+					) VALUES ($1, $2, $3, $4, $5, $6, $7)
+					ON CONFLICT (entity_type, entity_id, language, field_name)
+					DO UPDATE SET
+						translated_text = EXCLUDED.translated_text,
+						is_machine_translated = EXCLUDED.is_machine_translated
+				`,
+					"listing", listingID, lang, "title",
+					title, true, false)
+				if err != nil {
+					log.Printf("Error saving title translation for lang %s: %v", lang, err)
+				}
+			}
+
+			// Сохраняем перевод description
+			if description, ok := fields["description"]; ok && description != "" {
+				_, err = s.pool.Exec(ctx, `
+					INSERT INTO translations (
+						entity_type, entity_id, language, field_name,
+						translated_text, is_machine_translated, is_verified
+					) VALUES ($1, $2, $3, $4, $5, $6, $7)
+					ON CONFLICT (entity_type, entity_id, language, field_name)
+					DO UPDATE SET
+						translated_text = EXCLUDED.translated_text,
+						is_machine_translated = EXCLUDED.is_machine_translated
+				`,
+					"listing", listingID, lang, "description",
+					description, true, false)
+				if err != nil {
+					log.Printf("Error saving description translation for lang %s: %v", lang, err)
+				}
+			}
+		}
+	}
+
 	if len(listing.Attributes) > 0 {
 		// Устанавливаем ID объявления для каждого атрибута
 		for i := range listing.Attributes {
@@ -1376,6 +1424,49 @@ func (s *Storage) GetFormattedAttributeValue(ctx context.Context, attr models.Li
 // GetListingAttributes получает значения атрибутов для объявления
 func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
 	query := `
+        WITH attribute_translations AS (
+            SELECT 
+                entity_id,
+                jsonb_object_agg(
+                    language,
+                    translated_text
+                ) as translations
+            FROM translations
+            WHERE entity_type = 'attribute'
+                AND field_name = 'display_name'
+            GROUP BY entity_id
+        ),
+        option_translations AS (
+            SELECT 
+                attribute_name,
+                jsonb_object_agg(
+                    lang,
+                    options_json
+                ) as option_translations
+            FROM (
+                SELECT 
+                    attribute_name,
+                    lang,
+                    jsonb_object_agg(option_value, translation) as options_json
+                FROM (
+                    SELECT 
+                        attribute_name,
+                        'ru' as lang,
+                        option_value,
+                        ru_translation as translation
+                    FROM attribute_option_translations
+                    UNION ALL
+                    SELECT 
+                        attribute_name,
+                        'sr' as lang,
+                        option_value,
+                        sr_translation as translation
+                    FROM attribute_option_translations
+                ) o
+                GROUP BY attribute_name, lang
+            ) grouped
+            GROUP BY attribute_name
+        )
         SELECT DISTINCT ON (a.id)
             v.listing_id,
             v.attribute_id,
@@ -1391,45 +1482,17 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             COALESCE(cam.is_required, a.is_required) as is_required,
             COALESCE(cam.show_in_card, a.show_in_card) as show_in_card,
             COALESCE(cam.show_in_list, a.show_in_list) as show_in_list,
-            COALESCE(
-                jsonb_object_agg(
-                    t.language,
-                    t.translated_text
-                ) FILTER (WHERE t.language IS NOT NULL),
-                '{}'::jsonb
-            ) as translations,
-            COALESCE(
-                (SELECT jsonb_object_agg(
-                    o.language,
-                    o.field_translations
-                )
-                FROM (
-                    SELECT
-                        language,
-                        jsonb_object_agg(field_name, translated_text) as field_translations
-                    FROM translations
-                    WHERE entity_type = 'attribute_option'
-                    AND entity_id = a.id
-                    GROUP BY language
-                ) o),
-                '{}'::jsonb
-            ) as option_translations
+            COALESCE(at.translations, '{}'::jsonb) as translations,
+            COALESCE(ot.option_translations, '{}'::jsonb) as option_translations
         FROM listing_attribute_values v
         JOIN category_attributes a ON v.attribute_id = a.id
         JOIN marketplace_listings ml ON ml.id = v.listing_id
         LEFT JOIN category_attribute_mapping cam ON
             cam.category_id = ml.category_id AND
             cam.attribute_id = a.id
-        LEFT JOIN translations t ON
-            t.entity_type = 'attribute'
-            AND t.entity_id = a.id
-            AND t.field_name = 'display_name'
+        LEFT JOIN attribute_translations at ON at.entity_id = a.id
+        LEFT JOIN option_translations ot ON ot.attribute_name = a.name
         WHERE v.listing_id = $1
-        GROUP BY
-            v.listing_id, v.attribute_id, a.id, a.name, a.display_name,
-            a.attribute_type, v.text_value, v.numeric_value, v.boolean_value,
-            v.json_value, v.unit, a.is_required, a.show_in_card, a.show_in_list,
-            cam.is_required, cam.show_in_card, cam.show_in_list
         ORDER BY a.id, a.sort_order, a.display_name
     `
 
@@ -1501,12 +1564,43 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 			attr.Unit = unit.String
 		}
 
+		// Получаем язык из контекста для переводов
+		locale := "sr"
+		if lang, ok := ctx.Value(common.ContextKeyLocale).(string); ok && lang != "" {
+			locale = lang
+		}
+
 		// Заполняем значения в зависимости от типа
 		if textValue.Valid {
 			attr.TextValue = &textValue.String
-			attr.DisplayValue = textValue.String
-			log.Printf("DEBUG: Attribute %d (%s) has text value: %s",
-				attr.AttributeID, attr.AttributeName, textValue.String)
+
+			// Для select атрибутов пытаемся найти перевод
+			if attr.AttributeType == "select" && attr.OptionTranslations != nil {
+				// Сначала проверяем перевод для текущего языка с точным совпадением регистра
+				if langTranslations, ok := attr.OptionTranslations[locale]; ok {
+					if translation, ok := langTranslations[textValue.String]; ok {
+						attr.DisplayValue = translation
+					} else {
+						// Пробуем найти перевод для значения в нижнем регистре
+						lowerValue := strings.ToLower(textValue.String)
+						if translation, ok := langTranslations[lowerValue]; ok {
+							attr.DisplayValue = translation
+						} else {
+							// Если перевода нет, используем оригинальное значение
+							attr.DisplayValue = textValue.String
+						}
+					}
+				} else {
+					// Если нет переводов для языка, используем оригинальное значение
+					attr.DisplayValue = textValue.String
+				}
+			} else {
+				// Для других типов используем значение как есть
+				attr.DisplayValue = textValue.String
+			}
+
+			log.Printf("DEBUG: Attribute %d (%s) has text value: %s, display: %s",
+				attr.AttributeID, attr.AttributeName, textValue.String, attr.DisplayValue)
 		}
 
 		if numericValue.Valid {

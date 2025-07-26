@@ -21,6 +21,12 @@ export interface CreateListingRequest {
     boolean_value?: boolean;
     json_value?: any;
   }>;
+  // Переводы полей
+  translations?: Record<string, Record<string, string>>;
+
+  // Язык оригинала
+  original_language?: string;
+
   // Региональные поля
   payment_methods?: string[];
   delivery_options?: string[];
@@ -83,6 +89,16 @@ export class ListingsService {
       negotiable_price: data.payment.negotiablePrice,
       bundle_deals: data.payment.bundleDeals,
     };
+
+    // Добавляем переводы, если они есть
+    if (data.translations && Object.keys(data.translations).length > 0) {
+      request.translations = data.translations;
+    }
+
+    // Добавляем язык оригинала, если он указан
+    if (data.originalLanguage) {
+      request.original_language = data.originalLanguage;
+    }
 
     // Отладочное логирование запроса к API
     console.log('API Request:', JSON.stringify(request, null, 2));

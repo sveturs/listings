@@ -118,7 +118,7 @@ export async function getHomePageData(locale: string) {
           listing.images?.[0]?.public_url ||
           (listing.images?.[0]?.public_url
             ? `${process.env.NEXT_PUBLIC_MINIO_URL || 'http://localhost:9000'}${listing.images[0].public_url}`
-            : '/api/placeholder/300/200'),
+            : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjE1MCIgeT0iMTAwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjE5cHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+Tm8gaW1hZ2U8L3RleHQ+PC9zdmc+'),
         category:
           listing.category?.translations?.[locale] ||
           listing.category_name ||

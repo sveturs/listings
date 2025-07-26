@@ -637,14 +637,14 @@ func (r *Repository) ReindexAll(ctx context.Context) error {
 
 func (r *Repository) getAttributeOptionTranslations(ctx context.Context, attrName, value string) (map[string]string, error) {
 	query := `
-        SELECT option_value, en_translation, sr_translation
+        SELECT option_value, ru_translation, sr_translation
         FROM attribute_option_translations
         WHERE attribute_name = $1 AND option_value = $2
     `
 
-	var optionValue, enTranslation, srTranslation string
+	var optionValue, ruTranslation, srTranslation string
 	err := r.storage.QueryRow(ctx, query, attrName, value).Scan(
-		&optionValue, &enTranslation, &srTranslation,
+		&optionValue, &ruTranslation, &srTranslation,
 	)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -654,7 +654,7 @@ func (r *Repository) getAttributeOptionTranslations(ctx context.Context, attrNam
 	}
 
 	translations := map[string]string{
-		"en": enTranslation,
+		"ru": ruTranslation,
 		"sr": srTranslation,
 	}
 
@@ -2295,6 +2295,12 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		case "date_asc":
 			sortField = fieldNameCreatedAt
 			sortOrder = sortOrderAsc
+		case "created":
+			sortField = fieldNameCreatedAt
+			// sortOrder уже установлен из params.SortDirection выше
+		case "created_at":
+			sortField = fieldNameCreatedAt
+			// sortOrder уже установлен из params.SortDirection выше
 		case fieldNamePrice:
 			sortField = fieldNamePrice
 			// sortOrder уже установлен из params.SortDirection выше

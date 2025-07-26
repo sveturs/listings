@@ -1,11 +1,5 @@
 import { config } from '@/config';
 
-interface ClaudeResponse {
-  content: {
-    text: string;
-  }[];
-}
-
 interface ProductAnalysis {
   title: string;
   titleVariants: string[];
@@ -19,6 +13,20 @@ interface ProductAnalysis {
   suggestedPhotos: string[];
   translations: Record<string, { title: string; description: string }>;
   socialPosts: Record<string, string>;
+  location?: {
+    city?: string;
+    region?: string;
+    suggestedLocation?: string;
+  };
+  condition?: 'new' | 'used' | 'refurbished';
+  insights?: Record<
+    string,
+    {
+      demand: string;
+      audience: string;
+      recommendations: string;
+    }
+  >;
 }
 
 export class ClaudeAIService {
@@ -27,14 +35,24 @@ export class ClaudeAIService {
 
   constructor() {
     this.apiKey = config.claudeApiKey || '';
-    console.log('Claude API key configured:', !!this.apiKey, this.apiKey ? 'Key starts with: ' + this.apiKey.substring(0, 10) + '...' : 'No key');
+    console.log(
+      'Claude API key configured:',
+      !!this.apiKey,
+      this.apiKey
+        ? 'Key starts with: ' + this.apiKey.substring(0, 10) + '...'
+        : 'No key'
+    );
   }
 
-  async analyzeProduct(imageBase64: string): Promise<ProductAnalysis> {
+  async analyzeProduct(
+    imageBase64: string,
+    userLanguage: string = 'ru'
+  ): Promise<ProductAnalysis> {
     try {
       console.log('Sending product analysis request via API route...');
       console.log('Image data length:', imageBase64.length);
-      
+      console.log('User language:', userLanguage);
+
       // Use our API route instead of calling Claude directly
       const response = await fetch('/api/ai/analyze', {
         method: 'POST',
@@ -43,6 +61,7 @@ export class ClaudeAIService {
         },
         body: JSON.stringify({
           imageBase64,
+          userLanguage,
         }),
       });
 
@@ -129,6 +148,54 @@ export class ClaudeAIService {
           score: 90 - i * 10,
         })),
       };
+    }
+  }
+
+  async translateContent(
+    content: { title: string; description: string },
+    targetLanguages: string[] = ['en', 'ru', 'sr']
+  ): Promise<Record<string, { title: string; description: string }>> {
+    try {
+      console.log('Translating content to languages:', targetLanguages);
+
+      // Use our API route for translation
+      const response = await fetch('/api/ai/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content,
+          targetLanguages,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Translation API error:', response.status, errorData);
+        throw new Error(`Translation API error: ${response.status}`);
+      }
+
+      const translations = await response.json();
+      console.log('Translations completed');
+
+      return translations;
+    } catch (error) {
+      console.error('Claude translation error:', error);
+
+      // Fallback: вернуть исходный контент для всех языков
+      const fallbackTranslations: Record<
+        string,
+        { title: string; description: string }
+      > = {};
+      targetLanguages.forEach((lang) => {
+        fallbackTranslations[lang] = {
+          title: content.title,
+          description: content.description,
+        };
+      });
+
+      return fallbackTranslations;
     }
   }
 }

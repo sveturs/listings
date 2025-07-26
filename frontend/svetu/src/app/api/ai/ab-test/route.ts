@@ -5,7 +5,7 @@ const CLAUDE_API_KEY = process.env.NEXT_PUBLIC_CLAUDE_API_KEY || '';
 
 export async function POST(request: NextRequest) {
   let titleVariants: string[] = [];
-  
+
   try {
     const body = await request.json();
     titleVariants = body.titleVariants;

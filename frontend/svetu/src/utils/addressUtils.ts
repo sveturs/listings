@@ -78,26 +78,19 @@ export function getFullLocalizedAddress(
     city?: string;
     country?: string;
     translations?: {
-      location?: { sr?: string; en?: string; ru?: string };
-      city?: { sr?: string; en?: string; ru?: string };
-      country?: { sr?: string; en?: string; ru?: string };
+      [locale: string]: {
+        location?: string;
+        city?: string;
+        country?: string;
+      };
     };
   },
   locale: string
 ): string {
-  const location = getLocalizedAddress(
-    item.location,
-    item.translations?.location,
-    locale
-  );
-
-  const city = getLocalizedAddress(item.city, item.translations?.city, locale);
-
-  const country = getLocalizedAddress(
-    item.country,
-    item.translations?.country,
-    locale
-  );
+  const translations = item.translations?.[locale];
+  const location = translations?.location || item.location || '';
+  const city = translations?.city || item.city || '';
+  const country = translations?.country || item.country || '';
 
   // Собираем полный адрес из непустых компонентов
   const parts = [location, city, country].filter(Boolean);

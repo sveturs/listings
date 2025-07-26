@@ -57,12 +57,12 @@ export default function CreateListingSmartPage() {
     deliveryMethods: ['pickup'],
     attributes: {} as Record<string, string>,
   });
-  const [suggestions] = useState({
+  const suggestions = {
     title: '',
     category: '',
     price: '',
     description: '',
-  });
+  };
   // Состояние для сравнения с похожими
   const [showPriceComparison, setShowPriceComparison] = useState(false);
   const [similarListings, setSimilarListings] = useState<any[]>([]);
@@ -246,16 +246,22 @@ export default function CreateListingSmartPage() {
 
     // Генерируем общие примеры на основе заголовка
     let basePrice = 10000;
-    
+
     // Определяем базовую цену по ключевым словам в названии
     const titleLower = title.toLowerCase();
     if (titleLower.includes('тап') || titleLower.includes('тапоч')) {
       basePrice = 1500;
     } else if (titleLower.includes('кроссов') || titleLower.includes('ботин')) {
       basePrice = 5000;
-    } else if (titleLower.includes('телефон') || titleLower.includes('iphone')) {
+    } else if (
+      titleLower.includes('телефон') ||
+      titleLower.includes('iphone')
+    ) {
       basePrice = 50000;
-    } else if (titleLower.includes('ноутбук') || titleLower.includes('компьютер')) {
+    } else if (
+      titleLower.includes('ноутбук') ||
+      titleLower.includes('компьютер')
+    ) {
       basePrice = 40000;
     } else if (titleLower.includes('диван') || titleLower.includes('кровать')) {
       basePrice = 20000;
@@ -347,7 +353,7 @@ export default function CreateListingSmartPage() {
     // Обновляем похожие объявления при изменении категории или заголовка
     if (formData.title || formData.category) {
       setSimilarListings(getSimilarListings(formData.category, formData.title));
-      
+
       // Показываем сравнение цен если есть заголовок
       if (formData.title) {
         setShowPriceComparison(true);
@@ -367,22 +373,86 @@ export default function CreateListingSmartPage() {
   // Автоматическое определение категории по названию
   const detectCategory = (title: string) => {
     const lowerTitle = title.toLowerCase();
-    
+
     // Ключевые слова для категорий
     const categoryKeywords = {
-      fashion: ['обувь', 'туфли', 'тапки', 'тапочки', 'кроссовки', 'ботинки', 'сапоги', 'босоножки', 'сандалии', 'кеды', 'одежда', 'платье', 'брюки', 'джинсы', 'футболка', 'рубашка', 'куртка', 'пальто', 'шуба', 'размер'],
-      electronics: ['телефон', 'iphone', 'samsung', 'xiaomi', 'ноутбук', 'компьютер', 'планшет', 'наушники', 'телевизор', 'playstation', 'xbox', 'приставка', 'фотоаппарат', 'камера'],
-      home: ['мебель', 'диван', 'кресло', 'стол', 'стул', 'шкаф', 'кровать', 'матрас', 'ковер', 'штора', 'посуда', 'кухня', 'холодильник', 'стиральная', 'пылесос'],
-      auto: ['машина', 'автомобиль', 'мотоцикл', 'велосипед', 'самокат', 'колеса', 'шины', 'запчасти', 'двигатель', 'коробка', 'бампер'],
+      fashion: [
+        'обувь',
+        'туфли',
+        'тапки',
+        'тапочки',
+        'кроссовки',
+        'ботинки',
+        'сапоги',
+        'босоножки',
+        'сандалии',
+        'кеды',
+        'одежда',
+        'платье',
+        'брюки',
+        'джинсы',
+        'футболка',
+        'рубашка',
+        'куртка',
+        'пальто',
+        'шуба',
+        'размер',
+      ],
+      electronics: [
+        'телефон',
+        'iphone',
+        'samsung',
+        'xiaomi',
+        'ноутбук',
+        'компьютер',
+        'планшет',
+        'наушники',
+        'телевизор',
+        'playstation',
+        'xbox',
+        'приставка',
+        'фотоаппарат',
+        'камера',
+      ],
+      home: [
+        'мебель',
+        'диван',
+        'кресло',
+        'стол',
+        'стул',
+        'шкаф',
+        'кровать',
+        'матрас',
+        'ковер',
+        'штора',
+        'посуда',
+        'кухня',
+        'холодильник',
+        'стиральная',
+        'пылесос',
+      ],
+      auto: [
+        'машина',
+        'автомобиль',
+        'мотоцикл',
+        'велосипед',
+        'самокат',
+        'колеса',
+        'шины',
+        'запчасти',
+        'двигатель',
+        'коробка',
+        'бампер',
+      ],
     };
-    
+
     // Проверяем каждую категорию
     for (const [category, keywords] of Object.entries(categoryKeywords)) {
-      if (keywords.some(keyword => lowerTitle.includes(keyword))) {
+      if (keywords.some((keyword) => lowerTitle.includes(keyword))) {
         return category;
       }
     }
-    
+
     return '';
   };
 
@@ -871,18 +941,28 @@ export default function CreateListingSmartPage() {
                   onChange={(e) => {
                     const newTitle = e.target.value;
                     setFormData({ ...formData, title: newTitle });
-                    
+
                     // Автоматически определяем категорию
                     if (newTitle.length > 3) {
                       const detectedCategory = detectCategory(newTitle);
                       if (detectedCategory && !formData.category) {
-                        setFormData(prev => ({ ...prev, category: detectedCategory }));
-                        toast.success(`Категория определена автоматически: ${
-                          detectedCategory === 'fashion' ? 'Мода' :
-                          detectedCategory === 'electronics' ? 'Электроника' :
-                          detectedCategory === 'home' ? 'Дом' :
-                          detectedCategory === 'auto' ? 'Авто' : ''
-                        }`);
+                        setFormData((prev) => ({
+                          ...prev,
+                          category: detectedCategory,
+                        }));
+                        toast.success(
+                          `Категория определена автоматически: ${
+                            detectedCategory === 'fashion'
+                              ? 'Мода'
+                              : detectedCategory === 'electronics'
+                                ? 'Электроника'
+                                : detectedCategory === 'home'
+                                  ? 'Дом'
+                                  : detectedCategory === 'auto'
+                                    ? 'Авто'
+                                    : ''
+                          }`
+                        );
                       }
                     }
                   }}
@@ -1016,7 +1096,16 @@ export default function CreateListingSmartPage() {
                       className="btn btn-outline btn-sm mt-2 gap-1"
                     >
                       <FileText className="w-3 h-3" />
-                      Использовать шаблон для {formData.category === 'fashion' ? 'одежды/обуви' : formData.category === 'electronics' ? 'электроники' : formData.category === 'home' ? 'дома' : formData.category === 'auto' ? 'авто' : 'товара'}
+                      Использовать шаблон для{' '}
+                      {formData.category === 'fashion'
+                        ? 'одежды/обуви'
+                        : formData.category === 'electronics'
+                          ? 'электроники'
+                          : formData.category === 'home'
+                            ? 'дома'
+                            : formData.category === 'auto'
+                              ? 'авто'
+                              : 'товара'}
                     </button>
                   )}
 

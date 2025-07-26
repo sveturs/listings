@@ -37,24 +37,45 @@ import {
   Loader2,
   ArrowRight,
   ImageIcon,
+  MapPin as MapPinIcon,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from '@/utils/toast';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { claudeAI } from '@/services/ai/claude.service';
+import type { CreateListingState } from '@/contexts/CreateListingContext';
+import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
+import { extractLocationFromImages } from '@/utils/exifUtils';
+import LocationPicker from '@/components/GIS/LocationPicker';
 
 export default function AIPoweredListingCreationPage() {
   const router = useRouter();
   const t = useTranslations();
+  const locale = useLocale();
   const { user } = useAuthContext();
   const [currentView, setCurrentView] = useState<
     'upload' | 'process' | 'enhance' | 'publish'
   >('upload');
   const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [voiceRecording, setVoiceRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<
+    Array<{ id: number; name: string; slug: string; translations?: any }>
+  >([]);
+
+  // Category attributes
+  const [categoryAttributes, setCategoryAttributes] = useState<any[]>([]);
+
+  // Location states
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [detectedLocation, setDetectedLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    source: 'exif' | 'profile' | 'manual';
+  } | null>(null);
 
   // AI generated data
   const [aiData, setAiData] = useState({
@@ -72,19 +93,140 @@ export default function AIPoweredListingCreationPage() {
     translations: {} as Record<string, { title: string; description: string }>,
     publishTime: '',
     socialPosts: {} as Record<string, string>,
+    location: {
+      city: '',
+      region: '',
+      suggestedLocation: '',
+    },
+    condition: 'used' as 'new' | 'used' | 'refurbished',
+    insights: {} as Record<
+      string,
+      {
+        demand: string;
+        audience: string;
+        recommendations: string;
+      }
+    >,
   });
 
   // A/B testing state
   const [selectedVariant, setSelectedVariant] = useState(0);
 
+  // Preview language state
+  const [previewLanguage, setPreviewLanguage] = useState('ru');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Геокодирование
+  const { validateAddress } = useAddressGeocoding({
+    country: ['rs'], // Сербия
+    language: 'sr',
+  });
 
   useEffect(() => {
     if (!user) {
       toast.error(t('create_listing.auth_required'));
       router.push('/');
+      return;
     }
-  }, [user, router, t]);
+
+    // Загружаем профиль пользователя для получения адреса по умолчанию
+    const loadUserProfile = async () => {
+      try {
+        const { tokenManager } = await import('@/utils/tokenManager');
+        const token = tokenManager.getAccessToken();
+
+        if (!token) {
+          console.log('No access token available, skipping profile load');
+          return;
+        }
+
+        // Используем относительный путь благодаря Next.js rewrites
+        console.log('Making profile request to: /api/v1/users/profile');
+
+        const response = await fetch('/api/v1/users/profile', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const profileData = await response.json();
+          if (profileData.data?.city && profileData.data?.country) {
+            console.log(
+              'Using default address from user profile:',
+              profileData.data
+            );
+            setAiData((prev) => ({
+              ...prev,
+              location: {
+                city: profileData.data.city,
+                region: profileData.data.country,
+                suggestedLocation: `${profileData.data.city}, ${profileData.data.country}`,
+              },
+            }));
+
+            // Геокодируем адрес пользователя для получения координат
+            try {
+              const geoResult = await validateAddress(
+                `${profileData.data.city}, ${profileData.data.country}`
+              );
+              if (geoResult.success && geoResult.location) {
+                setDetectedLocation({
+                  latitude: geoResult.location.lat,
+                  longitude: geoResult.location.lng,
+                  source: 'profile',
+                });
+              }
+            } catch (error) {
+              console.log('Failed to geocode user profile address:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Failed to load user profile:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, [user, router, t, validateAddress]);
+
+  // Загружаем категории при монтировании компонента
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await fetch('/api/v1/marketplace/categories');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            setCategories(data.data);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  // Загружаем атрибуты при изменении категории
+  const loadCategoryAttributes = async (categoryId: number) => {
+    try {
+      const response = await fetch(
+        `/api/v1/marketplace/categories/${categoryId}/attributes`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data) {
+          setCategoryAttributes(data.data);
+          console.log('Loaded attributes for category:', categoryId, data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load category attributes:', error);
+    }
+  };
 
   // Convert image to base64
   const convertToBase64 = async (imageUrl: string): Promise<string> => {
@@ -115,15 +257,43 @@ export default function AIPoweredListingCreationPage() {
       // Convert first image to base64
       const base64Image = await convertToBase64(images[0]);
 
-      // Call Claude AI service
-      const analysis = await claudeAI.analyzeProduct(base64Image);
+      // Call Claude AI service with user's language
+      const analysis = await claudeAI.analyzeProduct(base64Image, locale);
 
-      // Update state with AI analysis
+      // Update state with AI analysis with validation
       setAiData({
+        ...aiData,
         ...analysis,
+        // Валидация categoryProbabilities
+        categoryProbabilities: Array.isArray(analysis.categoryProbabilities)
+          ? analysis.categoryProbabilities
+          : [],
+        // Валидация других массивов
+        titleVariants: Array.isArray(analysis.titleVariants)
+          ? analysis.titleVariants
+          : [analysis.title || ''],
+        tags: Array.isArray(analysis.tags) ? analysis.tags : [],
+        suggestedPhotos: Array.isArray(analysis.suggestedPhotos)
+          ? analysis.suggestedPhotos
+          : [],
+        // Извлекаем только число из цены, убираем валюту
+        price: analysis.price?.replace(/[^\d.,]/g, '').replace(',', '.') || '',
         selectedTitleIndex: 0,
         publishTime: '19:00',
+        location: {
+          city: analysis.location?.city || 'Белград',
+          region: analysis.location?.region || 'Сербия',
+          suggestedLocation: analysis.location?.suggestedLocation || '',
+        },
+        condition: analysis.condition || 'used',
+        insights: analysis.insights || {},
       });
+
+      // Загружаем атрибуты для выбранной категории
+      const categoryData = getCategoryData(analysis.category);
+      if (categoryData && categoryData.id) {
+        await loadCategoryAttributes(categoryData.id);
+      }
 
       // Perform A/B testing on title variants
       if (analysis.titleVariants.length > 1) {
@@ -140,24 +310,53 @@ export default function AIPoweredListingCreationPage() {
       setCurrentView('enhance');
     } catch (err) {
       console.error('AI processing error:', err);
-      setError('Произошла ошибка при анализе. Проверьте подключение к интернету и попробуйте еще раз.');
+      setError(
+        'Произошла ошибка при анализе. Проверьте подключение к интернету и попробуйте еще раз.'
+      );
       setIsProcessing(false);
       // Не переходим к следующему шагу при ошибке
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map((file) =>
-        URL.createObjectURL(file)
-      );
+      const filesArray = Array.from(files);
+      const newImages = filesArray.map((file) => URL.createObjectURL(file));
       setImages([...images, ...newImages].slice(0, 8));
+      setImageFiles([...imageFiles, ...filesArray].slice(0, 8));
+
+      // Пытаемся извлечь геолокацию из EXIF данных
+      try {
+        const exifLocation = await extractLocationFromImages(filesArray);
+        if (exifLocation) {
+          console.log('Detected location from EXIF:', exifLocation);
+          setDetectedLocation({
+            latitude: exifLocation.latitude,
+            longitude: exifLocation.longitude,
+            source: 'exif',
+          });
+
+          // Обновляем данные локации в AI данных
+          setAiData((prev) => ({
+            ...prev,
+            location: {
+              ...prev.location,
+              suggestedLocation: `Локация из фото: ${exifLocation.latitude.toFixed(4)}, ${exifLocation.longitude.toFixed(4)}`,
+            },
+          }));
+
+          toast.success('Местоположение определено из фотографии!');
+        }
+      } catch {
+        console.log('No location data found in images');
+      }
     }
   };
 
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
+    setImageFiles(imageFiles.filter((_, i) => i !== index));
   };
 
   const regenerateTitle = () => {
@@ -512,7 +711,7 @@ export default function AIPoweredListingCreationPage() {
                 Категория
               </h3>
               <div className="space-y-2">
-                {aiData.categoryProbabilities.map((cat, index) => (
+                {(aiData.categoryProbabilities || []).map((cat, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between"
@@ -623,6 +822,110 @@ export default function AIPoweredListingCreationPage() {
             </div>
           </div>
 
+          {/* Location and condition */}
+          <div className="card bg-base-200 mb-6">
+            <div className="card-body">
+              <h3 className="card-title">
+                <Globe className="w-5 h-5" />
+                Местоположение и состояние
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">
+                    <span className="label-text">Город</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="input input-bordered"
+                    value={aiData.location.city}
+                    onChange={(e) =>
+                      setAiData({
+                        ...aiData,
+                        location: { ...aiData.location, city: e.target.value },
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="label">
+                    <span className="label-text">Состояние</span>
+                  </label>
+                  <select
+                    className="select select-bordered"
+                    value={aiData.condition}
+                    onChange={(e) =>
+                      setAiData({
+                        ...aiData,
+                        condition: e.target.value as
+                          | 'new'
+                          | 'used'
+                          | 'refurbished',
+                      })
+                    }
+                  >
+                    <option value="new">Новое</option>
+                    <option value="used">Б/у</option>
+                    <option value="refurbished">Восстановленное</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Location source info and manual picker */}
+              <div className="mt-4 space-y-3">
+                {detectedLocation && (
+                  <div className="alert alert-info">
+                    <Globe className="w-4 h-4" />
+                    <div>
+                      <p className="font-semibold text-sm">
+                        Местоположение определено:{' '}
+                        {detectedLocation.source === 'exif'
+                          ? 'из метаданных фото'
+                          : detectedLocation.source === 'profile'
+                            ? 'из профиля пользователя'
+                            : 'вручную'}
+                      </p>
+                      <p className="text-xs">
+                        Координаты: {detectedLocation.latitude.toFixed(4)},{' '}
+                        {detectedLocation.longitude.toFixed(4)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!detectedLocation && (
+                  <div className="alert alert-warning">
+                    <AlertCircle className="w-4 h-4" />
+                    <div>
+                      <p className="font-semibold text-sm">
+                        Местоположение не определено
+                      </p>
+                      <p className="text-xs">
+                        Выберите точное местоположение для лучшей видимости
+                        объявления
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowLocationPicker(true)}
+                  className="btn btn-outline btn-sm gap-2"
+                >
+                  <MapPinIcon className="w-4 h-4" />
+                  {detectedLocation ? 'Уточнить на карте' : 'Выбрать на карте'}
+                </button>
+              </div>
+              {aiData.location.suggestedLocation && (
+                <div className="alert alert-info mt-4">
+                  <Lightbulb className="w-4 h-4" />
+                  <span className="text-sm">
+                    AI предлагает локацию: {aiData.location.suggestedLocation}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Price with AI analysis */}
           <div className="card bg-base-200 mb-6">
             <div className="card-body">
@@ -676,14 +979,19 @@ export default function AIPoweredListingCreationPage() {
           </div>
 
           {/* Attributes */}
-          {Object.keys(aiData.attributes).length > 0 && (
+          {(Object.keys(aiData.attributes).length > 0 ||
+            categoryAttributes.length > 0) && (
             <div className="card bg-base-200 mb-6">
               <div className="card-body">
                 <h3 className="card-title">
                   <Package className="w-5 h-5" />
-                  Характеристики (AI распознал)
+                  Характеристики{' '}
+                  {Object.keys(aiData.attributes).length > 0
+                    ? '(AI распознал)'
+                    : '(категория)'}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Отображаем атрибуты от AI */}
                   {Object.entries(aiData.attributes).map(([key, value]) => (
                     <div key={key} className="form-control">
                       <label className="label">
@@ -705,6 +1013,92 @@ export default function AIPoweredListingCreationPage() {
                       />
                     </div>
                   ))}
+
+                  {/* Отображаем атрибуты категории, которых нет в AI данных */}
+                  {categoryAttributes
+                    .filter((attr) => !aiData.attributes[attr.name])
+                    .map((attr) => (
+                      <div key={attr.id} className="form-control">
+                        <label className="label">
+                          <span className="label-text">
+                            {attr.display_name || attr.name}
+                            {attr.is_required && (
+                              <span className="text-error">*</span>
+                            )}
+                          </span>
+                        </label>
+                        {attr.attribute_type === 'select' &&
+                        attr.options &&
+                        Array.isArray(attr.options) ? (
+                          <select
+                            className="select select-bordered select-sm"
+                            onChange={(e) =>
+                              setAiData({
+                                ...aiData,
+                                attributes: {
+                                  ...aiData.attributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          >
+                            <option value="">Выберите...</option>
+                            {attr.options.map((opt: any) => (
+                              <option
+                                key={opt.id || opt.value}
+                                value={opt.value}
+                              >
+                                {opt.display_value || opt.value}
+                              </option>
+                            ))}
+                          </select>
+                        ) : attr.attribute_type === 'boolean' ? (
+                          <input
+                            type="checkbox"
+                            className="checkbox"
+                            onChange={(e) =>
+                              setAiData({
+                                ...aiData,
+                                attributes: {
+                                  ...aiData.attributes,
+                                  [attr.name]: e.target.checked.toString(),
+                                },
+                              })
+                            }
+                          />
+                        ) : attr.attribute_type === 'number' ? (
+                          <input
+                            type="number"
+                            className="input input-bordered input-sm"
+                            placeholder={attr.placeholder}
+                            onChange={(e) =>
+                              setAiData({
+                                ...aiData,
+                                attributes: {
+                                  ...aiData.attributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            className="input input-bordered input-sm"
+                            placeholder={attr.placeholder}
+                            onChange={(e) =>
+                              setAiData({
+                                ...aiData,
+                                attributes: {
+                                  ...aiData.attributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        )}
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>
@@ -713,29 +1107,112 @@ export default function AIPoweredListingCreationPage() {
           {/* Translations */}
           <div className="card bg-base-200 mb-6">
             <div className="card-body">
-              <h3 className="card-title">
-                <Languages className="w-5 h-5" />
-                Мультиязычность (автоперевод)
-              </h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="card-title">
+                  <Languages className="w-5 h-5" />
+                  Мультиязычность (автоперевод)
+                </h3>
+                <button
+                  onClick={async () => {
+                    setIsProcessing(true);
+                    try {
+                      const translations = await claudeAI.translateContent(
+                        {
+                          title:
+                            aiData.titleVariants[aiData.selectedTitleIndex] ||
+                            aiData.title,
+                          description: aiData.description,
+                        },
+                        ['en', 'sr', 'ru']
+                      );
+                      setAiData({ ...aiData, translations });
+                      toast.success('Переводы обновлены через Claude AI!');
+                    } catch (_error) {
+                      toast.error('Ошибка при обновлении переводов');
+                    } finally {
+                      setIsProcessing(false);
+                    }
+                  }}
+                  className="btn btn-ghost btn-sm gap-1"
+                  disabled={isProcessing}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Обновить переводы
+                </button>
+              </div>
               <div className="space-y-4">
                 {Object.entries(aiData.translations).map(([lang, trans]) => (
                   <div key={lang} className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-3">
                       <Globe className="w-4 h-4" />
                       <span className="font-semibold">
                         {lang === 'en'
                           ? 'English'
                           : lang === 'sr'
                             ? 'Српски'
-                            : lang}
+                            : lang === 'ru'
+                              ? 'Русский'
+                              : lang}
                       </span>
                     </div>
-                    <p className="font-medium">{trans.title}</p>
-                    <p className="text-sm text-base-content/70">
-                      {trans.description}
-                    </p>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="label">
+                          <span className="label-text text-sm">Заголовок</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="input input-bordered w-full"
+                          value={trans.title}
+                          onChange={(e) => {
+                            setAiData({
+                              ...aiData,
+                              translations: {
+                                ...aiData.translations,
+                                [lang]: {
+                                  ...trans,
+                                  title: e.target.value,
+                                },
+                              },
+                            });
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="label">
+                          <span className="label-text text-sm">Описание</span>
+                        </label>
+                        <textarea
+                          className="textarea textarea-bordered w-full h-24"
+                          value={trans.description}
+                          onChange={(e) => {
+                            setAiData({
+                              ...aiData,
+                              translations: {
+                                ...aiData.translations,
+                                [lang]: {
+                                  ...trans,
+                                  description: e.target.value,
+                                },
+                              },
+                            });
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 ))}
+              </div>
+
+              <div className="alert alert-info mt-4">
+                <Brain className="w-4 h-4" />
+                <span className="text-sm">
+                  Переводы выполнены через Claude AI для максимальной точности и
+                  естественности. Вы можете отредактировать их при
+                  необходимости.
+                </span>
               </div>
             </div>
           </div>
@@ -821,6 +1298,310 @@ export default function AIPoweredListingCreationPage() {
     </motion.div>
   );
 
+  const getCategoryData = (
+    categoryName: string
+  ): { id: number; name: string; slug: string } => {
+    // Пытаемся найти категорию по разным критериям
+    const normalizedName = categoryName.toLowerCase().trim();
+
+    // 1. Точное совпадение по slug
+    let category = categories.find((cat) => cat.slug === normalizedName);
+
+    // 2. Частичное совпадение по slug (категория содержит искомое слово)
+    if (!category) {
+      category = categories.find(
+        (cat) =>
+          cat.slug.toLowerCase().includes(normalizedName) ||
+          normalizedName.includes(cat.slug.toLowerCase())
+      );
+    }
+
+    // 3. Поиск по переводам названия (если есть поле translations)
+    if (!category) {
+      category = categories.find((cat) => {
+        if (cat.translations) {
+          return Object.values(cat.translations).some(
+            (translation) =>
+              typeof translation === 'string' &&
+              (translation.toLowerCase().includes(normalizedName) ||
+                normalizedName.includes(translation.toLowerCase()))
+          );
+        }
+        return false;
+      });
+    }
+
+    // 4. Поиск по имени категории
+    if (!category) {
+      category = categories.find(
+        (cat) =>
+          cat.name.toLowerCase().includes(normalizedName) ||
+          normalizedName.includes(cat.name.toLowerCase())
+      );
+    }
+
+    // 5. Если ничего не нашли, используем первую категорию или дефолтную
+    if (!category && categories.length > 0) {
+      // Пытаемся найти категорию "Services" или "Other" как универсальную
+      category =
+        categories.find(
+          (cat) =>
+            cat.slug === 'services' ||
+            cat.slug === 'other' ||
+            cat.slug === 'misc'
+        ) || categories[0];
+    }
+
+    // Логирование для отладки
+    console.log('Category mapping:', {
+      aiCategory: categoryName,
+      foundCategory: category,
+      availableCategories: categories.length,
+    });
+
+    return category || { id: 1, name: 'General', slug: 'general' };
+  };
+
+  const publishListing = async () => {
+    let listingData: CreateListingState | undefined;
+
+    try {
+      setIsProcessing(true);
+
+      // Получаем данные категории
+      const categoryData = getCategoryData(aiData.category);
+
+      // Используем координаты из detectedLocation или геокодируем адрес
+      let latitude = 0;
+      let longitude = 0;
+
+      if (detectedLocation) {
+        // Используем уже определенные координаты
+        latitude = detectedLocation.latitude;
+        longitude = detectedLocation.longitude;
+        console.log(`Using ${detectedLocation.source} location:`, {
+          latitude,
+          longitude,
+        });
+      } else {
+        // Геокодируем адрес как fallback
+        const fullAddress =
+          `${aiData.location.suggestedLocation || ''} ${aiData.location.city || 'Белград'} ${aiData.location.region || 'Сербия'}`.trim();
+
+        try {
+          const geoResult = await validateAddress(fullAddress);
+          if (geoResult.success && geoResult.location) {
+            latitude = geoResult.location.lat;
+            longitude = geoResult.location.lng;
+            console.log('Geocoding successful:', { latitude, longitude });
+          }
+        } catch (error) {
+          console.error('Geocoding failed:', error);
+        }
+      }
+
+      // Преобразуем AI данные в формат CreateListingState
+      listingData = {
+        category: categoryData,
+        title: aiData.titleVariants[aiData.selectedTitleIndex] || aiData.title,
+        description: aiData.description,
+        price: parseFloat(aiData.price) || 0,
+        currency: 'RSD',
+        condition: aiData.condition,
+
+        // Локация
+        location: {
+          latitude,
+          longitude,
+          address:
+            aiData.location.suggestedLocation ||
+            aiData.location.city ||
+            'Белград',
+          city: aiData.location.city || 'Белград',
+          region: aiData.location.region || 'Сербия',
+          country: 'Сербия',
+        },
+
+        // Региональная система доверия
+        trust: {
+          phoneVerified: false,
+          preferredMeetingType: 'personal',
+          meetingLocations: [],
+          availableHours: '',
+          localReputation: 0,
+        },
+
+        // Платежи
+        payment: {
+          methods: ['cash'],
+          codEnabled: false,
+          codPrice: 0,
+          personalMeeting: true,
+          deliveryOptions: [],
+          negotiablePrice: false,
+          bundleDeals: false,
+        },
+
+        // Локализация
+        localization: {
+          script: 'cyrillic',
+          language: 'sr',
+          traditionalUnits: false,
+          regionalPhrases: [],
+        },
+
+        // Pijaca 2.0
+        pijaca: {
+          vendorStallStyle: '',
+          regularCustomers: false,
+          traditionalStyle: false,
+        },
+
+        // Изображения и атрибуты
+        images: images,
+        mainImageIndex: 0,
+        attributes: Object.entries(aiData.attributes).reduce(
+          (acc, [key, value]) => {
+            // Пропускаем пустые значения
+            const stringValue = String(value || '');
+            if (!stringValue || stringValue.trim() === '') {
+              return acc;
+            }
+
+            // Находим соответствующий атрибут из загруженных
+            const categoryAttr = categoryAttributes.find(
+              (attr) => attr.name === key
+            );
+
+            if (categoryAttr && categoryAttr.id > 0) {
+              // Проверяем, что значение подходит для типа атрибута
+              const attributeValue: any = {
+                attribute_id: categoryAttr.id,
+                attribute_name: categoryAttr.name,
+                display_name: categoryAttr.display_name,
+                attribute_type: categoryAttr.attribute_type,
+              };
+
+              // Добавляем значение в зависимости от типа
+              if (categoryAttr.attribute_type === 'text') {
+                attributeValue.text_value = stringValue;
+              } else if (categoryAttr.attribute_type === 'number') {
+                const numericValue = parseFloat(stringValue);
+                if (!isNaN(numericValue)) {
+                  attributeValue.numeric_value = numericValue;
+                } else {
+                  // Если число невалидно, пропускаем атрибут
+                  return acc;
+                }
+              } else if (categoryAttr.attribute_type === 'boolean') {
+                attributeValue.boolean_value =
+                  stringValue === 'true' ||
+                  stringValue === 'да' ||
+                  stringValue === 'yes';
+              } else if (categoryAttr.attribute_type === 'select') {
+                // Для select проверяем, что значение есть в options
+                if (
+                  categoryAttr.options &&
+                  Array.isArray(categoryAttr.options)
+                ) {
+                  const validOption = categoryAttr.options.find(
+                    (opt: any) =>
+                      opt.value === stringValue ||
+                      opt.display_value === stringValue
+                  );
+                  if (validOption) {
+                    attributeValue.text_value = validOption.value;
+                  } else {
+                    // Если значение не найдено в options, пропускаем
+                    return acc;
+                  }
+                } else {
+                  attributeValue.text_value = stringValue;
+                }
+              } else if (categoryAttr.attribute_type === 'multiselect') {
+                attributeValue.json_value = Array.isArray(value)
+                  ? value
+                  : [stringValue];
+              }
+
+              if (categoryAttr.unit) {
+                attributeValue.unit = categoryAttr.unit;
+              }
+
+              acc[key] = attributeValue;
+            }
+            // Убираем блок else - больше не создаем атрибуты с ID=0
+
+            return acc;
+          },
+          {} as Record<string, any>
+        ),
+
+        // Переводы
+        translations: aiData.translations,
+
+        // Язык оригинала
+        originalLanguage: locale,
+
+        // Метаданные
+        isPublished: true,
+        isDraft: false,
+      };
+
+      // Создаем объявление
+      const { ListingsService } = await import('@/services/listings');
+      const response = await ListingsService.createListing(listingData);
+
+      if (response.data?.id) {
+        // Загружаем изображения
+        if (imageFiles.length > 0) {
+          await ListingsService.uploadImages(response.data.id, imageFiles, 0);
+        }
+
+        toast.success('Объявление успешно создано с помощью AI!');
+        router.push(`/marketplace/${response.data.id}`);
+      }
+    } catch (error) {
+      console.error('Error publishing listing:', error);
+
+      // Улучшенная обработка ошибок
+      let errorMessage = 'Ошибка при создании объявления. Попробуйте еще раз.';
+
+      if (error instanceof Error) {
+        // Проверяем на специфические ошибки атрибутов
+        if (
+          error.message.includes('attribute') ||
+          error.message.includes('атрибут')
+        ) {
+          errorMessage =
+            'Ошибка в атрибутах товара. Проверьте заполненные поля.';
+        } else if (
+          error.message.includes('validation') ||
+          error.message.includes('валидация')
+        ) {
+          errorMessage = 'Ошибка валидации данных. Проверьте все поля.';
+        } else if (
+          error.message.includes('network') ||
+          error.message.includes('fetch')
+        ) {
+          errorMessage = 'Ошибка сети. Проверьте подключение к интернету.';
+        }
+
+        console.error('Detailed error information:', {
+          message: error.message,
+          stack: error.stack,
+          listingData: listingData
+            ? JSON.stringify(listingData, null, 2)
+            : 'undefined',
+        });
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const renderPublishView = () => (
     <motion.div
       initial={{ opacity: 0 }}
@@ -847,6 +1628,28 @@ export default function AIPoweredListingCreationPage() {
               Готово к публикации с максимальной эффективностью
             </p>
           </motion.div>
+
+          {/* Language Switcher */}
+          <div className="flex justify-center gap-2 mb-6">
+            <button
+              onClick={() => setPreviewLanguage('ru')}
+              className={`btn btn-sm ${previewLanguage === 'ru' ? 'btn-primary' : 'btn-outline'}`}
+            >
+              🇷🇺 Русский
+            </button>
+            <button
+              onClick={() => setPreviewLanguage('en')}
+              className={`btn btn-sm ${previewLanguage === 'en' ? 'btn-primary' : 'btn-outline'}`}
+            >
+              🇬🇧 English
+            </button>
+            <button
+              onClick={() => setPreviewLanguage('sr')}
+              className={`btn btn-sm ${previewLanguage === 'sr' ? 'btn-primary' : 'btn-outline'}`}
+            >
+              🇷🇸 Српски
+            </button>
+          </div>
 
           {/* Preview Card */}
           <motion.div
@@ -875,8 +1678,12 @@ export default function AIPoweredListingCreationPage() {
 
             <div className="card-body">
               <h2 className="card-title text-2xl">
-                {aiData.titleVariants[aiData.selectedTitleIndex] ||
-                  aiData.title}
+                {previewLanguage === 'ru'
+                  ? aiData.titleVariants[aiData.selectedTitleIndex] ||
+                    aiData.title
+                  : aiData.translations[previewLanguage]?.title ||
+                    aiData.titleVariants[aiData.selectedTitleIndex] ||
+                    aiData.title}
               </h2>
 
               <div className="text-3xl font-bold text-primary mb-4">
@@ -884,8 +1691,65 @@ export default function AIPoweredListingCreationPage() {
               </div>
 
               <p className="text-base-content/80 mb-4 whitespace-pre-wrap">
-                {aiData.description}
+                {previewLanguage === 'ru'
+                  ? aiData.description
+                  : aiData.translations[previewLanguage]?.description ||
+                    aiData.description}
               </p>
+
+              {/* Атрибуты */}
+              {Object.keys(aiData.attributes).length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-semibold mb-2">
+                    {previewLanguage === 'ru' && 'Характеристики:'}
+                    {previewLanguage === 'en' && 'Specifications:'}
+                    {previewLanguage === 'sr' && 'Karakteristike:'}
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(aiData.attributes).map(([key, value]) => {
+                      const categoryAttr = categoryAttributes.find(
+                        (attr) => attr.name === key
+                      );
+
+                      // Получаем переведенное имя атрибута
+                      let displayName = categoryAttr?.display_name || key;
+                      if (
+                        categoryAttr?.translations &&
+                        categoryAttr.translations[previewLanguage]
+                      ) {
+                        displayName =
+                          categoryAttr.translations[previewLanguage];
+                      }
+
+                      // Получаем переведенное значение для select атрибутов
+                      let displayValue = String(value);
+                      if (
+                        categoryAttr?.attribute_type === 'select' &&
+                        categoryAttr?.option_translations?.[previewLanguage]?.[
+                          value
+                        ]
+                      ) {
+                        displayValue =
+                          categoryAttr.option_translations[previewLanguage][
+                            value
+                          ];
+                      }
+
+                      return (
+                        <div
+                          key={key}
+                          className="flex justify-between py-1 border-b border-base-200"
+                        >
+                          <span className="text-base-content/70">
+                            {displayName}:
+                          </span>
+                          <span className="font-medium">{displayValue}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-4 text-sm text-base-content/60 mb-4">
                 <span className="flex items-center gap-1">
@@ -899,13 +1763,15 @@ export default function AIPoweredListingCreationPage() {
               </div>
 
               {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {aiData.tags.map((tag, index) => (
-                  <div key={index} className="badge badge-secondary">
-                    {tag}
-                  </div>
-                ))}
-              </div>
+              {aiData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {aiData.tags.map((tag, index) => (
+                    <div key={index} className="badge badge-secondary">
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -956,48 +1822,69 @@ export default function AIPoweredListingCreationPage() {
           </div>
 
           {/* AI insights */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="card bg-gradient-to-r from-primary/10 to-secondary/10 mb-8"
-          >
-            <div className="card-body">
-              <h3 className="font-bold mb-4 flex items-center gap-2">
-                <Brain className="w-5 h-5" />
-                AI инсайты для вашего объявления
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <TrendingUp className="w-5 h-5 text-success mt-0.5" />
-                  <div>
-                    <p className="font-semibold">Высокий спрос</p>
-                    <p className="text-sm text-base-content/70">
-                      iPhone 13 Pro входит в топ-5 самых популярных телефонов
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Users className="w-5 h-5 text-info mt-0.5" />
-                  <div>
-                    <p className="font-semibold">Целевая аудитория</p>
-                    <p className="text-sm text-base-content/70">
-                      25-45 лет, средний и высокий доход, ценят качество
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <ThumbsUp className="w-5 h-5 text-warning mt-0.5" />
-                  <div>
-                    <p className="font-semibold">Рекомендации</p>
-                    <p className="text-sm text-base-content/70">
-                      Отвечайте быстро в первые 24 часа для лучшей конверсии
-                    </p>
-                  </div>
+          {aiData.insights && Object.keys(aiData.insights).length > 0 && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="card bg-gradient-to-r from-primary/10 to-secondary/10 mb-8"
+            >
+              <div className="card-body">
+                <h3 className="font-bold mb-4 flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  {previewLanguage === 'ru' &&
+                    'AI инсайты для вашего объявления'}
+                  {previewLanguage === 'en' && 'AI insights for your listing'}
+                  {previewLanguage === 'sr' && 'AI uvidi za vaš oglas'}
+                </h3>
+                <div className="space-y-3">
+                  {aiData.insights[previewLanguage] && (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <TrendingUp className="w-5 h-5 text-success mt-0.5" />
+                        <div>
+                          <p className="font-semibold">
+                            {previewLanguage === 'ru' && 'Спрос'}
+                            {previewLanguage === 'en' && 'Demand'}
+                            {previewLanguage === 'sr' && 'Potražnja'}
+                          </p>
+                          <p className="text-sm text-base-content/70">
+                            {aiData.insights[previewLanguage].demand}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Users className="w-5 h-5 text-info mt-0.5" />
+                        <div>
+                          <p className="font-semibold">
+                            {previewLanguage === 'ru' && 'Целевая аудитория'}
+                            {previewLanguage === 'en' && 'Target audience'}
+                            {previewLanguage === 'sr' && 'Ciljna publika'}
+                          </p>
+                          <p className="text-sm text-base-content/70">
+                            {aiData.insights[previewLanguage].audience}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <ThumbsUp className="w-5 h-5 text-warning mt-0.5" />
+                        <div>
+                          <p className="font-semibold">
+                            {previewLanguage === 'ru' && 'Рекомендации'}
+                            {previewLanguage === 'en' && 'Recommendations'}
+                            {previewLanguage === 'sr' && 'Preporuke'}
+                          </p>
+                          <p className="text-sm text-base-content/70">
+                            {aiData.insights[previewLanguage].recommendations}
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
 
           {/* Publish Actions */}
           <motion.div
@@ -1007,14 +1894,21 @@ export default function AIPoweredListingCreationPage() {
             className="flex gap-3"
           >
             <button
-              onClick={() => {
-                toast.success('Объявление опубликовано с AI оптимизацией!');
-                router.push('/profile/listings');
-              }}
+              onClick={publishListing}
               className="btn btn-primary btn-lg flex-1"
+              disabled={isProcessing}
             >
-              Опубликовать сейчас
-              <Brain className="w-5 h-5 ml-1" />
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Публикация...
+                </>
+              ) : (
+                <>
+                  Опубликовать сейчас
+                  <Brain className="w-5 h-5 ml-1" />
+                </>
+              )}
             </button>
             <button
               onClick={() => setCurrentView('enhance')}
@@ -1071,6 +1965,62 @@ export default function AIPoweredListingCreationPage() {
           {currentView === 'publish' && renderPublishView()}
         </AnimatePresence>
       </div>
+
+      {/* Location Picker Modal */}
+      {showLocationPicker && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-base-100 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold">Выберите местоположение</h3>
+                <button
+                  onClick={() => setShowLocationPicker(false)}
+                  className="btn btn-ghost btn-sm btn-circle"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <LocationPicker
+                value={
+                  detectedLocation
+                    ? {
+                        latitude: detectedLocation.latitude,
+                        longitude: detectedLocation.longitude,
+                        address: aiData.location.suggestedLocation || '',
+                        city: aiData.location.city || '',
+                        region: aiData.location.region || '',
+                        country: 'Сербия',
+                        confidence: 0.8,
+                      }
+                    : undefined
+                }
+                onChange={(location) => {
+                  setDetectedLocation({
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    source: 'manual',
+                  });
+
+                  setAiData((prev) => ({
+                    ...prev,
+                    location: {
+                      city: location.city,
+                      region: location.region,
+                      suggestedLocation: location.address,
+                    },
+                  }));
+
+                  setShowLocationPicker(false);
+                  toast.success('Местоположение обновлено!');
+                }}
+                height="400px"
+                showCurrentLocation={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
