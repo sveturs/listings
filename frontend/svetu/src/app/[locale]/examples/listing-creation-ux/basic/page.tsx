@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,53 +19,80 @@ import {
   Clock,
   Shield,
   Sparkles,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function BasicListingCreationPage() {
-  const t = useTranslations();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
-    category: "",
-    title: "",
-    description: "",
-    price: "",
-    condition: "used",
+    category: '',
+    title: '',
+    description: '',
+    price: '',
+    condition: 'used',
     images: [] as string[],
-    location: "",
-    privacyLevel: "district",
+    location: '',
+    privacyLevel: 'district',
     deliveryMethods: [] as string[],
     paymentMethods: [] as string[],
   });
 
   const steps = [
-    { id: "category", title: "Категория", icon: Package },
-    { id: "info", title: "Информация", icon: Info },
-    { id: "photos", title: "Фотографии", icon: Camera },
-    { id: "location", title: "Местоположение", icon: MapPin },
-    { id: "payment", title: "Оплата и доставка", icon: CreditCard },
+    { id: 'category', title: 'Категория', icon: Package },
+    { id: 'info', title: 'Информация', icon: Info },
+    { id: 'photos', title: 'Фотографии', icon: Camera },
+    { id: 'location', title: 'Местоположение', icon: MapPin },
+    { id: 'payment', title: 'Оплата и доставка', icon: CreditCard },
   ];
 
   const popularCategories = [
-    { id: "electronics", name: "Электроника", icon: "📱", count: "12.5k" },
-    { id: "fashion", name: "Одежда и обувь", icon: "👕", count: "8.3k" },
-    { id: "home", name: "Дом и сад", icon: "🏠", count: "6.7k" },
-    { id: "vehicles", name: "Транспорт", icon: "🚗", count: "4.2k" },
-    { id: "services", name: "Услуги", icon: "🛠️", count: "3.9k" },
-    { id: "other", name: "Другое", icon: "📦", count: "15.1k" },
+    { id: 'electronics', name: 'Электроника', icon: '📱', count: '12.5k' },
+    { id: 'fashion', name: 'Одежда и обувь', icon: '👕', count: '8.3k' },
+    { id: 'home', name: 'Дом и сад', icon: '🏠', count: '6.7k' },
+    { id: 'vehicles', name: 'Транспорт', icon: '🚗', count: '4.2k' },
+    { id: 'services', name: 'Услуги', icon: '🛠️', count: '3.9k' },
+    { id: 'other', name: 'Другое', icon: '📦', count: '15.1k' },
   ];
 
   const conditions = [
-    { id: "new", label: "Новый", description: "Не использовался", icon: "✨" },
-    { id: "like-new", label: "Как новый", description: "Использовался бережно", icon: "⭐" },
-    { id: "used", label: "Б/у", description: "Есть следы использования", icon: "👍" },
-    { id: "for-parts", label: "На запчасти", description: "Требует ремонта", icon: "🔧" },
+    { id: 'new', label: 'Новый', description: 'Не использовался', icon: '✨' },
+    {
+      id: 'like-new',
+      label: 'Как новый',
+      description: 'Использовался бережно',
+      icon: '⭐',
+    },
+    {
+      id: 'used',
+      label: 'Б/у',
+      description: 'Есть следы использования',
+      icon: '👍',
+    },
+    {
+      id: 'for-parts',
+      label: 'На запчасти',
+      description: 'Требует ремонта',
+      icon: '🔧',
+    },
   ];
 
   const privacyLevels = [
-    { id: "exact", label: "Точный адрес", description: "Покупатели увидят точное местоположение" },
-    { id: "street", label: "Только улица", description: "Без номера дома" },
-    { id: "district", label: "Только район", description: "Безопасный вариант", recommended: true },
-    { id: "city", label: "Только город", description: "Максимальная приватность" },
+    {
+      id: 'exact',
+      label: 'Точный адрес',
+      description: 'Покупатели увидят точное местоположение',
+    },
+    { id: 'street', label: 'Только улица', description: 'Без номера дома' },
+    {
+      id: 'district',
+      label: 'Только район',
+      description: 'Безопасный вариант',
+      recommended: true,
+    },
+    {
+      id: 'city',
+      label: 'Только город',
+      description: 'Максимальная приватность',
+    },
   ];
 
   const nextStep = () => {
@@ -83,8 +110,13 @@ export default function BasicListingCreationPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map((file) => URL.createObjectURL(file));
-      setFormData({ ...formData, images: [...formData.images, ...newImages].slice(0, 8) });
+      const newImages = Array.from(files).map((file) =>
+        URL.createObjectURL(file)
+      );
+      setFormData({
+        ...formData,
+        images: [...formData.images, ...newImages].slice(0, 8),
+      });
     }
   };
 
@@ -131,15 +163,19 @@ export default function BasicListingCreationPage() {
                     key={cat.id}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setFormData({ ...formData, category: cat.id })}
+                    onClick={() =>
+                      setFormData({ ...formData, category: cat.id })
+                    }
                     className={`card ${
-                      formData.category === cat.id ? "ring-2 ring-primary" : ""
+                      formData.category === cat.id ? 'ring-2 ring-primary' : ''
                     } hover:shadow-lg transition-all cursor-pointer`}
                   >
                     <div className="card-body p-4">
                       <div className="text-3xl mb-2">{cat.icon}</div>
                       <h4 className="font-semibold">{cat.name}</h4>
-                      <p className="text-sm text-base-content/60">{cat.count} объявлений</p>
+                      <p className="text-sm text-base-content/60">
+                        {cat.count} объявлений
+                      </p>
                     </div>
                   </motion.button>
                 ))}
@@ -171,15 +207,21 @@ export default function BasicListingCreationPage() {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-semibold">Название объявления</span>
-                <span className="label-text-alt">{formData.title.length}/80</span>
+                <span className="label-text font-semibold">
+                  Название объявления
+                </span>
+                <span className="label-text-alt">
+                  {formData.title.length}/80
+                </span>
               </label>
               <input
                 type="text"
                 placeholder="Например: iPhone 13 Pro, 256GB, синий"
                 className="input input-bordered input-lg"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 maxLength={80}
               />
               <label className="label">
@@ -192,13 +234,17 @@ export default function BasicListingCreationPage() {
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">Описание</span>
-                <span className="label-text-alt">{formData.description.length}/1000</span>
+                <span className="label-text-alt">
+                  {formData.description.length}/1000
+                </span>
               </label>
               <textarea
                 className="textarea textarea-bordered h-32"
                 placeholder="Опишите состояние товара, комплектацию, причину продажи..."
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 maxLength={1000}
               />
             </div>
@@ -214,7 +260,9 @@ export default function BasicListingCreationPage() {
                     placeholder="0"
                     className="input input-bordered flex-1"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
                   />
                   <span>РСД</span>
                 </label>
@@ -233,9 +281,13 @@ export default function BasicListingCreationPage() {
                   {conditions.map((cond) => (
                     <button
                       key={cond.id}
-                      onClick={() => setFormData({ ...formData, condition: cond.id })}
+                      onClick={() =>
+                        setFormData({ ...formData, condition: cond.id })
+                      }
                       className={`btn ${
-                        formData.condition === cond.id ? "btn-primary" : "btn-outline"
+                        formData.condition === cond.id
+                          ? 'btn-primary'
+                          : 'btn-outline'
                       } btn-sm justify-start`}
                     >
                       <span className="text-lg mr-2">{cond.icon}</span>
@@ -271,10 +323,11 @@ export default function BasicListingCreationPage() {
                   animate={{ scale: 1 }}
                   className="relative aspect-square"
                 >
-                  <img
+                  <Image
                     src={img}
                     alt={`Photo ${index + 1}`}
-                    className="w-full h-full object-cover rounded-lg"
+                    fill
+                    className="object-cover rounded-lg"
                   />
                   {index === 0 && (
                     <div className="absolute top-2 left-2 badge badge-primary">
@@ -293,7 +346,9 @@ export default function BasicListingCreationPage() {
               {formData.images.length < 8 && (
                 <label className="border-2 border-dashed border-base-300 rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
                   <Upload className="w-8 h-8 mb-2 text-base-content/50" />
-                  <span className="text-sm text-base-content/70">Добавить фото</span>
+                  <span className="text-sm text-base-content/70">
+                    Добавить фото
+                  </span>
                   <span className="text-xs text-base-content/50">
                     {8 - formData.images.length} осталось
                   </span>
@@ -340,14 +395,18 @@ export default function BasicListingCreationPage() {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-semibold">Адрес или район</span>
+                <span className="label-text font-semibold">
+                  Адрес или район
+                </span>
               </label>
               <input
                 type="text"
                 placeholder="Начните вводить адрес..."
                 className="input input-bordered input-lg"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
               />
             </div>
 
@@ -365,7 +424,9 @@ export default function BasicListingCreationPage() {
                   <label
                     key={level.id}
                     className={`card cursor-pointer ${
-                      formData.privacyLevel === level.id ? "ring-2 ring-primary" : ""
+                      formData.privacyLevel === level.id
+                        ? 'ring-2 ring-primary'
+                        : ''
                     }`}
                   >
                     <div className="card-body p-4 flex-row items-start">
@@ -374,16 +435,22 @@ export default function BasicListingCreationPage() {
                         name="privacy"
                         className="radio radio-primary"
                         checked={formData.privacyLevel === level.id}
-                        onChange={() => setFormData({ ...formData, privacyLevel: level.id })}
+                        onChange={() =>
+                          setFormData({ ...formData, privacyLevel: level.id })
+                        }
                       />
                       <div className="flex-1 ml-4">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{level.label}</span>
                           {level.recommended && (
-                            <span className="badge badge-success badge-sm">Рекомендуется</span>
+                            <span className="badge badge-success badge-sm">
+                              Рекомендуется
+                            </span>
                           )}
                         </div>
-                        <p className="text-sm text-base-content/70">{level.description}</p>
+                        <p className="text-sm text-base-content/70">
+                          {level.description}
+                        </p>
                       </div>
                     </div>
                   </label>
@@ -412,9 +479,14 @@ export default function BasicListingCreationPage() {
               <h3 className="font-semibold mb-4">Способы получения</h3>
               <div className="space-y-3">
                 {[
-                  { id: "pickup", label: "Личная встреча", icon: "🤝", popular: true },
-                  { id: "delivery", label: "Доставка курьером", icon: "🚚" },
-                  { id: "post", label: "Отправка почтой", icon: "📦" },
+                  {
+                    id: 'pickup',
+                    label: 'Личная встреча',
+                    icon: '🤝',
+                    popular: true,
+                  },
+                  { id: 'delivery', label: 'Доставка курьером', icon: '🚚' },
+                  { id: 'post', label: 'Отправка почтой', icon: '📦' },
                 ].map((method) => (
                   <label key={method.id} className="flex items-center gap-3">
                     <input
@@ -425,12 +497,17 @@ export default function BasicListingCreationPage() {
                         if (e.target.checked) {
                           setFormData({
                             ...formData,
-                            deliveryMethods: [...formData.deliveryMethods, method.id],
+                            deliveryMethods: [
+                              ...formData.deliveryMethods,
+                              method.id,
+                            ],
                           });
                         } else {
                           setFormData({
                             ...formData,
-                            deliveryMethods: formData.deliveryMethods.filter((m) => m !== method.id),
+                            deliveryMethods: formData.deliveryMethods.filter(
+                              (m) => m !== method.id
+                            ),
                           });
                         }
                       }}
@@ -438,7 +515,9 @@ export default function BasicListingCreationPage() {
                     <span className="text-2xl">{method.icon}</span>
                     <span className="flex-1">{method.label}</span>
                     {method.popular && (
-                      <span className="badge badge-primary badge-sm">Популярно</span>
+                      <span className="badge badge-primary badge-sm">
+                        Популярно
+                      </span>
                     )}
                   </label>
                 ))}
@@ -449,9 +528,14 @@ export default function BasicListingCreationPage() {
               <h3 className="font-semibold mb-4">Способы оплаты</h3>
               <div className="space-y-3">
                 {[
-                  { id: "cash", label: "Наличные", icon: "💵", safe: true },
-                  { id: "card", label: "Перевод на карту", icon: "💳" },
-                  { id: "online", label: "Онлайн оплата", icon: "📱", new: true },
+                  { id: 'cash', label: 'Наличные', icon: '💵', safe: true },
+                  { id: 'card', label: 'Перевод на карту', icon: '💳' },
+                  {
+                    id: 'online',
+                    label: 'Онлайн оплата',
+                    icon: '📱',
+                    new: true,
+                  },
                 ].map((method) => (
                   <label key={method.id} className="flex items-center gap-3">
                     <input
@@ -462,12 +546,17 @@ export default function BasicListingCreationPage() {
                         if (e.target.checked) {
                           setFormData({
                             ...formData,
-                            paymentMethods: [...formData.paymentMethods, method.id],
+                            paymentMethods: [
+                              ...formData.paymentMethods,
+                              method.id,
+                            ],
                           });
                         } else {
                           setFormData({
                             ...formData,
-                            paymentMethods: formData.paymentMethods.filter((m) => m !== method.id),
+                            paymentMethods: formData.paymentMethods.filter(
+                              (m) => m !== method.id
+                            ),
                           });
                         }
                       }}
@@ -475,7 +564,9 @@ export default function BasicListingCreationPage() {
                     <span className="text-2xl">{method.icon}</span>
                     <span className="flex-1">{method.label}</span>
                     {method.safe && (
-                      <span className="badge badge-success badge-sm">Безопасно</span>
+                      <span className="badge badge-success badge-sm">
+                        Безопасно
+                      </span>
                     )}
                     {method.new && (
                       <span className="badge badge-info badge-sm">Новое</span>
@@ -507,7 +598,10 @@ export default function BasicListingCreationPage() {
       {/* Header */}
       <div className="navbar bg-base-100 border-b border-base-200">
         <div className="flex-1">
-          <Link href="/ru/examples/listing-creation-ux" className="btn btn-ghost">
+          <Link
+            href="/ru/examples/listing-creation-ux"
+            className="btn btn-ghost"
+          >
             <ChevronLeft className="w-5 h-5" />
             Назад к примерам
           </Link>
@@ -539,10 +633,10 @@ export default function BasicListingCreationPage() {
                   <div
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
                       isActive
-                        ? "bg-primary text-primary-content"
+                        ? 'bg-primary text-primary-content'
                         : isCompleted
-                        ? "bg-success text-success-content"
-                        : "bg-base-300 text-base-content/50"
+                          ? 'bg-success text-success-content'
+                          : 'bg-base-300 text-base-content/50'
                     }`}
                   >
                     {isCompleted ? (
@@ -553,9 +647,11 @@ export default function BasicListingCreationPage() {
                     <span className="font-medium">{step.title}</span>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`flex-1 h-1 ${
-                      index < currentStep ? "bg-success" : "bg-base-300"
-                    }`} />
+                    <div
+                      className={`flex-1 h-1 ${
+                        index < currentStep ? 'bg-success' : 'bg-base-300'
+                      }`}
+                    />
                   )}
                 </React.Fragment>
               );
@@ -575,10 +671,10 @@ export default function BasicListingCreationPage() {
                     key={step.id}
                     className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                       isActive
-                        ? "bg-primary text-primary-content"
+                        ? 'bg-primary text-primary-content'
                         : isCompleted
-                        ? "bg-success text-success-content"
-                        : "bg-base-300 text-base-content/50"
+                          ? 'bg-success text-success-content'
+                          : 'bg-base-300 text-base-content/50'
                     }`}
                   >
                     {isCompleted ? (
@@ -600,9 +696,7 @@ export default function BasicListingCreationPage() {
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <AnimatePresence mode="wait">
-            {renderStep()}
-          </AnimatePresence>
+          <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
         </div>
       </div>
 

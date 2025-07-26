@@ -1,9 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { motion } from "framer-motion";
+import React from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
   ChevronLeft,
   Sparkles,
@@ -14,113 +13,107 @@ import {
   TrendingUp,
   Users,
   Smartphone,
-  Globe,
-  Shield,
-  Award,
   Camera,
   Package,
-  CreditCard,
-  MapPin,
-  ChevronRight,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function ListingCreationUXPage() {
-  const t = useTranslations();
-
   const examples = [
     {
-      id: "basic",
-      title: "Базовые улучшения UX",
-      subtitle: "Без AI, только оптимизация интерфейса",
-      description: "Упрощенный процесс из 5 шагов с улучшенной мобильной версией",
+      id: 'basic',
+      title: 'Базовые улучшения UX',
+      subtitle: 'Без AI, только оптимизация интерфейса',
+      description:
+        'Упрощенный процесс из 5 шагов с улучшенной мобильной версией',
       features: [
-        "Сокращение с 8 до 5 шагов",
-        "Популярные категории на главной",
-        "Улучшенная мобильная навигация",
-        "Контекстные подсказки",
-        "Автосохранение черновиков",
+        'Сокращение с 8 до 5 шагов',
+        'Популярные категории на главной',
+        'Улучшенная мобильная навигация',
+        'Контекстные подсказки',
+        'Автосохранение черновиков',
       ],
       stats: {
         steps: 5,
-        time: "7-10 мин",
-        conversion: "40-50%",
+        time: '7-10 мин',
+        conversion: '40-50%',
       },
-      gradient: "from-blue-500 to-blue-600",
+      gradient: 'from-blue-500 to-blue-600',
       icon: Package,
-      path: "/ru/examples/listing-creation-ux/basic",
+      path: '/ru/examples/listing-creation-ux/basic',
     },
     {
-      id: "no-backend",
-      title: "Продвинутый UX без изменений Backend",
-      subtitle: "Максимум возможностей на текущей архитектуре",
-      description: "Революционный интерфейс с быстрым стартом и умными шаблонами",
+      id: 'no-backend',
+      title: 'Продвинутый UX без изменений Backend',
+      subtitle: 'Максимум возможностей на текущей архитектуре',
+      description:
+        'Революционный интерфейс с быстрым стартом и умными шаблонами',
       features: [
-        "Старт с фото или шаблона",
-        "Быстрый режим (3 шага)",
-        "Прогрессивное раскрытие полей",
-        "Визуальный предпросмотр",
-        "Анимации и микровзаимодействия",
+        'Старт с фото или шаблона',
+        'Быстрый режим (3 шага)',
+        'Прогрессивное раскрытие полей',
+        'Визуальный предпросмотр',
+        'Анимации и микровзаимодействия',
       ],
       stats: {
-        steps: "3-4",
-        time: "3-5 мин",
-        conversion: "60-70%",
+        steps: '3-4',
+        time: '3-5 мин',
+        conversion: '60-70%',
       },
-      gradient: "from-purple-500 to-pink-500",
+      gradient: 'from-purple-500 to-pink-500',
       icon: Zap,
-      path: "/ru/examples/listing-creation-ux/no-backend",
+      path: '/ru/examples/listing-creation-ux/no-backend',
     },
     {
-      id: "ai-powered",
-      title: "AI-Powered создание объявлений",
-      subtitle: "Полная интеграция искусственного интеллекта",
-      description: "Футуристичный опыт с AI-ассистентом на каждом шаге",
+      id: 'ai-powered',
+      title: 'AI-Powered создание объявлений',
+      subtitle: 'Полная интеграция искусственного интеллекта',
+      description: 'Футуристичный опыт с AI-ассистентом на каждом шаге',
       features: [
-        "Распознавание товара по фото",
-        "Автогенерация описания",
-        "Умный подбор цены",
-        "SEO-оптимизация",
-        "Голосовой ввод",
-        "Предсказание эффективности",
+        'Распознавание товара по фото',
+        'Автогенерация описания',
+        'Умный подбор цены',
+        'SEO-оптимизация',
+        'Голосовой ввод',
+        'Предсказание эффективности',
       ],
       stats: {
-        steps: "1-2",
-        time: "30 сек - 2 мин",
-        conversion: "85-95%",
+        steps: '1-2',
+        time: '30 сек - 2 мин',
+        conversion: '85-95%',
       },
-      gradient: "from-green-500 to-teal-500",
+      gradient: 'from-green-500 to-teal-500',
       icon: Brain,
-      path: "/ru/examples/listing-creation-ux/ai-powered",
+      path: '/ru/examples/listing-creation-ux/ai-powered',
     },
   ];
 
   const improvements = [
     {
-      category: "Скорость",
-      current: "15 минут",
-      improved: "30 секунд",
-      improvement: "30x быстрее",
+      category: 'Скорость',
+      current: '15 минут',
+      improved: '30 секунд',
+      improvement: '30x быстрее',
       icon: Clock,
     },
     {
-      category: "Конверсия",
-      current: "20%",
-      improved: "95%",
-      improvement: "+375%",
+      category: 'Конверсия',
+      current: '20%',
+      improved: '95%',
+      improvement: '+375%',
       icon: TrendingUp,
     },
     {
-      category: "Мобильные",
-      current: "10%",
-      improved: "85%",
-      improvement: "+750%",
+      category: 'Мобильные',
+      current: '10%',
+      improved: '85%',
+      improvement: '+750%',
       icon: Smartphone,
     },
     {
-      category: "Повторные",
-      current: "5%",
-      improved: "80%",
-      improvement: "+1500%",
+      category: 'Повторные',
+      current: '5%',
+      improved: '80%',
+      improvement: '+1500%',
       icon: Users,
     },
   ];
@@ -148,8 +141,9 @@ export default function ListingCreationUXPage() {
             Эволюция создания объявлений
           </h1>
           <p className="text-xl text-base-content/70 max-w-3xl mx-auto">
-            От классического подхода до AI-powered решения. Посмотрите, как можно 
-            трансформировать процесс создания объявлений для максимальной конверсии.
+            От классического подхода до AI-powered решения. Посмотрите, как
+            можно трансформировать процесс создания объявлений для максимальной
+            конверсии.
           </p>
         </motion.div>
 
@@ -175,8 +169,12 @@ export default function ListingCreationUXPage() {
                   <h3 className="font-bold text-sm">{stat.category}</h3>
                   <div className="text-xs text-base-content/60">
                     <div className="line-through">{stat.current}</div>
-                    <div className="text-lg font-bold text-primary">{stat.improved}</div>
-                    <div className="badge badge-success badge-sm">{stat.improvement}</div>
+                    <div className="text-lg font-bold text-primary">
+                      {stat.improved}
+                    </div>
+                    <div className="badge badge-success badge-sm">
+                      {stat.improvement}
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -197,12 +195,16 @@ export default function ListingCreationUXPage() {
                 className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all"
               >
                 <div className="card-body">
-                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${example.gradient} flex items-center justify-center mb-4`}>
+                  <div
+                    className={`w-16 h-16 rounded-full bg-gradient-to-br ${example.gradient} flex items-center justify-center mb-4`}
+                  >
                     <Icon className="w-8 h-8 text-white" />
                   </div>
-                  
+
                   <h2 className="card-title text-xl mb-1">{example.title}</h2>
-                  <p className="text-sm text-base-content/70 mb-2">{example.subtitle}</p>
+                  <p className="text-sm text-base-content/70 mb-2">
+                    {example.subtitle}
+                  </p>
                   <p className="text-sm mb-4">{example.description}</p>
 
                   <div className="space-y-2 mb-6">
@@ -216,20 +218,31 @@ export default function ListingCreationUXPage() {
 
                   <div className="grid grid-cols-3 gap-2 text-center mb-6">
                     <div>
-                      <div className="text-lg font-bold text-primary">{example.stats.steps}</div>
+                      <div className="text-lg font-bold text-primary">
+                        {example.stats.steps}
+                      </div>
                       <div className="text-xs text-base-content/60">шагов</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-secondary">{example.stats.time}</div>
+                      <div className="text-lg font-bold text-secondary">
+                        {example.stats.time}
+                      </div>
                       <div className="text-xs text-base-content/60">время</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-success">{example.stats.conversion}</div>
-                      <div className="text-xs text-base-content/60">конверсия</div>
+                      <div className="text-lg font-bold text-success">
+                        {example.stats.conversion}
+                      </div>
+                      <div className="text-xs text-base-content/60">
+                        конверсия
+                      </div>
                     </div>
                   </div>
 
-                  <Link href={example.path} className="btn btn-primary btn-block">
+                  <Link
+                    href={example.path}
+                    className="btn btn-primary btn-block"
+                  >
                     Посмотреть демо
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </Link>
@@ -247,8 +260,10 @@ export default function ListingCreationUXPage() {
           className="card bg-base-100 shadow-xl"
         >
           <div className="card-body">
-            <h2 className="card-title text-2xl mb-6">Детальное сравнение подходов</h2>
-            
+            <h2 className="card-title text-2xl mb-6">
+              Детальное сравнение подходов
+            </h2>
+
             <div className="overflow-x-auto">
               <table className="table">
                 <thead>
@@ -330,16 +345,19 @@ export default function ListingCreationUXPage() {
           transition={{ delay: 0.6 }}
           className="mt-12"
         >
-          <h2 className="text-3xl font-bold text-center mb-8">Ключевые инновации</h2>
-          
+          <h2 className="text-3xl font-bold text-center mb-8">
+            Ключевые инновации
+          </h2>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20">
               <div className="card-body">
                 <Camera className="w-12 h-12 text-primary mb-4" />
                 <h3 className="card-title">Старт с фото</h3>
                 <p className="text-base-content/70">
-                  Пользователь просто загружает фото, а система сама определяет категорию, 
-                  генерирует название и описание. Это снижает барьер входа и ускоряет процесс.
+                  Пользователь просто загружает фото, а система сама определяет
+                  категорию, генерирует название и описание. Это снижает барьер
+                  входа и ускоряет процесс.
                 </p>
               </div>
             </div>
@@ -349,8 +367,9 @@ export default function ListingCreationUXPage() {
                 <Brain className="w-12 h-12 text-secondary mb-4" />
                 <h3 className="card-title">AI-ассистент</h3>
                 <p className="text-base-content/70">
-                  Искусственный интеллект анализирует фото, предлагает оптимальную цену 
-                  на основе рынка и генерирует SEO-оптимизированное описание.
+                  Искусственный интеллект анализирует фото, предлагает
+                  оптимальную цену на основе рынка и генерирует
+                  SEO-оптимизированное описание.
                 </p>
               </div>
             </div>
@@ -360,8 +379,8 @@ export default function ListingCreationUXPage() {
                 <Smartphone className="w-12 h-12 text-success mb-4" />
                 <h3 className="card-title">Mobile-first дизайн</h3>
                 <p className="text-base-content/70">
-                  Интерфейс оптимизирован для мобильных устройств с крупными элементами, 
-                  жестами и минимальным вводом текста.
+                  Интерфейс оптимизирован для мобильных устройств с крупными
+                  элементами, жестами и минимальным вводом текста.
                 </p>
               </div>
             </div>
@@ -371,8 +390,8 @@ export default function ListingCreationUXPage() {
                 <Zap className="w-12 h-12 text-warning mb-4" />
                 <h3 className="card-title">Быстрые шаблоны</h3>
                 <p className="text-base-content/70">
-                  Готовые шаблоны для популярных категорий позволяют создать объявление 
-                  буквально в несколько кликов.
+                  Готовые шаблоны для популярных категорий позволяют создать
+                  объявление буквально в несколько кликов.
                 </p>
               </div>
             </div>
@@ -388,16 +407,26 @@ export default function ListingCreationUXPage() {
         >
           <h2 className="text-2xl font-bold mb-4">Готовы увидеть будущее?</h2>
           <p className="text-base-content/70 mb-6">
-            Выберите любой пример выше и посмотрите, как может выглядеть создание объявлений
+            Выберите любой пример выше и посмотрите, как может выглядеть
+            создание объявлений
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/ru/examples/listing-creation-ux/basic" className="btn btn-outline">
+            <Link
+              href="/ru/examples/listing-creation-ux/basic"
+              className="btn btn-outline"
+            >
               Базовые улучшения
             </Link>
-            <Link href="/ru/examples/listing-creation-ux/no-backend" className="btn btn-outline">
+            <Link
+              href="/ru/examples/listing-creation-ux/no-backend"
+              className="btn btn-outline"
+            >
               Без изменений Backend
             </Link>
-            <Link href="/ru/examples/listing-creation-ux/ai-powered" className="btn btn-primary">
+            <Link
+              href="/ru/examples/listing-creation-ux/ai-powered"
+              className="btn btn-primary"
+            >
               <Sparkles className="w-4 h-4 mr-1" />
               AI-Powered версия
             </Link>

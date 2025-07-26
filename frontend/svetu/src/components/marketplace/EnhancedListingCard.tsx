@@ -51,16 +51,18 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   const [mounted, setMounted] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isProcessingFavorite, setIsProcessingFavorite] = useState(false);
-  
+
   // Попытаемся найти condition в атрибутах, если его нет в основном объекте
   let itemCondition = item.condition;
   if (!itemCondition && item.attributes) {
-    const conditionAttr = item.attributes.find((attr: any) => 
-      attr.attribute_name === 'condition' || 
-      attr.name === 'condition'
+    const conditionAttr = item.attributes.find(
+      (attr: any) =>
+        attr.attribute_name === 'condition' || attr.name === 'condition'
     );
     if (conditionAttr) {
-      itemCondition = String(conditionAttr.value || conditionAttr.text_value || '');
+      itemCondition = String(
+        conditionAttr.value || conditionAttr.text_value || ''
+      );
     }
   }
   const [showQuickView, setShowQuickView] = useState(false);

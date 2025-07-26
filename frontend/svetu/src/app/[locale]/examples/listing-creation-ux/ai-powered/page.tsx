@@ -1,18 +1,16 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import React, { useState, useRef } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import {
   ChevronLeft,
   Camera,
   Sparkles,
-  Zap,
   ArrowRight,
   Check,
   MapPin,
-  Package,
   Mic,
   Brain,
   Image as ImageIcon,
@@ -20,78 +18,74 @@ import {
   RefreshCw,
   TrendingUp,
   Target,
-  Smartphone,
   Globe,
-  DollarSign,
   Calendar,
   MessageSquare,
   BarChart3,
-  Shield,
-  Award,
   Rocket,
   Bot,
   Eye,
   Heart,
   Share2,
   Clock,
-  ChevronDown,
   Plus,
   X,
   Loader2,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Simulated AI responses
 const AI_SUGGESTIONS = {
   iphone: {
-    title: "iPhone 13 Pro, 256GB, Pacific Blue",
-    category: "smartphones",
-    subcategory: "apple",
+    title: 'iPhone 13 Pro, 256GB, Pacific Blue',
+    category: 'smartphones',
+    subcategory: 'apple',
     price: { min: 60000, max: 70000, recommended: 65000 },
-    description: "Продаю iPhone 13 Pro в отличном состоянии. Телефон использовался аккуратно, всегда в чехле и с защитным стеклом. Батарея держит отлично - 89% здоровья. В комплекте оригинальная коробка, документы и зарядное устройство. Причина продажи - переход на новую модель.",
+    description:
+      'Продаю iPhone 13 Pro в отличном состоянии. Телефон использовался аккуратно, всегда в чехле и с защитным стеклом. Батарея держит отлично - 89% здоровья. В комплекте оригинальная коробка, документы и зарядное устройство. Причина продажи - переход на новую модель.',
     attributes: {
-      brand: "Apple",
-      model: "iPhone 13 Pro",
-      memory: "256GB",
-      color: "Pacific Blue",
-      condition: "excellent",
-      battery_health: "89%",
+      brand: 'Apple',
+      model: 'iPhone 13 Pro',
+      memory: '256GB',
+      color: 'Pacific Blue',
+      condition: 'excellent',
+      battery_health: '89%',
     },
-    tags: ["premium", "flagship", "camera", "5G"],
+    tags: ['premium', 'flagship', 'camera', '5G'],
     similar_listings: [
-      { title: "iPhone 13 Pro 128GB", price: 58000, sold_in_days: 3 },
-      { title: "iPhone 13 Pro 512GB", price: 72000, sold_in_days: 5 },
+      { title: 'iPhone 13 Pro 128GB', price: 58000, sold_in_days: 3 },
+      { title: 'iPhone 13 Pro 512GB', price: 72000, sold_in_days: 5 },
     ],
   },
 };
 
 export default function AIPoweredListingCreationPage() {
-  const t = useTranslations();
-  const [stage, setStage] = useState<"welcome" | "capture" | "enhance" | "publish">("welcome");
+  const [stage, setStage] = useState<
+    'welcome' | 'capture' | 'enhance' | 'publish'
+  >('welcome');
   const [isProcessing, setIsProcessing] = useState(false);
   const [voiceActive, setVoiceActive] = useState(false);
   const [formData, setFormData] = useState({
     images: [] as string[],
-    title: "",
-    description: "",
-    price: "",
-    category: "",
-    location: "",
+    title: '',
+    description: '',
+    price: '',
+    category: '',
+    location: '',
     attributes: {} as any,
     tags: [] as string[],
     aiScore: 0,
   });
   const [aiSuggestions, setAiSuggestions] = useState<any>(null);
-  const [showComparison, setShowComparison] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const controls = useAnimation();
 
   // Simulate AI processing
   const processWithAI = async () => {
     setIsProcessing(true);
-    
+
     // Simulate AI analysis delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     // Set AI suggestions
     setAiSuggestions(AI_SUGGESTIONS.iphone);
     setFormData({
@@ -104,19 +98,24 @@ export default function AIPoweredListingCreationPage() {
       tags: AI_SUGGESTIONS.iphone.tags,
       aiScore: 95,
     });
-    
+
     setIsProcessing(false);
-    setStage("enhance");
+    setStage('enhance');
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map((file) => URL.createObjectURL(file));
-      setFormData({ ...formData, images: [...formData.images, ...newImages].slice(0, 8) });
-      
+      const newImages = Array.from(files).map((file) =>
+        URL.createObjectURL(file)
+      );
+      setFormData({
+        ...formData,
+        images: [...formData.images, ...newImages].slice(0, 8),
+      });
+
       if (newImages.length > 0) {
-        setStage("capture");
+        setStage('capture');
         // Automatically start AI processing after image upload
         setTimeout(() => processWithAI(), 500);
       }
@@ -127,7 +126,8 @@ export default function AIPoweredListingCreationPage() {
     controls.start({ rotate: 360 });
     setFormData({
       ...formData,
-      description: "Предлагаю вашему вниманию iPhone 13 Pro в идеальном состоянии. Флагманский смартфон с профессиональной системой камер, мощным процессором A15 Bionic и дисплеем ProMotion 120Hz. Телефон прошел полную проверку, все функции работают безупречно. Идеальный выбор для тех, кто ценит качество и производительность.",
+      description:
+        'Предлагаю вашему вниманию iPhone 13 Pro в идеальном состоянии. Флагманский смартфон с профессиональной системой камер, мощным процессором A15 Bionic и дисплеем ProMotion 120Hz. Телефон прошел полную проверку, все функции работают безупречно. Идеальный выбор для тех, кто ценит качество и производительность.',
     });
   };
 
@@ -153,7 +153,7 @@ export default function AIPoweredListingCreationPage() {
             transition={{
               duration: 3,
               repeat: Infinity,
-              repeatType: "reverse",
+              repeatType: 'reverse',
             }}
             className="inline-block mb-6"
           >
@@ -165,20 +165,37 @@ export default function AIPoweredListingCreationPage() {
           <h1 className="text-5xl lg:text-6xl font-bold mb-4">
             <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               AI-Powered
-            </span>
-            {" "}Листинг
+            </span>{' '}
+            Листинг
           </h1>
           <p className="text-xl text-base-content/70 mb-8 max-w-2xl mx-auto">
-            Создайте идеальное объявление за 30 секунд с помощью искусственного интеллекта
+            Создайте идеальное объявление за 30 секунд с помощью искусственного
+            интеллекта
           </p>
 
           {/* AI Features Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
             {[
-              { icon: Camera, title: "Умное распознавание", desc: "AI определит товар по фото" },
-              { icon: Wand2, title: "Автогенерация", desc: "Название и описание за секунду" },
-              { icon: Target, title: "Точная цена", desc: "Анализ рынка в реальном времени" },
-              { icon: Rocket, title: "SEO оптимизация", desc: "Максимум просмотров" },
+              {
+                icon: Camera,
+                title: 'Умное распознавание',
+                desc: 'AI определит товар по фото',
+              },
+              {
+                icon: Wand2,
+                title: 'Автогенерация',
+                desc: 'Название и описание за секунду',
+              },
+              {
+                icon: Target,
+                title: 'Точная цена',
+                desc: 'Анализ рынка в реальном времени',
+              },
+              {
+                icon: Rocket,
+                title: 'SEO оптимизация',
+                desc: 'Максимум просмотров',
+              },
             ].map((feature, index) => (
               <motion.div
                 key={index}
@@ -234,9 +251,9 @@ export default function AIPoweredListingCreationPage() {
           className="grid grid-cols-3 gap-4 max-w-2xl mx-auto"
         >
           {[
-            { label: "Обработано сегодня", value: "12,847", icon: BarChart3 },
-            { label: "Точность AI", value: "98.5%", icon: Target },
-            { label: "Экономия времени", value: "92%", icon: Clock },
+            { label: 'Обработано сегодня', value: '12,847', icon: BarChart3 },
+            { label: 'Точность AI', value: '98.5%', icon: Target },
+            { label: 'Экономия времени', value: '92%', icon: Clock },
           ].map((stat, index) => (
             <div key={index} className="text-center">
               <stat.icon className="w-6 h-6 text-primary mx-auto mb-2" />
@@ -279,16 +296,20 @@ export default function AIPoweredListingCreationPage() {
                 >
                   <Brain className="w-10 h-10 text-primary-content" />
                 </motion.div>
-                <h2 className="text-xl font-bold mb-2">AI анализирует ваш товар...</h2>
-                <p className="text-base-content/70">Это займет всего несколько секунд</p>
-                
+                <h2 className="text-xl font-bold mb-2">
+                  AI анализирует ваш товар...
+                </h2>
+                <p className="text-base-content/70">
+                  Это займет всего несколько секунд
+                </p>
+
                 {/* Progress Steps */}
                 <div className="mt-8 space-y-2 text-left max-w-xs mx-auto">
                   {[
-                    "Распознавание объекта",
-                    "Анализ состояния",
-                    "Поиск похожих товаров",
-                    "Генерация описания",
+                    'Распознавание объекта',
+                    'Анализ состояния',
+                    'Поиск похожих товаров',
+                    'Генерация описания',
                   ].map((step, index) => (
                     <motion.div
                       key={index}
@@ -313,7 +334,9 @@ export default function AIPoweredListingCreationPage() {
                 <Camera className="w-5 h-5" />
                 Фотографии товара
                 {formData.images.length > 0 && (
-                  <div className="badge badge-primary">{formData.images.length}/8</div>
+                  <div className="badge badge-primary">
+                    {formData.images.length}/8
+                  </div>
                 )}
               </h2>
 
@@ -325,10 +348,11 @@ export default function AIPoweredListingCreationPage() {
                     animate={{ scale: 1 }}
                     className="relative aspect-square group"
                   >
-                    <img
+                    <Image
                       src={img}
                       alt={`Photo ${index + 1}`}
-                      className="w-full h-full object-cover rounded-lg"
+                      fill
+                      className="object-cover rounded-lg"
                     />
                     {index === 0 && (
                       <div className="absolute top-2 left-2 badge badge-primary badge-sm">
@@ -352,7 +376,9 @@ export default function AIPoweredListingCreationPage() {
                 {formData.images.length < 8 && (
                   <label className="aspect-square border-2 border-dashed border-base-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
                     <Plus className="w-8 h-8 text-base-content/30" />
-                    <span className="text-sm text-base-content/50 mt-2">Добавить</span>
+                    <span className="text-sm text-base-content/50 mt-2">
+                      Добавить
+                    </span>
                     <input
                       type="file"
                       multiple
@@ -370,7 +396,8 @@ export default function AIPoweredListingCreationPage() {
                 <div>
                   <h3 className="font-bold">Совет от AI</h3>
                   <p className="text-sm">
-                    Сделайте фото на светлом фоне и покажите все важные детали - это поможет AI точнее определить товар
+                    Сделайте фото на светлом фоне и покажите все важные детали -
+                    это поможет AI точнее определить товар
                   </p>
                 </div>
               </div>
@@ -398,13 +425,19 @@ export default function AIPoweredListingCreationPage() {
           >
             <Check className="w-5 h-5" />
             <div className="flex-1">
-              <h3 className="font-bold">AI успешно проанализировал ваш товар!</h3>
+              <h3 className="font-bold">
+                AI успешно проанализировал ваш товар!
+              </h3>
               <p className="text-sm">
-                Мы создали оптимизированное объявление на основе анализа {aiSuggestions?.similar_listings?.length || 0} похожих товаров
+                Мы создали оптимизированное объявление на основе анализа{' '}
+                {aiSuggestions?.similar_listings?.length || 0} похожих товаров
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="radial-progress text-success" style={{"--value": formData.aiScore} as any}>
+              <div
+                className="radial-progress text-success"
+                style={{ '--value': formData.aiScore } as any}
+              >
                 {formData.aiScore}%
               </div>
               <div className="text-sm">
@@ -422,7 +455,9 @@ export default function AIPoweredListingCreationPage() {
                 <div className="card-body">
                   <div className="flex items-center justify-between mb-2">
                     <label className="label">
-                      <span className="label-text font-bold text-lg">Название</span>
+                      <span className="label-text font-bold text-lg">
+                        Название
+                      </span>
                     </label>
                     <button className="btn btn-ghost btn-xs gap-1">
                       <RefreshCw className="w-3 h-3" />
@@ -433,7 +468,9 @@ export default function AIPoweredListingCreationPage() {
                     type="text"
                     className="input input-bordered input-lg"
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
                   />
                   <div className="flex gap-2 mt-2">
                     {aiSuggestions?.tags?.map((tag: string) => (
@@ -450,7 +487,9 @@ export default function AIPoweredListingCreationPage() {
                 <div className="card-body">
                   <div className="flex items-center justify-between mb-2">
                     <label className="label">
-                      <span className="label-text font-bold text-lg">Описание</span>
+                      <span className="label-text font-bold text-lg">
+                        Описание
+                      </span>
                     </label>
                     <motion.button
                       animate={controls}
@@ -464,7 +503,9 @@ export default function AIPoweredListingCreationPage() {
                   <textarea
                     className="textarea textarea-bordered h-32"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                   />
                   <div className="text-xs text-base-content/60 mt-2">
                     ✨ AI оптимизировал текст для поисковых систем
@@ -480,16 +521,23 @@ export default function AIPoweredListingCreationPage() {
                     {Object.entries(formData.attributes).map(([key, value]) => (
                       <div key={key} className="form-control">
                         <label className="label">
-                          <span className="label-text capitalize">{key.replace(/_/g, ' ')}</span>
+                          <span className="label-text capitalize">
+                            {key.replace(/_/g, ' ')}
+                          </span>
                         </label>
                         <input
                           type="text"
                           className="input input-bordered input-sm"
                           value={value as string}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            attributes: { ...formData.attributes, [key]: e.target.value }
-                          })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              attributes: {
+                                ...formData.attributes,
+                                [key]: e.target.value,
+                              },
+                            })
+                          }
                         />
                       </div>
                     ))}
@@ -509,12 +557,20 @@ export default function AIPoweredListingCreationPage() {
                     placeholder="Начните вводить адрес..."
                     className="input input-bordered"
                     value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, location: e.target.value })
+                    }
                   />
                   <div className="form-control mt-4">
                     <label className="label cursor-pointer">
-                      <span className="label-text">Скрыть точный адрес до сделки</span>
-                      <input type="checkbox" className="toggle toggle-primary" defaultChecked />
+                      <span className="label-text">
+                        Скрыть точный адрес до сделки
+                      </span>
+                      <input
+                        type="checkbox"
+                        className="toggle toggle-primary"
+                        defaultChecked
+                      />
                     </label>
                   </div>
                 </div>
@@ -530,20 +586,28 @@ export default function AIPoweredListingCreationPage() {
                     <TrendingUp className="w-5 h-5 text-primary" />
                     AI Ценовой анализ
                   </h3>
-                  
+
                   <div className="text-center mb-4">
-                    <div className="text-3xl font-bold text-primary">{formData.price} РСД</div>
-                    <div className="text-sm text-base-content/60">Рекомендуемая цена</div>
+                    <div className="text-3xl font-bold text-primary">
+                      {formData.price} РСД
+                    </div>
+                    <div className="text-sm text-base-content/60">
+                      Рекомендуемая цена
+                    </div>
                   </div>
 
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
                       <span>Минимум</span>
-                      <span className="font-semibold">{aiSuggestions?.price?.min} РСД</span>
+                      <span className="font-semibold">
+                        {aiSuggestions?.price?.min} РСД
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Максимум</span>
-                      <span className="font-semibold">{aiSuggestions?.price?.max} РСД</span>
+                      <span className="font-semibold">
+                        {aiSuggestions?.price?.max} РСД
+                      </span>
                     </div>
                   </div>
 
@@ -552,7 +616,9 @@ export default function AIPoweredListingCreationPage() {
                     min={aiSuggestions?.price?.min}
                     max={aiSuggestions?.price?.max}
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
                     className="range range-primary"
                   />
                 </div>
@@ -563,17 +629,26 @@ export default function AIPoweredListingCreationPage() {
                 <div className="card-body">
                   <h3 className="font-bold mb-4">Похожие объявления</h3>
                   <div className="space-y-3">
-                    {aiSuggestions?.similar_listings?.map((listing: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center">
-                        <div>
-                          <div className="text-sm font-medium">{listing.title}</div>
-                          <div className="text-xs text-base-content/60">
-                            Продано за {listing.sold_in_days} дней
+                    {aiSuggestions?.similar_listings?.map(
+                      (listing: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center"
+                        >
+                          <div>
+                            <div className="text-sm font-medium">
+                              {listing.title}
+                            </div>
+                            <div className="text-xs text-base-content/60">
+                              Продано за {listing.sold_in_days} дней
+                            </div>
+                          </div>
+                          <div className="text-sm font-bold">
+                            {listing.price} РСД
                           </div>
                         </div>
-                        <div className="text-sm font-bold">{listing.price} РСД</div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -591,21 +666,33 @@ export default function AIPoweredListingCreationPage() {
                         <span className="text-sm">Просмотры в день</span>
                         <span className="text-sm font-bold">120-150</span>
                       </div>
-                      <progress className="progress progress-primary" value="80" max="100"></progress>
+                      <progress
+                        className="progress progress-primary"
+                        value="80"
+                        max="100"
+                      ></progress>
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
                         <span className="text-sm">Вероятность продажи</span>
                         <span className="text-sm font-bold">92%</span>
                       </div>
-                      <progress className="progress progress-success" value="92" max="100"></progress>
+                      <progress
+                        className="progress progress-success"
+                        value="92"
+                        max="100"
+                      ></progress>
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
                         <span className="text-sm">Время до продажи</span>
                         <span className="text-sm font-bold">3-5 дней</span>
                       </div>
-                      <progress className="progress progress-warning" value="70" max="100"></progress>
+                      <progress
+                        className="progress progress-warning"
+                        value="70"
+                        max="100"
+                      ></progress>
                     </div>
                   </div>
                 </div>
@@ -640,15 +727,13 @@ export default function AIPoweredListingCreationPage() {
           {/* Action Buttons */}
           <div className="flex gap-3 mt-8">
             <button
-              onClick={() => setStage("publish")}
+              onClick={() => setStage('publish')}
               className="btn btn-primary btn-lg flex-1"
             >
               Предпросмотр
               <ArrowRight className="w-5 h-5 ml-1" />
             </button>
-            <button className="btn btn-ghost btn-lg">
-              Сохранить черновик
-            </button>
+            <button className="btn btn-ghost btn-lg">Сохранить черновик</button>
           </div>
         </div>
       </div>
@@ -668,13 +753,15 @@ export default function AIPoweredListingCreationPage() {
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200 }}
+            transition={{ type: 'spring', stiffness: 200 }}
             className="text-center mb-8"
           >
             <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-success/20 to-success/10 rounded-full mb-4">
               <Check className="w-12 h-12 text-success" />
             </div>
-            <h1 className="text-3xl font-bold mb-2">Великолепно! Объявление готово</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              Великолепно! Объявление готово
+            </h1>
             <p className="text-base-content/70">
               AI оптимизировал ваше объявление для максимальной эффективности
             </p>
@@ -691,19 +778,22 @@ export default function AIPoweredListingCreationPage() {
               >
                 {formData.images.length > 0 && (
                   <figure className="relative">
-                    <img
-                      src={formData.images[0]}
-                      alt={formData.title}
-                      className="w-full h-96 object-cover"
-                    />
+                    <div className="relative w-full h-96">
+                      <Image
+                        src={formData.images[0]}
+                        alt={formData.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                     <div className="absolute top-4 left-4 badge badge-primary gap-1">
                       <Sparkles className="w-3 h-3" />
                       AI Enhanced
                     </div>
                     {formData.images.length > 1 && (
                       <div className="absolute bottom-4 right-4 badge badge-neutral gap-1">
-                        <ImageIcon className="w-3 h-3" />
-                        +{formData.images.length - 1}
+                        <ImageIcon className="w-3 h-3" />+
+                        {formData.images.length - 1}
                       </div>
                     )}
                   </figure>
@@ -711,10 +801,13 @@ export default function AIPoweredListingCreationPage() {
 
                 <div className="card-body">
                   <h2 className="card-title text-2xl">{formData.title}</h2>
-                  
+
                   <div className="flex flex-wrap gap-2 mb-3">
                     {formData.tags.map((tag) => (
-                      <span key={tag} className="badge badge-secondary badge-sm">
+                      <span
+                        key={tag}
+                        className="badge badge-secondary badge-sm"
+                      >
                         {tag}
                       </span>
                     ))}
@@ -724,31 +817,38 @@ export default function AIPoweredListingCreationPage() {
                     {formData.price} РСД
                   </div>
 
-                  <p className="text-base-content/80 mb-4">{formData.description}</p>
+                  <p className="text-base-content/80 mb-4">
+                    {formData.description}
+                  </p>
 
                   <div className="grid grid-cols-2 gap-4 mb-4">
-                    {Object.entries(formData.attributes).slice(0, 4).map(([key, value]) => (
-                      <div key={key} className="flex justify-between py-2 border-b border-base-200">
-                        <span className="text-sm text-base-content/60 capitalize">
-                          {key.replace(/_/g, ' ')}
-                        </span>
-                        <span className="text-sm font-medium">{value as string}</span>
-                      </div>
-                    ))}
+                    {Object.entries(formData.attributes)
+                      .slice(0, 4)
+                      .map(([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex justify-between py-2 border-b border-base-200"
+                        >
+                          <span className="text-sm text-base-content/60 capitalize">
+                            {key.replace(/_/g, ' ')}
+                          </span>
+                          <span className="text-sm font-medium">
+                            {value as string}
+                          </span>
+                        </div>
+                      ))}
                   </div>
 
                   <div className="flex items-center gap-4 text-sm text-base-content/60">
                     <span className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
-                      {formData.location || "Белград"}
+                      {formData.location || 'Белград'}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Eye className="w-4 h-4" />
-                      0 просмотров
+                      <Eye className="w-4 h-4" />0 просмотров
                     </span>
                     <span className="flex items-center gap-1">
-                      <Heart className="w-4 h-4" />
-                      0 в избранном
+                      <Heart className="w-4 h-4" />0 в избранном
                     </span>
                   </div>
 
@@ -781,8 +881,15 @@ export default function AIPoweredListingCreationPage() {
               >
                 <div className="card-body text-center">
                   <h3 className="font-bold text-lg mb-4">AI Оценка качества</h3>
-                  <div className="radial-progress text-primary mx-auto mb-4" style={{"--value": formData.aiScore, "--size": "8rem"} as any}>
-                    <span className="text-2xl font-bold">{formData.aiScore}%</span>
+                  <div
+                    className="radial-progress text-primary mx-auto mb-4"
+                    style={
+                      { '--value': formData.aiScore, '--size': '8rem' } as any
+                    }
+                  >
+                    <span className="text-2xl font-bold">
+                      {formData.aiScore}%
+                    </span>
                   </div>
                   <p className="text-sm text-base-content/70">
                     Ваше объявление лучше 95% других в этой категории
@@ -844,7 +951,9 @@ export default function AIPoweredListingCreationPage() {
                     </ul>
                     <div className="text-center mb-4">
                       <div className="text-2xl font-bold">199 РСД</div>
-                      <div className="text-xs text-base-content/60">на 7 дней</div>
+                      <div className="text-xs text-base-content/60">
+                        на 7 дней
+                      </div>
                     </div>
                     <button className="btn btn-warning btn-block">
                       <Rocket className="w-4 h-4 mr-1" />
@@ -869,11 +978,15 @@ export default function AIPoweredListingCreationPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center p-2 bg-success/10 rounded">
                       <span className="text-sm">Сейчас</span>
-                      <span className="text-sm font-bold text-success">Отлично</span>
+                      <span className="text-sm font-bold text-success">
+                        Отлично
+                      </span>
                     </div>
                     <div className="flex justify-between items-center p-2">
                       <span className="text-sm">Вечером (19:00)</span>
-                      <span className="text-sm text-base-content/60">Хорошо</span>
+                      <span className="text-sm text-base-content/60">
+                        Хорошо
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -887,7 +1000,9 @@ export default function AIPoweredListingCreationPage() {
                 className="card bg-base-200"
               >
                 <div className="card-body">
-                  <h4 className="font-bold mb-3">Поделиться после публикации</h4>
+                  <h4 className="font-bold mb-3">
+                    Поделиться после публикации
+                  </h4>
                   <div className="flex gap-2">
                     <button className="btn btn-sm btn-ghost">
                       <Globe className="w-4 h-4" />
@@ -913,7 +1028,10 @@ export default function AIPoweredListingCreationPage() {
       {/* Navigation */}
       <div className="navbar bg-base-100 border-b border-base-200 sticky top-0 z-40">
         <div className="flex-1">
-          <Link href="/ru/examples/listing-creation-ux" className="btn btn-ghost">
+          <Link
+            href="/ru/examples/listing-creation-ux"
+            className="btn btn-ghost"
+          >
             <ChevronLeft className="w-5 h-5" />
             Назад к примерам
           </Link>
@@ -958,7 +1076,8 @@ export default function AIPoweredListingCreationPage() {
                 </motion.div>
                 <h3 className="text-xl font-bold mb-2">Говорите...</h3>
                 <p className="text-base-content/70 mb-4">
-                  "Продаю iPhone 13 Pro, 256 гигабайт, синий цвет, состояние отличное"
+                  &quot;Продаю iPhone 13 Pro, 256 гигабайт, синий цвет,
+                  состояние отличное&quot;
                 </p>
                 <button
                   onClick={() => setVoiceActive(false)}
@@ -974,10 +1093,10 @@ export default function AIPoweredListingCreationPage() {
 
       {/* Main Content */}
       <AnimatePresence mode="wait">
-        {stage === "welcome" && renderWelcomeStage()}
-        {stage === "capture" && renderCaptureStage()}
-        {stage === "enhance" && renderEnhanceStage()}
-        {stage === "publish" && renderPublishStage()}
+        {stage === 'welcome' && renderWelcomeStage()}
+        {stage === 'capture' && renderCaptureStage()}
+        {stage === 'enhance' && renderEnhanceStage()}
+        {stage === 'publish' && renderPublishStage()}
       </AnimatePresence>
     </>
   );

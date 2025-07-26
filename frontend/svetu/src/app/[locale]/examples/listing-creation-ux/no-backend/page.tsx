@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import {
   ChevronLeft,
   Camera,
@@ -15,8 +15,6 @@ import {
   Check,
   MapPin,
   Package,
-  CreditCard,
-  Smartphone,
   Image as ImageIcon,
   Heart,
   Eye,
@@ -27,62 +25,148 @@ import {
   Shield,
   Award,
   Info,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function NoBackendListingCreationPage() {
-  const t = useTranslations();
-  const [currentView, setCurrentView] = useState<"start" | "create" | "preview">("start");
+  const [currentView, setCurrentView] = useState<
+    'start' | 'create' | 'preview'
+  >('start');
   const [quickMode, setQuickMode] = useState(false);
   const [formData, setFormData] = useState({
     images: [] as string[],
-    category: "",
-    title: "",
-    price: "",
-    description: "",
-    location: "",
-    deliveryMethods: ["pickup"],
+    category: '',
+    title: '',
+    price: '',
+    description: '',
+    location: '',
+    deliveryMethods: ['pickup'],
+    attributes: {} as Record<string, string>,
   });
   const [suggestions, setSuggestions] = useState({
-    title: "",
-    category: "",
-    price: "",
+    title: '',
+    category: '',
+    price: '',
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const controls = useAnimation();
 
+  // Category-specific attributes
+  const categoryAttributes: Record<
+    string,
+    Array<{ id: string; label: string; type: string; options?: string[] }>
+  > = {
+    electronics: [
+      { id: 'brand', label: 'Бренд', type: 'text' },
+      { id: 'model', label: 'Модель', type: 'text' },
+      {
+        id: 'condition',
+        label: 'Состояние',
+        type: 'select',
+        options: [
+          'Новый',
+          'Как новый',
+          'Отличное',
+          'Хорошее',
+          'Удовлетворительное',
+        ],
+      },
+      {
+        id: 'warranty',
+        label: 'Гарантия',
+        type: 'select',
+        options: ['Есть', 'Нет', 'Истекла'],
+      },
+    ],
+    fashion: [
+      { id: 'brand', label: 'Бренд', type: 'text' },
+      { id: 'size', label: 'Размер', type: 'text' },
+      { id: 'color', label: 'Цвет', type: 'text' },
+      { id: 'material', label: 'Материал', type: 'text' },
+      {
+        id: 'season',
+        label: 'Сезон',
+        type: 'select',
+        options: ['Лето', 'Зима', 'Весна/Осень', 'Всесезонная'],
+      },
+    ],
+    home: [
+      { id: 'type', label: 'Тип', type: 'text' },
+      { id: 'dimensions', label: 'Размеры', type: 'text' },
+      { id: 'material', label: 'Материал', type: 'text' },
+      {
+        id: 'condition',
+        label: 'Состояние',
+        type: 'select',
+        options: ['Новый', 'Отличное', 'Хорошее', 'Требует ремонта'],
+      },
+    ],
+    auto: [
+      { id: 'brand', label: 'Марка', type: 'text' },
+      { id: 'model', label: 'Модель', type: 'text' },
+      { id: 'year', label: 'Год выпуска', type: 'text' },
+      { id: 'mileage', label: 'Пробег (км)', type: 'text' },
+      {
+        id: 'fuel',
+        label: 'Топливо',
+        type: 'select',
+        options: ['Бензин', 'Дизель', 'Электро', 'Гибрид'],
+      },
+    ],
+  };
+
   // Simulated quick templates
   const quickTemplates = [
     {
-      id: "phone",
-      icon: "📱",
-      title: "Продаю телефон",
-      fields: ["Модель", "Память", "Состояние"],
+      id: 'phone',
+      icon: '📱',
+      title: 'Продаю телефон',
+      fields: ['Модель', 'Память', 'Состояние'],
     },
     {
-      id: "clothes",
-      icon: "👕",
-      title: "Одежда/Обувь",
-      fields: ["Размер", "Бренд", "Состояние"],
+      id: 'clothes',
+      icon: '👕',
+      title: 'Одежда/Обувь',
+      fields: ['Размер', 'Бренд', 'Состояние'],
     },
     {
-      id: "electronics",
-      icon: "💻",
-      title: "Электроника",
-      fields: ["Бренд", "Модель", "Год"],
+      id: 'electronics',
+      icon: '💻',
+      title: 'Электроника',
+      fields: ['Бренд', 'Модель', 'Год'],
     },
     {
-      id: "furniture",
-      icon: "🛋️",
-      title: "Мебель",
-      fields: ["Тип", "Размеры", "Материал"],
+      id: 'furniture',
+      icon: '🛋️',
+      title: 'Мебель',
+      fields: ['Тип', 'Размеры', 'Материал'],
     },
   ];
 
   const popularCategories = [
-    { id: "electronics", name: "Электроника", icon: "📱", gradient: "from-blue-500 to-purple-500" },
-    { id: "fashion", name: "Мода", icon: "👗", gradient: "from-pink-500 to-rose-500" },
-    { id: "home", name: "Дом", icon: "🏠", gradient: "from-green-500 to-emerald-500" },
-    { id: "auto", name: "Авто", icon: "🚗", gradient: "from-orange-500 to-red-500" },
+    {
+      id: 'electronics',
+      name: 'Электроника',
+      icon: '📱',
+      gradient: 'from-blue-500 to-purple-500',
+    },
+    {
+      id: 'fashion',
+      name: 'Мода',
+      icon: '👗',
+      gradient: 'from-pink-500 to-rose-500',
+    },
+    {
+      id: 'home',
+      name: 'Дом',
+      icon: '🏠',
+      gradient: 'from-green-500 to-emerald-500',
+    },
+    {
+      id: 'auto',
+      name: 'Авто',
+      icon: '🚗',
+      gradient: 'from-orange-500 to-red-500',
+    },
   ];
 
   useEffect(() => {
@@ -90,21 +174,26 @@ export default function NoBackendListingCreationPage() {
     if (formData.images.length > 0 && !suggestions.title) {
       setTimeout(() => {
         setSuggestions({
-          title: "iPhone 13 Pro, 256GB, Pacific Blue",
-          category: "electronics",
-          price: "65000",
+          title: 'iPhone 13 Pro, 256GB, Pacific Blue',
+          category: 'electronics',
+          price: '65000',
         });
       }, 1000);
     }
-  }, [formData.images]);
+  }, [formData.images, suggestions.title]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map((file) => URL.createObjectURL(file));
-      setFormData({ ...formData, images: [...formData.images, ...newImages].slice(0, 8) });
+      const newImages = Array.from(files).map((file) =>
+        URL.createObjectURL(file)
+      );
+      setFormData({
+        ...formData,
+        images: [...formData.images, ...newImages].slice(0, 8),
+      });
       if (newImages.length > 0) {
-        setCurrentView("create");
+        setCurrentView('create');
       }
     }
   };
@@ -150,7 +239,7 @@ export default function NoBackendListingCreationPage() {
           <p className="text-xl text-base-content/70 mb-8">
             Новый опыт создания объявлений — проще, быстрее, умнее
           </p>
-          
+
           {/* Stats */}
           <div className="flex justify-center gap-8 mb-8">
             <motion.div
@@ -178,7 +267,9 @@ export default function NoBackendListingCreationPage() {
               className="text-center"
             >
               <div className="text-3xl font-bold text-secondary">5x</div>
-              <div className="text-sm text-base-content/60">больше просмотров</div>
+              <div className="text-sm text-base-content/60">
+                больше просмотров
+              </div>
             </motion.div>
           </div>
         </motion.div>
@@ -228,7 +319,7 @@ export default function NoBackendListingCreationPage() {
             >
               <button
                 onClick={() => {
-                  setCurrentView("create");
+                  setCurrentView('create');
                   setQuickMode(false);
                 }}
                 className="card bg-base-100 border-2 border-base-300 hover:border-primary hover:shadow-lg transition-all w-full"
@@ -253,7 +344,7 @@ export default function NoBackendListingCreationPage() {
               <button
                 onClick={() => {
                   setQuickMode(true);
-                  setCurrentView("create");
+                  setCurrentView('create');
                 }}
                 className="card bg-base-100 border-2 border-base-300 hover:border-secondary hover:shadow-lg transition-all w-full"
               >
@@ -285,7 +376,7 @@ export default function NoBackendListingCreationPage() {
                   key={template.id}
                   onClick={() => {
                     setFormData({ ...formData, category: template.id });
-                    setCurrentView("create");
+                    setCurrentView('create');
                   }}
                   className="btn btn-outline btn-sm gap-2"
                 >
@@ -312,13 +403,13 @@ export default function NoBackendListingCreationPage() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <button
-              onClick={() => setCurrentView("start")}
+              onClick={() => setCurrentView('start')}
               className="btn btn-ghost btn-sm gap-2"
             >
               <ChevronLeft className="w-4 h-4" />
               Назад
             </button>
-            
+
             <div className="flex items-center gap-2">
               <div className="badge badge-success gap-1">
                 <Timer className="w-3 h-3" />
@@ -349,26 +440,29 @@ export default function NoBackendListingCreationPage() {
               <div className="flex-1">
                 <h3 className="font-bold">Мы узнали ваш товар!</h3>
                 <p className="text-sm">
-                  {suggestions.title} • Рекомендуемая цена: {suggestions.price} РСД
+                  {suggestions.title} • Рекомендуемая цена: {suggestions.price}{' '}
+                  РСД
                 </p>
               </div>
-              <button onClick={applySuggestions} className="btn btn-sm btn-primary">
+              <button
+                onClick={applySuggestions}
+                className="btn btn-sm btn-primary"
+              >
                 Применить
               </button>
             </motion.div>
           )}
 
           {/* Photo Upload Section */}
-          <motion.div
-            animate={controls}
-            className="card bg-base-200"
-          >
+          <motion.div animate={controls} className="card bg-base-200">
             <div className="card-body">
               <h2 className="card-title">
                 <Camera className="w-5 h-5" />
                 Фотографии
                 {formData.images.length > 0 && (
-                  <span className="badge badge-primary">{formData.images.length}/8</span>
+                  <span className="badge badge-primary">
+                    {formData.images.length}/8
+                  </span>
                 )}
               </h2>
 
@@ -380,10 +474,11 @@ export default function NoBackendListingCreationPage() {
                     animate={{ scale: 1 }}
                     className="relative aspect-square group"
                   >
-                    <img
+                    <Image
                       src={img}
                       alt={`Photo ${index + 1}`}
-                      className="w-full h-full object-cover rounded-lg"
+                      fill
+                      className="object-cover rounded-lg"
                     />
                     {index === 0 && (
                       <div className="absolute top-1 left-1 badge badge-primary badge-sm">
@@ -402,7 +497,9 @@ export default function NoBackendListingCreationPage() {
                 {formData.images.length < 8 && (
                   <label className="aspect-square border-2 border-dashed border-base-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
                     <Plus className="w-6 h-6 text-base-content/50" />
-                    <span className="text-xs text-base-content/50 mt-1">Добавить</span>
+                    <span className="text-xs text-base-content/50 mt-1">
+                      Добавить
+                    </span>
                     <input
                       type="file"
                       multiple
@@ -423,14 +520,18 @@ export default function NoBackendListingCreationPage() {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold">Название</span>
-                  <span className="label-text-alt">{formData.title.length}/80</span>
+                  <span className="label-text-alt">
+                    {formData.title.length}/80
+                  </span>
                 </label>
                 <input
                   type="text"
                   placeholder="Что вы продаете?"
                   className="input input-bordered"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   maxLength={80}
                 />
               </div>
@@ -445,9 +546,13 @@ export default function NoBackendListingCreationPage() {
                     {popularCategories.map((cat) => (
                       <button
                         key={cat.id}
-                        onClick={() => setFormData({ ...formData, category: cat.id })}
+                        onClick={() =>
+                          setFormData({ ...formData, category: cat.id })
+                        }
                         className={`btn btn-sm ${
-                          formData.category === cat.id ? "btn-primary" : "btn-outline"
+                          formData.category === cat.id
+                            ? 'btn-primary'
+                            : 'btn-outline'
                         } gap-1`}
                       >
                         <span>{cat.icon}</span>
@@ -472,7 +577,9 @@ export default function NoBackendListingCreationPage() {
                     placeholder="0"
                     className="input input-bordered flex-1"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
                   />
                   <span>РСД</span>
                 </label>
@@ -489,12 +596,77 @@ export default function NoBackendListingCreationPage() {
                     className="textarea textarea-bordered h-20"
                     placeholder="Добавьте детали..."
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                   />
                 </div>
               )}
             </div>
           </div>
+
+          {/* Dynamic Attributes based on Category */}
+          {formData.category && categoryAttributes[formData.category] && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="card bg-base-200"
+            >
+              <div className="card-body">
+                <h3 className="card-title text-base">
+                  <Package className="w-4 h-4" />
+                  Дополнительная информация
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {categoryAttributes[formData.category].map((attr) => (
+                    <div key={attr.id} className="form-control">
+                      <label className="label">
+                        <span className="label-text">{attr.label}</span>
+                      </label>
+                      {attr.type === 'select' ? (
+                        <select
+                          className="select select-bordered select-sm"
+                          value={formData.attributes[attr.id] || ''}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              attributes: {
+                                ...formData.attributes,
+                                [attr.id]: e.target.value,
+                              },
+                            })
+                          }
+                        >
+                          <option value="">Выберите...</option>
+                          {attr.options?.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          className="input input-bordered input-sm"
+                          placeholder={`Введите ${attr.label.toLowerCase()}`}
+                          value={formData.attributes[attr.id] || ''}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              attributes: {
+                                ...formData.attributes,
+                                [attr.id]: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Location Card */}
           <div className="card bg-base-200">
@@ -508,7 +680,9 @@ export default function NoBackendListingCreationPage() {
                 placeholder="Район или станция метро"
                 className="input input-bordered"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
               />
               <div className="flex items-center gap-2 mt-2">
                 <Shield className="w-4 h-4 text-success" />
@@ -522,16 +696,18 @@ export default function NoBackendListingCreationPage() {
           {/* Quick Actions */}
           <div className="flex gap-3">
             <button
-              onClick={() => setCurrentView("preview")}
+              onClick={() => setCurrentView('preview')}
               className="btn btn-primary flex-1"
-              disabled={!formData.title || !formData.price || formData.images.length === 0}
+              disabled={
+                !formData.title ||
+                !formData.price ||
+                formData.images.length === 0
+              }
             >
               Предпросмотр
               <ArrowRight className="w-4 h-4 ml-1" />
             </button>
-            <button className="btn btn-ghost">
-              Сохранить черновик
-            </button>
+            <button className="btn btn-ghost">Сохранить черновик</button>
           </div>
 
           {/* Tips */}
@@ -565,7 +741,7 @@ export default function NoBackendListingCreationPage() {
       <div className="navbar bg-base-100 border-b border-base-200">
         <div className="flex-1">
           <button
-            onClick={() => setCurrentView("create")}
+            onClick={() => setCurrentView('create')}
             className="btn btn-ghost gap-2"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -587,13 +763,15 @@ export default function NoBackendListingCreationPage() {
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200 }}
+            transition={{ type: 'spring', stiffness: 200 }}
             className="text-center mb-8"
           >
             <div className="inline-flex items-center justify-center w-20 h-20 bg-success/20 rounded-full mb-4">
               <Check className="w-10 h-10 text-success" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Отлично! Ваше объявление готово</h1>
+            <h1 className="text-2xl font-bold mb-2">
+              Отлично! Ваше объявление готово
+            </h1>
             <p className="text-base-content/70">
               Вот как его увидят покупатели
             </p>
@@ -609,43 +787,69 @@ export default function NoBackendListingCreationPage() {
             {/* Image Gallery */}
             {formData.images.length > 0 && (
               <figure className="relative">
-                <img
-                  src={formData.images[0]}
-                  alt={formData.title}
-                  className="w-full h-96 object-cover"
-                />
+                <div className="relative w-full h-96">
+                  <Image
+                    src={formData.images[0]}
+                    alt={formData.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
                 {formData.images.length > 1 && (
                   <div className="absolute bottom-4 right-4 badge badge-neutral gap-1">
-                    <ImageIcon className="w-3 h-3" />
-                    +{formData.images.length - 1}
+                    <ImageIcon className="w-3 h-3" />+
+                    {formData.images.length - 1}
                   </div>
                 )}
               </figure>
             )}
 
             <div className="card-body">
-              <h2 className="card-title text-2xl">{formData.title || "Название товара"}</h2>
-              
+              <h2 className="card-title text-2xl">
+                {formData.title || 'Название товара'}
+              </h2>
+
               <div className="text-3xl font-bold text-primary mb-4">
-                {formData.price ? `${formData.price} РСД` : "Цена не указана"}
+                {formData.price ? `${formData.price} РСД` : 'Цена не указана'}
               </div>
 
               {formData.description && (
-                <p className="text-base-content/80 mb-4">{formData.description}</p>
+                <p className="text-base-content/80 mb-4">
+                  {formData.description}
+                </p>
+              )}
+
+              {/* Display attributes in preview */}
+              {formData.category && categoryAttributes[formData.category] && (
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  {categoryAttributes[formData.category]
+                    .filter((attr) => formData.attributes[attr.id])
+                    .map((attr) => (
+                      <div
+                        key={attr.id}
+                        className="flex justify-between py-2 border-b border-base-200"
+                      >
+                        <span className="text-sm text-base-content/60">
+                          {attr.label}
+                        </span>
+                        <span className="text-sm font-medium">
+                          {formData.attributes[attr.id]}
+                        </span>
+                      </div>
+                    ))}
+                </div>
               )}
 
               <div className="flex items-center gap-4 text-sm text-base-content/60 mb-4">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
-                  {formData.location || "Местоположение"}
+                  {formData.location || 'Местоположение'}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  0 просмотров
+                  <Eye className="w-4 h-4" />0 просмотров
                 </span>
                 <span className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
-                  0 в избранном
+                  <Heart className="w-4 h-4" />0 в избранном
                 </span>
               </div>
 
@@ -738,22 +942,27 @@ export default function NoBackendListingCreationPage() {
       {/* Navigation Bar */}
       <div className="navbar bg-base-100 border-b border-base-200 fixed top-0 z-50">
         <div className="flex-1">
-          <Link href="/ru/examples/listing-creation-ux" className="btn btn-ghost">
+          <Link
+            href="/ru/examples/listing-creation-ux"
+            className="btn btn-ghost"
+          >
             <ChevronLeft className="w-5 h-5" />
             Назад к примерам
           </Link>
         </div>
         <div className="flex-none">
-          <div className="badge badge-warning badge-lg">Без изменений Backend</div>
+          <div className="badge badge-warning badge-lg">
+            Без изменений Backend
+          </div>
         </div>
       </div>
 
       {/* Main Content with Padding for Fixed Navbar */}
       <div className="pt-16">
         <AnimatePresence mode="wait">
-          {currentView === "start" && renderStartView()}
-          {currentView === "create" && renderCreateView()}
-          {currentView === "preview" && renderPreviewView()}
+          {currentView === 'start' && renderStartView()}
+          {currentView === 'create' && renderCreateView()}
+          {currentView === 'preview' && renderPreviewView()}
         </AnimatePresence>
       </div>
     </>
