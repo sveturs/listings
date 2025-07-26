@@ -71,6 +71,14 @@ export default function ExamplesPage() {
       color: 'bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500',
       icon: '🎭',
     },
+    {
+      title: 'Listing Creation UX',
+      description:
+        'Three revolutionary approaches to creating listings: from basic to AI-powered',
+      href: '/examples/listing-creation-ux',
+      color: 'bg-gradient-to-r from-green-500 to-teal-500',
+      icon: '🚀',
+    },
   ];
 
   return (
@@ -125,7 +133,7 @@ export default function ExamplesPage() {
               max="100"
             ></progress>
             <p className="text-sm text-base-content/70 mt-2">
-              All 12 UI/UX improvements have been successfully implemented!
+              All 13 UI/UX improvements have been successfully implemented!
             </p>
           </div>
         </div>
