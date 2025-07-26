@@ -54,6 +54,16 @@ export interface MarketplaceItem {
   // Добавляем для поддержки unified search
   product_type?: 'marketplace' | 'storefront';
   storefront_id?: number;
+  // Атрибуты объявления
+  attributes?: Array<{
+    attribute_id?: number;
+    attribute_name?: string;
+    name?: string;
+    value?: string | number | boolean;
+    text_value?: string;
+    numeric_value?: number;
+    boolean_value?: boolean;
+  }>;
 }
 
 export interface MarketplaceSearchResponse {

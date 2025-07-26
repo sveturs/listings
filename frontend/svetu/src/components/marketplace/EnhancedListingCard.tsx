@@ -51,6 +51,18 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   const [mounted, setMounted] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isProcessingFavorite, setIsProcessingFavorite] = useState(false);
+  
+  // Попытаемся найти condition в атрибутах, если его нет в основном объекте
+  let itemCondition = item.condition;
+  if (!itemCondition && item.attributes) {
+    const conditionAttr = item.attributes.find((attr: any) => 
+      attr.attribute_name === 'condition' || 
+      attr.name === 'condition'
+    );
+    if (conditionAttr) {
+      itemCondition = String(conditionAttr.value || conditionAttr.text_value || '');
+    }
+  }
   const [showQuickView, setShowQuickView] = useState(false);
   const [showPriceHistory, setShowPriceHistory] = useState(false);
   const t = useTranslations('common');
@@ -230,11 +242,11 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
 
                   {/* Badges */}
                   <div className="absolute top-1 left-1 flex flex-col gap-1">
-                    {item.condition && conditionBadge[item.condition] && (
+                    {itemCondition && conditionBadge[itemCondition] && (
                       <div
-                        className={`badge badge-sm ${conditionBadge[item.condition].class}`}
+                        className={`badge badge-sm ${conditionBadge[itemCondition].class}`}
                       >
-                        {conditionBadge[item.condition].text}
+                        {conditionBadge[itemCondition].text}
                       </div>
                     )}
                     {ecoScore > 7 && (
@@ -510,11 +522,11 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
 
           {/* Badges слева сверху */}
           <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {item.condition && (
+            {itemCondition && conditionBadge[itemCondition] && (
               <div
-                className={`badge badge-sm ${conditionBadge[item.condition].class}`}
+                className={`badge badge-sm ${conditionBadge[itemCondition].class}`}
               >
-                {conditionBadge[item.condition].text}
+                {conditionBadge[itemCondition].text}
               </div>
             )}
             {ecoScore > 7 && (
