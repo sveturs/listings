@@ -58,7 +58,7 @@ export default function BasicEnhancedListingCreationPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // История изменений
-  const [history, setHistory] = useState<typeof formData[]>([]);
+  const [history, setHistory] = useState<(typeof formData)[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -854,9 +854,7 @@ export default function BasicEnhancedListingCreationPage() {
             </span>
           )}
 
-          <div className="badge badge-primary badge-lg">
-            Улучшенная версия
-          </div>
+          <div className="badge badge-primary badge-lg">Улучшенная версия</div>
         </div>
       </div>
 

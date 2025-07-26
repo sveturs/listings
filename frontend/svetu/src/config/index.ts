@@ -125,6 +125,7 @@ class ConfigManager {
         enableChat: !!publicEnv.NEXT_PUBLIC_WEBSOCKET_URL,
         enablePayments: publicEnv.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true',
       },
+      claudeApiKey: this.getEnvValue('NEXT_PUBLIC_CLAUDE_API_KEY'),
     };
   }
 

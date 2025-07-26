@@ -65,8 +65,7 @@ export default function EnhancedListingCreationUXPage() {
       id: 'no-backend-enhanced',
       title: 'Продвинутый UX v2.0',
       subtitle: 'Умные подсказки, шаблоны, сравнение цен',
-      description:
-        'Максимум интеллектуальных функций без изменения backend',
+      description: 'Максимум интеллектуальных функций без изменения backend',
       features: [
         'Сравнение с похожими объявлениями',
         'Шаблоны описаний по категориям',
@@ -262,7 +261,9 @@ export default function EnhancedListingCreationUXPage() {
                         <Icon className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-sm">{feature.title}</h3>
+                        <h3 className="font-semibold text-sm">
+                          {feature.title}
+                        </h3>
                         <p className="text-xs text-base-content/60 mt-1">
                           {feature.description}
                         </p>
@@ -300,8 +301,12 @@ export default function EnhancedListingCreationUXPage() {
                     <Icon className="w-8 h-8 text-primary mx-auto mb-2" />
                     <h3 className="font-bold text-sm">{stat.category}</h3>
                     <div className="text-xs text-base-content/60">
-                      <div className="line-through opacity-50">{stat.original}</div>
-                      <div className="text-base-content/70">v1.0: {stat.v1}</div>
+                      <div className="line-through opacity-50">
+                        {stat.original}
+                      </div>
+                      <div className="text-base-content/70">
+                        v1.0: {stat.v1}
+                      </div>
                       <div className="text-lg font-bold text-primary">
                         v2.0: {stat.v2}
                       </div>
@@ -555,4 +560,3 @@ export default function EnhancedListingCreationUXPage() {
     </div>
   );
 }
-

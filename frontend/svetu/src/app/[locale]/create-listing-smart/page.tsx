@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
   Camera,
@@ -31,12 +31,18 @@ import {
   Instagram,
   Facebook,
   Clock as ClockIcon,
-  ThumbsUp,
   FileText,
   Users,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { toast } from '@/utils/toast';
+import { useTranslations } from 'next-intl';
 
-export default function NoBackendEnhancedListingCreationPage() {
+export default function CreateListingSmartPage() {
+  const router = useRouter();
+  const t = useTranslations();
+  const { user } = useAuthContext();
   const [currentView, setCurrentView] = useState<
     'start' | 'create' | 'preview'
   >('start');
@@ -51,25 +57,28 @@ export default function NoBackendEnhancedListingCreationPage() {
     deliveryMethods: ['pickup'],
     attributes: {} as Record<string, string>,
   });
-  const [suggestions, setSuggestions] = useState({
+  const [suggestions] = useState({
     title: '',
     category: '',
     price: '',
     description: '',
   });
-
   // Состояние для сравнения с похожими
   const [showPriceComparison, setShowPriceComparison] = useState(false);
   const [similarListings, setSimilarListings] = useState<any[]>([]);
 
-  // Состояние для шаблонов описаний
-  const [descriptionTemplate, setDescriptionTemplate] = useState('');
-
-  // Оптимальное время публикации
-  const [optimalPublishTime, setOptimalPublishTime] = useState('');
+  // Drag & Drop состояние
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const controls = useAnimation();
+
+  useEffect(() => {
+    if (!user) {
+      toast.error(t('create_listing.auth_required'));
+      router.push('/');
+    }
+  }, [user, router, t]);
 
   // Category-specific attributes
   const categoryAttributes: Record<
@@ -143,11 +152,11 @@ export default function NoBackendEnhancedListingCreationPage() {
 🔋 Батарея держит: [время работы]
 💎 Особенности: [что особенного]`,
 
-    fashion: `👕 Размер: [точный размер]
-📏 Параметры: [обхват груди/талии]
-🧵 Состав: [материал]
+    fashion: `👟 Размер: [точный размер]
+📏 Стелька: [длина в см]
+🧵 Материал: [кожа/текстиль/синтетика]
 ✨ Состояние: [новое/б/у]
-📸 На фото: [рост модели]`,
+📸 Носил(а): [сколько раз/период]`,
 
     home: `🏠 Размеры: [длина x ширина x высота]
 📦 Состояние: [новое/б/у]
@@ -162,44 +171,121 @@ export default function NoBackendEnhancedListingCreationPage() {
 🛡️ Страховка: [до когда]`,
   };
 
-  // Симулированные данные похожих объявлений
-  const getSimilarListings = () => {
+  // Симулированные данные похожих объявлений в зависимости от категории
+  const getSimilarListings = (category: string, title: string) => {
+    // Базовые примеры для разных категорий
+    const categoryExamples: Record<string, any[]> = {
+      fashion: [
+        {
+          id: 1,
+          title: 'Кроссовки Nike Air Max 42',
+          price: 8500,
+          views: 345,
+          daysAgo: 3,
+          sold: false,
+        },
+        {
+          id: 2,
+          title: 'Adidas Ultraboost 41',
+          price: 7200,
+          views: 289,
+          daysAgo: 5,
+          sold: true,
+        },
+        {
+          id: 3,
+          title: 'Домашние тапочки 40-42',
+          price: 1200,
+          views: 156,
+          daysAgo: 1,
+          sold: false,
+        },
+      ],
+      electronics: [
+        {
+          id: 1,
+          title: 'iPhone 13 Pro 256GB',
+          price: 68000,
+          views: 245,
+          daysAgo: 2,
+          sold: false,
+        },
+        {
+          id: 2,
+          title: 'Samsung Galaxy S23',
+          price: 62000,
+          views: 189,
+          daysAgo: 5,
+          sold: true,
+        },
+      ],
+      home: [
+        {
+          id: 1,
+          title: 'Диван раскладной IKEA',
+          price: 25000,
+          views: 445,
+          daysAgo: 2,
+          sold: false,
+        },
+        {
+          id: 2,
+          title: 'Кресло офисное',
+          price: 12000,
+          views: 189,
+          daysAgo: 4,
+          sold: true,
+        },
+      ],
+    };
+
+    // Если есть конкретная категория, возвращаем примеры для неё
+    if (category && categoryExamples[category]) {
+      return categoryExamples[category];
+    }
+
+    // Генерируем общие примеры на основе заголовка
+    let basePrice = 10000;
+    
+    // Определяем базовую цену по ключевым словам в названии
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('тап') || titleLower.includes('тапоч')) {
+      basePrice = 1500;
+    } else if (titleLower.includes('кроссов') || titleLower.includes('ботин')) {
+      basePrice = 5000;
+    } else if (titleLower.includes('телефон') || titleLower.includes('iphone')) {
+      basePrice = 50000;
+    } else if (titleLower.includes('ноутбук') || titleLower.includes('компьютер')) {
+      basePrice = 40000;
+    } else if (titleLower.includes('диван') || titleLower.includes('кровать')) {
+      basePrice = 20000;
+    }
     return [
       {
         id: 1,
-        title: 'iPhone 13 Pro 256GB Space Gray',
-        price: 68000,
-        views: 245,
-        daysAgo: 2,
+        title: `${title} - отличное состояние`,
+        price: basePrice * 1.2,
+        views: Math.floor(Math.random() * 300) + 100,
+        daysAgo: Math.floor(Math.random() * 7) + 1,
         sold: false,
       },
       {
         id: 2,
-        title: 'iPhone 13 Pro 128GB Blue',
-        price: 62000,
-        views: 189,
-        daysAgo: 5,
-        sold: true,
+        title: `${title} - почти новый`,
+        price: basePrice * 1.5,
+        views: Math.floor(Math.random() * 300) + 100,
+        daysAgo: Math.floor(Math.random() * 7) + 1,
+        sold: Math.random() > 0.5,
       },
       {
         id: 3,
-        title: 'iPhone 13 Pro 512GB Gold',
-        price: 75000,
-        views: 156,
-        daysAgo: 1,
+        title: `${title} - срочная продажа`,
+        price: basePrice * 0.8,
+        views: Math.floor(Math.random() * 300) + 100,
+        daysAgo: Math.floor(Math.random() * 7) + 1,
         sold: false,
       },
     ];
-  };
-
-  // Определение оптимального времени публикации
-  const getOptimalPublishTime = () => {
-    const times = [
-      { time: '19:00-21:00', activity: 'Высокая', icon: '🔥' },
-      { time: '12:00-13:00', activity: 'Средняя', icon: '👍' },
-      { time: '09:00-10:00', activity: 'Средняя', icon: '👍' },
-    ];
-    return times[0]; // Возвращаем лучшее время
   };
 
   // Simulated quick templates
@@ -258,23 +344,16 @@ export default function NoBackendEnhancedListingCreationPage() {
   ];
 
   useEffect(() => {
-    // Simulate AI suggestions when image is uploaded
-    if (formData.images.length > 0 && !suggestions.title) {
-      setTimeout(() => {
-        setSuggestions({
-          title: 'iPhone 13 Pro, 256GB, Pacific Blue',
-          category: 'electronics',
-          price: '65000',
-          description:
-            'Телефон в отличном состоянии, использовался аккуратно. Полный комплект, есть чек.',
-        });
-
-        // Показываем сравнение цен
-        setSimilarListings(getSimilarListings());
+    // Обновляем похожие объявления при изменении категории или заголовка
+    if (formData.title || formData.category) {
+      setSimilarListings(getSimilarListings(formData.category, formData.title));
+      
+      // Показываем сравнение цен если есть заголовок
+      if (formData.title) {
         setShowPriceComparison(true);
-      }, 1000);
+      }
     }
-  }, [formData.images, suggestions.title]);
+  }, [formData.category, formData.title]);
 
   // Проверка на наличие контактов в описании
   const checkForContactInfo = (text: string) => {
@@ -283,6 +362,28 @@ export default function NoBackendEnhancedListingCreationPage() {
     const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
     return phoneRegex.test(text) || emailRegex.test(text);
+  };
+
+  // Автоматическое определение категории по названию
+  const detectCategory = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    
+    // Ключевые слова для категорий
+    const categoryKeywords = {
+      fashion: ['обувь', 'туфли', 'тапки', 'тапочки', 'кроссовки', 'ботинки', 'сапоги', 'босоножки', 'сандалии', 'кеды', 'одежда', 'платье', 'брюки', 'джинсы', 'футболка', 'рубашка', 'куртка', 'пальто', 'шуба', 'размер'],
+      electronics: ['телефон', 'iphone', 'samsung', 'xiaomi', 'ноутбук', 'компьютер', 'планшет', 'наушники', 'телевизор', 'playstation', 'xbox', 'приставка', 'фотоаппарат', 'камера'],
+      home: ['мебель', 'диван', 'кресло', 'стол', 'стул', 'шкаф', 'кровать', 'матрас', 'ковер', 'штора', 'посуда', 'кухня', 'холодильник', 'стиральная', 'пылесос'],
+      auto: ['машина', 'автомобиль', 'мотоцикл', 'велосипед', 'самокат', 'колеса', 'шины', 'запчасти', 'двигатель', 'коробка', 'бампер'],
+    };
+    
+    // Проверяем каждую категорию
+    for (const [category, keywords] of Object.entries(categoryKeywords)) {
+      if (keywords.some(keyword => lowerTitle.includes(keyword))) {
+        return category;
+      }
+    }
+    
+    return '';
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -298,7 +399,9 @@ export default function NoBackendEnhancedListingCreationPage() {
         img.src = imgUrl;
         img.onload = () => {
           if (img.width < 800 || img.height < 600) {
-            console.log(`Image ${index + 1} has low quality`);
+            toast.warning(
+              `Изображение ${index + 1} имеет низкое качество. Рекомендуем загрузить фото минимум 800x600 пикселей`
+            );
           }
         };
       });
@@ -307,7 +410,7 @@ export default function NoBackendEnhancedListingCreationPage() {
         ...formData,
         images: [...formData.images, ...newImages].slice(0, 8),
       });
-      if (newImages.length > 0) {
+      if (newImages.length > 0 && currentView === 'start') {
         setCurrentView('create');
       }
     }
@@ -320,18 +423,32 @@ export default function NoBackendEnhancedListingCreationPage() {
     });
   };
 
-  const applySuggestions = () => {
-    setFormData({
-      ...formData,
-      title: suggestions.title,
-      category: suggestions.category,
-      price: suggestions.price,
-      description: suggestions.description,
-    });
-    controls.start({
-      scale: [1, 1.05, 1],
-      transition: { duration: 0.3 },
-    });
+  // Drag & Drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null) return;
+
+    const draggedImage = formData.images[draggedIndex];
+    const newImages = [...formData.images];
+
+    // Remove the dragged image
+    newImages.splice(draggedIndex, 1);
+
+    // Insert it at the new position
+    newImages.splice(dropIndex, 0, draggedImage);
+
+    setFormData({ ...formData, images: newImages });
+    setDraggedIndex(null);
   };
 
   const applyDescriptionTemplate = () => {
@@ -340,7 +457,12 @@ export default function NoBackendEnhancedListingCreationPage() {
         ...formData,
         description: descriptionTemplates[formData.category],
       });
+      toast.success('Шаблон применен! Отредактируйте детали');
     }
+  };
+
+  const handleSocialImport = (platform: string) => {
+    toast.info(`Импорт из ${platform} будет доступен в ближайшее время`);
   };
 
   const renderStartView = () => (
@@ -362,7 +484,8 @@ export default function NoBackendEnhancedListingCreationPage() {
             Продайте быстрее с умными подсказками 🚀
           </h1>
           <p className="text-xl text-base-content/70 mb-8">
-            AI-подсказки, шаблоны, сравнение цен — всё для успешной продажи
+            Шаблоны, сравнение цен, импорт из соцсетей — всё для успешной
+            продажи
           </p>
 
           {/* Stats */}
@@ -373,7 +496,7 @@ export default function NoBackendEnhancedListingCreationPage() {
               transition={{ delay: 0.2 }}
               className="text-center"
             >
-              <div className="text-3xl font-bold text-primary">2 мин</div>
+              <div className="text-3xl font-bold text-primary">2-4 мин</div>
               <div className="text-sm text-base-content/60">создание</div>
             </motion.div>
             <motion.div
@@ -382,7 +505,7 @@ export default function NoBackendEnhancedListingCreationPage() {
               transition={{ delay: 0.3 }}
               className="text-center"
             >
-              <div className="text-3xl font-bold text-success">98%</div>
+              <div className="text-3xl font-bold text-success">85%</div>
               <div className="text-sm text-base-content/60">завершают</div>
             </motion.div>
             <motion.div
@@ -411,12 +534,38 @@ export default function NoBackendEnhancedListingCreationPage() {
             <label
               htmlFor="quick-upload"
               className="card bg-gradient-to-r from-primary to-secondary text-primary-content cursor-pointer hover:shadow-2xl transition-all"
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                  const newImages = Array.from(files).map((file) =>
+                    URL.createObjectURL(file)
+                  );
+                  setFormData({
+                    ...formData,
+                    images: [...formData.images, ...newImages].slice(0, 8),
+                  });
+                  if (newImages.length > 0) {
+                    setCurrentView('create');
+                  }
+                }
+              }}
             >
-              <div className="card-body text-center py-12">
+              <div
+                className={`card-body text-center py-12 ${isDragging ? 'opacity-70' : ''}`}
+              >
                 <Camera className="w-16 h-16 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold mb-2">Начните с фото</h2>
+                <h2 className="text-2xl font-bold mb-2">
+                  {isDragging ? 'Отпустите фото здесь' : 'Начните с фото'}
+                </h2>
                 <p className="opacity-90 mb-4">
-                  Загрузите фото товара, а мы поможем с остальным
+                  Загрузите или перетащите фото товара
                 </p>
                 <div className="flex gap-2 justify-center">
                   <div className="badge badge-lg badge-warning gap-2">
@@ -424,8 +573,8 @@ export default function NoBackendEnhancedListingCreationPage() {
                     Быстрый старт
                   </div>
                   <div className="badge badge-lg badge-info gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    AI подсказки
+                    <FileText className="w-4 h-4" />
+                    Умные шаблоны
                   </div>
                 </div>
               </div>
@@ -455,11 +604,17 @@ export default function NoBackendEnhancedListingCreationPage() {
               </p>
             </div>
             <div className="flex gap-2 justify-center">
-              <button className="btn btn-outline gap-2">
+              <button
+                onClick={() => handleSocialImport('Instagram')}
+                className="btn btn-outline gap-2"
+              >
                 <Instagram className="w-4 h-4" />
                 Instagram
               </button>
-              <button className="btn btn-outline gap-2">
+              <button
+                onClick={() => handleSocialImport('Facebook')}
+                className="btn btn-outline gap-2"
+              >
                 <Facebook className="w-4 h-4" />
                 Facebook
               </button>
@@ -585,32 +740,8 @@ export default function NoBackendEnhancedListingCreationPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* AI Suggestions Banner */}
-          {suggestions.title && formData.images.length > 0 && (
-            <motion.div
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="alert alert-info shadow-lg"
-            >
-              <Sparkles className="w-5 h-5" />
-              <div className="flex-1">
-                <h3 className="font-bold">Мы узнали ваш товар!</h3>
-                <p className="text-sm">
-                  {suggestions.title} • Рекомендуемая цена: {suggestions.price}{' '}
-                  РСД
-                </p>
-              </div>
-              <button
-                onClick={applySuggestions}
-                className="btn btn-sm btn-primary"
-              >
-                Применить
-              </button>
-            </motion.div>
-          )}
-
-          {/* Photo Upload Section */}
-          <motion.div animate={controls} className="card bg-base-200">
+          {/* Photo Upload Section with Drag & Drop */}
+          <div className="card bg-base-200">
             <div className="card-body">
               <h2 className="card-title">
                 <Camera className="w-5 h-5" />
@@ -628,7 +759,11 @@ export default function NoBackendEnhancedListingCreationPage() {
                     key={index}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="relative aspect-square group"
+                    className="relative aspect-square group cursor-move"
+                    draggable
+                    onDragStart={(e: any) => handleDragStart(e, index)}
+                    onDragOver={(e: any) => handleDragOver(e)}
+                    onDrop={(e: any) => handleDrop(e, index)}
                   >
                     <Image
                       src={img}
@@ -651,7 +786,33 @@ export default function NoBackendEnhancedListingCreationPage() {
                 ))}
 
                 {formData.images.length < 8 && (
-                  <label className="aspect-square border-2 border-dashed border-base-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                  <label
+                    className="aspect-square border-2 border-dashed border-base-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.classList.add('border-primary');
+                    }}
+                    onDragLeave={(e) => {
+                      e.currentTarget.classList.remove('border-primary');
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.classList.remove('border-primary');
+                      const files = e.dataTransfer.files;
+                      if (files && files.length > 0) {
+                        const newImages = Array.from(files).map((file) =>
+                          URL.createObjectURL(file)
+                        );
+                        setFormData({
+                          ...formData,
+                          images: [...formData.images, ...newImages].slice(
+                            0,
+                            8
+                          ),
+                        });
+                      }
+                    }}
+                  >
                     <Plus className="w-6 h-6 text-base-content/50" />
                     <span className="text-xs text-base-content/50 mt-1">
                       Добавить
@@ -677,8 +838,19 @@ export default function NoBackendEnhancedListingCreationPage() {
                   </span>
                 </div>
               )}
+
+              {/* Совет по порядку фото */}
+              {formData.images.length > 1 && (
+                <div className="alert alert-info mt-4">
+                  <Info className="w-4 h-4" />
+                  <span className="text-sm">
+                    Перетащите фото, чтобы изменить их порядок. Первое фото -
+                    главное
+                  </span>
+                </div>
+              )}
             </div>
-          </motion.div>
+          </div>
 
           {/* Quick Info Section */}
           <div className="card bg-base-200">
@@ -696,9 +868,24 @@ export default function NoBackendEnhancedListingCreationPage() {
                   placeholder="Что вы продаете?"
                   className="input input-bordered"
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const newTitle = e.target.value;
+                    setFormData({ ...formData, title: newTitle });
+                    
+                    // Автоматически определяем категорию
+                    if (newTitle.length > 3) {
+                      const detectedCategory = detectCategory(newTitle);
+                      if (detectedCategory && !formData.category) {
+                        setFormData(prev => ({ ...prev, category: detectedCategory }));
+                        toast.success(`Категория определена автоматически: ${
+                          detectedCategory === 'fashion' ? 'Мода' :
+                          detectedCategory === 'electronics' ? 'Электроника' :
+                          detectedCategory === 'home' ? 'Дом' :
+                          detectedCategory === 'auto' ? 'Авто' : ''
+                        }`);
+                      }
+                    }
+                  }}
                   maxLength={80}
                 />
               </div>
@@ -829,7 +1016,7 @@ export default function NoBackendEnhancedListingCreationPage() {
                       className="btn btn-outline btn-sm mt-2 gap-1"
                     >
                       <FileText className="w-3 h-3" />
-                      Использовать шаблон для {formData.category}
+                      Использовать шаблон для {formData.category === 'fashion' ? 'одежды/обуви' : formData.category === 'electronics' ? 'электроники' : formData.category === 'home' ? 'дома' : formData.category === 'auto' ? 'авто' : 'товара'}
                     </button>
                   )}
 
@@ -1194,7 +1381,7 @@ export default function NoBackendEnhancedListingCreationPage() {
                 <TrendingUp className="w-8 h-8 text-primary mx-auto mb-2" />
                 <h3 className="font-bold">Больше просмотров</h3>
                 <p className="text-sm text-base-content/70">
-                  AI-оптимизация увеличит охват
+                  Умная оптимизация увеличит охват
                 </p>
               </div>
             </motion.div>
@@ -1237,7 +1424,13 @@ export default function NoBackendEnhancedListingCreationPage() {
             transition={{ delay: 0.7 }}
             className="flex gap-3"
           >
-            <button className="btn btn-primary btn-lg flex-1">
+            <button
+              onClick={() => {
+                toast.success('Объявление опубликовано успешно!');
+                router.push('/profile/listings');
+              }}
+              className="btn btn-primary btn-lg flex-1"
+            >
               Опубликовать сейчас
               <Sparkles className="w-5 h-5 ml-1" />
             </button>
@@ -1257,7 +1450,7 @@ export default function NoBackendEnhancedListingCreationPage() {
             <div className="flex items-center justify-center gap-2 text-sm text-base-content/60">
               <Users className="w-4 h-4" />
               <span>
-                <span className="font-semibold">2,345</span> продавцов уже
+                <span className="font-semibold">1,234</span> продавцов уже
                 воспользовались умными подсказками сегодня
               </span>
             </div>
@@ -1272,16 +1465,13 @@ export default function NoBackendEnhancedListingCreationPage() {
       {/* Navigation Bar */}
       <div className="navbar bg-base-100 border-b border-base-200 fixed top-0 z-50">
         <div className="flex-1">
-          <Link
-            href="/ru/examples/listing-creation-ux-v2"
-            className="btn btn-ghost"
-          >
+          <Link href="/sr/create-listing-choice" className="btn btn-ghost">
             <ChevronLeft className="w-5 h-5" />
-            Назад к примерам
+            Назад к выбору
           </Link>
         </div>
         <div className="flex-none">
-          <div className="badge badge-warning badge-lg">Улучшенная версия</div>
+          <div className="badge badge-success badge-lg">Бесплатная версия</div>
         </div>
       </div>
 

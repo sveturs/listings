@@ -41,7 +41,7 @@ export const EnhancedMobileBottomNav: React.FC = () => {
     {
       icon: PlusCircle,
       label: t('create'),
-      href: '/create-listing',
+      href: '/create-listing-choice',
       authRequired: true,
       color: 'text-primary',
     },
@@ -146,7 +146,7 @@ export const EnhancedMobileBottomNav: React.FC = () => {
                 )}
 
                 {/* Ripple эффект для центральной кнопки */}
-                {item.href === '/create-listing' && (
+                {item.href === '/create-listing-choice' && (
                   <div className="absolute inset-0 -m-2">
                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
                   </div>

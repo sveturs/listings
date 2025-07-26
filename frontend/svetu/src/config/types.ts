@@ -56,6 +56,9 @@ export interface Config {
     enableChat: boolean;
     enablePayments: boolean;
   };
+
+  // AI Configuration
+  claudeApiKey?: string;
 }
 
 // Дополнительный тип для ошибок валидации
