@@ -8268,7 +8268,7 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Job cancelled successfully */
+        /** @description Job canceled successfully */
         200: {
           headers: {
             [name: string]: unknown;
@@ -13305,7 +13305,7 @@ export interface paths {
         };
       };
       responses: {
-        /** @description Cancelled order */
+        /** @description Canceled order */
         200: {
           headers: {
             [name: string]: unknown;
@@ -13352,7 +13352,7 @@ export interface paths {
             'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
-        /** @description Order cannot be cancelled */
+        /** @description Order cannot be canceled */
         409: {
           headers: {
             [name: string]: unknown;
@@ -13486,7 +13486,7 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Payment cancelled successfully */
+        /** @description Payment canceled successfully */
         200: {
           headers: {
             [name: string]: unknown;
@@ -18000,6 +18000,294 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/{slug}/dashboard/low-stock': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get low stock products
+     * @description Returns products with low stock for storefront dashboard
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Low stock products */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_storage_postgres.LowStockProduct'][];
+            };
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{slug}/dashboard/notifications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get dashboard notifications
+     * @description Returns notifications for storefront dashboard
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit */
+          limit?: number;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Dashboard notifications */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_storefronts_handler.DashboardNotification'][];
+            };
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{slug}/dashboard/recent-orders': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get recent orders
+     * @description Returns recent orders for storefront dashboard
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit */
+          limit?: number;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Recent orders */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_storage_postgres.DashboardOrder'][];
+            };
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/{slug}/dashboard/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get dashboard statistics
+     * @description Returns statistics for storefront dashboard
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Dashboard statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_storage_postgres.DashboardStats'];
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts/{slug}/products': {
     parameters: {
       query?: never;
@@ -22133,7 +22421,7 @@ export interface components {
       reason:
         | 'not_a_customer'
         | 'false_information'
-        | 'deal_cancelled'
+        | 'deal_canceled'
         | 'spam'
         | 'other';
     };
@@ -22516,7 +22804,7 @@ export interface components {
       | 'delivered'
       | 'completed'
       | 'disputed'
-      | 'cancelled'
+      | 'canceled'
       | 'refunded';
     'backend_internal_domain_models.Notification': {
       created_at?: string;
@@ -22571,7 +22859,7 @@ export interface components {
       | 'processing'
       | 'shipped'
       | 'delivered'
-      | 'cancelled'
+      | 'canceled'
       | 'refunded';
     'backend_internal_domain_models.OrderStatusHistory': {
       created_at?: string;
@@ -22975,7 +23263,7 @@ export interface components {
     };
     'backend_internal_domain_models.StorefrontOrder': {
       billing_address?: components['schemas']['backend_internal_domain_models.JSONB'];
-      cancelled_at?: string;
+      canceled_at?: string;
       commission_amount?: number;
       /** @description Временные метки */
       confirmed_at?: string;
@@ -23788,6 +24076,29 @@ export interface components {
       is_main?: boolean;
       public_url?: string;
       thumbnail_url?: string;
+    };
+    'backend_internal_storage_postgres.DashboardOrder': {
+      created_at?: string;
+      currency?: string;
+      customer?: string;
+      id?: number;
+      items_count?: number;
+      order_id?: string;
+      status?: string;
+      total?: number;
+    };
+    'backend_internal_storage_postgres.DashboardStats': {
+      active_products?: number;
+      low_stock_products?: number;
+      pending_orders?: number;
+      total_products?: number;
+      unread_messages?: number;
+    };
+    'backend_internal_storage_postgres.LowStockProduct': {
+      id?: number;
+      min_stock?: number;
+      name?: string;
+      stock_quantity?: number;
     };
     'backend_pkg_utils.ErrorResponseSwag': {
       /** @example Описание ошибки */
@@ -24602,6 +24913,15 @@ export interface components {
     'internal_proj_storefronts_handler.AddStaffRequest': {
       role: components['schemas']['backend_internal_domain_models.StaffRole'];
       user_id: number;
+    };
+    'internal_proj_storefronts_handler.DashboardNotification': {
+      created_at?: string;
+      id?: number;
+      is_read?: boolean;
+      message?: string;
+      title?: string;
+      /** @description order, message, stock */
+      type?: string;
     };
     'internal_proj_storefronts_handler.ImageOrderUpdate': {
       display_order?: number;
