@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { useTranslations } from 'next-intl';
 import { ShoppingBag, TrendingUp, LayoutGrid, List } from 'lucide-react';
 import {
@@ -72,6 +78,7 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
   const [viewMode, setViewMode] = useViewPreference('grid');
   const [gridColumns, setGridColumns] = useGridColumns(1);
   const showAll = true; // Всегда показываем все объявления
+  const prevFiltersRef = useRef<string>('');
 
   // Конвертация фильтров в формат API
   const searchParams = useMemo(() => {
@@ -92,13 +99,7 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
     }
 
     return params;
-  }, [
-    filters?.priceMin,
-    filters?.priceMax,
-    filters?.condition,
-    filters?.sellerType,
-    filters?.attributeFilters,
-  ]);
+  }, [filters]);
 
   // Загрузка данных
   const loadData = useCallback(
@@ -141,14 +142,52 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
     [productTypes, selectedCategoryId, searchParams]
   );
 
-  // Извлекаем сложное выражение в отдельную переменную
-  const searchParamsString = JSON.stringify(searchParams);
-
   useEffect(() => {
+    // Создаем стабильную строку для сравнения
+    const currentFilters = JSON.stringify({
+      selectedCategoryId,
+      productTypes,
+      searchParams,
+    });
+
+    // Проверяем, изменились ли фильтры
+    if (prevFiltersRef.current === currentFilters) {
+      return;
+    }
+
+    prevFiltersRef.current = currentFilters;
+
     console.log('BentoGridListings: Filters changed, reloading data');
     setPage(1);
-    loadData(1);
-  }, [selectedCategoryId, searchParamsString, loadData]);
+    setItems([]);
+
+    // Вызываем loadData без зависимости от нее самой
+    (async () => {
+      try {
+        setLoading(true);
+        const response = await UnifiedSearchService.search({
+          query: '',
+          product_types: productTypes,
+          category_id: selectedCategoryId?.toString(),
+          sort_by: 'date',
+          sort_order: 'desc',
+          page: 1,
+          limit: 12,
+          ...searchParams,
+        });
+
+        if (response && response.items) {
+          setItems(response.items);
+          setHasMore(response.has_more);
+          setPage(1);
+        }
+      } catch (err) {
+        console.error('Failed to load listings:', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [selectedCategoryId, productTypes, searchParams]);
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {

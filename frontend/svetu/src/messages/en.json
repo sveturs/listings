@@ -2361,6 +2361,7 @@
         "main_photo": "Main",
         "ai_recommends": "AI recommends adding:",
         "category_title": "Category",
+        "category_auto_selected": "AI automatically selected category: {category}",
         "title_ab_testing": "Title (A/B testing)",
         "change": "Change",
         "ai_choice": "AI choice",

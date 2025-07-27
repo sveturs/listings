@@ -2474,6 +2474,7 @@
         "main_photo": "Главное",
         "ai_recommends": "AI рекомендует добавить:",
         "category_title": "Категория",
+        "category_auto_selected": "AI автоматически выбрал категорию: {category}",
         "title_ab_testing": "Заголовок (A/B тестирование)",
         "change": "Изменить",
         "ai_choice": "AI выбор",
