@@ -160,7 +160,7 @@ export default function Header() {
 
             {mounted && isAuthenticated && user && (
               <Link
-                href="/create-listing"
+                href="/create-listing-choice"
                 className="btn btn-primary btn-sm hidden md:flex"
               >
                 <svg

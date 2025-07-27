@@ -44,7 +44,7 @@ export default function AIPoweredEnhancedListingCreationPage() {
   const [images, setImages] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [voiceRecording, setVoiceRecording] = useState(false);
-  
+
   // AI generated data
   const [aiData, setAiData] = useState({
     title: '',
@@ -136,9 +136,12 @@ export default function AIPoweredEnhancedListingCreationPage() {
       },
       publishTime: '19:00',
       socialPosts: {
-        whatsapp: '📱 Продаю iPhone 13 Pro, 256GB\n💙 Pacific Blue\n✨ Идеальное состояние\n💰 65.000 РСД',
-        telegram: '📱 iPhone 13 Pro на продажу!\n\n• 256GB, Pacific Blue\n• Состояние: как новый\n• Батарея: 92%\n• Цена: 65.000 РСД\n\nПодробности в личку 📩',
-        instagram: '#ПродамiPhone #iPhone13Pro #Belgrade #Сербия\n\n📱 iPhone 13 Pro, 256GB\n💙 Цвет: Pacific Blue\n⚡ Состояние: идеальное\n💰 Цена: 65.000 РСД\n\nDM для деталей! 📩',
+        whatsapp:
+          '📱 Продаю iPhone 13 Pro, 256GB\n💙 Pacific Blue\n✨ Идеальное состояние\n💰 65.000 РСД',
+        telegram:
+          '📱 iPhone 13 Pro на продажу!\n\n• 256GB, Pacific Blue\n• Состояние: как новый\n• Батарея: 92%\n• Цена: 65.000 РСД\n\nПодробности в личку 📩',
+        instagram:
+          '#ПродамiPhone #iPhone13Pro #Belgrade #Сербия\n\n📱 iPhone 13 Pro, 256GB\n💙 Цвет: Pacific Blue\n⚡ Состояние: идеальное\n💰 Цена: 65.000 РСД\n\nDM для деталей! 📩',
       },
     });
 
@@ -161,7 +164,8 @@ export default function AIPoweredEnhancedListingCreationPage() {
   };
 
   const regenerateTitle = () => {
-    const newIndex = (aiData.selectedTitleIndex + 1) % aiData.titleVariants.length;
+    const newIndex =
+      (aiData.selectedTitleIndex + 1) % aiData.titleVariants.length;
     setAiData({ ...aiData, selectedTitleIndex: newIndex });
   };
 
@@ -343,7 +347,7 @@ export default function AIPoweredEnhancedListingCreationPage() {
         </motion.div>
 
         <h2 className="text-2xl font-bold mb-4">AI анализирует ваши фото</h2>
-        
+
         <div className="space-y-4 text-left max-w-md mx-auto">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
@@ -442,13 +446,15 @@ export default function AIPoweredEnhancedListingCreationPage() {
                   </div>
                 ))}
               </div>
-              
+
               {/* Suggested missing photos */}
               {aiData.suggestedPhotos.length > 0 && (
                 <div className="alert alert-info mt-4">
                   <Lightbulb className="w-4 h-4" />
                   <div>
-                    <p className="font-semibold text-sm">AI рекомендует добавить:</p>
+                    <p className="font-semibold text-sm">
+                      AI рекомендует добавить:
+                    </p>
                     <ul className="text-xs mt-1">
                       {aiData.suggestedPhotos.map((photo, index) => (
                         <li key={index}>• {photo}</li>
@@ -469,7 +475,10 @@ export default function AIPoweredEnhancedListingCreationPage() {
               </h3>
               <div className="space-y-2">
                 {aiData.categoryProbabilities.map((cat, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
                     <span className={index === 0 ? 'font-semibold' : ''}>
                       {cat.name}
                     </span>
@@ -503,7 +512,7 @@ export default function AIPoweredEnhancedListingCreationPage() {
                   Другой вариант
                 </button>
               </div>
-              
+
               <div className="space-y-3">
                 {aiData.titleVariants.map((variant, index) => (
                   <label
@@ -536,7 +545,7 @@ export default function AIPoweredEnhancedListingCreationPage() {
                   </label>
                 ))}
               </div>
-              
+
               <div className="form-control form-control-sm mt-3">
                 <label className="label cursor-pointer">
                   <span className="label-text">Включить A/B тестирование</span>
@@ -562,11 +571,14 @@ export default function AIPoweredEnhancedListingCreationPage() {
                 {aiData.price} РСД
               </div>
               <p className="text-sm text-base-content/60 mb-4">
-                Рекомендуемый диапазон: {aiData.priceRange.min.toLocaleString()} - {aiData.priceRange.max.toLocaleString()} РСД
+                Рекомендуемый диапазон: {aiData.priceRange.min.toLocaleString()}{' '}
+                - {aiData.priceRange.max.toLocaleString()} РСД
               </p>
-              
+
               <div className="bg-base-100 p-3 rounded-lg">
-                <p className="text-sm font-semibold mb-2">Анализ конкурентов:</p>
+                <p className="text-sm font-semibold mb-2">
+                  Анализ конкурентов:
+                </p>
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span>Минимальная цена:</span>
@@ -810,7 +822,9 @@ export default function AIPoweredEnhancedListingCreationPage() {
           className="max-w-4xl mx-auto card bg-base-100 shadow-xl mb-8"
         >
           <div className="card-body">
-            <h3 className="card-title mb-4">Прогноз эффективности (AI анализ)</h3>
+            <h3 className="card-title mb-4">
+              Прогноз эффективности (AI анализ)
+            </h3>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
               <div>
                 <p className="text-3xl font-bold text-primary">2,450</p>
@@ -843,7 +857,10 @@ export default function AIPoweredEnhancedListingCreationPage() {
           transition={{ delay: 0.7 }}
           className="max-w-4xl mx-auto flex flex-col lg:flex-row gap-4"
         >
-          <Link href="/ru/my-listings" className="btn btn-primary btn-lg flex-1">
+          <Link
+            href="/ru/my-listings"
+            className="btn btn-primary btn-lg flex-1"
+          >
             <Eye className="w-5 h-5 mr-2" />
             Посмотреть объявление
           </Link>

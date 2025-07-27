@@ -128,7 +128,7 @@ export default function HomePageClient({
 
           {/* Плавающая кнопка создания объявления */}
           <Link
-            href="/create-listing"
+            href="/create-listing-choice"
             className="fixed bottom-6 right-6 btn btn-primary btn-circle btn-lg shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-200 z-50"
             title={createListingText}
           >

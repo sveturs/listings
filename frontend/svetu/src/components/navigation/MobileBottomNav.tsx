@@ -39,7 +39,7 @@ export const MobileBottomNav: React.FC = () => {
     {
       icon: PlusCircle,
       label: t('create'),
-      href: '/create-listing',
+      href: '/create-listing-choice',
       authRequired: true,
     },
     {

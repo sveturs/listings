@@ -81,6 +81,12 @@ export interface CreateListingState {
   // Атрибуты
   attributes: Record<string, any>;
 
+  // Переводы
+  translations?: Record<string, Record<string, string>>;
+
+  // Язык оригинала
+  originalLanguage?: string;
+
   // Метаданные
   isPublished: boolean;
   isDraft: boolean;

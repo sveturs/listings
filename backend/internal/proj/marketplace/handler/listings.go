@@ -585,6 +585,29 @@ func (h *ListingsHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 
 // processAttributesFromRequest обрабатывает атрибуты из запроса
 func processAttributesFromRequest(requestBody map[string]interface{}, listing *models.MarketplaceListing) {
+	// Обработка переводов
+	if translationsRaw, ok := requestBody["translations"]; ok {
+		if translationsMap, ok := translationsRaw.(map[string]interface{}); ok {
+			translations := make(models.TranslationMap)
+			for lang, fieldsRaw := range translationsMap {
+				if fields, ok := fieldsRaw.(map[string]interface{}); ok {
+					langTranslations := make(map[string]string)
+					for field, value := range fields {
+						if strValue, ok := value.(string); ok {
+							langTranslations[field] = strValue
+						}
+					}
+					if len(langTranslations) > 0 {
+						translations[lang] = langTranslations
+					}
+				}
+			}
+			if len(translations) > 0 {
+				listing.Translations = translations
+			}
+		}
+	}
+
 	// Проверяем наличие атрибутов в запросе
 	if attributesRaw, ok := requestBody["attributes"]; ok {
 		if attributesSlice, ok := attributesRaw.([]interface{}); ok {

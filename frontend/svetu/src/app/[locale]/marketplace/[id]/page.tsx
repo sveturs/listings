@@ -72,22 +72,14 @@ interface Listing {
   longitude?: number;
   city?: string;
   country?: string;
-  // Переводы адресов
+  // Переводы всех полей
   translations?: {
-    location?: {
-      sr?: string;
-      en?: string;
-      ru?: string;
-    };
-    city?: {
-      sr?: string;
-      en?: string;
-      ru?: string;
-    };
-    country?: {
-      sr?: string;
-      en?: string;
-      ru?: string;
+    [locale: string]: {
+      title?: string;
+      description?: string;
+      location?: string;
+      city?: string;
+      country?: string;
     };
   };
   views_count: number;
@@ -126,6 +118,18 @@ export default function ListingPage({ params }: Props) {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [localizedAddress, setLocalizedAddress] = useState<string | null>(null);
 
+  // Функция для получения переведенного значения
+  const getTranslatedValue = (field: 'title' | 'description') => {
+    if (!listing) return '';
+
+    // Пробуем получить перевод для текущего языка
+    const translation = listing.translations?.[locale]?.[field];
+    if (translation) return translation;
+
+    // Если нет перевода, возвращаем оригинальное значение
+    return listing[field];
+  };
+
   // Используем локализованный адрес из backend или запрашиваем через геокодирование
 
   // Получение адреса на нужном языке через обратное геокодирование
@@ -163,10 +167,7 @@ export default function ListingPage({ params }: Props) {
       setListing(listingData);
 
       // Проверяем есть ли переводы адресов из backend
-      const hasTranslations =
-        listingData.translations?.location?.[
-          locale as keyof typeof listingData.translations.location
-        ];
+      const hasTranslations = listingData.translations?.[locale]?.location;
 
       if (!hasTranslations && listingData.latitude && listingData.longitude) {
         // Получаем локализованный адрес через геокодирование только если нет переводов
@@ -280,11 +281,12 @@ export default function ListingPage({ params }: Props) {
       : [{ id: 0, public_url: '/placeholder-listing.jpg' }];
 
   // Check if description is long
-  const isLongDescription = listing.description.length > 300;
+  const translatedDescription = getTranslatedValue('description');
+  const isLongDescription = translatedDescription.length > 300;
   const displayDescription =
     showFullDescription || !isLongDescription
-      ? listing.description
-      : listing.description.slice(0, 300) + '...';
+      ? translatedDescription
+      : translatedDescription.slice(0, 300) + '...';
 
   return (
     <PageTransition mode="slideUp">
@@ -307,7 +309,7 @@ export default function ListingPage({ params }: Props) {
                   </Link>
                 </li>
               ))}
-              <li className="font-semibold">{listing.title}</li>
+              <li className="font-semibold">{getTranslatedValue('title')}</li>
             </ul>
           </div>
         </div>
@@ -316,7 +318,9 @@ export default function ListingPage({ params }: Props) {
           {/* Title and Actions Row */}
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{listing.title}</h1>
+              <h1 className="text-3xl font-bold mb-2">
+                {getTranslatedValue('title')}
+              </h1>
               <div className="flex flex-wrap items-center gap-3 text-sm text-base-content/60">
                 <span className="flex items-center gap-1">
                   <svg
@@ -387,7 +391,10 @@ export default function ListingPage({ params }: Props) {
             {/* Left Column - Images and Description */}
             <div className="lg:col-span-2 space-y-6">
               {/* Image Gallery */}
-              <ImageGallery images={images} title={listing.title} />
+              <ImageGallery
+                images={images}
+                title={getTranslatedValue('title')}
+              />
 
               {/* Price and Main Info */}
               <div className="card bg-base-200">
@@ -529,13 +536,8 @@ export default function ListingPage({ params }: Props) {
                                     locale
                                   );
 
-                                  const displayValue =
-                                    attr.attribute_type === 'select' &&
-                                    attr.text_value
-                                      ? translated.getOptionLabel(
-                                          attr.text_value
-                                        )
-                                      : attr.display_value;
+                                  // Backend уже предоставляет переведенное значение в display_value
+                                  const displayValue = attr.display_value;
 
                                   return (
                                     <div
@@ -578,13 +580,8 @@ export default function ListingPage({ params }: Props) {
                                     locale
                                   );
 
-                                  const displayValue =
-                                    attr.attribute_type === 'select' &&
-                                    attr.text_value
-                                      ? translated.getOptionLabel(
-                                          attr.text_value
-                                        )
-                                      : attr.display_value;
+                                  // Backend уже предоставляет переведенное значение в display_value
+                                  const displayValue = attr.display_value;
 
                                   return (
                                     <div
