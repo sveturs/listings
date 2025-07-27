@@ -141,11 +141,14 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
     [productTypes, selectedCategoryId, searchParams]
   );
 
+  // Извлекаем сложное выражение в отдельную переменную
+  const searchParamsString = JSON.stringify(searchParams);
+
   useEffect(() => {
     console.log('BentoGridListings: Filters changed, reloading data');
     setPage(1);
     loadData(1);
-  }, [selectedCategoryId, JSON.stringify(searchParams)]); // Используем JSON.stringify для глубокого сравнения
+  }, [selectedCategoryId, searchParamsString, loadData]);
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {

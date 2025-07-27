@@ -188,7 +188,7 @@ export default function EditListingPage() {
     }, 30000);
 
     return () => clearTimeout(timer);
-  }, [isDirty, formData, attributes]);
+  }, [isDirty, formData, attributes, listing]);
 
   const saveDraft = async () => {
     // TODO: Implement draft saving

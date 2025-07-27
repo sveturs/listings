@@ -87,7 +87,11 @@ export function getFullLocalizedAddress(
 
   if (item.translations) {
     // Проверяем формат 1: { [locale]: { location, city, country } }
-    if (item.translations[locale] && typeof item.translations[locale] === 'object' && 'location' in item.translations[locale]) {
+    if (
+      item.translations[locale] &&
+      typeof item.translations[locale] === 'object' &&
+      'location' in item.translations[locale]
+    ) {
       location = item.translations[locale].location || location;
       city = item.translations[locale].city || city;
       country = item.translations[locale].country || country;

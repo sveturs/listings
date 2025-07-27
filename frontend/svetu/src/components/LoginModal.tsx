@@ -65,7 +65,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
     setErrors,
     setError,
     setLoading,
-    setSuccess,
+    setSuccess: _setSuccess,
     clearSuccess,
     resetForm,
   } = useAuthForm(initialMode);
@@ -281,8 +281,6 @@ const LoginModal: React.FC<LoginModalProps> = ({
       formData,
       setLoading,
       setErrors,
-      setError,
-      setSuccess,
       onClose,
       t,
       updateUser,

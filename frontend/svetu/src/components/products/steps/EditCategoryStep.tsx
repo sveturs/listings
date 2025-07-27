@@ -111,7 +111,7 @@ export default function EditCategoryStep({ onNext }: EditCategoryStepProps) {
     } finally {
       setLoading(false);
     }
-  }, [state.category?.id, t, setError, setAllCategories, buildBreadcrumbs]);
+  }, [state.category, t, setError, setAllCategories, buildBreadcrumbs]);
 
   useEffect(() => {
     loadCategories();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiClient } from '@/services/api-client';
 import debounce from 'lodash/debounce';
 
@@ -92,10 +92,11 @@ export function SEOSection({
   );
 
   // Debounced slug check
-  const debouncedSlugCheck = useCallback(
-    debounce((slug: string) => {
-      checkSlugAvailability(slug);
-    }, 500),
+  const debouncedSlugCheck = useMemo(
+    () =>
+      debounce((slug: string) => {
+        checkSlugAvailability(slug);
+      }, 500),
     [checkSlugAvailability]
   );
 

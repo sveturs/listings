@@ -728,12 +728,14 @@ const MapPage: React.FC = () => {
   }, [debouncedSearchQuery, handleAddressSearch, isSearchFromUser]);
 
   // Обработка изменений фильтров и позиции покупателя
+  // Извлекаем сложное выражение в отдельную переменную
+  const categoriesString = JSON.stringify(debouncedFilters.categories);
+
   useEffect(() => {
     loadListings();
   }, [
     loadListings,
-    // Используем JSON.stringify для массива категорий, чтобы правильно отслеживать изменения
-    JSON.stringify(debouncedFilters.categories),
+    categoriesString,
     debouncedFilters.priceFrom,
     debouncedFilters.priceTo,
     debouncedFilters.radius,
