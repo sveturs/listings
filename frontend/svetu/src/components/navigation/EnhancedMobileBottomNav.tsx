@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Search, PlusCircle, MessageCircle, User } from 'lucide-react';
@@ -66,16 +66,19 @@ export const EnhancedMobileBottomNav: React.FC = () => {
   );
 
   // Функция для определения активности ссылки
-  const isActive = (href: string) => {
-    const pathWithoutLocale = pathname.replace(/^\/(en|ru|sr)/, '') || '/';
-    const hrefWithoutLocale = href === '/' ? '/' : href;
+  const isActive = useCallback(
+    (href: string) => {
+      const pathWithoutLocale = pathname.replace(/^\/(en|ru|sr)/, '') || '/';
+      const hrefWithoutLocale = href === '/' ? '/' : href;
 
-    if (hrefWithoutLocale === '/') {
-      return pathWithoutLocale === '/';
-    }
+      if (hrefWithoutLocale === '/') {
+        return pathWithoutLocale === '/';
+      }
 
-    return pathWithoutLocale.startsWith(hrefWithoutLocale);
-  };
+      return pathWithoutLocale.startsWith(hrefWithoutLocale);
+    },
+    [pathname]
+  );
 
   // Обновляем активный индекс при изменении pathname
   useEffect(() => {
@@ -83,7 +86,7 @@ export const EnhancedMobileBottomNav: React.FC = () => {
     if (currentIndex !== -1) {
       setActiveIndex(currentIndex);
     }
-  }, [pathname, visibleItems]);
+  }, [pathname, visibleItems, isActive]);
 
   // Добавляем локаль к href
   const getLocalizedHref = (href: string) => {

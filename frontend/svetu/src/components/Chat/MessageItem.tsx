@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import { ChatAttachments } from '@/components/Chat/ChatAttachments';
 import { useChat } from '@/hooks/useChat';
 import DOMPurify from 'isomorphic-dompurify';
+import Image from 'next/image';
 
 // Динамически импортируем AnimatedEmoji, чтобы избежать проблем с SSR
 const AnimatedEmoji = dynamic(() => import('./AnimatedEmoji'), {
@@ -105,11 +106,11 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
         <div className="chat-image avatar">
           <div className="w-10 rounded-full bg-base-300 flex items-center justify-center">
             {message.sender?.picture_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={message.sender.picture_url}
                 alt={message.sender?.name || 'User'}
-                className="rounded-full"
+                fill
+                className="rounded-full object-cover"
               />
             ) : (
               <span className="text-sm font-semibold text-base-content">

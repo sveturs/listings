@@ -7808,6 +7808,77 @@ paths:
       summary: Get similar listings
       tags:
         - marketplace-search
+  /api/v1/marketplace/listings/check-slug:
+    post:
+      description: Checks if a slug is available for use and suggests alternatives if not
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: true
+              type: object
+        description: Slug to check
+        required: true
+      responses:
+        "200":
+          description: Slug availability status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: marketplace.invalidData
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Check slug availability
+      tags:
+        - marketplace-listings
+  "/api/v1/marketplace/listings/slug/{slug}":
+    get:
+      description: Returns detailed information about a specific listing by URL slug
+        including attributes and images
+      parameters:
+        - description: Listing slug
+          in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Listing details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.MarketplaceListing"
+                    type: object
+        "404":
+          description: marketplace.notFound
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.getError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get listing details by slug
+      tags:
+        - marketplace-listings
   /api/v1/marketplace/map/bounds:
     get:
       description: Returns all listings within the specified geographical bounds
@@ -16734,6 +16805,10 @@ components:
       type: object
     backend_internal_domain_models.MarketplaceListing:
       properties:
+        address_city:
+          type: string
+        address_country:
+          type: string
         attributes:
           items:
             $ref: "#/components/schemas/backend_internal_domain_models.ListingAttributeValu\
@@ -16761,11 +16836,7 @@ components:
           items:
             type: string
           type: array
-        city:
-          type: string
         condition:
-          type: string
-        country:
           type: string
         created_at:
           type: string

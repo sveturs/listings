@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,31 +33,48 @@ import {
   Clock as ClockIcon,
   FileText,
   Users,
+  Loader2,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from '@/utils/toast';
 import { useTranslations } from 'next-intl';
+import { ListingsService } from '@/services/listings';
+import type { CreateListingState } from '@/contexts/CreateListingContext';
+import type { components } from '@/types/generated/api';
+
+type MarketplaceCategory =
+  components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
 
 export default function CreateListingSmartPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
   const t = useTranslations();
   const { user } = useAuthContext();
   const [currentView, setCurrentView] = useState<
     'start' | 'create' | 'preview'
   >('start');
   const [quickMode, setQuickMode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<MarketplaceCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] =
+    useState<MarketplaceCategory | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     images: [] as string[],
     category: '',
+    categoryId: 0,
     title: '',
     price: '',
     description: '',
     location: '',
+    city: 'Белград',
+    country: 'Србија',
     deliveryMethods: ['pickup'],
-    attributes: {} as Record<string, string>,
+    attributes: {} as Record<string, any>,
   });
-  const suggestions = {
+  const _suggestions = {
     title: '',
     category: '',
     price: '',
@@ -66,6 +83,7 @@ export default function CreateListingSmartPage() {
   // Состояние для сравнения с похожими
   const [showPriceComparison, setShowPriceComparison] = useState(false);
   const [similarListings, setSimilarListings] = useState<any[]>([]);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
 
   // Drag & Drop состояние
   const [isDragging, setIsDragging] = useState(false);
@@ -79,6 +97,27 @@ export default function CreateListingSmartPage() {
       router.push('/');
     }
   }, [user, router, t]);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/api/v1/marketplace/categories?lang=${locale}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && Array.isArray(data.data)) {
+          setCategories(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  }, [locale]);
+
+  // Загружаем категории при монтировании
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   // Category-specific attributes
   const categoryAttributes: Record<
@@ -171,128 +210,70 @@ export default function CreateListingSmartPage() {
 🛡️ Страховка: [до когда]`,
   };
 
-  // Симулированные данные похожих объявлений в зависимости от категории
-  const getSimilarListings = (category: string, title: string) => {
-    // Базовые примеры для разных категорий
-    const categoryExamples: Record<string, any[]> = {
-      fashion: [
-        {
-          id: 1,
-          title: 'Кроссовки Nike Air Max 42',
-          price: 8500,
-          views: 345,
-          daysAgo: 3,
-          sold: false,
-        },
-        {
-          id: 2,
-          title: 'Adidas Ultraboost 41',
-          price: 7200,
-          views: 289,
-          daysAgo: 5,
-          sold: true,
-        },
-        {
-          id: 3,
-          title: 'Домашние тапочки 40-42',
-          price: 1200,
-          views: 156,
-          daysAgo: 1,
-          sold: false,
-        },
-      ],
-      electronics: [
-        {
-          id: 1,
-          title: 'iPhone 13 Pro 256GB',
-          price: 68000,
-          views: 245,
-          daysAgo: 2,
-          sold: false,
-        },
-        {
-          id: 2,
-          title: 'Samsung Galaxy S23',
-          price: 62000,
-          views: 189,
-          daysAgo: 5,
-          sold: true,
-        },
-      ],
-      home: [
-        {
-          id: 1,
-          title: 'Диван раскладной IKEA',
-          price: 25000,
-          views: 445,
-          daysAgo: 2,
-          sold: false,
-        },
-        {
-          id: 2,
-          title: 'Кресло офисное',
-          price: 12000,
-          views: 189,
-          daysAgo: 4,
-          sold: true,
-        },
-      ],
-    };
+  // Поиск реальных похожих объявлений
+  const fetchSimilarListings = useCallback(
+    async (categoryId: number, title: string) => {
+      console.log('fetchSimilarListings called with:', { categoryId, title });
+      if (!categoryId || !title || title.length < 3) {
+        console.log('Skipping fetch: invalid params');
+        return;
+      }
 
-    // Если есть конкретная категория, возвращаем примеры для неё
-    if (category && categoryExamples[category]) {
-      return categoryExamples[category];
-    }
+      setIsLoadingSimilar(true);
+      try {
+        // Извлекаем ключевые слова из заголовка
+        const keywords = title
+          .toLowerCase()
+          .split(' ')
+          .filter((word) => word.length > 2)
+          .slice(0, 3)
+          .join(' ');
 
-    // Генерируем общие примеры на основе заголовка
-    let basePrice = 10000;
+        // Поиск через API
+        const searchParams = new URLSearchParams({
+          query: keywords,
+          category_id: categoryId.toString(),
+          page: '1',
+          limit: '5',
+          sort_by: 'date',
+          sort_order: 'desc',
+          language: locale,
+        });
 
-    // Определяем базовую цену по ключевым словам в названии
-    const titleLower = title.toLowerCase();
-    if (titleLower.includes('тап') || titleLower.includes('тапоч')) {
-      basePrice = 1500;
-    } else if (titleLower.includes('кроссов') || titleLower.includes('ботин')) {
-      basePrice = 5000;
-    } else if (
-      titleLower.includes('телефон') ||
-      titleLower.includes('iphone')
-    ) {
-      basePrice = 50000;
-    } else if (
-      titleLower.includes('ноутбук') ||
-      titleLower.includes('компьютер')
-    ) {
-      basePrice = 40000;
-    } else if (titleLower.includes('диван') || titleLower.includes('кровать')) {
-      basePrice = 20000;
-    }
-    return [
-      {
-        id: 1,
-        title: `${title} - отличное состояние`,
-        price: basePrice * 1.2,
-        views: Math.floor(Math.random() * 300) + 100,
-        daysAgo: Math.floor(Math.random() * 7) + 1,
-        sold: false,
-      },
-      {
-        id: 2,
-        title: `${title} - почти новый`,
-        price: basePrice * 1.5,
-        views: Math.floor(Math.random() * 300) + 100,
-        daysAgo: Math.floor(Math.random() * 7) + 1,
-        sold: Math.random() > 0.5,
-      },
-      {
-        id: 3,
-        title: `${title} - срочная продажа`,
-        price: basePrice * 0.8,
-        views: Math.floor(Math.random() * 300) + 100,
-        daysAgo: Math.floor(Math.random() * 7) + 1,
-        sold: false,
-      },
-    ];
-  };
+        const response = await fetch(`/api/v1/search?${searchParams}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Search API response:', data); // Для отладки
+          if (data.items && Array.isArray(data.items)) {
+            // Преобразуем данные для отображения
+            const listings = data.items.slice(0, 3).map((item: any) => {
+              const createdDate = new Date(item.created_at);
+              const now = new Date();
+              const daysAgo = Math.floor(
+                (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)
+              );
+
+              return {
+                id: item.product_id,
+                title: item.name,
+                price: item.price,
+                views: Math.floor(Math.random() * 200) + 50, // Пока нет views в ответе search
+                daysAgo: daysAgo || 0,
+                sold: false, // В search API нет статуса
+                image: item.images?.[0]?.url,
+              };
+            });
+            setSimilarListings(listings);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching similar listings:', error);
+      } finally {
+        setIsLoadingSimilar(false);
+      }
+    },
+    [locale]
+  );
 
   // Simulated quick templates
   const quickTemplates = [
@@ -322,44 +303,61 @@ export default function CreateListingSmartPage() {
     },
   ];
 
-  const popularCategories = [
-    {
-      id: 'electronics',
-      name: 'Электроника',
-      icon: '📱',
-      gradient: 'from-blue-500 to-purple-500',
-    },
-    {
-      id: 'fashion',
-      name: 'Мода',
-      icon: '👗',
-      gradient: 'from-pink-500 to-rose-500',
-    },
-    {
-      id: 'home',
-      name: 'Дом',
-      icon: '🏠',
-      gradient: 'from-green-500 to-emerald-500',
-    },
-    {
-      id: 'auto',
-      name: 'Авто',
-      icon: '🚗',
-      gradient: 'from-orange-500 to-red-500',
-    },
-  ];
+  // Получаем популярные категории из загруженных
+  const getPopularCategories = () => {
+    const popularSlugs = [
+      'electronics',
+      'fashion',
+      'home-garden',
+      'automotive',
+    ];
+    const iconMap: Record<string, string> = {
+      electronics: '📱',
+      fashion: '👗',
+      'home-garden': '🏠',
+      automotive: '🚗',
+    };
+    const gradientMap: Record<string, string> = {
+      electronics: 'from-blue-500 to-purple-500',
+      fashion: 'from-pink-500 to-rose-500',
+      'home-garden': 'from-green-500 to-emerald-500',
+      automotive: 'from-orange-500 to-red-500',
+    };
+
+    return categories
+      .filter((cat) => popularSlugs.includes(cat.slug || ''))
+      .map((cat) => ({
+        id: cat.id,
+        slug: cat.slug || '',
+        name: cat.translations?.name || cat.name || '',
+        icon: iconMap[cat.slug || ''] || '📦',
+        gradient: gradientMap[cat.slug || ''] || 'from-gray-500 to-gray-600',
+      }));
+  };
 
   useEffect(() => {
     // Обновляем похожие объявления при изменении категории или заголовка
-    if (formData.title || formData.category) {
-      setSimilarListings(getSimilarListings(formData.category, formData.title));
+    console.log('useEffect triggered, formData:', {
+      title: formData.title,
+      categoryId: formData.categoryId,
+    });
+    if (formData.title && formData.categoryId) {
+      // Используем debounce для оптимизации запросов
+      const timeoutId = setTimeout(() => {
+        fetchSimilarListings(formData.categoryId, formData.title);
+      }, 500);
 
       // Показываем сравнение цен если есть заголовок
-      if (formData.title) {
+      if (formData.title.length > 3) {
         setShowPriceComparison(true);
       }
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      setSimilarListings([]);
+      setShowPriceComparison(false);
     }
-  }, [formData.category, formData.title]);
+  }, [formData.categoryId, formData.title, fetchSimilarListings]);
 
   // Проверка на наличие контактов в описании
   const checkForContactInfo = (text: string) => {
@@ -443,6 +441,76 @@ export default function CreateListingSmartPage() {
         'двигатель',
         'коробка',
         'бампер',
+        // Марки автомобилей
+        'volkswagen',
+        'vw',
+        'фольксваген',
+        'mercedes',
+        'мерседес',
+        'мерс',
+        'bmw',
+        'бмв',
+        'audi',
+        'ауди',
+        'toyota',
+        'тойота',
+        'honda',
+        'хонда',
+        'ford',
+        'форд',
+        'opel',
+        'опель',
+        'peugeot',
+        'пежо',
+        'renault',
+        'рено',
+        'citroen',
+        'ситроен',
+        'fiat',
+        'фиат',
+        'nissan',
+        'ниссан',
+        'mazda',
+        'мазда',
+        'hyundai',
+        'хундай',
+        'хюндай',
+        'kia',
+        'киа',
+        'škoda',
+        'skoda',
+        'шкода',
+        'seat',
+        'сеат',
+        'volvo',
+        'вольво',
+        // Модели
+        'golf',
+        'гольф',
+        'passat',
+        'пассат',
+        'touran',
+        'туран',
+        'tiguan',
+        'тигуан',
+        'polo',
+        'поло',
+        'jetta',
+        'джетта',
+        // Общие термины
+        'авто',
+        'тачка',
+        'минивэн',
+        'минивен',
+        'седан',
+        'хэтчбек',
+        'хетчбек',
+        'кроссовер',
+        'внедорожник',
+        'пикап',
+        'грузовик',
+        'автобус',
+        'микроавтобус',
       ],
     };
 
@@ -459,9 +527,8 @@ export default function CreateListingSmartPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map((file) =>
-        URL.createObjectURL(file)
-      );
+      const newFiles = Array.from(files);
+      const newImages = newFiles.map((file) => URL.createObjectURL(file));
 
       // Проверка качества изображений
       newImages.forEach((imgUrl, index) => {
@@ -476,6 +543,8 @@ export default function CreateListingSmartPage() {
         };
       });
 
+      // Сохраняем и файлы, и превью
+      setImageFiles([...imageFiles, ...newFiles].slice(0, 8));
       setFormData({
         ...formData,
         images: [...formData.images, ...newImages].slice(0, 8),
@@ -487,6 +556,7 @@ export default function CreateListingSmartPage() {
   };
 
   const removeImage = (index: number) => {
+    setImageFiles(imageFiles.filter((_, i) => i !== index));
     setFormData({
       ...formData,
       images: formData.images.filter((_, i) => i !== index),
@@ -528,6 +598,118 @@ export default function CreateListingSmartPage() {
         description: descriptionTemplates[formData.category],
       });
       toast.success('Шаблон применен! Отредактируйте детали');
+    }
+  };
+
+  const handlePublish = async () => {
+    if (isSubmitting) return;
+
+    // Валидация
+    if (!formData.title || !formData.price || !formData.categoryId) {
+      toast.error('Заполните все обязательные поля');
+      return;
+    }
+
+    if (imageFiles.length === 0) {
+      toast.error('Добавьте хотя бы одно фото');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Подготовка данных для создания объявления
+      const listingData: CreateListingState = {
+        title: formData.title,
+        description: formData.description || '',
+        price: parseFloat(formData.price) || 0,
+        currency: 'RSD',
+        category: selectedCategory
+          ? {
+              id: selectedCategory.id || 0,
+              name: selectedCategory.name || '',
+              slug: selectedCategory.slug || '',
+            }
+          : undefined,
+        condition: 'used',
+        location: {
+          address: formData.location || '',
+          city: formData.city,
+          region: '',
+          country: formData.country,
+          latitude: 0,
+          longitude: 0,
+        },
+        attributes: formData.attributes,
+        images: [],
+        mainImageIndex: 0,
+        payment: {
+          methods: formData.deliveryMethods,
+          codEnabled: false,
+          codPrice: 0,
+          personalMeeting: false,
+          negotiablePrice: false,
+          bundleDeals: false,
+          deliveryOptions: ['pickup'],
+        },
+        trust: {
+          phoneVerified: false,
+          preferredMeetingType: 'personal',
+          meetingLocations: [],
+          availableHours: '',
+          localReputation: 0,
+        },
+        localization: {
+          script: 'cyrillic',
+          language: 'sr',
+          traditionalUnits: false,
+          regionalPhrases: [],
+        },
+        pijaca: {
+          vendorStallStyle: '',
+          regularCustomers: false,
+          traditionalStyle: false,
+        },
+        isPublished: true,
+        isDraft: false,
+        originalLanguage: locale,
+        translations: {},
+      };
+
+      // Создаем объявление
+      const createResponse = await ListingsService.createListing(listingData);
+
+      if (!createResponse.data?.id) {
+        throw new Error('Не получен ID созданного объявления');
+      }
+
+      const listingId = createResponse.data.id;
+      console.log('Объявление создано с ID:', listingId);
+
+      // Загружаем изображения
+      if (imageFiles.length > 0) {
+        try {
+          await ListingsService.uploadImages(listingId, imageFiles, 0);
+          console.log('Изображения загружены успешно');
+        } catch (uploadError) {
+          console.error('Ошибка загрузки изображений:', uploadError);
+          toast.warning(
+            'Объявление создано, но не удалось загрузить изображения'
+          );
+        }
+      }
+
+      toast.success('Объявление опубликовано успешно!');
+      router.push(`/${locale}/profile/listings`);
+    } catch (error) {
+      console.error('Ошибка при создании объявления:', error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Произошла ошибка при создании объявления'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -614,9 +796,11 @@ export default function CreateListingSmartPage() {
                 setIsDragging(false);
                 const files = e.dataTransfer.files;
                 if (files && files.length > 0) {
-                  const newImages = Array.from(files).map((file) =>
+                  const newFiles = Array.from(files);
+                  const newImages = newFiles.map((file) =>
                     URL.createObjectURL(file)
                   );
+                  setImageFiles([...imageFiles, ...newFiles].slice(0, 8));
                   setFormData({
                     ...formData,
                     images: [...formData.images, ...newImages].slice(0, 8),
@@ -870,9 +1054,11 @@ export default function CreateListingSmartPage() {
                       e.currentTarget.classList.remove('border-primary');
                       const files = e.dataTransfer.files;
                       if (files && files.length > 0) {
-                        const newImages = Array.from(files).map((file) =>
+                        const newFiles = Array.from(files);
+                        const newImages = newFiles.map((file) =>
                           URL.createObjectURL(file)
                         );
+                        setImageFiles([...imageFiles, ...newFiles].slice(0, 8));
                         setFormData({
                           ...formData,
                           images: [...formData.images, ...newImages].slice(
@@ -946,23 +1132,38 @@ export default function CreateListingSmartPage() {
                     if (newTitle.length > 3) {
                       const detectedCategory = detectCategory(newTitle);
                       if (detectedCategory && !formData.category) {
-                        setFormData((prev) => ({
-                          ...prev,
-                          category: detectedCategory,
-                        }));
-                        toast.success(
-                          `Категория определена автоматически: ${
-                            detectedCategory === 'fashion'
-                              ? 'Мода'
-                              : detectedCategory === 'electronics'
-                                ? 'Электроника'
-                                : detectedCategory === 'home'
-                                  ? 'Дом'
-                                  : detectedCategory === 'auto'
-                                    ? 'Авто'
-                                    : ''
-                          }`
+                        // Ищем соответствующую категорию в загруженных категориях
+                        const categoryMap: Record<string, number> = {
+                          fashion: 1002, // Fashion
+                          electronics: 1001, // Electronics
+                          home: 1005, // Home & Garden
+                          auto: 1003, // Automotive
+                        };
+
+                        const categoryId = categoryMap[detectedCategory];
+                        const fullCategory = categories.find(
+                          (c) => c.id === categoryId
                         );
+
+                        if (fullCategory) {
+                          setSelectedCategory(fullCategory);
+                          setFormData((prev) => ({
+                            ...prev,
+                            category: detectedCategory,
+                            categoryId: categoryId,
+                          }));
+
+                          const categoryNames: Record<string, string> = {
+                            fashion: 'Мода',
+                            electronics: 'Электроника',
+                            home: 'Дом и сад',
+                            auto: 'Автомобили',
+                          };
+
+                          toast.success(
+                            `Категория определена автоматически: ${categoryNames[detectedCategory] || detectedCategory}`
+                          );
+                        }
                       }
                     }
                   }}
@@ -977,14 +1178,24 @@ export default function CreateListingSmartPage() {
                     <span className="label-text font-semibold">Категория</span>
                   </label>
                   <div className="flex flex-wrap gap-2">
-                    {popularCategories.map((cat) => (
+                    {getPopularCategories().map((cat) => (
                       <button
                         key={cat.id}
-                        onClick={() =>
-                          setFormData({ ...formData, category: cat.id })
-                        }
+                        onClick={() => {
+                          const fullCategory = categories.find(
+                            (c) => c.id === cat.id
+                          );
+                          if (fullCategory) {
+                            setSelectedCategory(fullCategory);
+                            setFormData({
+                              ...formData,
+                              category: cat.slug,
+                              categoryId: cat.id || 0,
+                            });
+                          }
+                        }}
                         className={`btn btn-sm ${
-                          formData.category === cat.id
+                          formData.categoryId === cat.id
                             ? 'btn-primary'
                             : 'btn-outline'
                         } gap-1`}
@@ -1002,7 +1213,24 @@ export default function CreateListingSmartPage() {
                 <label className="label">
                   <span className="label-text font-semibold">Цена</span>
                   <button
-                    onClick={() => setShowPriceComparison(!showPriceComparison)}
+                    onClick={() => {
+                      console.log(
+                        'Price comparison button clicked, current state:',
+                        showPriceComparison
+                      );
+                      setShowPriceComparison(!showPriceComparison);
+                      // Если включаем сравнение - сразу загружаем похожие
+                      if (
+                        !showPriceComparison &&
+                        formData.title &&
+                        formData.categoryId
+                      ) {
+                        fetchSimilarListings(
+                          formData.categoryId,
+                          formData.title
+                        );
+                      }
+                    }}
                     className="label-text-alt link link-primary"
                   >
                     Сравнить с похожими
@@ -1022,36 +1250,60 @@ export default function CreateListingSmartPage() {
                 </label>
 
                 {/* Price comparison */}
-                {showPriceComparison && similarListings.length > 0 && (
+                {showPriceComparison && (
                   <div className="mt-4 space-y-2">
-                    <h4 className="text-sm font-semibold">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
                       Похожие объявления:
+                      {isLoadingSimilar && (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      )}
                     </h4>
-                    {similarListings.map((listing) => (
-                      <div
-                        key={listing.id}
-                        className="flex items-center justify-between text-sm p-2 bg-base-100 rounded"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium">{listing.title}</p>
-                          <p className="text-xs text-base-content/60">
-                            <Eye className="w-3 h-3 inline mr-1" />
-                            {listing.views} просмотров • {listing.daysAgo} дн.
-                            назад
-                          </p>
+                    {!isLoadingSimilar && similarListings.length > 0 ? (
+                      similarListings.map((listing) => (
+                        <div
+                          key={listing.id}
+                          className="flex items-center justify-between text-sm p-2 bg-base-100 rounded hover:bg-base-100/70 transition-colors cursor-pointer"
+                          onClick={() =>
+                            window.open(
+                              `/${locale}/marketplace/${listing.id}`,
+                              '_blank'
+                            )
+                          }
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium">{listing.title}</p>
+                            <p className="text-xs text-base-content/60">
+                              <Eye className="w-3 h-3 inline mr-1" />
+                              {listing.views} просмотров •
+                              {listing.daysAgo === 0
+                                ? 'сегодня'
+                                : listing.daysAgo === 1
+                                  ? 'вчера'
+                                  : `${listing.daysAgo} дн. назад`}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold">
+                              {listing.price.toLocaleString()} РСД
+                            </p>
+                            {listing.sold && (
+                              <span className="badge badge-success badge-xs">
+                                Продано
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold">
-                            {listing.price.toLocaleString()} РСД
-                          </p>
-                          {listing.sold && (
-                            <span className="badge badge-success badge-xs">
-                              Продано
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : !isLoadingSimilar && formData.title.length > 3 ? (
+                      <p className="text-xs text-base-content/60">
+                        Похожих объявлений не найдено. Ваша цена может быть
+                        уникальной!
+                      </p>
+                    ) : (
+                      <p className="text-xs text-base-content/60">
+                        Введите название товара для поиска похожих
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -1124,7 +1376,7 @@ export default function CreateListingSmartPage() {
           </div>
 
           {/* Dynamic Attributes based on Category */}
-          {formData.category && categoryAttributes[formData.category] && (
+          {false && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1136,51 +1388,104 @@ export default function CreateListingSmartPage() {
                   Дополнительная информация
                 </h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {categoryAttributes[formData.category].map((attr) => (
-                    <div key={attr.id} className="form-control">
-                      <label className="label">
-                        <span className="label-text">{attr.label}</span>
-                      </label>
-                      {attr.type === 'select' ? (
-                        <select
-                          className="select select-bordered select-sm"
-                          value={formData.attributes[attr.id] || ''}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              attributes: {
-                                ...formData.attributes,
-                                [attr.id]: e.target.value,
-                              },
-                            })
-                          }
-                        >
-                          <option value="">Выберите...</option>
-                          {attr.options?.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          className="input input-bordered input-sm"
-                          placeholder={`Введите ${attr.label.toLowerCase()}`}
-                          value={formData.attributes[attr.id] || ''}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              attributes: {
-                                ...formData.attributes,
-                                [attr.id]: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      )}
-                    </div>
-                  ))}
+                  {/* {selectedCategory?.attributes?.map((attr) => {
+                      const attrName =
+                        attr.translations?.name || attr.name || '';
+                      return (
+                        <div key={attr.id} className="form-control">
+                          <label className="label">
+                            <span className="label-text">{attrName}</span>
+                          </label>
+                          {attr.input_type === 'select' &&
+                          attr.allowed_values ? (
+                            <select
+                              className="select select-bordered select-sm"
+                              value={
+                                formData.attributes[attr.id || 0]?.text_value ||
+                                ''
+                              }
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  attributes: {
+                                    ...formData.attributes,
+                                    [attr.id || 0]: {
+                                      attribute_id: attr.id || 0,
+                                      attribute_name: attr.name || '',
+                                      display_name: attrName,
+                                      attribute_type: attr.value_type || 'text',
+                                      text_value: e.target.value,
+                                      unit: attr.unit,
+                                    },
+                                  },
+                                })
+                              }
+                            >
+                              <option value="">Выберите...</option>
+                              {attr.allowed_values.map((option) => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          ) : attr.value_type === 'numeric' ? (
+                            <input
+                              type="number"
+                              className="input input-bordered input-sm"
+                              placeholder={`Введите ${attrName.toLowerCase()}`}
+                              value={
+                                formData.attributes[attr.id || 0]
+                                  ?.numeric_value || ''
+                              }
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  attributes: {
+                                    ...formData.attributes,
+                                    [attr.id || 0]: {
+                                      attribute_id: attr.id || 0,
+                                      attribute_name: attr.name || '',
+                                      display_name: attrName,
+                                      attribute_type:
+                                        attr.value_type || 'numeric',
+                                      numeric_value:
+                                        parseFloat(e.target.value) || 0,
+                                      unit: attr.unit,
+                                    },
+                                  },
+                                })
+                              }
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              className="input input-bordered input-sm"
+                              placeholder={`Введите ${attrName.toLowerCase()}`}
+                              value={
+                                formData.attributes[attr.id || 0]?.text_value ||
+                                ''
+                              }
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  attributes: {
+                                    ...formData.attributes,
+                                    [attr.id || 0]: {
+                                      attribute_id: attr.id || 0,
+                                      attribute_name: attr.name || '',
+                                      display_name: attrName,
+                                      attribute_type: attr.value_type || 'text',
+                                      text_value: e.target.value,
+                                      unit: attr.unit,
+                                    },
+                                  },
+                                })
+                              }
+                            />
+                          )}
+                        </div>
+                      );
+                    })} */}
                 </div>
               </div>
             </motion.div>
@@ -1514,14 +1819,21 @@ export default function CreateListingSmartPage() {
             className="flex gap-3"
           >
             <button
-              onClick={() => {
-                toast.success('Объявление опубликовано успешно!');
-                router.push('/profile/listings');
-              }}
+              onClick={handlePublish}
+              disabled={isSubmitting}
               className="btn btn-primary btn-lg flex-1"
             >
-              Опубликовать сейчас
-              <Sparkles className="w-5 h-5 ml-1" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Публикация...
+                </>
+              ) : (
+                <>
+                  Опубликовать сейчас
+                  <Sparkles className="w-5 h-5 ml-1" />
+                </>
+              )}
             </button>
             <button className="btn btn-outline btn-lg">
               <ClockIcon className="w-5 h-5 mr-1" />
@@ -1554,7 +1866,10 @@ export default function CreateListingSmartPage() {
       {/* Navigation Bar */}
       <div className="navbar bg-base-100 border-b border-base-200 fixed top-0 z-50">
         <div className="flex-1">
-          <Link href="/sr/create-listing-choice" className="btn btn-ghost">
+          <Link
+            href={`/${locale}/create-listing-choice`}
+            className="btn btn-ghost"
+          >
             <ChevronLeft className="w-5 h-5" />
             Назад к выбору
           </Link>

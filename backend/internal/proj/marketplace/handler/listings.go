@@ -155,6 +155,66 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, listing)
 }
 
+// GetListingBySlug получает детали объявления по slug
+// @Summary Get listing details by slug
+// @Description Returns detailed information about a specific listing by URL slug including attributes and images
+// @Tags marketplace-listings
+// @Accept json
+// @Produce json
+// @Param slug path string true "Listing slug"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceListing} "Listing details"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getError"
+// @Router /api/v1/marketplace/listings/slug/{slug} [get]
+func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
+	// Получаем slug из параметров URL
+	slug := c.Params("slug")
+	if slug == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidSlug")
+	}
+
+	// Получаем детали объявления по slug
+	listing, err := h.marketplaceService.GetListingBySlug(c.Context(), slug)
+	if err != nil {
+		logger.Error().Err(err).Str("slug", slug).Msg("Failed to get listing by slug")
+		if strings.Contains(err.Error(), "not found") {
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
+		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getError")
+	}
+
+	// Делаем запрос на увеличение счетчика просмотров в горутине, чтобы не задерживать ответ
+	// Создаем новый контекст с данными из текущего запроса
+	viewCtx := context.WithValue(context.Background(), ContextKeyUserID, c.Locals("user_id"))
+	viewCtx = context.WithValue(viewCtx, ContextKeyIPAddress, c.IP())
+
+	go func(listingID int, ctx context.Context) {
+		err := h.services.Storage().IncrementViewsCount(ctx, listingID)
+		if err != nil {
+			logger.Error().Err(err).Int("listingId", listingID).Msg("Failed to increment views count")
+		}
+	}(listing.ID, viewCtx)
+
+	// Получаем ID пользователя из контекста для проверки избранного
+	userID, ok := c.Locals("user_id").(int)
+	if ok && userID > 0 {
+		// Проверяем, находится ли объявление в избранном у пользователя
+		var favorites []models.MarketplaceListing
+		favorites, err = h.marketplaceService.GetUserFavorites(c.Context(), userID)
+		if err == nil {
+			for _, fav := range favorites {
+				if fav.ID == listing.ID {
+					listing.IsFavorite = true
+					break
+				}
+			}
+		}
+	}
+
+	// Возвращаем детали объявления
+	return utils.SuccessResponse(c, listing)
+}
+
 // GetListings получает список объявлений
 // @Summary Get listings list
 // @Description Returns paginated list of listings with optional filters
@@ -448,6 +508,56 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, MessageResponse{
 		Message: "marketplace.updateSuccess",
 	})
+}
+
+// CheckSlugAvailability проверяет доступность slug
+// @Summary Check slug availability
+// @Description Checks if a slug is available for use and suggests alternatives if not
+// @Tags marketplace-listings
+// @Accept json
+// @Produce json
+// @Param body body map[string]interface{} true "Slug to check"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Slug availability status"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Router /api/v1/marketplace/listings/check-slug [post]
+func (h *ListingsHandler) CheckSlugAvailability(c *fiber.Ctx) error {
+	var request struct {
+		Slug      string `json:"slug"`
+		ExcludeID int    `json:"exclude_id,omitempty"`
+	}
+
+	if err := c.BodyParser(&request); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
+	}
+
+	if request.Slug == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.slugRequired")
+	}
+
+	// Проверяем доступность slug
+	isAvailable, err := h.marketplaceService.IsSlugAvailable(c.Context(), request.Slug, request.ExcludeID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to check slug availability")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.checkError")
+	}
+
+	response := map[string]interface{}{
+		"available": isAvailable,
+		"slug":      request.Slug,
+	}
+
+	// Если slug занят, генерируем альтернативы
+	if !isAvailable {
+		suggestions, err := h.marketplaceService.GenerateUniqueSlug(c.Context(), request.Slug, request.ExcludeID)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to generate slug suggestions")
+			// Не прерываем выполнение, просто не возвращаем предложения
+		} else {
+			response["suggestion"] = suggestions
+		}
+	}
+
+	return utils.SuccessResponse(c, response)
 }
 
 // DeleteListing удаляет объявление

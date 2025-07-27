@@ -495,6 +495,18 @@ func (db *Database) GetListingByID(ctx context.Context, id int) (*models.Marketp
 	return db.marketplaceDB.GetListingByID(ctx, id)
 }
 
+func (db *Database) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
+	return db.marketplaceDB.GetListingBySlug(ctx, slug)
+}
+
+func (db *Database) IsSlugUnique(ctx context.Context, slug string, excludeID int) (bool, error) {
+	return db.marketplaceDB.IsSlugUnique(ctx, slug, excludeID)
+}
+
+func (db *Database) GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error) {
+	return db.marketplaceDB.GenerateUniqueSlug(ctx, baseSlug, excludeID)
+}
+
 func (db *Database) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
 	return db.marketplaceDB.UpdateListing(ctx, listing)
 }

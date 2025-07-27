@@ -46,7 +46,7 @@ ${titleVariants.map((t: string, i: number) => `${i + 1}. ${t}`).join('\n')}
     });
 
     if (!response.ok) {
-      const errorData = await response.text();
+      const _errorData = await response.text();
       return NextResponse.json(
         { error: `Claude API error: ${response.status}` },
         { status: response.status }

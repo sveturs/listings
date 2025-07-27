@@ -13,6 +13,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { DistanceBadge } from './DistanceBadge';
+import Image from 'next/image';
 
 interface QuickViewProps {
   isOpen: boolean;
@@ -109,17 +110,20 @@ export const QuickView: React.FC<QuickViewProps> = ({
             <div className="lg:w-1/2 h-1/2 lg:h-full bg-base-200 relative group">
               {/* Main Image */}
               <div className="relative h-full flex items-center justify-center p-4">
-                <img
-                  src={
-                    product.images[currentImageIndex] ||
-                    'https://via.placeholder.com/600x400'
-                  }
-                  alt={product.title}
-                  className={`max-w-full max-h-full object-contain rounded-lg transition-opacity duration-300 ${
-                    isImageLoading ? 'opacity-0' : 'opacity-100'
-                  }`}
-                  onLoad={() => setIsImageLoading(false)}
-                />
+                <div className="relative w-full h-full">
+                  <Image
+                    src={
+                      product.images[currentImageIndex] ||
+                      'https://via.placeholder.com/600x400'
+                    }
+                    alt={product.title}
+                    fill
+                    className={`object-contain rounded-lg transition-opacity duration-300 ${
+                      isImageLoading ? 'opacity-0' : 'opacity-100'
+                    }`}
+                    onLoad={() => setIsImageLoading(false)}
+                  />
+                </div>
 
                 {/* Navigation Arrows */}
                 {product.images.length > 1 && (
@@ -165,11 +169,14 @@ export const QuickView: React.FC<QuickViewProps> = ({
                           : 'border-transparent hover:border-base-300'
                       }`}
                     >
-                      <img
-                        src={image}
-                        alt={`${product.title} ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={image}
+                          alt={`${product.title} ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -232,9 +239,11 @@ export const QuickView: React.FC<QuickViewProps> = ({
                       <div className="avatar">
                         <div className="w-12 h-12 rounded-full bg-base-300">
                           {product.seller.avatar ? (
-                            <img
+                            <Image
                               src={product.seller.avatar}
                               alt={product.seller.name}
+                              fill
+                              className="object-cover"
                             />
                           ) : (
                             <span className="text-lg font-semibold flex items-center justify-center h-full">

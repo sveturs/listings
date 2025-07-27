@@ -11068,6 +11068,127 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/listings/check-slug': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Check slug availability
+     * @description Checks if a slug is available for use and suggests alternatives if not
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Slug to check */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Slug availability status */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description marketplace.invalidData */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/listings/slug/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get listing details by slug
+     * @description Returns detailed information about a specific listing by URL slug including attributes and images
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Listing slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Listing details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+            };
+          };
+        };
+        /** @description marketplace.notFound */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.getError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/map/bounds': {
     parameters: {
       query?: never;
@@ -22701,6 +22822,8 @@ export interface components {
       thumbnail_url?: string;
     };
     'backend_internal_domain_models.MarketplaceListing': {
+      address_city?: string;
+      address_country?: string;
       attributes?: components['schemas']['backend_internal_domain_models.ListingAttributeValue'][];
       average_rating?: number;
       category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -22709,9 +22832,7 @@ export interface components {
       category_path_ids?: number[];
       category_path_names?: string[];
       category_path_slugs?: string[];
-      city?: string;
       condition?: string;
-      country?: string;
       created_at?: string;
       description?: string;
       external_id?: string;

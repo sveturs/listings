@@ -651,13 +651,32 @@
         "permissionError": "You do not have permission to edit this listing",
         "updateSuccess": "Listing updated successfully",
         "updateError": "Failed to update listing",
+        "unsavedChanges": "Unsaved changes",
+        "confirmLeave": "You have unsaved changes. Are you sure you want to leave?",
+        "tabs": {
+          "basic": "Basic Info",
+          "images": "Photos",
+          "attributes": "Attributes",
+          "location": "Location",
+          "seo": "SEO",
+          "preview": "Preview"
+        },
         "fields": {
           "title": "Title",
+          "titlePlaceholder": "Enter listing title",
+          "titleHint": "Make it descriptive and attention-grabbing",
           "description": "Description",
+          "descriptionPlaceholder": "Describe your item in detail",
           "price": "Price",
+          "pricePlaceholder": "Enter price",
+          "priceHint": "Set a competitive price for your item",
           "condition": "Condition",
           "city": "City",
+          "cityPlaceholder": "Enter city",
           "country": "Country",
+          "countryPlaceholder": "Enter country",
+          "location": "Address",
+          "locationPlaceholder": "Enter address or location",
           "category": "Category",
           "categoryHint": "Category cannot be changed after creation",
           "loadError": "Failed to load listing"
@@ -667,10 +686,132 @@
           "used": "Used",
           "refurbished": "Refurbished"
         },
-        "validation": {
+        "errors": {
           "titleRequired": "Title is required",
+          "titleTooShort": "Title must be at least 10 characters",
           "descriptionRequired": "Description is required",
-          "priceRequired": "Price is required"
+          "descriptionTooShort": "Description must be at least 20 characters",
+          "priceRequired": "Price must be greater than 0"
+        },
+        "titleSEO": {
+          "poor": "Poor",
+          "good": "Good",
+          "excellent": "Excellent",
+          "hint": "Title quality affects search visibility"
+        },
+        "aiAssistant": {
+          "improve": "Improve with AI",
+          "generating": "Generating...",
+          "options": {
+            "improveTitle": "Improve title",
+            "improveDescription": "Improve description",
+            "generateFromPhoto": "Generate from photo",
+            "translateToSerbian": "Translate to Serbian"
+          }
+        },
+        "images": {
+          "title": "Photos",
+          "dragDrop": "Drag & drop photos here or click to browse",
+          "selectFiles": "Select Files",
+          "uploading": "Uploading...",
+          "main": "Main",
+          "setAsMain": "Set as main",
+          "delete": "Delete",
+          "deleteConfirm": "Are you sure you want to delete this photo?",
+          "helpText": "Add up to 10 photos. The first photo will be the main one.",
+          "maxSize": "Maximum file size: 5MB per photo"
+        },
+        "attributes": {
+          "title": "Attributes",
+          "noAttributes": "No attributes for this category",
+          "selectOption": "Select an option"
+        },
+        "location": {
+          "title": "Location",
+          "showOnMap": "Show on map",
+          "showOnMapHint": "When enabled, buyers can see the approximate location",
+          "selectOnMap": "Select on map",
+          "clickToSelect": "Click on the map to select location",
+          "hideMap": "Hide map",
+          "coordinates": "Coordinates",
+          "privacyNote": "Your exact address will never be shown to buyers. Only the general area will be displayed.",
+          "privacySettings": "Privacy Settings",
+          "addressDetails": "Address Details",
+          "privacyTitle": "🔒 Privacy Protection",
+          "privacy": {
+            "exact": "Show exact location",
+            "exactDesc": "Buyers can see the exact address on the map",
+            "area": "Show general area",
+            "areaDesc": "Buyers can see approximate location (recommended)",
+            "city": "Show only city",
+            "cityDesc": "Buyers can only see the city name"
+          }
+        },
+        "preview": {
+          "card": "Card View",
+          "list": "List View",
+          "mobile": "Mobile View",
+          "untitled": "Untitled listing",
+          "noDescription": "No description provided",
+          "photos": "photos"
+        },
+        "sidebar": {
+          "status": "Listing Status",
+          "completion": "Completion",
+          "quality": "Quality Score",
+          "hasTitle": "Has title",
+          "hasDescription": "Has description",
+          "hasImages": "Has photos",
+          "hasLocation": "Has location"
+        },
+        "seo": {
+          "poor": "Poor",
+          "good": "Good",
+          "excellent": "Excellent",
+          "title": "Search Engine Optimization",
+          "metaTitle": "Meta Title",
+          "metaTitlePlaceholder": "Enter SEO title (30-60 characters)",
+          "metaDescription": "Meta Description",
+          "metaDescriptionPlaceholder": "Enter SEO description (120-155 characters)",
+          "slug": "URL Slug",
+          "slugPlaceholder": "enter-url-slug",
+          "slugAutoChanged": "URL was automatically changed to ensure uniqueness",
+          "slugChanged": "URL changed to: {suggestion}",
+          "keywords": "Keywords",
+          "keywordsPlaceholder": "keyword1, keyword2, keyword3",
+          "keywordsHint": "Separate keywords with commas",
+          "analysis": {
+            "title": "SEO Analysis",
+            "titleScore": "Title Score",
+            "descScore": "Description Score",
+            "recommendations": "Recommendations",
+            "titleTooShort": "Title should be at least 30 characters",
+            "titleTooLong": "Title should not exceed 60 characters",
+            "descTooShort": "Description should be at least 120 characters",
+            "descTooLong": "Description should not exceed 155 characters"
+          },
+          "preview": {
+            "title": "Search Result Preview",
+            "defaultTitle": "Your Listing Title",
+            "defaultDescription": "Your listing description will appear here"
+          },
+          "tips": {
+            "title": "💡 SEO Tips",
+            "content": "Good SEO helps your listing appear higher in search results and attracts more potential buyers."
+          }
+        },
+        "assistant": "AI Assistant",
+        "ai": {
+          "improveText": "Improve Text",
+          "addDetails": "Add Details",
+          "optimizeSEO": "Optimize for Search"
+        },
+        "tips": {
+          "title": "💡 Pro Tips",
+          "goodListing": "Make your title descriptive, add quality photos, and provide detailed information to attract more buyers."
+        },
+        "sections": {
+          "basicInfo": "Basic Information"
         }
       }
     },
@@ -2030,6 +2171,253 @@
         "safe_meetings": "Meetings in safe public places"
       },
       "publish_info": "Your listing will be available to all users"
+    },
+    "choice": {
+      "title": "Choose how to create your listing",
+      "subtitle": "Two options — choose the one that suits you",
+      "select_error": "Please choose a listing creation method",
+      "continue": "Continue",
+      "select_option_hint": "Select one of the options to continue",
+      "selected": "Selected",
+      "free_option": {
+        "title": "Smart Assistant",
+        "subtitle": "Without artificial intelligence",
+        "badge": "Free",
+        "time": "time",
+        "time_value": "2-4 min",
+        "conversion": "conversion",
+        "conversion_value": "85%",
+        "cost": "cost",
+        "cost_value": "0 RSD",
+        "features": {
+          "templates": "Smart description templates",
+          "drag_drop": "Drag & Drop for photos",
+          "price_compare": "Price comparison with similar",
+          "optimal_time": "Optimal publishing time",
+          "social_import": "Import from social media",
+          "error_check": "Error checking"
+        },
+        "info": "Suitable for experienced sellers who want full control"
+      },
+      "ai_option": {
+        "title": "AI-Powered",
+        "subtitle": "Artificial intelligence",
+        "badge": "Premium",
+        "time": "time",
+        "time_value": "30 sec",
+        "conversion": "conversion",
+        "conversion_value": "99%",
+        "cost": "per listing",
+        "cost_value": "199 RSD",
+        "features": {
+          "photo_recognition": "AI recognizes product from photo",
+          "auto_description": "Auto-generated description",
+          "price_analysis": "AI optimal price analysis",
+          "ab_testing": "A/B testing for titles",
+          "multilingual": "Multilingual (5 languages)",
+          "forecast": "Performance forecast"
+        },
+        "info": "Perfect for quick sales and maximum reach"
+      },
+      "comparison": {
+        "title": "Feature comparison",
+        "feature": "Feature",
+        "free_column": "Smart Assistant",
+        "ai_column": "AI-Powered",
+        "creation_time": "Creation time",
+        "creation_time_free": "2-4 minutes",
+        "creation_time_ai": "30 seconds",
+        "photo_recognition": "Product recognition from photo",
+        "auto_description": "Auto-generated description",
+        "auto_description_free": "Templates",
+        "auto_description_ai": "AI generation",
+        "price_analysis": "Price analysis",
+        "price_analysis_free": "Compare with similar",
+        "price_analysis_ai": "AI market analysis",
+        "ab_testing": "A/B testing",
+        "multilingual": "Multilingual",
+        "multilingual_ai": "5 languages",
+        "cost": "Cost",
+        "cost_free": "Free",
+        "cost_ai": "199 RSD"
+      }
+    },
+    "ai": {
+      "title": "AI will create listing for you",
+      "subtitle": "Just upload a photo — artificial intelligence will do the rest",
+      "back_to_choice": "Back to choice",
+      "stats": {
+        "creation_time": "30 sec",
+        "creation_label": "creation",
+        "accuracy": "95%",
+        "accuracy_label": "AI accuracy",
+        "languages": "5 languages",
+        "languages_label": "translation"
+      },
+      "upload": {
+        "title": "Upload product photo",
+        "subtitle": "AI will recognize the product and create the perfect listing",
+        "ai_recognition": "AI recognition",
+        "time": "30 seconds",
+        "import_instagram": "Import from Instagram",
+        "import_facebook": "Import from Facebook",
+        "voice_input": "Voice description",
+        "stop_recording": "Stop recording",
+        "add_more": "Add more",
+        "create_with_ai": "Create listing with AI"
+      },
+      "processing": {
+        "title": "AI is analyzing your photos",
+        "recognizing": "Recognizing product...",
+        "analyzing_market": "Analyzing market and prices...",
+        "generating_description": "Generating description...",
+        "seo_optimization": "SEO optimization...",
+        "creating_translations": "Creating translations..."
+      },
+      "success": {
+        "title": "AI successfully created your listing!",
+        "subtitle": "Review and edit if necessary"
+      },
+      "photos": {
+        "title": "Photos",
+        "main": "Main",
+        "ai_recommends": "AI recommends adding:"
+      },
+      "category": {
+        "title": "Category"
+      },
+      "title_section": {
+        "title": "Title (A/B testing)",
+        "change": "Change",
+        "ai_choice": "AI choice",
+        "ab_testing_info": "AI will test variants and show the most effective"
+      },
+      "description_section": {
+        "title": "Description (AI optimized)",
+        "update": "Update",
+        "seo_optimized": "SEO optimized",
+        "keywords": "Keywords"
+      },
+      "location": {
+        "title": "Location and condition",
+        "city": "City",
+        "condition": "Condition",
+        "condition_new": "New",
+        "condition_used": "Used",
+        "condition_refurbished": "Refurbished",
+        "detected_from": "Location detected:",
+        "from_photo": "from photo metadata",
+        "from_profile": "from user profile",
+        "manually": "manually",
+        "coordinates": "Coordinates:",
+        "not_detected": "Location not detected",
+        "not_detected_hint": "Choose exact location for better listing visibility",
+        "select_on_map": "Select on map",
+        "refine_on_map": "Refine on map",
+        "ai_suggests": "AI suggests location:",
+        "choose_location": "Choose location"
+      },
+      "price": {
+        "title": "Price (AI market analysis)",
+        "min": "Minimum:",
+        "max": "Maximum:",
+        "currency": "RSD",
+        "ai_analyzed": "AI analyzed 50+ similar listings for optimal price"
+      },
+      "attributes": {
+        "title": "Specifications",
+        "ai_detected": "(AI detected)",
+        "category_based": "(category)",
+        "choose": "Choose..."
+      },
+      "translations": {
+        "title": "Multilingual (auto-translation)",
+        "update": "Update translations",
+        "language_title": "Title",
+        "language_description": "Description",
+        "info": "Translations are made through Claude AI for maximum accuracy and naturalness. You can edit them if necessary."
+      },
+      "social": {
+        "title": "Social media posts (ready to publish)"
+      },
+      "prediction": {
+        "title": "Performance forecast",
+        "views": "views per day",
+        "messages": "messages",
+        "days_to_sell": "days to sell",
+        "sell_probability": "sell probability"
+      },
+      "actions": {
+        "continue_to_publish": "Continue to publish",
+        "save_draft": "Save draft",
+        "publish_now": "Publish now",
+        "publishing": "Publishing...",
+        "back_to_edit": "Back to editing"
+      },
+      "enhance": {
+        "success_title": "AI successfully created your listing!",
+        "success_subtitle": "Review and edit if necessary",
+        "photos_title": "Photos",
+        "main_photo": "Main",
+        "ai_recommends": "AI recommends adding:",
+        "category_title": "Category",
+        "title_ab_testing": "Title (A/B testing)",
+        "change": "Change",
+        "ai_choice": "AI choice",
+        "ai_will_test": "AI will test variants and show the most effective one",
+        "description_title": "Description (AI optimized)",
+        "seo_optimized": "SEO optimized",
+        "keywords": "Keywords",
+        "location_condition_title": "Location and condition",
+        "city": "City",
+        "condition": "Condition",
+        "condition_new": "New",
+        "condition_used": "Used",
+        "condition_refurbished": "Refurbished"
+      },
+      "publish": {
+        "title": "AI created the perfect listing!",
+        "subtitle": "Ready to publish with maximum effectiveness",
+        "optimal_time": "Optimal time",
+        "optimal_time_desc": "AI recommends publishing at {time} for maximum reach",
+        "schedule": "Schedule",
+        "social_auto": "Auto-publish to social",
+        "social_auto_desc": "Publish to WhatsApp, Telegram, Instagram",
+        "enable": "Enable",
+        "views_per_day": "views/day",
+        "high_interest": "High interest",
+        "specifications": "Specifications:",
+        "ai_insights": "AI insights for your listing",
+        "demand": "Demand",
+        "target_audience": "Target audience",
+        "recommendations": "Recommendations",
+        "sellers_used_ai": "sellers used AI today",
+        "ai_insights_title": "AI insights for your listing",
+        "social_proof": "{count} sellers used AI today",
+        "location_picker_title": "Choose location",
+        "location_updated": "Location updated!"
+      },
+      "errors": {
+        "ai_processing": "An error occurred during analysis. Check your internet connection and try again.",
+        "description_generation": "Description generation error",
+        "translation_update": "Error updating translations",
+        "missing_attributes": "Required attributes not filled: {attributes}",
+        "publish_error": "Error creating listing. Please try again.",
+        "attribute_error": "Error in product attributes. Check filled fields.",
+        "validation_error": "Data validation error. Check all fields.",
+        "network_error": "Network error. Check internet connection."
+      },
+      "success_messages": {
+        "description_updated": "Description updated!",
+        "translations_updated": "Translations updated via Claude AI!",
+        "location_detected": "Location detected from photo!",
+        "location_updated": "Location updated!",
+        "listing_created": "Listing successfully created with AI!"
+      },
+      "features": {
+        "voice_coming_soon": "Voice input will be available soon",
+        "import_coming_soon": "Import from {platform} will be available soon"
+      }
     }
   },
   "trust": {

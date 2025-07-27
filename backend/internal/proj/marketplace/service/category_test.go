@@ -1102,6 +1102,19 @@ func (ts *testStorage) SearchListingsAdvanced(ctx context.Context, params interf
 func (ts *testStorage) Close()                         {}
 func (ts *testStorage) Ping(ctx context.Context) error { return nil }
 
+// Marketplace specific methods
+func (ts *testStorage) GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error) {
+	return baseSlug, nil
+}
+
+func (ts *testStorage) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
+	return nil, sql.ErrNoRows
+}
+
+func (ts *testStorage) IsSlugUnique(ctx context.Context, slug string, excludeID int) (bool, error) {
+	return true, nil
+}
+
 // testTransaction - простая реализация транзакции для тестов
 type testTransaction struct {
 	tx *sql.Tx

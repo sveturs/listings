@@ -51,7 +51,7 @@ import LocationPicker from '@/components/GIS/LocationPicker';
 
 export default function AIPoweredListingCreationPage() {
   const router = useRouter();
-  const t = useTranslations();
+  const t = useTranslations('create_listing');
   const locale = useLocale();
   const { user } = useAuthContext();
   const [currentView, setCurrentView] = useState<
@@ -125,7 +125,7 @@ export default function AIPoweredListingCreationPage() {
 
   useEffect(() => {
     if (!user) {
-      toast.error(t('create_listing.auth_required'));
+      toast.error(t('auth_required'));
       router.push('/');
       return;
     }
@@ -310,9 +310,7 @@ export default function AIPoweredListingCreationPage() {
       setCurrentView('enhance');
     } catch (err) {
       console.error('AI processing error:', err);
-      setError(
-        'Произошла ошибка при анализе. Проверьте подключение к интернету и попробуйте еще раз.'
-      );
+      setError(t('ai.errors.ai_processing'));
       setIsProcessing(false);
       // Не переходим к следующему шагу при ошибке
     }
@@ -346,7 +344,7 @@ export default function AIPoweredListingCreationPage() {
             },
           }));
 
-          toast.success('Местоположение определено из фотографии!');
+          toast.success(t('ai.success_messages.location_detected'));
         }
       } catch {
         console.log('No location data found in images');
@@ -376,21 +374,21 @@ export default function AIPoweredListingCreationPage() {
         aiData.attributes
       );
       setAiData({ ...aiData, description: newDescription });
-      toast.success('Описание обновлено!');
+      toast.success(t('ai.success_messages.description_updated'));
     } catch {
-      toast.error('Ошибка генерации описания');
+      toast.error(t('ai.errors.description_generation'));
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleVoiceInput = () => {
-    toast.info('Голосовой ввод будет доступен в ближайшее время');
+    toast.info(t('ai.features.voice_coming_soon'));
     setVoiceRecording(!voiceRecording);
   };
 
   const handleSocialImport = (platform: string) => {
-    toast.info(`Импорт из ${platform} будет доступен в ближайшее время`);
+    toast.info(t('ai.features.import_coming_soon', { platform }));
   };
 
   const renderUploadView = () => (
@@ -410,24 +408,36 @@ export default function AIPoweredListingCreationPage() {
             <Brain className="w-10 h-10 text-primary-content" />
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold mb-4">
-            AI создаст объявление за вас
+            {t('ai.title')}
           </h1>
           <p className="text-xl text-base-content/70 mb-8">
-            Просто загрузите фото — остальное сделает искусственный интеллект
+            {t('ai.subtitle')}
           </p>
 
           <div className="flex justify-center gap-6 mb-8">
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">30 сек</div>
-              <div className="text-sm text-base-content/60">создание</div>
+              <div className="text-3xl font-bold text-primary">
+                {t('ai.stats.creation_time')}
+              </div>
+              <div className="text-sm text-base-content/60">
+                {t('ai.stats.creation_label')}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-success">95%</div>
-              <div className="text-sm text-base-content/60">точность AI</div>
+              <div className="text-3xl font-bold text-success">
+                {t('ai.stats.accuracy')}
+              </div>
+              <div className="text-sm text-base-content/60">
+                {t('ai.stats.accuracy_label')}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-secondary">5 языков</div>
-              <div className="text-sm text-base-content/60">перевод</div>
+              <div className="text-3xl font-bold text-secondary">
+                {t('ai.stats.languages')}
+              </div>
+              <div className="text-sm text-base-content/60">
+                {t('ai.stats.languages_label')}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -446,19 +456,19 @@ export default function AIPoweredListingCreationPage() {
               <div className="card-body text-center py-16">
                 <Camera className="w-20 h-20 mx-auto mb-4 text-primary" />
                 <h2 className="text-2xl font-bold mb-2">
-                  Загрузите фото товара
+                  {t('ai.upload.title')}
                 </h2>
                 <p className="text-base-content/70 mb-6">
-                  AI распознает товар и создаст идеальное объявление
+                  {t('ai.upload.subtitle')}
                 </p>
                 <div className="flex gap-4 justify-center">
                   <div className="badge badge-lg badge-primary gap-2">
                     <Brain className="w-4 h-4" />
-                    AI распознавание
+                    {t('ai.upload.ai_recognition')}
                   </div>
                   <div className="badge badge-lg badge-secondary gap-2">
                     <Zap className="w-4 h-4" />
-                    30 секунд
+                    {t('ai.upload.time')}
                   </div>
                 </div>
               </div>
@@ -480,21 +490,23 @@ export default function AIPoweredListingCreationPage() {
                 className="btn btn-outline gap-2"
               >
                 <Instagram className="w-4 h-4" />
-                Импорт из Instagram
+                {t('ai.upload.import_instagram')}
               </button>
               <button
                 onClick={() => handleSocialImport('Facebook')}
                 className="btn btn-outline gap-2"
               >
                 <Facebook className="w-4 h-4" />
-                Импорт из Facebook
+                {t('ai.upload.import_facebook')}
               </button>
               <button
                 onClick={handleVoiceInput}
                 className={`btn ${voiceRecording ? 'btn-error' : 'btn-outline'} gap-2`}
               >
                 <Mic className="w-4 h-4" />
-                {voiceRecording ? 'Остановить запись' : 'Голосовое описание'}
+                {voiceRecording
+                  ? t('ai.upload.stop_recording')
+                  : t('ai.upload.voice_input')}
               </button>
             </div>
           </motion.div>
@@ -526,7 +538,7 @@ export default function AIPoweredListingCreationPage() {
                 <label className="aspect-square border-2 border-dashed border-base-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
                   <Plus className="w-8 h-8 text-base-content/50" />
                   <span className="text-sm text-base-content/50 mt-2">
-                    Добавить еще
+                    {t('ai.upload.add_more')}
                   </span>
                   <input
                     type="file"
@@ -553,7 +565,7 @@ export default function AIPoweredListingCreationPage() {
               className="btn btn-primary btn-lg btn-block"
             >
               <Brain className="w-5 h-5 mr-2" />
-              Создать объявление с помощью AI
+              {t('ai.upload.create_with_ai')}
             </motion.button>
           </div>
         )}
@@ -583,7 +595,7 @@ export default function AIPoweredListingCreationPage() {
           <Brain className="w-12 h-12 text-primary-content" />
         </motion.div>
 
-        <h2 className="text-2xl font-bold mb-4">AI анализирует ваши фото</h2>
+        <h2 className="text-2xl font-bold mb-4">{t('ai.processing.title')}</h2>
 
         <div className="space-y-4 text-left max-w-md mx-auto">
           <motion.div
@@ -593,7 +605,7 @@ export default function AIPoweredListingCreationPage() {
             className="flex items-center gap-3"
           >
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            <span>Распознавание товара...</span>
+            <span>{t('ai.processing.recognizing')}</span>
           </motion.div>
           <motion.div
             initial={{ x: -20, opacity: 0 }}
@@ -602,7 +614,7 @@ export default function AIPoweredListingCreationPage() {
             className="flex items-center gap-3"
           >
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            <span>Анализ рынка и цен...</span>
+            <span>{t('ai.processing.analyzing_market')}</span>
           </motion.div>
           <motion.div
             initial={{ x: -20, opacity: 0 }}
@@ -611,7 +623,7 @@ export default function AIPoweredListingCreationPage() {
             className="flex items-center gap-3"
           >
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            <span>Генерация описания...</span>
+            <span>{t('ai.processing.generating_description')}</span>
           </motion.div>
           <motion.div
             initial={{ x: -20, opacity: 0 }}
@@ -620,7 +632,7 @@ export default function AIPoweredListingCreationPage() {
             className="flex items-center gap-3"
           >
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            <span>SEO оптимизация...</span>
+            <span>{t('ai.processing.seo_optimization')}</span>
           </motion.div>
           <motion.div
             initial={{ x: -20, opacity: 0 }}
@@ -629,7 +641,7 @@ export default function AIPoweredListingCreationPage() {
             className="flex items-center gap-3"
           >
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            <span>Создание переводов...</span>
+            <span>{t('ai.processing.creating_translations')}</span>
           </motion.div>
         </div>
       </div>
@@ -653,8 +665,8 @@ export default function AIPoweredListingCreationPage() {
           >
             <Check className="w-6 h-6" />
             <div>
-              <h3 className="font-bold">AI успешно создал ваше объявление!</h3>
-              <p>Проверьте и отредактируйте при необходимости</p>
+              <h3 className="font-bold">{t('ai.enhance.success_title')}</h3>
+              <p>{t('ai.enhance.success_subtitle')}</p>
             </div>
           </motion.div>
 
@@ -663,7 +675,7 @@ export default function AIPoweredListingCreationPage() {
             <div className="card-body">
               <h3 className="card-title">
                 <Camera className="w-5 h-5" />
-                Фотографии
+                {t('ai.enhance.photos_title')}
                 <span className="badge badge-primary">{images.length}/8</span>
               </h3>
               <div className="grid grid-cols-4 gap-3">
@@ -677,7 +689,7 @@ export default function AIPoweredListingCreationPage() {
                     />
                     {index === 0 && (
                       <div className="absolute top-1 left-1 badge badge-primary badge-sm">
-                        Главное
+                        {t('ai.enhance.main_photo')}
                       </div>
                     )}
                   </div>
@@ -690,7 +702,7 @@ export default function AIPoweredListingCreationPage() {
                   <Lightbulb className="w-4 h-4" />
                   <div>
                     <p className="font-semibold text-sm">
-                      AI рекомендует добавить:
+                      {t('ai.enhance.ai_recommends')}
                     </p>
                     <ul className="text-xs mt-1">
                       {aiData.suggestedPhotos.map((photo, index) => (
@@ -708,7 +720,7 @@ export default function AIPoweredListingCreationPage() {
             <div className="card-body">
               <h3 className="card-title">
                 <Package className="w-5 h-5" />
-                Категория
+                {t('ai.enhance.category_title')}
               </h3>
               <div className="space-y-2">
                 {(aiData.categoryProbabilities || []).map((cat, index) => (
@@ -739,7 +751,7 @@ export default function AIPoweredListingCreationPage() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="card-title">
                   <TestTube2 className="w-5 h-5" />
-                  Заголовок (A/B тестирование)
+                  {t('ai.enhance.title_ab_testing')}
                 </h3>
                 <button
                   onClick={regenerateTitle}
@@ -747,7 +759,7 @@ export default function AIPoweredListingCreationPage() {
                   disabled={isProcessing}
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Изменить
+                  {t('ai.enhance.change')}
                 </button>
               </div>
 
@@ -768,7 +780,7 @@ export default function AIPoweredListingCreationPage() {
                       <span className="flex-1">{variant}</span>
                       {index === selectedVariant && (
                         <div className="badge badge-secondary badge-sm">
-                          AI выбор
+                          {t('ai.enhance.ai_choice')}
                         </div>
                       )}
                     </div>
@@ -778,9 +790,7 @@ export default function AIPoweredListingCreationPage() {
 
               <div className="alert alert-info mt-4">
                 <TestTube2 className="w-4 h-4" />
-                <span className="text-sm">
-                  AI будет тестировать варианты и покажет самый эффективный
-                </span>
+                <span className="text-sm">{t('ai.enhance.ai_will_test')}</span>
               </div>
             </div>
           </div>
@@ -791,7 +801,7 @@ export default function AIPoweredListingCreationPage() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="card-title">
                   <Brain className="w-5 h-5" />
-                  Описание (AI оптимизированное)
+                  {t('ai.enhance.description_title')}
                 </h3>
                 <button
                   onClick={regenerateDescription}
@@ -799,7 +809,7 @@ export default function AIPoweredListingCreationPage() {
                   disabled={isProcessing}
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Обновить
+                  {t('ai.description_section.update')}
                 </button>
               </div>
               <textarea
@@ -812,11 +822,11 @@ export default function AIPoweredListingCreationPage() {
               <div className="flex gap-2 mt-2">
                 <div className="badge badge-success gap-1">
                   <Check className="w-3 h-3" />
-                  SEO оптимизировано
+                  {t('ai.enhance.seo_optimized')}
                 </div>
                 <div className="badge badge-info gap-1">
                   <Sparkles className="w-3 h-3" />
-                  Ключевые слова
+                  {t('ai.enhance.keywords')}
                 </div>
               </div>
             </div>
@@ -827,12 +837,12 @@ export default function AIPoweredListingCreationPage() {
             <div className="card-body">
               <h3 className="card-title">
                 <Globe className="w-5 h-5" />
-                Местоположение и состояние
+                {t('ai.enhance.location_condition_title')}
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">
-                    <span className="label-text">Город</span>
+                    <span className="label-text">{t('ai.enhance.city')}</span>
                   </label>
                   <input
                     type="text"
@@ -848,7 +858,9 @@ export default function AIPoweredListingCreationPage() {
                 </div>
                 <div>
                   <label className="label">
-                    <span className="label-text">Состояние</span>
+                    <span className="label-text">
+                      {t('ai.enhance.condition')}
+                    </span>
                   </label>
                   <select
                     className="select select-bordered"
@@ -863,9 +875,13 @@ export default function AIPoweredListingCreationPage() {
                       })
                     }
                   >
-                    <option value="new">Новое</option>
-                    <option value="used">Б/у</option>
-                    <option value="refurbished">Восстановленное</option>
+                    <option value="new">{t('ai.enhance.condition_new')}</option>
+                    <option value="used">
+                      {t('ai.enhance.condition_used')}
+                    </option>
+                    <option value="refurbished">
+                      {t('ai.enhance.condition_refurbished')}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -877,15 +893,16 @@ export default function AIPoweredListingCreationPage() {
                     <Globe className="w-4 h-4" />
                     <div>
                       <p className="font-semibold text-sm">
-                        Местоположение определено:{' '}
+                        {t('ai.location.detected_from')}{' '}
                         {detectedLocation.source === 'exif'
-                          ? 'из метаданных фото'
+                          ? t('ai.location.from_photo')
                           : detectedLocation.source === 'profile'
-                            ? 'из профиля пользователя'
-                            : 'вручную'}
+                            ? t('ai.location.from_profile')
+                            : t('ai.location.manually')}
                       </p>
                       <p className="text-xs">
-                        Координаты: {detectedLocation.latitude.toFixed(4)},{' '}
+                        {t('ai.location.coordinates')}{' '}
+                        {detectedLocation.latitude.toFixed(4)},{' '}
                         {detectedLocation.longitude.toFixed(4)}
                       </p>
                     </div>
@@ -897,11 +914,10 @@ export default function AIPoweredListingCreationPage() {
                     <AlertCircle className="w-4 h-4" />
                     <div>
                       <p className="font-semibold text-sm">
-                        Местоположение не определено
+                        {t('ai.location.not_detected')}
                       </p>
                       <p className="text-xs">
-                        Выберите точное местоположение для лучшей видимости
-                        объявления
+                        {t('ai.location.not_detected_hint')}
                       </p>
                     </div>
                   </div>
@@ -912,14 +928,17 @@ export default function AIPoweredListingCreationPage() {
                   className="btn btn-outline btn-sm gap-2"
                 >
                   <MapPinIcon className="w-4 h-4" />
-                  {detectedLocation ? 'Уточнить на карте' : 'Выбрать на карте'}
+                  {detectedLocation
+                    ? t('ai.location.refine_on_map')
+                    : t('ai.location.select_on_map')}
                 </button>
               </div>
               {aiData.location.suggestedLocation && (
                 <div className="alert alert-info mt-4">
                   <Lightbulb className="w-4 h-4" />
                   <span className="text-sm">
-                    AI предлагает локацию: {aiData.location.suggestedLocation}
+                    {t('ai.location.ai_suggests')}{' '}
+                    {aiData.location.suggestedLocation}
                   </span>
                 </div>
               )}
@@ -931,7 +950,7 @@ export default function AIPoweredListingCreationPage() {
             <div className="card-body">
               <h3 className="card-title">
                 <BarChart3 className="w-5 h-5" />
-                Цена (AI анализ рынка)
+                {t('ai.price.title')}
               </h3>
               <div className="form-control">
                 <label className="input-group">
@@ -943,7 +962,7 @@ export default function AIPoweredListingCreationPage() {
                       setAiData({ ...aiData, price: e.target.value })
                     }
                   />
-                  <span>РСД</span>
+                  <span>{t('ai.price.currency')}</span>
                 </label>
               </div>
 
@@ -951,10 +970,12 @@ export default function AIPoweredListingCreationPage() {
               <div className="mt-4">
                 <div className="flex justify-between text-sm mb-2">
                   <span>
-                    Минимум: {aiData.priceRange.min.toLocaleString()} РСД
+                    {t('ai.price.min')} {aiData.priceRange.min.toLocaleString()}{' '}
+                    {t('ai.price.currency')}
                   </span>
                   <span>
-                    Максимум: {aiData.priceRange.max.toLocaleString()} РСД
+                    {t('ai.price.max')} {aiData.priceRange.max.toLocaleString()}{' '}
+                    {t('ai.price.currency')}
                   </span>
                 </div>
                 <input
@@ -971,9 +992,7 @@ export default function AIPoweredListingCreationPage() {
 
               <div className="alert alert-success mt-4">
                 <TrendingUp className="w-4 h-4" />
-                <span className="text-sm">
-                  AI проанализировал 50+ похожих объявлений для оптимальной цены
-                </span>
+                <span className="text-sm">{t('ai.price.ai_analyzed')}</span>
               </div>
             </div>
           </div>
@@ -985,10 +1004,10 @@ export default function AIPoweredListingCreationPage() {
               <div className="card-body">
                 <h3 className="card-title">
                   <Package className="w-5 h-5" />
-                  Характеристики{' '}
+                  {t('ai.attributes.title')}{' '}
                   {Object.keys(aiData.attributes).length > 0
-                    ? '(AI распознал)'
-                    : '(категория)'}
+                    ? t('ai.attributes.ai_detected')
+                    : t('ai.attributes.category_based')}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   {/* Отображаем атрибуты от AI */}
@@ -1042,7 +1061,9 @@ export default function AIPoweredListingCreationPage() {
                               })
                             }
                           >
-                            <option value="">Выберите...</option>
+                            <option value="">
+                              {t('ai.attributes.choose')}
+                            </option>
                             {attr.options.map((opt: any) => (
                               <option
                                 key={opt.id || opt.value}
@@ -1110,7 +1131,7 @@ export default function AIPoweredListingCreationPage() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="card-title">
                   <Languages className="w-5 h-5" />
-                  Мультиязычность (автоперевод)
+                  {t('ai.translations.title')}
                 </h3>
                 <button
                   onClick={async () => {
@@ -1126,9 +1147,12 @@ export default function AIPoweredListingCreationPage() {
                         ['en', 'sr', 'ru']
                       );
                       setAiData({ ...aiData, translations });
-                      toast.success('Переводы обновлены через Claude AI!');
-                    } catch (_error) {
-                      toast.error('Ошибка при обновлении переводов');
+                      toast.success(
+                        t('ai.success_messages.translations_updated')
+                      );
+                    } catch (error) {
+                      console.error('Translation error:', error);
+                      toast.error(t('ai.errors.translation_update'));
                     } finally {
                       setIsProcessing(false);
                     }
@@ -1137,7 +1161,7 @@ export default function AIPoweredListingCreationPage() {
                   disabled={isProcessing}
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Обновить переводы
+                  {t('ai.translations.update')}
                 </button>
               </div>
               <div className="space-y-4">
@@ -1159,7 +1183,9 @@ export default function AIPoweredListingCreationPage() {
                     <div className="space-y-3">
                       <div>
                         <label className="label">
-                          <span className="label-text text-sm">Заголовок</span>
+                          <span className="label-text text-sm">
+                            {t('ai.translations.language_title')}
+                          </span>
                         </label>
                         <input
                           type="text"
@@ -1182,7 +1208,9 @@ export default function AIPoweredListingCreationPage() {
 
                       <div>
                         <label className="label">
-                          <span className="label-text text-sm">Описание</span>
+                          <span className="label-text text-sm">
+                            {t('ai.translations.language_description')}
+                          </span>
                         </label>
                         <textarea
                           className="textarea textarea-bordered w-full h-24"
@@ -1208,11 +1236,7 @@ export default function AIPoweredListingCreationPage() {
 
               <div className="alert alert-info mt-4">
                 <Brain className="w-4 h-4" />
-                <span className="text-sm">
-                  Переводы выполнены через Claude AI для максимальной точности и
-                  естественности. Вы можете отредактировать их при
-                  необходимости.
-                </span>
+                <span className="text-sm">{t('ai.translations.info')}</span>
               </div>
             </div>
           </div>
@@ -1222,7 +1246,7 @@ export default function AIPoweredListingCreationPage() {
             <div className="card-body">
               <h3 className="card-title">
                 <Share2 className="w-5 h-5" />
-                Посты для соцсетей (готовы к публикации)
+                {t('ai.social.title')}
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {Object.entries(aiData.socialPosts).map(([platform, post]) => (
@@ -1253,29 +1277,31 @@ export default function AIPoweredListingCreationPage() {
             <div className="card-body">
               <h3 className="card-title">
                 <TrendingUp className="w-5 h-5" />
-                Прогноз эффективности
+                {t('ai.prediction.title')}
               </h3>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-success">250+</div>
                   <div className="text-sm text-base-content/60">
-                    просмотров в день
+                    {t('ai.prediction.views')}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-success">15-20</div>
-                  <div className="text-sm text-base-content/60">сообщений</div>
+                  <div className="text-sm text-base-content/60">
+                    {t('ai.prediction.messages')}
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-success">3-5</div>
                   <div className="text-sm text-base-content/60">
-                    дней до продажи
+                    {t('ai.prediction.days_to_sell')}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-success">95%</div>
                   <div className="text-sm text-base-content/60">
-                    вероятность продажи
+                    {t('ai.prediction.sell_probability')}
                   </div>
                 </div>
               </div>
@@ -1288,10 +1314,12 @@ export default function AIPoweredListingCreationPage() {
               onClick={() => setCurrentView('publish')}
               className="btn btn-primary flex-1"
             >
-              Продолжить к публикации
+              {t('ai.actions.continue_to_publish')}
               <ArrowRight className="w-4 h-4 ml-1" />
             </button>
-            <button className="btn btn-ghost">Сохранить черновик</button>
+            <button className="btn btn-ghost">
+              {t('ai.actions.save_draft')}
+            </button>
           </div>
         </div>
       </div>
@@ -1370,6 +1398,30 @@ export default function AIPoweredListingCreationPage() {
 
       // Получаем данные категории
       const categoryData = getCategoryData(aiData.category);
+
+      // Валидация обязательных атрибутов для выбранной категории
+      const requiredAttributes = categoryAttributes.filter(
+        (attr) => attr.is_required === true
+      );
+
+      const missingRequiredAttributes = requiredAttributes.filter((reqAttr) => {
+        const attributeValue = aiData.attributes[reqAttr.name];
+        const stringValue = String(attributeValue || '').trim();
+        return !stringValue;
+      });
+
+      if (missingRequiredAttributes.length > 0) {
+        const missingNames = missingRequiredAttributes
+          .map((attr) => attr.display_name || attr.name)
+          .join(', ');
+
+        toast.error(
+          t('ai.errors.missing_attributes', { attributes: missingNames })
+        );
+        setCurrentView('enhance');
+        setIsProcessing(false);
+        return;
+      }
 
       // Используем координаты из detectedLocation или геокодируем адрес
       let latitude = 0;
@@ -1500,22 +1552,27 @@ export default function AIPoweredListingCreationPage() {
                   stringValue === 'yes';
               } else if (categoryAttr.attribute_type === 'select') {
                 // Для select проверяем, что значение есть в options
+                // Backend возвращает options как {values: [...]} объект
                 if (
                   categoryAttr.options &&
-                  Array.isArray(categoryAttr.options)
+                  categoryAttr.options.values &&
+                  Array.isArray(categoryAttr.options.values)
                 ) {
-                  const validOption = categoryAttr.options.find(
-                    (opt: any) =>
-                      opt.value === stringValue ||
-                      opt.display_value === stringValue
+                  const validValue = categoryAttr.options.values.find(
+                    (optValue: string) => optValue === stringValue
                   );
-                  if (validOption) {
-                    attributeValue.text_value = validOption.value;
+                  if (validValue) {
+                    attributeValue.text_value = validValue;
                   } else {
                     // Если значение не найдено в options, пропускаем
+                    console.warn(
+                      `Invalid option value "${stringValue}" for attribute "${categoryAttr.name}". Valid options:`,
+                      categoryAttr.options.values
+                    );
                     return acc;
                   }
                 } else {
+                  // Fallback для случаев без options
                   attributeValue.text_value = stringValue;
                 }
               } else if (categoryAttr.attribute_type === 'multiselect') {
@@ -1558,14 +1615,14 @@ export default function AIPoweredListingCreationPage() {
           await ListingsService.uploadImages(response.data.id, imageFiles, 0);
         }
 
-        toast.success('Объявление успешно создано с помощью AI!');
+        toast.success(t('ai.success_messages.listing_created'));
         router.push(`/marketplace/${response.data.id}`);
       }
     } catch (error) {
       console.error('Error publishing listing:', error);
 
       // Улучшенная обработка ошибок
-      let errorMessage = 'Ошибка при создании объявления. Попробуйте еще раз.';
+      let errorMessage = t('ai.errors.publish_error');
 
       if (error instanceof Error) {
         // Проверяем на специфические ошибки атрибутов
@@ -1573,18 +1630,17 @@ export default function AIPoweredListingCreationPage() {
           error.message.includes('attribute') ||
           error.message.includes('атрибут')
         ) {
-          errorMessage =
-            'Ошибка в атрибутах товара. Проверьте заполненные поля.';
+          errorMessage = t('ai.errors.attribute_error');
         } else if (
           error.message.includes('validation') ||
           error.message.includes('валидация')
         ) {
-          errorMessage = 'Ошибка валидации данных. Проверьте все поля.';
+          errorMessage = t('ai.errors.validation_error');
         } else if (
           error.message.includes('network') ||
           error.message.includes('fetch')
         ) {
-          errorMessage = 'Ошибка сети. Проверьте подключение к интернету.';
+          errorMessage = t('ai.errors.network_error');
         }
 
         console.error('Detailed error information:', {
@@ -1621,12 +1677,8 @@ export default function AIPoweredListingCreationPage() {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-success/20 rounded-full mb-4">
               <Check className="w-10 h-10 text-success" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">
-              AI создал идеальное объявление!
-            </h1>
-            <p className="text-base-content/70">
-              Готово к публикации с максимальной эффективностью
-            </p>
+            <h1 className="text-2xl font-bold mb-2">{t('ai.publish.title')}</h1>
+            <p className="text-base-content/70">{t('ai.publish.subtitle')}</p>
           </motion.div>
 
           {/* Language Switcher */}
@@ -1701,9 +1753,7 @@ export default function AIPoweredListingCreationPage() {
               {Object.keys(aiData.attributes).length > 0 && (
                 <div className="mb-4">
                   <h3 className="font-semibold mb-2">
-                    {previewLanguage === 'ru' && 'Характеристики:'}
-                    {previewLanguage === 'en' && 'Specifications:'}
-                    {previewLanguage === 'sr' && 'Karakteristike:'}
+                    {t('ai.publish.specifications')}
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
                     {Object.entries(aiData.attributes).map(([key, value]) => {
@@ -1754,11 +1804,11 @@ export default function AIPoweredListingCreationPage() {
               <div className="flex items-center gap-4 text-sm text-base-content/60 mb-4">
                 <span className="flex items-center gap-1">
                   <Eye className="w-4 h-4" />
-                  250+ просмотров/день
+                  250+ {t('ai.publish.views_per_day')}
                 </span>
                 <span className="flex items-center gap-1">
                   <Heart className="w-4 h-4" />
-                  Высокий интерес
+                  {t('ai.publish.high_interest')}
                 </span>
               </div>
 
@@ -1786,15 +1836,16 @@ export default function AIPoweredListingCreationPage() {
               <div className="card-body">
                 <h3 className="font-bold flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  Оптимальное время
+                  {t('ai.publish.optimal_time')}
                 </h3>
                 <p className="text-sm text-base-content/70">
-                  AI рекомендует опубликовать в {aiData.publishTime} для
-                  максимального охвата
+                  {t('ai.publish.optimal_time_desc', {
+                    time: aiData.publishTime,
+                  })}
                 </p>
                 <button className="btn btn-primary btn-sm mt-2">
                   <Calendar className="w-4 h-4 mr-1" />
-                  Запланировать
+                  {t('ai.publish.schedule')}
                 </button>
               </div>
             </motion.div>
@@ -1808,14 +1859,14 @@ export default function AIPoweredListingCreationPage() {
               <div className="card-body">
                 <h3 className="font-bold flex items-center gap-2">
                   <Share2 className="w-5 h-5" />
-                  Автопубликация в соцсети
+                  {t('ai.publish.social_auto')}
                 </h3>
                 <p className="text-sm text-base-content/70">
-                  Опубликовать в WhatsApp, Telegram, Instagram
+                  {t('ai.publish.social_auto_desc')}
                 </p>
                 <button className="btn btn-secondary btn-sm mt-2">
                   <Sparkles className="w-4 h-4 mr-1" />
-                  Включить
+                  {t('ai.publish.enable')}
                 </button>
               </div>
             </motion.div>
@@ -1832,10 +1883,7 @@ export default function AIPoweredListingCreationPage() {
               <div className="card-body">
                 <h3 className="font-bold mb-4 flex items-center gap-2">
                   <Brain className="w-5 h-5" />
-                  {previewLanguage === 'ru' &&
-                    'AI инсайты для вашего объявления'}
-                  {previewLanguage === 'en' && 'AI insights for your listing'}
-                  {previewLanguage === 'sr' && 'AI uvidi za vaš oglas'}
+                  {t('ai.publish.ai_insights_title')}
                 </h3>
                 <div className="space-y-3">
                   {aiData.insights[previewLanguage] && (
@@ -1844,9 +1892,7 @@ export default function AIPoweredListingCreationPage() {
                         <TrendingUp className="w-5 h-5 text-success mt-0.5" />
                         <div>
                           <p className="font-semibold">
-                            {previewLanguage === 'ru' && 'Спрос'}
-                            {previewLanguage === 'en' && 'Demand'}
-                            {previewLanguage === 'sr' && 'Potražnja'}
+                            {t('ai.publish.demand')}
                           </p>
                           <p className="text-sm text-base-content/70">
                             {aiData.insights[previewLanguage].demand}
@@ -1857,9 +1903,7 @@ export default function AIPoweredListingCreationPage() {
                         <Users className="w-5 h-5 text-info mt-0.5" />
                         <div>
                           <p className="font-semibold">
-                            {previewLanguage === 'ru' && 'Целевая аудитория'}
-                            {previewLanguage === 'en' && 'Target audience'}
-                            {previewLanguage === 'sr' && 'Ciljna publika'}
+                            {t('ai.publish.target_audience')}
                           </p>
                           <p className="text-sm text-base-content/70">
                             {aiData.insights[previewLanguage].audience}
@@ -1870,9 +1914,7 @@ export default function AIPoweredListingCreationPage() {
                         <ThumbsUp className="w-5 h-5 text-warning mt-0.5" />
                         <div>
                           <p className="font-semibold">
-                            {previewLanguage === 'ru' && 'Рекомендации'}
-                            {previewLanguage === 'en' && 'Recommendations'}
-                            {previewLanguage === 'sr' && 'Preporuke'}
+                            {t('ai.publish.recommendations')}
                           </p>
                           <p className="text-sm text-base-content/70">
                             {aiData.insights[previewLanguage].recommendations}
@@ -1901,11 +1943,11 @@ export default function AIPoweredListingCreationPage() {
               {isProcessing ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Публикация...
+                  {t('ai.actions.publishing')}
                 </>
               ) : (
                 <>
-                  Опубликовать сейчас
+                  {t('ai.actions.publish_now')}
                   <Brain className="w-5 h-5 ml-1" />
                 </>
               )}
@@ -1914,7 +1956,7 @@ export default function AIPoweredListingCreationPage() {
               onClick={() => setCurrentView('enhance')}
               className="btn btn-outline btn-lg"
             >
-              Вернуться к редактированию
+              {t('ai.actions.back_to_edit')}
             </button>
           </motion.div>
 
@@ -1927,10 +1969,7 @@ export default function AIPoweredListingCreationPage() {
           >
             <div className="flex items-center justify-center gap-2 text-sm text-base-content/60">
               <Users className="w-4 h-4" />
-              <span>
-                <span className="font-semibold">834</span> продавца использовали
-                AI сегодня
-              </span>
+              <span>{t('ai.publish.social_proof', { count: 834 })}</span>
             </div>
           </motion.div>
         </div>
@@ -1943,9 +1982,12 @@ export default function AIPoweredListingCreationPage() {
       {/* Navigation Bar */}
       <div className="navbar bg-base-100 border-b border-base-200 fixed top-0 z-50">
         <div className="flex-1">
-          <Link href="/sr/create-listing-choice" className="btn btn-ghost">
+          <Link
+            href={`/${locale}/create-listing-choice`}
+            className="btn btn-ghost"
+          >
             <ChevronLeft className="w-5 h-5" />
-            Назад к выбору
+            {t('ai.back_to_choice')}
           </Link>
         </div>
         <div className="flex-none">
@@ -1972,7 +2014,9 @@ export default function AIPoweredListingCreationPage() {
           <div className="bg-base-100 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">Выберите местоположение</h3>
+                <h3 className="text-lg font-bold">
+                  {t('ai.publish.location_picker_title')}
+                </h3>
                 <button
                   onClick={() => setShowLocationPicker(false)}
                   className="btn btn-ghost btn-sm btn-circle"
@@ -2012,7 +2056,7 @@ export default function AIPoweredListingCreationPage() {
                   }));
 
                   setShowLocationPicker(false);
-                  toast.success('Местоположение обновлено!');
+                  toast.success(t('ai.success_messages.location_updated'));
                 }}
                 height="400px"
                 showCurrentLocation={true}

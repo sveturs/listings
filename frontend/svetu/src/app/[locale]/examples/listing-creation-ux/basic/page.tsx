@@ -581,7 +581,8 @@ export default function BasicListingCreationPage() {
               <div>
                 <h3 className="font-bold">Готово к публикации!</h3>
                 <p className="text-sm">
-                  Ваше объявление готово. Нажмите "Опубликовать" для размещения.
+                  Ваше объявление готово. Нажмите &quot;Опубликовать&quot; для
+                  размещения.
                 </p>
               </div>
             </div>

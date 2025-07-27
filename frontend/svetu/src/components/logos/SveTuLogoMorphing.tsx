@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface MorphTile {
   id: number;
@@ -88,55 +88,67 @@ export const SveTuLogoMorphing: React.FC<SveTuLogoMorphingProps> = ({
   }, [width]);
 
   // Функции морфинга
-  const calculateWavePosition = (tile: MorphTile, time: number) => {
-    const scale = width < 200 ? width / 200 : 1;
-    const waveX = Math.sin(time * 0.8 + tile.waveOffset) * 30 * scale;
-    const waveY = Math.cos(time * 1.2 + tile.waveOffset * 1.5) * 20 * scale;
-    return {
-      x: tile.originalX + waveX,
-      y: tile.originalY + waveY,
-      scale: 1 + Math.sin(time * 2 + tile.waveOffset) * 0.3,
-      hue: Math.sin(time * 0.5 + tile.waveOffset) * 60,
-    };
-  };
+  const calculateWavePosition = useCallback(
+    (tile: MorphTile, time: number) => {
+      const scale = width < 200 ? width / 200 : 1;
+      const waveX = Math.sin(time * 0.8 + tile.waveOffset) * 30 * scale;
+      const waveY = Math.cos(time * 1.2 + tile.waveOffset * 1.5) * 20 * scale;
+      return {
+        x: tile.originalX + waveX,
+        y: tile.originalY + waveY,
+        scale: 1 + Math.sin(time * 2 + tile.waveOffset) * 0.3,
+        hue: Math.sin(time * 0.5 + tile.waveOffset) * 60,
+      };
+    },
+    [width]
+  );
 
-  const calculateSpiralPosition = (tile: MorphTile, time: number) => {
-    const scale = width < 200 ? width / 200 : 1;
-    const angle = time * 0.5 + tile.id * ((Math.PI * 2) / 9);
-    const radius = (40 + Math.sin(time * 0.3) * 20) * scale;
-    return {
-      x: Math.cos(angle) * radius,
-      y: Math.sin(angle) * radius,
-      scale: 1 + Math.sin(time * 3 + tile.id) * 0.2,
-      hue: (time * 30 + tile.id * 40) % 360,
-    };
-  };
+  const calculateSpiralPosition = useCallback(
+    (tile: MorphTile, time: number) => {
+      const scale = width < 200 ? width / 200 : 1;
+      const angle = time * 0.5 + tile.id * ((Math.PI * 2) / 9);
+      const radius = (40 + Math.sin(time * 0.3) * 20) * scale;
+      return {
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius,
+        scale: 1 + Math.sin(time * 3 + tile.id) * 0.2,
+        hue: (time * 30 + tile.id * 40) % 360,
+      };
+    },
+    [width]
+  );
 
-  const calculateExplosionPosition = (tile: MorphTile, time: number) => {
-    const scale = width < 200 ? width / 200 : 1;
-    const explosionProgress = Math.sin(time * 0.4) * 0.5 + 0.5;
-    const distance = explosionProgress * 80 * scale;
-    const angle = tile.id * ((Math.PI * 2) / 9);
-    return {
-      x: tile.originalX + Math.cos(angle) * distance,
-      y: tile.originalY + Math.sin(angle) * distance,
-      scale: 1 + explosionProgress * 0.5,
-      hue: explosionProgress * 120,
-    };
-  };
+  const calculateExplosionPosition = useCallback(
+    (tile: MorphTile, time: number) => {
+      const scale = width < 200 ? width / 200 : 1;
+      const explosionProgress = Math.sin(time * 0.4) * 0.5 + 0.5;
+      const distance = explosionProgress * 80 * scale;
+      const angle = tile.id * ((Math.PI * 2) / 9);
+      return {
+        x: tile.originalX + Math.cos(angle) * distance,
+        y: tile.originalY + Math.sin(angle) * distance,
+        scale: 1 + explosionProgress * 0.5,
+        hue: explosionProgress * 120,
+      };
+    },
+    [width]
+  );
 
-  const calculateLiquidPosition = (tile: MorphTile, time: number) => {
-    const scale = width < 200 ? width / 200 : 1;
-    const liquidX = Math.sin(time * 0.6 + tile.id * 0.5) * 25 * scale;
-    const liquidY = Math.cos(time * 0.4 + tile.id * 0.7) * 15 * scale;
-    const distortion = Math.sin(time * 2 + tile.id) * 0.2;
-    return {
-      x: tile.originalX + liquidX,
-      y: tile.originalY + liquidY,
-      scale: 1 + distortion,
-      hue: Math.sin(time * 0.7 + tile.id * 0.3) * 90,
-    };
-  };
+  const calculateLiquidPosition = useCallback(
+    (tile: MorphTile, time: number) => {
+      const scale = width < 200 ? width / 200 : 1;
+      const liquidX = Math.sin(time * 0.6 + tile.id * 0.5) * 25 * scale;
+      const liquidY = Math.cos(time * 0.4 + tile.id * 0.7) * 15 * scale;
+      const distortion = Math.sin(time * 2 + tile.id) * 0.2;
+      return {
+        x: tile.originalX + liquidX,
+        y: tile.originalY + liquidY,
+        scale: 1 + distortion,
+        hue: Math.sin(time * 0.7 + tile.id * 0.3) * 90,
+      };
+    },
+    [width]
+  );
 
   // Главный цикл анимации
   useEffect(() => {
@@ -196,7 +208,14 @@ export const SveTuLogoMorphing: React.FC<SveTuLogoMorphingProps> = ({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [morphMode, width]);
+  }, [
+    morphMode,
+    width,
+    calculateWavePosition,
+    calculateSpiralPosition,
+    calculateExplosionPosition,
+    calculateLiquidPosition,
+  ]);
 
   // Автоматическая смена режимов
   useEffect(() => {

@@ -77,20 +77,38 @@ export function getFullLocalizedAddress(
     location?: string;
     city?: string;
     country?: string;
-    translations?: {
-      [locale: string]: {
-        location?: string;
-        city?: string;
-        country?: string;
-      };
-    };
+    translations?: any; // Принимаем любой формат translations
   },
   locale: string
 ): string {
-  const translations = item.translations?.[locale];
-  const location = translations?.location || item.location || '';
-  const city = translations?.city || item.city || '';
-  const country = translations?.country || item.country || '';
+  let location = item.location || '';
+  let city = item.city || '';
+  let country = item.country || '';
+
+  if (item.translations) {
+    // Проверяем формат 1: { [locale]: { location, city, country } }
+    if (
+      item.translations[locale] &&
+      typeof item.translations[locale] === 'object' &&
+      'location' in item.translations[locale]
+    ) {
+      location = item.translations[locale].location || location;
+      city = item.translations[locale].city || city;
+      country = item.translations[locale].country || country;
+    }
+    // Проверяем формат 2: { location: { [locale]: string }, ... }
+    else {
+      if (item.translations.location && item.translations.location[locale]) {
+        location = item.translations.location[locale] || location;
+      }
+      if (item.translations.city && item.translations.city[locale]) {
+        city = item.translations.city[locale] || city;
+      }
+      if (item.translations.country && item.translations.country[locale]) {
+        country = item.translations.country[locale] || country;
+      }
+    }
+  }
 
   // Собираем полный адрес из непустых компонентов
   const parts = [location, city, country].filter(Boolean);

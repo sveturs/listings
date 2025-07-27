@@ -83,6 +83,9 @@ type Storage interface {
 	CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error)
 	GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error)
 	GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error)
+	GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error)
+	IsSlugUnique(ctx context.Context, slug string, excludeID int) (bool, error)
+	GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error)
 	IncrementViewsCount(ctx context.Context, id int) error
 	UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListing(ctx context.Context, id int, userID int) error

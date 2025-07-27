@@ -601,36 +601,177 @@
         "pending": "Pending"
       },
       "editListing": {
-        "title": "Edit Listing",
-        "description": "Update your listing information",
-        "back": "Back to My Listings",
+        "title": "Izmeni oglas",
+        "description": "Ažurirajte informacije o vašem oglasu",
+        "back": "Nazad na moje oglase",
         "saving": "Čuvanje...",
-        "saveChanges": "Save Changes",
+        "saveChanges": "Sačuvaj izmene",
         "cancel": "Otkaži",
         "listingNotFound": "Oglas nije pronađen",
-        "permissionError": "You do not have permission to edit this listing",
-        "updateSuccess": "Listing updated successfully",
-        "updateError": "Failed to update listing",
+        "permissionError": "Nemate dozvolu za izmenu ovog oglasa",
+        "updateSuccess": "Oglas je uspešno ažuriran",
+        "updateError": "Neuspešno ažuriranje oglasa",
+        "unsavedChanges": "Nesačuvane izmene",
+        "confirmLeave": "Imate nesačuvane izmene. Da li ste sigurni da želite da napustite stranicu?",
+        "tabs": {
+          "basic": "Osnovne informacije",
+          "images": "Fotografije",
+          "attributes": "Atributi",
+          "location": "Lokacija",
+          "seo": "SEO",
+          "preview": "Pregled"
+        },
         "fields": {
-          "title": "Title",
+          "title": "Naslov",
+          "titlePlaceholder": "Unesite naslov oglasa",
+          "titleHint": "Neka bude opisan i privlačan",
           "description": "Opis",
+          "descriptionPlaceholder": "Detaljno opišite vaš artikal",
           "price": "Cena",
+          "pricePlaceholder": "Unesite cenu",
+          "priceHint": "Postavite konkurentnu cenu za vaš artikal",
           "condition": "Stanje",
           "city": "Grad",
+          "cityPlaceholder": "Unesite grad",
           "country": "Država",
+          "countryPlaceholder": "Unesite državu",
+          "location": "Adresa",
+          "locationPlaceholder": "Unesite adresu ili lokaciju",
           "category": "Kategorija",
-          "categoryHint": "Category cannot be changed after creation",
-          "loadError": "Failed to load listing"
+          "categoryHint": "Kategorija se ne može promeniti nakon kreiranja",
+          "loadError": "Neuspešno učitavanje oglasa"
         },
         "condition": {
           "new": "Novo",
           "used": "Polovno",
           "refurbished": "Obnovljeno"
         },
-        "validation": {
-          "titleRequired": "Title is required",
-          "descriptionRequired": "Description is required",
-          "priceRequired": "Price is required"
+        "errors": {
+          "titleRequired": "Naslov je obavezan",
+          "titleTooShort": "Naslov mora imati najmanje 10 karaktera",
+          "descriptionRequired": "Opis je obavezan",
+          "descriptionTooShort": "Opis mora imati najmanje 20 karaktera",
+          "priceRequired": "Cena mora biti veća od 0"
+        },
+        "titleSEO": {
+          "poor": "Loše",
+          "good": "Dobro",
+          "excellent": "Odlično",
+          "hint": "Kvalitet naslova utiče na vidljivost u pretrazi"
+        },
+        "aiAssistant": {
+          "improve": "Poboljšaj uz AI",
+          "generating": "Generisanje...",
+          "options": {
+            "improveTitle": "Poboljšaj naslov",
+            "improveDescription": "Poboljšaj opis",
+            "generateFromPhoto": "Generiši iz fotografije",
+            "translateToSerbian": "Prevedi na srpski"
+          }
+        },
+        "images": {
+          "title": "Fotografije",
+          "dragDrop": "Prevucite fotografije ovde ili kliknite za izbor",
+          "selectFiles": "Izaberi fajlove",
+          "uploading": "Otpremanje...",
+          "main": "Glavna",
+          "setAsMain": "Postavi kao glavnu",
+          "delete": "Obriši",
+          "deleteConfirm": "Da li ste sigurni da želite da obrišete ovu fotografiju?",
+          "helpText": "Dodajte do 10 fotografija. Prva fotografija će biti glavna.",
+          "maxSize": "Maksimalna veličina fajla: 5MB po fotografiji"
+        },
+        "attributes": {
+          "title": "Atributi",
+          "noAttributes": "Nema atributa za ovu kategoriju",
+          "selectOption": "Izaberite opciju"
+        },
+        "location": {
+          "title": "Lokacija",
+          "showOnMap": "Prikaži na mapi",
+          "showOnMapHint": "Kada je omogućeno, kupci mogu videti približnu lokaciju",
+          "selectOnMap": "Izaberi na mapi",
+          "clickToSelect": "Kliknite na mapu da izaberete lokaciju",
+          "hideMap": "Sakrij mapu",
+          "coordinates": "Koordinate",
+          "privacyNote": "Vaša tačna adresa nikada neće biti prikazana kupcima. Biće prikazan samo širi rejon.",
+          "privacySettings": "Podešavanja privatnosti",
+          "addressDetails": "Detalji adrese",
+          "privacyTitle": "🔒 Zaštita privatnosti",
+          "privacy": {
+            "exact": "Prikaži tačnu lokaciju",
+            "exactDesc": "Kupci mogu da vide tačnu adresu na mapi",
+            "area": "Prikaži širi rejon",
+            "areaDesc": "Kupci vide približnu lokaciju (preporučeno)",
+            "city": "Prikaži samo grad",
+            "cityDesc": "Kupci vide samo naziv grada"
+          }
+        },
+        "preview": {
+          "card": "Prikaz kartice",
+          "list": "Prikaz liste",
+          "mobile": "Mobilni prikaz",
+          "untitled": "Oglas bez naslova",
+          "noDescription": "Opis nije naveden",
+          "photos": "fotografija"
+        },
+        "sidebar": {
+          "status": "Status oglasa",
+          "completion": "Popunjenost",
+          "quality": "Ocena kvaliteta",
+          "hasTitle": "Ima naslov",
+          "hasDescription": "Ima opis",
+          "hasImages": "Ima fotografije",
+          "hasLocation": "Ima lokaciju"
+        },
+        "seo": {
+          "poor": "Loše",
+          "good": "Dobro",
+          "excellent": "Odlično",
+          "title": "Optimizacija za pretrage",
+          "metaTitle": "Meta naslov",
+          "metaTitlePlaceholder": "Unesite SEO naslov (30-60 karaktera)",
+          "metaDescription": "Meta opis",
+          "metaDescriptionPlaceholder": "Unesite SEO opis (120-155 karaktera)",
+          "slug": "URL link",
+          "slugPlaceholder": "url-link-proizvoda",
+          "slugAutoChanged": "URL je automatski promenjen radi jedinstvnosti",
+          "slugChanged": "URL promenjen na: {suggestion}",
+          "keywords": "Ključne reči",
+          "keywordsPlaceholder": "reč1, reč2, reč3",
+          "keywordsHint": "Razdvojite ključne reči zapetama",
+          "analysis": {
+            "title": "SEO analiza",
+            "titleScore": "Ocena naslova",
+            "descScore": "Ocena opisa",
+            "recommendations": "Preporuke",
+            "titleTooShort": "Naslov treba da ima najmanje 30 karaktera",
+            "titleTooLong": "Naslov ne treba da prelazi 60 karaktera",
+            "descTooShort": "Opis treba da ima najmanje 120 karaktera",
+            "descTooLong": "Opis ne treba da prelazi 155 karaktera"
+          },
+          "preview": {
+            "title": "Pregled u pretrazi",
+            "defaultTitle": "Naslov vašeg oglasa",
+            "defaultDescription": "Opis vašeg oglasa će biti prikazan ovde"
+          },
+          "tips": {
+            "title": "💡 SEO saveti",
+            "content": "Dobra SEO pomaže vašem oglasu da se pojavi više u rezultatima pretrage i privuče više potencijalnih kupaca."
+          }
+        },
+        "assistant": "AI Asistent",
+        "ai": {
+          "improveText": "Poboljšaj tekst",
+          "addDetails": "Dodaj detalje",
+          "optimizeSEO": "Optimizuj za pretragu"
+        },
+        "tips": {
+          "title": "💡 Korisni saveti",
+          "goodListing": "Napravite naslov opisnim, dodajte kvalitetne fotografije i dajte detaljne informacije da privučete više kupaca."
+        },
+        "sections": {
+          "basicInfo": "Osnovne informacije"
         }
       }
     },
@@ -1739,7 +1880,45 @@
     "year": "Godina",
     "addToFavorites": "Dodaj u omiljene",
     "share": "Podeli",
-    "newSeller": "Novi"
+    "newSeller": "Novi",
+    "seller": {
+      "title": "Prodavac",
+      "noReviews": "Nema recenzija",
+      "memberSince": "Član od",
+      "responseRate": "Stopa odgovora",
+      "responseTime": "Vreme odgovora",
+      "verified": "Verifikovan",
+      "experienced": "Iskusan prodavac",
+      "sendMessage": "Pošalji poruku",
+      "showPhone": "Prikaži telefon",
+      "allItems": "Svi oglasi prodavca",
+      "yourListing": "Ovo je vaš oglas",
+      "edit": "Izmeni",
+      "signInToContact": "Prijavite se da kontaktirate prodavca",
+      "signIn": "Prijavite se",
+      "platformProtection": "Sve transakcije su zaštićene pravilima platforme"
+    },
+    "listingActions": {
+      "signInToAddFavorites": "Prijavite se da dodate u omiljene",
+      "removedFromFavorites": "Uklonjeno iz omiljenih",
+      "addedToFavorites": "Dodato u omiljene",
+      "removedFromComparison": "Uklonjeno iz poređenja",
+      "addedToComparison": "Dodato u poređenje",
+      "linkCopied": "Link je kopiran",
+      "failedToCopyLink": "Neuspešno kopiranje linka",
+      "copyNotSupported": "Kopiranje nije podržano u vašem pregledaču",
+      "error": "Došlo je do greške",
+      "addToFavorites": "Dodaj u omiljene",
+      "addToComparison": "Dodaj u poređenje",
+      "share": "Podeli",
+      "copyLink": "Kopiraj link",
+      "report": "Prijavi"
+    },
+    "similarListings": {
+      "title": "Slični oglasi",
+      "buy": "Kupi",
+      "chat": "Ćaskanje"
+    }
   },
   "reviews": {
     "create": {
@@ -2078,6 +2257,253 @@
         "safe_meetings": "Sastanci na bezbednim javnim mestima"
       },
       "publish_info": "Vaš oglas će biti dostupan svim korisnicima"
+    },
+    "choice": {
+      "title": "Izaberite način kreiranja oglasa",
+      "subtitle": "Dve opcije — izaberite onu koja vam odgovara",
+      "select_error": "Molimo izaberite način kreiranja oglasa",
+      "continue": "Nastavi",
+      "select_option_hint": "Izaberite jednu od opcija za nastavak",
+      "selected": "Izabrano",
+      "free_option": {
+        "title": "Pametni pomoćnik",
+        "subtitle": "Bez veštačke inteligencije",
+        "badge": "Besplatno",
+        "time": "vreme",
+        "time_value": "2-4 min",
+        "conversion": "konverzija",
+        "conversion_value": "85%",
+        "cost": "cena",
+        "cost_value": "0 RSD",
+        "features": {
+          "templates": "Pametni šabloni opisa",
+          "drag_drop": "Drag & Drop za fotografije",
+          "price_compare": "Poređenje cena sa sličnim",
+          "optimal_time": "Optimalno vreme objavljivanja",
+          "social_import": "Uvoz sa društvenih mreža",
+          "error_check": "Provera grešaka"
+        },
+        "info": "Pogodno za iskusne prodavce koji žele potpunu kontrolu"
+      },
+      "ai_option": {
+        "title": "AI-Powered",
+        "subtitle": "Veštačka inteligencija",
+        "badge": "Premium",
+        "time": "vreme",
+        "time_value": "30 sek",
+        "conversion": "konverzija",
+        "conversion_value": "99%",
+        "cost": "po oglasu",
+        "cost_value": "199 RSD",
+        "features": {
+          "photo_recognition": "AI prepoznaje proizvod sa fotografije",
+          "auto_description": "Automatsko generisanje opisa",
+          "price_analysis": "AI analiza optimalne cene",
+          "ab_testing": "A/B testiranje naslova",
+          "multilingual": "Višejezičnost (5 jezika)",
+          "forecast": "Prognoza performansi"
+        },
+        "info": "Idealno za brzu prodaju i maksimalan domet"
+      },
+      "comparison": {
+        "title": "Poređenje mogućnosti",
+        "feature": "Mogućnost",
+        "free_column": "Pametni pomoćnik",
+        "ai_column": "AI-Powered",
+        "creation_time": "Vreme kreiranja",
+        "creation_time_free": "2-4 minuta",
+        "creation_time_ai": "30 sekundi",
+        "photo_recognition": "Prepoznavanje proizvoda sa fotografije",
+        "auto_description": "Automatsko generisanje opisa",
+        "auto_description_free": "Šabloni",
+        "auto_description_ai": "AI generisanje",
+        "price_analysis": "Analiza cene",
+        "price_analysis_free": "Poređenje sa sličnim",
+        "price_analysis_ai": "AI analiza tržišta",
+        "ab_testing": "A/B testiranje",
+        "multilingual": "Višejezičnost",
+        "multilingual_ai": "5 jezika",
+        "cost": "Cena",
+        "cost_free": "Besplatno",
+        "cost_ai": "199 RSD"
+      }
+    },
+    "ai": {
+      "title": "AI će kreirati oglas za vas",
+      "subtitle": "Samo otpremite fotografiju — veštačka inteligencija će uraditi ostalo",
+      "back_to_choice": "Nazad na izbor",
+      "stats": {
+        "creation_time": "30 sek",
+        "creation_label": "kreiranje",
+        "accuracy": "95%",
+        "accuracy_label": "tačnost AI",
+        "languages": "5 jezika",
+        "languages_label": "prevod"
+      },
+      "upload": {
+        "title": "Otpremite fotografiju proizvoda",
+        "subtitle": "AI će prepoznati proizvod i kreirati savršen oglas",
+        "ai_recognition": "AI prepoznavanje",
+        "time": "30 sekundi",
+        "import_instagram": "Uvoz sa Instagram",
+        "import_facebook": "Uvoz sa Facebook",
+        "voice_input": "Glasovni opis",
+        "stop_recording": "Zaustavi snimanje",
+        "add_more": "Dodaj još",
+        "create_with_ai": "Kreiraj oglas sa AI"
+      },
+      "processing": {
+        "title": "AI analizira vaše fotografije",
+        "recognizing": "Prepoznavanje proizvoda...",
+        "analyzing_market": "Analiza tržišta i cena...",
+        "generating_description": "Generisanje opisa...",
+        "seo_optimization": "SEO optimizacija...",
+        "creating_translations": "Kreiranje prevoda..."
+      },
+      "success": {
+        "title": "AI je uspešno kreirao vaš oglas!",
+        "subtitle": "Pregledajte i uredite po potrebi"
+      },
+      "photos": {
+        "title": "Fotografije",
+        "main": "Glavna",
+        "ai_recommends": "AI preporučuje dodavanje:"
+      },
+      "category": {
+        "title": "Kategorija"
+      },
+      "title_section": {
+        "title": "Naslov (A/B testiranje)",
+        "change": "Promeni",
+        "ai_choice": "AI izbor",
+        "ab_testing_info": "AI će testirati varijante i pokazati najefektivniju"
+      },
+      "description_section": {
+        "title": "Opis (AI optimizovan)",
+        "update": "Ažuriraj",
+        "seo_optimized": "SEO optimizovan",
+        "keywords": "Ključne reči"
+      },
+      "location": {
+        "title": "Lokacija i stanje",
+        "city": "Grad",
+        "condition": "Stanje",
+        "condition_new": "Novo",
+        "condition_used": "Polovno",
+        "condition_refurbished": "Obnovljeno",
+        "detected_from": "Lokacija otkrivena:",
+        "from_photo": "iz metadata fotografije",
+        "from_profile": "iz profila korisnika",
+        "manually": "ručno",
+        "coordinates": "Koordinate:",
+        "not_detected": "Lokacija nije otkrivena",
+        "not_detected_hint": "Izaberite tačnu lokaciju za bolju vidljivost oglasa",
+        "select_on_map": "Izaberi na mapi",
+        "refine_on_map": "Precizirati na mapi",
+        "ai_suggests": "AI predlaže lokaciju:",
+        "choose_location": "Izaberite lokaciju"
+      },
+      "price": {
+        "title": "Cena (AI analiza tržišta)",
+        "min": "Minimum:",
+        "max": "Maksimum:",
+        "currency": "RSD",
+        "ai_analyzed": "AI je analizirao 50+ sličnih oglasa za optimalnu cenu"
+      },
+      "attributes": {
+        "title": "Specifikacije",
+        "ai_detected": "(AI otkrio)",
+        "category_based": "(kategorija)",
+        "choose": "Izaberite..."
+      },
+      "translations": {
+        "title": "Višejezičnost (automatski prevod)",
+        "update": "Ažuriraj prevode",
+        "language_title": "Naslov",
+        "language_description": "Opis",
+        "info": "Prevodi su urađeni preko Claude AI za maksimalnu tačnost i prirodnost. Možete ih urediti po potrebi."
+      },
+      "social": {
+        "title": "Objave za društvene mreže (spremne za objavljivanje)"
+      },
+      "prediction": {
+        "title": "Prognoza performansi",
+        "views": "pregleda dnevno",
+        "messages": "poruka",
+        "days_to_sell": "dana do prodaje",
+        "sell_probability": "verovatnoća prodaje"
+      },
+      "actions": {
+        "continue_to_publish": "Nastavi ka objavljivanju",
+        "save_draft": "Sačuvaj nacrt",
+        "publish_now": "Objavi sada",
+        "publishing": "Objavljivanje...",
+        "back_to_edit": "Nazad na uređivanje"
+      },
+      "enhance": {
+        "success_title": "AI je uspešno kreirao vaš oglas!",
+        "success_subtitle": "Pregledajte i uredite po potrebi",
+        "photos_title": "Fotografije",
+        "main_photo": "Glavna",
+        "ai_recommends": "AI preporučuje da dodate:",
+        "category_title": "Kategorija",
+        "title_ab_testing": "Naslov (A/B testiranje)",
+        "change": "Promeni",
+        "ai_choice": "AI izbor",
+        "ai_will_test": "AI će testirati varijante i pokazati najefektivniju",
+        "description_title": "Opis (AI optimizovan)",
+        "seo_optimized": "SEO optimizovan",
+        "keywords": "Ključne reči",
+        "location_condition_title": "Lokacija i stanje",
+        "city": "Grad",
+        "condition": "Stanje",
+        "condition_new": "Novo",
+        "condition_used": "Polovno",
+        "condition_refurbished": "Obnovljeno"
+      },
+      "publish": {
+        "title": "AI je kreirao savršen oglas!",
+        "subtitle": "Spreman za objavljivanje sa maksimalnom efikasnošću",
+        "optimal_time": "Optimalno vreme",
+        "optimal_time_desc": "AI preporučuje objavljivanje u {time} za maksimalan domet",
+        "schedule": "Zakaži",
+        "social_auto": "Automatska objava na društvene mreže",
+        "social_auto_desc": "Objavi na WhatsApp, Telegram, Instagram",
+        "enable": "Omogući",
+        "views_per_day": "pregleda/dan",
+        "high_interest": "Visoko interesovanje",
+        "specifications": "Specifikacije:",
+        "ai_insights": "AI uvidi za vaš oglas",
+        "ai_insights_title": "AI uvidi za vaš oglas",
+        "social_proof": "{count} prodavca je koristilo AI danas",
+        "location_picker_title": "Izaberite lokaciju",
+        "location_updated": "Lokacija ažurirana!",
+        "demand": "Potražnja",
+        "target_audience": "Ciljna publika",
+        "recommendations": "Preporuke",
+        "sellers_used_ai": "prodavaca je koristilo AI danas"
+      },
+      "errors": {
+        "ai_processing": "Dogodila se greška tokom analize. Proverite internet konekciju i pokušajte ponovo.",
+        "description_generation": "Greška generisanja opisa",
+        "translation_update": "Greška ažuriranja prevoda",
+        "missing_attributes": "Obavezni atributi nisu popunjeni: {attributes}",
+        "publish_error": "Greška kreiranja oglasa. Pokušajte ponovo.",
+        "attribute_error": "Greška u atributima proizvoda. Proverite popunjena polja.",
+        "validation_error": "Greška validacije podataka. Proverite sva polja.",
+        "network_error": "Mrežna greška. Proverite internet konekciju."
+      },
+      "success_messages": {
+        "description_updated": "Opis ažuriran!",
+        "translations_updated": "Prevodi ažurirani preko Claude AI!",
+        "location_detected": "Lokacija otkrivena sa fotografije!",
+        "location_updated": "Lokacija ažurirana!",
+        "listing_created": "Oglas uspešno kreiran sa AI!"
+      },
+      "features": {
+        "voice_coming_soon": "Glasovni unos će uskoro biti dostupan",
+        "import_coming_soon": "Uvoz sa {platform} će uskoro biti dostupan"
+      }
     }
   },
   "trust": {

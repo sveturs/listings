@@ -397,7 +397,7 @@ export const BentoGridMapEnhanced: React.FC<BentoGridMapEnhancedProps> = ({
         'circle-opacity': 0.8,
       },
     }),
-    [theme]
+    []
   );
 
   // Слой текста кластеров

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import {
@@ -25,7 +25,9 @@ import { toast } from '@/utils/toast';
 
 export default function CreateListingChoicePage() {
   const router = useRouter();
-  const t = useTranslations();
+  const params = useParams();
+  const locale = params.locale as string;
+  const t = useTranslations('create_listing');
   const { user } = useAuthContext();
   const [selectedOption, setSelectedOption] = useState<'free' | 'ai' | null>(
     null
@@ -33,39 +35,39 @@ export default function CreateListingChoicePage() {
 
   const handleContinue = () => {
     if (!user) {
-      toast.error(t('create_listing.auth_required'));
+      toast.error(t('auth_required'));
       router.push('/');
       return;
     }
 
     if (!selectedOption) {
-      toast.error('Пожалуйста, выберите способ создания объявления');
+      toast.error(t('choice.select_error'));
       return;
     }
 
     if (selectedOption === 'free') {
-      router.push('/sr/create-listing-smart');
+      router.push(`/${locale}/create-listing-smart`);
     } else {
-      router.push('/sr/create-listing-ai');
+      router.push(`/${locale}/create-listing-ai`);
     }
   };
 
   const freeFeatures = [
-    { icon: FileText, text: 'Умные шаблоны описаний' },
-    { icon: ImageIcon, text: 'Drag & Drop для фото' },
-    { icon: TrendingUp, text: 'Сравнение цен с похожими' },
-    { icon: Clock, text: 'Оптимальное время публикации' },
-    { icon: MapPin, text: 'Импорт из соцсетей' },
-    { icon: Shield, text: 'Проверка на ошибки' },
+    { icon: FileText, text: t('choice.free_option.features.templates') },
+    { icon: ImageIcon, text: t('choice.free_option.features.drag_drop') },
+    { icon: TrendingUp, text: t('choice.free_option.features.price_compare') },
+    { icon: Clock, text: t('choice.free_option.features.optimal_time') },
+    { icon: MapPin, text: t('choice.free_option.features.social_import') },
+    { icon: Shield, text: t('choice.free_option.features.error_check') },
   ];
 
   const aiFeatures = [
-    { icon: Brain, text: 'AI распознает товар по фото' },
-    { icon: Sparkles, text: 'Автогенерация описания' },
-    { icon: DollarSign, text: 'AI анализ оптимальной цены' },
-    { icon: FileText, text: 'A/B тестирование заголовков' },
-    { icon: Check, text: 'Мультиязычность (5 языков)' },
-    { icon: TrendingUp, text: 'Прогноз эффективности' },
+    { icon: Brain, text: t('choice.ai_option.features.photo_recognition') },
+    { icon: Sparkles, text: t('choice.ai_option.features.auto_description') },
+    { icon: DollarSign, text: t('choice.ai_option.features.price_analysis') },
+    { icon: FileText, text: t('choice.ai_option.features.ab_testing') },
+    { icon: Check, text: t('choice.ai_option.features.multilingual') },
+    { icon: TrendingUp, text: t('choice.ai_option.features.forecast') },
   ];
 
   return (
@@ -78,11 +80,9 @@ export default function CreateListingChoicePage() {
           className="text-center mb-12"
         >
           <h1 className="text-4xl lg:text-5xl font-bold mb-4">
-            Выберите способ создания объявления
+            {t('choice.title')}
           </h1>
-          <p className="text-xl text-base-content/70">
-            Два варианта — выберите подходящий для вас
-          </p>
+          <p className="text-xl text-base-content/70">{t('choice.subtitle')}</p>
         </motion.div>
 
         {/* Options */}
@@ -102,9 +102,13 @@ export default function CreateListingChoicePage() {
             <div className="card-body">
               {/* Badge */}
               <div className="flex justify-between items-start mb-4">
-                <div className="badge badge-success badge-lg">Бесплатно</div>
+                <div className="badge badge-success badge-lg">
+                  {t('choice.free_option.badge')}
+                </div>
                 {selectedOption === 'free' && (
-                  <div className="badge badge-primary badge-lg">Выбрано</div>
+                  <div className="badge badge-primary badge-lg">
+                    {t('choice.selected')}
+                  </div>
                 )}
               </div>
 
@@ -114,9 +118,11 @@ export default function CreateListingChoicePage() {
                   <Package className="w-8 h-8 text-success" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">Умный помощник</h2>
+                  <h2 className="text-2xl font-bold">
+                    {t('choice.free_option.title')}
+                  </h2>
                   <p className="text-base-content/70">
-                    Без искусственного интеллекта
+                    {t('choice.free_option.subtitle')}
                   </p>
                 </div>
               </div>
@@ -124,16 +130,28 @@ export default function CreateListingChoicePage() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">2-4 мин</div>
-                  <div className="text-sm text-base-content/60">время</div>
+                  <div className="text-2xl font-bold">
+                    {t('choice.free_option.time_value')}
+                  </div>
+                  <div className="text-sm text-base-content/60">
+                    {t('choice.free_option.time')}
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">85%</div>
-                  <div className="text-sm text-base-content/60">конверсия</div>
+                  <div className="text-2xl font-bold">
+                    {t('choice.free_option.conversion_value')}
+                  </div>
+                  <div className="text-sm text-base-content/60">
+                    {t('choice.free_option.conversion')}
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">0 РСД</div>
-                  <div className="text-sm text-base-content/60">стоимость</div>
+                  <div className="text-2xl font-bold">
+                    {t('choice.free_option.cost_value')}
+                  </div>
+                  <div className="text-sm text-base-content/60">
+                    {t('choice.free_option.cost')}
+                  </div>
                 </div>
               </div>
 
@@ -156,9 +174,7 @@ export default function CreateListingChoicePage() {
               {/* Description */}
               <div className="alert alert-info mt-6">
                 <Info className="w-4 h-4" />
-                <span className="text-sm">
-                  Подходит для опытных продавцов, которые хотят полный контроль
-                </span>
+                <span className="text-sm">{t('choice.free_option.info')}</span>
               </div>
             </div>
           </motion.div>
@@ -180,10 +196,12 @@ export default function CreateListingChoicePage() {
               <div className="flex justify-between items-start mb-4">
                 <div className="badge badge-secondary badge-lg">
                   <Zap className="w-3 h-3 mr-1" />
-                  Premium
+                  {t('choice.ai_option.badge')}
                 </div>
                 {selectedOption === 'ai' && (
-                  <div className="badge badge-primary badge-lg">Выбрано</div>
+                  <div className="badge badge-primary badge-lg">
+                    {t('choice.selected')}
+                  </div>
                 )}
               </div>
 
@@ -193,9 +211,11 @@ export default function CreateListingChoicePage() {
                   <Brain className="w-8 h-8 text-secondary" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">AI-Powered</h2>
+                  <h2 className="text-2xl font-bold">
+                    {t('choice.ai_option.title')}
+                  </h2>
                   <p className="text-base-content/70">
-                    Искусственный интеллект
+                    {t('choice.ai_option.subtitle')}
                   </p>
                 </div>
               </div>
@@ -203,17 +223,27 @@ export default function CreateListingChoicePage() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">30 сек</div>
-                  <div className="text-sm text-base-content/60">время</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">99%</div>
-                  <div className="text-sm text-base-content/60">конверсия</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">199 РСД</div>
+                  <div className="text-2xl font-bold">
+                    {t('choice.ai_option.time_value')}
+                  </div>
                   <div className="text-sm text-base-content/60">
-                    за объявление
+                    {t('choice.ai_option.time')}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">
+                    {t('choice.ai_option.conversion_value')}
+                  </div>
+                  <div className="text-sm text-base-content/60">
+                    {t('choice.ai_option.conversion')}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">
+                    {t('choice.ai_option.cost_value')}
+                  </div>
+                  <div className="text-sm text-base-content/60">
+                    {t('choice.ai_option.cost')}
                   </div>
                 </div>
               </div>
@@ -237,9 +267,7 @@ export default function CreateListingChoicePage() {
               {/* Description */}
               <div className="alert alert-warning mt-6">
                 <Sparkles className="w-4 h-4" />
-                <span className="text-sm">
-                  Идеально для быстрых продаж и максимального охвата
-                </span>
+                <span className="text-sm">{t('choice.ai_option.info')}</span>
               </div>
             </div>
           </motion.div>
@@ -253,56 +281,74 @@ export default function CreateListingChoicePage() {
           className="max-w-4xl mx-auto mt-12"
         >
           <h3 className="text-2xl font-bold text-center mb-6">
-            Сравнение возможностей
+            {t('choice.comparison.title')}
           </h3>
           <div className="overflow-x-auto">
             <table className="table table-zebra">
               <thead>
                 <tr>
-                  <th>Возможность</th>
-                  <th className="text-center">Умный помощник</th>
-                  <th className="text-center">AI-Powered</th>
+                  <th>{t('choice.comparison.feature')}</th>
+                  <th className="text-center">
+                    {t('choice.comparison.free_column')}
+                  </th>
+                  <th className="text-center">
+                    {t('choice.comparison.ai_column')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>Время создания</td>
-                  <td className="text-center">2-4 минуты</td>
+                  <td>{t('choice.comparison.creation_time')}</td>
+                  <td className="text-center">
+                    {t('choice.comparison.creation_time_free')}
+                  </td>
                   <td className="text-center font-bold text-success">
-                    30 секунд
+                    {t('choice.comparison.creation_time_ai')}
                   </td>
                 </tr>
                 <tr>
-                  <td>Распознавание товара по фото</td>
+                  <td>{t('choice.comparison.photo_recognition')}</td>
                   <td className="text-center">❌</td>
                   <td className="text-center">✅</td>
                 </tr>
                 <tr>
-                  <td>Автогенерация описания</td>
-                  <td className="text-center">Шаблоны</td>
-                  <td className="text-center font-bold">AI генерация</td>
+                  <td>{t('choice.comparison.auto_description')}</td>
+                  <td className="text-center">
+                    {t('choice.comparison.auto_description_free')}
+                  </td>
+                  <td className="text-center font-bold">
+                    {t('choice.comparison.auto_description_ai')}
+                  </td>
                 </tr>
                 <tr>
-                  <td>Анализ цены</td>
-                  <td className="text-center">Сравнение с похожими</td>
-                  <td className="text-center font-bold">AI анализ рынка</td>
+                  <td>{t('choice.comparison.price_analysis')}</td>
+                  <td className="text-center">
+                    {t('choice.comparison.price_analysis_free')}
+                  </td>
+                  <td className="text-center font-bold">
+                    {t('choice.comparison.price_analysis_ai')}
+                  </td>
                 </tr>
                 <tr>
-                  <td>A/B тестирование</td>
+                  <td>{t('choice.comparison.ab_testing')}</td>
                   <td className="text-center">❌</td>
                   <td className="text-center">✅</td>
                 </tr>
                 <tr>
-                  <td>Мультиязычность</td>
+                  <td>{t('choice.comparison.multilingual')}</td>
                   <td className="text-center">❌</td>
-                  <td className="text-center">5 языков</td>
+                  <td className="text-center">
+                    {t('choice.comparison.multilingual_ai')}
+                  </td>
                 </tr>
                 <tr>
-                  <td>Стоимость</td>
+                  <td>{t('choice.comparison.cost')}</td>
                   <td className="text-center font-bold text-success">
-                    Бесплатно
+                    {t('choice.comparison.cost_free')}
                   </td>
-                  <td className="text-center">199 РСД</td>
+                  <td className="text-center">
+                    {t('choice.comparison.cost_ai')}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -321,12 +367,12 @@ export default function CreateListingChoicePage() {
             disabled={!selectedOption}
             className="btn btn-primary btn-lg gap-2"
           >
-            Продолжить
+            {t('choice.continue')}
             <ChevronRight className="w-5 h-5" />
           </button>
           {!selectedOption && (
             <p className="text-sm text-base-content/60 mt-2">
-              Выберите один из вариантов для продолжения
+              {t('choice.select_option_hint')}
             </p>
           )}
         </motion.div>

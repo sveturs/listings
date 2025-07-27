@@ -13,7 +13,6 @@ import {
   TrendingUp,
   Users,
   Smartphone,
-  Camera,
   Package,
   Check,
   RefreshCw,

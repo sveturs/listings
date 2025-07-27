@@ -111,7 +111,7 @@ Only include the languages that were requested. Return ONLY the JSON object, no 
       } else {
         throw new Error('No JSON found in response');
       }
-    } catch (_parseError) {
+    } catch {
       console.error('Failed to parse Claude response:', responseText);
       throw new Error('Invalid response format from Claude');
     }

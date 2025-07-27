@@ -16,7 +16,6 @@ import {
   X,
   Info,
   TrendingUp,
-  Clock,
   Shield,
   Sparkles,
   Save,
@@ -143,7 +142,7 @@ export default function BasicEnhancedListingCreationPage() {
     if (saveStatus === 'saved') {
       setSaveStatus('unsaved');
     }
-  }, [formData]);
+  }, [formData, saveStatus]);
 
   // Добавление в историю
   const addToHistory = () => {
@@ -753,7 +752,8 @@ export default function BasicEnhancedListingCreationPage() {
               <div>
                 <h3 className="font-bold">Готово к публикации!</h3>
                 <p className="text-sm">
-                  Ваше объявление готово. Нажмите "Опубликовать" для размещения.
+                  Ваше объявление готово. Нажмите &quot;Опубликовать&quot; для
+                  размещения.
                 </p>
               </div>
             </div>

@@ -48,8 +48,8 @@ type (
 		Location          string                  `json:"location"`
 		Latitude          *float64                `json:"latitude,omitempty"`
 		Longitude         *float64                `json:"longitude,omitempty"`
-		City              string                  `json:"city"`
-		Country           string                  `json:"country"`
+		City              string                  `json:"address_city"`
+		Country           string                  `json:"address_country"`
 		ViewsCount        int                     `json:"views_count"`
 		CreatedAt         time.Time               `json:"created_at"`
 		UpdatedAt         time.Time               `json:"updated_at"`
