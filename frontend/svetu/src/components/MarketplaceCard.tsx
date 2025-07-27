@@ -137,7 +137,14 @@ export default function MarketplaceCard({
 
   // Определяем правильный URL в зависимости от типа товара
   const getItemUrl = () => {
-    // Временно для всех товаров используем marketplace URL
+    // Проверяем наличие slug в metadata
+    const slug = item.metadata?.seo?.slug;
+
+    if (slug) {
+      return `/${locale}/listings/${slug}`;
+    }
+
+    // Если slug нет, используем старый формат с ID
     // TODO: Создать страницу для storefront товаров
     return `/${locale}/marketplace/${item.id}`;
   };

@@ -11042,6 +11042,116 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/marketplace/listings/check-slug": {
+            "post": {
+                "description": "Checks if a slug is available for use and suggests alternatives if not",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-listings"
+                ],
+                "summary": "Check slug availability",
+                "parameters": [
+                    {
+                        "description": "Slug to check",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Slug availability status",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidData",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/listings/slug/{slug}": {
+            "get": {
+                "description": "Returns detailed information about a specific listing by URL slug including attributes and images",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-listings"
+                ],
+                "summary": "Get listing details by slug",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Listing slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Listing details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.MarketplaceListing"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "marketplace.notFound",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.getError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/listings/{id}": {
             "get": {
                 "description": "Returns detailed information about a specific listing including attributes and images",
@@ -24049,6 +24159,12 @@ const docTemplate = `{
         "backend_internal_domain_models.MarketplaceListing": {
             "type": "object",
             "properties": {
+                "address_city": {
+                    "type": "string"
+                },
+                "address_country": {
+                    "type": "string"
+                },
                 "attributes": {
                     "type": "array",
                     "items": {
@@ -24088,13 +24204,7 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "city": {
-                    "type": "string"
-                },
                 "condition": {
-                    "type": "string"
-                },
-                "country": {
                     "type": "string"
                 },
                 "created_at": {

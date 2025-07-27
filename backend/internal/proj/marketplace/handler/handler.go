@@ -133,6 +133,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/listings", h.Listings.GetListings)
 	marketplace.Get("/categories", h.Categories.GetCategories)
 	marketplace.Get("/category-tree", h.Categories.GetCategoryTree)
+	marketplace.Get("/listings/slug/:slug", h.Listings.GetListingBySlug)
 	marketplace.Get("/listings/:id", h.Listings.GetListing)
 	marketplace.Get("/search", h.Search.SearchListingsAdvanced)  // маршрут поиска GET
 	marketplace.Post("/search", h.Search.SearchListingsAdvanced) // маршрут поиска POST для расширенных фильтров
@@ -163,6 +164,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplaceProtected.Post("/listings", h.Listings.CreateListing)
 	marketplaceProtected.Put("/listings/:id", h.Listings.UpdateListing)
 	marketplaceProtected.Delete("/listings/:id", h.Listings.DeleteListing)
+	marketplaceProtected.Post("/listings/check-slug", h.Listings.CheckSlugAvailability)
 	marketplaceProtected.Post("/listings/:id/images", h.Images.UploadImages)
 	marketplaceProtected.Post("/listings/:id/favorite", h.Favorites.AddToFavorites)
 	marketplaceProtected.Delete("/listings/:id/favorite", h.Favorites.RemoveFromFavorites)

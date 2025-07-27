@@ -1458,6 +1458,10 @@ definitions:
     type: object
   backend_internal_domain_models.MarketplaceListing:
     properties:
+      address_city:
+        type: string
+      address_country:
+        type: string
       attributes:
         items:
           $ref: '#/definitions/backend_internal_domain_models.ListingAttributeValue'
@@ -1484,11 +1488,7 @@ definitions:
         items:
           type: string
         type: array
-      city:
-        type: string
       condition:
-        type: string
-      country:
         type: string
       created_at:
         type: string
@@ -13473,6 +13473,75 @@ paths:
       summary: Get similar listings
       tags:
       - marketplace-search
+  /api/v1/marketplace/listings/check-slug:
+    post:
+      consumes:
+      - application/json
+      description: Checks if a slug is available for use and suggests alternatives
+        if not
+      parameters:
+      - description: Slug to check
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Slug availability status
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Check slug availability
+      tags:
+      - marketplace-listings
+  /api/v1/marketplace/listings/slug/{slug}:
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed information about a specific listing by URL slug
+        including attributes and images
+      parameters:
+      - description: Listing slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Listing details
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+              type: object
+        "404":
+          description: marketplace.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get listing details by slug
+      tags:
+      - marketplace-listings
   /api/v1/marketplace/map/bounds:
     get:
       consumes:

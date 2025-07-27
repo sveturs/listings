@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,13 +12,8 @@ import {
   Mic,
   X,
   TrendingUp,
-  Clock,
   Eye,
-  Heart,
-  MessageCircle,
   Share2,
-  Shield,
-  Award,
   Brain,
   Zap,
   Plus,
@@ -42,7 +37,7 @@ export default function AIPoweredEnhancedListingCreationPage() {
     'upload' | 'process' | 'enhance' | 'publish'
   >('upload');
   const [images, setImages] = useState<string[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [_isProcessing, setIsProcessing] = useState(false);
   const [voiceRecording, setVoiceRecording] = useState(false);
 
   // AI generated data
@@ -65,7 +60,7 @@ export default function AIPoweredEnhancedListingCreationPage() {
 
   // A/B testing state
   const [abTestEnabled, setAbTestEnabled] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState(0);
+  const [_selectedVariant, _setSelectedVariant] = useState(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

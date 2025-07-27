@@ -31,7 +31,6 @@ import {
   Instagram,
   Facebook,
   Clock as ClockIcon,
-  ThumbsUp,
   FileText,
   Users,
 } from 'lucide-react';
@@ -63,10 +62,10 @@ export default function NoBackendEnhancedListingCreationPage() {
   const [similarListings, setSimilarListings] = useState<any[]>([]);
 
   // Состояние для шаблонов описаний
-  const [descriptionTemplate, setDescriptionTemplate] = useState('');
+  const [_descriptionTemplate, _setDescriptionTemplate] = useState('');
 
   // Оптимальное время публикации
-  const [optimalPublishTime, setOptimalPublishTime] = useState('');
+  const [_optimalPublishTime, _setOptimalPublishTime] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const controls = useAnimation();
@@ -193,7 +192,7 @@ export default function NoBackendEnhancedListingCreationPage() {
   };
 
   // Определение оптимального времени публикации
-  const getOptimalPublishTime = () => {
+  const _getOptimalPublishTime = () => {
     const times = [
       { time: '19:00-21:00', activity: 'Высокая', icon: '🔥' },
       { time: '12:00-13:00', activity: 'Средняя', icon: '👍' },

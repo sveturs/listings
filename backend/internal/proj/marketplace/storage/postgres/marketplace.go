@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -20,7 +21,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	// "time"
-	// "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5"
 )
 
 const (
@@ -83,20 +84,46 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		}
 	}
 
+	// Проверяем уникальность slug, если он есть в metadata
+	if listing.Metadata != nil {
+		if seoData, ok := listing.Metadata["seo"].(map[string]interface{}); ok {
+			if slug, ok := seoData["slug"].(string); ok && slug != "" {
+				// Генерируем уникальный slug
+				uniqueSlug, err := s.GenerateUniqueSlug(ctx, slug, 0)
+				if err != nil {
+					return 0, fmt.Errorf("error generating unique slug: %w", err)
+				}
+				// Обновляем slug на уникальный
+				seoData["slug"] = uniqueSlug
+			}
+		}
+	}
+
+	// Конвертируем metadata в JSON
+	var metadataJSON []byte
+	if listing.Metadata != nil {
+		var err error
+		metadataJSON, err = json.Marshal(listing.Metadata)
+		if err != nil {
+			return 0, fmt.Errorf("error marshaling metadata: %w", err)
+		}
+	}
+
 	// Вставляем основные данные объявления
 	err := s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
             address_city, address_country, show_on_map, original_language,
-            storefront_id, external_id
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            storefront_id, external_id, metadata
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         RETURNING id
     `,
 		listing.UserID, listing.CategoryID, listing.Title, listing.Description,
 		listing.Price, listing.Condition, listing.Status, listing.Location,
 		listing.Latitude, listing.Longitude, listing.City, listing.Country,
 		listing.ShowOnMap, listing.OriginalLanguage, listing.StorefrontID, listing.ExternalID,
+		metadataJSON,
 	).Scan(&listingID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to insert listing: %w", err)
@@ -1094,6 +1121,31 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 		}
 	}
 
+	// Проверяем уникальность slug, если он есть в metadata
+	if listing.Metadata != nil {
+		if seoData, ok := listing.Metadata["seo"].(map[string]interface{}); ok {
+			if slug, ok := seoData["slug"].(string); ok && slug != "" {
+				// Генерируем уникальный slug
+				uniqueSlug, err := s.GenerateUniqueSlug(ctx, slug, listing.ID)
+				if err != nil {
+					return fmt.Errorf("error generating unique slug: %w", err)
+				}
+				// Обновляем slug на уникальный
+				seoData["slug"] = uniqueSlug
+			}
+		}
+	}
+
+	// Конвертируем metadata в JSON
+	var metadataJSON []byte
+	if listing.Metadata != nil {
+		var err error
+		metadataJSON, err = json.Marshal(listing.Metadata)
+		if err != nil {
+			return fmt.Errorf("error marshaling metadata: %w", err)
+		}
+	}
+
 	result, err := s.pool.Exec(ctx, `
         UPDATE marketplace_listings
         SET
@@ -1105,13 +1157,14 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
             location = $6,
             latitude = $7,
             longitude = $8,
-            city = $9,
-            country = $10,
+            address_city = $9,
+            address_country = $10,
             show_on_map = $11,
             category_id = $12,
             original_language = $13,
+            metadata = $14,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $14 AND user_id = $15
+        WHERE id = $15 AND user_id = $16
     `,
 		listing.Title,
 		listing.Description,
@@ -1126,6 +1179,7 @@ func (s *Storage) UpdateListing(ctx context.Context, listing *models.Marketplace
 		listing.ShowOnMap,
 		listing.CategoryID,
 		listing.OriginalLanguage,
+		metadataJSON,
 		listing.ID,
 		listing.UserID,
 	)
@@ -2614,6 +2668,72 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	}
 
 	return listing, nil
+}
+
+// GetListingBySlug получает объявление по slug
+func (s *Storage) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
+	// Сначала получаем ID объявления по slug из metadata
+	var id int
+	err := s.pool.QueryRow(ctx, `
+		SELECT id 
+		FROM marketplace_listings 
+		WHERE metadata->'seo'->>'slug' = $1
+		LIMIT 1
+	`, slug).Scan(&id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("listing with slug %s not found", slug)
+		}
+		return nil, fmt.Errorf("error getting listing by slug: %w", err)
+	}
+
+	// Используем существующий метод GetListingByID
+	return s.GetListingByID(ctx, id)
+}
+
+// IsSlugUnique проверяет уникальность slug
+func (s *Storage) IsSlugUnique(ctx context.Context, slug string, excludeID int) (bool, error) {
+	var count int
+	err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*) 
+		FROM marketplace_listings 
+		WHERE metadata->'seo'->>'slug' = $1 AND id != $2
+	`, slug, excludeID).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("error checking slug uniqueness: %w", err)
+	}
+
+	return count == 0, nil
+}
+
+// GenerateUniqueSlug генерирует уникальный slug на основе базового
+func (s *Storage) GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error) {
+	// Сначала проверяем исходный slug
+	isUnique, err := s.IsSlugUnique(ctx, baseSlug, excludeID)
+	if err != nil {
+		return "", err
+	}
+
+	if isUnique {
+		return baseSlug, nil
+	}
+
+	// Если не уникален, пробуем с числовыми суффиксами
+	for i := 2; i <= 99; i++ {
+		candidateSlug := fmt.Sprintf("%s-%d", baseSlug, i)
+		isUnique, err := s.IsSlugUnique(ctx, candidateSlug, excludeID)
+		if err != nil {
+			return "", err
+		}
+
+		if isUnique {
+			return candidateSlug, nil
+		}
+	}
+
+	// Если все числа от 2 до 99 заняты, используем короткий хеш
+	shortHash := fmt.Sprintf("%x", time.Now().Unix())[:6]
+	return fmt.Sprintf("%s-%s", baseSlug, shortHash), nil
 }
 
 // getStorefrontProductAsListing получает товар из storefront_products и возвращает как MarketplaceListing

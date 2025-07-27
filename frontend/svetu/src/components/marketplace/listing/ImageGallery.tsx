@@ -186,15 +186,11 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
   const renderImage = (image: (typeof images)[0], isMain = false) => {
     if (image.id === 0) {
       return (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src="/placeholder-listing.jpg"
           alt={title}
-          className={
-            isMain
-              ? 'w-full h-full object-contain'
-              : 'w-full h-full object-cover'
-          }
+          fill
+          className={isMain ? 'object-contain' : 'object-cover'}
         />
       );
     }

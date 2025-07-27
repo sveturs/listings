@@ -4917,3 +4917,5 @@ dump2migrate/
 db_dumps_*/
 *.sql
 *.tar.gz
+/backend/backend
+/backend/reindex

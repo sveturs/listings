@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useCountAnimation } from '@/hooks/useCountAnimation';
 import SearchBar from '@/components/SearchBar/SearchBar';
 import { BentoGridMapEnhanced } from './BentoGridMapEnhanced';
+import Image from 'next/image';
 
 interface BentoGridProps {
   categories?: Array<{
@@ -175,11 +176,11 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             <Link href={`/listing/${featuredListing.id}`}>
               <div className="card h-full bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
                 <figure className="h-32 relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={featuredListing.image}
                     alt={featuredListing.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   <div className="absolute top-2 left-2">
                     <span className="badge badge-warning gap-1">

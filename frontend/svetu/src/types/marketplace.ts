@@ -48,6 +48,13 @@ export interface MarketplaceItem {
   };
   condition?: string;
   status?: string;
+  metadata?: {
+    seo?: {
+      keywords?: string;
+      slug?: string;
+    };
+    [key: string]: any;
+  };
   views_count?: number;
   old_price?: number;
   has_discount?: boolean;

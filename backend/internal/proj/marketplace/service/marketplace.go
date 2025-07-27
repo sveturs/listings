@@ -431,6 +431,61 @@ func (s *MarketplaceService) GetListingByID(ctx context.Context, id int) (*model
 	return listing, nil
 }
 
+// GetListingBySlug получает объявление по slug
+func (s *MarketplaceService) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
+	// Получаем объявление по slug
+	listing, err := s.storage.GetListingBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	// Проверяем, пришел ли запрос от пользовательской части приложения
+	if ctx.Value("increment_views") == true {
+		// Увеличиваем счетчик просмотров только для просмотра деталей объявления
+		if err := s.storage.IncrementViewsCount(ctx, listing.ID); err != nil {
+			// Логируем ошибку, но не прерываем выполнение
+			log.Printf("Ошибка при увеличении счетчика просмотров для объявления %d: %v", listing.ID, err)
+		}
+	}
+
+	return listing, nil
+}
+
+// IsSlugAvailable проверяет доступность slug
+func (s *MarketplaceService) IsSlugAvailable(ctx context.Context, slug string, excludeID int) (bool, error) {
+	return s.storage.IsSlugUnique(ctx, slug, excludeID)
+}
+
+// GenerateUniqueSlug генерирует уникальный slug на основе базового
+func (s *MarketplaceService) GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error) {
+	// Сначала проверяем исходный slug
+	isUnique, err := s.storage.IsSlugUnique(ctx, baseSlug, excludeID)
+	if err != nil {
+		return "", err
+	}
+
+	if isUnique {
+		return baseSlug, nil
+	}
+
+	// Если не уникален, пробуем с числовыми суффиксами
+	for i := 2; i <= 99; i++ {
+		candidateSlug := fmt.Sprintf("%s-%d", baseSlug, i)
+		isUnique, err := s.storage.IsSlugUnique(ctx, candidateSlug, excludeID)
+		if err != nil {
+			return "", err
+		}
+
+		if isUnique {
+			return candidateSlug, nil
+		}
+	}
+
+	// Если все числа от 2 до 99 заняты, используем timestamp
+	timestamp := time.Now().Unix()
+	return fmt.Sprintf("%s-%d", baseSlug, timestamp), nil
+}
+
 func (s *MarketplaceService) GetOpenSearchRepository() (interface {
 	SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error)
 }, bool,

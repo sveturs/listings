@@ -57,6 +57,27 @@ func (m *MockStorage) AddAdmin(ctx context.Context, admin *models.AdminUser) err
 	return args.Error(0)
 }
 
+// Недостающий метод GenerateUniqueSlug
+func (m *MockStorage) GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error) {
+	args := m.Called(ctx, baseSlug, excludeID)
+	return args.String(0), args.Error(1)
+}
+
+// Недостающий метод GetListingBySlug
+func (m *MockStorage) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
+	args := m.Called(ctx, slug)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MarketplaceListing), args.Error(1)
+}
+
+// Недостающий метод IsSlugUnique
+func (m *MockStorage) IsSlugUnique(ctx context.Context, slug string, excludeID int) (bool, error) {
+	args := m.Called(ctx, slug, excludeID)
+	return args.Bool(0), args.Error(1)
+}
+
 // Все остальные методы интерфейса Storage (заглушки)
 func (m *MockStorage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
 	return nil, ErrNotImplemented

@@ -88,6 +88,15 @@ export default function ExamplesPage() {
       icon: '✨',
       badge: 'NEW',
     },
+    {
+      title: 'Listing Edit UX',
+      description:
+        'Modern listing editing: from basic to AI-powered with real-time preview',
+      href: '/examples/listing-edit-ux',
+      color: 'bg-gradient-to-r from-blue-500 to-purple-500',
+      icon: '✏️',
+      badge: 'NEW',
+    },
   ];
 
   return (
@@ -147,7 +156,7 @@ export default function ExamplesPage() {
               max="100"
             ></progress>
             <p className="text-sm text-base-content/70 mt-2">
-              All 14 UI/UX improvements have been successfully implemented!
+              All 15 UI/UX improvements have been successfully implemented!
             </p>
           </div>
         </div>

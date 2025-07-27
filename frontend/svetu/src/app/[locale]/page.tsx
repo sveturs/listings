@@ -13,9 +13,9 @@ export default async function Home({
   const t = await getTranslations('home');
 
   // Проверяем feature flags
-  const paymentsEnabled = configManager.isFeatureEnabled('enablePayments');
+  const _paymentsEnabled = configManager.isFeatureEnabled('enablePayments');
 
-  let marketplaceData = null;
+  const _marketplaceData = null;
   let error: Error | null = null;
   let homePageData = null;
 
@@ -42,7 +42,7 @@ export default async function Home({
       ]);
 
       if (marketplaceResult.status === 'fulfilled') {
-        marketplaceData = marketplaceResult.value;
+        const _marketplaceData = marketplaceResult.value;
       } else {
         console.error(
           'SSR marketplace search failed:',

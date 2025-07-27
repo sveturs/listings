@@ -22,6 +22,8 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Proxying request to Claude API...');
+    console.log('User language:', userLanguage);
+    console.log('Image data length:', imageBase64.length);
 
     const response = await fetch(CLAUDE_API_URL, {
       method: 'POST',
@@ -55,6 +57,12 @@ export async function POST(request: NextRequest) {
       }),
     });
 
+    console.log('Claude API response status:', response.status);
+    console.log(
+      'Claude API response headers:',
+      Object.fromEntries(response.headers)
+    );
+
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Claude API error:', response.status, errorData);
@@ -65,6 +73,11 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
+    console.log('Claude API response structure keys:', Object.keys(data));
+    console.log(
+      'Claude API response content array length:',
+      data.content?.length
+    );
     const content = data.content[0]?.text;
 
     if (!content) {
@@ -75,9 +88,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and return the JSON response
+    // Очищаем content от возможных проблемных символов, но сохраняем переносы строк (\n = \u000A)
+    const cleanContent = content.replace(
+      /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/g,
+      ''
+    );
+
     try {
-      // Очищаем content от возможных проблемных символов
-      const cleanContent = content.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
       console.log('Parsing Claude response, length:', cleanContent.length);
 
       const analysis = JSON.parse(cleanContent);
@@ -85,10 +102,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(analysis);
     } catch (parseError) {
       console.error('JSON parsing error:', parseError);
-      console.error(
-        'Content that failed to parse:',
-        content.substring(0, 500) + '...'
-      );
+      console.error('Full content that failed to parse:', content);
+      console.error('Clean content that failed to parse:', cleanContent);
+      console.error('Content length:', content.length);
+      console.error('Clean content length:', cleanContent.length);
 
       // Попробуем извлечь JSON из ответа если он обёрнут в ```json
       const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
@@ -148,7 +165,7 @@ function getAnalysisPrompt(userLanguage: string): string {
 5. categoryProbabilities: Топ-3 категории с вероятностями
 6. price: Рыночная цена в РСД как строка
 7. priceRange: {min, max} диапазон цен
-8. attributes: Для авто ТОЛЬКО: brand, model, year, color (из: black, white, silver, gold, blue, red, green, yellow, purple, other), fuel_type (petrol, diesel, electric, hybrid, lpg, cng), transmission (manual, automatic, semi-automatic, cvt), mileage, engine_size
+8. attributes: Для авто ТОЛЬКО: brand, car_model, year, color (из: black, white, silver, gold, blue, red, green, yellow, purple, other), fuel_type (petrol, diesel, electric, hybrid, lpg, cng), transmission (manual, automatic, semi-automatic, cvt), mileage, engine_size
 9. tags: 5-8 поисковых тегов на русском
 10. suggestedPhotos: Какие фото добавить для лучшей продажи
 11. translations: ОБЯЗАТЕЛЬНО создай ПОЛНЫЕ переводы title и description на ${targetLanguages.map((l) => languageNames[userLanguage][l]).join(' и ')} (${targetLanguages.join(', ')}). 
@@ -193,7 +210,7 @@ function getAnalysisPrompt(userLanguage: string): string {
 5. categoryProbabilities: Top 3 categories with probabilities
 6. price: Market price in RSD as string
 7. priceRange: {min, max} price range
-8. attributes: For cars ONLY: brand, model, year, color (from: black, white, silver, gold, blue, red, green, yellow, purple, other), fuel_type (petrol, diesel, electric, hybrid, lpg, cng), transmission (manual, automatic, semi-automatic, cvt), mileage, engine_size
+8. attributes: For cars ONLY: brand, car_model, year, color (from: black, white, silver, gold, blue, red, green, yellow, purple, other), fuel_type (petrol, diesel, electric, hybrid, lpg, cng), transmission (manual, automatic, semi-automatic, cvt), mileage, engine_size
 9. tags: 5-8 search tags in English
 10. suggestedPhotos: What photos to add for better sales
 11. translations: MANDATORY create COMPLETE translations of title & description to ${targetLanguages.map((l) => languageNames[userLanguage][l]).join(' and ')} (${targetLanguages.join(', ')}). 
@@ -238,7 +255,7 @@ EXAMPLE OF CORRECT TRANSLATION FORMAT:
 5. categoryProbabilities: Top 3 kategorije sa verovatnoćama
 6. price: Tržišna cena u RSD kao string
 7. priceRange: {min, max} raspon cena
-8. attributes: Za automobile SAMO: brand, model, year, color (iz: black, white, silver, gold, blue, red, green, yellow, purple, other), fuel_type (petrol, diesel, electric, hybrid, lpg, cng), transmission (manual, automatic, semi-automatic, cvt), mileage, engine_size
+8. attributes: Za automobile SAMO: brand, car_model, year, color (iz: black, white, silver, gold, blue, red, green, yellow, purple, other), fuel_type (petrol, diesel, electric, hybrid, lpg, cng), transmission (manual, automatic, semi-automatic, cvt), mileage, engine_size
 9. tags: 5-8 tagova za pretragu na srpskom
 10. suggestedPhotos: Koje fotografije dodati za bolju prodaju
 11. translations: OBAVEZNO napravi KOMPLETNE prevode title i description na ${targetLanguages.map((l) => languageNames[userLanguage][l]).join(' i ')} (${targetLanguages.join(', ')}). 
