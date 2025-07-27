@@ -79,6 +79,15 @@ export default function ExamplesPage() {
       color: 'bg-gradient-to-r from-green-500 to-teal-500',
       icon: '🚀',
     },
+    {
+      title: 'Listing Creation UX v2.0',
+      description:
+        'Enhanced examples with drag&drop, smart templates, A/B testing and more',
+      href: '/examples/listing-creation-ux-v2',
+      color: 'bg-gradient-to-r from-yellow-500 to-orange-500',
+      icon: '✨',
+      badge: 'NEW',
+    },
   ];
 
   return (
@@ -98,7 +107,12 @@ export default function ExamplesPage() {
             delay={index * 0.1}
           >
             <Link href={example.href} className="block h-full">
-              <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 h-full">
+              <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 h-full relative">
+                {example.badge && (
+                  <div className="absolute top-2 right-2 badge badge-warning badge-lg z-10">
+                    {example.badge}
+                  </div>
+                )}
                 <div className="card-body">
                   <div
                     className={`w-16 h-16 rounded-xl ${example.color} flex items-center justify-center text-3xl mb-4`}
@@ -133,7 +147,7 @@ export default function ExamplesPage() {
               max="100"
             ></progress>
             <p className="text-sm text-base-content/70 mt-2">
-              All 13 UI/UX improvements have been successfully implemented!
+              All 14 UI/UX improvements have been successfully implemented!
             </p>
           </div>
         </div>

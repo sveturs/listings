@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,9 +19,24 @@ import {
   Clock,
   Shield,
   Sparkles,
+  Save,
+  Cloud,
+  CloudOff,
+  GripVertical,
+  AlertCircle,
+  Volume2,
+  History,
+  Eye,
 } from 'lucide-react';
 
-export default function BasicListingCreationPage() {
+// Тип для элемента изображения с id для Reorder
+interface ImageItem {
+  id: string;
+  url: string;
+  file?: File;
+}
+
+export default function BasicEnhancedListingCreationPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     category: '',
@@ -29,12 +44,24 @@ export default function BasicListingCreationPage() {
     description: '',
     price: '',
     condition: 'used',
-    images: [] as string[],
+    images: [] as ImageItem[],
     location: '',
     privacyLevel: 'district',
     deliveryMethods: [] as string[],
     paymentMethods: [] as string[],
   });
+
+  // Состояние автосохранения
+  const [saveStatus, setSaveStatus] = useState<
+    'saved' | 'saving' | 'unsaved' | 'error'
+  >('saved');
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // История изменений
+  const [history, setHistory] = useState<typeof formData[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const steps = [
     { id: 'category', title: 'Категория', icon: Package },
@@ -95,9 +122,56 @@ export default function BasicListingCreationPage() {
     },
   ];
 
+  // Автосохранение черновика
+  useEffect(() => {
+    const saveTimer = setTimeout(() => {
+      if (saveStatus === 'unsaved') {
+        setSaveStatus('saving');
+        // Симуляция сохранения
+        setTimeout(() => {
+          setSaveStatus('saved');
+          setLastSaved(new Date());
+        }, 1000);
+      }
+    }, 2000);
+
+    return () => clearTimeout(saveTimer);
+  }, [formData, saveStatus]);
+
+  // Отслеживание изменений
+  useEffect(() => {
+    if (saveStatus === 'saved') {
+      setSaveStatus('unsaved');
+    }
+  }, [formData]);
+
+  // Добавление в историю
+  const addToHistory = () => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(formData);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  // Откат изменений
+  const undo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
+      setFormData(history[historyIndex - 1]);
+    }
+  };
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(historyIndex + 1);
+      setFormData(history[historyIndex + 1]);
+    }
+  };
+
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+      addToHistory();
     }
   };
 
@@ -110,9 +184,24 @@ export default function BasicListingCreationPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map((file) =>
-        URL.createObjectURL(file)
-      );
+      const newImages = Array.from(files).map((file) => ({
+        id: `img-${Date.now()}-${Math.random()}`,
+        url: URL.createObjectURL(file),
+        file,
+      }));
+
+      // Проверка качества изображений
+      newImages.forEach((img) => {
+        const image = new window.Image();
+        image.src = img.url;
+        image.onload = () => {
+          if (image.width < 800 || image.height < 600) {
+            // Показать предупреждение о низком качестве
+            console.log('Low quality image detected');
+          }
+        };
+      });
+
       setFormData({
         ...formData,
         images: [...formData.images, ...newImages].slice(0, 8),
@@ -120,11 +209,36 @@ export default function BasicListingCreationPage() {
     }
   };
 
-  const removeImage = (index: number) => {
+  const removeImage = (id: string) => {
     setFormData({
       ...formData,
-      images: formData.images.filter((_, i) => i !== index),
+      images: formData.images.filter((img) => img.id !== id),
     });
+  };
+
+  // Progress bar с мотивацией
+  const getMotivationalMessage = () => {
+    const completedFields = [
+      formData.category,
+      formData.title,
+      formData.description,
+      formData.price,
+      formData.images.length > 0,
+      formData.location,
+      formData.deliveryMethods.length > 0,
+      formData.paymentMethods.length > 0,
+    ].filter(Boolean).length;
+
+    const messages = [
+      'Отличное начало!',
+      'Продолжайте в том же духе!',
+      'Уже больше половины!',
+      'Почти готово!',
+      'Последний рывок!',
+      'Превосходно! Готово к публикации!',
+    ];
+
+    return messages[Math.floor((completedFields / 8) * messages.length)];
   };
 
   const renderStep = () => {
@@ -238,15 +352,31 @@ export default function BasicListingCreationPage() {
                   {formData.description.length}/1000
                 </span>
               </label>
-              <textarea
-                className="textarea textarea-bordered h-32"
-                placeholder="Опишите состояние товара, комплектацию, причину продажи..."
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                maxLength={1000}
-              />
+              <div className="relative">
+                <textarea
+                  className="textarea textarea-bordered h-32 w-full"
+                  placeholder="Опишите состояние товара, комплектацию, причину продажи..."
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  maxLength={1000}
+                />
+                <button className="absolute bottom-2 right-2 btn btn-xs btn-ghost gap-1">
+                  <Volume2 className="w-3 h-3" />
+                  Голосовой ввод
+                </button>
+              </div>
+
+              {/* Шаблоны описаний */}
+              {formData.category && (
+                <div className="mt-2">
+                  <button className="btn btn-outline btn-sm gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Использовать шаблон для {formData.category}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -270,6 +400,9 @@ export default function BasicListingCreationPage() {
                   <span className="label-text-alt text-success">
                     📊 Средняя цена в категории: 45.000 РСД
                   </span>
+                  <button className="label-text-alt link link-primary">
+                    Сравнить с похожими
+                  </button>
                 </label>
               </div>
 
@@ -300,7 +433,7 @@ export default function BasicListingCreationPage() {
           </motion.div>
         );
 
-      case 2: // Photos
+      case 2: // Photos with drag & drop
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -315,32 +448,56 @@ export default function BasicListingCreationPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Reorder.Group
+              axis="y"
+              values={formData.images}
+              onReorder={(newImages) =>
+                setFormData({ ...formData, images: newImages })
+              }
+              className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+            >
               {formData.images.map((img, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="relative aspect-square"
+                <Reorder.Item
+                  key={img.id}
+                  value={img}
+                  className="relative aspect-square cursor-move"
                 >
-                  <Image
-                    src={img}
-                    alt={`Photo ${index + 1}`}
-                    fill
-                    className="object-cover rounded-lg"
-                  />
-                  {index === 0 && (
-                    <div className="absolute top-2 left-2 badge badge-primary">
-                      Главное фото
-                    </div>
-                  )}
-                  <button
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 btn btn-circle btn-sm btn-error"
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative h-full w-full"
                   >
-                    <X className="w-4 h-4" />
-                  </button>
-                </motion.div>
+                    <Image
+                      src={img.url}
+                      alt={`Photo ${index + 1}`}
+                      fill
+                      className="object-cover rounded-lg"
+                    />
+                    {index === 0 && (
+                      <div className="absolute top-2 left-2 badge badge-primary">
+                        Главное фото
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      <div className="btn btn-circle btn-sm btn-neutral">
+                        <GripVertical className="w-3 h-3" />
+                      </div>
+                      <button
+                        onClick={() => removeImage(img.id)}
+                        className="btn btn-circle btn-sm btn-error"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {/* Предупреждение о качестве */}
+                    {Math.random() > 0.7 && (
+                      <div className="absolute bottom-2 left-2 right-2 alert alert-warning p-2">
+                        <AlertCircle className="w-3 h-3" />
+                        <span className="text-xs">Низкое качество фото</span>
+                      </div>
+                    )}
+                  </motion.div>
+                </Reorder.Item>
               ))}
 
               {formData.images.length < 8 && (
@@ -353,6 +510,7 @@ export default function BasicListingCreationPage() {
                     {8 - formData.images.length} осталось
                   </span>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     multiple
                     accept="image/*"
@@ -361,20 +519,34 @@ export default function BasicListingCreationPage() {
                   />
                 </label>
               )}
-            </div>
+            </Reorder.Group>
 
             <div className="alert alert-info">
               <Info className="w-5 h-5" />
               <div>
                 <h3 className="font-bold">Советы для хороших фото</h3>
                 <ul className="text-sm mt-1 space-y-1">
+                  <li>• Перетащите фото для изменения порядка</li>
+                  <li>• Первое фото - самое важное</li>
                   <li>• Снимайте при дневном свете</li>
                   <li>• Покажите товар с разных сторон</li>
                   <li>• Включите все дефекты, если есть</li>
-                  <li>• Первое фото - самое важное</li>
                 </ul>
               </div>
             </div>
+
+            {/* Рекомендации по недостающим фото */}
+            {formData.images.length > 0 && formData.images.length < 4 && (
+              <div className="alert">
+                <Sparkles className="w-5 h-5" />
+                <div>
+                  <h3 className="font-bold">Рекомендуем добавить</h3>
+                  <p className="text-sm">
+                    Фото сзади, фото деталей, фото в использовании
+                  </p>
+                </div>
+              </div>
+            )}
           </motion.div>
         );
 
@@ -585,6 +757,21 @@ export default function BasicListingCreationPage() {
                 </p>
               </div>
             </div>
+
+            {/* Предпросмотр шаринга */}
+            <div className="card bg-base-200">
+              <div className="card-body">
+                <h3 className="card-title text-base">
+                  <Eye className="w-4 h-4" />
+                  Как будет выглядеть в соцсетях
+                </h3>
+                <div className="flex gap-2">
+                  <div className="btn btn-sm btn-ghost">WhatsApp</div>
+                  <div className="btn btn-sm btn-ghost">Telegram</div>
+                  <div className="btn btn-sm btn-ghost">Facebook</div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         );
 
@@ -595,23 +782,85 @@ export default function BasicListingCreationPage() {
 
   return (
     <div className="min-h-screen bg-base-100">
-      {/* Header */}
+      {/* Header with save status */}
       <div className="navbar bg-base-100 border-b border-base-200">
         <div className="flex-1">
           <Link
-            href="/ru/examples/listing-creation-ux"
+            href="/ru/examples/listing-creation-ux-v2"
             className="btn btn-ghost"
           >
             <ChevronLeft className="w-5 h-5" />
             Назад к примерам
           </Link>
         </div>
-        <div className="flex-none">
-          <div className="badge badge-primary badge-lg">Без AI</div>
+        <div className="flex-none gap-2">
+          {/* История изменений */}
+          <div className="flex gap-1">
+            <button
+              onClick={undo}
+              disabled={historyIndex <= 0}
+              className="btn btn-ghost btn-sm"
+              title="Отменить"
+            >
+              <History className="w-4 h-4 rotate-180" />
+            </button>
+            <button
+              onClick={redo}
+              disabled={historyIndex >= history.length - 1}
+              className="btn btn-ghost btn-sm"
+              title="Повторить"
+            >
+              <History className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Статус сохранения */}
+          <div className="flex items-center gap-2">
+            {saveStatus === 'saved' && (
+              <>
+                <Cloud className="w-4 h-4 text-success" />
+                <span className="text-sm text-success">Сохранено</span>
+              </>
+            )}
+            {saveStatus === 'saving' && (
+              <>
+                <Cloud className="w-4 h-4 text-warning animate-pulse" />
+                <span className="text-sm text-warning">Сохраняется...</span>
+              </>
+            )}
+            {saveStatus === 'unsaved' && (
+              <>
+                <CloudOff className="w-4 h-4 text-base-content/50" />
+                <span className="text-sm text-base-content/50">
+                  Изменения не сохранены
+                </span>
+              </>
+            )}
+            {saveStatus === 'error' && (
+              <>
+                <AlertCircle className="w-4 h-4 text-error" />
+                <span className="text-sm text-error">Ошибка сохранения</span>
+              </>
+            )}
+          </div>
+
+          {lastSaved && (
+            <span className="text-xs text-base-content/50">
+              Последнее сохранение:{' '}
+              {new Date(lastSaved).toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          )}
+
+          <div className="badge badge-primary badge-lg">
+            Улучшенная версия
+          </div>
         </div>
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress Bar with motivation */}
       <div className="bg-base-200 py-4">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-4">
@@ -619,6 +868,13 @@ export default function BasicListingCreationPage() {
             <div className="text-sm text-base-content/70">
               Шаг {currentStep + 1} из {steps.length}
             </div>
+          </div>
+
+          {/* Motivational message */}
+          <div className="text-center mb-2">
+            <p className="text-sm font-medium text-primary">
+              {getMotivationalMessage()}
+            </p>
           </div>
 
           {/* Desktop Progress */}
@@ -715,7 +971,7 @@ export default function BasicListingCreationPage() {
 
             <div className="flex items-center gap-2">
               <button className="btn btn-ghost btn-sm">
-                <Clock className="w-4 h-4 mr-1" />
+                <Save className="w-4 h-4 mr-1" />
                 Сохранить черновик
               </button>
             </div>

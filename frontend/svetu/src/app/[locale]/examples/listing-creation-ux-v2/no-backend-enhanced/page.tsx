@@ -25,9 +25,18 @@ import {
   Shield,
   Award,
   Info,
+  Lightbulb,
+  AlertCircle,
+  Volume2,
+  Instagram,
+  Facebook,
+  Clock as ClockIcon,
+  ThumbsUp,
+  FileText,
+  Users,
 } from 'lucide-react';
 
-export default function NoBackendListingCreationPage() {
+export default function NoBackendEnhancedListingCreationPage() {
   const [currentView, setCurrentView] = useState<
     'start' | 'create' | 'preview'
   >('start');
@@ -46,7 +55,19 @@ export default function NoBackendListingCreationPage() {
     title: '',
     category: '',
     price: '',
+    description: '',
   });
+  
+  // Состояние для сравнения с похожими
+  const [showPriceComparison, setShowPriceComparison] = useState(false);
+  const [similarListings, setSimilarListings] = useState<any[]>([]);
+  
+  // Состояние для шаблонов описаний
+  const [descriptionTemplate, setDescriptionTemplate] = useState('');
+  
+  // Оптимальное время публикации
+  const [optimalPublishTime, setOptimalPublishTime] = useState('');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const controls = useAnimation();
 
@@ -114,6 +135,73 @@ export default function NoBackendListingCreationPage() {
     ],
   };
 
+  // Шаблоны описаний по категориям
+  const descriptionTemplates: Record<string, string> = {
+    electronics: `📱 Состояние: [отличное/хорошее/новое]
+✅ Комплектация: [что входит в комплект]
+📦 Причина продажи: [обновление/не используется]
+🔋 Батарея держит: [время работы]
+💎 Особенности: [что особенного]`,
+    
+    fashion: `👕 Размер: [точный размер]
+📏 Параметры: [обхват груди/талии]
+🧵 Состав: [материал]
+✨ Состояние: [новое/б/у]
+📸 На фото: [рост модели]`,
+    
+    home: `🏠 Размеры: [длина x ширина x высота]
+📦 Состояние: [новое/б/у]
+🛠️ Сборка: [требуется/не требуется]
+🚚 Самовывоз: [адрес]
+💡 Особенности: [что особенного]`,
+    
+    auto: `🚗 Пробег: [км]
+⛽ Расход: [л/100км]
+🔧 ТО: [когда было]
+📋 Документы: [в порядке]
+🛡️ Страховка: [до когда]`,
+  };
+
+  // Симулированные данные похожих объявлений
+  const getSimilarListings = () => {
+    return [
+      {
+        id: 1,
+        title: 'iPhone 13 Pro 256GB Space Gray',
+        price: 68000,
+        views: 245,
+        daysAgo: 2,
+        sold: false,
+      },
+      {
+        id: 2,
+        title: 'iPhone 13 Pro 128GB Blue',
+        price: 62000,
+        views: 189,
+        daysAgo: 5,
+        sold: true,
+      },
+      {
+        id: 3,
+        title: 'iPhone 13 Pro 512GB Gold',
+        price: 75000,
+        views: 156,
+        daysAgo: 1,
+        sold: false,
+      },
+    ];
+  };
+
+  // Определение оптимального времени публикации
+  const getOptimalPublishTime = () => {
+    const times = [
+      { time: '19:00-21:00', activity: 'Высокая', icon: '🔥' },
+      { time: '12:00-13:00', activity: 'Средняя', icon: '👍' },
+      { time: '09:00-10:00', activity: 'Средняя', icon: '👍' },
+    ];
+    return times[0]; // Возвращаем лучшее время
+  };
+
   // Simulated quick templates
   const quickTemplates = [
     {
@@ -177,10 +265,23 @@ export default function NoBackendListingCreationPage() {
           title: 'iPhone 13 Pro, 256GB, Pacific Blue',
           category: 'electronics',
           price: '65000',
+          description: 'Телефон в отличном состоянии, использовался аккуратно. Полный комплект, есть чек.',
         });
+        
+        // Показываем сравнение цен
+        setSimilarListings(getSimilarListings());
+        setShowPriceComparison(true);
       }, 1000);
     }
   }, [formData.images, suggestions.title]);
+
+  // Проверка на наличие контактов в описании
+  const checkForContactInfo = (text: string) => {
+    const phoneRegex = /(\+?\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g;
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    
+    return phoneRegex.test(text) || emailRegex.test(text);
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -188,6 +289,18 @@ export default function NoBackendListingCreationPage() {
       const newImages = Array.from(files).map((file) =>
         URL.createObjectURL(file)
       );
+      
+      // Проверка качества изображений
+      newImages.forEach((imgUrl, index) => {
+        const img = new window.Image();
+        img.src = imgUrl;
+        img.onload = () => {
+          if (img.width < 800 || img.height < 600) {
+            console.log(`Image ${index + 1} has low quality`);
+          }
+        };
+      });
+      
       setFormData({
         ...formData,
         images: [...formData.images, ...newImages].slice(0, 8),
@@ -211,11 +324,21 @@ export default function NoBackendListingCreationPage() {
       title: suggestions.title,
       category: suggestions.category,
       price: suggestions.price,
+      description: suggestions.description,
     });
     controls.start({
       scale: [1, 1.05, 1],
       transition: { duration: 0.3 },
     });
+  };
+
+  const applyDescriptionTemplate = () => {
+    if (formData.category && descriptionTemplates[formData.category]) {
+      setFormData({
+        ...formData,
+        description: descriptionTemplates[formData.category],
+      });
+    }
   };
 
   const renderStartView = () => (
@@ -234,10 +357,10 @@ export default function NoBackendListingCreationPage() {
           className="text-center mb-12"
         >
           <h1 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Продайте быстрее, чем заварится кофе ☕
+            Продайте быстрее с умными подсказками 🚀
           </h1>
           <p className="text-xl text-base-content/70 mb-8">
-            Новый опыт создания объявлений — проще, быстрее, умнее
+            AI-подсказки, шаблоны, сравнение цен — всё для успешной продажи
           </p>
 
           {/* Stats */}
@@ -248,8 +371,8 @@ export default function NoBackendListingCreationPage() {
               transition={{ delay: 0.2 }}
               className="text-center"
             >
-              <div className="text-3xl font-bold text-primary">3 мин</div>
-              <div className="text-sm text-base-content/60">в среднем</div>
+              <div className="text-3xl font-bold text-primary">2 мин</div>
+              <div className="text-sm text-base-content/60">создание</div>
             </motion.div>
             <motion.div
               initial={{ scale: 0 }}
@@ -257,7 +380,7 @@ export default function NoBackendListingCreationPage() {
               transition={{ delay: 0.3 }}
               className="text-center"
             >
-              <div className="text-3xl font-bold text-success">95%</div>
+              <div className="text-3xl font-bold text-success">98%</div>
               <div className="text-sm text-base-content/60">завершают</div>
             </motion.div>
             <motion.div
@@ -266,7 +389,7 @@ export default function NoBackendListingCreationPage() {
               transition={{ delay: 0.4 }}
               className="text-center"
             >
-              <div className="text-3xl font-bold text-secondary">5x</div>
+              <div className="text-3xl font-bold text-secondary">10x</div>
               <div className="text-sm text-base-content/60">
                 больше просмотров
               </div>
@@ -293,9 +416,15 @@ export default function NoBackendListingCreationPage() {
                 <p className="opacity-90 mb-4">
                   Загрузите фото товара, а мы поможем с остальным
                 </p>
-                <div className="badge badge-lg badge-warning gap-2">
-                  <Zap className="w-4 h-4" />
-                  Быстрый старт
+                <div className="flex gap-2 justify-center">
+                  <div className="badge badge-lg badge-warning gap-2">
+                    <Zap className="w-4 h-4" />
+                    Быстрый старт
+                  </div>
+                  <div className="badge badge-lg badge-info gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    AI подсказки
+                  </div>
                 </div>
               </div>
             </label>
@@ -310,12 +439,37 @@ export default function NoBackendListingCreationPage() {
             />
           </motion.div>
 
+          {/* Social Import */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mb-6"
+          >
+            <div className="text-center mb-4">
+              <h3 className="font-semibold">Импорт из соцсетей</h3>
+              <p className="text-sm text-base-content/60">
+                Уже выложили товар в соцсетях? Импортируйте одним кликом
+              </p>
+            </div>
+            <div className="flex gap-2 justify-center">
+              <button className="btn btn-outline gap-2">
+                <Instagram className="w-4 h-4" />
+                Instagram
+              </button>
+              <button className="btn btn-outline gap-2">
+                <Facebook className="w-4 h-4" />
+                Facebook
+              </button>
+            </div>
+          </motion.div>
+
           {/* Alternative Options */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
             <motion.div
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.4 }}
             >
               <button
                 onClick={() => {
@@ -339,7 +493,7 @@ export default function NoBackendListingCreationPage() {
             <motion.div
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.5 }}
             >
               <button
                 onClick={() => {
@@ -365,7 +519,7 @@ export default function NoBackendListingCreationPage() {
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.6 }}
           >
             <h3 className="text-center font-semibold mb-4 text-base-content/70">
               Или выберите готовый шаблон
@@ -510,6 +664,16 @@ export default function NoBackendListingCreationPage() {
                   </label>
                 )}
               </div>
+
+              {/* Рекомендации по фото */}
+              {formData.images.length > 0 && formData.images.length < 4 && (
+                <div className="alert alert-warning mt-4">
+                  <Lightbulb className="w-4 h-4" />
+                  <span className="text-sm">
+                    Добавьте еще {4 - formData.images.length} фото для лучших продаж
+                  </span>
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -563,13 +727,16 @@ export default function NoBackendListingCreationPage() {
                 </div>
               )}
 
-              {/* Price */}
+              {/* Price with comparison */}
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold">Цена</span>
-                  <span className="label-text-alt text-success">
-                    📊 Средняя: 45.000 РСД
-                  </span>
+                  <button
+                    onClick={() => setShowPriceComparison(!showPriceComparison)}
+                    className="label-text-alt link link-primary"
+                  >
+                    Сравнить с похожими
+                  </button>
                 </label>
                 <label className="input-group">
                   <input
@@ -583,23 +750,85 @@ export default function NoBackendListingCreationPage() {
                   />
                   <span>РСД</span>
                 </label>
+                
+                {/* Price comparison */}
+                {showPriceComparison && similarListings.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <h4 className="text-sm font-semibold">Похожие объявления:</h4>
+                    {similarListings.map((listing) => (
+                      <div
+                        key={listing.id}
+                        className="flex items-center justify-between text-sm p-2 bg-base-100 rounded"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium">{listing.title}</p>
+                          <p className="text-xs text-base-content/60">
+                            <Eye className="w-3 h-3 inline mr-1" />
+                            {listing.views} просмотров • {listing.daysAgo} дн. назад
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold">{listing.price.toLocaleString()} РСД</p>
+                          {listing.sold && (
+                            <span className="badge badge-success badge-xs">Продано</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Quick Description */}
+              {/* Quick Description with templates */}
               {!quickMode && (
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">Описание</span>
                     <span className="label-text-alt">Опционально</span>
                   </label>
-                  <textarea
-                    className="textarea textarea-bordered h-20"
-                    placeholder="Добавьте детали..."
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  />
+                  <div className="relative">
+                    <textarea
+                      className="textarea textarea-bordered h-20 w-full"
+                      placeholder="Добавьте детали..."
+                      value={formData.description}
+                      onChange={(e) => {
+                        const newDescription = e.target.value;
+                        setFormData({ ...formData, description: newDescription });
+                        
+                        // Проверка на контакты
+                        if (checkForContactInfo(newDescription)) {
+                          console.log('Contact info detected!');
+                        }
+                      }}
+                    />
+                    <div className="absolute bottom-2 right-2 flex gap-1">
+                      <button className="btn btn-xs btn-ghost gap-1">
+                        <Volume2 className="w-3 h-3" />
+                        Диктовка
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Шаблоны описаний */}
+                  {formData.category && (
+                    <button
+                      onClick={applyDescriptionTemplate}
+                      className="btn btn-outline btn-sm mt-2 gap-1"
+                    >
+                      <FileText className="w-3 h-3" />
+                      Использовать шаблон для {formData.category}
+                    </button>
+                  )}
+                  
+                  {/* Предупреждение о контактах */}
+                  {checkForContactInfo(formData.description) && (
+                    <div className="alert alert-warning mt-2">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="text-sm">
+                        Контактные данные в описании запрещены правилами
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -693,6 +922,25 @@ export default function NoBackendListingCreationPage() {
             </div>
           </div>
 
+          {/* Optimal time to publish */}
+          <div className="card bg-gradient-to-r from-warning/10 to-warning/5 border-2 border-warning/20">
+            <div className="card-body">
+              <h3 className="card-title text-base">
+                <ClockIcon className="w-4 h-4" />
+                Оптимальное время публикации
+              </h3>
+              <p className="text-sm">
+                Сейчас <span className="font-bold">{new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
+              </p>
+              <p className="text-sm">
+                Рекомендуем опубликовать в <span className="font-bold text-warning">19:00-21:00</span> для максимального охвата
+              </p>
+              <button className="btn btn-warning btn-sm mt-2">
+                Запланировать на 19:00
+              </button>
+            </div>
+          </div>
+
           {/* Quick Actions */}
           <div className="flex gap-3">
             <button
@@ -721,7 +969,7 @@ export default function NoBackendListingCreationPage() {
             <div>
               <h3 className="font-bold text-sm">Совет дня</h3>
               <p className="text-xs">
-                Объявления с 3+ фото продаются в 2 раза быстрее
+                Объявления с полным описанием продаются в 3 раза быстрее
               </p>
             </div>
           </motion.div>
@@ -814,7 +1062,7 @@ export default function NoBackendListingCreationPage() {
               </div>
 
               {formData.description && (
-                <p className="text-base-content/80 mb-4">
+                <p className="text-base-content/80 mb-4 whitespace-pre-wrap">
                   {formData.description}
                 </p>
               )}
@@ -869,34 +1117,57 @@ export default function NoBackendListingCreationPage() {
             </div>
           </motion.div>
 
+          {/* Social sharing preview */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="card bg-base-100 mb-6"
+          >
+            <div className="card-body">
+              <h3 className="font-bold mb-4 flex items-center gap-2">
+                <Share2 className="w-5 h-5" />
+                Предпросмотр в соцсетях
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="border rounded-lg p-4">
+                  <p className="text-sm font-semibold mb-2">WhatsApp</p>
+                  <div className="bg-green-50 rounded p-3">
+                    <p className="font-medium text-sm">{formData.title}</p>
+                    <p className="text-xs text-gray-600">{formData.price} РСД</p>
+                  </div>
+                </div>
+                <div className="border rounded-lg p-4">
+                  <p className="text-sm font-semibold mb-2">Telegram</p>
+                  <div className="bg-blue-50 rounded p-3">
+                    <p className="font-medium text-sm">{formData.title}</p>
+                    <p className="text-xs text-gray-600">{formData.price} РСД</p>
+                  </div>
+                </div>
+                <div className="border rounded-lg p-4">
+                  <p className="text-sm font-semibold mb-2">Facebook</p>
+                  <div className="bg-gray-50 rounded p-3">
+                    <p className="font-medium text-sm">{formData.title}</p>
+                    <p className="text-xs text-gray-600">{formData.price} РСД</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Benefits Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.4 }}
               className="card bg-primary/10 border-2 border-primary/20"
             >
               <div className="card-body text-center py-6">
                 <TrendingUp className="w-8 h-8 text-primary mx-auto mb-2" />
                 <h3 className="font-bold">Больше просмотров</h3>
                 <p className="text-sm text-base-content/70">
-                  Ваше объявление увидят тысячи покупателей
-                </p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="card bg-success/10 border-2 border-success/20"
-            >
-              <div className="card-body text-center py-6">
-                <Shield className="w-8 h-8 text-success mx-auto mb-2" />
-                <h3 className="font-bold">Безопасная сделка</h3>
-                <p className="text-sm text-base-content/70">
-                  Мы защищаем ваши данные и помогаем с оплатой
+                  AI-оптимизация увеличит охват
                 </p>
               </div>
             </motion.div>
@@ -905,13 +1176,28 @@ export default function NoBackendListingCreationPage() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
+              className="card bg-success/10 border-2 border-success/20"
+            >
+              <div className="card-body text-center py-6">
+                <Shield className="w-8 h-8 text-success mx-auto mb-2" />
+                <h3 className="font-bold">Безопасная сделка</h3>
+                <p className="text-sm text-base-content/70">
+                  Мы защищаем ваши данные
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
               className="card bg-secondary/10 border-2 border-secondary/20"
             >
               <div className="card-body text-center py-6">
                 <Award className="w-8 h-8 text-secondary mx-auto mb-2" />
-                <h3 className="font-bold">Премиум размещение</h3>
+                <h3 className="font-bold">Умное продвижение</h3>
                 <p className="text-sm text-base-content/70">
-                  Поднимите объявление в топ за 99 РСД
+                  Автоматическое продвижение в нужное время
                 </p>
               </div>
             </motion.div>
@@ -921,16 +1207,32 @@ export default function NoBackendListingCreationPage() {
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.7 }}
             className="flex gap-3"
           >
             <button className="btn btn-primary btn-lg flex-1">
-              Опубликовать бесплатно
+              Опубликовать сейчас
               <Sparkles className="w-5 h-5 ml-1" />
             </button>
             <button className="btn btn-outline btn-lg">
-              Сохранить черновик
+              <ClockIcon className="w-5 h-5 mr-1" />
+              Запланировать
             </button>
+          </motion.div>
+
+          {/* Social proof */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center mt-8"
+          >
+            <div className="flex items-center justify-center gap-2 text-sm text-base-content/60">
+              <Users className="w-4 h-4" />
+              <span>
+                <span className="font-semibold">2,345</span> продавцов уже воспользовались умными подсказками сегодня
+              </span>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -943,7 +1245,7 @@ export default function NoBackendListingCreationPage() {
       <div className="navbar bg-base-100 border-b border-base-200 fixed top-0 z-50">
         <div className="flex-1">
           <Link
-            href="/ru/examples/listing-creation-ux"
+            href="/ru/examples/listing-creation-ux-v2"
             className="btn btn-ghost"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -952,7 +1254,7 @@ export default function NoBackendListingCreationPage() {
         </div>
         <div className="flex-none">
           <div className="badge badge-warning badge-lg">
-            Без изменений Backend
+            Улучшенная версия
           </div>
         </div>
       </div>
