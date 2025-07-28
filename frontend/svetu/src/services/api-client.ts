@@ -324,11 +324,13 @@ class ApiClient {
 
   async delete<T = any>(
     endpoint: string,
-    options?: ApiClientOptions
+    options?: ApiClientOptions & { data?: any }
   ): Promise<ApiResponse<T>> {
+    const { data, ...restOptions } = options || {};
     return this.request<T>(endpoint, {
-      ...options,
+      ...restOptions,
       method: 'DELETE',
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"backend/internal/logger"
 	"backend/pkg/jwt"
 
 	"github.com/gofiber/fiber/v2"
@@ -34,6 +35,14 @@ func GenerateSessionToken() string {
 }
 
 func ErrorResponse(c *fiber.Ctx, status int, message string) error {
+	// Логируем ошибку для отладки
+	if status == 500 {
+		logger.Error().
+			Str("path", c.Path()).
+			Str("error_message", message).
+			Str("method", c.Method()).
+			Msg("ErrorResponse 500 called")
+	}
 	return c.Status(status).JSON(fiber.Map{
 		"error": message,
 	})

@@ -50,6 +50,7 @@
     "continue": "Nastavi",
     "change": "Promeni",
     "select": "Izaberi",
+    "progress": "Napredak",
     "accessDenied": "Pristup odbijen",
     "you": "ti",
     "send": "Pošalji",
@@ -120,7 +121,8 @@
     "search": "Pretraga",
     "create": "Dodaj",
     "chats": "Poruke",
-    "profile": "Profil"
+    "profile": "Profil",
+    "close": "Zatvori"
   },
   "checkout": {
     "title": "Checkout",
@@ -901,7 +903,42 @@
       "seoDescription": "SEO Description",
       "seoKeywords": "SEO Keywords",
       "totalCategories": "Total Categories",
-      "manageAttributes": "Manage Attributes"
+      "manageAttributes": "Manage Attributes",
+      "keywords": {
+        "title": "Ključne reči",
+        "addKeyword": "Dodaj ključnu reč",
+        "keywordPlaceholder": "Unesite ključnu reč",
+        "keywordRequired": "Ključna reč je obavezna",
+        "weight": "Težina",
+        "negative": "Negativna",
+        "allLanguages": "Svi jezici",
+        "add": "Dodaj",
+        "addSuccess": "Ključna reč dodana",
+        "addError": "Greška pri dodavanju ključne reči",
+        "deleteConfirm": "Obrisati ovu ključnu reč?",
+        "deleteSuccess": "Ključna reč obrisana",
+        "deleteError": "Greška pri brisanju ključne reči",
+        "updateSuccess": "Ključna reč ažurirana",
+        "updateError": "Greška pri ažuriranju ključne reči",
+        "loadError": "Greška pri učitavanju ključnih reči",
+        "noKeywords": "Nema pronađenih ključnih reči",
+        "usage": "Korišćenje",
+        "types": {
+          "general": "Opšte",
+          "main": "Glavna",
+          "synonym": "Sinonim",
+          "brand": "Brend",
+          "attribute": "Atribut"
+        },
+        "info": {
+          "title": "Informacije o sistemu ključnih reči",
+          "weights": "Težina (0-10): utiče na prioritet u pretragama kategorija",
+          "types": "Tipovi: glavne, sinonimi, brendovi, atributi",
+          "negative": "Negativne reči: ako su pronađene, kategorija se isključuje",
+          "languages": "Jezici: ru, en, sr ili * za sve jezike",
+          "statistics": "Statistike: broj korišćenja i stopa uspešnosti"
+        }
+      }
     },
     "attributes": {
       "title": "Attributes",
@@ -2371,6 +2408,10 @@
       },
       "category": {
         "title": "Kategorija"
+      },
+      "category_detection": {
+        "low_confidence": "Kategorija je određena sa niskom sigurnošću. Molimo proverite i prilagodite po potrebi",
+        "success": "Kategorija određena: {category}"
       },
       "title_section": {
         "title": "Naslov (A/B testiranje)",

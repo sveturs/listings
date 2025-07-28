@@ -32,24 +32,26 @@ export default function CreateListingChoicePage() {
   const [selectedOption, setSelectedOption] = useState<'free' | 'ai' | null>(
     null
   );
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = () => {
+  const handleOptionSelect = (option: 'free' | 'ai') => {
     if (!user) {
       toast.error(t('auth_required'));
       router.push('/');
       return;
     }
 
-    if (!selectedOption) {
-      toast.error(t('choice.select_error'));
-      return;
-    }
+    setSelectedOption(option);
+    setIsLoading(true);
 
-    if (selectedOption === 'free') {
-      router.push(`/${locale}/create-listing-smart`);
-    } else {
-      router.push(`/${locale}/create-listing-ai`);
-    }
+    // Небольшая задержка для визуального эффекта выбора
+    setTimeout(() => {
+      if (option === 'free') {
+        router.push(`/${locale}/create-listing-smart`);
+      } else {
+        router.push(`/${locale}/create-listing-ai`);
+      }
+    }, 300);
   };
 
   const freeFeatures = [
@@ -92,12 +94,12 @@ export default function CreateListingChoicePage() {
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            onClick={() => setSelectedOption('free')}
+            onClick={() => handleOptionSelect('free')}
             className={`card cursor-pointer transition-all ${
               selectedOption === 'free'
                 ? 'ring-4 ring-primary shadow-2xl'
                 : 'hover:shadow-xl'
-            }`}
+            } ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <div className="card-body">
               {/* Badge */}
@@ -107,7 +109,11 @@ export default function CreateListingChoicePage() {
                 </div>
                 {selectedOption === 'free' && (
                   <div className="badge badge-primary badge-lg">
-                    {t('choice.selected')}
+                    {isLoading ? (
+                      <span className="loading loading-spinner loading-xs"></span>
+                    ) : (
+                      t('choice.selected')
+                    )}
                   </div>
                 )}
               </div>
@@ -184,12 +190,12 @@ export default function CreateListingChoicePage() {
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            onClick={() => setSelectedOption('ai')}
+            onClick={() => handleOptionSelect('ai')}
             className={`card cursor-pointer transition-all ${
               selectedOption === 'ai'
                 ? 'ring-4 ring-secondary shadow-2xl'
                 : 'hover:shadow-xl'
-            }`}
+            } ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <div className="card-body">
               {/* Badge */}
@@ -200,7 +206,11 @@ export default function CreateListingChoicePage() {
                 </div>
                 {selectedOption === 'ai' && (
                   <div className="badge badge-primary badge-lg">
-                    {t('choice.selected')}
+                    {isLoading ? (
+                      <span className="loading loading-spinner loading-xs"></span>
+                    ) : (
+                      t('choice.selected')
+                    )}
                   </div>
                 )}
               </div>
@@ -353,28 +363,6 @@ export default function CreateListingChoicePage() {
               </tbody>
             </table>
           </div>
-        </motion.div>
-
-        {/* Action Button */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-center mt-12"
-        >
-          <button
-            onClick={handleContinue}
-            disabled={!selectedOption}
-            className="btn btn-primary btn-lg gap-2"
-          >
-            {t('choice.continue')}
-            <ChevronRight className="w-5 h-5" />
-          </button>
-          {!selectedOption && (
-            <p className="text-sm text-base-content/60 mt-2">
-              {t('choice.select_option_hint')}
-            </p>
-          )}
         </motion.div>
       </div>
     </div>

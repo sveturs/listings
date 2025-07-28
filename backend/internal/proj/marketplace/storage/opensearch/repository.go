@@ -1170,23 +1170,37 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 		needStorefrontInfo := listing.City == "" || listing.Country == "" || listing.Location == "" ||
 			listing.Latitude == nil || listing.Longitude == nil
 
-		if needStorefrontInfo {
-			logger.Info().Msgf("Fetching storefront %d data for listing %d address info", *listing.StorefrontID, listing.ID)
-			var storefront models.Storefront
-			err := storage.QueryRow(context.Background(), `
-                SELECT name, city, address, country, latitude, longitude
-                FROM user_storefronts
-                WHERE id = $1
-            `, *listing.StorefrontID).Scan(
-				&storefront.Name,
-				&storefront.City,
-				&storefront.Address,
-				&storefront.Country,
-				&storefront.Latitude,
-				&storefront.Longitude,
-			)
+		// Всегда загружаем информацию о витрине для индексации
+		logger.Info().Msgf("Fetching storefront %d data for listing %d", *listing.StorefrontID, listing.ID)
+		var storefront models.Storefront
+		err := storage.QueryRow(context.Background(), `
+			SELECT id, name, slug, city, address, country, latitude, longitude, rating, is_verified
+			FROM user_storefronts
+			WHERE id = $1
+		`, *listing.StorefrontID).Scan(
+			&storefront.ID,
+			&storefront.Name,
+			&storefront.Slug,
+			&storefront.City,
+			&storefront.Address,
+			&storefront.Country,
+			&storefront.Latitude,
+			&storefront.Longitude,
+			&storefront.Rating,
+			&storefront.IsVerified,
+		)
 
-			if err == nil {
+		if err == nil {
+			// Добавляем полную информацию о витрине в документ
+			doc["storefront"] = map[string]interface{}{
+				"id":          storefront.ID,
+				"name":        storefront.Name,
+				"slug":        storefront.Slug,
+				"rating":      storefront.Rating,
+				"is_verified": storefront.IsVerified,
+			}
+
+			if needStorefrontInfo {
 				if listing.City == "" && storefront.City != "" {
 					doc["city"] = storefront.City
 				}
@@ -1206,9 +1220,9 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 					}
 					doc["show_on_map"] = true
 				}
-			} else {
-				logger.Info().Msgf("WARNING: Failed to load storefront data for listing %d: %v", listing.ID, err)
 			}
+		} else {
+			logger.Info().Msgf("WARNING: Failed to load storefront data for listing %d: %v", listing.ID, err)
 		}
 	} else {
 		logger.Info().Msgf("DEBUG: Listing %d has no storefront_id", listing.ID)
@@ -2850,6 +2864,34 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 	if listing.OldPrice > 0 && listing.OldPrice > listing.Price {
 		listing.HasDiscount = true
 	}
+
+	// Обрабатываем информацию о витрине
+	if storefrontID, ok := doc["storefront_id"].(float64); ok {
+		sfID := int(storefrontID)
+		listing.StorefrontID = &sfID
+	}
+
+	if storefrontData, ok := doc["storefront"].(map[string]interface{}); ok {
+		storefront := &models.Storefront{}
+
+		if id, ok := storefrontData["id"].(float64); ok {
+			storefront.ID = int(id)
+		}
+		if name, ok := storefrontData["name"].(string); ok {
+			storefront.Name = name
+		}
+		if slug, ok := storefrontData["slug"].(string); ok {
+			storefront.Slug = slug
+		}
+		if rating, ok := storefrontData["rating"].(float64); ok {
+			storefront.Rating = rating
+		}
+		if isVerified, ok := storefrontData["is_verified"].(bool); ok {
+			storefront.IsVerified = isVerified
+		}
+
+		listing.Storefront = storefront
+	}
 	if listing.ID == 18 {
 		logger.Info().Msgf("DEBUG: Преобразование документа для объявления ID=18")
 		logger.Info().Msgf("DEBUG: Source документа: %+v", doc)
@@ -2861,4 +2903,88 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		}
 	}
 	return listing, nil
+}
+
+// SimilarListing представляет похожее объявление с оценкой схожести
+type SimilarListing struct {
+	ID         int32   `json:"id"`
+	CategoryID int32   `json:"category_id"`
+	Title      string  `json:"title"`
+	Score      float64 `json:"score"`
+}
+
+// FindSimilarListings находит похожие объявления используя more_like_this запрос
+func (r *Repository) FindSimilarListings(ctx context.Context, text string, size int) ([]*SimilarListing, error) {
+	// Создаем more_like_this запрос
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"more_like_this": map[string]interface{}{
+				"fields": []string{
+					"title^3",
+					"description^2",
+					"all_attributes_text",
+					"car_keywords",
+					"real_estate_attributes_combined",
+				},
+				"like":            text,
+				"min_term_freq":   1,
+				"min_doc_freq":    1,
+				"max_query_terms": 25,
+				"analyzer":        "standard",
+			},
+		},
+		"size":    size,
+		"_source": []string{"id", "category_id", "title"},
+	}
+
+	// Выполняем запрос
+	response, err := r.client.Search(ctx, r.indexName, query)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения more_like_this запроса: %w", err)
+	}
+
+	// Парсим результаты
+	results := make([]*SimilarListing, 0)
+
+	// Парсим JSON ответ
+	var responseMap map[string]interface{}
+	if err := json.Unmarshal(response, &responseMap); err != nil {
+		return nil, fmt.Errorf("ошибка парсинга ответа: %w", err)
+	}
+
+	if hits, ok := responseMap["hits"].(map[string]interface{}); ok {
+		if hitsArray, ok := hits["hits"].([]interface{}); ok {
+			for _, hitI := range hitsArray {
+				if hit, ok := hitI.(map[string]interface{}); ok {
+					if source, ok := hit["_source"].(map[string]interface{}); ok {
+						listing := &SimilarListing{}
+
+						// Извлекаем ID
+						if idFloat, ok := source["id"].(float64); ok {
+							listing.ID = int32(idFloat)
+						}
+
+						// Извлекаем CategoryID
+						if catIDFloat, ok := source["category_id"].(float64); ok {
+							listing.CategoryID = int32(catIDFloat)
+						}
+
+						// Извлекаем Title
+						if title, ok := source["title"].(string); ok {
+							listing.Title = title
+						}
+
+						// Извлекаем Score
+						if score, ok := hit["_score"].(float64); ok {
+							listing.Score = score
+						}
+
+						results = append(results, listing)
+					}
+				}
+			}
+		}
+	}
+
+	return results, nil
 }

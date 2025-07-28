@@ -2120,7 +2120,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
                     t.translated_text
                 ) as translations
             FROM translations t
-            WHERE t.entity_type = 'marketplace_category'
+            WHERE t.entity_type = 'category'
             AND t.field_name = 'name'
             GROUP BY t.entity_id
         )
@@ -2226,7 +2226,7 @@ func (s *Storage) GetAllCategories(ctx context.Context) ([]models.MarketplaceCat
                     t.translated_text
                 ) AS translations
             FROM marketplace_categories c
-            LEFT JOIN translations t ON t.entity_id = c.id AND t.entity_type = 'marketplace_category' AND t.field_name = 'name'
+            LEFT JOIN translations t ON t.entity_id = c.id AND t.entity_type = 'category' AND t.field_name = 'name'
             GROUP BY c.id
         )
         SELECT

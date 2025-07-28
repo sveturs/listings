@@ -119,6 +119,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 				Err(err).
 				Str("error_type", fmt.Sprintf("%T", err)).
 				Str("path", c.Path()).
+				Str("method", c.Method()).
+				Str("stack", fmt.Sprintf("%+v", err)).
 				Msg("Error in handler")
 
 			// Стандартная обработка ошибки

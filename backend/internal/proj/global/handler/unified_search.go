@@ -371,9 +371,15 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 			continue
 		}
 
+		// Определяем тип товара на основе StorefrontID
+		productType := "marketplace"
+		if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+			productType = "storefront"
+		}
+
 		item := UnifiedSearchItem{
 			ID:          "ml_" + strconv.Itoa(listing.ID),
-			ProductType: "marketplace",
+			ProductType: productType,
 			ProductID:   listing.ID,
 			Name:        listing.Title,
 			Description: listing.Description,
@@ -385,6 +391,23 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 			Score:       1.0, // TODO: получить реальный score из OpenSearch
 			ViewsCount:  listing.ViewsCount,
 			CreatedAt:   &listing.CreatedAt,
+		}
+
+		// Если это товар витрины, нужно добавить информацию о витрине
+		if productType == "storefront" && listing.StorefrontID != nil {
+			// Получаем информацию о витрине из базы данных
+			storefront, err := h.services.Storefront().GetByID(ctx, *listing.StorefrontID)
+			if err != nil {
+				logger.Error().Err(err).Int("storefront_id", *listing.StorefrontID).Msg("Failed to get storefront info")
+			} else if storefront != nil {
+				item.Storefront = &UnifiedStorefrontInfo{
+					ID:         storefront.ID,
+					Slug:       storefront.Slug,
+					Name:       storefront.Name,
+					Rating:     storefront.Rating,
+					IsVerified: storefront.IsVerified,
+				}
+			}
 		}
 
 		items = append(items, item)

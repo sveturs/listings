@@ -27,6 +27,12 @@ export interface CreateListingRequest {
   // Язык оригинала
   original_language?: string;
 
+  // ID статистики определения категории для обновления success_rate
+  category_detection_stats_id?: number;
+  
+  // Ключевые слова, которые были использованы для определения категории
+  detected_keywords?: string[];
+
   // Региональные поля
   payment_methods?: string[];
   delivery_options?: string[];
@@ -98,6 +104,16 @@ export class ListingsService {
     // Добавляем язык оригинала, если он указан
     if (data.originalLanguage) {
       request.original_language = data.originalLanguage;
+    }
+
+    // Добавляем ID статистики определения категории
+    if (data.categoryDetectionStatsId) {
+      request.category_detection_stats_id = data.categoryDetectionStatsId;
+    }
+    
+    // Добавляем ключевые слова для определения категории
+    if (data.detectedKeywords && data.detectedKeywords.length > 0) {
+      request.detected_keywords = data.detectedKeywords;
     }
 
     // Отладочное логирование запроса к API

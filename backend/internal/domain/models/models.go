@@ -68,6 +68,7 @@ type (
 		CategoryPathSlugs []string                `json:"category_path_slugs,omitempty"`
 		CategoryPath      []string                `json:"category_path,omitempty"`
 		StorefrontID      *int                    `json:"storefront_id,omitempty"` // связь с витриной
+		Storefront        *Storefront             `json:"storefront,omitempty"`    // данные витрины
 		ExternalID        string                  `json:"external_id,omitempty"`
 		Attributes        []ListingAttributeValue `json:"attributes,omitempty"`
 		OldPrice          float64                 `json:"old_price,omitempty"`
@@ -80,25 +81,25 @@ type (
 )
 
 type MarketplaceCategory struct {
-	ID                int               `json:"id"`
-	Name              string            `json:"name"`
-	Slug              string            `json:"slug"`
-	ParentID          *int              `json:"parent_id,omitempty"`
-	Icon              string            `json:"icon,omitempty"`
-	Description       string            `json:"description,omitempty"`
-	IsActive          bool              `json:"is_active"`
-	CreatedAt         time.Time         `json:"created_at"`
+	ID                int               `json:"id" db:"id"`
+	Name              string            `json:"name" db:"name"`
+	Slug              string            `json:"slug" db:"slug"`
+	ParentID          *int              `json:"parent_id,omitempty" db:"parent_id"`
+	Icon              string            `json:"icon,omitempty" db:"icon"`
+	Description       string            `json:"description,omitempty" db:"description"`
+	IsActive          bool              `json:"is_active" db:"is_active"`
+	CreatedAt         time.Time         `json:"created_at" db:"created_at"`
 	Translations      map[string]string `json:"translations,omitempty"`
-	ListingCount      int               `json:"listing_count"`
-	HasCustomUI       bool              `json:"has_custom_ui,omitempty"`
-	CustomUIComponent string            `json:"custom_ui_component,omitempty"`
-	SortOrder         int               `json:"sort_order"`
-	Level             int               `json:"level"`
-	Count             int               `json:"count"`
-	ExternalID        string            `json:"external_id,omitempty"`
-	SEOTitle          string            `json:"seo_title,omitempty"`
-	SEODescription    string            `json:"seo_description,omitempty"`
-	SEOKeywords       string            `json:"seo_keywords,omitempty"`
+	ListingCount      int               `json:"listing_count" db:"listing_count"`
+	HasCustomUI       bool              `json:"has_custom_ui,omitempty" db:"has_custom_ui"`
+	CustomUIComponent string            `json:"custom_ui_component,omitempty" db:"custom_ui_component"`
+	SortOrder         int               `json:"sort_order" db:"sort_order"`
+	Level             int               `json:"level" db:"level"`
+	Count             int               `json:"count" db:"count"`
+	ExternalID        string            `json:"external_id,omitempty" db:"external_id"`
+	SEOTitle          string            `json:"seo_title,omitempty" db:"seo_title"`
+	SEODescription    string            `json:"seo_description,omitempty" db:"seo_description"`
+	SEOKeywords       string            `json:"seo_keywords,omitempty" db:"seo_keywords"`
 }
 
 type MarketplaceImage struct {
@@ -258,4 +259,61 @@ type CategoryTreeNode struct {
 	Translations      map[string]string  `json:"translations,omitempty"`
 	HasCustomUI       bool               `json:"has_custom_ui,omitempty"`
 	CustomUIComponent string             `json:"custom_ui_component,omitempty"`
+}
+
+// CategoryDetectionStats статистика определения категорий
+type CategoryDetectionStats struct {
+	ID                      int32                  `db:"id" json:"id"`
+	UserID                  *int32                 `db:"user_id" json:"user_id,omitempty"`
+	SessionID               string                 `db:"session_id" json:"session_id,omitempty"`
+	Method                  string                 `db:"method" json:"method"`
+	AIKeywords              []string               `db:"ai_keywords" json:"ai_keywords,omitempty"`
+	AIAttributes            map[string]interface{} `db:"ai_attributes" json:"ai_attributes,omitempty"`
+	AIDomain                string                 `db:"ai_domain" json:"ai_domain,omitempty"`
+	AIProductType           string                 `db:"ai_product_type" json:"ai_product_type,omitempty"`
+	AISuggestedCategoryID   *int32                 `db:"ai_suggested_category_id" json:"ai_suggested_category_id,omitempty"`
+	FinalCategoryID         *int32                 `db:"final_category_id" json:"final_category_id,omitempty"`
+	AlternativeCategories   []byte                 `db:"alternative_categories" json:"-"`
+	ConfidenceScore         *float64               `db:"confidence_score" json:"confidence_score,omitempty"`
+	SimilarityScore         *float64               `db:"similarity_score" json:"similarity_score,omitempty"`
+	KeywordScore            *float64               `db:"keyword_score" json:"keyword_score,omitempty"`
+	SimilarListingsFound    *int32                 `db:"similar_listings_found" json:"similar_listings_found,omitempty"`
+	TopSimilarListingID     *int32                 `db:"top_similar_listing_id" json:"top_similar_listing_id,omitempty"`
+	TopSimilarityScore      *float64               `db:"top_similarity_score" json:"top_similarity_score,omitempty"`
+	MatchedKeywords         []string               `db:"matched_keywords" json:"matched_keywords,omitempty"`
+	MatchedNegativeKeywords []string               `db:"matched_negative_keywords" json:"matched_negative_keywords,omitempty"`
+	ProcessingTimeMs        *int64                 `db:"processing_time_ms" json:"processing_time_ms,omitempty"`
+	UserConfirmed           *bool                  `db:"user_confirmed" json:"user_confirmed,omitempty"`
+	UserSelectedCategoryID  *int32                 `db:"user_selected_category_id" json:"user_selected_category_id,omitempty"`
+	CreatedAt               time.Time              `db:"created_at" json:"created_at"`
+}
+
+// CategoryKeyword модель ключевого слова категории
+type CategoryKeyword struct {
+	ID          int32     `json:"id"`
+	CategoryID  int32     `json:"category_id"`
+	Keyword     string    `json:"keyword"`
+	Language    string    `json:"language"`
+	Weight      float64   `json:"weight"`
+	KeywordType string    `json:"keyword_type"`
+	IsNegative  bool      `json:"is_negative"`
+	Source      string    `json:"source"`
+	UsageCount  int32     `json:"usage_count"`
+	SuccessRate float64   `json:"success_rate"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// CategoryKeywordRequest запрос на создание ключевого слова
+type CategoryKeywordRequest struct {
+	Keyword     string  `json:"keyword" validate:"required"`
+	Language    string  `json:"language" validate:"required"`
+	Weight      float64 `json:"weight" validate:"gte=0,lte=10"`
+	KeywordType string  `json:"keyword_type" validate:"required"`
+	IsNegative  bool    `json:"is_negative"`
+}
+
+// CategoryKeywordUpdateRequest запрос на обновление ключевого слова
+type CategoryKeywordUpdateRequest struct {
+	Weight float64 `json:"weight" validate:"gte=0,lte=10"`
 }

@@ -190,6 +190,11 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   };
 
   const getItemUrl = () => {
+    // Для товаров витрин используем другой URL
+    if (item.product_type === 'storefront' && item.storefront_slug) {
+      return `/${locale}/storefronts/${item.storefront_slug}/products/${item.id}`;
+    }
+    // Для обычных объявлений маркетплейса
     return `/${locale}/marketplace/${item.id}`;
   };
 

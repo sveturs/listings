@@ -7,6 +7,7 @@ import { toast } from '@/utils/toast';
 import CategoryTree from './components/CategoryTree';
 import CategoryForm from './components/CategoryForm';
 import CategoryAttributesOptimized from './components/CategoryAttributesOptimized';
+import CategoryKeywordsModal from './components/CategoryKeywordsModal';
 
 export default function CategoriesPage() {
   const t = useTranslations('admin');
@@ -17,6 +18,7 @@ export default function CategoriesPage() {
   );
   const [showForm, setShowForm] = useState(false);
   const [showAttributes, setShowAttributes] = useState(false);
+  const [showKeywordsModal, setShowKeywordsModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -78,6 +80,11 @@ export default function CategoriesPage() {
     setSelectedCategory(category);
     setShowForm(false);
     setShowAttributes(true);
+  };
+
+  const handleManageKeywords = (category: Category) => {
+    setSelectedCategory(category);
+    setShowKeywordsModal(true);
   };
 
   const handleDeleteCategory = async (category: Category) => {
@@ -173,6 +180,7 @@ export default function CategoriesPage() {
                 onEdit={handleEditCategory}
                 onDelete={handleDeleteCategory}
                 onManageAttributes={handleManageAttributes}
+                onManageKeywords={handleManageKeywords}
                 onReorder={handleReorderCategories}
                 onMove={handleMoveCategory}
               />
@@ -234,6 +242,16 @@ export default function CategoriesPage() {
           )}
         </div>
       </div>
+
+      {/* Modal for managing keywords */}
+      {selectedCategory && (
+        <CategoryKeywordsModal
+          categoryId={selectedCategory.id}
+          categoryName={selectedCategory.name}
+          isOpen={showKeywordsModal}
+          onClose={() => setShowKeywordsModal(false)}
+        />
+      )}
     </div>
   );
 }

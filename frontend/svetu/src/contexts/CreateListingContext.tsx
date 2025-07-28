@@ -87,6 +87,12 @@ export interface CreateListingState {
   // Язык оригинала
   originalLanguage?: string;
 
+  // ID статистики определения категории
+  categoryDetectionStatsId?: number;
+  
+  // Ключевые слова, использованные для определения категории
+  detectedKeywords?: string[];
+
   // Метаданные
   isPublished: boolean;
   isDraft: boolean;

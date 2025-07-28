@@ -80,6 +80,7 @@
     "change": "Change",
     "required": "Required",
     "select": "Select",
+    "progress": "Progress",
     "accessDenied": "Access Denied",
     "minutes": "minutes",
     "km": "km",
@@ -340,7 +341,8 @@
     "search": "Search",
     "create": "Create",
     "chats": "Chats",
-    "profile": "Profile"
+    "profile": "Profile",
+    "close": "Close"
   },
   "header": {
     "nav": {
@@ -944,6 +946,41 @@
       "manageAttributes": "Manage Attributes",
       "translate": "Translate",
       "translationStatus": "Translation Status",
+      "keywords": {
+        "title": "Keywords",
+        "addKeyword": "Add Keyword",
+        "keywordPlaceholder": "Enter keyword",
+        "keywordRequired": "Keyword is required",
+        "weight": "Weight",
+        "negative": "Negative",
+        "allLanguages": "All languages",
+        "add": "Add",
+        "addSuccess": "Keyword added",
+        "addError": "Error adding keyword",
+        "deleteConfirm": "Delete this keyword?",
+        "deleteSuccess": "Keyword deleted",
+        "deleteError": "Error deleting keyword",
+        "updateSuccess": "Keyword updated",
+        "updateError": "Error updating keyword",
+        "loadError": "Error loading keywords",
+        "noKeywords": "No keywords found",
+        "usage": "Usage",
+        "types": {
+          "general": "General",
+          "main": "Main",
+          "synonym": "Synonym",
+          "brand": "Brand",
+          "attribute": "Attribute"
+        },
+        "info": {
+          "title": "Keywords System Information",
+          "weights": "Weight (0-10): affects priority in category search",
+          "types": "Types: main, synonyms, brands, attributes",
+          "negative": "Negative words: if found, category is excluded",
+          "languages": "Languages: ru, en, sr or * for all languages",
+          "statistics": "Statistics: usage count and success rate"
+        }
+      },
       "saveCategory": "Save Category",
       "cancelEdit": "Cancel",
       "deleteCategory": "Delete Category",
@@ -2286,6 +2323,10 @@
       "category": {
         "title": "Category"
       },
+      "category_detection": {
+        "low_confidence": "Category detected with low confidence. Please check and adjust if needed",
+        "success": "Category detected: {category}"
+      },
       "title_section": {
         "title": "Title (A/B testing)",
         "change": "Change",
@@ -2362,6 +2403,8 @@
         "ai_recommends": "AI recommends adding:",
         "category_title": "Category",
         "category_auto_selected": "AI automatically selected category: {category}",
+        "manual_category_selection": "Or select category manually:",
+        "select_category": "Select category",
         "title_ab_testing": "Title (A/B testing)",
         "change": "Change",
         "ai_choice": "AI choice",

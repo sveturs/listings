@@ -28,8 +28,6 @@ import {
   Lightbulb,
   AlertCircle,
   Volume2,
-  Instagram,
-  Facebook,
   Clock as ClockIcon,
   FileText,
   Users,
@@ -713,10 +711,6 @@ export default function CreateListingSmartPage() {
     }
   };
 
-  const handleSocialImport = (platform: string) => {
-    toast.info(`Импорт из ${platform} будет доступен в ближайшее время`);
-  };
-
   const renderStartView = () => (
     <motion.div
       initial={{ opacity: 0 }}
@@ -736,8 +730,7 @@ export default function CreateListingSmartPage() {
             Продайте быстрее с умными подсказками 🚀
           </h1>
           <p className="text-xl text-base-content/70 mb-8">
-            Шаблоны, сравнение цен, импорт из соцсетей — всё для успешной
-            продажи
+            Шаблоны, сравнение цен, умные подсказки — всё для успешной продажи
           </p>
 
           {/* Stats */}
@@ -842,37 +835,6 @@ export default function CreateListingSmartPage() {
               className="hidden"
               onChange={handleImageUpload}
             />
-          </motion.div>
-
-          {/* Social Import */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mb-6"
-          >
-            <div className="text-center mb-4">
-              <h3 className="font-semibold">Импорт из соцсетей</h3>
-              <p className="text-sm text-base-content/60">
-                Уже выложили товар в соцсетях? Импортируйте одним кликом
-              </p>
-            </div>
-            <div className="flex gap-2 justify-center">
-              <button
-                onClick={() => handleSocialImport('Instagram')}
-                className="btn btn-outline gap-2"
-              >
-                <Instagram className="w-4 h-4" />
-                Instagram
-              </button>
-              <button
-                onClick={() => handleSocialImport('Facebook')}
-                className="btn btn-outline gap-2"
-              >
-                <Facebook className="w-4 h-4" />
-                Facebook
-              </button>
-            </div>
           </motion.div>
 
           {/* Alternative Options */}

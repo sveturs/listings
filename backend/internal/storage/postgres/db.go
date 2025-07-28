@@ -210,6 +210,11 @@ func (db *Database) GetOpenSearchClient() (interface {
 	return db.osClient, nil
 }
 
+// GetOpenSearchRepository возвращает репозиторий OpenSearch для маркетплейса
+func (db *Database) GetOpenSearchRepository() opensearch.MarketplaceSearchRepository {
+	return db.osMarketplaceRepo
+}
+
 // SearchStorefrontsOpenSearch выполняет поиск витрин через OpenSearch
 func (db *Database) SearchStorefrontsOpenSearch(ctx context.Context, params *storefrontOpenSearch.StorefrontSearchParams) (*storefrontOpenSearch.StorefrontSearchResult, error) {
 	if db.osStorefrontRepo == nil {

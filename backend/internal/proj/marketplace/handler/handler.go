@@ -8,11 +8,14 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
+	marketplaceServices "backend/internal/proj/marketplace/services"
+	"backend/internal/proj/marketplace/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
 )
@@ -52,6 +55,7 @@ type Handler struct {
 	CustomComponents   *CustomComponentHandler
 	MarketplaceHandler *MarketplaceHandler
 	Orders             *OrderHandler
+	CategoryDetector   *CategoryDetectorHandler
 	service            globalService.ServicesInterface
 }
 
@@ -83,8 +87,45 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			orderHandler = NewOrderHandler(orderService)
 		}
 
-		adminCategoriesHandler := NewAdminCategoriesHandler(categoriesHandler)
+		// Создаем репозиторий для keywords
+		keywordRepo := postgres.NewCategoryKeywordRepository(postgresDB.GetSQLXDB())
+		
+		adminCategoriesHandler := NewAdminCategoriesHandler(categoriesHandler, keywordRepo)
 		logger.Info().Interface("adminCategoriesHandler", adminCategoriesHandler).Msg("Created AdminCategoriesHandler")
+
+		// Создаём CategoryDetector и CategoryDetectorHandler
+		var categoryDetectorHandler *CategoryDetectorHandler
+		if storage := services.Storage(); storage != nil {
+			logger.Info().Msg("Storage is available, checking for OpenSearch...")
+			// Пытаемся получить OpenSearch репозиторий
+			if db, ok := storage.(*postgres.Database); ok {
+				logger.Info().Msg("Storage is postgres.Database")
+				if osRepo := db.GetOpenSearchRepository(); osRepo != nil {
+					logger.Info().Msg("OpenSearch repository exists")
+					// Проверяем, что это именно *opensearch.Repository
+					if concreteRepo, ok := osRepo.(*opensearch.Repository); ok {
+						logger.Info().Msg("OpenSearch repository is correct type")
+						// Создаём сервис определения категорий
+						detector, err := marketplaceServices.NewCategoryDetectorFromStorage(db, concreteRepo)
+						if err != nil {
+							logger.Error().Err(err).Msg("Failed to create CategoryDetector")
+						} else {
+							// Создаём handler
+							categoryDetectorHandler = NewCategoryDetectorHandler(detector, zap.L())
+							logger.Info().Msg("Created CategoryDetectorHandler successfully")
+						}
+					} else {
+						logger.Error().Msgf("OpenSearch repository is not of expected type *opensearch.Repository, got %T", osRepo)
+					}
+				} else {
+					logger.Error().Msg("OpenSearch repository is nil")
+				}
+			} else {
+				logger.Error().Msg("Storage is not postgres.Database")
+			}
+		} else {
+			logger.Error().Msg("Storage is nil")
+		}
 
 		return &Handler{
 			Listings:           NewListingsHandler(services),
@@ -101,12 +142,14 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			CustomComponents:   customComponentHandler,
 			MarketplaceHandler: marketplaceHandler,
 			Orders:             orderHandler,
+			CategoryDetector:   categoryDetectorHandler,
 			service:            services,
 		}
 	}
 
 	// Возвращаем handler без CustomComponents, если приведение не удалось
-	adminCategoriesHandler := NewAdminCategoriesHandler(categoriesHandler)
+	// В fallback случае создаем nil keywordRepo - это временное решение
+	adminCategoriesHandler := NewAdminCategoriesHandler(categoriesHandler, nil)
 	logger.Info().Interface("adminCategoriesHandler", adminCategoriesHandler).Msg("Created AdminCategoriesHandler (fallback)")
 
 	return &Handler{
@@ -124,6 +167,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		CustomComponents:   nil,
 		MarketplaceHandler: nil,
 		Orders:             nil,
+		CategoryDetector:   nil,
 		service:            services,
 	}
 }
@@ -148,6 +192,31 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Fuzzy search routes
 	marketplace.Get("/test-fuzzy-search", h.Search.TestFuzzySearch)
 	marketplace.Get("/fuzzy-search", h.Search.SearchWithFuzzyParams)
+
+	// Category detection routes
+	if h.CategoryDetector != nil {
+		logger.Info().Msg("Registering category detection routes")
+		// Добавляем тестовый эндпоинт
+		marketplace.Get("/categories/detect/test", func(c *fiber.Ctx) error {
+			logger.Info().Msg("Test endpoint called")
+			return c.JSON(fiber.Map{"status": "ok", "message": "CategoryDetector is available"})
+		})
+		// Создаем wrapper функцию для вызова метода
+		detectCategoryFunc := func(c *fiber.Ctx) error {
+			logger.Info().Msg("=== DetectCategory route called ===")
+			if h.CategoryDetector == nil {
+				logger.Error().Msg("CategoryDetector is nil in route")
+				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.marketplace.categoryDetectionFailed")
+			}
+			logger.Info().Msg("Calling CategoryDetector.DetectCategory method...")
+			return h.CategoryDetector.DetectCategory(c)
+		}
+		marketplace.Post("/categories/detect", detectCategoryFunc)
+		marketplace.Put("/categories/detect/:stats_id/confirm", h.CategoryDetector.UpdateCategoryConfirmation)
+		marketplace.Get("/categories/:category_id/keywords", h.CategoryDetector.GetCategoryKeywords)
+	} else {
+		logger.Error().Msg("CategoryDetector is nil, routes not registered")
+	}
 
 	// Карта - геопространственные маршруты
 	marketplace.Get("/map/bounds", h.GetListingsInBounds)
@@ -214,6 +283,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Post("/categories/:id/groups", h.AdminCategories.AttachAttributeGroupToCategory)
 	adminRoutes.Delete("/categories/:id/groups/:group_id", h.AdminCategories.DetachAttributeGroupFromCategory)
 	adminRoutes.Post("/categories/:id/translate", h.AdminCategories.TranslateCategory)
+
+	// Маршруты для управления ключевыми словами категорий
+	adminRoutes.Get("/categories/:category_id/keywords", h.AdminCategories.GetCategoryKeywords)
+	adminRoutes.Post("/categories/:category_id/keywords", h.AdminCategories.AddCategoryKeyword)
+	adminRoutes.Put("/categories/keywords/:keyword_id", h.AdminCategories.UpdateCategoryKeyword)
+	adminRoutes.Delete("/categories/keywords/:keyword_id", h.AdminCategories.DeleteCategoryKeyword)
 
 	// Регистрируем маршруты администрирования атрибутов
 	adminRoutes.Post("/attributes", h.AdminAttributes.CreateAttribute)

@@ -14,6 +14,7 @@ import (
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
 	searchlogsTypes "backend/internal/proj/searchlogs/types"
+	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -67,6 +68,28 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 		processAttributesFromRequest(requestBody, &listing)
 	}
 
+	// Проверяем, была ли категория определена автоматически
+	var categoryDetectionStatsID *int32
+	var detectedKeywords []string
+	var detectionLanguage string = "ru" // значение по умолчанию
+	if requestBody != nil {
+		if statsID, ok := requestBody["category_detection_stats_id"].(float64); ok {
+			statsIDInt := int32(statsID)
+			categoryDetectionStatsID = &statsIDInt
+		}
+		if keywords, ok := requestBody["detected_keywords"].([]interface{}); ok {
+			for _, kw := range keywords {
+				if kwStr, ok := kw.(string); ok {
+					detectedKeywords = append(detectedKeywords, kwStr)
+				}
+			}
+		}
+		// Получаем язык оригинала для правильного обновления счетчиков
+		if lang, ok := requestBody["original_language"].(string); ok {
+			detectionLanguage = lang
+		}
+	}
+
 	listing.UserID = userID
 	listing.Status = "active"
 
@@ -85,6 +108,11 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 			return utils.ErrorResponse(c, fiber.StatusConflict, "marketplace.duplicateTitle")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.createError")
+	}
+
+	// Если категория была определена автоматически, обновляем статистику
+	if categoryDetectionStatsID != nil {
+		go h.updateCategoryDetectionStats(c.Context(), *categoryDetectionStatsID, listing.CategoryID, detectedKeywords, detectionLanguage)
 	}
 
 	// Возвращаем ID созданного объявления
@@ -829,4 +857,95 @@ func detectDeviceType(userAgent string) string {
 
 	// По умолчанию - десктоп
 	return "desktop"
+}
+
+// updateCategoryDetectionStats обновляет статистику определения категории при создании объявления
+func (h *ListingsHandler) updateCategoryDetectionStats(ctx context.Context, statsID int32, categoryID int, detectedKeywords []string, language string) {
+	// Получаем storage для работы с БД
+	storage := h.services.Storage()
+	
+	// Преобразуем storage к конкретному типу для доступа к методам
+	if db, ok := storage.(*postgres.Database); ok {
+		// Обновляем статистику как подтвержденную
+		statsRepo := postgres.NewCategoryDetectionStatsRepository(db.GetSQLXDB())
+		
+		// Помечаем, что пользователь подтвердил категорию
+		confirmed := true
+		finalCategoryID := int32(categoryID)
+		
+		err := statsRepo.UpdateUserFeedback(ctx, statsID, confirmed, &finalCategoryID)
+		if err != nil {
+			logger.Error().Err(err).Int32("statsID", statsID).Msg("Failed to update category detection stats")
+			return
+		}
+		
+		// Обновляем success_rate для использованных ключевых слов
+		if len(detectedKeywords) > 0 {
+			keywordRepo := postgres.NewCategoryKeywordRepository(db.GetSQLXDB())
+			
+			// Увеличиваем счетчик использования для найденных ключевых слов
+			err := keywordRepo.IncrementUsageCount(ctx, finalCategoryID, detectedKeywords, language)
+			if err != nil {
+				logger.Error().Err(err).
+					Int32("categoryID", finalCategoryID).
+					Interface("keywords", detectedKeywords).
+					Msg("Failed to increment keyword usage count")
+			} else {
+				logger.Info().
+					Int32("categoryID", finalCategoryID).
+					Interface("keywords", detectedKeywords).
+					Msg("Successfully incremented keyword usage count")
+			}
+			
+			// Получаем все статистики для пересчета success_rate
+			stats, err := statsRepo.GetRecentStats(ctx, 30) // за последние 30 дней
+			if err != nil {
+				logger.Error().Err(err).Msg("Failed to get recent stats for success rate update")
+				return
+			}
+			
+			// Подсчитываем успешность для каждого ключевого слова
+			keywordSuccess := make(map[string]int)
+			keywordTotal := make(map[string]int)
+			
+			logger.Info().Int("totalStats", len(stats)).Msg("Processing stats for success rate calculation")
+			
+			for _, stat := range stats {
+				for _, keyword := range stat.MatchedKeywords {
+					keywordTotal[keyword]++
+					if stat.UserConfirmed != nil && *stat.UserConfirmed {
+						keywordSuccess[keyword]++
+					}
+				}
+			}
+			
+			logger.Info().
+				Interface("keywordTotal", keywordTotal).
+				Interface("keywordSuccess", keywordSuccess).
+				Msg("Keyword statistics calculated")
+			
+			// Обновляем success_rate для каждого ключевого слова
+			for keyword, total := range keywordTotal {
+				if total > 0 {
+					successRate := float64(keywordSuccess[keyword]) / float64(total)
+					logger.Info().
+						Str("keyword", keyword).
+						Int("success", keywordSuccess[keyword]).
+						Int("total", total).
+						Float64("successRate", successRate).
+						Msg("Updating keyword success rate")
+					err := keywordRepo.UpdateSuccessRate(ctx, keyword, successRate)
+					if err != nil {
+						logger.Error().Err(err).Str("keyword", keyword).Msg("Failed to update keyword success rate")
+					}
+				}
+			}
+		}
+		
+		logger.Info().
+			Int32("statsID", statsID).
+			Int("categoryID", categoryID).
+			Strs("keywords", detectedKeywords).
+			Msg("Category detection stats updated successfully")
+	}
 }
