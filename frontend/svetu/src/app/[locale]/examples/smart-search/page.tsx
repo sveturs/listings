@@ -32,7 +32,8 @@ const SmartSearch = () => {
       title: 'iPhone 14 Pro Max 256GB',
       price: 899,
       location: 'Белград',
-      image: '/api/minio/download?fileName=listings/0a47e66f-d8da-459f-a2ba-8e2b85ae0163/38ad29e6-7b07-4bfc-9db2-d965cb6b966f.jpg',
+      image:
+        '/api/minio/download?fileName=listings/0a47e66f-d8da-459f-a2ba-8e2b85ae0163/38ad29e6-7b07-4bfc-9db2-d965cb6b966f.jpg',
       rating: 4.8,
       reviews: 23,
       isPromoted: true,
@@ -42,7 +43,8 @@ const SmartSearch = () => {
       title: 'Квартира 2-комнатная, центр',
       price: 650,
       location: 'Нови Сад',
-      image: '/api/minio/download?fileName=listings/0c1fc30d-5d84-485f-a86a-5c5dc37f8b97/4b8b8e48-ddd8-4c04-ad8e-00c4b4d10d26.jpg',
+      image:
+        '/api/minio/download?fileName=listings/0c1fc30d-5d84-485f-a86a-5c5dc37f8b97/4b8b8e48-ddd8-4c04-ad8e-00c4b4d10d26.jpg',
       rating: 4.9,
       reviews: 12,
     },
@@ -51,7 +53,8 @@ const SmartSearch = () => {
       title: 'MacBook Pro M2 13"',
       price: 1299,
       location: 'Ниш',
-      image: '/api/minio/download?fileName=listings/0c91d2f7-53f7-4bff-87fe-d7e82dc3e2f0/3b26f07f-c5d6-4ff7-ba56-06ec69bb7f4d.jpg',
+      image:
+        '/api/minio/download?fileName=listings/0c91d2f7-53f7-4bff-87fe-d7e82dc3e2f0/3b26f07f-c5d6-4ff7-ba56-06ec69bb7f4d.jpg',
       rating: 5.0,
       reviews: 8,
     },
@@ -61,9 +64,9 @@ const SmartSearch = () => {
   const popularTags = ['Срочно', 'Новое', 'С гарантией', 'Торг', 'Обмен'];
 
   const handleFilterToggle = (filter: string) => {
-    setActiveFilters(prev =>
+    setActiveFilters((prev) =>
       prev.includes(filter)
-        ? prev.filter(f => f !== filter)
+        ? prev.filter((f) => f !== filter)
         : [...prev, filter]
     );
   };
@@ -86,8 +89,18 @@ const SmartSearch = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <button className="btn btn-primary">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
               </button>
             </div>
@@ -95,7 +108,7 @@ const SmartSearch = () => {
         </div>
         <div className="navbar-end">
           <div className="btn-group">
-            <button 
+            <button
               className={`btn btn-sm ${viewMode === 'grid' ? 'btn-active' : ''}`}
               onClick={() => setViewMode('grid')}
             >
@@ -103,12 +116,16 @@ const SmartSearch = () => {
                 <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM13 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z" />
               </svg>
             </button>
-            <button 
+            <button
               className={`btn btn-sm ${viewMode === 'list' ? 'btn-active' : ''}`}
               onClick={() => setViewMode('list')}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
           </div>
@@ -133,7 +150,10 @@ const SmartSearch = () => {
               <div className="divider divider-horizontal"></div>
               <span className="text-sm text-base-content/60">Популярное:</span>
               {popularTags.map((tag, idx) => (
-                <span key={idx} className="badge badge-outline cursor-pointer hover:badge-primary">
+                <span
+                  key={idx}
+                  className="badge badge-outline cursor-pointer hover:badge-primary"
+                >
                   {tag}
                 </span>
               ))}
@@ -153,8 +173,14 @@ const SmartSearch = () => {
                   <h4 className="font-semibold mb-3">Категории</h4>
                   <div className="space-y-2">
                     {categories.map((cat) => (
-                      <label key={cat.id} className="flex items-center gap-3 cursor-pointer hover:bg-base-200 p-2 rounded-lg">
-                        <input type="checkbox" className="checkbox checkbox-primary checkbox-sm" />
+                      <label
+                        key={cat.id}
+                        className="flex items-center gap-3 cursor-pointer hover:bg-base-200 p-2 rounded-lg"
+                      >
+                        <input
+                          type="checkbox"
+                          className="checkbox checkbox-primary checkbox-sm"
+                        />
                         <span className="text-xl">{cat.icon}</span>
                         <span className="flex-1">{cat.name}</span>
                         <span className="badge badge-sm">{cat.count}</span>
@@ -174,14 +200,18 @@ const SmartSearch = () => {
                       placeholder="От"
                       className="input input-bordered input-sm w-full"
                       value={priceRange[0]}
-                      onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                      onChange={(e) =>
+                        setPriceRange([Number(e.target.value), priceRange[1]])
+                      }
                     />
                     <input
                       type="number"
                       placeholder="До"
                       className="input input-bordered input-sm w-full"
                       value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                      onChange={(e) =>
+                        setPriceRange([priceRange[0], Number(e.target.value)])
+                      }
                     />
                   </div>
                   <input
@@ -190,7 +220,9 @@ const SmartSearch = () => {
                     max="2000"
                     value={priceRange[1]}
                     className="range range-primary range-sm"
-                    onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                    onChange={(e) =>
+                      setPriceRange([priceRange[0], Number(e.target.value)])
+                    }
                   />
                 </div>
 
@@ -199,7 +231,13 @@ const SmartSearch = () => {
                 {/* Other Filters */}
                 {Object.entries(filters).map(([key, values]) => (
                   <div key={key} className="mb-4">
-                    <h4 className="font-semibold mb-2 capitalize">{key === 'condition' ? 'Состояние' : key === 'delivery' ? 'Доставка' : 'Оплата'}</h4>
+                    <h4 className="font-semibold mb-2 capitalize">
+                      {key === 'condition'
+                        ? 'Состояние'
+                        : key === 'delivery'
+                          ? 'Доставка'
+                          : 'Оплата'}
+                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {values.map((value) => (
                         <button
@@ -229,10 +267,14 @@ const SmartSearch = () => {
             <AnimatedSection animation="fadeIn">
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold">Найдено: 1,234 объявления</h2>
-                  <p className="text-sm text-base-content/60">по запросу "{searchQuery || 'все товары'}"</p>
+                  <h2 className="text-2xl font-bold">
+                    Найдено: 1,234 объявления
+                  </h2>
+                  <p className="text-sm text-base-content/60">
+                    по запросу "{searchQuery || 'все товары'}"
+                  </p>
                 </div>
-                <select 
+                <select
                   className="select select-bordered select-sm"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
@@ -247,23 +289,54 @@ const SmartSearch = () => {
             </AnimatedSection>
 
             {/* Results Grid */}
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+            <div
+              className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                  : 'space-y-4'
+              }
+            >
               {searchResults.map((item, idx) => (
-                <AnimatedSection key={item.id} animation="slideUp" delay={idx * 0.1}>
+                <AnimatedSection
+                  key={item.id}
+                  animation="slideUp"
+                  delay={idx * 0.1}
+                >
                   {viewMode === 'grid' ? (
                     <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
                       {item.isPromoted && (
-                        <div className="badge badge-warning absolute top-2 right-2 z-10">Промо</div>
+                        <div className="badge badge-warning absolute top-2 right-2 z-10">
+                          Промо
+                        </div>
                       )}
                       <figure className="relative h-48">
-                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
                       </figure>
                       <div className="card-body">
                         <h3 className="card-title text-lg">{item.title}</h3>
                         <div className="flex items-center gap-2 text-sm">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
                           </svg>
                           <span>{item.location}</span>
                         </div>
@@ -282,8 +355,12 @@ const SmartSearch = () => {
                           <span className="text-sm">({item.reviews})</span>
                         </div>
                         <div className="card-actions justify-between items-center mt-4">
-                          <span className="text-2xl font-bold">€{item.price}</span>
-                          <button className="btn btn-primary btn-sm">Подробнее</button>
+                          <span className="text-2xl font-bold">
+                            €{item.price}
+                          </span>
+                          <button className="btn btn-primary btn-sm">
+                            Подробнее
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -292,16 +369,32 @@ const SmartSearch = () => {
                       <div className="card-body">
                         <div className="flex gap-4">
                           <figure className="w-32 h-32 flex-shrink-0">
-                            <img src={item.image} alt={item.title} className="w-full h-full object-cover rounded-lg" />
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
                           </figure>
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <div>
-                                <h3 className="text-xl font-bold">{item.title}</h3>
+                                <h3 className="text-xl font-bold">
+                                  {item.title}
+                                </h3>
                                 <div className="flex items-center gap-4 mt-2 text-sm text-base-content/60">
                                   <span className="flex items-center gap-1">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                      />
                                     </svg>
                                     {item.location}
                                   </span>
@@ -312,7 +405,9 @@ const SmartSearch = () => {
                                           key={star}
                                           type="radio"
                                           className="mask mask-star-2 bg-orange-400"
-                                          checked={star <= Math.floor(item.rating)}
+                                          checked={
+                                            star <= Math.floor(item.rating)
+                                          }
                                           readOnly
                                         />
                                       ))}
@@ -322,13 +417,23 @@ const SmartSearch = () => {
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="text-2xl font-bold">€{item.price}</div>
-                                {item.isPromoted && <span className="badge badge-warning badge-sm">Промо</span>}
+                                <div className="text-2xl font-bold">
+                                  €{item.price}
+                                </div>
+                                {item.isPromoted && (
+                                  <span className="badge badge-warning badge-sm">
+                                    Промо
+                                  </span>
+                                )}
                               </div>
                             </div>
                             <div className="mt-4 flex gap-2">
-                              <button className="btn btn-primary btn-sm">Подробнее</button>
-                              <button className="btn btn-ghost btn-sm">В избранное</button>
+                              <button className="btn btn-primary btn-sm">
+                                Подробнее
+                              </button>
+                              <button className="btn btn-ghost btn-sm">
+                                В избранное
+                              </button>
                             </div>
                           </div>
                         </div>

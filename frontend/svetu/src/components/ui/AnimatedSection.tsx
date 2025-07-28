@@ -8,7 +8,14 @@ interface AnimatedSectionProps {
   delay?: number;
   duration?: number;
   className?: string;
-  animation?: 'fadeIn' | 'slideUp' | 'slideIn' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn';
+  animation?:
+    | 'fadeIn'
+    | 'slideUp'
+    | 'slideIn'
+    | 'slideDown'
+    | 'slideLeft'
+    | 'slideRight'
+    | 'zoomIn';
 }
 
 const animations = {

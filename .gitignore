@@ -4919,3 +4919,4 @@ db_dumps_*/
 *.tar.gz
 /backend/backend
 /backend/reindex
+/frontend/svetu/src/app/api/ai/analyze/route.ts.backup

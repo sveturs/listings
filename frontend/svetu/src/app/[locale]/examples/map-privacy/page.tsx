@@ -5,7 +5,9 @@ import { SveTuLogoStatic } from '@/components/logos/SveTuLogoStatic';
 import { AnimatedSection } from '@/components/ui/AnimatedSection';
 
 const MapPrivacy = () => {
-  const [privacyLevel, setPrivacyLevel] = useState<'exact' | 'area' | 'city'>('area');
+  const [privacyLevel, setPrivacyLevel] = useState<'exact' | 'area' | 'city'>(
+    'area'
+  );
   const [showMyLocation, setShowMyLocation] = useState(true);
   const [selectedListing, setSelectedListing] = useState<any>(null);
   const [mapView, setMapView] = useState<'map' | 'satellite' | 'hybrid'>('map');
@@ -21,7 +23,8 @@ const MapPrivacy = () => {
       city: 'Белград',
       address: 'Кнез Михаилова 25',
       privacyLevel: 'area',
-      image: '/api/minio/download?fileName=listings/0a47e66f-d8da-459f-a2ba-8e2b85ae0163/38ad29e6-7b07-4bfc-9db2-d965cb6b966f.jpg',
+      image:
+        '/api/minio/download?fileName=listings/0a47e66f-d8da-459f-a2ba-8e2b85ae0163/38ad29e6-7b07-4bfc-9db2-d965cb6b966f.jpg',
     },
     {
       id: 2,
@@ -32,7 +35,8 @@ const MapPrivacy = () => {
       city: 'Нови Сад',
       address: 'Данила Киша 15',
       privacyLevel: 'exact',
-      image: '/api/minio/download?fileName=listings/0c1fc30d-5d84-485f-a86a-5c5dc37f8b97/4b8b8e48-ddd8-4c04-ad8e-00c4b4d10d26.jpg',
+      image:
+        '/api/minio/download?fileName=listings/0c1fc30d-5d84-485f-a86a-5c5dc37f8b97/4b8b8e48-ddd8-4c04-ad8e-00c4b4d10d26.jpg',
     },
     {
       id: 3,
@@ -43,7 +47,8 @@ const MapPrivacy = () => {
       city: 'Ниш',
       address: 'Обреновићева 8',
       privacyLevel: 'city',
-      image: '/api/minio/download?fileName=listings/0c91d2f7-53f7-4bff-87fe-d7e82dc3e2f0/3b26f07f-c5d6-4ff7-ba56-06ec69bb7f4d.jpg',
+      image:
+        '/api/minio/download?fileName=listings/0c91d2f7-53f7-4bff-87fe-d7e82dc3e2f0/3b26f07f-c5d6-4ff7-ba56-06ec69bb7f4d.jpg',
     },
   ];
 
@@ -79,23 +84,25 @@ const MapPrivacy = () => {
           <SveTuLogoStatic variant="gradient" width={120} height={40} />
         </div>
         <div className="navbar-center">
-          <h1 className="text-xl font-bold">🗺️ Карта с настройками приватности</h1>
+          <h1 className="text-xl font-bold">
+            🗺️ Карта с настройками приватности
+          </h1>
         </div>
         <div className="navbar-end">
           <div className="btn-group">
-            <button 
+            <button
               className={`btn btn-sm ${mapView === 'map' ? 'btn-active' : ''}`}
               onClick={() => setMapView('map')}
             >
               Карта
             </button>
-            <button 
+            <button
               className={`btn btn-sm ${mapView === 'satellite' ? 'btn-active' : ''}`}
               onClick={() => setMapView('satellite')}
             >
               Спутник
             </button>
-            <button 
+            <button
               className={`btn btn-sm ${mapView === 'hybrid' ? 'btn-active' : ''}`}
               onClick={() => setMapView('hybrid')}
             >
@@ -113,10 +120,18 @@ const MapPrivacy = () => {
             {/* Map Grid */}
             <div className="absolute inset-0 opacity-10">
               {[...Array(20)].map((_, i) => (
-                <div key={i} className="absolute w-full border-t border-gray-400" style={{ top: `${i * 5}%` }}></div>
+                <div
+                  key={i}
+                  className="absolute w-full border-t border-gray-400"
+                  style={{ top: `${i * 5}%` }}
+                ></div>
               ))}
               {[...Array(20)].map((_, i) => (
-                <div key={i} className="absolute h-full border-l border-gray-400" style={{ left: `${i * 5}%` }}></div>
+                <div
+                  key={i}
+                  className="absolute h-full border-l border-gray-400"
+                  style={{ left: `${i * 5}%` }}
+                ></div>
               ))}
             </div>
 
@@ -130,7 +145,7 @@ const MapPrivacy = () => {
               return (
                 <div key={listing.id} className="absolute" style={position}>
                   {listing.privacyLevel === 'exact' && (
-                    <div 
+                    <div
                       className="cursor-pointer transform hover:scale-110 transition-transform"
                       onClick={() => setSelectedListing(listing)}
                     >
@@ -143,14 +158,16 @@ const MapPrivacy = () => {
                       <div className="absolute top-12 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
                         <div className="bg-white rounded-lg shadow-lg px-3 py-1 text-sm">
                           <div className="font-semibold">{listing.title}</div>
-                          <div className="text-xs text-gray-500">{listing.address}</div>
+                          <div className="text-xs text-gray-500">
+                            {listing.address}
+                          </div>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {listing.privacyLevel === 'area' && (
-                    <div 
+                    <div
                       className="cursor-pointer"
                       onClick={() => setSelectedListing(listing)}
                     >
@@ -164,14 +181,16 @@ const MapPrivacy = () => {
                       <div className="absolute top-12 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
                         <div className="bg-white rounded-lg shadow-lg px-3 py-1 text-sm">
                           <div className="font-semibold">{listing.title}</div>
-                          <div className="text-xs text-gray-500">Район ±500м</div>
+                          <div className="text-xs text-gray-500">
+                            Район ±500м
+                          </div>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {listing.privacyLevel === 'city' && (
-                    <div 
+                    <div
                       className="cursor-pointer"
                       onClick={() => setSelectedListing(listing)}
                     >
@@ -186,7 +205,9 @@ const MapPrivacy = () => {
                       <div className="absolute top-12 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
                         <div className="bg-white rounded-lg shadow-lg px-3 py-1 text-sm">
                           <div className="font-semibold">{listing.title}</div>
-                          <div className="text-xs text-gray-500">{listing.city}</div>
+                          <div className="text-xs text-gray-500">
+                            {listing.city}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -201,8 +222,16 @@ const MapPrivacy = () => {
                 <div className="relative">
                   <div className="absolute -inset-2 bg-blue-500 rounded-full animate-ping opacity-75"></div>
                   <div className="relative bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-4 border-white">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
+                    <svg
+                      className="w-6 h-6"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -218,23 +247,46 @@ const MapPrivacy = () => {
           {/* Map Controls */}
           <div className="absolute top-4 left-4 space-y-2">
             <button className="btn btn-circle btn-sm bg-white shadow-lg">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
               </svg>
             </button>
             <button className="btn btn-circle btn-sm bg-white shadow-lg">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 12H4"
+                />
               </svg>
             </button>
           </div>
 
           {/* Selected Listing Details */}
           {selectedListing && (
-            <AnimatedSection animation="slideUp" className="absolute bottom-4 left-4 right-4">
+            <AnimatedSection
+              animation="slideUp"
+              className="absolute bottom-4 left-4 right-4"
+            >
               <div className="card bg-base-100 shadow-xl">
                 <div className="card-body">
-                  <button 
+                  <button
                     className="btn btn-sm btn-circle absolute right-2 top-2"
                     onClick={() => setSelectedListing(null)}
                   >
@@ -242,19 +294,33 @@ const MapPrivacy = () => {
                   </button>
                   <div className="flex gap-4">
                     <figure className="w-24 h-24 flex-shrink-0">
-                      <img src={selectedListing.image} alt={selectedListing.title} className="w-full h-full object-cover rounded-lg" />
+                      <img
+                        src={selectedListing.image}
+                        alt={selectedListing.title}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
                     </figure>
                     <div className="flex-1">
                       <h3 className="card-title">{selectedListing.title}</h3>
-                      <p className="text-2xl font-bold text-primary">€{selectedListing.price}</p>
+                      <p className="text-2xl font-bold text-primary">
+                        €{selectedListing.price}
+                      </p>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className={`badge badge-${selectedListing.privacyLevel === 'exact' ? 'error' : selectedListing.privacyLevel === 'area' ? 'warning' : 'success'}`}>
-                          {privacyOptions.find(o => o.level === selectedListing.privacyLevel)?.title}
+                        <span
+                          className={`badge badge-${selectedListing.privacyLevel === 'exact' ? 'error' : selectedListing.privacyLevel === 'area' ? 'warning' : 'success'}`}
+                        >
+                          {
+                            privacyOptions.find(
+                              (o) => o.level === selectedListing.privacyLevel
+                            )?.title
+                          }
                         </span>
                         <span className="text-sm text-base-content/60">
-                          {selectedListing.privacyLevel === 'exact' ? selectedListing.address : 
-                           selectedListing.privacyLevel === 'area' ? 'Район показан приблизительно' : 
-                           selectedListing.city}
+                          {selectedListing.privacyLevel === 'exact'
+                            ? selectedListing.address
+                            : selectedListing.privacyLevel === 'area'
+                              ? 'Район показан приблизительно'
+                              : selectedListing.city}
                         </span>
                       </div>
                     </div>
@@ -269,16 +335,21 @@ const MapPrivacy = () => {
         </div>
 
         {/* Sidebar */}
-        <AnimatedSection animation="slideRight" className={`transition-all duration-300 ${showFilters ? 'w-96' : 'w-0'} overflow-hidden`}>
+        <AnimatedSection
+          animation="slideRight"
+          className={`transition-all duration-300 ${showFilters ? 'w-96' : 'w-0'} overflow-hidden`}
+        >
           <div className="w-96 h-full bg-base-100 shadow-xl p-6 overflow-y-auto">
             <h2 className="text-2xl font-bold mb-6">Настройки приватности</h2>
 
             {/* Privacy Level Selector */}
             <div className="mb-6">
-              <h3 className="font-semibold mb-3">Уровень приватности для моих объявлений:</h3>
+              <h3 className="font-semibold mb-3">
+                Уровень приватности для моих объявлений:
+              </h3>
               <div className="space-y-3">
                 {privacyOptions.map((option) => (
-                  <label 
+                  <label
                     key={option.level}
                     className={`card cursor-pointer transition-all hover:shadow-lg ${privacyLevel === option.level ? 'ring-2 ring-primary' : ''}`}
                   >
@@ -294,7 +365,9 @@ const MapPrivacy = () => {
                         <div className="text-2xl">{option.icon}</div>
                         <div className="flex-1">
                           <div className="font-semibold">{option.title}</div>
-                          <div className="text-sm text-base-content/60">{option.description}</div>
+                          <div className="text-sm text-base-content/60">
+                            {option.description}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -309,9 +382,9 @@ const MapPrivacy = () => {
             <div className="space-y-4">
               <label className="flex items-center justify-between cursor-pointer">
                 <span>Показывать мое местоположение</span>
-                <input 
-                  type="checkbox" 
-                  className="toggle toggle-primary" 
+                <input
+                  type="checkbox"
+                  className="toggle toggle-primary"
                   checked={showMyLocation}
                   onChange={(e) => setShowMyLocation(e.target.checked)}
                 />
@@ -319,7 +392,11 @@ const MapPrivacy = () => {
 
               <label className="flex items-center justify-between cursor-pointer">
                 <span>Скрывать адрес до подтверждения</span>
-                <input type="checkbox" className="toggle toggle-primary" defaultChecked />
+                <input
+                  type="checkbox"
+                  className="toggle toggle-primary"
+                  defaultChecked
+                />
               </label>
 
               <label className="flex items-center justify-between cursor-pointer">
@@ -334,23 +411,39 @@ const MapPrivacy = () => {
             <div className="card bg-info/10 border border-info/20">
               <div className="card-body p-4">
                 <h4 className="font-semibold flex items-center gap-2">
-                  <svg className="w-5 h-5 text-info" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5 text-info"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Как это работает?
                 </h4>
                 <ul className="text-sm space-y-2 mt-2">
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    <span><strong>Точный адрес:</strong> Покупатели видят точное местоположение на карте</span>
+                    <span>
+                      <strong>Точный адрес:</strong> Покупатели видят точное
+                      местоположение на карте
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-warning">•</span>
-                    <span><strong>Район:</strong> Показывается область радиусом 500м</span>
+                    <span>
+                      <strong>Район:</strong> Показывается область радиусом 500м
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-success">•</span>
-                    <span><strong>Только город:</strong> Максимальная приватность, только название города</span>
+                    <span>
+                      <strong>Только город:</strong> Максимальная приватность,
+                      только название города
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -363,21 +456,33 @@ const MapPrivacy = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Точный адрес</span>
                   <div className="flex items-center gap-2">
-                    <progress className="progress progress-error w-32" value="25" max="100"></progress>
+                    <progress
+                      className="progress progress-error w-32"
+                      value="25"
+                      max="100"
+                    ></progress>
                     <span className="text-sm font-semibold">25%</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Район</span>
                   <div className="flex items-center gap-2">
-                    <progress className="progress progress-warning w-32" value="60" max="100"></progress>
+                    <progress
+                      className="progress progress-warning w-32"
+                      value="60"
+                      max="100"
+                    ></progress>
                     <span className="text-sm font-semibold">60%</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Только город</span>
                   <div className="flex items-center gap-2">
-                    <progress className="progress progress-success w-32" value="15" max="100"></progress>
+                    <progress
+                      className="progress progress-success w-32"
+                      value="15"
+                      max="100"
+                    ></progress>
                     <span className="text-sm font-semibold">15%</span>
                   </div>
                 </div>
@@ -387,12 +492,22 @@ const MapPrivacy = () => {
         </AnimatedSection>
 
         {/* Toggle Sidebar Button */}
-        <button 
+        <button
           className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-base-100 rounded-l-lg shadow-lg p-2"
           onClick={() => setShowFilters(!showFilters)}
         >
-          <svg className={`w-6 h-6 transition-transform ${showFilters ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className={`w-6 h-6 transition-transform ${showFilters ? '' : 'rotate-180'}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>
