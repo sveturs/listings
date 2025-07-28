@@ -563,6 +563,168 @@ const IdealHomepageV2 = () => {
         </div>
       </section>
 
+      {/* Картографический сервис */}
+      <section className="py-6 bg-gradient-to-br from-blue-50 to-green-50">
+        <div className="container mx-auto px-4">
+          <AnimatedSection animation="fadeIn">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold mb-2">🗺️ Товары на карте</h2>
+              <p className="text-base text-base-content/70">
+                Найдите нужное рядом с вами или исследуйте другие районы
+              </p>
+            </div>
+          </AnimatedSection>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Интерактивная карта */}
+            <AnimatedSection animation="slideLeft" className="lg:col-span-2">
+              <div className="card bg-base-100 shadow-xl overflow-hidden">
+                <div className="relative h-96 bg-gradient-to-br from-blue-100 to-green-100">
+                  {/* Сетка карты */}
+                  <div className="absolute inset-0 opacity-20">
+                    {[...Array(8)].map((_, i) => (
+                      <div
+                        key={`h-${i}`}
+                        className="absolute w-full border-t border-gray-400"
+                        style={{ top: `${i * 12.5}%` }}
+                      />
+                    ))}
+                    {[...Array(8)].map((_, i) => (
+                      <div
+                        key={`v-${i}`}
+                        className="absolute h-full border-l border-gray-400"
+                        style={{ left: `${i * 12.5}%` }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Центральная точка пользователя */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="relative">
+                      <div className="absolute -inset-8 bg-blue-500 rounded-full opacity-20 animate-pulse" />
+                      <div className="absolute -inset-6 bg-blue-500 rounded-full opacity-30 animate-pulse animation-delay-200" />
+                      <div className="relative bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-xl z-10">
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="absolute top-16 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                      <div className="bg-gray-800 text-white rounded-lg px-3 py-1 text-sm shadow-lg">
+                        Ваше местоположение
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Маркеры товаров */}
+                  {[
+                    { left: '25%', top: '30%', price: '€450', category: '🏠', color: 'bg-green-500' },
+                    { left: '65%', top: '25%', price: '€89', category: '👕', color: 'bg-pink-500' },
+                    { left: '35%', top: '60%', price: '€1299', category: '💻', color: 'bg-purple-500' },
+                    { left: '75%', top: '45%', price: '€45K', category: '🚗', color: 'bg-blue-500' },
+                    { left: '45%', top: '20%', price: '€250', category: '🎮', color: 'bg-red-500' },
+                    { left: '20%', top: '70%', price: '€150', category: '📱', color: 'bg-yellow-500' },
+                    { left: '80%', top: '65%', price: '€350', category: '🛋️', color: 'bg-indigo-500' },
+                  ].map((marker, idx) => (
+                    <div
+                      key={idx}
+                      className="absolute cursor-pointer group transform hover:scale-110 transition-all"
+                      style={{ left: marker.left, top: marker.top }}
+                    >
+                      <div className="relative">
+                        <div className={`${marker.color} text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all`}>
+                          <span className="text-lg">{marker.category}</span>
+                        </div>
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-gray-800 text-white rounded px-2 py-1 text-xs font-bold whitespace-nowrap">
+                            {marker.price}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Контролы карты */}
+                  <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+                    <button className="btn btn-circle btn-sm bg-white shadow-lg hover:shadow-xl">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </button>
+                    <button className="btn btn-circle btn-sm bg-white shadow-lg hover:shadow-xl">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <button className="btn btn-circle btn-sm bg-white shadow-lg hover:shadow-xl">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </AnimatedSection>
+
+            {/* Статистика и фильтры */}
+            <AnimatedSection animation="slideRight">
+              <div className="space-y-4">
+                {/* Статистика по районам */}
+                <div className="card bg-base-100 shadow-lg">
+                  <div className="card-body">
+                    <h3 className="card-title text-lg mb-3">📊 В вашем районе</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Всего объявлений</span>
+                        <span className="badge badge-primary badge-lg">1,234</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Новых сегодня</span>
+                        <span className="badge badge-success">+89</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">В радиусе 5 км</span>
+                        <span className="badge badge-info">567</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Быстрые фильтры */}
+                <div className="card bg-base-100 shadow-lg">
+                  <div className="card-body">
+                    <h3 className="card-title text-lg mb-3">⚡ Быстрые фильтры</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <button className="btn btn-sm btn-outline">До 500€</button>
+                      <button className="btn btn-sm btn-outline">Сегодня</button>
+                      <button className="btn btn-sm btn-outline">С фото</button>
+                      <button className="btn btn-sm btn-outline">Рядом</button>
+                      <button className="btn btn-sm btn-outline">Срочно</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <div className="card bg-gradient-to-r from-primary to-secondary text-primary-content">
+                  <div className="card-body">
+                    <h3 className="card-title text-white">Исследуйте карту</h3>
+                    <p className="text-sm opacity-90">Найдите товары в любом районе города</p>
+                    <div className="card-actions justify-end mt-3">
+                      <Link href="/map" className="btn btn-white btn-sm">
+                        Открыть карту
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </AnimatedSection>
+          </div>
+        </div>
+      </section>
+
       {/* История просмотров как в Avito */}
       <section className="py-6">
         <div className="container mx-auto px-4">
