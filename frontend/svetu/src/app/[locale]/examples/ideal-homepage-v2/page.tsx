@@ -576,95 +576,119 @@ const IdealHomepageV2 = () => {
           </AnimatedSection>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Интерактивная карта */}
-            <AnimatedSection animation="slideLeft" className="lg:col-span-2">
-              <div className="card bg-base-100 shadow-xl overflow-hidden">
-                <div className="relative h-96 bg-gradient-to-br from-blue-100 to-green-100">
-                  {/* Сетка карты */}
-                  <div className="absolute inset-0 opacity-20">
-                    {[...Array(8)].map((_, i) => (
-                      <div
-                        key={`h-${i}`}
-                        className="absolute w-full border-t border-gray-400"
-                        style={{ top: `${i * 12.5}%` }}
-                      />
-                    ))}
-                    {[...Array(8)].map((_, i) => (
-                      <div
-                        key={`v-${i}`}
-                        className="absolute h-full border-l border-gray-400"
-                        style={{ left: `${i * 12.5}%` }}
-                      />
-                    ))}
-                  </div>
+            {/* Визуализация карты */}
+            <div className="lg:col-span-2">
+              <div className="card bg-base-100 shadow-xl h-full">
+                <div className="card-body p-0">
+                  <div className="relative h-[400px] lg:h-[500px] rounded-xl overflow-hidden">
+                    {/* Реальная карта - статическое изображение OpenStreetMap */}
+                    <iframe
+                      className="absolute inset-0 w-full h-full"
+                      frameBorder="0"
+                      scrolling="no"
+                      marginHeight={0}
+                      marginWidth={0}
+                      src="https://www.openstreetmap.org/export/embed.html?bbox=20.35,44.75,20.55,44.88&amp;layer=mapnik"
+                      style={{ border: 0 }}
+                    />
+                    
+                    {/* Полупрозрачный оверлей для лучшей видимости маркеров */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-green-500/10 pointer-events-none" />
 
-                  {/* Центральная точка пользователя */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="relative">
-                      <div className="absolute -inset-8 bg-blue-500 rounded-full opacity-20 animate-pulse" />
-                      <div className="absolute -inset-6 bg-blue-500 rounded-full opacity-30 animate-pulse animation-delay-200" />
-                      <div className="relative bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-xl z-10">
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="absolute top-16 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-                      <div className="bg-gray-800 text-white rounded-lg px-3 py-1 text-sm shadow-lg">
-                        Ваше местоположение
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Маркеры товаров */}
-                  {[
-                    { left: '25%', top: '30%', price: '€450', category: '🏠', color: 'bg-green-500' },
-                    { left: '65%', top: '25%', price: '€89', category: '👕', color: 'bg-pink-500' },
-                    { left: '35%', top: '60%', price: '€1299', category: '💻', color: 'bg-purple-500' },
-                    { left: '75%', top: '45%', price: '€45K', category: '🚗', color: 'bg-blue-500' },
-                    { left: '45%', top: '20%', price: '€250', category: '🎮', color: 'bg-red-500' },
-                    { left: '20%', top: '70%', price: '€150', category: '📱', color: 'bg-yellow-500' },
-                    { left: '80%', top: '65%', price: '€350', category: '🛋️', color: 'bg-indigo-500' },
-                  ].map((marker, idx) => (
-                    <div
-                      key={idx}
-                      className="absolute cursor-pointer group transform hover:scale-110 transition-all"
-                      style={{ left: marker.left, top: marker.top }}
-                    >
+                    {/* Маркер пользователя */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                       <div className="relative">
-                        <div className={`${marker.color} text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all`}>
-                          <span className="text-lg">{marker.category}</span>
+                        <div className="w-5 h-5 bg-blue-500 rounded-full shadow-lg border-2 border-white">
+                          <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping" />
                         </div>
-                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="bg-gray-800 text-white rounded px-2 py-1 text-xs font-bold whitespace-nowrap">
-                            {marker.price}
+                      </div>
+                      <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap">
+                        📍 Вы здесь
+                      </div>
+                    </div>
+
+                    {/* Маркеры товаров с реалистичными локациями для Белграда */}
+                    {[
+                      { top: '25%', left: '45%', price: '250€', category: 'Электроника', address: 'Knez Mihailova' },
+                      { top: '35%', left: '55%', price: '450€', category: 'Мебель', address: 'Vračar' },
+                      { top: '55%', left: '40%', price: '120€', category: 'Одежда', address: 'Novi Beograd' },
+                      { top: '40%', left: '65%', price: '800€/мес', category: 'Квартира', address: 'Dedinje' },
+                      { top: '65%', left: '50%', price: '50€', category: 'Книги', address: 'Zemun' },
+                      { top: '30%', left: '35%', price: '350€', category: 'Спорт', address: 'Kalemegdan' },
+                      { top: '45%', left: '30%', price: '15,000€', category: 'Авто', address: 'Autokomanda' },
+                      { top: '50%', left: '60%', price: '90€', category: 'Хобби', address: 'Zvezdara' },
+                    ].map((marker, idx) => (
+                      <div
+                        key={idx}
+                        className="absolute group cursor-pointer z-10"
+                        style={{ top: marker.top, left: marker.left }}
+                      >
+                        <div className="relative">
+                          {/* Пин маркера */}
+                          <div className="relative">
+                            <svg
+                              className="w-8 h-8 text-orange-500 drop-shadow-lg transform group-hover:scale-110 transition-transform"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                            <div className="absolute top-1 left-1/2 -translate-x-1/2 text-white text-xs font-bold">
+                              {idx + 1}
+                            </div>
+                          </div>
+                          
+                          {/* Информация при наведении */}
+                          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur px-4 py-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-30 whitespace-nowrap">
+                            <p className="font-bold text-lg text-orange-600">{marker.price}</p>
+                            <p className="text-sm font-medium text-gray-800">{marker.category}</p>
+                            <p className="text-xs text-gray-600 mt-1">📍 {marker.address}</p>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
 
-                  {/* Контролы карты */}
-                  <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-                    <button className="btn btn-circle btn-sm bg-white shadow-lg hover:shadow-xl">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    </button>
-                    <button className="btn btn-circle btn-sm bg-white shadow-lg hover:shadow-xl">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                      </svg>
-                    </button>
-                    <button className="btn btn-circle btn-sm bg-white shadow-lg hover:shadow-xl">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      </svg>
-                    </button>
+                    {/* Радиус поиска */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-blue-400 border-dashed rounded-full opacity-40">
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                        Радиус 2 км
+                      </div>
+                    </div>
+
+                    {/* Легенда карты */}
+                    <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg p-3 shadow-lg">
+                      <p className="text-xs font-medium mb-2">Легенда:</p>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <span className="text-xs">Ваше местоположение</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                          </svg>
+                          <span className="text-xs">Товары поблизости</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Контролы карты */}
+                    <div className="absolute top-4 right-4 flex flex-col gap-2">
+                      <button className="btn btn-circle btn-sm bg-white/90 backdrop-blur shadow-lg hover:bg-white">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </button>
+                      <button className="btn btn-circle btn-sm bg-white/90 backdrop-blur shadow-lg hover:bg-white">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </AnimatedSection>
+            </div>
 
             {/* Статистика и фильтры */}
             <AnimatedSection animation="slideRight">
