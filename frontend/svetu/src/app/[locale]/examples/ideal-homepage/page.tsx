@@ -321,8 +321,12 @@ const IdealHomepage = () => {
                     />
                   </figure>
                   <div className="card-body p-2">
-                    <h3 className="text-xs font-semibold line-clamp-2">{product.title}</h3>
-                    <div className="text-xs text-base-content/60">{product.location}</div>
+                    <h3 className="text-xs font-semibold line-clamp-2">
+                      {product.title}
+                    </h3>
+                    <div className="text-xs text-base-content/60">
+                      {product.location}
+                    </div>
                     <div className="text-sm font-bold text-primary">
                       €{product.price}
                     </div>
@@ -331,7 +335,6 @@ const IdealHomepage = () => {
               </AnimatedSection>
             ))}
           </div>
-
         </div>
       </section>
 
@@ -475,7 +478,9 @@ const IdealHomepage = () => {
                 <span style={{ '--value': 23 } as any}></span>:
                 <span style={{ '--value': 45 } as any}></span>:
                 <span style={{ '--value': 12 } as any}></span>
-                <span className="text-sm text-base-content/60 ml-2">до конца акции</span>
+                <span className="text-sm text-base-content/60 ml-2">
+                  до конца акции
+                </span>
               </div>
             </div>
           </AnimatedSection>
@@ -569,12 +574,22 @@ const IdealHomepage = () => {
       <section className="py-6 bg-gradient-to-r from-purple-50 to-pink-50">
         <div className="container mx-auto max-w-7xl px-4">
           <AnimatedSection animation="fadeIn">
-            <h2 className="text-xl lg:text-2xl font-bold mb-3 text-center">🎆 Что сейчас ищут</h2>
+            <h2 className="text-xl lg:text-2xl font-bold mb-3 text-center">
+              🎆 Что сейчас ищут
+            </h2>
           </AnimatedSection>
           <div className="flex flex-wrap justify-center gap-2">
             {[
-              'iPhone 15 Pro', 'PS5', 'Квартира в центре', 'MacBook Air', 'Електросамокат',
-              'Диван', 'AirPods', 'Кроссовки Nike', 'Холодильник', 'Велосипед'
+              'iPhone 15 Pro',
+              'PS5',
+              'Квартира в центре',
+              'MacBook Air',
+              'Електросамокат',
+              'Диван',
+              'AirPods',
+              'Кроссовки Nike',
+              'Холодильник',
+              'Велосипед',
             ].map((search, idx) => (
               <AnimatedSection key={idx} animation="fadeIn" delay={idx * 0.03}>
                 <button className="btn btn-sm btn-outline hover:btn-primary">
