@@ -6,6 +6,24 @@ import { AnimatedSection } from '@/components/ui/AnimatedSection';
 export default function ExamplesPage() {
   const examples = [
     {
+      title: 'Главная v2.0 - Лучшие практики',
+      description:
+        'Новый дизайн с лучшими практиками Avito, Amazon и Wildberries',
+      href: '/examples/ideal-homepage-v2',
+      color: 'bg-gradient-to-r from-purple-600 to-pink-600',
+      icon: '🎆',
+      badge: 'NEW',
+    },
+    {
+      title: 'Идеальная главная страница',
+      description:
+        'Современный дизайн главной страницы со всеми ключевыми элементами',
+      href: '/examples/ideal-homepage',
+      color: 'bg-gradient-to-r from-amber-500 to-orange-500',
+      icon: '🏠',
+      badge: 'HOT',
+    },
+    {
       title: 'Toast Notifications',
       description:
         'Interactive toast messages with different types and positions',
@@ -97,15 +115,85 @@ export default function ExamplesPage() {
       icon: '✏️',
       badge: 'NEW',
     },
+    {
+      title: 'AI Создание объявлений',
+      description:
+        'Умный анализ фото с автоматической генерацией описания и цены',
+      href: '/examples/ai-listing-creator',
+      color: 'bg-gradient-to-r from-violet-500 to-purple-500',
+      icon: '🤖',
+    },
+    {
+      title: 'Умный поиск',
+      description:
+        'Продвинутая система поиска с фильтрами и OpenSearch интеграцией',
+      href: '/examples/smart-search',
+      color: 'bg-gradient-to-r from-blue-500 to-cyan-500',
+      icon: '🔍',
+    },
+    {
+      title: 'Карта с приватностью',
+      description:
+        'Настройки приватности местоположения для безопасности пользователей',
+      href: '/examples/map-privacy',
+      color: 'bg-gradient-to-r from-green-500 to-emerald-500',
+      icon: '🗺️',
+    },
+    {
+      title: 'Витрина B2C',
+      description:
+        'Dashboard для управления магазином с аналитикой и статистикой',
+      href: '/examples/storefront-dashboard',
+      color: 'bg-gradient-to-r from-orange-500 to-red-500',
+      icon: '🏪',
+    },
+    {
+      title: 'Чат с эмодзи',
+      description: 'Анимированные эмодзи и реакции для живого общения',
+      href: '/examples/animated-chat',
+      color: 'bg-gradient-to-r from-pink-500 to-rose-500',
+      icon: '💬',
+    },
+    {
+      title: 'Эскроу платежи',
+      description: 'Безопасные сделки с защитой средств до получения товара',
+      href: '/examples/escrow-payment',
+      color: 'bg-gradient-to-r from-indigo-500 to-purple-500',
+      icon: '🔒',
+    },
+    {
+      title: 'Адаптивный дизайн',
+      description: 'Демонстрация responsive дизайна для всех устройств',
+      href: '/examples/adaptive-design',
+      color: 'bg-gradient-to-r from-teal-500 to-cyan-500',
+      icon: '📱',
+    },
   ];
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
       <AnimatedSection animation="fadeIn">
         <h1 className="text-4xl font-bold mb-4">UI/UX Examples</h1>
-        <p className="text-lg text-base-content/70 mb-8">
+        <p className="text-lg text-base-content/70 mb-4">
           Explore all the UI/UX improvements implemented in the Sve Tu platform
         </p>
+        <div className="stats shadow mb-8">
+          <div className="stat">
+            <div className="stat-title">Total Examples</div>
+            <div className="stat-value text-primary">{examples.length}</div>
+            <div className="stat-desc">UI/UX improvements</div>
+          </div>
+          <div className="stat">
+            <div className="stat-title">Categories</div>
+            <div className="stat-value text-secondary">8+</div>
+            <div className="stat-desc">Different types</div>
+          </div>
+          <div className="stat">
+            <div className="stat-title">New</div>
+            <div className="stat-value text-accent">2</div>
+            <div className="stat-desc">Latest additions</div>
+          </div>
+        </div>
       </AnimatedSection>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -156,7 +244,7 @@ export default function ExamplesPage() {
               max="100"
             ></progress>
             <p className="text-sm text-base-content/70 mt-2">
-              All 15 UI/UX improvements have been successfully implemented!
+              All 23 UI/UX improvements have been successfully implemented!
             </p>
           </div>
         </div>

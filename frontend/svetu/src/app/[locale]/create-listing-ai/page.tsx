@@ -123,10 +123,18 @@ export default function AIPoweredListingCreationPage() {
     language: 'sr',
   });
 
+  // Флаг для предотвращения повторной загрузки профиля
+  const profileLoadedRef = useRef(false);
+
   useEffect(() => {
     if (!user) {
       toast.error(t('auth_required'));
       router.push('/');
+      return;
+    }
+
+    // Предотвращаем повторную загрузку
+    if (profileLoadedRef.current) {
       return;
     }
 
@@ -166,30 +174,20 @@ export default function AIPoweredListingCreationPage() {
               },
             }));
 
-            // Геокодируем адрес пользователя для получения координат
-            try {
-              const geoResult = await validateAddress(
-                `${profileData.data.city}, ${profileData.data.country}`
-              );
-              if (geoResult.success && geoResult.location) {
-                setDetectedLocation({
-                  latitude: geoResult.location.lat,
-                  longitude: geoResult.location.lng,
-                  source: 'profile',
-                });
-              }
-            } catch (error) {
-              console.log('Failed to geocode user profile address:', error);
-            }
+            // Не геокодируем сразу, чтобы избежать циклических зависимостей
+            // Геокодирование будет выполнено при необходимости позже
           }
         }
       } catch (error) {
         console.log('Failed to load user profile:', error);
+      } finally {
+        // Отмечаем, что профиль был загружен
+        profileLoadedRef.current = true;
       }
     };
 
     loadUserProfile();
-  }, [user, router, t, validateAddress]);
+  }, [user, router, t]); // Убираем validateAddress из зависимостей
 
   // Загружаем категории при монтировании компонента
   useEffect(() => {
@@ -723,25 +721,52 @@ export default function AIPoweredListingCreationPage() {
                 {t('ai.enhance.category_title')}
               </h3>
               <div className="space-y-2">
-                {(aiData.categoryProbabilities || []).map((cat, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <span className={index === 0 ? 'font-semibold' : ''}>
-                      {cat.name}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <progress
-                        className="progress progress-primary w-32"
-                        value={cat.probability}
-                        max="100"
-                      ></progress>
-                      <span className="text-sm">{cat.probability}%</span>
+                {(aiData.categoryProbabilities || []).map((cat, index) => {
+                  if (!cat || !cat.name) {
+                    return null;
+                  }
+                  const categoryData = getCategoryData(cat.name);
+                  const categoryName = categoryData?.name || cat.name;
+                  const isSelected = index === 0; // Первая категория имеет наибольшую вероятность
+
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-2 rounded-lg ${
+                        isSelected ? 'bg-primary/10 ring-2 ring-primary' : ''
+                      }`}
+                    >
+                      <span className={isSelected ? 'font-semibold' : ''}>
+                        {categoryName}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <progress
+                          className={`progress ${isSelected ? 'progress-primary' : 'progress-base-300'} w-32`}
+                          value={cat.probability}
+                          max="100"
+                        ></progress>
+                        <span className="text-sm font-medium">
+                          {cat.probability}%
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
+              {aiData.categoryProbabilities &&
+                aiData.categoryProbabilities.length > 0 && (
+                  <div className="alert alert-info mt-4">
+                    <Check className="w-4 h-4" />
+                    <span className="text-sm">
+                      {t('ai.enhance.category_auto_selected', {
+                        category:
+                          getCategoryData(aiData.category)?.name ||
+                          aiData.category,
+                      })}
+                    </span>
+                  </div>
+                )}
             </div>
           </div>
 
@@ -1329,6 +1354,11 @@ export default function AIPoweredListingCreationPage() {
   const getCategoryData = (
     categoryName: string
   ): { id: number; name: string; slug: string } => {
+    // Проверка на undefined или пустую строку
+    if (!categoryName) {
+      return { id: 1, name: 'General', slug: 'general' };
+    }
+
     // Пытаемся найти категорию по разным критериям
     const normalizedName = categoryName.toLowerCase().trim();
 

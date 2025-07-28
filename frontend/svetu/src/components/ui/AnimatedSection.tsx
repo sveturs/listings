@@ -8,7 +8,14 @@ interface AnimatedSectionProps {
   delay?: number;
   duration?: number;
   className?: string;
-  animation?: 'fadeIn' | 'slideUp' | 'slideIn' | 'zoomIn';
+  animation?:
+    | 'fadeIn'
+    | 'slideUp'
+    | 'slideIn'
+    | 'slideDown'
+    | 'slideLeft'
+    | 'slideRight'
+    | 'zoomIn';
 }
 
 const animations = {
@@ -22,7 +29,22 @@ const animations = {
     whileInView: { y: 0, opacity: 1 },
     viewport: { once: true, amount: 0.3 },
   },
+  slideDown: {
+    initial: { y: -50, opacity: 0 },
+    whileInView: { y: 0, opacity: 1 },
+    viewport: { once: true, amount: 0.3 },
+  },
   slideIn: {
+    initial: { x: -50, opacity: 0 },
+    whileInView: { x: 0, opacity: 1 },
+    viewport: { once: true, amount: 0.3 },
+  },
+  slideLeft: {
+    initial: { x: 50, opacity: 0 },
+    whileInView: { x: 0, opacity: 1 },
+    viewport: { once: true, amount: 0.3 },
+  },
+  slideRight: {
     initial: { x: -50, opacity: 0 },
     whileInView: { x: 0, opacity: 1 },
     viewport: { once: true, amount: 0.3 },
