@@ -400,6 +400,20 @@ func (cd *CategoryDetector) combineResults(keyword *keywordSearchResult, similar
 		}
 	}
 
+	// Если не удалось определить категорию с достаточной уверенностью,
+	// используем категорию "Прочее" (ID=9999)
+	const otherCategoryID = 9999
+	const minConfidenceThreshold = 0.3
+	
+	if bestScore < minConfidenceThreshold || bestCategoryID == 0 {
+		cd.logger.Warn("не удалось определить категорию с достаточной уверенностью, используется 'Прочее'",
+			zap.Float64("bestScore", bestScore),
+			zap.Int32("bestCategoryID", bestCategoryID))
+		
+		bestCategoryID = otherCategoryID
+		bestScore = 0.1 // Низкая уверенность для категории "Прочее"
+	}
+
 	// Формируем список альтернативных категорий
 	alternatives := make([]AlternativeCategory, 0)
 	for catID, score := range combinedScores {

@@ -82,13 +82,18 @@ func buildCategoryTree(categories []*SimplifiedCategory) []*SimplifiedCategory {
 
 // convertToSimplified преобразует MarketplaceCategory в SimplifiedCategory
 func convertToSimplified(cat models.MarketplaceCategory) *SimplifiedCategory {
+	iconStr := ""
+	if cat.Icon != nil {
+		iconStr = *cat.Icon
+	}
+	
 	simplified := &SimplifiedCategory{
 		// ID:           cat.ID * 10, // TODO: когда полностью перейдем на файл
 		ID:           cat.ID,
 		Name:         cat.Name,
 		Slug:         cat.Slug,
 		ParentID:     cat.ParentID,
-		Icon:         cat.Icon,
+		Icon:         iconStr,
 		Translations: cat.Translations,
 	}
 

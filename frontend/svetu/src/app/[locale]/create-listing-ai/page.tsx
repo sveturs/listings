@@ -38,6 +38,7 @@ import {
   ArrowRight,
   ImageIcon,
   MapPin as MapPinIcon,
+  Shield,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -48,7 +49,9 @@ import { categoryDetector } from '@/services/categoryDetector';
 import type { CreateListingState } from '@/contexts/CreateListingContext';
 import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
 import { extractLocationFromImages } from '@/utils/exifUtils';
+import { formatAddressWithPrivacy } from '@/utils/addressPrivacy';
 import LocationPicker from '@/components/GIS/LocationPicker';
+import LocationPrivacySettingsWithAddress, { LocationPrivacyLevel } from '@/components/GIS/LocationPrivacySettingsWithAddress';
 
 export default function AIPoweredListingCreationPage() {
   const router = useRouter();
@@ -77,6 +80,11 @@ export default function AIPoweredListingCreationPage() {
     longitude: number;
     source: 'exif' | 'profile' | 'manual';
   } | null>(null);
+  
+  // Состояние для приватности адреса
+  const [locationPrivacyLevel, setLocationPrivacyLevel] = useState<LocationPrivacyLevel['id']>('street');
+  const [fullAddress, setFullAddress] = useState<string>(''); // Полный адрес для сохранения в БД
+  const [showPrivacySettings, setShowPrivacySettings] = useState(false);
 
   // AI generated data
   const [aiData, setAiData] = useState({
@@ -121,7 +129,7 @@ export default function AIPoweredListingCreationPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Геокодирование
-  const { validateAddress } = useAddressGeocoding({
+  const geocoding = useAddressGeocoding({
     country: ['rs'], // Сербия
     language: 'sr',
   });
@@ -372,6 +380,51 @@ export default function AIPoweredListingCreationPage() {
     setError(null);
 
     try {
+      // Пытаемся извлечь геолокацию из EXIF данных перед AI анализом
+      console.log('Processing images, checking EXIF data...');
+      let exifLocationData = null;
+      try {
+        const exifLocation = await extractLocationFromImages(imageFiles);
+        console.log('EXIF extraction during processing:', exifLocation);
+        if (exifLocation) {
+          console.log('Found EXIF location during processing:', exifLocation);
+          setDetectedLocation({
+            latitude: exifLocation.latitude,
+            longitude: exifLocation.longitude,
+            source: 'exif',
+          });
+
+          // Геокодируем координаты в адрес
+          const geocodedAddress = await geocoding.reverseGeocode(
+            exifLocation.latitude,
+            exifLocation.longitude
+          );
+
+          if (geocodedAddress) {
+            console.log('Geocoded address during processing:', geocodedAddress);
+            
+            // Сохраняем полный адрес
+            const fullAddressStr = geocodedAddress.address || geocodedAddress.place_name;
+            setFullAddress(fullAddressStr);
+            
+            // Форматируем адрес с учетом приватности по умолчанию (улица)
+            const privateAddress = formatAddressWithPrivacy(
+              fullAddressStr,
+              { showHouseNumber: false, showStreet: true, showCity: true, showRegion: true }
+            );
+            
+            // Сохраняем адрес для использования ниже
+            exifLocationData = {
+              city: geocodedAddress.city || geocodedAddress.address_components.city || 'Белград',
+              region: geocodedAddress.region || geocodedAddress.address_components.district || 'Сербия',
+              suggestedLocation: privateAddress,
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Error extracting EXIF during processing:', error);
+      }
+
       // Convert first image to base64
       const base64Image = await convertToBase64(images[0]);
 
@@ -398,7 +451,7 @@ export default function AIPoweredListingCreationPage() {
         price: analysis.price?.replace(/[^\d.,]/g, '').replace(',', '.') || '',
         selectedTitleIndex: 0,
         publishTime: '19:00',
-        location: {
+        location: exifLocationData || {
           city: analysis.location?.city || 'Белград',
           region: analysis.location?.region || 'Сербия',
           suggestedLocation: analysis.location?.suggestedLocation || '',
@@ -490,16 +543,20 @@ export default function AIPoweredListingCreationPage() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleImageUpload called');
     const files = e.target.files;
     if (files) {
       const filesArray = Array.from(files);
+      console.log('Processing', filesArray.length, 'files');
       const newImages = filesArray.map((file) => URL.createObjectURL(file));
       setImages([...images, ...newImages].slice(0, 8));
       setImageFiles([...imageFiles, ...filesArray].slice(0, 8));
 
       // Пытаемся извлечь геолокацию из EXIF данных
+      console.log('Attempting to extract EXIF location...');
       try {
         const exifLocation = await extractLocationFromImages(filesArray);
+        console.log('EXIF extraction result:', exifLocation);
         if (exifLocation) {
           console.log('Detected location from EXIF:', exifLocation);
           setDetectedLocation({
@@ -508,19 +565,50 @@ export default function AIPoweredListingCreationPage() {
             source: 'exif',
           });
 
-          // Обновляем данные локации в AI данных
-          setAiData((prev) => ({
-            ...prev,
-            location: {
-              ...prev.location,
-              suggestedLocation: `Локация из фото: ${exifLocation.latitude.toFixed(4)}, ${exifLocation.longitude.toFixed(4)}`,
-            },
-          }));
+          // Геокодируем координаты в адрес
+          const geocodedAddress = await geocoding.reverseGeocode(
+            exifLocation.latitude,
+            exifLocation.longitude
+          );
 
-          toast.success(t('ai.success_messages.location_detected'));
+          if (geocodedAddress) {
+            console.log('Geocoded address:', geocodedAddress);
+            
+            // Сохраняем полный адрес
+            const fullAddressStr = geocodedAddress.address || geocodedAddress.place_name;
+            setFullAddress(fullAddressStr);
+            
+            // Форматируем адрес с учетом приватности по умолчанию (улица)
+            const privateAddress = formatAddressWithPrivacy(
+              fullAddressStr,
+              { showHouseNumber: false, showStreet: true, showCity: true, showRegion: true }
+            );
+            
+            // Обновляем данные локации в AI данных с реальным адресом
+            setAiData((prev) => ({
+              ...prev,
+              location: {
+                city: geocodedAddress.city || geocodedAddress.address_components.city || 'Белград',
+                region: geocodedAddress.region || geocodedAddress.address_components.district || 'Сербия',
+                suggestedLocation: privateAddress,
+              },
+            }));
+
+            // Используем нейтральное сообщение без упоминания AI
+            toast.success(t('location_detected_from_photo'));
+          } else {
+            // Если не удалось геокодировать, показываем координаты
+            setAiData((prev) => ({
+              ...prev,
+              location: {
+                ...prev.location,
+                suggestedLocation: `Координаты: ${exifLocation.latitude.toFixed(4)}, ${exifLocation.longitude.toFixed(4)}`,
+              },
+            }));
+          }
         }
-      } catch {
-        console.log('No location data found in images');
+      } catch (error) {
+        console.log('Error processing location data:', error);
       }
     }
   };
@@ -1168,13 +1256,79 @@ export default function AIPoweredListingCreationPage() {
                 </button>
               </div>
               {aiData.location.suggestedLocation && (
-                <div className="alert alert-info mt-4">
-                  <Lightbulb className="w-4 h-4" />
-                  <span className="text-sm">
-                    {t('ai.location.ai_suggests')}{' '}
-                    {aiData.location.suggestedLocation}
-                  </span>
-                </div>
+                <>
+                  <div className="alert alert-info mt-4">
+                    <Lightbulb className="w-4 h-4" />
+                    <span className="text-sm">
+                      {fullAddress ? 
+                        `${t('location_detected_from_photo')}: ${aiData.location.suggestedLocation}` :
+                        `${t('ai.location.ai_suggests')} ${aiData.location.suggestedLocation}`
+                      }
+                    </span>
+                  </div>
+                  
+                  {/* Настройки приватности */}
+                  {(detectedLocation || fullAddress) && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowPrivacySettings(!showPrivacySettings)}
+                        className="btn btn-outline btn-sm gap-2"
+                      >
+                        <Shield className="w-4 h-4" />
+                        {t('privacy_settings')}
+                        <svg
+                          className={`w-4 h-4 transition-transform ${showPrivacySettings ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                      
+                      {showPrivacySettings && (
+                        <div className="mt-4 p-4 bg-base-100 rounded-lg">
+                          <LocationPrivacySettingsWithAddress
+                            selectedLevel={locationPrivacyLevel}
+                            onLevelChange={(level) => {
+                              setLocationPrivacyLevel(level);
+                              // Обновляем отображаемый адрес
+                              if (fullAddress) {
+                                const options = {
+                                  showHouseNumber: level === 'exact',
+                                  showStreet: level === 'exact' || level === 'street',
+                                  showCity: true,
+                                  showRegion: level !== 'city',
+                                  showCountry: level === 'city'
+                                };
+                                const updatedAddress = formatAddressWithPrivacy(fullAddress, options);
+                                setAiData((prev) => ({
+                                  ...prev,
+                                  location: {
+                                    ...prev.location,
+                                    suggestedLocation: updatedAddress,
+                                  },
+                                }));
+                              }
+                            }}
+                            location={detectedLocation ? {
+                              lat: detectedLocation.latitude,
+                              lng: detectedLocation.longitude,
+                            } : undefined}
+                            fullAddress={fullAddress}
+                            showPreview={true}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -1611,7 +1765,7 @@ export default function AIPoweredListingCreationPage() {
           `${aiData.location.suggestedLocation || ''} ${aiData.location.city || 'Белград'} ${aiData.location.region || 'Сербия'}`.trim();
 
         try {
-          const geoResult = await validateAddress(fullAddress);
+          const geoResult = await geocoding.validateAddress(fullAddress);
           if (geoResult.success && geoResult.location) {
             latitude = geoResult.location.lat;
             longitude = geoResult.location.lng;
@@ -1635,10 +1789,8 @@ export default function AIPoweredListingCreationPage() {
         location: {
           latitude,
           longitude,
-          address:
-            aiData.location.suggestedLocation ||
-            aiData.location.city ||
-            'Белград',
+          // Отправляем адрес с учетом приватности
+          address: aiData.location.suggestedLocation || aiData.location.city || 'Белград',
           city: aiData.location.city || 'Белград',
           region: aiData.location.region || 'Сербия',
           country: 'Сербия',
@@ -1783,7 +1935,7 @@ export default function AIPoweredListingCreationPage() {
 
       // Создаем объявление
       const { ListingsService } = await import('@/services/listings');
-      const response = await ListingsService.createListing(listingData);
+      const response = await ListingsService.createListing(listingData, locationPrivacyLevel);
 
       if (response.data?.id) {
         // Загружаем изображения
@@ -2222,12 +2374,25 @@ export default function AIPoweredListingCreationPage() {
                     source: 'manual',
                   });
 
+                  // Сохраняем полный адрес
+                  setFullAddress(location.address);
+                  
+                  // Форматируем адрес с учетом текущего уровня приватности
+                  const options = {
+                    showHouseNumber: locationPrivacyLevel === 'exact',
+                    showStreet: locationPrivacyLevel === 'exact' || locationPrivacyLevel === 'street',
+                    showCity: true,
+                    showRegion: locationPrivacyLevel !== 'city',
+                    showCountry: locationPrivacyLevel === 'city'
+                  };
+                  const privateAddress = formatAddressWithPrivacy(location.address, options);
+
                   setAiData((prev) => ({
                     ...prev,
                     location: {
                       city: location.city,
                       region: location.region,
-                      suggestedLocation: location.address,
+                      suggestedLocation: privateAddress,
                     },
                   }));
 

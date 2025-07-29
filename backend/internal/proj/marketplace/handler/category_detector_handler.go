@@ -188,6 +188,15 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 		StatsID:          result.StatsID,
 	}
 
+	// Добавляем предупреждение, если использована категория "Прочее"
+	const otherCategoryID = 9999
+	if result.CategoryID == otherCategoryID {
+		response.Warning = "Не удалось автоматически определить подходящую категорию. Объявление будет размещено в категории 'Прочее'. Пожалуйста, выберите более подходящую категорию вручную."
+		h.logger.Warn("использована категория 'Прочее'",
+			zap.Strings("keywords", req.Keywords),
+			zap.String("title", req.Title))
+	}
+
 	// Добавляем альтернативные категории
 	if len(result.AlternativeCategories) > 0 {
 		response.AlternativeCategories = make([]AlternativeCategoryResponse, len(result.AlternativeCategories))
@@ -320,6 +329,7 @@ type DetectCategoryResponse struct {
 	ProcessingTimeMs      int64                         `json:"processing_time_ms"`
 	DebugInfo             *DebugInfo                    `json:"debug_info,omitempty"`
 	StatsID               int32                         `json:"stats_id,omitempty"`
+	Warning               string                        `json:"warning,omitempty"`
 }
 
 type AlternativeCategoryResponse struct {

@@ -60,6 +60,7 @@ type (
 		NotHelpfulVotes   int                     `json:"not_helpful_votes"`
 		IsFavorite        bool                    `json:"is_favorite"`
 		ShowOnMap         bool                    `json:"show_on_map"`
+		LocationPrivacy   string                  `json:"location_privacy,omitempty"`
 		OriginalLanguage  string                  `json:"original_language,omitempty"`
 		RawTranslations   interface{}             `json:"-"` // Для хранения "сырых" данных
 		Translations      TranslationMap          `json:"translations,omitempty"`
@@ -85,7 +86,7 @@ type MarketplaceCategory struct {
 	Name              string            `json:"name" db:"name"`
 	Slug              string            `json:"slug" db:"slug"`
 	ParentID          *int              `json:"parent_id,omitempty" db:"parent_id"`
-	Icon              string            `json:"icon,omitempty" db:"icon"`
+	Icon              *string           `json:"icon,omitempty" db:"icon"`
 	Description       string            `json:"description,omitempty" db:"description"`
 	IsActive          bool              `json:"is_active" db:"is_active"`
 	CreatedAt         time.Time         `json:"created_at" db:"created_at"`

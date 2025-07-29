@@ -14,6 +14,7 @@ export interface CreateListingRequest {
   city: string;
   country: string;
   show_on_map: boolean;
+  location_privacy?: string;
   attributes?: Array<{
     attribute_id: number;
     text_value?: string;
@@ -65,7 +66,8 @@ export interface UploadImagesResponse {
 
 export class ListingsService {
   static async createListing(
-    data: CreateListingState
+    data: CreateListingState,
+    locationPrivacy?: string
   ): Promise<CreateListingResponse> {
     // Отладочное логирование состояния формы
     console.log('CreateListing Data:', JSON.stringify(data, null, 2));
@@ -84,6 +86,7 @@ export class ListingsService {
       country: data.location?.country || 'Србија',
       show_on_map:
         data.location?.latitude && data.location?.longitude ? true : false,
+      location_privacy: locationPrivacy,
 
       // Региональные поля сохраняем в атрибутах
       payment_methods: data.payment.methods,

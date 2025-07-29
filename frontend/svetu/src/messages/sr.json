@@ -928,7 +928,9 @@
           "main": "Glavna",
           "synonym": "Sinonim",
           "brand": "Brend",
-          "attribute": "Atribut"
+          "attribute": "Atribut",
+          "context": "Kontekst",
+          "pattern": "Stilska šema"
         },
         "info": {
           "title": "Informacije o sistemu ključnih reči",
@@ -2136,6 +2138,8 @@
     "subtitle_regional": "Kreirajte oglase prema standardima srpskog tržišta",
     "auth_required": "Morate biti ulogovani da biste postavili oglas",
     "success": "Oglas je uspešno postavljen!",
+    "location_detected_from_photo": "Lokacija je određena iz fotografije",
+    "privacy_settings": "Podešavanja privatnosti",
     "data_saving_mode": "Režim štednje podataka je uključen",
     "script_mode": "Režim skripte",
     "description": "Opis",

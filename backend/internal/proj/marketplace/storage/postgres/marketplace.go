@@ -216,23 +216,30 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 
 	// Создаем запись в unified_geo для поддержки GIS поиска
 	if listing.Latitude != nil && listing.Longitude != nil {
+		// Определяем privacy_level, по умолчанию 'exact'
+		privacyLevel := "exact"
+		if listing.LocationPrivacy != "" {
+			privacyLevel = listing.LocationPrivacy
+		}
+		
 		_, err = s.pool.Exec(ctx, `
 			INSERT INTO unified_geo (
 				source_type, source_id, location, geohash,
-				formatted_address
+				formatted_address, privacy_level
 			) VALUES (
 				'marketplace_listing', $1, 
 				ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography, 
 				substring(ST_GeoHash(ST_SetSRID(ST_MakePoint($2, $3), 4326)) from 1 for 12),
-				$4
+				$4, $5::location_privacy_level
 			)
 			ON CONFLICT (source_type, source_id) 
 			DO UPDATE SET
 				location = EXCLUDED.location,
 				geohash = EXCLUDED.geohash,
 				formatted_address = EXCLUDED.formatted_address,
+				privacy_level = EXCLUDED.privacy_level,
 				updated_at = CURRENT_TIMESTAMP
-		`, listingID, listing.Longitude, listing.Latitude, listing.Location)
+		`, listingID, listing.Longitude, listing.Latitude, listing.Location, privacyLevel)
 
 		if err != nil {
 			log.Printf("Error creating unified_geo entry for listing %d: %v", listingID, err)
@@ -2168,7 +2175,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 
 		// Обрабатываем NULL значения
 		if icon.Valid {
-			cat.Icon = icon.String
+			cat.Icon = &icon.String
 		}
 		if description.Valid {
 			cat.Description = description.String
@@ -2276,7 +2283,7 @@ func (s *Storage) GetAllCategories(ctx context.Context) ([]models.MarketplaceCat
 			cat.ParentID = &pid
 		}
 		if icon.Valid {
-			cat.Icon = icon.String
+			cat.Icon = &icon.String
 		}
 		if description.Valid {
 			cat.Description = description.String
@@ -2342,7 +2349,7 @@ func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.Marketpl
 
 	// Обрабатываем NULL значения
 	if icon.Valid {
-		cat.Icon = icon.String
+		cat.Icon = &icon.String
 	}
 	if description.Valid {
 		cat.Description = description.String
@@ -2384,6 +2391,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		categoryName   sql.NullString
 		categorySlug   sql.NullString
 		storefrontID   sql.NullInt32
+		locationPrivacy sql.NullString
 	)
 
 	err := s.pool.QueryRow(ctx, `
@@ -2394,10 +2402,12 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
             u.name, u.email, u.created_at as user_created_at,
             u.picture_url, u.phone,
-            c.name as category_name, c.slug as category_slug, l.metadata, l.storefront_id
+            c.name as category_name, c.slug as category_slug, l.metadata, l.storefront_id,
+            COALESCE(ug.privacy_level::text, 'exact') as location_privacy
         FROM marketplace_listings l
         LEFT JOIN users u ON l.user_id = u.id
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
+        LEFT JOIN unified_geo ug ON ug.source_type = 'marketplace_listing' AND ug.source_id = l.id
         WHERE l.id = $1
     `, id).Scan(
 		&listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title,
@@ -2407,7 +2417,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&listing.ShowOnMap, &originalLang,
 		&userName, &userEmail, &listing.User.CreatedAt,
 		&userPictureURL, &userPhone,
-		&categoryName, &categorySlug, &listing.Metadata, &storefrontID,
+		&categoryName, &categorySlug, &listing.Metadata, &storefrontID, &locationPrivacy,
 	)
 	log.Printf("999 DEBUG: Listing %d metadata: %+v", id, listing.Metadata)
 	log.Printf("DEBUG: err after query = %v", err)
@@ -2469,6 +2479,9 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	if storefrontID.Valid {
 		sfID := int(storefrontID.Int32)
 		listing.StorefrontID = &sfID
+	}
+	if locationPrivacy.Valid {
+		listing.LocationPrivacy = locationPrivacy.String
 	}
 
 	// Обработка метаданных и скидок для согласованного отображения
@@ -2964,7 +2977,7 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 
 		// Обработка NULL значения для icon
 		if icon.Valid {
-			cat.Icon = icon.String
+			cat.Icon = &icon.String
 		}
 
 		// Парсим переводы

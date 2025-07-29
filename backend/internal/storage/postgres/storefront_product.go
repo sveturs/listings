@@ -166,7 +166,9 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			c.ID = int(categoryID.Int64)
 			c.Name = categoryName.String
 			c.Slug = categorySlug.String
-			c.Icon = categoryIcon.String
+			if categoryIcon.Valid {
+				c.Icon = &categoryIcon.String
+			}
 			if categoryParentID.Valid {
 				parentID := int(categoryParentID.Int64)
 				c.ParentID = &parentID
@@ -260,7 +262,9 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 		c.ID = int(categoryID.Int64)
 		c.Name = categoryName.String
 		c.Slug = categorySlug.String
-		c.Icon = categoryIcon.String
+		if categoryIcon.Valid {
+			c.Icon = &categoryIcon.String
+		}
 		if categoryParentID.Valid {
 			parentID := int(categoryParentID.Int64)
 			c.ParentID = &parentID

@@ -101,10 +101,7 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 				ELSE 0
 			END as rating,
 			ug.source_type::text as item_type,
-			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN 'exact'::text
-				WHEN ug.source_type = 'storefront_product' THEN COALESCE(s.default_privacy_level::text, 'exact'::text)
-			END as privacy_level`
+			COALESCE(ug.privacy_level::text, 'exact'::text) as privacy_level`
 
 	// Добавляем расчет расстояния если есть центр поиска
 	if params.Center != nil {

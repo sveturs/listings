@@ -93,7 +93,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 		category.Slug = slug
 	}
 	if icon, ok := requestData["icon"].(string); ok {
-		category.Icon = icon
+		category.Icon = &icon
 	}
 	if description, ok := requestData["description"].(string); ok {
 		category.Description = description
@@ -260,7 +260,7 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 		category.Slug = slug
 	}
 	if icon, ok := requestData["icon"].(string); ok {
-		category.Icon = icon
+		category.Icon = &icon
 	}
 	if description, ok := requestData["description"].(string); ok {
 		category.Description = description

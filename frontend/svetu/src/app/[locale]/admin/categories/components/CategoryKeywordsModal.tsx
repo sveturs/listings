@@ -238,8 +238,8 @@ export default function CategoryKeywordsModal({
                 <option value="synonym">{t('types.synonym')}</option>
                 <option value="brand">{t('types.brand')}</option>
                 <option value="attribute">{t('types.attribute')}</option>
-                <option value="context">Контекст</option>
-                <option value="pattern">Паттерн</option>
+                <option value="context">{t('types.context')}</option>
+                <option value="pattern">{t('types.pattern')}</option>
               </select>
             </div>
 

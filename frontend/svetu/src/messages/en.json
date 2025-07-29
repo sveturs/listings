@@ -970,7 +970,9 @@
           "main": "Main",
           "synonym": "Synonym",
           "brand": "Brand",
-          "attribute": "Attribute"
+          "attribute": "Attribute",
+          "context": "Context",
+          "pattern": "Pattern"
         },
         "info": {
           "title": "Keywords System Information",
@@ -2050,6 +2052,8 @@
     "subtitle_regional": "Create listings according to Serbian market standards",
     "auth_required": "You must be logged in to post a listing",
     "success": "Listing posted successfully!",
+    "location_detected_from_photo": "Location detected from photo",
+    "privacy_settings": "Privacy settings",
     "data_saving_mode": "Data saving mode is enabled",
     "script_mode": "Script mode",
     "description": "Description",
