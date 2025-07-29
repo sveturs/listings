@@ -48,7 +48,8 @@ func (h *OrdersHandler) CreateOrder(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.error.no_items")
 	}
 
-	order, err := h.orderService.CreateOrder(c.Context(), &req, userID)
+	// Используем новый метод с транзакциями
+	order, err := h.orderService.CreateOrderWithTx(c.Context(), h.db, &req, userID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to create order")
 
