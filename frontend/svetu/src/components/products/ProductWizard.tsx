@@ -6,6 +6,7 @@ import CategoryStep from './steps/CategoryStep';
 import BasicInfoStep from './steps/BasicInfoStep';
 import LocationStep from './steps/LocationStep';
 import AttributesStep from './steps/AttributesStep';
+import VariantsStep from './steps/VariantsStep';
 import PhotosStep from './steps/PhotosStep';
 import PreviewStep from './steps/PreviewStep';
 
@@ -18,6 +19,7 @@ const STEPS = [
   { id: 'basic', icon: '📝' },
   { id: 'location', icon: '📍' },
   { id: 'attributes', icon: '⚙️' },
+  { id: 'variants', icon: '🔀' },
   { id: 'photos', icon: '📸' },
   { id: 'preview', icon: '👁️' },
 ];
@@ -37,8 +39,10 @@ export default function ProductWizard({ storefrontSlug }: ProductWizardProps) {
       case 3:
         return <AttributesStep onNext={nextStep} onBack={prevStep} />;
       case 4:
-        return <PhotosStep onNext={nextStep} onBack={prevStep} />;
+        return <VariantsStep onNext={nextStep} onBack={prevStep} />;
       case 5:
+        return <PhotosStep onNext={nextStep} onBack={prevStep} />;
+      case 6:
         return (
           <PreviewStep onBack={prevStep} storefrontSlug={storefrontSlug} />
         );

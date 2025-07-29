@@ -3,17 +3,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import SafeImage from '../../SafeImage';
+import type { components } from '@/types/generated/api';
 
-interface ProductVariant {
-  id: number;
-  sku?: string;
-  price?: number;
-  stock_quantity: number;
-  stock_status: string;
-  variant_attributes: Record<string, string>;
-  is_default: boolean;
-  images: ProductVariantImage[];
-}
+// Use generated types from API
+type ProductVariant =
+  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'] & {
+    // Add additional fields that might be needed
+    images?: ProductVariantImage[];
+    stock_status?: string;
+    reserved_quantity?: number;
+    available_quantity?: number;
+    is_default?: boolean;
+  };
 
 interface ProductVariantImage {
   id: number;
@@ -60,15 +61,17 @@ export default function VariantSelector({
         const variantData = await response.json();
         setVariants(variantData);
 
-        // Extract available attributes
+        // Extract available attributes from the new attributes field
         const attributes: Record<string, Set<string>> = {};
         variantData.forEach((variant: ProductVariant) => {
-          Object.entries(variant.variant_attributes).forEach(([key, value]) => {
-            if (!attributes[key]) {
-              attributes[key] = new Set();
-            }
-            attributes[key].add(value);
-          });
+          if (variant.attributes) {
+            Object.entries(variant.attributes).forEach(([key, value]) => {
+              if (!attributes[key]) {
+                attributes[key] = new Set();
+              }
+              attributes[key].add(String(value));
+            });
+          }
         });
 
         // Convert Sets to arrays
@@ -82,8 +85,13 @@ export default function VariantSelector({
         const defaultVariant =
           variantData.find((v: ProductVariant) => v.is_default) ||
           variantData[0];
-        if (defaultVariant) {
-          setSelectedAttributes(defaultVariant.variant_attributes);
+        if (defaultVariant && defaultVariant.attributes) {
+          // Convert attributes to string-based format for compatibility
+          const stringAttributes: Record<string, string> = {};
+          Object.entries(defaultVariant.attributes).forEach(([key, value]) => {
+            stringAttributes[key] = String(value);
+          });
+          setSelectedAttributes(stringAttributes);
         }
       }
     } catch (error) {
@@ -97,8 +105,9 @@ export default function VariantSelector({
     (attributes: Record<string, string>): ProductVariant | null => {
       return (
         variants.find((variant) => {
+          if (!variant.attributes) return false;
           return Object.entries(attributes).every(
-            ([key, value]) => variant.variant_attributes[key] === value
+            ([key, value]) => String(variant.attributes![key]) === value
           );
         }) || null
       );
@@ -135,11 +144,24 @@ export default function VariantSelector({
   };
 
   const getCurrentStock = (): number => {
-    return selectedVariant?.stock_quantity || 0;
+    // Use available_quantity if present, otherwise fall back to stock_quantity
+    return (
+      selectedVariant?.available_quantity ??
+      selectedVariant?.stock_quantity ??
+      0
+    );
   };
 
   const getStockStatus = (): string => {
-    return selectedVariant?.stock_status || 'out_of_stock';
+    if (selectedVariant?.stock_status) {
+      return selectedVariant.stock_status;
+    }
+
+    // Calculate status based on stock
+    const stock = getCurrentStock();
+    if (stock === 0) return 'out_of_stock';
+    if (stock < 5) return 'low_stock';
+    return 'in_stock';
   };
 
   const getMainImage = (): string | null => {
@@ -288,8 +310,16 @@ export default function VariantSelector({
         </div>
 
         {getCurrentStock() > 0 && (
-          <div className="text-sm text-gray-600">
-            {t('items_available', { count: getCurrentStock() })}
+          <div className="space-y-1">
+            <div className="text-sm text-gray-600">
+              {t('items_available', { count: getCurrentStock() })}
+            </div>
+            {selectedVariant?.reserved_quantity &&
+              selectedVariant.reserved_quantity > 0 && (
+                <div className="text-xs text-amber-600">
+                  {t('reserved', { count: selectedVariant.reserved_quantity })}
+                </div>
+              )}
           </div>
         )}
 
@@ -328,9 +358,10 @@ export default function VariantSelector({
   );
 }
 
-// Helper function to get color hex value (you might want to store this in your data)
+// Helper function to get color hex value with enhanced color mapping
 function getColorHex(colorName: string): string {
   const colorMap: Record<string, string> = {
+    // Basic colors
     black: '#000000',
     white: '#FFFFFF',
     red: '#FF0000',
@@ -344,6 +375,38 @@ function getColorHex(colorName: string): string {
     brown: '#A52A2A',
     gold: '#FFD700',
     silver: '#C0C0C0',
+
+    // Extended colors from the backend data
+    navy: '#000080',
+    teal: '#008080',
+    lime: '#00FF00',
+    maroon: '#800000',
+    olive: '#808000',
+    aqua: '#00FFFF',
+    fuchsia: '#FF00FF',
+    beige: '#F5F5DC',
+    khaki: '#F0E68C',
+    coral: '#FF7F50',
+    salmon: '#FA8072',
+    crimson: '#DC143C',
+    indigo: '#4B0082',
+    violet: '#EE82EE',
+    turquoise: '#40E0D0',
+
+    // Russian color names (if needed)
+    чёрный: '#000000',
+    белый: '#FFFFFF',
+    красный: '#FF0000',
+    синий: '#0000FF',
+    зелёный: '#00FF00',
+    жёлтый: '#FFFF00',
+    фиолетовый: '#800080',
+    оранжевый: '#FFA500',
+    розовый: '#FFC0CB',
+    серый: '#808080',
+    коричневый: '#A52A2A',
+    золотой: '#FFD700',
+    серебряный: '#C0C0C0',
   };
 
   return colorMap[colorName.toLowerCase()] || '#CCCCCC';

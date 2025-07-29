@@ -133,9 +133,13 @@ type ProductAttribute struct {
 
 // ProductVariant вариант товара
 type ProductVariant struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	SKU        string                 `json:"sku"`
-	Price      float64                `json:"price"`
-	Attributes map[string]interface{} `json:"attributes"`
+	ID                int                    `json:"id"`
+	Name              string                 `json:"name"`
+	SKU               string                 `json:"sku"`
+	Price             float64                `json:"price"`
+	StockQuantity     int                    `json:"stock_quantity"`
+	AvailableQuantity int                    `json:"available_quantity"`
+	StockStatus       string                 `json:"stock_status"`
+	IsActive          bool                   `json:"is_active"`
+	Attributes        map[string]interface{} `json:"attributes"`
 }

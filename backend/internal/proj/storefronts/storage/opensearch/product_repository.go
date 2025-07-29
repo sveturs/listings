@@ -194,14 +194,48 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		variantsArray := make([]map[string]interface{}, 0, len(product.Variants))
 		minPrice := product.Price
 		maxPrice := product.Price
+		totalVariantStock := 0
+		totalVariantReserved := 0
+		hasStockVariants := false
 
 		for _, variant := range product.Variants {
+			// Расчет доступного количества с учетом резервирований
+			availableQuantity := variant.StockQuantity
+			// TODO: добавить логику расчета зарезервированного количества из inventory_reservations
+			// Пока используем только stock_quantity
+			
 			varDoc := map[string]interface{}{
-				"id":         variant.ID,
-				"name":       variant.Name,
-				"sku":        variant.SKU,
-				"price":      variant.Price,
-				"attributes": variant.Attributes,
+				"id":                 variant.ID,
+				"name":               variant.Name,
+				"sku":                variant.SKU,
+				"price":              variant.Price,
+				"attributes":         variant.Attributes,
+				"stock_quantity":     variant.StockQuantity,
+				"available_quantity": availableQuantity,
+				"is_active":          variant.IsActive,
+				"created_at":         variant.CreatedAt.Format(time.RFC3339),
+				"updated_at":         variant.UpdatedAt.Format(time.RFC3339),
+			}
+
+			// Определяем статус наличия варианта
+			var stockStatus string
+			if availableQuantity <= 0 {
+				stockStatus = "out_of_stock"
+			} else if availableQuantity <= 5 { // TODO: сделать настраиваемым
+				stockStatus = "low_stock"
+			} else {
+				stockStatus = "in_stock"
+			}
+			varDoc["stock_status"] = stockStatus
+
+			// Добавляем инвентарь варианта
+			varDoc["inventory"] = map[string]interface{}{
+				"quantity":  variant.StockQuantity,
+				"available": availableQuantity,
+				"reserved":  variant.StockQuantity - availableQuantity, // расчет резервов
+				"in_stock":  availableQuantity > 0,
+				"low_stock": availableQuantity > 0 && availableQuantity <= 5,
+				"status":    stockStatus,
 			}
 
 			// Отслеживаем диапазон цен
@@ -212,6 +246,13 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 				maxPrice = variant.Price
 			}
 
+			// Считаем общие остатки по вариантам
+			totalVariantStock += variant.StockQuantity
+			totalVariantReserved += (variant.StockQuantity - availableQuantity)
+			if availableQuantity > 0 {
+				hasStockVariants = true
+			}
+
 			variantsArray = append(variantsArray, varDoc)
 		}
 
@@ -220,11 +261,34 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		doc["variant_count"] = len(product.Variants)
 		doc["price_min"] = minPrice
 		doc["price_max"] = maxPrice
+		
+		// Обновляем общую информацию о наличии с учетом вариантов
+		doc["total_variant_stock"] = totalVariantStock
+		doc["total_variant_reserved"] = totalVariantReserved
+		doc["total_variant_available"] = totalVariantStock - totalVariantReserved
+		doc["has_available_variants"] = hasStockVariants
+		
+		// Перезаписываем inventory с учетом вариантов
+		doc["inventory"] = map[string]interface{}{
+			"quantity":           totalVariantStock,
+			"available":          totalVariantStock - totalVariantReserved,
+			"reserved":           totalVariantReserved,
+			"in_stock":           hasStockVariants,
+			"low_stock":          hasStockVariants && (totalVariantStock-totalVariantReserved) <= 5,
+			"status":             product.StockStatus,
+			"has_variants":       true,
+			"variant_count":      len(product.Variants),
+			"has_stock_variants": hasStockVariants,
+		}
 	} else {
 		doc["has_variants"] = false
 		doc["variant_count"] = 0
 		doc["price_min"] = product.Price
 		doc["price_max"] = product.Price
+		doc["total_variant_stock"] = 0
+		doc["total_variant_reserved"] = 0
+		doc["total_variant_available"] = 0
+		doc["has_available_variants"] = false
 	}
 
 	// TODO: Добавить загрузку информации о витрине по StorefrontID
@@ -280,22 +344,49 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 	// Текстовый поиск
 	if params.Query != "" {
 		must = append(must, map[string]interface{}{
-			"multi_match": map[string]interface{}{
-				"query": params.Query,
-				"fields": []string{
-					"name^3",
-					"name.autocomplete^2",
-					"name_lowercase^2",
-					"description",
-					"brand^2",
-					"model^2",
-					"search_keywords",
-					"sku",
-					"barcode",
+			"bool": map[string]interface{}{
+				"should": []map[string]interface{}{
+					// Поиск по основным полям товара
+					{
+						"multi_match": map[string]interface{}{
+							"query": params.Query,
+							"fields": []string{
+								"name^3",
+								"name.autocomplete^2",
+								"name_lowercase^2",
+								"description",
+								"brand^2",
+								"model^2",
+								"search_keywords",
+								"sku",
+								"barcode",
+							},
+							"type":          "best_fields",
+							"fuzziness":     "AUTO",
+							"prefix_length": 2,
+							"boost":         2.0,
+						},
+					},
+					// Поиск по вариантам
+					{
+						"nested": map[string]interface{}{
+							"path": "variants",
+							"query": map[string]interface{}{
+								"multi_match": map[string]interface{}{
+									"query": params.Query,
+									"fields": []string{
+										"variants.name^2",
+										"variants.sku^1.5",
+									},
+									"type":          "best_fields",
+									"fuzziness":     "AUTO",
+									"prefix_length": 2,
+								},
+							},
+							"boost": 1.5,
+						},
+					},
 				},
-				"type":          "best_fields",
-				"fuzziness":     "AUTO",
-				"prefix_length": 2,
 			},
 		})
 	}
@@ -336,7 +427,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 		})
 	}
 
-	// Фильтр по цене
+	// Фильтр по цене (с учетом вариантов)
 	if params.PriceMin > 0 || params.PriceMax > 0 {
 		priceRange := map[string]interface{}{}
 		if params.PriceMin > 0 {
@@ -345,39 +436,149 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 		if params.PriceMax > 0 {
 			priceRange["lte"] = params.PriceMax
 		}
+
+		// Ищем товары, у которых либо основная цена в диапазоне, либо есть варианты в диапазоне
 		filter = append(filter, map[string]interface{}{
-			"range": map[string]interface{}{
-				"price": priceRange,
+			"bool": map[string]interface{}{
+				"should": []map[string]interface{}{
+					// Основная цена товара в диапазоне
+					{
+						"range": map[string]interface{}{
+							"price": priceRange,
+						},
+					},
+					// Минимальная цена вариантов в диапазоне
+					{
+						"range": map[string]interface{}{
+							"price_min": priceRange,
+						},
+					},
+					// Максимальная цена вариантов в диапазоне
+					{
+						"range": map[string]interface{}{
+							"price_max": priceRange,
+						},
+					},
+					// Вариант с ценой в диапазоне
+					{
+						"nested": map[string]interface{}{
+							"path": "variants",
+							"query": map[string]interface{}{
+								"range": map[string]interface{}{
+									"variants.price": priceRange,
+								},
+							},
+						},
+					},
+				},
 			},
 		})
 	}
 
 	// Фильтр по наличию
 	if params.InStock != nil {
-		filter = append(filter, map[string]interface{}{
-			"term": map[string]interface{}{
-				"inventory.in_stock": *params.InStock,
-			},
-		})
+		if *params.InStock {
+			// Если ищем товары в наличии, учитываем варианты
+			filter = append(filter, map[string]interface{}{
+				"bool": map[string]interface{}{
+					"should": []map[string]interface{}{
+						// Товары без вариантов, которые в наличии
+						{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{"term": map[string]interface{}{"has_variants": false}},
+									{"term": map[string]interface{}{"inventory.in_stock": true}},
+								},
+							},
+						},
+						// Товары с вариантами, у которых есть доступные варианты
+						{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{"term": map[string]interface{}{"has_variants": true}},
+									{"term": map[string]interface{}{"has_available_variants": true}},
+								},
+							},
+						},
+					},
+				},
+			})
+		} else {
+			// Ищем товары не в наличии
+			filter = append(filter, map[string]interface{}{
+				"bool": map[string]interface{}{
+					"should": []map[string]interface{}{
+						// Товары без вариантов, которые не в наличии
+						{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{"term": map[string]interface{}{"has_variants": false}},
+									{"term": map[string]interface{}{"inventory.in_stock": false}},
+								},
+							},
+						},
+						// Товары с вариантами, у которых нет доступных вариантов
+						{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{"term": map[string]interface{}{"has_variants": true}},
+									{"term": map[string]interface{}{"has_available_variants": false}},
+								},
+							},
+						},
+					},
+				},
+			})
+		}
 	}
 
 	// Фильтр по атрибутам (nested query)
 	if len(params.Attributes) > 0 {
 		for attrName, attrValue := range params.Attributes {
+			// Ищем атрибуты как у товара, так и у вариантов
 			filter = append(filter, map[string]interface{}{
-				"nested": map[string]interface{}{
-					"path": "attributes",
-					"query": map[string]interface{}{
-						"bool": map[string]interface{}{
-							"must": []map[string]interface{}{
-								{
-									"term": map[string]interface{}{
-										"attributes.name": attrName,
+				"bool": map[string]interface{}{
+					"should": []map[string]interface{}{
+						// Атрибуты товара
+						{
+							"nested": map[string]interface{}{
+								"path": "attributes",
+								"query": map[string]interface{}{
+									"bool": map[string]interface{}{
+										"must": []map[string]interface{}{
+											{
+												"term": map[string]interface{}{
+													"attributes.name": attrName,
+												},
+											},
+											{
+												"match": map[string]interface{}{
+													"attributes.value": attrValue,
+												},
+											},
+										},
 									},
 								},
-								{
-									"match": map[string]interface{}{
-										"attributes.value": attrValue,
+							},
+						},
+						// Атрибуты в вариантах товара
+						{
+							"nested": map[string]interface{}{
+								"path": "variants",
+								"query": map[string]interface{}{
+									"bool": map[string]interface{}{
+										"must": []map[string]interface{}{
+											{
+												"exists": map[string]interface{}{
+													"field": fmt.Sprintf("variants.attributes.%s", attrName),
+												},
+											},
+											{
+												"match": map[string]interface{}{
+													fmt.Sprintf("variants.attributes.%s", attrName): attrValue,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -474,6 +675,14 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 				"fragment_size": 150,
 				"pre_tags":      []string{"<mark>"},
 				"post_tags":     []string{"</mark>"},
+			},
+			"variants.name": map[string]interface{}{
+				"pre_tags":  []string{"<mark>"},
+				"post_tags": []string{"</mark>"},
+			},
+			"variants.sku": map[string]interface{}{
+				"pre_tags":  []string{"<mark>"},
+				"post_tags": []string{"</mark>"},
 			},
 		},
 	}
@@ -629,6 +838,50 @@ func (r *ProductRepository) buildAggregations(requested []string) map[string]int
 			aggs["in_stock"] = map[string]interface{}{
 				"terms": map[string]interface{}{
 					"field": "inventory.in_stock",
+				},
+			}
+		case "variants":
+			aggs["variants"] = map[string]interface{}{
+				"nested": map[string]interface{}{
+					"path": "variants",
+				},
+				"aggs": map[string]interface{}{
+					"available_variants": map[string]interface{}{
+						"filter": map[string]interface{}{
+							"term": map[string]interface{}{
+								"variants.inventory.in_stock": true,
+							},
+						},
+					},
+					"variant_attributes": map[string]interface{}{
+						"terms": map[string]interface{}{
+							"script": map[string]interface{}{
+								"source": "params._source.variants.attributes.keySet()",
+							},
+							"size": 50,
+						},
+						"aggs": map[string]interface{}{
+							"values": map[string]interface{}{
+								"terms": map[string]interface{}{
+									"script": map[string]interface{}{
+										"source": "params._source.variants.attributes.values()",
+									},
+									"size": 20,
+								},
+							},
+						},
+					},
+					"price_range": map[string]interface{}{
+						"stats": map[string]interface{}{
+							"field": "variants.price",
+						},
+					},
+				},
+			}
+		case "has_variants":
+			aggs["has_variants"] = map[string]interface{}{
+				"terms": map[string]interface{}{
+					"field": "has_variants",
 				},
 			}
 		}
@@ -897,6 +1150,19 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 				if v, ok := varMap["attributes"].(map[string]interface{}); ok {
 					var_.Attributes = v
 				}
+				// Новые поля
+				if v, ok := varMap["stock_quantity"].(float64); ok {
+					var_.StockQuantity = int(v)
+				}
+				if v, ok := varMap["available_quantity"].(float64); ok {
+					var_.AvailableQuantity = int(v)
+				}
+				if v, ok := varMap["stock_status"].(string); ok {
+					var_.StockStatus = v
+				}
+				if v, ok := varMap["is_active"].(bool); ok {
+					var_.IsActive = v
+				}
 				item.Variants = append(item.Variants, var_)
 			}
 		}
@@ -1007,11 +1273,16 @@ const storefrontProductMapping = `{
       "inventory": {
         "properties": {
           "track": {"type": "boolean"},
+          "quantity": {"type": "integer"},
           "count": {"type": "integer"},
           "reserved": {"type": "integer"},
           "available": {"type": "integer"},
           "in_stock": {"type": "boolean"},
-          "low_stock": {"type": "boolean"}
+          "low_stock": {"type": "boolean"},
+          "status": {"type": "keyword"},
+          "has_variants": {"type": "boolean"},
+          "variant_count": {"type": "integer"},
+          "has_stock_variants": {"type": "boolean"}
         }
       },
       "attributes": {
@@ -1040,16 +1311,42 @@ const storefrontProductMapping = `{
       "has_images": {"type": "boolean"},
       "image_count": {"type": "integer"},
       "variants": {
+        "type": "nested",
         "properties": {
           "id": {"type": "integer"},
-          "name": {"type": "text"},
+          "name": {
+            "type": "text",
+            "fields": {
+              "keyword": {"type": "keyword"}
+            }
+          },
           "sku": {"type": "keyword"},
           "price": {"type": "float"},
-          "attributes": {"type": "object"}
+          "stock_quantity": {"type": "integer"},
+          "available_quantity": {"type": "integer"},
+          "stock_status": {"type": "keyword"},
+          "is_active": {"type": "boolean"},
+          "attributes": {"type": "object"},
+          "inventory": {
+            "properties": {
+              "quantity": {"type": "integer"},
+              "available": {"type": "integer"},
+              "reserved": {"type": "integer"},
+              "in_stock": {"type": "boolean"},
+              "low_stock": {"type": "boolean"},
+              "status": {"type": "keyword"}
+            }
+          },
+          "created_at": {"type": "date"},
+          "updated_at": {"type": "date"}
         }
       },
       "has_variants": {"type": "boolean"},
       "variant_count": {"type": "integer"},
+      "total_variant_stock": {"type": "integer"},
+      "total_variant_reserved": {"type": "integer"},
+      "total_variant_available": {"type": "integer"},
+      "has_available_variants": {"type": "boolean"},
       "storefront": {
         "properties": {
           "id": {"type": "integer"},

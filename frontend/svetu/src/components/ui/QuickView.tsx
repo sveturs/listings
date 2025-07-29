@@ -40,13 +40,21 @@ interface QuickViewProps {
       favorites: number;
     };
     condition?: 'new' | 'used' | 'refurbished';
+    storefrontId?: number;
+    storefrontName?: string;
+    storefrontSlug?: string;
+    stockQuantity?: number;
   };
+  onAddToCart?: () => void;
+  onContact?: () => void;
 }
 
 export const QuickView: React.FC<QuickViewProps> = ({
   isOpen,
   onClose,
   product,
+  onAddToCart,
+  onContact,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
@@ -279,10 +287,22 @@ export const QuickView: React.FC<QuickViewProps> = ({
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-4">
-                  <button className="btn btn-primary flex-1">
-                    <ShoppingCart className="w-5 h-5" />
-                    Связаться
-                  </button>
+                  {product.storefrontId && onAddToCart ? (
+                    <button
+                      onClick={onAddToCart}
+                      className="btn btn-primary flex-1"
+                    >
+                      <ShoppingCart className="w-5 h-5" />В корзину
+                    </button>
+                  ) : (
+                    <button
+                      onClick={onContact}
+                      className="btn btn-primary flex-1"
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                      Связаться
+                    </button>
+                  )}
                   <button className="btn btn-ghost btn-square">
                     <Heart className="w-5 h-5" />
                   </button>
@@ -292,10 +312,14 @@ export const QuickView: React.FC<QuickViewProps> = ({
                 </div>
 
                 {/* Safe Deal Badge */}
-                <div className="flex items-center gap-2 p-3 bg-success/10 text-success rounded-lg">
-                  <Shield className="w-5 h-5" />
-                  <span className="text-sm font-medium">Безопасная сделка</span>
-                </div>
+                {product.storefrontId && (
+                  <div className="flex items-center gap-2 p-3 bg-success/10 text-success rounded-lg">
+                    <Shield className="w-5 h-5" />
+                    <span className="text-sm font-medium">
+                      Безопасная сделка
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
