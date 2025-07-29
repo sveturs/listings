@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import {
-  X,
-  Loader2,
-  Tags,
-  TrendingUp,
-  Languages,
-  Trash2,
-} from 'lucide-react';
+import { X, Loader2, Tags, TrendingUp, Languages, Trash2 } from 'lucide-react';
 import { toast } from '@/utils/toast';
 
 interface CategoryKeyword {
@@ -317,74 +310,75 @@ export default function CategoryKeywordsModal({
                 </tr>
               </thead>
               <tbody>
-                {Array.isArray(keywords) && keywords.map((keyword) => (
-                  <tr
-                    key={keyword.id}
-                    className={keyword.is_negative ? 'bg-error/5' : ''}
-                  >
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{keyword.keyword}</span>
-                        {keyword.is_negative && (
-                          <span className="badge badge-error badge-sm">
-                            {t('negative')}
+                {Array.isArray(keywords) &&
+                  keywords.map((keyword) => (
+                    <tr
+                      key={keyword.id}
+                      className={keyword.is_negative ? 'bg-error/5' : ''}
+                    >
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{keyword.keyword}</span>
+                          {keyword.is_negative && (
+                            <span className="badge badge-error badge-sm">
+                              {t('negative')}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <Languages className="w-4 h-4" />
+                          <span>
+                            {keyword.language === '*'
+                              ? t('allLanguages')
+                              : keyword.language.toUpperCase()}
                           </span>
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <Languages className="w-4 h-4" />
-                        <span>
-                          {keyword.language === '*'
-                            ? t('allLanguages')
-                            : keyword.language.toUpperCase()}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="badge badge-outline">
+                          {t(`types.${keyword.keyword_type}`)}
                         </span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="badge badge-outline">
-                        {t(`types.${keyword.keyword_type}`)}
-                      </span>
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        className="input input-bordered input-sm w-20"
-                        value={keyword.weight}
-                        min="0"
-                        max="10"
-                        step="0.1"
-                        onChange={(e) =>
-                          updateWeight(keyword.id, parseFloat(e.target.value))
-                        }
-                      />
-                    </td>
-                    <td>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <span>
-                            {t('usage')}: {keyword.usage_count}
-                          </span>
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          className="input input-bordered input-sm w-20"
+                          value={keyword.weight}
+                          min="0"
+                          max="10"
+                          step="0.1"
+                          onChange={(e) =>
+                            updateWeight(keyword.id, parseFloat(e.target.value))
+                          }
+                        />
+                      </td>
+                      <td>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <span>
+                              {t('usage')}: {keyword.usage_count}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <TrendingUp className="w-4 h-4 text-success" />
+                            <span>
+                              {(keyword.success_rate * 100).toFixed(1)}%
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <TrendingUp className="w-4 h-4 text-success" />
-                          <span>
-                            {(keyword.success_rate * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => deleteKeyword(keyword.id)}
-                        className="btn btn-ghost btn-sm text-error"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => deleteKeyword(keyword.id)}
+                          className="btn btn-ghost btn-sm text-error"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           )}

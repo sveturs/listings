@@ -5,6 +5,17 @@ import (
 	"strings"
 )
 
+// Privacy level constants
+const (
+	PrivacyLevelExact       = "exact"
+	PrivacyLevelStreet      = "street"
+	PrivacyLevelApproximate = "approximate"
+	PrivacyLevelDistrict    = "district"
+	PrivacyLevelCity        = "city"
+	PrivacyLevelCityOnly    = "city_only"
+	PrivacyLevelHidden      = "hidden"
+)
+
 // FormatAddressWithPrivacy форматирует адрес в соответствии с уровнем приватности
 func FormatAddressWithPrivacy(address string, privacyLevel string) string {
 	if address == "" {
@@ -12,7 +23,7 @@ func FormatAddressWithPrivacy(address string, privacyLevel string) string {
 	}
 
 	// Для точного адреса возвращаем как есть
-	if privacyLevel == "exact" {
+	if privacyLevel == PrivacyLevelExact {
 		return address
 	}
 
@@ -23,7 +34,7 @@ func FormatAddressWithPrivacy(address string, privacyLevel string) string {
 	}
 
 	switch privacyLevel {
-	case "street", "approximate":
+	case PrivacyLevelStreet, PrivacyLevelApproximate:
 		// Уровень улицы - убираем номер дома
 		if len(parts) > 0 {
 			// Регулярное выражение для удаления номера дома
@@ -39,7 +50,7 @@ func FormatAddressWithPrivacy(address string, privacyLevel string) string {
 		}
 		return strings.Join(parts, ", ")
 
-	case "district":
+	case PrivacyLevelDistrict:
 		// Уровень района - показываем только район и город
 		if len(parts) >= 2 {
 			// Берем последние 2-3 части (обычно район/город, страна)
@@ -47,7 +58,7 @@ func FormatAddressWithPrivacy(address string, privacyLevel string) string {
 		}
 		return address
 
-	case "city", "city_only":
+	case PrivacyLevelCity, PrivacyLevelCityOnly:
 		// Только город - берем последнюю часть адреса
 		if len(parts) > 0 {
 			// Обычно город находится в конце адреса
@@ -60,7 +71,7 @@ func FormatAddressWithPrivacy(address string, privacyLevel string) string {
 		}
 		return address
 
-	case "hidden":
+	case PrivacyLevelHidden:
 		// Скрытый адрес - возвращаем только страну или общее указание
 		if len(parts) > 0 {
 			// Если есть страна (последняя часть), возвращаем её
@@ -81,26 +92,26 @@ func FormatAddressWithPrivacy(address string, privacyLevel string) string {
 // GetCoordinatesWithGeocoding с сервисом геокодирования
 func GetCoordinatesPrivacy(lat, lng float64, privacyLevel string) (float64, float64) {
 	switch privacyLevel {
-	case "exact":
+	case PrivacyLevelExact:
 		// Точные координаты
 		return lat, lng
 
-	case "street", "approximate":
+	case PrivacyLevelStreet, PrivacyLevelApproximate:
 		// Временно округляем до ~100 метров (3 знака после запятой)
 		// TODO: Использовать геокодирование для получения координат улицы
 		return roundToDecimalPlaces(lat, 3), roundToDecimalPlaces(lng, 3)
 
-	case "district":
+	case PrivacyLevelDistrict:
 		// Временно округляем до ~1 км (2 знака после запятой)
 		// TODO: Использовать геокодирование для получения координат района
 		return roundToDecimalPlaces(lat, 2), roundToDecimalPlaces(lng, 2)
 
-	case "city", "city_only":
+	case PrivacyLevelCity, PrivacyLevelCityOnly:
 		// Временно округляем до ~10 км (1 знак после запятой)
 		// TODO: Использовать геокодирование для получения координат города
 		return roundToDecimalPlaces(lat, 1), roundToDecimalPlaces(lng, 1)
 
-	case "hidden":
+	case PrivacyLevelHidden:
 		// Возвращаем 0,0 для скрытых координат
 		return 0, 0
 

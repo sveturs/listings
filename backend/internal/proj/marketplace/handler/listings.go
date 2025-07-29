@@ -71,7 +71,7 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 	// Проверяем, была ли категория определена автоматически
 	var categoryDetectionStatsID *int32
 	var detectedKeywords []string
-	var detectionLanguage string = "ru" // значение по умолчанию
+	detectionLanguage := "ru" // значение по умолчанию
 	if requestBody != nil {
 		if statsID, ok := requestBody["category_detection_stats_id"].(float64); ok {
 			statsIDInt := int32(statsID)
@@ -863,26 +863,26 @@ func detectDeviceType(userAgent string) string {
 func (h *ListingsHandler) updateCategoryDetectionStats(ctx context.Context, statsID int32, categoryID int, detectedKeywords []string, language string) {
 	// Получаем storage для работы с БД
 	storage := h.services.Storage()
-	
+
 	// Преобразуем storage к конкретному типу для доступа к методам
 	if db, ok := storage.(*postgres.Database); ok {
 		// Обновляем статистику как подтвержденную
 		statsRepo := postgres.NewCategoryDetectionStatsRepository(db.GetSQLXDB())
-		
+
 		// Помечаем, что пользователь подтвердил категорию
 		confirmed := true
-		finalCategoryID := int32(categoryID)
-		
+		finalCategoryID := int32(categoryID) //nolint:gosec // CategoryID проверяется выше
+
 		err := statsRepo.UpdateUserFeedback(ctx, statsID, confirmed, &finalCategoryID)
 		if err != nil {
 			logger.Error().Err(err).Int32("statsID", statsID).Msg("Failed to update category detection stats")
 			return
 		}
-		
+
 		// Обновляем success_rate для использованных ключевых слов
 		if len(detectedKeywords) > 0 {
 			keywordRepo := postgres.NewCategoryKeywordRepository(db.GetSQLXDB())
-			
+
 			// Увеличиваем счетчик использования для найденных ключевых слов
 			err := keywordRepo.IncrementUsageCount(ctx, finalCategoryID, detectedKeywords, language)
 			if err != nil {
@@ -896,20 +896,20 @@ func (h *ListingsHandler) updateCategoryDetectionStats(ctx context.Context, stat
 					Interface("keywords", detectedKeywords).
 					Msg("Successfully incremented keyword usage count")
 			}
-			
+
 			// Получаем все статистики для пересчета success_rate
 			stats, err := statsRepo.GetRecentStats(ctx, 30) // за последние 30 дней
 			if err != nil {
 				logger.Error().Err(err).Msg("Failed to get recent stats for success rate update")
 				return
 			}
-			
+
 			// Подсчитываем успешность для каждого ключевого слова
 			keywordSuccess := make(map[string]int)
 			keywordTotal := make(map[string]int)
-			
+
 			logger.Info().Int("totalStats", len(stats)).Msg("Processing stats for success rate calculation")
-			
+
 			for _, stat := range stats {
 				for _, keyword := range stat.MatchedKeywords {
 					keywordTotal[keyword]++
@@ -918,12 +918,12 @@ func (h *ListingsHandler) updateCategoryDetectionStats(ctx context.Context, stat
 					}
 				}
 			}
-			
+
 			logger.Info().
 				Interface("keywordTotal", keywordTotal).
 				Interface("keywordSuccess", keywordSuccess).
 				Msg("Keyword statistics calculated")
-			
+
 			// Обновляем success_rate для каждого ключевого слова
 			for keyword, total := range keywordTotal {
 				if total > 0 {
@@ -941,7 +941,7 @@ func (h *ListingsHandler) updateCategoryDetectionStats(ctx context.Context, stat
 				}
 			}
 		}
-		
+
 		logger.Info().
 			Int32("statsID", statsID).
 			Int("categoryID", categoryID).

@@ -89,7 +89,7 @@ export interface CreateListingState {
 
   // ID статистики определения категории
   categoryDetectionStatsId?: number;
-  
+
   // Ключевые слова, использованные для определения категории
   detectedKeywords?: string[];
 

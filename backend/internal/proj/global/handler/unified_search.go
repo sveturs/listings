@@ -372,9 +372,13 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		}
 
 		// Определяем тип товара на основе StorefrontID
-		productType := "marketplace"
+		const (
+			productTypeMarketplace = "marketplace"
+			productTypeStorefront  = "storefront"
+		)
+		productType := productTypeMarketplace
 		if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-			productType = "storefront"
+			productType = productTypeStorefront
 		}
 
 		item := UnifiedSearchItem{
@@ -394,7 +398,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		}
 
 		// Если это товар витрины, нужно добавить информацию о витрине
-		if productType == "storefront" && listing.StorefrontID != nil {
+		if productType == productTypeStorefront && listing.StorefrontID != nil {
 			// Получаем информацию о витрине из базы данных
 			storefront, err := h.services.Storefront().GetByID(ctx, *listing.StorefrontID)
 			if err != nil {

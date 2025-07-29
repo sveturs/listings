@@ -17,7 +17,6 @@ import {
   ImageIcon,
   MapPin,
   DollarSign,
-  ChevronRight,
   Info,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';

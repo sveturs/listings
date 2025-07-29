@@ -51,7 +51,9 @@ import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
 import { extractLocationFromImages } from '@/utils/exifUtils';
 import { formatAddressWithPrivacy } from '@/utils/addressPrivacy';
 import LocationPicker from '@/components/GIS/LocationPicker';
-import LocationPrivacySettingsWithAddress, { LocationPrivacyLevel } from '@/components/GIS/LocationPrivacySettingsWithAddress';
+import LocationPrivacySettingsWithAddress, {
+  LocationPrivacyLevel,
+} from '@/components/GIS/LocationPrivacySettingsWithAddress';
 
 export default function AIPoweredListingCreationPage() {
   const router = useRouter();
@@ -80,9 +82,10 @@ export default function AIPoweredListingCreationPage() {
     longitude: number;
     source: 'exif' | 'profile' | 'manual';
   } | null>(null);
-  
+
   // Состояние для приватности адреса
-  const [locationPrivacyLevel, setLocationPrivacyLevel] = useState<LocationPrivacyLevel['id']>('street');
+  const [locationPrivacyLevel, setLocationPrivacyLevel] =
+    useState<LocationPrivacyLevel['id']>('street');
   const [fullAddress, setFullAddress] = useState<string>(''); // Полный адрес для сохранения в БД
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
 
@@ -402,21 +405,30 @@ export default function AIPoweredListingCreationPage() {
 
           if (geocodedAddress) {
             console.log('Geocoded address during processing:', geocodedAddress);
-            
+
             // Сохраняем полный адрес
-            const fullAddressStr = geocodedAddress.address || geocodedAddress.place_name;
+            const fullAddressStr =
+              geocodedAddress.address || geocodedAddress.place_name;
             setFullAddress(fullAddressStr);
-            
+
             // Форматируем адрес с учетом приватности по умолчанию (улица)
-            const privateAddress = formatAddressWithPrivacy(
-              fullAddressStr,
-              { showHouseNumber: false, showStreet: true, showCity: true, showRegion: true }
-            );
-            
+            const privateAddress = formatAddressWithPrivacy(fullAddressStr, {
+              showHouseNumber: false,
+              showStreet: true,
+              showCity: true,
+              showRegion: true,
+            });
+
             // Сохраняем адрес для использования ниже
             exifLocationData = {
-              city: geocodedAddress.city || geocodedAddress.address_components.city || 'Белград',
-              region: geocodedAddress.region || geocodedAddress.address_components.district || 'Сербия',
+              city:
+                geocodedAddress.city ||
+                geocodedAddress.address_components.city ||
+                'Белград',
+              region:
+                geocodedAddress.region ||
+                geocodedAddress.address_components.district ||
+                'Сербия',
               suggestedLocation: privateAddress,
             };
           }
@@ -487,7 +499,8 @@ export default function AIPoweredListingCreationPage() {
                     probability: alt.confidence_score,
                   })) || [],
                 // Сохраняем найденные ключевые слова для последующей передачи на backend
-                matchedKeywords: detectionResult.debug_info?.matched_keywords || [],
+                matchedKeywords:
+                  detectionResult.debug_info?.matched_keywords || [],
               }));
 
               // Загружаем атрибуты для определенной категории
@@ -573,23 +586,32 @@ export default function AIPoweredListingCreationPage() {
 
           if (geocodedAddress) {
             console.log('Geocoded address:', geocodedAddress);
-            
+
             // Сохраняем полный адрес
-            const fullAddressStr = geocodedAddress.address || geocodedAddress.place_name;
+            const fullAddressStr =
+              geocodedAddress.address || geocodedAddress.place_name;
             setFullAddress(fullAddressStr);
-            
+
             // Форматируем адрес с учетом приватности по умолчанию (улица)
-            const privateAddress = formatAddressWithPrivacy(
-              fullAddressStr,
-              { showHouseNumber: false, showStreet: true, showCity: true, showRegion: true }
-            );
-            
+            const privateAddress = formatAddressWithPrivacy(fullAddressStr, {
+              showHouseNumber: false,
+              showStreet: true,
+              showCity: true,
+              showRegion: true,
+            });
+
             // Обновляем данные локации в AI данных с реальным адресом
             setAiData((prev) => ({
               ...prev,
               location: {
-                city: geocodedAddress.city || geocodedAddress.address_components.city || 'Белград',
-                region: geocodedAddress.region || geocodedAddress.address_components.district || 'Сербия',
+                city:
+                  geocodedAddress.city ||
+                  geocodedAddress.address_components.city ||
+                  'Белград',
+                region:
+                  geocodedAddress.region ||
+                  geocodedAddress.address_components.district ||
+                  'Сербия',
                 suggestedLocation: privateAddress,
               },
             }));
@@ -1260,19 +1282,20 @@ export default function AIPoweredListingCreationPage() {
                   <div className="alert alert-info mt-4">
                     <Lightbulb className="w-4 h-4" />
                     <span className="text-sm">
-                      {fullAddress ? 
-                        `${t('location_detected_from_photo')}: ${aiData.location.suggestedLocation}` :
-                        `${t('ai.location.ai_suggests')} ${aiData.location.suggestedLocation}`
-                      }
+                      {fullAddress
+                        ? `${t('location_detected_from_photo')}: ${aiData.location.suggestedLocation}`
+                        : `${t('ai.location.ai_suggests')} ${aiData.location.suggestedLocation}`}
                     </span>
                   </div>
-                  
+
                   {/* Настройки приватности */}
                   {(detectedLocation || fullAddress) && (
                     <div className="mt-4">
                       <button
                         type="button"
-                        onClick={() => setShowPrivacySettings(!showPrivacySettings)}
+                        onClick={() =>
+                          setShowPrivacySettings(!showPrivacySettings)
+                        }
                         className="btn btn-outline btn-sm gap-2"
                       >
                         <Shield className="w-4 h-4" />
@@ -1291,7 +1314,7 @@ export default function AIPoweredListingCreationPage() {
                           />
                         </svg>
                       </button>
-                      
+
                       {showPrivacySettings && (
                         <div className="mt-4 p-4 bg-base-100 rounded-lg">
                           <LocationPrivacySettingsWithAddress
@@ -1302,12 +1325,16 @@ export default function AIPoweredListingCreationPage() {
                               if (fullAddress) {
                                 const options = {
                                   showHouseNumber: level === 'exact',
-                                  showStreet: level === 'exact' || level === 'street',
+                                  showStreet:
+                                    level === 'exact' || level === 'street',
                                   showCity: true,
                                   showRegion: level !== 'city',
-                                  showCountry: level === 'city'
+                                  showCountry: level === 'city',
                                 };
-                                const updatedAddress = formatAddressWithPrivacy(fullAddress, options);
+                                const updatedAddress = formatAddressWithPrivacy(
+                                  fullAddress,
+                                  options
+                                );
                                 setAiData((prev) => ({
                                   ...prev,
                                   location: {
@@ -1317,10 +1344,14 @@ export default function AIPoweredListingCreationPage() {
                                 }));
                               }
                             }}
-                            location={detectedLocation ? {
-                              lat: detectedLocation.latitude,
-                              lng: detectedLocation.longitude,
-                            } : undefined}
+                            location={
+                              detectedLocation
+                                ? {
+                                    lat: detectedLocation.latitude,
+                                    lng: detectedLocation.longitude,
+                                  }
+                                : undefined
+                            }
                             fullAddress={fullAddress}
                             showPreview={true}
                           />
@@ -1790,7 +1821,10 @@ export default function AIPoweredListingCreationPage() {
           latitude,
           longitude,
           // Отправляем адрес с учетом приватности
-          address: aiData.location.suggestedLocation || aiData.location.city || 'Белград',
+          address:
+            aiData.location.suggestedLocation ||
+            aiData.location.city ||
+            'Белград',
           city: aiData.location.city || 'Белград',
           region: aiData.location.region || 'Сербия',
           country: 'Сербия',
@@ -1924,7 +1958,7 @@ export default function AIPoweredListingCreationPage() {
 
         // ID статистики определения категории
         categoryDetectionStatsId: aiData.categoryDetectionStatsId || undefined,
-        
+
         // Ключевые слова, использованные для определения категории
         detectedKeywords: aiData.matchedKeywords || undefined,
 
@@ -1935,7 +1969,10 @@ export default function AIPoweredListingCreationPage() {
 
       // Создаем объявление
       const { ListingsService } = await import('@/services/listings');
-      const response = await ListingsService.createListing(listingData, locationPrivacyLevel);
+      const response = await ListingsService.createListing(
+        listingData,
+        locationPrivacyLevel
+      );
 
       if (response.data?.id) {
         // Загружаем изображения
@@ -2376,16 +2413,21 @@ export default function AIPoweredListingCreationPage() {
 
                   // Сохраняем полный адрес
                   setFullAddress(location.address);
-                  
+
                   // Форматируем адрес с учетом текущего уровня приватности
                   const options = {
                     showHouseNumber: locationPrivacyLevel === 'exact',
-                    showStreet: locationPrivacyLevel === 'exact' || locationPrivacyLevel === 'street',
+                    showStreet:
+                      locationPrivacyLevel === 'exact' ||
+                      locationPrivacyLevel === 'street',
                     showCity: true,
                     showRegion: locationPrivacyLevel !== 'city',
-                    showCountry: locationPrivacyLevel === 'city'
+                    showCountry: locationPrivacyLevel === 'city',
                   };
-                  const privateAddress = formatAddressWithPrivacy(location.address, options);
+                  const privateAddress = formatAddressWithPrivacy(
+                    location.address,
+                    options
+                  );
 
                   setAiData((prev) => ({
                     ...prev,

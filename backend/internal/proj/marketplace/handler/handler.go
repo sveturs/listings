@@ -89,7 +89,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 
 		// Создаем репозиторий для keywords
 		keywordRepo := postgres.NewCategoryKeywordRepository(postgresDB.GetSQLXDB())
-		
+
 		adminCategoriesHandler := NewAdminCategoriesHandler(categoriesHandler, keywordRepo)
 		logger.Info().Interface("adminCategoriesHandler", adminCategoriesHandler).Msg("Created AdminCategoriesHandler")
 

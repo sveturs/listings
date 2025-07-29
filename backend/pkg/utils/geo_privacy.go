@@ -29,7 +29,7 @@ func NewNominatimGeocoding() GeocodingService {
 func (n *NominatimGeocoding) geocode(address string) (lat, lng float64, err error) {
 	// Кодируем адрес для URL
 	encodedAddress := url.QueryEscape(address)
-	
+
 	// Формируем URL запроса к Nominatim
 	nominatimURL := fmt.Sprintf(
 		"https://nominatim.openstreetmap.org/search?format=json&q=%s&limit=1",
@@ -68,20 +68,24 @@ func (n *NominatimGeocoding) geocode(address string) (lat, lng float64, err erro
 
 	// Получаем координаты из первого результата
 	result := results[0]
-	
+
 	latStr, ok := result["lat"].(string)
 	if !ok {
 		return 0, 0, fmt.Errorf("invalid latitude in response")
 	}
-	
+
 	lngStr, ok := result["lon"].(string)
 	if !ok {
 		return 0, 0, fmt.Errorf("invalid longitude in response")
 	}
 
 	// Преобразуем строки в числа
-	fmt.Sscanf(latStr, "%f", &lat)
-	fmt.Sscanf(lngStr, "%f", &lng)
+	if _, err := fmt.Sscanf(latStr, "%f", &lat); err != nil {
+		return 0, 0, fmt.Errorf("failed to parse latitude: %w", err)
+	}
+	if _, err := fmt.Sscanf(lngStr, "%f", &lng); err != nil {
+		return 0, 0, fmt.Errorf("failed to parse longitude: %w", err)
+	}
 
 	return lat, lng, nil
 }
@@ -122,7 +126,7 @@ func removeHouseNumber(street string) string {
 	// Простая реализация - удаляем числа в начале или конце строки
 	parts := strings.Fields(street)
 	var result []string
-	
+
 	for _, part := range parts {
 		// Проверяем, не является ли это числом или числом с буквой
 		isNumber := true
@@ -132,12 +136,12 @@ func removeHouseNumber(street string) string {
 				break
 			}
 		}
-		
+
 		if !isNumber {
 			result = append(result, part)
 		}
 	}
-	
+
 	return strings.Join(result, " ")
 }
 
@@ -169,7 +173,7 @@ func GetCoordinatesWithGeocoding(ctx context.Context, lat, lng float64, address 
 				// Предполагаем формат: улица, район/город, страна
 				city := strings.TrimSpace(parts[len(parts)-2])
 				district := city // В простом случае используем город как район
-				
+
 				districtLat, districtLng, err := geocoder.GetDistrictCoordinates(ctx, city, district)
 				if err == nil {
 					return districtLat, districtLng, nil
@@ -190,7 +194,7 @@ func GetCoordinatesWithGeocoding(ctx context.Context, lat, lng float64, address 
 				if len(parts) >= 3 {
 					country = strings.TrimSpace(parts[len(parts)-1])
 				}
-				
+
 				cityLat, cityLng, err := geocoder.GetCityCoordinates(ctx, city, country)
 				if err == nil {
 					return cityLat, cityLng, nil

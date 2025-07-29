@@ -2530,6 +2530,321 @@
                 }
             }
         },
+        "/api/v1/admin/categories/keywords/{keyword_id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates an existing keyword",
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Update category keyword",
+                "parameters": [
+                    {
+                        "description": "Keyword ID",
+                        "name": "keyword_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.CategoryKeywordUpdateRequest"
+                            }
+                        }
+                    },
+                    "description": "Updated keyword data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated keyword",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_domain_models.CategoryKeyword"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Keyword not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a keyword from category",
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Delete category keyword",
+                "parameters": [
+                    {
+                        "description": "Keyword ID",
+                        "name": "keyword_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Keyword deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid keyword ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Keyword not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/categories/{category_id}/keywords": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all keywords for a specific category",
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Get category keywords",
+                "parameters": [
+                    {
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Keywords list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.CategoryKeyword"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid category ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds a new keyword to the specified category",
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Add keyword to category",
+                "parameters": [
+                    {
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.CategoryKeywordRequest"
+                            }
+                        }
+                    },
+                    "description": "Keyword data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created keyword",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_domain_models.CategoryKeyword"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/categories/{id}/translate": {
             "post": {
                 "security": [
@@ -11161,6 +11476,223 @@
                     },
                     "500": {
                         "description": "marketplace.categoriesError",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/categories/detect": {
+            "post": {
+                "description": "Использует комбинированный подход с ключевыми словами и similarity search",
+                "tags": [
+                    "marketplace-categories"
+                ],
+                "summary": "Определить категорию по ключевым словам и атрибутам",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/internal_proj_marketplace_handler.DetectCategoryRequest"
+                            }
+                        }
+                    },
+                    "description": "Данные для определения категории",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Результат определения категории",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/internal_proj_marketplace_handler.DetectCategoryResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Недостаточно данных",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/categories/detect/{stats_id}/confirm": {
+            "put": {
+                "description": "Обновляет статистику для улучшения алгоритма",
+                "tags": [
+                    "marketplace-categories"
+                ],
+                "summary": "Подтвердить или исправить выбор категории",
+                "parameters": [
+                    {
+                        "description": "ID записи статистики",
+                        "name": "stats_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/internal_proj_marketplace_handler.UpdateConfirmationRequest"
+                            }
+                        }
+                    },
+                    "description": "Данные подтверждения",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Успешное обновление",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "boolean"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/categories/{category_id}/keywords": {
+            "get": {
+                "description": "Возвращает список ключевых слов с весами для указанной категории",
+                "tags": [
+                    "marketplace-categories"
+                ],
+                "summary": "Получить ключевые слова категории",
+                "parameters": [
+                    {
+                        "description": "ID категории",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Язык (ru, en, sr)",
+                        "name": "language",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список ключевых слов",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/internal_proj_marketplace_handler.CategoryKeywordResponse"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Категория не найдена",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -26763,6 +27295,84 @@
                     }
                 }
             },
+            "backend_internal_domain_models.CategoryKeyword": {
+                "type": "object",
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_negative": {
+                        "type": "boolean"
+                    },
+                    "keyword": {
+                        "type": "string"
+                    },
+                    "keyword_type": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "success_rate": {
+                        "type": "number"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "usage_count": {
+                        "type": "integer"
+                    },
+                    "weight": {
+                        "type": "number"
+                    }
+                }
+            },
+            "backend_internal_domain_models.CategoryKeywordRequest": {
+                "type": "object",
+                "required": [
+                    "keyword",
+                    "keyword_type",
+                    "language"
+                ],
+                "properties": {
+                    "is_negative": {
+                        "type": "boolean"
+                    },
+                    "keyword": {
+                        "type": "string"
+                    },
+                    "keyword_type": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string"
+                    },
+                    "weight": {
+                        "type": "number",
+                        "maximum": 10,
+                        "minimum": 0
+                    }
+                }
+            },
+            "backend_internal_domain_models.CategoryKeywordUpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "weight": {
+                        "type": "number",
+                        "maximum": 10,
+                        "minimum": 0
+                    }
+                }
+            },
             "backend_internal_domain_models.CategorySuggestion": {
                 "type": "object",
                 "properties": {
@@ -28056,6 +28666,9 @@
                     "location": {
                         "type": "string"
                     },
+                    "location_privacy": {
+                        "type": "string"
+                    },
                     "longitude": {
                         "type": "number"
                     },
@@ -28084,6 +28697,14 @@
                     },
                     "status": {
                         "type": "string"
+                    },
+                    "storefront": {
+                        "description": "данные витрины",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.Storefront"
+                            }
+                        ]
                     },
                     "storefront_id": {
                         "description": "связь с витриной",
@@ -32569,6 +33190,23 @@
                     }
                 }
             },
+            "internal_proj_marketplace_handler.AlternativeCategoryResponse": {
+                "type": "object",
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "category_name": {
+                        "type": "string"
+                    },
+                    "category_slug": {
+                        "type": "string"
+                    },
+                    "confidence_score": {
+                        "type": "number"
+                    }
+                }
+            },
             "internal_proj_marketplace_handler.AttributeCreateResponse": {
                 "type": "object",
                 "properties": {
@@ -32718,6 +33356,35 @@
                     }
                 }
             },
+            "internal_proj_marketplace_handler.CategoryKeywordResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_negative": {
+                        "type": "boolean"
+                    },
+                    "keyword": {
+                        "type": "string"
+                    },
+                    "keyword_type": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string"
+                    },
+                    "success_rate": {
+                        "type": "number"
+                    },
+                    "usage_count": {
+                        "type": "integer"
+                    },
+                    "weight": {
+                        "type": "number"
+                    }
+                }
+            },
             "internal_proj_marketplace_handler.CategoryTranslationResult": {
                 "type": "object",
                 "properties": {
@@ -32800,6 +33467,102 @@
                             "card",
                             "bank_transfer"
                         ]
+                    }
+                }
+            },
+            "internal_proj_marketplace_handler.DebugInfo": {
+                "type": "object",
+                "properties": {
+                    "keyword_score": {
+                        "type": "number"
+                    },
+                    "matched_keywords": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "similarity_score": {
+                        "type": "number"
+                    }
+                }
+            },
+            "internal_proj_marketplace_handler.DetectCategoryRequest": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "domain": {
+                        "type": "string",
+                        "example": "electronics"
+                    },
+                    "include_debug_info": {
+                        "type": "boolean"
+                    },
+                    "keywords": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "телефон",
+                            "смартфон",
+                            "айфон"
+                        ]
+                    },
+                    "language": {
+                        "type": "string",
+                        "example": "ru"
+                    },
+                    "product_type": {
+                        "type": "string",
+                        "example": "smartphone"
+                    },
+                    "title": {
+                        "type": "string"
+                    }
+                }
+            },
+            "internal_proj_marketplace_handler.DetectCategoryResponse": {
+                "type": "object",
+                "properties": {
+                    "alternative_categories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/internal_proj_marketplace_handler.AlternativeCategoryResponse"
+                        }
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "category_name": {
+                        "type": "string"
+                    },
+                    "category_slug": {
+                        "type": "string"
+                    },
+                    "confidence_score": {
+                        "type": "number"
+                    },
+                    "debug_info": {
+                        "$ref": "#/components/schemas/internal_proj_marketplace_handler.DebugInfo"
+                    },
+                    "method": {
+                        "type": "string"
+                    },
+                    "processing_time_ms": {
+                        "type": "integer"
+                    },
+                    "stats_id": {
+                        "type": "integer"
+                    },
+                    "warning": {
+                        "type": "string"
                     }
                 }
             },
@@ -33456,6 +34219,17 @@
                     "count": {
                         "type": "integer",
                         "example": 5
+                    }
+                }
+            },
+            "internal_proj_marketplace_handler.UpdateConfirmationRequest": {
+                "type": "object",
+                "properties": {
+                    "confirmed": {
+                        "type": "boolean"
+                    },
+                    "selected_category_id": {
+                        "type": "integer"
                     }
                 }
             },

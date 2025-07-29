@@ -118,11 +118,27 @@
   },
   "navigation": {
     "home": "Početna",
+    "marketplace": "Tržište",
+    "createListing": "Kreiraj oglas",
+    "myListings": "Moji oglasi",
+    "blog": "Blog",
+    "news": "Vesti",
+    "contacts": "Kontakti",
+    "userContacts": "Moji kontakti",
+    "profile": "Profil",
+    "logout": "Odjavi se",
     "search": "Pretraga",
     "create": "Dodaj",
     "chats": "Poruke",
-    "profile": "Profil",
-    "close": "Zatvori"
+    "adminPanel": "Admin panel",
+    "messages": "Poruke",
+    "notifications": "Obaveštenja",
+    "settings": "Podešavanja",
+    "help": "Pomoć",
+    "searchPlaceholder": "Pretražite proizvode i usluge...",
+    "viewAll": "Prikaži sve",
+    "moreOptions": "Više opcija",
+    "backToTop": "Vrati se na vrh"
   },
   "checkout": {
     "title": "Checkout",
@@ -1046,245 +1062,6 @@
       "comingSoon": "Ova funkcija uskoro stiže"
     },
     "search": {
-      "title": "Analitika pretrage",
-      "description": "Analizirajte performanse pretrage i ponašanje korisnika",
-      "tabs": {
-        "analytics": "Analitika",
-        "behavior": "Ponašanje",
-        "weights": "Težinski faktori pretrage",
-        "synonyms": "Sinonimi",
-        "optimization": "Optimizacija",
-        "transliteration": "Transliteracija"
-      },
-      "analytics": {
-        "title": "Pregled analitike pretrage",
-        "description": "Opšte metrike performansi pretrage i statistika",
-        "loadError": "Neuspešno učitavanje podataka analitike",
-        "timeRange": "Vremenski period",
-        "exportCSV": "Izvezi CSV",
-        "ranges": {
-          "24h": "Poslednja 24 sata",
-          "7d": "Poslednjih 7 dana",
-          "30d": "Poslednjih 30 dana",
-          "90d": "Poslednjih 90 dana"
-        },
-        "metrics": {
-          "totalSearches": "Ukupno pretrage",
-          "uniqueQueries": "Jedinstveni upiti",
-          "avgResponseTime": "Prosečno vreme odgovora",
-          "zeroResults": "Bez rezultata",
-          "avgCTR": "Prosečan CTR",
-          "conversionRate": "Stopa konverzije"
-        },
-        "charts": {
-          "searchTrends": "Trendovi pretrage",
-          "ctrTrends": "CTR trendovi",
-          "topQueries": "Distribucija top upita"
-        },
-        "topQueries": {
-          "title": "Top upiti pretrage sa analizom relevantnosti",
-          "query": "Upit",
-          "count": "Broj",
-          "ctr": "CTR",
-          "avgPosition": "Prosečna pozicija",
-          "avgResults": "Prosečno rezultata",
-          "relevance": "Ocena relevantnosti"
-        }
-      },
-      "weights": {
-        "title": "Konfiguracija težinskih faktora pretrage",
-        "description": "Konfiguriši težinske faktore i parametre algoritma pretrage"
-      },
-      "behavior": {
-        "title": "Analitika ponašanja",
-        "loadError": "Neuspešno učitavanje podataka analitike",
-        "filters": {
-          "title": "Filteri",
-          "period": "Period",
-          "periods": {
-            "day": "Poslednji dan",
-            "week": "Poslednja nedelja",
-            "month": "Poslednji mesec"
-          },
-          "limit": "Ograničenje rezultata"
-        },
-        "metrics": {
-          "totalClicks": "Ukupno klikova",
-          "avgCTR": "Prosečan CTR",
-          "avgPosition": "Prosečna pozicija klika",
-          "conversionRate": "Stopa konverzije"
-        },
-        "ctr": {
-          "title": "Stopa prolaska kroz vreme",
-          "label": "CTR %",
-          "chartTitle": "Analiza trenda CTR-a"
-        },
-        "searchClicks": {
-          "title": "Pretrage vs Klikovi",
-          "chartTitle": "Volumen pretrage i aktivnost klikova"
-        },
-        "searches": "Pretrage",
-        "clicks": "Klikovi",
-        "topQueries": {
-          "title": "Najbolji upiti pretrage",
-          "query": "Upit",
-          "searches": "Pretrage",
-          "ctr": "CTR",
-          "avgPosition": "Prosečna pozicija",
-          "avgResults": "Prosečno rezultata"
-        },
-        "itemPerformance": {
-          "title": "Analitika performansi stavki",
-          "item": "Stavka",
-          "impressions": "Prikazi",
-          "clicks": "Klikovi",
-          "ctr": "CTR",
-          "avgPosition": "Prosečna pozicija",
-          "conversions": "Konverzije"
-        }
-      },
-      "synonyms": {
-        "title": "Upravljanje sinonimima",
-        "description": "Upravljajte sinonimima pretrage za poboljšanje rezultata",
-        "addSynonym": "Dodaj sinonim",
-        "editSynonym": "Izmeni sinonim",
-        "term": "Termin",
-        "synonyms": "Sinonimi",
-        "bidirectional": "Dvosmerno",
-        "language": "Jezik",
-        "actions": "Akcije",
-        "noSynonyms": "Nema definisanih sinonima",
-        "enterTerm": "Unesite termin",
-        "enterSynonyms": "Unesite sinonime (odvojeno zarezom)",
-        "save": "Sačuvaj",
-        "cancel": "Otkaži",
-        "delete": "Obriši",
-        "confirmDelete": "Da li ste sigurni da želite da obrišete ovaj sinonim?",
-        "validation": {
-          "termRequired": "Termin je obavezan",
-          "synonymsRequired": "Najmanje jedan sinonim je obavezan"
-        }
-      },
-      "transliteration": {
-        "title": "Pravila transliteracije",
-        "description": "Upravljajte pravilima transliteracije za različite jezike",
-        "addRule": "Dodaj pravilo",
-        "editRule": "Izmeni pravilo",
-        "sourceChar": "Izvorni karakter",
-        "targetChar": "Ciljni karakter",
-        "language": "Jezik",
-        "isActive": "Aktivno",
-        "actions": "Akcije",
-        "noRules": "Nema definisanih pravila",
-        "enterSourceChar": "Unesite izvorni karakter",
-        "enterTargetChar": "Unesite ciljni karakter",
-        "save": "Sačuvaj",
-        "cancel": "Otkaži",
-        "delete": "Obriši",
-        "confirmDelete": "Da li ste sigurni da želite da obrišete ovo pravilo?",
-        "testRules": "Testiraj pravila",
-        "inputText": "Unesite tekst",
-        "outputText": "Rezultat",
-        "test": "Testiraj",
-        "builtInRules": "Ugrađena pravila",
-        "customRules": "Prilagođena pravila",
-        "validation": {
-          "sourceCharRequired": "Izvorni karakter je obavezan",
-          "targetCharRequired": "Ciljni karakter je obavezan"
-        }
-      },
-      "optimization": {
-        "title": "Optimizacija pretrage",
-        "description": "Optimizujte performanse i relevantnost pretrage",
-        "startSession": "Započni sesiju",
-        "endSession": "Završi sesiju",
-        "activeSession": "Aktivna sesija",
-        "sessionStatus": "Status sesije",
-        "lastOptimization": "Poslednja optimizacija",
-        "recommendations": "Preporuke",
-        "applyRecommendations": "Primeni preporuke",
-        "metrics": {
-          "beforeOptimization": "Pre optimizacije",
-          "afterOptimization": "Posle optimizacije",
-          "improvement": "Poboljšanje"
-        }
-      }
-    },
-    "users": {
-      "error": {
-        "fetch_failed": "Neuspešno dobijanje liste korisnika",
-        "invalid_user_id": "Neispravan ID korisnika",
-        "user_not_found": "Korisnik nije pronađen",
-        "invalid_format": "Neispravan format podataka",
-        "validation_failed": "Validacija neuspešna",
-        "update_failed": "Neuspešno ažuriranje korisničkog profila",
-        "invalid_status": "Neispravan status. Dozvoljene vrednosti: active, blocked, pending",
-        "status_update_failed": "Neuspešno ažuriranje statusa korisnika",
-        "delete_failed": "Neuspešno brisanje korisnika"
-      },
-      "success": {
-        "profile_updated": "Korisnički profil uspešno ažuriran",
-        "status_updated": "Status korisnika uspešno ažuriran",
-        "deleted": "Korisnik uspešno obrisan"
-      }
-    },
-    "balance": {
-      "title": "Moj balans",
-      "availableBalance": "Dostupan balans",
-      "totalBalance": "Ukupan balans",
-      "frozen": "Zamrznuto",
-      "deposit": "Uplata",
-      "withdraw": "Isplata",
-      "recentTransactions": "Nedavne transakcije",
-      "viewAllTransactions": "Prikaži sve transakcije",
-      "errorLoading": "Greška pri učitavanju balansa",
-      "depositFunds": "Uplatite sredstva",
-      "withdrawFunds": "Isplatite sredstva",
-      "selectAmount": "Izaberite iznos",
-      "customAmount": "Proizvoljan iznos",
-      "paymentMethod": "Način plaćanja",
-      "continueToPayment": "Nastavi sa plaćanjem",
-      "transactionHistory": "Istorija transakcija",
-      "transaction": {
-        "deposit": "Uplata",
-        "withdrawal": "Isplata",
-        "payment": "Plaćanje",
-        "refund": "Povraćaj",
-        "commission": "Provizija",
-        "escrow_release": "Oslobađanje depozita",
-        "escrow_hold": "Zadržavanje depozita"
-      },
-      "status": {
-        "pending": "Na čekanju",
-        "completed": "Završeno",
-        "failed": "Neuspešno",
-        "processing": "U obradi"
-      },
-      "error": {
-        "invalid_user_id": "Neispravan ID korisnika",
-        "fetch_balance_failed": "Neuspešno dobijanje balansa korisnika",
-        "fetch_transactions_failed": "Neuspešno dobijanje transakcija korisnika",
-        "deposit_failed": "Neuspešno kreiranje uplate",
-        "withdrawal_failed": "Neuspešno kreiranje isplate"
-      },
-      "limits": "Minimum: 100 RSD, Maksimum: 100.000 RSD",
-      "bankCard": "Bankovna kartica",
-      "supportedCards": "Visa, Mastercard, Maestro",
-      "amountToDeposit": "Iznos za uplatu",
-      "commission": "Provizija",
-      "toCredit": "Za uplatu",
-      "securePayment": "Sigurno plaćanje preko zaštićene veze",
-      "information": "Informacije",
-      "instantCredit": "Sredstva se uplaćuju trenutno",
-      "minAmount": "Minimalni iznos",
-      "maxAmount": "Maksimalni iznos",
-      "noCommission": "Provizija za uplatu",
-      "supportedCurrencies": "Podržane valute",
-      "needHelp": "Trebate pomoć?",
-      "supportMessage": "Ako imate problema sa uplatom, kontaktirajte podršku.",
-      "contactSupport": "Kontaktirajte podršku"
-    },
-    "search": {
       "title": "Аналитика претраге",
       "description": "Анализа перформанси претраге и метрика понашања корисника",
       "tabs": {
@@ -1480,6 +1257,83 @@
         "noSynonyms": "Синоними нису пронађени",
         "confirmDelete": "Да ли сте сигурни да желите да обришете овај синоним?"
       }
+    },
+    "users": {
+      "error": {
+        "fetch_failed": "Neuspešno dobijanje liste korisnika",
+        "invalid_user_id": "Neispravan ID korisnika",
+        "user_not_found": "Korisnik nije pronađen",
+        "invalid_format": "Neispravan format podataka",
+        "validation_failed": "Validacija neuspešna",
+        "update_failed": "Neuspešno ažuriranje korisničkog profila",
+        "invalid_status": "Neispravan status. Dozvoljene vrednosti: active, blocked, pending",
+        "status_update_failed": "Neuspešno ažuriranje statusa korisnika",
+        "delete_failed": "Neuspešno brisanje korisnika"
+      },
+      "success": {
+        "profile_updated": "Korisnički profil uspešno ažuriran",
+        "status_updated": "Status korisnika uspešno ažuriran",
+        "deleted": "Korisnik uspešno obrisan"
+      },
+      "title": "Upravljanje korisnicima",
+      "comingSoon": "Ova funkcija će uskoro biti dostupna",
+      "description": "Funkcionalnost upravljanja korisnicima je u razvoju"
+    },
+    "balance": {
+      "title": "Moj balans",
+      "availableBalance": "Dostupan balans",
+      "totalBalance": "Ukupan balans",
+      "frozen": "Zamrznuto",
+      "deposit": "Uplata",
+      "withdraw": "Isplata",
+      "recentTransactions": "Nedavne transakcije",
+      "viewAllTransactions": "Prikaži sve transakcije",
+      "errorLoading": "Greška pri učitavanju balansa",
+      "depositFunds": "Uplatite sredstva",
+      "withdrawFunds": "Isplatite sredstva",
+      "selectAmount": "Izaberite iznos",
+      "customAmount": "Proizvoljan iznos",
+      "paymentMethod": "Način plaćanja",
+      "continueToPayment": "Nastavi sa plaćanjem",
+      "transactionHistory": "Istorija transakcija",
+      "transaction": {
+        "deposit": "Uplata",
+        "withdrawal": "Isplata",
+        "payment": "Plaćanje",
+        "refund": "Povraćaj",
+        "commission": "Provizija",
+        "escrow_release": "Oslobađanje depozita",
+        "escrow_hold": "Zadržavanje depozita"
+      },
+      "status": {
+        "pending": "Na čekanju",
+        "completed": "Završeno",
+        "failed": "Neuspešno",
+        "processing": "U obradi"
+      },
+      "error": {
+        "invalid_user_id": "Neispravan ID korisnika",
+        "fetch_balance_failed": "Neuspešno dobijanje balansa korisnika",
+        "fetch_transactions_failed": "Neuspešno dobijanje transakcija korisnika",
+        "deposit_failed": "Neuspešno kreiranje uplate",
+        "withdrawal_failed": "Neuspešno kreiranje isplate"
+      },
+      "limits": "Minimum: 100 RSD, Maksimum: 100.000 RSD",
+      "bankCard": "Bankovna kartica",
+      "supportedCards": "Visa, Mastercard, Maestro",
+      "amountToDeposit": "Iznos za uplatu",
+      "commission": "Provizija",
+      "toCredit": "Za uplatu",
+      "securePayment": "Sigurno plaćanje preko zaštićene veze",
+      "information": "Informacije",
+      "instantCredit": "Sredstva se uplaćuju trenutno",
+      "minAmount": "Minimalni iznos",
+      "maxAmount": "Maksimalni iznos",
+      "noCommission": "Provizija za uplatu",
+      "supportedCurrencies": "Podržane valute",
+      "needHelp": "Trebate pomoć?",
+      "supportMessage": "Ako imate problema sa uplatom, kontaktirajte podršku.",
+      "contactSupport": "Kontaktirajte podršku"
     },
     "admins": {
       "error": {
@@ -1698,13 +1552,7 @@
     "imageGallery": {
       "clickToZoom": "Kliknite za uvećanje"
     },
-    "condition": {
-      "new": "Novo",
-      "like_new": "Kao novo",
-      "used": "Korišćeno",
-      "refurbished": "Obnovljeno",
-      "damaged": "Oštećeno"
-    },
+    "condition": "Stanje",
     "invalidData": "Nevažeći format podataka",
     "duplicateTitle": "Oglas sa ovim naslovom već postoji",
     "createError": "Neuspešno kreiranje oglasa",
@@ -1874,7 +1722,23 @@
     "deleteCategoryError": "Neuspešno brisanje kategorije",
     "buy": "Kupi",
     "confirmPurchase": "Potvrdite kupovinu",
-    "seller": "Prodavac",
+    "seller": {
+      "title": "Prodavac",
+      "noReviews": "Nema recenzija",
+      "memberSince": "Član od",
+      "responseRate": "Stopa odgovora",
+      "responseTime": "Vreme odgovora",
+      "verified": "Verifikovan",
+      "experienced": "Iskusan prodavac",
+      "sendMessage": "Pošalji poruku",
+      "showPhone": "Prikaži telefon",
+      "allItems": "Svi oglasi prodavca",
+      "yourListing": "Ovo je vaš oglas",
+      "edit": "Izmeni",
+      "signInToContact": "Prijavite se da kontaktirate prodavca",
+      "signIn": "Prijavite se",
+      "platformProtection": "Sve transakcije su zaštićene pravilima platforme"
+    },
     "paymentMethod": "Način plaćanja",
     "payFromBalance": "Platite sa bilansa",
     "availableBalance": "Dostupan bilans",
@@ -1908,35 +1772,16 @@
     "published": "Objavljeno",
     "characteristics": "Karakteristike",
     "andMore": "i još {count}",
-    "seller": "Prodavac",
     "views": "Pregledi",
     "rating": "Ocena",
     "category": "Kategorija",
     "area": "Površina",
     "rooms": "Sobe",
-    "condition": "Stanje",
     "type": "Tip",
     "year": "Godina",
     "addToFavorites": "Dodaj u omiljene",
     "share": "Podeli",
     "newSeller": "Novi",
-    "seller": {
-      "title": "Prodavac",
-      "noReviews": "Nema recenzija",
-      "memberSince": "Član od",
-      "responseRate": "Stopa odgovora",
-      "responseTime": "Vreme odgovora",
-      "verified": "Verifikovan",
-      "experienced": "Iskusan prodavac",
-      "sendMessage": "Pošalji poruku",
-      "showPhone": "Prikaži telefon",
-      "allItems": "Svi oglasi prodavca",
-      "yourListing": "Ovo je vaš oglas",
-      "edit": "Izmeni",
-      "signInToContact": "Prijavite se da kontaktirate prodavca",
-      "signIn": "Prijavite se",
-      "platformProtection": "Sve transakcije su zaštićene pravilima platforme"
-    },
     "listingActions": {
       "signInToAddFavorites": "Prijavite se da dodate u omiljene",
       "removedFromFavorites": "Uklonjeno iz omiljenih",
@@ -3370,30 +3215,6 @@
       "low_stock": "Malo zaliha",
       "out_of_stock": "Nema na lageru"
     }
-  },
-  "navigation": {
-    "home": "Početna",
-    "marketplace": "Tržište",
-    "createListing": "Kreiraj oglas",
-    "myListings": "Moji oglasi",
-    "blog": "Blog",
-    "news": "Vesti",
-    "contacts": "Kontakti",
-    "userContacts": "Moji kontakti",
-    "profile": "Profil",
-    "logout": "Odjavi se",
-    "search": "Pretraga",
-    "create": "Dodaj",
-    "chats": "Poruke",
-    "adminPanel": "Admin panel",
-    "messages": "Poruke",
-    "notifications": "Obaveštenja",
-    "settings": "Podešavanja",
-    "help": "Pomoć",
-    "searchPlaceholder": "Pretražite proizvode i usluge...",
-    "viewAll": "Prikaži sve",
-    "moreOptions": "Više opcija",
-    "backToTop": "Vrati se na vrh"
   },
   "analytics": {
     "error": {

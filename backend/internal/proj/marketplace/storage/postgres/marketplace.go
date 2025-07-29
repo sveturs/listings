@@ -221,7 +221,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		if listing.LocationPrivacy != "" {
 			privacyLevel = listing.LocationPrivacy
 		}
-		
+
 		_, err = s.pool.Exec(ctx, `
 			INSERT INTO unified_geo (
 				source_type, source_id, location, geohash,
@@ -2375,22 +2375,22 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 
 	// Получаем основные данные объявления с original_language
 	var (
-		description    sql.NullString
-		condition      sql.NullString
-		status         sql.NullString
-		location       sql.NullString
-		latitude       sql.NullFloat64
-		longitude      sql.NullFloat64
-		city           sql.NullString
-		country        sql.NullString
-		originalLang   sql.NullString
-		userName       sql.NullString
-		userEmail      sql.NullString
-		userPictureURL sql.NullString
-		userPhone      sql.NullString
-		categoryName   sql.NullString
-		categorySlug   sql.NullString
-		storefrontID   sql.NullInt32
+		description     sql.NullString
+		condition       sql.NullString
+		status          sql.NullString
+		location        sql.NullString
+		latitude        sql.NullFloat64
+		longitude       sql.NullFloat64
+		city            sql.NullString
+		country         sql.NullString
+		originalLang    sql.NullString
+		userName        sql.NullString
+		userEmail       sql.NullString
+		userPictureURL  sql.NullString
+		userPhone       sql.NullString
+		categoryName    sql.NullString
+		categorySlug    sql.NullString
+		storefrontID    sql.NullInt32
 		locationPrivacy sql.NullString
 	)
 

@@ -86,7 +86,7 @@ func convertToSimplified(cat models.MarketplaceCategory) *SimplifiedCategory {
 	if cat.Icon != nil {
 		iconStr = *cat.Icon
 	}
-	
+
 	simplified := &SimplifiedCategory{
 		// ID:           cat.ID * 10, // TODO: когда полностью перейдем на файл
 		ID:           cat.ID,

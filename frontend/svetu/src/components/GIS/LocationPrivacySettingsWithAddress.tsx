@@ -55,7 +55,6 @@ const PRIVACY_LEVELS: LocationPrivacyLevel[] = [
 export default function LocationPrivacySettingsWithAddress({
   selectedLevel,
   onLevelChange,
-  location,
   fullAddress,
   showPreview = true,
   className = '',
@@ -79,19 +78,22 @@ export default function LocationPrivacySettingsWithAddress({
   );
 
   // Форматируем адрес в зависимости от уровня приватности
-  const getFormattedAddress = useCallback((levelId: LocationPrivacyLevel['id']) => {
-    if (!fullAddress) return null;
-    
-    const options = {
-      showHouseNumber: levelId === 'exact',
-      showStreet: levelId === 'exact' || levelId === 'street',
-      showCity: true,
-      showRegion: levelId !== 'city',
-      showCountry: levelId === 'city'
-    };
-    
-    return formatAddressWithPrivacy(fullAddress, options);
-  }, [fullAddress]);
+  const getFormattedAddress = useCallback(
+    (levelId: LocationPrivacyLevel['id']) => {
+      if (!fullAddress) return null;
+
+      const options = {
+        showHouseNumber: levelId === 'exact',
+        showStreet: levelId === 'exact' || levelId === 'street',
+        showCity: true,
+        showRegion: levelId !== 'city',
+        showCountry: levelId === 'city',
+      };
+
+      return formatAddressWithPrivacy(fullAddress, options);
+    },
+    [fullAddress]
+  );
 
   // Примеры адресов для каждого уровня
   const addressExamples = useMemo(() => {
@@ -188,7 +190,8 @@ export default function LocationPrivacySettingsWithAddress({
           </p>
           {previewLevel.radiusMeters > 0 && (
             <p className="text-sm text-base-content/60 mt-2">
-              ± {previewLevel.radiusMeters < 1000
+              ±{' '}
+              {previewLevel.radiusMeters < 1000
                 ? `${previewLevel.radiusMeters} м`
                 : `${previewLevel.radiusMeters / 1000} км`}
             </p>

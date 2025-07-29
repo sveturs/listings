@@ -96,7 +96,7 @@ type DetectionResult struct {
 	SimilarityScore  float64  `json:"similarity_score,omitempty"`
 	MatchedKeywords  []string `json:"matched_keywords,omitempty"`
 	ProcessingTimeMs int64    `json:"processing_time_ms"`
-	
+
 	// ID записи статистики для отслеживания подтверждений
 	StatsID int32 `json:"stats_id,omitempty"`
 }
@@ -177,13 +177,14 @@ func (cd *CategoryDetector) DetectCategory(ctx context.Context, input DetectionI
 	finalResult := cd.combineResults(keywordResult, similarityResult)
 
 	// Определяем метод
-	if keywordResult != nil && similarityResult != nil {
+	switch {
+	case keywordResult != nil && similarityResult != nil:
 		finalResult.Method = "combined"
-	} else if keywordResult != nil {
+	case keywordResult != nil:
 		finalResult.Method = "keywords"
-	} else if similarityResult != nil {
+	case similarityResult != nil:
 		finalResult.Method = "similarity"
-	} else {
+	default:
 		return nil, errors.New("не удалось определить категорию")
 	}
 
@@ -199,16 +200,13 @@ func (cd *CategoryDetector) DetectCategory(ctx context.Context, input DetectionI
 
 	// Обновляем счетчик использования ключевых слов
 	if keywordResult != nil && len(keywordResult.matchedKeywords[finalResult.CategoryID]) > 0 {
-		go func() {
-			if err := cd.keywordRepo.IncrementUsageCount(context.Background(), 
-				finalResult.CategoryID, 
-				keywordResult.matchedKeywords[finalResult.CategoryID], 
-				input.Language); err != nil {
-				cd.logger.Error("ошибка обновления счетчика использования ключевых слов", 
-					zap.Error(err),
-					zap.Int32("categoryID", finalResult.CategoryID))
-			}
-		}()
+		// Сохраняем параметры для фоновой задачи
+		categoryID := finalResult.CategoryID
+		keywords := keywordResult.matchedKeywords[finalResult.CategoryID]
+		language := input.Language
+
+		//nolint:contextcheck // Используем новый контекст для фоновой задачи
+		go cd.incrementKeywordUsageInBackground(categoryID, keywords, language)
 	}
 
 	// Сохраняем статистику для анализа и получаем ID
@@ -227,7 +225,7 @@ type keywordSearchResult struct {
 // searchByKeywords поиск категории по ключевым словам
 func (cd *CategoryDetector) searchByKeywords(ctx context.Context, input DetectionInput) (*keywordSearchResult, error) {
 	cd.logger.Info("searchByKeywords начало")
-	
+
 	// Объединяем все ключевые слова для поиска
 	allKeywords := make([]string, 0, len(input.Keywords))
 	allKeywords = append(allKeywords, input.Keywords...)
@@ -326,7 +324,7 @@ func (cd *CategoryDetector) searchBySimilarity(ctx context.Context, input Detect
 	}
 
 	if len(similarListings) == 0 {
-		return nil, nil
+		return nil, nil //nolint:nilnil // Возвращаем nil для обоих значений, если нет похожих объявлений
 	}
 
 	// Подсчитываем score для каждой категории
@@ -404,12 +402,12 @@ func (cd *CategoryDetector) combineResults(keyword *keywordSearchResult, similar
 	// используем категорию "Прочее" (ID=9999)
 	const otherCategoryID = 9999
 	const minConfidenceThreshold = 0.3
-	
+
 	if bestScore < minConfidenceThreshold || bestCategoryID == 0 {
 		cd.logger.Warn("не удалось определить категорию с достаточной уверенностью, используется 'Прочее'",
 			zap.Float64("bestScore", bestScore),
 			zap.Int32("bestCategoryID", bestCategoryID))
-		
+
 		bestCategoryID = otherCategoryID
 		bestScore = 0.1 // Низкая уверенность для категории "Прочее"
 	}
@@ -510,7 +508,7 @@ func (cd *CategoryDetector) saveDetectionStats(ctx context.Context, input Detect
 		cd.logger.Error("ошибка сохранения статистики определения категории", zap.Error(err))
 		return 0
 	}
-	
+
 	// Возвращаем ID созданной записи
 	return stats.ID
 }
@@ -554,4 +552,14 @@ func (cd *CategoryDetector) UpdateKeywordWeights(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// incrementKeywordUsageInBackground увеличивает счетчик использования ключевых слов в фоновом режиме
+func (cd *CategoryDetector) incrementKeywordUsageInBackground(categoryID int32, keywords []string, language string) {
+	bgCtx := context.Background()
+	if err := cd.keywordRepo.IncrementUsageCount(bgCtx, categoryID, keywords, language); err != nil {
+		cd.logger.Error("ошибка обновления счетчика использования ключевых слов",
+			zap.Error(err),
+			zap.Int32("categoryID", categoryID))
+	}
 }

@@ -1477,6 +1477,99 @@ paths:
       summary: Check administrator status
       tags:
         - admin-management
+  "/api/v1/admin/categories/{category_id}/keywords":
+    get:
+      description: Returns all keywords for a specific category
+      parameters:
+        - description: Category ID
+          in: path
+          name: category_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Keywords list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.CategoryKeyword"
+                        type: array
+                    type: object
+        "400":
+          description: Invalid category ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get category keywords
+      tags:
+        - marketplace-admin-categories
+    post:
+      description: Adds a new keyword to the specified category
+      parameters:
+        - description: Category ID
+          in: path
+          name: category_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_domain_models.CategoryKeywordReque\
+                st"
+        description: Keyword data
+        required: true
+      responses:
+        "201":
+          description: Created keyword
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.CategoryKeyword"
+                    type: object
+        "400":
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Add keyword to category
+      tags:
+        - marketplace-admin-categories
   "/api/v1/admin/categories/{id}/translate":
     post:
       description: Automatically translates category name, description, seo_title and
@@ -1524,6 +1617,98 @@ paths:
       security:
         - BearerAuth: []
       summary: Auto-translate category
+      tags:
+        - marketplace-admin-categories
+  "/api/v1/admin/categories/keywords/{keyword_id}":
+    delete:
+      description: Deletes a keyword from category
+      parameters:
+        - description: Keyword ID
+          in: path
+          name: keyword_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Keyword deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+        "400":
+          description: Invalid keyword ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Keyword not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Delete category keyword
+      tags:
+        - marketplace-admin-categories
+    put:
+      description: Updates an existing keyword
+      parameters:
+        - description: Keyword ID
+          in: path
+          name: keyword_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_domain_models.CategoryKeywordUpdat\
+                eRequest"
+        description: Updated keyword data
+        required: true
+      responses:
+        "200":
+          description: Updated keyword
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.CategoryKeyword"
+                    type: object
+        "400":
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Keyword not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Update category keyword
       tags:
         - marketplace-admin-categories
   /api/v1/admin/marketplace/attributes:
@@ -6555,6 +6740,51 @@ paths:
       summary: Get categories list
       tags:
         - marketplace-categories
+  "/api/v1/marketplace/categories/{category_id}/keywords":
+    get:
+      description: Возвращает список ключевых слов с весами для указанной категории
+      parameters:
+        - description: ID категории
+          in: path
+          name: category_id
+          required: true
+          schema:
+            type: integer
+        - description: Язык (ru, en, sr)
+          in: query
+          name: language
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Список ключевых слов
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/internal_proj_marketplace_handler.CategoryKeywordRe\
+                            sponse"
+                        type: array
+                    type: object
+        "404":
+          description: Категория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Получить ключевые слова категории
+      tags:
+        - marketplace-categories
   "/api/v1/marketplace/categories/{id}/attribute-ranges":
     get:
       description: Returns min/max values for numeric attributes in a category
@@ -6635,6 +6865,92 @@ paths:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Get category attributes
+      tags:
+        - marketplace-categories
+  /api/v1/marketplace/categories/detect:
+    post:
+      description: Использует комбинированный подход с ключевыми словами и similarity search
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_marketplace_handler.DetectCategoryReq\
+                uest"
+        description: Данные для определения категории
+        required: true
+      responses:
+        "200":
+          description: Результат определения категории
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_marketplace_handler.DetectCategoryRes\
+                          ponse"
+                    type: object
+        "400":
+          description: Недостаточно данных
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Определить категорию по ключевым словам и атрибутам
+      tags:
+        - marketplace-categories
+  "/api/v1/marketplace/categories/detect/{stats_id}/confirm":
+    put:
+      description: Обновляет статистику для улучшения алгоритма
+      parameters:
+        - description: ID записи статистики
+          in: path
+          name: stats_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_marketplace_handler.UpdateConfirmatio\
+                nRequest"
+        description: Данные подтверждения
+        required: true
+      responses:
+        "200":
+          description: Успешное обновление
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties:
+                          type: boolean
+                        type: object
+                    type: object
+        "400":
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Подтвердить или исправить выбор категории
       tags:
         - marketplace-categories
   /api/v1/marketplace/category-suggestions:
@@ -15975,6 +16291,59 @@ components:
         sort_order:
           type: integer
       type: object
+    backend_internal_domain_models.CategoryKeyword:
+      properties:
+        category_id:
+          type: integer
+        created_at:
+          type: string
+        id:
+          type: integer
+        is_negative:
+          type: boolean
+        keyword:
+          type: string
+        keyword_type:
+          type: string
+        language:
+          type: string
+        source:
+          type: string
+        success_rate:
+          type: number
+        updated_at:
+          type: string
+        usage_count:
+          type: integer
+        weight:
+          type: number
+      type: object
+    backend_internal_domain_models.CategoryKeywordRequest:
+      properties:
+        is_negative:
+          type: boolean
+        keyword:
+          type: string
+        keyword_type:
+          type: string
+        language:
+          type: string
+        weight:
+          maximum: 10
+          minimum: 0
+          type: number
+      required:
+        - keyword
+        - keyword_type
+        - language
+      type: object
+    backend_internal_domain_models.CategoryKeywordUpdateRequest:
+      properties:
+        weight:
+          maximum: 10
+          minimum: 0
+          type: number
+      type: object
     backend_internal_domain_models.CategorySuggestion:
       properties:
         id:
@@ -16860,6 +17229,8 @@ components:
           type: number
         location:
           type: string
+        location_privacy:
+          type: string
         longitude:
           type: number
         metadata:
@@ -16880,6 +17251,10 @@ components:
           type: boolean
         status:
           type: string
+        storefront:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_models.Storefront"
+          description: данные витрины
         storefront_id:
           description: связь с витриной
           type: integer
@@ -19910,6 +20285,17 @@ components:
       required:
         - content
       type: object
+    internal_proj_marketplace_handler.AlternativeCategoryResponse:
+      properties:
+        category_id:
+          type: integer
+        category_name:
+          type: string
+        category_slug:
+          type: string
+        confidence_score:
+          type: number
+      type: object
     internal_proj_marketplace_handler.AttributeCreateResponse:
       properties:
         id:
@@ -20012,6 +20398,25 @@ components:
           example: 10
           type: integer
       type: object
+    internal_proj_marketplace_handler.CategoryKeywordResponse:
+      properties:
+        id:
+          type: integer
+        is_negative:
+          type: boolean
+        keyword:
+          type: string
+        keyword_type:
+          type: string
+        language:
+          type: string
+        success_rate:
+          type: number
+        usage_count:
+          type: integer
+        weight:
+          type: number
+      type: object
     internal_proj_marketplace_handler.CategoryTranslationResult:
       properties:
         category_id:
@@ -20068,6 +20473,72 @@ components:
       required:
         - listing_id
         - payment_method
+      type: object
+    internal_proj_marketplace_handler.DebugInfo:
+      properties:
+        keyword_score:
+          type: number
+        matched_keywords:
+          items:
+            type: string
+          type: array
+        similarity_score:
+          type: number
+      type: object
+    internal_proj_marketplace_handler.DetectCategoryRequest:
+      properties:
+        attributes:
+          additionalProperties: true
+          type: object
+        description:
+          type: string
+        domain:
+          example: electronics
+          type: string
+        include_debug_info:
+          type: boolean
+        keywords:
+          example:
+            - телефон
+            - смартфон
+            - айфон
+          items:
+            type: string
+          type: array
+        language:
+          example: ru
+          type: string
+        product_type:
+          example: smartphone
+          type: string
+        title:
+          type: string
+      type: object
+    internal_proj_marketplace_handler.DetectCategoryResponse:
+      properties:
+        alternative_categories:
+          items:
+            $ref: "#/components/schemas/internal_proj_marketplace_handler.AlternativeCatego\
+              ryResponse"
+          type: array
+        category_id:
+          type: integer
+        category_name:
+          type: string
+        category_slug:
+          type: string
+        confidence_score:
+          type: number
+        debug_info:
+          $ref: "#/components/schemas/internal_proj_marketplace_handler.DebugInfo"
+        method:
+          type: string
+        processing_time_ms:
+          type: integer
+        stats_id:
+          type: integer
+        warning:
+          type: string
       type: object
     internal_proj_marketplace_handler.DetectLanguageRequest:
       properties:
@@ -20518,6 +20989,13 @@ components:
       properties:
         count:
           example: 5
+          type: integer
+      type: object
+    internal_proj_marketplace_handler.UpdateConfirmationRequest:
+      properties:
+        confirmed:
+          type: boolean
+        selected_category_id:
           type: integer
       type: object
     internal_proj_marketplace_handler.UpdateFieldTranslationRequest:

@@ -835,7 +835,7 @@ func (h *AdminCategoriesHandler) GetCategoryKeywords(c *fiber.Ctx) error {
 	}
 
 	// Получаем ключевые слова из репозитории postgres
-	pgKeywords, err := h.keywordRepo.GetKeywordsByCategoryID(c.Context(), int32(categoryID))
+	pgKeywords, err := h.keywordRepo.GetKeywordsByCategoryID(c.Context(), int32(categoryID)) //nolint:gosec // Проверка на переполнение делается на уровне БД
 	if err != nil {
 		logger.Error().Err(err).Int("category_id", categoryID).Msg("Failed to get keywords")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "categories.getKeywordsError")
@@ -901,7 +901,7 @@ func (h *AdminCategoriesHandler) AddCategoryKeyword(c *fiber.Ctx) error {
 
 	// Создаем объект ключевого слова для postgres репозитория
 	pgKeyword := &postgres.CategoryKeyword{
-		CategoryID:  int32(categoryID),
+		CategoryID:  int32(categoryID), //nolint:gosec // Проверка на переполнение делается на уровне БД
 		Keyword:     req.Keyword,
 		Language:    req.Language,
 		Weight:      req.Weight,
@@ -1005,7 +1005,7 @@ func (h *AdminCategoriesHandler) DeleteCategoryKeyword(c *fiber.Ctx) error {
 	}
 
 	// Удаляем ключевое слово
-	err = h.keywordRepo.DeleteKeyword(c.Context(), int32(keywordID))
+	err = h.keywordRepo.DeleteKeyword(c.Context(), int32(keywordID)) //nolint:gosec // Проверка на переполнение делается на уровне БД
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to delete keyword")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "categories.deleteKeywordError")

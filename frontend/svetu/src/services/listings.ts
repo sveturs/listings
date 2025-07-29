@@ -30,7 +30,7 @@ export interface CreateListingRequest {
 
   // ID статистики определения категории для обновления success_rate
   category_detection_stats_id?: number;
-  
+
   // Ключевые слова, которые были использованы для определения категории
   detected_keywords?: string[];
 
@@ -113,7 +113,7 @@ export class ListingsService {
     if (data.categoryDetectionStatsId) {
       request.category_detection_stats_id = data.categoryDetectionStatsId;
     }
-    
+
     // Добавляем ключевые слова для определения категории
     if (data.detectedKeywords && data.detectedKeywords.length > 0) {
       request.detected_keywords = data.detectedKeywords;

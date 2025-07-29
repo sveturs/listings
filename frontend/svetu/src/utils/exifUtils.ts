@@ -60,41 +60,49 @@ export async function extractExifData(file: File): Promise<ExifData | null> {
         GPSLatitude: exifData.GPSLatitude,
         GPSLongitude: exifData.GPSLongitude,
         GPSLatitudeRef: exifData.GPSLatitudeRef,
-        GPSLongitudeRef: exifData.GPSLongitudeRef
+        GPSLongitudeRef: exifData.GPSLongitudeRef,
       });
-      
+
       // Преобразуем DMS в десятичные градусы если нужно
-      const lat = Array.isArray(exifData.GPSLatitude) 
-        ? exifData.GPSLatitude[0] + exifData.GPSLatitude[1] / 60 + exifData.GPSLatitude[2] / 3600
+      const lat = Array.isArray(exifData.GPSLatitude)
+        ? exifData.GPSLatitude[0] +
+          exifData.GPSLatitude[1] / 60 +
+          exifData.GPSLatitude[2] / 3600
         : exifData.GPSLatitude;
       const lon = Array.isArray(exifData.GPSLongitude)
-        ? exifData.GPSLongitude[0] + exifData.GPSLongitude[1] / 60 + exifData.GPSLongitude[2] / 3600
+        ? exifData.GPSLongitude[0] +
+          exifData.GPSLongitude[1] / 60 +
+          exifData.GPSLongitude[2] / 3600
         : exifData.GPSLongitude;
-        
+
       result.location = {
         latitude: exifData.GPSLatitudeRef === 'S' ? -lat : lat,
         longitude: exifData.GPSLongitudeRef === 'W' ? -lon : lon,
       };
-      
+
       if (exifData.GPSAltitude !== undefined) {
         result.location.altitude = exifData.GPSAltitude;
       }
-      
+
       console.log('Converted GPS coordinates:', result.location);
     } else {
-      console.log('No GPS data found in EXIF. Available fields:', Object.keys(exifData));
-      
-      // Логируем все поля, которые могут содержать GPS
-      const gpsFields = Object.keys(exifData).filter(key => 
-        key.toLowerCase().includes('gps') || 
-        key.toLowerCase().includes('lat') || 
-        key.toLowerCase().includes('lon') ||
-        key.toLowerCase().includes('location')
+      console.log(
+        'No GPS data found in EXIF. Available fields:',
+        Object.keys(exifData)
       );
-      
+
+      // Логируем все поля, которые могут содержать GPS
+      const gpsFields = Object.keys(exifData).filter(
+        (key) =>
+          key.toLowerCase().includes('gps') ||
+          key.toLowerCase().includes('lat') ||
+          key.toLowerCase().includes('lon') ||
+          key.toLowerCase().includes('location')
+      );
+
       if (gpsFields.length > 0) {
         console.log('Found GPS-related fields:', gpsFields);
-        gpsFields.forEach(field => {
+        gpsFields.forEach((field) => {
           console.log(`${field}:`, exifData[field]);
         });
       }

@@ -1,21 +1,10 @@
 {
   "countries": {
-    "Сербия": "Serbia",
-    "Serbia": "Serbia",
-    "Россия": "Russia",
-    "Russia": "Russia",
-    "США": "USA",
-    "USA": "USA",
-    "Германия": "Germany",
-    "Germany": "Germany",
-    "Франция": "France",
-    "France": "France",
-    "Италия": "Italy",
-    "Italy": "Italy",
-    "Испания": "Spain",
-    "Spain": "Spain",
-    "Великобритания": "United Kingdom",
-    "United Kingdom": "United Kingdom"
+    "RS": "Serbia",
+    "BA": "Bosnia and Herzegovina",
+    "HR": "Croatia",
+    "ME": "Montenegro",
+    "MK": "North Macedonia"
   },
   "common": {
     "next": "Next",
@@ -72,9 +61,6 @@
     "saveSuccess": "Successfully saved",
     "deleteSuccess": "Successfully deleted",
     "total": "Total",
-    "showing": "Showing",
-    "of": "of",
-    "items": "items",
     "translate": "Translate",
     "continue": "Continue",
     "change": "Change",
@@ -92,7 +78,6 @@
     "processing": "Processing...",
     "uploading": "Uploading...",
     "optional": "Optional",
-    "progress": "Progress",
     "buy": "Buy",
     "comingSoon": "Coming Soon",
     "popular": "Popular",
@@ -117,8 +102,6 @@
     "publish": "Publish",
     "free_above": "Free above",
     "all": "All",
-    "reviews": "reviews",
-    "notSpecified": "Not specified",
     "rating": "Rating",
     "share": "Share",
     "viewGrid": "Grid view",
@@ -1074,7 +1057,10 @@
         "profile_updated": "User profile updated successfully",
         "status_updated": "User status updated successfully",
         "deleted": "User deleted successfully"
-      }
+      },
+      "title": "User Management",
+      "comingSoon": "This feature is coming soon",
+      "description": "User management functionality is under development"
     },
     "balance": {
       "title": "My Balance",
@@ -1587,13 +1573,7 @@
     "imageGallery": {
       "clickToZoom": "Click to zoom"
     },
-    "condition": {
-      "new": "New",
-      "like_new": "Like new",
-      "used": "Used",
-      "refurbished": "Refurbished",
-      "damaged": "Damaged"
-    },
+    "condition": "Condition",
     "invalidData": "Invalid data format",
     "duplicateTitle": "Listing with this title already exists",
     "createError": "Failed to create listing",
@@ -1763,7 +1743,23 @@
     "deleteCategoryError": "Failed to delete category",
     "buy": "Buy",
     "confirmPurchase": "Confirm Purchase",
-    "seller": "Seller",
+    "seller": {
+      "title": "Seller",
+      "noReviews": "No reviews yet",
+      "memberSince": "Member since",
+      "responseRate": "Response rate",
+      "responseTime": "Response time",
+      "verified": "Verified",
+      "experienced": "Experienced",
+      "sendMessage": "Send Message",
+      "showPhone": "Show Phone",
+      "allItems": "All seller items",
+      "yourListing": "This is your listing",
+      "edit": "Edit",
+      "signInToContact": "Sign in to contact seller",
+      "signIn": "Sign In",
+      "platformProtection": "All transactions protected by platform rules"
+    },
     "paymentMethod": "Payment Method",
     "payFromBalance": "Pay from Balance",
     "availableBalance": "Available balance",
@@ -1797,35 +1793,16 @@
     "published": "Published",
     "characteristics": "Characteristics",
     "andMore": "and {count} more",
-    "seller": "Seller",
     "views": "Views",
     "rating": "Rating",
     "category": "Category",
     "area": "Area",
     "rooms": "Rooms",
-    "condition": "Condition",
     "type": "Type",
     "year": "Year",
     "addToFavorites": "Add to Favorites",
     "share": "Share",
     "newSeller": "New",
-    "seller": {
-      "title": "Seller",
-      "noReviews": "No reviews yet",
-      "memberSince": "Member since",
-      "responseRate": "Response rate",
-      "responseTime": "Response time",
-      "verified": "Verified",
-      "experienced": "Experienced",
-      "sendMessage": "Send Message",
-      "showPhone": "Show Phone",
-      "allItems": "All seller items",
-      "yourListing": "This is your listing",
-      "edit": "Edit",
-      "signInToContact": "Sign in to contact seller",
-      "signIn": "Sign In",
-      "platformProtection": "All transactions protected by platform rules"
-    },
     "iconPicker": {
       "placeholder": "Select an icon",
       "close": "Close",
@@ -2661,13 +2638,6 @@
       "city_required": "City must be at least 2 characters",
       "postal_code_required": "Postal code must be at least 4 characters"
     }
-  },
-  "countries": {
-    "RS": "Serbia",
-    "BA": "Bosnia and Herzegovina",
-    "HR": "Croatia",
-    "ME": "Montenegro",
-    "MK": "North Macedonia"
   },
   "payment_methods": {
     "cash": "Cash",

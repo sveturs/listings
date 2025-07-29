@@ -120,25 +120,25 @@ func (r *CategoryDetectionStatsRepository) GetRecentStats(ctx context.Context, d
 		if err != nil {
 			return nil, errors.Wrap(err, "ошибка сканирования строки")
 		}
-		
+
 		// Отдельно загружаем массивы ключевых слов
 		var matchedKeywords, matchedNegativeKeywords []string
-		err = r.db.QueryRowContext(ctx, 
+		err = r.db.QueryRowContext(ctx,
 			`SELECT matched_keywords, matched_negative_keywords 
 			 FROM category_detection_stats 
 			 WHERE id = $1`, stat.ID).Scan(
 			pq.Array(&matchedKeywords),
 			pq.Array(&matchedNegativeKeywords),
 		)
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.Wrap(err, "ошибка загрузки ключевых слов")
 		}
 		stat.MatchedKeywords = matchedKeywords
 		stat.MatchedNegativeKeywords = matchedNegativeKeywords
-		
+
 		stats = append(stats, stat)
 	}
-	
+
 	if err = rows.Err(); err != nil {
 		return nil, errors.Wrap(err, "ошибка чтения результатов")
 	}
@@ -254,7 +254,7 @@ func (r *CategoryDetectionStatsRepository) GetCategoryStats(ctx context.Context,
 		&stats.SuccessRate,
 		&stats.AvgConfidence,
 	)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, errors.Wrap(err, "ошибка получения статистики категории")
 	}
 
@@ -285,6 +285,10 @@ func (r *CategoryDetectionStatsRepository) GetCategoryStats(ctx context.Context,
 		stats.TopKeywords = append(stats.TopKeywords, keyword)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "ошибка чтения результатов ключевых слов")
+	}
+
 	// Частые ошибки (когда AI предложил эту категорию, но пользователь выбрал другую)
 	mistakesQuery := `
 		SELECT user_selected_category_id, COUNT(*) as count
@@ -312,6 +316,10 @@ func (r *CategoryDetectionStatsRepository) GetCategoryStats(ctx context.Context,
 			continue
 		}
 		stats.CommonMistakes[mistakeCategoryID] = count
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "ошибка чтения результатов ошибок")
 	}
 
 	return &stats, nil

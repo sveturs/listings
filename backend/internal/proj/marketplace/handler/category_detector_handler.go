@@ -39,22 +39,22 @@ func NewCategoryDetectorHandler(detector *services.CategoryDetector, logger *zap
 func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 	// Используем fmt для гарантированного вывода
 	fmt.Println("=== DetectCategory METHOD CALLED ===")
-	
+
 	// Проверка на nil в самом начале
 	if h == nil {
 		fmt.Println("ERROR: CategoryDetectorHandler is nil!")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "handler is nil")
 	}
-	
+
 	fmt.Println("Handler is not nil, checking detector...")
-	
+
 	if h.detector == nil {
 		fmt.Println("ERROR: detector is nil!")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "detector is nil")
 	}
-	
+
 	fmt.Println("Detector is not nil, checking logger...")
-	
+
 	// Логируем используя глобальный logger если h.logger nil
 	if h.logger == nil {
 		fmt.Println("Logger is nil, using global zap logger")
@@ -71,9 +71,9 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 			h.logger.Info(">>>>>> DetectCategory method called! <<<<<<")
 		}()
 	}
-	
+
 	fmt.Println("Logger call completed, parsing request body...")
-	
+
 	var req DetectCategoryRequest
 	if err := c.BodyParser(&req); err != nil {
 		fmt.Printf("Error parsing request: %v\n", err)
@@ -81,9 +81,9 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 		zap.L().Error("ошибка парсинга запроса", zap.Error(err))
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "errors.validation.invalidRequest")
 	}
-	
+
 	fmt.Printf("Request parsed successfully. Keywords: %d, Title: %s\n", len(req.Keywords), req.Title)
-	
+
 	// Безопасный вызов logger
 	func() {
 		defer func() {
@@ -92,24 +92,24 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 			}
 		}()
 		if h.logger != nil {
-			h.logger.Info("запрос распарсен", 
+			h.logger.Info("запрос распарсен",
 				zap.Int("keywords_count", len(req.Keywords)),
 				zap.String("title", req.Title))
 		} else {
-			zap.L().Info("запрос распарсен", 
+			zap.L().Info("запрос распарсен",
 				zap.Int("keywords_count", len(req.Keywords)),
 				zap.String("title", req.Title))
 		}
 	}()
 
 	fmt.Println("Starting validation...")
-	
+
 	// Валидация
 	if len(req.Keywords) == 0 && req.Title == "" && req.Description == "" {
 		fmt.Println("Validation failed: insufficient data")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "errors.validation.insufficientData")
 	}
-	
+
 	fmt.Println("Validation passed, getting user ID...")
 
 	// Получаем user_id из контекста
@@ -117,7 +117,7 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 	var userIDPtr *int32
 	if userID != nil {
 		if id, ok := userID.(int); ok {
-			id32 := int32(id)
+			id32 := int32(id) //nolint:gosec // UserID проверяется в middleware
 			userIDPtr = &id32
 		}
 	}
@@ -137,7 +137,7 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 
 	// Определяем категорию
 	fmt.Println("About to call detector.DetectCategory...")
-	
+
 	// Безопасный вызов logger
 	func() {
 		defer func() {
@@ -151,10 +151,9 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 			zap.L().Info("вызов detector.DetectCategory", zap.Any("input", input))
 		}
 	}()
-	
+
 	fmt.Println("Calling detector.DetectCategory method...")
 	result, err := h.detector.DetectCategory(c.Context(), input)
-	
 	if err != nil {
 		fmt.Printf("Detector returned error: %v\n", err)
 		// Безопасное логирование ошибки
@@ -172,9 +171,9 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 		}()
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.marketplace.categoryDetectionFailed")
 	}
-	
+
 	fmt.Printf("Detector returned result: categoryID=%d\n", result.CategoryID)
-	
+
 	h.logger.Info("категория определена", zap.Int32("categoryID", result.CategoryID))
 
 	// Формируем ответ

@@ -60,39 +60,39 @@ func (s *SpatialService) SearchListings(ctx context.Context, params types.Search
 		if listings[i].PrivacyLevel != "" && listings[i].PrivacyLevel != "exact" {
 			// Сохраняем оригинальный адрес для геокодирования
 			originalFullAddress := listings[i].Address
-			
+
 			// Форматируем адрес для отображения
 			if listings[i].Address != "" {
 				formattedAddress := utils.FormatAddressWithPrivacy(listings[i].Address, listings[i].PrivacyLevel)
-				
+
 				// Логируем форматирование для отладки
 				if originalFullAddress != formattedAddress {
 					fmt.Printf("🔒 Address privacy applied: ID=%d, Privacy=%s, Original=%s, Formatted=%s\n",
 						listings[i].ID, listings[i].PrivacyLevel, originalFullAddress, formattedAddress)
 				}
-				
+
 				listings[i].Address = formattedAddress
 			}
 
 			// Применяем геокодирование для получения координат согласно приватности
 			originalLat, originalLng := listings[i].Location.Lat, listings[i].Location.Lng
-			
+
 			// Используем новую функцию с геокодированием
 			newLat, newLng, err := utils.GetCoordinatesWithGeocoding(
 				ctx,
-				listings[i].Location.Lat, 
+				listings[i].Location.Lat,
 				listings[i].Location.Lng,
 				originalFullAddress, // Используем полный адрес для геокодирования
 				listings[i].PrivacyLevel,
 				geocoder,
 			)
-			
+
 			if err != nil {
 				fmt.Printf("⚠️ Geocoding failed for listing %d: %v, using fallback\n", listings[i].ID, err)
 				// Используем старую функцию как fallback
 				listings[i].Location.Lat, listings[i].Location.Lng = utils.GetCoordinatesPrivacy(
-					listings[i].Location.Lat, 
-					listings[i].Location.Lng, 
+					listings[i].Location.Lat,
+					listings[i].Location.Lng,
 					listings[i].PrivacyLevel,
 				)
 			} else {
@@ -103,7 +103,7 @@ func (s *SpatialService) SearchListings(ctx context.Context, params types.Search
 			// Логируем изменение координат для отладки
 			if originalLat != listings[i].Location.Lat || originalLng != listings[i].Location.Lng {
 				fmt.Printf("📍 Coordinates privacy applied: ID=%d, Privacy=%s, Original=(%.6f,%.6f), New=(%.6f,%.6f)\n",
-					listings[i].ID, listings[i].PrivacyLevel, originalLat, originalLng, 
+					listings[i].ID, listings[i].PrivacyLevel, originalLat, originalLng,
 					listings[i].Location.Lat, listings[i].Location.Lng)
 			}
 		}

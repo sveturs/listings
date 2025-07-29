@@ -29,17 +29,19 @@ export function formatAddressWithPrivacy(
 
   // Пытаемся разобрать адрес на компоненты
   // Типичный формат: "Улица Номер, Город Индекс, Регион, Страна"
-  const parts = fullAddress.split(',').map(part => part.trim());
-  
+  const parts = fullAddress.split(',').map((part) => part.trim());
+
   if (parts.length === 0) return fullAddress;
 
-  let result: string[] = [];
+  const result: string[] = [];
 
   // Первая часть обычно содержит улицу и номер дома
   if (parts[0] && options.showStreet) {
     if (!options.showHouseNumber) {
       // Удаляем номер дома (обычно в конце строки)
-      const streetWithoutNumber = parts[0].replace(/\s+\d+[а-яa-z]?$/i, '').trim();
+      const streetWithoutNumber = parts[0]
+        .replace(/\s+\d+[а-яa-z]?$/i, '')
+        .trim();
       if (streetWithoutNumber) {
         result.push(streetWithoutNumber);
       }
@@ -51,12 +53,12 @@ export function formatAddressWithPrivacy(
   // Остальные части адреса
   for (let i = 1; i < parts.length; i++) {
     const part = parts[i];
-    
+
     // Пропускаем почтовый индекс
     if (/^\d{5,6}$/.test(part)) {
       continue;
     }
-    
+
     // Добавляем остальные части если нужно
     if (i === 1 && options.showCity) {
       // Убираем индекс из города если есть
@@ -79,10 +81,11 @@ export function formatAddressWithPrivacy(
  */
 export function extractStreetFromAddress(fullAddress: string): string {
   if (!fullAddress) return '';
-  
+
   const firstComma = fullAddress.indexOf(',');
-  const streetPart = firstComma > 0 ? fullAddress.substring(0, firstComma) : fullAddress;
-  
+  const streetPart =
+    firstComma > 0 ? fullAddress.substring(0, firstComma) : fullAddress;
+
   // Удаляем номер дома
   return streetPart.replace(/\s+\d+[а-яa-z]?$/i, '').trim();
 }
