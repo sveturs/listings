@@ -535,6 +535,25 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 				Rating:     product.Storefront.Rating,
 				IsVerified: product.Storefront.IsVerified,
 			}
+
+			// Получаем информацию о владельце витрины
+			storefront, err := h.services.Storefront().GetByID(ctx, product.StorefrontID)
+			if err != nil {
+				logger.Error().Err(err).Int("storefront_id", product.StorefrontID).Msg("Failed to get storefront info for user")
+			} else if storefront != nil {
+				// Получаем информацию о пользователе - владельце витрины
+				user, err := h.services.User().GetUserByID(ctx, storefront.UserID)
+				if err != nil {
+					logger.Error().Err(err).Int("user_id", storefront.UserID).Msg("Failed to get storefront owner info")
+				} else if user != nil {
+					item.User = &UnifiedUserInfo{
+						ID:         user.ID,
+						Name:       user.Name,
+						PictureURL: user.PictureURL,
+						IsVerified: false, // TODO: добавить поле verified в таблицу users
+					}
+				}
+			}
 		}
 
 		// Добавляем highlights, если есть
