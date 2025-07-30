@@ -54,10 +54,22 @@ export default function VariantGenerator({
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
+  // Stock settings
+  const [stockSettings, setStockSettings] = useState({
+    defaultQuantity: 10,
+    useIndividualQuantities: false,
+  });
+
   const loadProductAttributes = useCallback(async () => {
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/attributes`
+        `/api/v1/storefronts/storefront/products/${productId}/attributes`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (response.ok) {
         const attrs = await response.json();
@@ -144,11 +156,24 @@ export default function VariantGenerator({
     setGenerating(true);
 
     try {
+      // Prepare stock quantities
+      const finalStockQuantities = { ...stockQuantities };
+      if (!stockSettings.useIndividualQuantities) {
+        // Apply default quantity to all combinations
+        const combinations = generateCombinations();
+        combinations.forEach((combination) => {
+          const key = Object.values(combination).join('-');
+          if (!(key in finalStockQuantities)) {
+            finalStockQuantities[key] = stockSettings.defaultQuantity;
+          }
+        });
+      }
+
       const request = {
         product_id: productId,
         attribute_matrix: selectedValues,
         price_modifiers: priceModifiers,
-        stock_quantities: stockQuantities,
+        stock_quantities: finalStockQuantities,
         default_attributes: defaultAttributes,
       };
 
@@ -331,43 +356,112 @@ export default function VariantGenerator({
         </div>
       )}
 
-      {/* Stock Quantities Preview */}
-      {combinations.length > 0 && combinations.length <= 20 && (
+      {/* Stock Quantity Settings */}
+      {totalVariants > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium">{t('stock_quantities')}</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {combinations.map((combination, index) => {
-              const key = Object.values(combination).join('-');
-              const displayName = Object.entries(combination)
-                .map(([attr, value]) => {
-                  const attrObj = attributes.find(
-                    (a) => a.attribute.name === attr
-                  );
-                  const valueObj = attrObj?.custom_values.find(
-                    (v) => v.value === value
-                  );
-                  return valueObj?.display_name || value;
-                })
-                .join(' • ');
+          <h4 className="font-medium">{t('stockQuantities')}</h4>
 
-              return (
-                <div key={index} className="flex items-center space-x-2">
-                  <span className="text-sm flex-1">{displayName}</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={stockQuantities[key] || 10}
-                    onChange={(e) =>
-                      updateStockQuantity(key, parseInt(e.target.value) || 0)
-                    }
-                    className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                  />
-                </div>
-              );
-            })}
+          <div className="space-y-4">
+            {/* Use default quantity for all */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="radio"
+                id="defaultQuantity"
+                name="stockMode"
+                checked={!stockSettings.useIndividualQuantities}
+                onChange={() =>
+                  setStockSettings((prev) => ({
+                    ...prev,
+                    useIndividualQuantities: false,
+                  }))
+                }
+                className="radio radio-primary"
+              />
+              <label
+                htmlFor="defaultQuantity"
+                className="flex items-center space-x-2 flex-1"
+              >
+                <span className="text-sm">{t('useDefaultQuantityForAll')}</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={stockSettings.defaultQuantity}
+                  onChange={(e) =>
+                    setStockSettings((prev) => ({
+                      ...prev,
+                      defaultQuantity: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  disabled={stockSettings.useIndividualQuantities}
+                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm disabled:opacity-50"
+                />
+              </label>
+            </div>
+
+            {/* Set individual quantities */}
+            {combinations.length <= 20 && (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="individualQuantities"
+                  name="stockMode"
+                  checked={stockSettings.useIndividualQuantities}
+                  onChange={() =>
+                    setStockSettings((prev) => ({
+                      ...prev,
+                      useIndividualQuantities: true,
+                    }))
+                  }
+                  className="radio radio-primary"
+                />
+                <label htmlFor="individualQuantities" className="text-sm">
+                  {t('setIndividualQuantities')}
+                </label>
+              </div>
+            )}
           </div>
         </div>
       )}
+
+      {/* Stock Quantities Preview */}
+      {combinations.length > 0 &&
+        combinations.length <= 20 &&
+        stockSettings.useIndividualQuantities && (
+          <div className="space-y-4">
+            <h4 className="font-medium">{t('stock_quantities')}</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {combinations.map((combination, index) => {
+                const key = Object.values(combination).join('-');
+                const displayName = Object.entries(combination)
+                  .map(([attr, value]) => {
+                    const attrObj = attributes.find(
+                      (a) => a.attribute.name === attr
+                    );
+                    const valueObj = attrObj?.custom_values.find(
+                      (v) => v.value === value
+                    );
+                    return valueObj?.display_name || value;
+                  })
+                  .join(' • ');
+
+                return (
+                  <div key={index} className="flex items-center space-x-2">
+                    <span className="text-sm flex-1">{displayName}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={stockQuantities[key] || 10}
+                      onChange={(e) =>
+                        updateStockQuantity(key, parseInt(e.target.value) || 0)
+                      }
+                      className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
       {combinations.length > 20 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">

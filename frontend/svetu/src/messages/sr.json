@@ -2738,6 +2738,40 @@
       "noVariantsConfigured": "Varijante nisu konfigurisane",
       "setupAttributesFirst": "Prvo podesi atribute proizvoda da kreiraš varijante",
       "setupAttributes": "Podesi atribute",
+      "noAttributesForCategory": "Nema specifičnih atributa za ovu kategoriju",
+      "selectDifferentCategory": "Izaberite drugu kategoriju ili prvo podesite atribute",
+      "stockSettings": "Podešavanja zaliha",
+      "defaultStockQuantity": "Početna količina zaliha",
+      "useIndividualQuantities": "Postavi pojedinačne količine za svaku varijantu",
+      "willGenerateVariants": "Biće generisano {count} varijanti",
+      "generateVariants": "Generiši varijante",
+      "configureStockAndPrices": "Konfiguriši zalihe i cene za varijante",
+      "backToSettings": "Nazad na podešavanja",
+      "confirmVariants": "Potvrdi varijante",
+      "totalVariants": "Ukupno varijanti",
+      "totalStock": "Ukupne zalihe",
+      "averagePrice": "Prosečna cena",
+      "manageVariants": "Upravljanje varijantama",
+      "variant": "Varijanta",
+      "stock": "Zalihe",
+      "price": "Cena",
+      "status": "Status",
+      "inStock": "Na lageru",
+      "outOfStock": "Nema na lageru",
+      "quickActions": "Brze akcije",
+      "setStockForAll": "Postavi zalihe za sve",
+      "setPriceForAll": "Postavi cenu za sve",
+      "setStockPrompt": "Postavi istu količinu zaliha za sve varijante:",
+      "setPricePrompt": "Postavi istu cenu za sve varijante:",
+      "main": "Glavna",
+      "attributesFromPreviousStep": "Atributi izabrani na prethodnom koraku. Izaberite vrednosti da kreirate varijante:",
+      "stock": {
+        "in_stock": "Na lageru",
+        "low_stock": "Malo na lageru",
+        "out_of_stock": "Nema na lageru"
+      },
+      "noVariantsToManage": "Nema varijanti za upravljanje",
+      "noVariantAttributes": "Nema konfigurisanih atributa za varijante",
       "readyToPublish": "Ready to Publish!",
       "publishConfirmation": "Your product is ready and will be visible to all customers after publishing",
       "publishProduct": "Publish Product",
@@ -2847,7 +2881,7 @@
         "selectMode": "Select Mode"
       },
       "loadMore": "Load more",
-      "stock": {
+      "stockStatus": {
         "in_stock": "In Stock",
         "low_stock": "Low Stock",
         "out_of_stock": "Out of Stock"
@@ -2891,7 +2925,8 @@
         "invalidImageType": "Молимо изаберите исправне фајлове слика (PNG, JPG)",
         "imageTooLarge": "Фајл слике је превелик (максимум 10МБ)",
         "atLeastOneImage": "Молимо додајте најмање једну слику производа"
-      }
+      },
+      "default": "Подразумевано"
     },
     "noProducts": "No products available yet",
     "storeInfo": "Store Information",

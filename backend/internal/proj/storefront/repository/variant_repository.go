@@ -8,10 +8,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
 
+	"backend/internal/domain/models"
 	"backend/internal/proj/storefront/types"
 
 	"github.com/jmoiron/sqlx"
@@ -671,7 +673,7 @@ func (r *VariantRepository) UpdateVariant(ctx context.Context, variantID int, re
 	}
 
 	// Add updated_at
-	setParts = append(setParts, fmt.Sprintf("updated_at = NOW()"))
+	setParts = append(setParts, "updated_at = NOW()")
 
 	// Add WHERE clause
 	args = append(args, variantID)
@@ -810,10 +812,16 @@ func (r *VariantRepository) GetVariantAnalytics(ctx context.Context, productID i
 	if err == nil {
 		// Unmarshal JSON fields
 		if len(variantAttrsJSON) > 0 {
-			json.Unmarshal(variantAttrsJSON, &bestSeller.VariantAttributes)
+			if err := json.Unmarshal(variantAttrsJSON, &bestSeller.VariantAttributes); err != nil {
+				// Log error but don't fail the entire operation
+				log.Printf("Failed to unmarshal variant attributes: %v", err)
+			}
 		}
 		if len(dimensionsJSON) > 0 {
-			json.Unmarshal(dimensionsJSON, &bestSeller.Dimensions)
+			if err := json.Unmarshal(dimensionsJSON, &bestSeller.Dimensions); err != nil {
+				// Log error but don't fail the entire operation
+				log.Printf("Failed to unmarshal dimensions: %v", err)
+			}
 		}
 		analytics.BestSeller = &bestSeller
 	}
@@ -832,6 +840,9 @@ func (r *VariantRepository) GetVariantAnalytics(ctx context.Context, productID i
 	rows, err := r.db.QueryContext(ctx, lowStockQuery, productID)
 	if err == nil {
 		defer rows.Close()
+		if err := rows.Err(); err != nil {
+			return nil, fmt.Errorf("error iterating rows: %w", err)
+		}
 		for rows.Next() {
 			var variant types.ProductVariant
 			var variantAttrsJSON, dimensionsJSON []byte
@@ -850,10 +861,16 @@ func (r *VariantRepository) GetVariantAnalytics(ctx context.Context, productID i
 
 			// Unmarshal JSON fields
 			if len(variantAttrsJSON) > 0 {
-				json.Unmarshal(variantAttrsJSON, &variant.VariantAttributes)
+				if err := json.Unmarshal(variantAttrsJSON, &variant.VariantAttributes); err != nil {
+					// Log error but don't fail the entire operation
+					log.Printf("Failed to unmarshal variant attributes: %v", err)
+				}
 			}
 			if len(dimensionsJSON) > 0 {
-				json.Unmarshal(dimensionsJSON, &variant.Dimensions)
+				if err := json.Unmarshal(dimensionsJSON, &variant.Dimensions); err != nil {
+					// Log error but don't fail the entire operation
+					log.Printf("Failed to unmarshal dimensions: %v", err)
+				}
 			}
 
 			analytics.LowStockVariants = append(analytics.LowStockVariants, variant)
@@ -918,7 +935,11 @@ func (r *VariantRepository) ImportVariants(ctx context.Context, productID int, c
 	if err != nil {
 		return 0, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			// Transaction might already be committed, ignore error
+		}
+	}()
 
 	importedCount := 0
 
@@ -1003,7 +1024,8 @@ func (r *VariantRepository) ImportVariants(ctx context.Context, productID int, c
 		}
 
 		if expectedHeader["is_active"] != -1 {
-			variant.IsActive = record[expectedHeader["is_active"]] == "true"
+			const trueValue = "true"
+			variant.IsActive = record[expectedHeader["is_active"]] == trueValue
 		} else {
 			variant.IsActive = true // default
 		}
@@ -1067,7 +1089,7 @@ func (r *VariantRepository) ExportVariants(ctx context.Context, productID int) (
 	header := []string{
 		"id",
 		"sku",
-		"name", 
+		"name",
 		"price",
 		"compare_at_price",
 		"cost_price",
@@ -1156,4 +1178,168 @@ func intToString(i *int) string {
 		return ""
 	}
 	return strconv.Itoa(*i)
+}
+
+// =====================================================
+// PUBLIC METHODS (for unauthenticated buyers)
+// =====================================================
+
+// GetVariantsByProductIDPublic returns variants for public viewing (without sensitive data)
+func (r *VariantRepository) GetVariantsByProductIDPublic(ctx context.Context, productID int) ([]types.ProductVariant, error) {
+	type VariantRow struct {
+		ID                int              `db:"id"`
+		ProductID         int              `db:"product_id"`
+		SKU               *string          `db:"sku"`
+		Price             *float64         `db:"price"`
+		CompareAtPrice    *float64         `db:"compare_at_price"`
+		StockQuantity     int              `db:"stock_quantity"`
+		ReservedQuantity  int              `db:"reserved_quantity"`
+		AvailableQuantity int              `db:"available_quantity"`
+		StockStatus       string           `db:"stock_status"`
+		VariantAttributes json.RawMessage  `db:"variant_attributes"`
+		Weight            *float64         `db:"weight"`
+		Dimensions        *json.RawMessage `db:"dimensions"`
+		IsActive          bool             `db:"is_active"`
+		IsDefault         bool             `db:"is_default"`
+		ViewCount         int              `db:"view_count"`
+		SoldCount         int              `db:"sold_count"`
+		CreatedAt         time.Time        `db:"created_at"`
+		UpdatedAt         time.Time        `db:"updated_at"`
+	}
+
+	query := `
+		SELECT 
+			v.id, v.product_id, v.sku, v.price, v.compare_at_price,
+			v.stock_quantity, v.reserved_quantity, v.available_quantity, v.stock_status,
+			v.variant_attributes, v.weight, v.dimensions, v.is_active, v.is_default,
+			v.view_count, v.sold_count, v.created_at, v.updated_at
+		FROM storefront_product_variants v
+		WHERE v.product_id = $1 AND v.is_active = true
+		ORDER BY v.is_default DESC, v.id`
+
+	var rows []VariantRow
+	err := r.db.SelectContext(ctx, &rows, query, productID)
+	if err != nil {
+		log.Printf("Failed to query variants: %v", err)
+		return nil, err
+	}
+
+	// Convert to ProductVariant structs
+	variants := make([]types.ProductVariant, len(rows))
+	for i, row := range rows {
+		variants[i] = types.ProductVariant{
+			ID:                row.ID,
+			ProductID:         row.ProductID,
+			SKU:               row.SKU,
+			Price:             row.Price,
+			CompareAtPrice:    row.CompareAtPrice,
+			StockQuantity:     row.StockQuantity,
+			ReservedQuantity:  row.ReservedQuantity,
+			AvailableQuantity: row.AvailableQuantity,
+			StockStatus:       row.StockStatus,
+			Weight:            row.Weight,
+			IsActive:          row.IsActive,
+			IsDefault:         row.IsDefault,
+			ViewCount:         row.ViewCount,
+			SoldCount:         row.SoldCount,
+			CreatedAt:         row.CreatedAt,
+			UpdatedAt:         row.UpdatedAt,
+			Images:            []types.ProductVariantImage{},
+		}
+
+		// Parse JSON fields
+		if len(row.VariantAttributes) > 0 {
+			if err := json.Unmarshal(row.VariantAttributes, &variants[i].VariantAttributes); err != nil {
+				log.Printf("Failed to parse variant_attributes for variant %d: %v", row.ID, err)
+				variants[i].VariantAttributes = make(map[string]interface{})
+			}
+		} else {
+			variants[i].VariantAttributes = make(map[string]interface{})
+		}
+
+		if row.Dimensions != nil && len(*row.Dimensions) > 0 {
+			if err := json.Unmarshal(*row.Dimensions, &variants[i].Dimensions); err != nil {
+				log.Printf("Failed to parse dimensions for variant %d: %v", row.ID, err)
+				variants[i].Dimensions = make(map[string]interface{})
+			}
+		} else {
+			variants[i].Dimensions = make(map[string]interface{})
+		}
+	}
+
+	return variants, nil
+}
+
+// GetVariantAttributesPublic returns all variant attributes for public viewing
+func (r *VariantRepository) GetVariantAttributesPublic(ctx context.Context) ([]types.ProductVariantAttribute, error) {
+	query := `
+		SELECT id, name, display_name, type, is_required, sort_order, created_at, updated_at
+		FROM product_variant_attributes
+		ORDER BY sort_order, name`
+
+	var attributes []types.ProductVariantAttribute
+	err := r.db.SelectContext(ctx, &attributes, query)
+	return attributes, err
+}
+
+// GetVariantAttributeValuesPublic returns values for a specific attribute for public viewing
+func (r *VariantRepository) GetVariantAttributeValuesPublic(ctx context.Context, attributeID int) ([]types.ProductVariantAttributeValue, error) {
+	query := `
+		SELECT id, attribute_id, value, display_name, color_hex, image_url, sort_order, is_active,
+		       is_popular, usage_count, created_at, updated_at
+		FROM product_variant_attribute_values
+		WHERE attribute_id = $1 AND is_active = true
+		ORDER BY is_popular DESC, sort_order, display_name`
+
+	var values []types.ProductVariantAttributeValue
+	err := r.db.SelectContext(ctx, &values, query, attributeID)
+	return values, err
+}
+
+// GetProductPublic returns basic product information for public viewing
+func (r *VariantRepository) GetProductPublic(ctx context.Context, slug string, productID int) (*models.StorefrontProduct, error) {
+	query := `
+		SELECT 
+			p.id, p.storefront_id, p.title, p.description, p.price, p.compare_at_price,
+			p.category_id, p.is_active, p.is_featured, p.view_count, p.created_at, p.updated_at,
+			s.slug as storefront_slug
+		FROM storefront_products p
+		JOIN storefronts s ON p.storefront_id = s.id
+		WHERE p.id = $1 AND s.slug = $2 AND p.is_active = true`
+
+	var product models.StorefrontProduct
+	err := r.db.GetContext(ctx, &product, query, productID, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	return &product, nil
+}
+
+// GetVariantByIDPublic returns a specific variant for public viewing
+func (r *VariantRepository) GetVariantByIDPublic(ctx context.Context, variantID int) (*types.ProductVariant, error) {
+	query := `
+		SELECT 
+			v.id, v.product_id, v.sku, v.price, v.compare_at_price,
+			v.stock_quantity, v.reserved_quantity, v.available_quantity, v.stock_status,
+			v.variant_attributes, v.weight, v.dimensions, v.is_active, v.is_default,
+			v.view_count, v.sold_count, v.created_at, v.updated_at
+		FROM storefront_product_variants v
+		WHERE v.id = $1 AND v.is_active = true`
+
+	var variant types.ProductVariant
+	err := r.db.GetContext(ctx, &variant, query, variantID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get images for the variant
+	images, err := r.getVariantImages(ctx, variant.ID)
+	if err != nil {
+		log.Printf("Failed to get images for variant %d: %v", variant.ID, err)
+	} else {
+		variant.Images = images
+	}
+
+	return &variant, nil
 }

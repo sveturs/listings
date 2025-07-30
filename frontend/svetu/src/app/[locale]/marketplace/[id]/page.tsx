@@ -2,8 +2,11 @@
 
 import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@/store';
+import { addItem } from '@/store/slices/localCartSlice';
 import config from '@/config';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -20,6 +23,12 @@ import {
 } from '@/utils/addressUtils';
 import { PageTransition } from '@/components/ui/PageTransition';
 import AddToCartButton from '@/components/cart/AddToCartButton';
+import VariantSelector from '@/components/Storefront/ProductVariants/VariantSelector';
+import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
+import type { components } from '@/types/generated/api';
+
+type ProductVariant =
+  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
 
 interface User {
   id: number;
@@ -122,10 +131,16 @@ export default function ListingPage({ params }: Props) {
   const locale = useLocale();
   const router = useRouter();
   const { user } = useAuth();
+  const t = useTranslations();
+  const _dispatch = useDispatch<AppDispatch>();
   const [listing, setListing] = useState<Listing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [localizedAddress, setLocalizedAddress] = useState<string | null>(null);
+  const [_selectedVariant, setSelectedVariant] =
+    useState<ProductVariant | null>(null);
+  const [hasVariants, setHasVariants] = useState(false);
+  const [showVariantModal, setShowVariantModal] = useState(false);
 
   // Функция для получения переведенного значения
   const getTranslatedValue = (field: 'title' | 'description') => {
@@ -137,6 +152,40 @@ export default function ListingPage({ params }: Props) {
 
     // Если нет перевода, возвращаем оригинальное значение
     return listing[field];
+  };
+
+  // Функция для обработки нажатия на кнопку "Добавить в корзину"
+  const handleAddToCartClick = async () => {
+    if (hasVariants && _selectedVariant) {
+      // Если вариант выбран, добавляем напрямую в корзину
+      console.log('Adding variant to cart:', _selectedVariant);
+      
+      try {
+        _dispatch(
+          addItem({
+            productId: listing.id,
+            variantId: _selectedVariant.id,
+            name: getTranslatedValue('title'),
+            variantName: _selectedVariant.sku,
+            price: _selectedVariant.price || listing.price,
+            currency: 'RSD',
+            quantity: 1,
+            stockQuantity: _selectedVariant.stock_quantity,
+            image: images[0]?.public_url || '',
+            storefrontId: listing.storefront_id,
+            storefrontName: listing.storefront.name,
+            storefrontSlug: listing.storefront.slug,
+          })
+        );
+        
+        console.log('Successfully added variant to cart');
+      } catch (error) {
+        console.error('Failed to add variant to cart:', error);
+      }
+    } else if (hasVariants && !_selectedVariant) {
+      // Если варианты есть, но ничего не выбрано, открываем модальное окно
+      setShowVariantModal(true);
+    }
   };
 
   // Используем локализованный адрес из backend или запрашиваем через геокодирование
@@ -173,6 +222,15 @@ export default function ListingPage({ params }: Props) {
       const result = await response.json();
       // Проверяем обертку ответа
       const listingData = result.data || result;
+      console.log('Listing data:', listingData);
+      // Если storefront_id есть, но storefront отсутствует, создаем минимальный объект
+      if (listingData.storefront_id && !listingData.storefront) {
+        listingData.storefront = {
+          id: listingData.storefront_id,
+          name: 'Store',
+          slug: 'store',
+        };
+      }
       setListing(listingData);
 
       // Проверяем есть ли переводы адресов из backend
@@ -190,6 +248,41 @@ export default function ListingPage({ params }: Props) {
       } else if (hasTranslations) {
         // Используем готовые переводы из backend
         setLocalizedAddress(getFullLocalizedAddress(listingData, locale));
+      }
+
+      // Проверяем, является ли это товаром витрины
+      if (listingData.storefront_id) {
+        // Сначала получаем информацию о витрине
+        try {
+          const storefrontResponse = await fetch(
+            `${config.getApiUrl()}/api/v1/storefronts/${listingData.storefront_id}`
+          );
+          if (storefrontResponse.ok) {
+            const storefrontData = await storefrontResponse.json();
+            listingData.storefront = storefrontData.data || storefrontData;
+
+            // Теперь загружаем информацию о продукте витрины, чтобы получить варианты
+            const productResponse = await fetch(
+              `${config.getApiUrl()}/api/v1/storefronts/slug/${listingData.storefront.slug}/products/${listingData.id}`
+            );
+            console.log('Product response status:', productResponse.status);
+            if (productResponse.ok) {
+              const productData = await productResponse.json();
+              console.log('Product data:', productData);
+              if (productData.variants && productData.variants.length > 0) {
+                console.log(
+                  'Product has variants:',
+                  productData.variants.length
+                );
+                setHasVariants(true);
+              }
+            } else {
+              console.error('Failed to fetch product:', productResponse.status);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching storefront/product data:', error);
+        }
       }
     } catch (error) {
       console.error('Error fetching listing:', error);
@@ -406,8 +499,34 @@ export default function ListingPage({ params }: Props) {
               />
 
               {/* Price and Main Info */}
-              <div className="card bg-base-200">
+              <div
+                className={`card ${
+                  listing.storefront_id
+                    ? 'bg-gradient-to-br from-primary/10 to-primary/20 border-2 border-primary/30'
+                    : 'bg-base-200'
+                }`}
+              >
                 <div className="card-body">
+                  {/* Информация о витрине */}
+                  {listing.storefront && (
+                    <div className="mb-4 p-3 bg-primary/5 rounded-lg border-l-4 border-primary">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg">🏪</span>
+                        <span className="font-semibold text-primary">
+                          {listing.storefront.name}
+                        </span>
+                        <div className="badge badge-primary">
+                          {locale === 'ru' ? 'Витрина' : 'Storefront'}
+                        </div>
+                      </div>
+                      <p className="text-sm text-base-content/70">
+                        {locale === 'ru'
+                          ? 'Этот товар продается официальной витриной магазина'
+                          : 'This product is sold by an official store'}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap items-baseline gap-4">
                     <div className="flex items-baseline gap-2">
                       <h2 className="text-3xl font-bold text-primary">
@@ -444,27 +563,64 @@ export default function ListingPage({ params }: Props) {
                     )}
                   </div>
 
-                  {/* Add to Cart button for storefront products */}
+                  {/* Variant Selection and Add to Cart for storefront products */}
+                  {(() => {
+                    console.log('Add to cart check:', {
+                      storefrontId: listing.storefront_id,
+                      storefront: listing.storefront,
+                      userId: user?.id,
+                      listingUserId: listing.user_id,
+                      shouldShow:
+                        listing.storefront_id &&
+                        listing.storefront &&
+                        user &&
+                        user.id !== listing.user_id,
+                    });
+                    return null;
+                  })()}
                   {listing.storefront_id &&
                     listing.storefront &&
                     user &&
                     user.id !== listing.user_id && (
-                      <div className="mt-4">
-                        <AddToCartButton
-                          product={{
-                            id: listing.id,
-                            name: getTranslatedValue('title'),
-                            price: listing.price,
-                            image: images[0]?.public_url || '',
-                            storefrontId: listing.storefront_id,
-                            storefrontName: listing.storefront.name,
-                            storefrontSlug: listing.storefront.slug,
-                            stockQuantity: 100, // TODO: get real stock from API
-                            minOrderQuantity: 1,
-                            maxOrderQuantity: 10,
-                          }}
-                          className="btn-block"
-                        />
+                      <div className="mt-4 space-y-4">
+                        {/* Variant Selector */}
+                        {hasVariants && (
+                          <VariantSelector
+                            productId={listing.id}
+                            storefrontSlug={listing.storefront.slug}
+                            basePrice={listing.price}
+                            baseCurrency="RSD"
+                            onVariantChange={(variant) =>
+                              setSelectedVariant(variant)
+                            }
+                          />
+                        )}
+
+                        {/* Add to Cart Button */}
+                        {hasVariants ? (
+                          <button
+                            onClick={handleAddToCartClick}
+                            className="btn btn-primary btn-block"
+                          >
+                            {t('cart.addToCart')}
+                          </button>
+                        ) : (
+                          <AddToCartButton
+                            product={{
+                              id: listing.id,
+                              name: getTranslatedValue('title'),
+                              price: listing.price,
+                              image: images[0]?.public_url || '',
+                              storefrontId: listing.storefront_id,
+                              storefrontName: listing.storefront.name,
+                              storefrontSlug: listing.storefront.slug,
+                              stockQuantity: 100, // TODO: get real stock from API
+                              minOrderQuantity: 1,
+                              maxOrderQuantity: 10,
+                            }}
+                            className="btn-block"
+                          />
+                        )}
                       </div>
                     )}
 
@@ -761,22 +917,31 @@ export default function ListingPage({ params }: Props) {
             </div>
             {user && user.id !== listing.user_id && (
               <div className="flex gap-2">
-                {listing.storefront_id && listing.storefront && (
-                  <AddToCartButton
-                    product={{
-                      id: listing.id,
-                      name: getTranslatedValue('title'),
-                      price: listing.price,
-                      image: images[0]?.public_url || '',
-                      storefrontId: listing.storefront_id,
-                      storefrontName: listing.storefront.name,
-                      storefrontSlug: listing.storefront.slug,
-                      stockQuantity: 100, // TODO: get real stock from API
-                      minOrderQuantity: 1,
-                      maxOrderQuantity: 10,
-                    }}
-                  />
-                )}
+                {listing.storefront_id &&
+                  listing.storefront &&
+                  (hasVariants ? (
+                    <button
+                      onClick={handleAddToCartClick}
+                      className="btn btn-primary"
+                    >
+                      {t('cart.addToCart')}
+                    </button>
+                  ) : (
+                    <AddToCartButton
+                      product={{
+                        id: listing.id,
+                        name: getTranslatedValue('title'),
+                        price: listing.price,
+                        image: images[0]?.public_url || '',
+                        storefrontId: listing.storefront_id,
+                        storefrontName: listing.storefront.name,
+                        storefrontSlug: listing.storefront.slug,
+                        stockQuantity: 100, // TODO: get real stock from API
+                        minOrderQuantity: 1,
+                        maxOrderQuantity: 10,
+                      }}
+                    />
+                  ))}
                 <button onClick={handleChatClick} className="btn btn-primary">
                   <svg
                     className="w-5 h-5"
@@ -798,6 +963,47 @@ export default function ListingPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Variant Selection Modal */}
+      {listing && listing.storefront_id && listing.storefront && (
+        <VariantSelectionModal
+          isOpen={showVariantModal}
+          onClose={() => setShowVariantModal(false)}
+          productId={listing.id}
+          productName={getTranslatedValue('title')}
+          productImage={images[0]?.public_url}
+          storefrontSlug={listing.storefront.slug}
+          basePrice={listing.price}
+          baseCurrency="RSD"
+          onAddToCart={(variant, quantity) => {
+            console.log('Adding to cart from modal:', variant, 'quantity:', quantity);
+            
+            try {
+              _dispatch(
+                addItem({
+                  productId: listing.id,
+                  variantId: variant?.id,
+                  name: getTranslatedValue('title'),
+                  variantName: variant?.sku,
+                  price: variant?.price || listing.price,
+                  currency: 'RSD',
+                  quantity: quantity,
+                  stockQuantity: variant?.stock_quantity,
+                  image: images[0]?.public_url || '',
+                  storefrontId: listing.storefront_id,
+                  storefrontName: listing.storefront.name,
+                  storefrontSlug: listing.storefront.slug,
+                })
+              );
+              
+              console.log('Successfully added to cart from modal');
+              setShowVariantModal(false);
+            } catch (error) {
+              console.error('Failed to add to cart from modal:', error);
+            }
+          }}
+        />
+      )}
     </PageTransition>
   );
 }

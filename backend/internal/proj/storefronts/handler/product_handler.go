@@ -157,13 +157,13 @@ func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
 
 // CreateProduct creates a new product
 // @Summary Create a storefront product
-// @Description Creates a new product for the storefront
+// @Description Creates a new product for the storefront with optional variants support
 // @Tags storefront-products
 // @Accept json
 // @Produce json
 // @Param slug path string true "Storefront slug"
-// @Param product body models.CreateProductRequest true "Product data"
-// @Success 201 {object} models.StorefrontProduct "Created product"
+// @Param product body models.CreateProductRequest true "Product data with optional variants"
+// @Success 201 {object} models.StorefrontProduct "Created product with variants"
 // @Failure 400 {object} models.ErrorResponse "Bad request"
 // @Failure 401 {object} models.ErrorResponse "Unauthorized"
 // @Failure 500 {object} models.ErrorResponse "Internal server error"

@@ -9,7 +9,6 @@ import {
   Clock,
   Eye,
   MessageCircle,
-  ShoppingBag,
   ShoppingCart,
   Star,
   Expand,
@@ -35,6 +34,11 @@ import { PriceHistoryModal } from '@/components/marketplace/PriceHistoryModal';
 import { useDispatch } from 'react-redux';
 import { addItem } from '@/store/slices/localCartSlice';
 import type { AppDispatch } from '@/store';
+import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
+import type { components } from '@/types/generated/api';
+
+type ProductVariant =
+  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
 
 interface EnhancedListingCardProps {
   item: MarketplaceItem;
@@ -72,6 +76,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   }
   const [showQuickView, setShowQuickView] = useState(false);
   const [showPriceHistory, setShowPriceHistory] = useState(false);
+  const [showVariantModal, setShowVariantModal] = useState(false);
   const t = useTranslations('common');
   const { user, isAuthenticated } = useAuth();
 
@@ -203,18 +208,30 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   const handleAddToCart = () => {
     if (!item.storefront_id) return;
 
+    // Show variant selection modal
+    setShowVariantModal(true);
+  };
+
+  const handleAddToCartWithVariant = (
+    variant: ProductVariant | null,
+    quantity: number
+  ) => {
+    if (!item.storefront_id) return;
+
     dispatch(
       addItem({
         productId: item.id,
+        variantId: variant?.id,
         name: item.title,
-        price: item.price || 0,
-        quantity: 1,
+        variantName: variant?.name,
+        price: variant?.price || item.price || 0,
+        quantity,
         storefrontId: item.storefront_id,
         storefrontName: item.storefront?.name || 'Store',
         storefrontSlug: item.storefront?.slug || 'store',
         image: mainImage?.public_url || '',
         currency: 'RSD',
-        stockQuantity: 100, // TODO: get from API
+        stockQuantity: variant?.stock_quantity || 100, // TODO: get from API
       })
     );
   };
@@ -806,6 +823,21 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
           listingId={item.id}
           isOpen={showPriceHistory}
           onClose={() => setShowPriceHistory(false)}
+        />
+      )}
+
+      {/* Variant Selection Modal */}
+      {showVariantModal && item.storefront?.slug && (
+        <VariantSelectionModal
+          isOpen={showVariantModal}
+          onClose={() => setShowVariantModal(false)}
+          productId={item.id}
+          productName={item.title}
+          productImage={mainImage?.public_url}
+          storefrontSlug={item.storefront.slug}
+          basePrice={item.price || 0}
+          baseCurrency="RSD"
+          onAddToCart={handleAddToCartWithVariant}
         />
       )}
     </>

@@ -8,6 +8,32 @@ type UpdateProductRequest =
 type CreateProductRequest =
   components['schemas']['backend_internal_domain_models.CreateProductRequest'];
 
+// Расширенный тип для создания товара с вариантами
+interface CreateProductWithVariantsRequest extends CreateProductRequest {
+  has_variants?: boolean;
+  variants?: Array<{
+    sku?: string;
+    barcode?: string;
+    price?: number;
+    compare_at_price?: number;
+    cost_price?: number;
+    stock_quantity: number;
+    low_stock_threshold?: number;
+    variant_attributes: Record<string, any>;
+    weight?: number;
+    dimensions?: Record<string, any>;
+    is_default: boolean;
+  }>;
+  variant_settings?: {
+    track_inventory: boolean;
+    continue_selling: boolean;
+    require_shipping: boolean;
+    taxable_product: boolean;
+    weight_unit?: string;
+    selected_attributes: string[];
+  };
+}
+
 export const storefrontProductsService = {
   // Получить товары витрины
   async getProducts(
@@ -48,10 +74,10 @@ export const storefrontProductsService = {
     return response.data;
   },
 
-  // Создать товар
+  // Создать товар (с поддержкой вариантов)
   async createProduct(
     storefrontSlug: string,
-    productData: CreateProductRequest
+    productData: CreateProductRequest | CreateProductWithVariantsRequest
   ): Promise<StorefrontProduct> {
     const response = await apiClient.post(
       `/api/v1/storefronts/${storefrontSlug}/products`,

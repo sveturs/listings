@@ -8,7 +8,7 @@ import type { components } from '@/types/generated/api';
 type ProductVariant =
   components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
 type BulkUpdateStockRequest =
-  components['schemas']['backend_internal_proj_storefront_handler.BulkUpdateStockRequest'];
+  components['schemas']['backend_internal_proj_storefront_types.BulkUpdateStockRequest'];
 
 interface VariantStockTableProps {
   productId: number;
@@ -36,7 +36,7 @@ interface SortState {
 
 export default function VariantStockTable({
   productId,
-  storefrontId,
+  storefrontId: _storefrontId,
   editable = true,
 }: VariantStockTableProps) {
   const t = useTranslations('storefronts.variants');
@@ -87,8 +87,14 @@ export default function VariantStockTable({
   const loadVariants = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/variants`
+        `/api/v1/storefronts/storefront/products/${productId}/variants`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (response.ok) {
         const data: ProductVariant[] = await response.json();
@@ -117,7 +123,7 @@ export default function VariantStockTable({
 
   useEffect(() => {
     loadVariants();
-  }, [productId]);
+  }, [productId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apply filters and sorting
   useEffect(() => {
@@ -275,12 +281,14 @@ export default function VariantStockTable({
 
       const request: BulkUpdateStockRequest = { updates };
 
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/variants/bulk-update-stock`,
+        `/api/v1/storefronts/storefront/products/${productId}/variants/bulk-update-stock`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(request),
         }
@@ -346,10 +354,14 @@ export default function VariantStockTable({
       const formData = new FormData();
       formData.append('file', file);
 
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/variants/import`,
+        `/api/v1/storefronts/storefront/products/${productId}/variants/import`,
         {
           method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           body: formData,
         }
       );
@@ -375,8 +387,14 @@ export default function VariantStockTable({
   const handleCSVExport = async () => {
     try {
       setExporting(true);
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/variants/export`
+        `/api/v1/storefronts/storefront/products/${productId}/variants/export`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.ok) {

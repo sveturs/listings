@@ -31,7 +31,7 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			p.is_active, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address, p.individual_latitude,
-			p.individual_longitude, p.location_privacy, p.show_on_map,
+			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
 		LEFT JOIN marketplace_categories c ON p.category_id = c.id
@@ -154,7 +154,7 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			&p.IsActive, &attributesJSON, &p.ViewCount, &p.SoldCount,
 			&p.CreatedAt, &p.UpdatedAt,
 			&p.HasIndividualLocation, &p.IndividualAddress, &p.IndividualLatitude,
-			&p.IndividualLongitude, &p.LocationPrivacy, &p.ShowOnMap,
+			&p.IndividualLongitude, &p.LocationPrivacy, &p.ShowOnMap, &p.HasVariants,
 			&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
 		)
 		if err != nil {
@@ -221,7 +221,7 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 			p.is_active, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address, p.individual_latitude,
-			p.individual_longitude, p.location_privacy, p.show_on_map,
+			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
 		LEFT JOIN marketplace_categories c ON p.category_id = c.id
@@ -240,7 +240,7 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 		&p.IsActive, &attributesJSON, &p.ViewCount, &p.SoldCount,
 		&p.CreatedAt, &p.UpdatedAt,
 		&p.HasIndividualLocation, &p.IndividualAddress, &p.IndividualLatitude,
-		&p.IndividualLongitude, &p.LocationPrivacy, &p.ShowOnMap,
+		&p.IndividualLongitude, &p.LocationPrivacy, &p.ShowOnMap, &p.HasVariants,
 		&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
 	)
 
@@ -320,8 +320,8 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 			storefront_id, name, description, price, currency, category_id,
 			sku, barcode, stock_quantity, is_active, attributes,
 			has_individual_location, individual_address, individual_latitude,
-			individual_longitude, location_privacy, show_on_map
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+			individual_longitude, location_privacy, show_on_map, has_variants
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		RETURNING id, stock_status, created_at, updated_at`
 
 	// Log query parameters
@@ -358,7 +358,7 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 		storefrontID, req.Name, req.Description, req.Price, req.Currency, req.CategoryID,
 		sku, barcode, req.StockQuantity, req.IsActive, attributesJSON,
 		hasIndividualLocation, req.IndividualAddress, req.IndividualLatitude,
-		req.IndividualLongitude, req.LocationPrivacy, showOnMap,
+		req.IndividualLongitude, req.LocationPrivacy, showOnMap, req.HasVariants,
 	).Scan(&product.ID, &product.StockStatus, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		logger.Error().
@@ -387,6 +387,7 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 	product.IndividualLongitude = req.IndividualLongitude
 	product.LocationPrivacy = req.LocationPrivacy
 	product.ShowOnMap = showOnMap
+	product.HasVariants = req.HasVariants
 
 	return &product, nil
 }

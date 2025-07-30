@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useCreateProduct } from '@/contexts/CreateProductContext';
 import VariantManager from '@/components/Storefront/ProductVariants/VariantManager';
 import AttributeSetup from '@/components/Storefront/ProductVariants/AttributeSetup';
-import VariantGenerator from '@/components/Storefront/ProductVariants/VariantGenerator';
+import SimplifiedVariantGenerator from '@/components/products/SimplifiedVariantGenerator';
 
 interface VariantsStepProps {
   onNext: () => void;
@@ -14,36 +14,29 @@ interface VariantsStepProps {
 
 export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
   const t = useTranslations('storefronts.products');
-  const { state, setState } = useCreateProduct();
+  const { state, setHasVariants, setVariants, completeStep } =
+    useCreateProduct();
 
   const [activeMode, setActiveMode] = useState<'none' | 'simple' | 'advanced'>(
-    'none'
+    state.hasVariants
+      ? state.variants.length > 0
+        ? 'advanced'
+        : 'simple'
+      : 'none'
   );
-  const [hasVariants, setHasVariants] = useState(false);
-  const [variants, setVariants] = useState<any[]>([]);
 
-  // Initialize variants state from context
+  // Initialize from context
   useEffect(() => {
-    if (state.formData.variants && state.formData.variants.length > 0) {
-      setVariants(state.formData.variants);
-      setHasVariants(true);
+    if (state.hasVariants && state.variants.length > 0) {
       setActiveMode('advanced');
     }
-  }, [state.formData.variants]);
+  }, [state.hasVariants, state.variants.length]);
 
   const handleVariantToggle = (enabled: boolean) => {
     setHasVariants(enabled);
     if (!enabled) {
       setActiveMode('none');
       setVariants([]);
-      // Clear variants from form data
-      setState((prev) => ({
-        ...prev,
-        formData: {
-          ...prev.formData,
-          variants: [],
-        },
-      }));
     } else {
       setActiveMode('simple');
     }
@@ -54,46 +47,41 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
   };
 
   const handleVariantsSave = (newVariants: any[]) => {
-    setVariants(newVariants);
-    // Save to context
-    setState((prev) => ({
-      ...prev,
-      formData: {
-        ...prev.formData,
-        variants: newVariants,
-      },
+    // Convert to the format expected by the context
+    const formattedVariants = newVariants.map((v) => ({
+      sku: v.sku,
+      barcode: v.barcode,
+      price: v.price,
+      compare_at_price: v.compare_at_price,
+      cost_price: v.cost_price,
+      stock_quantity: v.stock_quantity || 0,
+      low_stock_threshold: v.low_stock_threshold,
+      variant_attributes: v.variant_attributes || {},
+      weight: v.weight,
+      dimensions: v.dimensions,
+      is_default: v.is_default || false,
     }));
+    setVariants(formattedVariants);
   };
 
   const handleNext = () => {
-    // Mark step as completed
-    setState((prev) => ({
-      ...prev,
-      completedSteps: new Set([...prev.completedSteps, prev.currentStep]),
-    }));
+    completeStep(state.currentStep);
     onNext();
   };
 
   const handleSkipVariants = () => {
     setHasVariants(false);
     setVariants([]);
-    setState((prev) => ({
-      ...prev,
-      formData: {
-        ...prev.formData,
-        variants: [],
-      },
-      completedSteps: new Set([...prev.completedSteps, prev.currentStep]),
-    }));
+    completeStep(state.currentStep);
     onNext();
   };
 
-  // Mock product data for the variant manager
-  const mockProduct = {
+  // Product data from context
+  const productData = {
     id: 0, // Will be set after product creation
-    category_id: state.formData.category?.id || 0,
-    title: state.formData.title || 'New Product',
-    price: state.formData.price || 0,
+    category_id: state.productData.category_id || 0,
+    title: state.productData.name || 'New Product',
+    price: state.productData.price || 0,
   };
 
   return (
@@ -123,7 +111,7 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
                 <input
                   type="checkbox"
                   className="toggle toggle-primary"
-                  checked={hasVariants}
+                  checked={state.hasVariants}
                   onChange={(e) => handleVariantToggle(e.target.checked)}
                 />
               </label>
@@ -133,7 +121,7 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
       </div>
 
       {/* Variant Configuration */}
-      {hasVariants && (
+      {state.hasVariants && (
         <div className="space-y-6">
           {/* Mode Selection */}
           <div className="card bg-base-100 shadow-sm">
@@ -211,17 +199,18 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
           {/* Variant Configuration Content */}
           {activeMode === 'simple' && (
             <SimpleVariantConfig
-              productData={mockProduct}
-              variants={variants}
+              productData={productData}
+              variants={state.variants}
               onVariantsChange={handleVariantsSave}
+              selectedAttributes={state.attributes || {}}
               t={t}
             />
           )}
 
           {activeMode === 'advanced' && (
             <AdvancedVariantConfig
-              productData={mockProduct}
-              variants={variants}
+              productData={productData}
+              variants={state.variants}
               onVariantsChange={handleVariantsSave}
               t={t}
             />
@@ -236,7 +225,7 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
         </button>
 
         <div className="flex space-x-2">
-          {hasVariants && variants.length === 0 && (
+          {state.hasVariants && state.variants.length === 0 && (
             <button onClick={handleSkipVariants} className="btn btn-outline">
               {t('skipVariants')}
             </button>
@@ -245,7 +234,7 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
           <button
             onClick={handleNext}
             className="btn btn-primary"
-            disabled={hasVariants && variants.length === 0}
+            disabled={state.hasVariants && state.variants.length === 0}
           >
             {t('continue')}
           </button>
@@ -260,20 +249,79 @@ interface SimpleVariantConfigProps {
   productData: any;
   variants: any[];
   onVariantsChange: (variants: any[]) => void;
+  selectedAttributes: Record<number, any>;
   t: (key: string, params?: any) => string;
 }
 
 function SimpleVariantConfig({
   productData,
-  variants,
+  variants: _variants,
   onVariantsChange,
+  selectedAttributes,
   t,
 }: SimpleVariantConfigProps) {
-  const [basePrice, setBasePrice] = useState(productData.price || 0);
+  const [_basePrice] = useState(productData.price || 0);
+  const [categoryAttributes, setCategoryAttributes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Загружаем атрибуты категории
+  useEffect(() => {
+    const loadCategoryAttributes = async () => {
+      if (!productData.category_id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/v1/marketplace/categories/${productData.category_id}/attributes`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setCategoryAttributes(data.data || data);
+        }
+      } catch (error) {
+        console.error('Failed to load category attributes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategoryAttributes();
+  }, [productData.category_id]);
 
   const handleGenerateVariants = (generatedVariants: any[]) => {
     onVariantsChange(generatedVariants);
   };
+
+  if (loading) {
+    return (
+      <div className="card bg-base-100 shadow-sm">
+        <div className="card-body">
+          <div className="flex justify-center">
+            <span className="loading loading-spinner loading-lg"></span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (categoryAttributes.length === 0) {
+    return (
+      <div className="card bg-base-100 shadow-sm">
+        <div className="card-body">
+          <div className="text-center py-8">
+            <p className="text-base-content/70">
+              {t('noAttributesForCategory')}
+            </p>
+            <p className="text-sm text-base-content/50 mt-2">
+              {t('selectDifferentCategory')}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="card bg-base-100 shadow-sm">
@@ -282,9 +330,10 @@ function SimpleVariantConfig({
           {t('generateVariants')}
         </h3>
 
-        <VariantGenerator
-          productId={0} // Temporary ID for new products
-          basePrice={basePrice}
+        <SimplifiedVariantGenerator
+          selectedAttributes={selectedAttributes}
+          categoryAttributes={categoryAttributes}
+          basePrice={productData.price || 0}
           onGenerate={handleGenerateVariants}
           onCancel={() => {}}
         />
@@ -304,7 +353,7 @@ interface AdvancedVariantConfigProps {
 function AdvancedVariantConfig({
   productData,
   variants,
-  onVariantsChange,
+  onVariantsChange: _onVariantsChange,
   t,
 }: AdvancedVariantConfigProps) {
   const [showAttributeSetup, setShowAttributeSetup] = useState(false);
@@ -314,7 +363,7 @@ function AdvancedVariantConfig({
     // The variants are already saved to the parent component
   };
 
-  const handleAttributeSetupSave = (attributes: any[]) => {
+  const handleAttributeSetupSave = (_attributes: any[]) => {
     setShowAttributeSetup(false);
     // Attributes are saved to the product
   };

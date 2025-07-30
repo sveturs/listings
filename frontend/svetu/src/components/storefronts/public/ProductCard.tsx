@@ -68,7 +68,7 @@ export default function ProductCard({
                 
                 <div className="flex items-center gap-2">
                   <span className={`text-sm font-medium ${stockStatusColor}`}>
-                    {t(`stock.${product.stock_status || 'in_stock'}`)}
+                    {t(`stockStatus.${product.stock_status || 'in_stock'}`)}
                   </span>
                   <span className="text-sm text-base-content/70">
                     ({product.stock_quantity} {t('units')})
@@ -121,7 +121,7 @@ export default function ProductCard({
         {/* Out of stock overlay */}
         {product.stock_status === 'out_of_stock' && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="badge badge-error badge-lg">{t('stock.out_of_stock')}</span>
+            <span className="badge badge-error badge-lg">{t('stockStatus.out_of_stock')}</span>
           </div>
         )}
 
@@ -152,7 +152,7 @@ export default function ProductCard({
         {/* Stock info */}
         <div className="flex items-center gap-2 mt-1">
           <span className={`text-sm font-medium ${stockStatusColor}`}>
-            {t(`stock.${product.stock_status || 'in_stock'}`)}
+            {t(`stockStatus.${product.stock_status || 'in_stock'}`)}
           </span>
           <span className="text-sm text-base-content/70">
             ({product.stock_quantity} {t('units')})

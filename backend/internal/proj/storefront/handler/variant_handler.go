@@ -7,7 +7,7 @@ import (
 	"backend/internal/proj/storefront/repository"
 	"backend/internal/proj/storefront/types"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
 type VariantHandler struct {
@@ -463,7 +463,7 @@ func (h *VariantHandler) BulkUpdateStock(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "Stock updated successfully",
+		"message":       "Stock updated successfully",
 		"updated_count": updatedCount,
 	})
 }
@@ -550,7 +550,7 @@ func (h *VariantHandler) ImportVariants(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "Variants imported successfully",
+		"message":        "Variants imported successfully",
 		"imported_count": importedCount,
 	})
 }
@@ -583,7 +583,6 @@ func (h *VariantHandler) ExportVariants(c *fiber.Ctx) error {
 
 	c.Set("Content-Type", "text/csv")
 	c.Set("Content-Disposition", "attachment; filename="+fileName)
-	
-	c.Send(csvData)
-	return nil
+
+	return c.Send(csvData)
 }

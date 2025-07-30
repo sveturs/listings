@@ -21,6 +21,12 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	// Временное решение: пропускаем публичные маршруты storefronts и аналитики
 	path := c.Path()
 
+	// Пропускаем все публичные API маршруты
+	if strings.HasPrefix(path, "/api/v1/public/") {
+		logger.Info().Str("path", path).Msg("Skipping auth for public API routes")
+		return c.Next()
+	}
+
 	// Пропускаем маршруты аналитики для записи событий и публичных метрик
 	if strings.HasPrefix(path, "/api/v1/analytics/track") ||
 		strings.HasPrefix(path, "/api/v1/analytics/event") ||

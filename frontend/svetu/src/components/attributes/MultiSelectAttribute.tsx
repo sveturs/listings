@@ -8,7 +8,7 @@ interface MultiSelectAttributeProps {
     id: number;
     name: string;
     display_name: string;
-    options?: string | string[] | any[];
+    options?: string | string[] | any[] | { values: string[] };
     translations?: Record<string, string>;
     option_translations?: Record<string, Record<string, string>>;
     is_required?: boolean;
@@ -80,6 +80,14 @@ export default function MultiSelectAttribute({
       }
     } else if (Array.isArray(attribute.options)) {
       options = attribute.options;
+    } else if (
+      typeof attribute.options === 'object' &&
+      attribute.options.values
+    ) {
+      // Handle options in format { values: [...] }
+      options = Array.isArray(attribute.options.values)
+        ? attribute.options.values
+        : [];
     }
   }
 

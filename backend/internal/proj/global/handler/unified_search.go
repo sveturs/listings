@@ -78,6 +78,7 @@ type UnifiedSearchItem struct {
 	Images      []UnifiedProductImage  `json:"images"`
 	Category    UnifiedCategoryInfo    `json:"category"`
 	Location    *UnifiedLocationInfo   `json:"location,omitempty"`
+	User        *UnifiedUserInfo       `json:"user,omitempty"`        // Информация о продавце
 	Storefront  *UnifiedStorefrontInfo `json:"storefront,omitempty"` // Только для storefront товаров
 	Score       float64                `json:"score"`
 	Highlights  map[string][]string    `json:"highlights,omitempty"`
@@ -114,6 +115,14 @@ type UnifiedStorefrontInfo struct {
 	Slug       string  `json:"slug,omitempty"`
 	Rating     float64 `json:"rating,omitempty"`
 	IsVerified bool    `json:"is_verified"`
+}
+
+// UnifiedUserInfo информация о пользователе/продавце
+type UnifiedUserInfo struct {
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	PictureURL string `json:"picture_url,omitempty"`
+	IsVerified bool   `json:"is_verified,omitempty"`
 }
 
 // UnifiedSearch выполняет унифицированный поиск по marketplace и storefront товарам
@@ -395,6 +404,16 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 			Score:       1.0, // TODO: получить реальный score из OpenSearch
 			ViewsCount:  listing.ViewsCount,
 			CreatedAt:   &listing.CreatedAt,
+		}
+
+		// Добавляем информацию о пользователе
+		if listing.User != nil {
+			item.User = &UnifiedUserInfo{
+				ID:         listing.User.ID,
+				Name:       listing.User.Name,
+				PictureURL: listing.User.PictureURL,
+				IsVerified: false, // TODO: добавить поле verified в таблицу users
+			}
 		}
 
 		// Если это товар витрины, нужно добавить информацию о витрине

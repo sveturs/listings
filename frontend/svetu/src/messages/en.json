@@ -121,7 +121,15 @@
       "friday": "Friday",
       "saturday": "Saturday",
       "sunday": "Sunday"
-    }
+    },
+    "stockStatus": {
+      "in_stock": "In Stock",
+      "low_stock": "Low Stock",
+      "out_of_stock": "Out of Stock"
+    },
+    "units": "pcs",
+    "storefront": "storefront",
+    "from": "from"
   },
   "cart": {
     "title": "Shopping Cart",
@@ -276,6 +284,8 @@
     "orderNumber": "Order #{number}",
     "ordered": "Ordered",
     "from": "from",
+    "units": "units",
+    "storefront": "store",
     "quantity": "Qty",
     "subtotal": "Subtotal",
     "shipping": "Shipping",
@@ -1636,6 +1646,11 @@
     "connectionError": "Error connecting Telegram"
   },
   "marketplace": {
+    "create": {
+      "title": "Create",
+      "selectOptions": "Select options",
+      "noOptions": "No options available"
+    },
     "filters": {
       "title": "Filters",
       "clearAll": "Clear all",
@@ -2811,6 +2826,21 @@
       "variants": "Variants",
       "generateMatrix": "Generate Matrix",
       "possibleCombinations": "Possible Combinations",
+      "loading": "Loading...",
+      "subtitle": "Manage product variants and stock",
+      "cancel": "Cancel",
+      "save": "Save",
+      "tabs": {
+        "attributes": "Attributes",
+        "variants": "Variants",
+        "stock": "Stock",
+        "analytics": "Analytics"
+      },
+      "selectAttributesHelp": "Select attribute values to generate variants",
+      "generationSummary": "Generation Summary",
+      "totalCombinations": "Total Combinations",
+      "variantsWillBeCreated": "{count} variants will be created",
+      "generating": "Generating...",
       "existingVariants": "Existing Variants",
       "priceModifiers": "Price Modifiers",
       "stockQuantities": "Stock Quantities",
@@ -2876,6 +2906,8 @@
       "active": "Active",
       "inactive": "Inactive",
       "readyToPublish": "Ready to Publish!",
+      "back": "Back",
+      "generateVariants": "Generate Variants",
       "variantsStepDescription": "Configure product variants with different attributes like color, size, etc.",
       "enableVariants": "Enable Product Variants",
       "enableVariantsDescription": "Create multiple versions of this product with different attributes",
@@ -2884,8 +2916,17 @@
       "simpleVariantsDescription": "Quickly generate variants using existing attributes",
       "advancedVariants": "Advanced Mode",
       "advancedVariantsDescription": "Full control over variant attributes and stock management",
+      "noAttributesForCategory": "No variant attributes available for this category",
+      "selectDifferentCategory": "Select a different category or set up attributes first",
+      "noVariantAttributes": "No variant attributes configured",
+      "setupAttributesFirst": "Set up product attributes first to create variants",
+      "stockSettings": "Stock Settings",
+      "defaultStockQuantity": "Default Stock Quantity",
+      "useIndividualQuantities": "Set individual quantities for each variant",
+      "willGenerateVariants": "Will generate {count} variants",
       "skipVariants": "Skip Variants",
       "continue": "Continue",
+      "cancel": "Cancel",
       "noVariantsConfigured": "No variants configured",
       "setupAttributesFirst": "Set up product attributes first to create variants",
       "setupAttributes": "Setup Attributes",
@@ -2896,6 +2937,50 @@
       "previewProductDescription": "Review how your product will appear to customers",
       "totalPhotos": "Total photos",
       "photosStepDescription": "Add photos to showcase your product",
+      "productPhotos": "Product Photos",
+      "productPhotosDescription": "Add high-quality photos to showcase your product",
+      "photosUploaded": "Photos Uploaded",
+      "maxPhotos": "Max Photos",
+      "recommendedSize": "Recommended Size",
+      "aspectRatio": "Aspect Ratio",
+      "uploadPhotos": "Upload Photos",
+      "dragDropPhotos": "Drag and drop photos here",
+      "supportedFormats": "Supported formats",
+      "chooseFiles": "Choose Files",
+      "photoPreview": "Photo Preview",
+      "mainPhoto": "Main Photo",
+      "photoTips": "Use high-quality images for better results",
+      "maxImagesError": "Maximum 10 photos allowed",
+      "invalidImagesError": "Some files are not valid images",
+      "imagesRequired": "At least one photo is required",
+      "variantStockManager": "Variant Stock Manager",
+      "configureStockAndPrices": "Configure stock and prices for variants",
+      "backToSettings": "Back to settings",
+      "confirmVariants": "Confirm variants",
+      "totalVariants": "Total variants",
+      "totalStock": "Total stock",
+      "averagePrice": "Average price",
+      "manageVariants": "Manage variants",
+      "variant": "Variant",
+      "stock": "Stock",
+      "price": "Price",
+      "status": "Status",
+      "inStock": "In stock",
+      "outOfStock": "Out of stock",
+      "quickActions": "Quick actions",
+      "setStockForAll": "Set stock for all",
+      "setPriceForAll": "Set price for all",
+      "setStockPrompt": "Set the same stock for all variants:",
+      "setPricePrompt": "Set the same price for all variants:",
+      "main": "Main",
+      "attributesFromPreviousStep": "Attributes selected on previous step. Choose values to create variants:",
+      "selectedCount": "Selected: {count} of {total}",
+      "stock": {
+        "in_stock": "In Stock",
+        "low_stock": "Low Stock",
+        "out_of_stock": "Out of Stock"
+      },
+      "noVariantsToManage": "No variants to manage",
       "activeOnly": "Active Only",
       "inactiveOnly": "Inactive Only",
       "noProducts": "No products yet",
@@ -2998,7 +3083,7 @@
         "selectMode": "Select Mode"
       },
       "loadMore": "Load more",
-      "stock": {
+      "stockStatus": {
         "in_stock": "In Stock",
         "low_stock": "Low Stock",
         "out_of_stock": "Out of Stock"
@@ -3042,7 +3127,8 @@
         "invalidImageType": "Please select valid image files (PNG, JPG)",
         "imageTooLarge": "Image file is too large (max 10MB)",
         "atLeastOneImage": "Please add at least one product image"
-      }
+      },
+      "default": "Default"
     },
     "noProducts": "No products available yet",
     "storeInfo": "Store Information",
@@ -3430,6 +3516,7 @@
   "products": {
     "title": "Products",
     "stock": "Stock",
+    "outOfStock": "Out of Stock",
     "bulk": {
       "selectMode": "Select Mode",
       "selectAll": "Select All",
@@ -3888,6 +3975,15 @@
       "title": "Updates",
       "newPerHour": "{count} new per hour",
       "priceDrops": "{count} price drops"
+    }
+  },
+  "storefront": {
+    "products": {
+      "attributes": "Product Attributes",
+      "default": "Default"
+    },
+    "categories": {
+      "attributes": "Category Attributes"
     }
   }
 }

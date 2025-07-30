@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { storefrontProductsService } from '@/services/storefrontProducts';
-import ProductCard from './ProductCard';
+import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
+import { adaptStorefrontProduct } from '@/utils/product-adapters';
 import ViewToggle from '@/components/common/ViewToggle';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
@@ -157,14 +158,21 @@ export default function StorefrontProductsList({
           ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
           : "space-y-4"
       }>
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            storefrontId={storefrontId}
-            viewMode={viewMode}
-          />
-        ))}
+        {products.map((product) => {
+          const unifiedProduct = adaptStorefrontProduct(product, {
+            id: storefrontId,
+            name: 'Store', // TODO: получать название витрины
+            slug: 'store' // TODO: получать slug витрины
+          });
+          return (
+            <UnifiedProductCard
+              key={product.id}
+              product={unifiedProduct}
+              locale="en" // TODO: получать локаль из контекста
+              viewMode={viewMode}
+            />
+          );
+        })}
       </div>
 
       {/* Load More */}

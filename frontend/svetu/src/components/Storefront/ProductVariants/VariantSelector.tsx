@@ -14,6 +14,8 @@ type ProductVariant =
     reserved_quantity?: number;
     available_quantity?: number;
     is_default?: boolean;
+    variant_attributes?: Record<string, any>;
+    attributes?: Record<string, any>;
   };
 
 interface ProductVariantImage {
@@ -26,6 +28,7 @@ interface ProductVariantImage {
 
 interface VariantSelectorProps {
   productId: number;
+  storefrontSlug: string;
   basePrice: number;
   baseCurrency: string;
   onVariantChange: (variant: ProductVariant | null) => void;
@@ -34,12 +37,13 @@ interface VariantSelectorProps {
 
 export default function VariantSelector({
   productId,
+  storefrontSlug,
   basePrice,
   baseCurrency,
   onVariantChange,
   className = '',
 }: VariantSelectorProps) {
-  const t = useTranslations('storefront');
+  const t = useTranslations('storefronts');
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null
@@ -53,19 +57,23 @@ export default function VariantSelector({
   const [loading, setLoading] = useState(true);
 
   const loadVariants = useCallback(async () => {
+    console.log('VariantSelector: Loading variants for productId:', productId, 'storefrontSlug:', storefrontSlug);
     try {
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/variants`
+        `/api/v1/public/storefronts/${storefrontSlug}/products/${productId}/variants`
       );
+      console.log('VariantSelector: Response status:', response.status);
       if (response.ok) {
         const variantData = await response.json();
+        console.log('VariantSelector: Loaded variants:', variantData);
         setVariants(variantData);
 
-        // Extract available attributes from the new attributes field
+        // Extract available attributes from variant_attributes field
         const attributes: Record<string, Set<string>> = {};
         variantData.forEach((variant: ProductVariant) => {
-          if (variant.attributes) {
-            Object.entries(variant.attributes).forEach(([key, value]) => {
+          const variantAttrs = variant.variant_attributes || variant.attributes;
+          if (variantAttrs) {
+            Object.entries(variantAttrs).forEach(([key, value]) => {
               if (!attributes[key]) {
                 attributes[key] = new Set();
               }
@@ -85,29 +93,35 @@ export default function VariantSelector({
         const defaultVariant =
           variantData.find((v: ProductVariant) => v.is_default) ||
           variantData[0];
-        if (defaultVariant && defaultVariant.attributes) {
-          // Convert attributes to string-based format for compatibility
-          const stringAttributes: Record<string, string> = {};
-          Object.entries(defaultVariant.attributes).forEach(([key, value]) => {
-            stringAttributes[key] = String(value);
-          });
-          setSelectedAttributes(stringAttributes);
+        if (defaultVariant) {
+          const defaultAttrs = defaultVariant.variant_attributes || defaultVariant.attributes;
+          if (defaultAttrs) {
+            // Convert attributes to string-based format for compatibility
+            const stringAttributes: Record<string, string> = {};
+            Object.entries(defaultAttrs).forEach(([key, value]) => {
+              stringAttributes[key] = String(value);
+            });
+            setSelectedAttributes(stringAttributes);
+          }
         }
+      } else {
+        console.error('VariantSelector: Failed to load variants, response not ok:', response.status);
       }
     } catch (error) {
-      console.error('Failed to load variants:', error);
+      console.error('VariantSelector: Failed to load variants:', error);
     } finally {
       setLoading(false);
     }
-  }, [productId]);
+  }, [productId, storefrontSlug]);
 
   const findMatchingVariant = useCallback(
     (attributes: Record<string, string>): ProductVariant | null => {
       return (
         variants.find((variant) => {
-          if (!variant.attributes) return false;
+          const variantAttrs = variant.variant_attributes || variant.attributes;
+          if (!variantAttrs) return false;
           return Object.entries(attributes).every(
-            ([key, value]) => String(variant.attributes![key]) === value
+            ([key, value]) => String(variantAttrs[key]) === value
           );
         }) || null
       );
@@ -176,7 +190,7 @@ export default function VariantSelector({
 
   useEffect(() => {
     loadVariants();
-  }, [productId, loadVariants]);
+  }, [loadVariants]);
 
   useEffect(() => {
     // Find matching variant when attributes change
@@ -185,7 +199,15 @@ export default function VariantSelector({
     onVariantChange(matchingVariant);
   }, [selectedAttributes, variants, findMatchingVariant, onVariantChange]);
 
+  console.log('VariantSelector: Rendering with state:', {
+    loading,
+    variantsLength: variants.length,
+    selectedVariant,
+    availableAttributes: Object.keys(availableAttributes)
+  });
+
   if (loading) {
+    console.log('VariantSelector: Showing loading state');
     return (
       <div className={`animate-pulse space-y-4 ${className}`}>
         <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -196,8 +218,11 @@ export default function VariantSelector({
   }
 
   if (variants.length === 0) {
+    console.log('VariantSelector: No variants available, returning null');
     return null; // No variants available
   }
+
+  console.log('VariantSelector: Rendering variant selector UI');
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -234,9 +259,9 @@ export default function VariantSelector({
               {getAttributeDisplayName(attributeName)}
             </label>
 
-            {attributeName === 'color' ? (
+            {attributeName.toLowerCase() === 'color' ? (
               // Color picker for color attributes
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {values.map((value) => {
                   const isSelected =
                     selectedAttributes[attributeName] === value;
@@ -251,18 +276,55 @@ export default function VariantSelector({
                       onClick={() => updateAttribute(attributeName, value)}
                       disabled={!isAvailable}
                       className={`
-                        w-8 h-8 rounded-full border-2 relative
-                        ${isSelected ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-300'}
-                        ${!isAvailable ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-400'}
+                        group relative flex flex-col items-center gap-1 p-1 rounded-lg transition-all
+                        ${!isAvailable ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 cursor-pointer'}
                       `}
-                      style={{ backgroundColor: getColorHex(value) }}
                       title={value}
                     >
-                      {!isAvailable && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-6 h-0.5 bg-red-500 rotate-45"></div>
-                        </div>
-                      )}
+                      <div
+                        className={`
+                          w-12 h-12 rounded-lg border-2 relative transition-all shadow-sm
+                          ${isSelected ? 'border-blue-500 ring-2 ring-blue-200 scale-105' : 'border-gray-200'}
+                          ${!isAvailable ? '' : 'group-hover:border-gray-300 group-hover:shadow-md'}
+                        `}
+                        style={{ backgroundColor: getColorHex(value) }}
+                      >
+                        {/* Checkmark for selected state */}
+                        {isSelected && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm">
+                              <svg
+                                className="w-3 h-3 text-blue-500"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Cross for unavailable colors */}
+                        {!isAvailable && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-0.5 bg-red-500 rotate-45 shadow-sm"></div>
+                            <div className="absolute w-8 h-0.5 bg-red-500 -rotate-45 shadow-sm"></div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Color name label */}
+                      <span className={`
+                        text-xs text-center capitalize leading-tight min-w-0 max-w-16
+                        ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-600'}
+                        ${!isAvailable ? 'text-gray-400' : ''}
+                      `}>
+                        {value}
+                      </span>
                     </button>
                   );
                 })}
@@ -274,7 +336,7 @@ export default function VariantSelector({
                 onChange={(e) => updateAttribute(attributeName, e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">{t('select_option')}</option>
+                <option value="">{t('variants.selectOption', { attribute: getAttributeDisplayName(attributeName) })}</option>
                 {values.map((value) => (
                   <option
                     key={value}
@@ -293,7 +355,7 @@ export default function VariantSelector({
       {/* Stock Status */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">{t('availability')}</span>
+          <span className="text-sm text-gray-600">{t('variants.availability')}</span>
           <span
             className={`text-sm font-medium ${
               getStockStatus() === 'in_stock'
@@ -303,21 +365,21 @@ export default function VariantSelector({
                   : 'text-red-600'
             }`}
           >
-            {getStockStatus() === 'in_stock' && t('in_stock')}
-            {getStockStatus() === 'low_stock' && t('low_stock')}
-            {getStockStatus() === 'out_of_stock' && t('out_of_stock')}
+            {getStockStatus() === 'in_stock' && t('variants.inStock')}
+            {getStockStatus() === 'low_stock' && t('variants.lowStock')}
+            {getStockStatus() === 'out_of_stock' && t('variants.outOfStock')}
           </span>
         </div>
 
         {getCurrentStock() > 0 && (
           <div className="space-y-1">
             <div className="text-sm text-gray-600">
-              {t('items_available', { count: getCurrentStock() })}
+              {t('variants.itemsAvailable', { count: getCurrentStock() })}
             </div>
             {selectedVariant?.reserved_quantity &&
               selectedVariant.reserved_quantity > 0 && (
                 <div className="text-xs text-amber-600">
-                  {t('reserved', { count: selectedVariant.reserved_quantity })}
+                  {t('variants.reserved', { count: selectedVariant.reserved_quantity })}
                 </div>
               )}
           </div>
@@ -334,7 +396,7 @@ export default function VariantSelector({
       {selectedVariant?.images && selectedVariant.images.length > 1 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-gray-700">
-            {t('more_images')}
+            {t('variants.moreImages')}
           </h4>
           <div className="grid grid-cols-4 gap-2">
             {selectedVariant.images.map((image) => (

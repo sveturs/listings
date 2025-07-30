@@ -28,7 +28,7 @@ func NewOrderServiceTx(orderService *OrderService, db *sqlx.DB) *OrderServiceTx 
 // CreateOrderTx создает новый заказ в транзакции
 func (s *OrderServiceTx) CreateOrderTx(ctx context.Context, req *models.CreateOrderRequest, userID int) (*models.StorefrontOrder, error) {
 	var createdOrder *models.StorefrontOrder
-	
+
 	err := orderRepo.WithTx(ctx, s.db, func(tx *sqlx.Tx) error {
 		s.logger.Info("Creating order in transaction (user_id: %d, storefront_id: %d)", userID, req.StorefrontID)
 
@@ -92,7 +92,6 @@ func (s *OrderServiceTx) CreateOrderTx(ctx context.Context, req *models.CreateOr
 		s.logger.Info("Order created successfully (order_id: %d)", createdOrder.ID)
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +102,7 @@ func (s *OrderServiceTx) CreateOrderTx(ctx context.Context, req *models.CreateOr
 // getOrderItems получает позиции заказа из корзины или запроса
 func (s *OrderServiceTx) getOrderItems(ctx context.Context, req *models.CreateOrderRequest, userID int) ([]models.OrderItemRequest, error) {
 	var items []models.OrderItemRequest
-	
+
 	if req.CartID != nil {
 		// Из корзины
 		cart, err := s.cartRepo.GetByID(ctx, *req.CartID)

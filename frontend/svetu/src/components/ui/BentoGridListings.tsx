@@ -14,7 +14,8 @@ import {
   UnifiedSearchItem,
 } from '@/services/unifiedSearch';
 import { MarketplaceItem } from '@/types/marketplace';
-import { EnhancedListingCard } from '@/components/marketplace/EnhancedListingCard';
+import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
+import { adaptMarketplaceItem } from '@/utils/product-adapters';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { ListingGridSkeleton } from '@/components/ui/skeletons';
@@ -36,10 +37,13 @@ function convertToMarketplaceItem(
       is_main: img.is_main,
     })),
     user: {
-      id: 0,
-      name: unifiedItem.storefront?.name || 'Пользователь',
+      id: unifiedItem.user?.id || unifiedItem.storefront?.id || 0,
+      name:
+        unifiedItem.user?.name ||
+        unifiedItem.storefront?.name ||
+        'Пользователь',
       email: '',
-      picture_url: '',
+      picture_url: unifiedItem.user?.picture_url || '',
     },
     category: {
       id: unifiedItem.category.id,
@@ -55,6 +59,14 @@ function convertToMarketplaceItem(
     product_type: unifiedItem.product_type,
     storefront_id: unifiedItem.storefront?.id,
     storefront_slug: unifiedItem.storefront?.slug,
+    // Добавляем объект storefront для правильной работы адаптера
+    storefront: unifiedItem.storefront
+      ? {
+          id: unifiedItem.storefront.id,
+          name: unifiedItem.storefront.name,
+          slug: unifiedItem.storefront.slug || '',
+        }
+      : undefined,
   };
 }
 
@@ -269,15 +281,19 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
                   : 'space-y-3'
               }
             >
-              {displayItems.map((item) => (
-                <EnhancedListingCard
-                  key={item.id}
-                  item={convertToMarketplaceItem(item)}
-                  locale={locale}
-                  viewMode={viewMode}
-                  gridColumns={viewMode === 'grid' ? gridColumns : undefined}
-                />
-              ))}
+              {displayItems.map((item) => {
+                const marketplaceItem = convertToMarketplaceItem(item);
+                const unifiedProduct = adaptMarketplaceItem(marketplaceItem);
+                return (
+                  <UnifiedProductCard
+                    key={item.id}
+                    product={unifiedProduct}
+                    locale={locale}
+                    viewMode={viewMode}
+                    gridColumns={viewMode === 'grid' ? gridColumns : undefined}
+                  />
+                );
+              })}
             </div>
 
             {/* Infinite scroll trigger */}

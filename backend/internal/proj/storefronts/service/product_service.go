@@ -2,10 +2,16 @@ package service
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
+	"errors"
 	"fmt"
+	"sort"
+	"strings"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
+	variantTypes "backend/internal/proj/storefront/types"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/pkg/utils"
 )
@@ -13,10 +19,18 @@ import (
 // ProductSearchRepository is an alias for OpenSearch interface
 type ProductSearchRepository = opensearch.ProductSearchRepository
 
+// VariantService interface for variant operations
+type VariantService interface {
+	BulkCreateVariants(ctx context.Context, productID int, variants []variantTypes.CreateVariantRequest) ([]*variantTypes.ProductVariant, error)
+	CreateVariant(ctx context.Context, req *variantTypes.CreateVariantRequest) (*variantTypes.ProductVariant, error)
+	GetVariantsByProductID(ctx context.Context, productID int) ([]*variantTypes.ProductVariant, error)
+}
+
 // ProductService handles business logic for storefront products
 type ProductService struct {
-	storage    Storage
-	searchRepo opensearch.ProductSearchRepository
+	storage        Storage
+	searchRepo     opensearch.ProductSearchRepository
+	variantService VariantService
 }
 
 // Storage interface for product operations
@@ -37,13 +51,23 @@ type Storage interface {
 
 	// Storefront operations
 	GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error)
+
+	// Transaction support
+	BeginTx(ctx context.Context) (Transaction, error)
+}
+
+// Transaction interface for database transactions
+type Transaction interface {
+	Rollback() error
+	Commit() error
 }
 
 // NewProductService creates a new product service
-func NewProductService(storage Storage, searchRepo opensearch.ProductSearchRepository) *ProductService {
+func NewProductService(storage Storage, searchRepo opensearch.ProductSearchRepository, variantService VariantService) *ProductService {
 	return &ProductService{
-		storage:    storage,
-		searchRepo: searchRepo,
+		storage:        storage,
+		searchRepo:     searchRepo,
+		variantService: variantService,
 	}
 }
 
@@ -147,20 +171,77 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
 
+	// Validate variants if provided
+	if req.HasVariants {
+		if err := s.validateVariants(req); err != nil {
+			return nil, fmt.Errorf("invalid variants: %w", err)
+		}
+	}
+
+	// Start transaction
+	tx, err := s.storage.BeginTx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer tx.Rollback()
+
 	// Create product
 	product, err := s.storage.CreateStorefrontProduct(ctx, storefrontID, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
 
-	// Index product in OpenSearch
-	if s.searchRepo != nil {
-		if err := s.searchRepo.IndexProduct(ctx, product); err != nil {
-			logger.Error().Err(err).Msgf("Failed to index product %d in OpenSearch", product.ID)
-			// Не возвращаем ошибку, так как товар уже создан в БД
-		} else {
-			logger.Info().Msgf("Successfully indexed product %d in OpenSearch", product.ID)
+	// Create variants if provided
+	if req.HasVariants && len(req.Variants) > 0 && s.variantService != nil {
+		variantRequests := make([]variantTypes.CreateVariantRequest, len(req.Variants))
+		for i, v := range req.Variants {
+			variantRequests[i] = variantTypes.CreateVariantRequest{
+				ProductID:         product.ID,
+				SKU:               v.SKU,
+				Barcode:           v.Barcode,
+				Price:             v.Price,
+				CompareAtPrice:    v.CompareAtPrice,
+				CostPrice:         v.CostPrice,
+				StockQuantity:     v.StockQuantity,
+				LowStockThreshold: v.LowStockThreshold,
+				VariantAttributes: v.VariantAttributes,
+				Weight:            v.Weight,
+				Dimensions:        v.Dimensions,
+				IsDefault:         v.IsDefault,
+			}
 		}
+
+		createdVariants, err := s.variantService.BulkCreateVariants(ctx, product.ID, variantRequests)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create variants: %w", err)
+		}
+
+		// Convert variants to models.StorefrontProductVariant
+		product.Variants = make([]models.StorefrontProductVariant, len(createdVariants))
+		for i, v := range createdVariants {
+			product.Variants[i] = models.StorefrontProductVariant{
+				ID:                  v.ID,
+				StorefrontProductID: v.ProductID,
+				Name:                s.generateVariantName(v.VariantAttributes),
+				SKU:                 v.SKU,
+				Price:               s.getVariantPrice(v.Price, product.Price),
+				StockQuantity:       v.StockQuantity,
+				Attributes:          v.VariantAttributes,
+				IsActive:            v.IsActive,
+				CreatedAt:           v.CreatedAt,
+				UpdatedAt:           v.UpdatedAt,
+			}
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Index product in OpenSearch (after transaction is committed)
+	if s.searchRepo != nil {
+		go s.indexProductWithVariants(product)
 	}
 
 	return product, nil
@@ -637,4 +718,123 @@ func (s *ProductService) validateInventoryRequest(req *models.UpdateInventoryReq
 	}
 
 	return nil
+}
+
+// validateVariants validates variants before creating product
+func (s *ProductService) validateVariants(req *models.CreateProductRequest) error {
+	if len(req.Variants) == 0 {
+		return errors.New("at least one variant is required when has_variants is true")
+	}
+
+	// Check for duplicate attribute combinations
+	seen := make(map[string]bool)
+	defaultCount := 0
+
+	for i, v := range req.Variants {
+		// Create key from attributes for uniqueness check
+		attrKey := s.generateAttributeKey(v.VariantAttributes)
+		if seen[attrKey] {
+			return fmt.Errorf("duplicate variant attributes at index %d", i)
+		}
+		seen[attrKey] = true
+
+		// Check that only one variant is default
+		if v.IsDefault {
+			defaultCount++
+		}
+
+		// Validate SKU if provided
+		if v.SKU != nil && *v.SKU != "" {
+			if err := s.validateSKU(*v.SKU); err != nil {
+				return fmt.Errorf("invalid SKU at index %d: %w", i, err)
+			}
+		}
+	}
+
+	if defaultCount > 1 {
+		return errors.New("only one variant can be default")
+	}
+
+	if defaultCount == 0 && len(req.Variants) > 0 {
+		// Make first variant default
+		req.Variants[0].IsDefault = true
+	}
+
+	return nil
+}
+
+// generateAttributeKey creates a unique key from variant attributes
+func (s *ProductService) generateAttributeKey(attributes map[string]interface{}) string {
+	// Sort attribute keys for consistent ordering
+	keys := make([]string, 0, len(attributes))
+	for k := range attributes {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// Build key string
+	var parts []string
+	for _, k := range keys {
+		v := attributes[k]
+		parts = append(parts, fmt.Sprintf("%s:%v", k, v))
+	}
+
+	keyStr := strings.Join(parts, ";")
+
+	// Create MD5 hash for shorter key
+	hasher := md5.New()
+	hasher.Write([]byte(keyStr))
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+// validateSKU validates SKU format
+func (s *ProductService) validateSKU(sku string) error {
+	if len(sku) < 3 || len(sku) > 100 {
+		return errors.New("SKU must be between 3 and 100 characters")
+	}
+
+	// Check for valid characters (alphanumeric, dash, underscore)
+	for _, r := range sku {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_') {
+			return errors.New("SKU can only contain letters, numbers, dashes and underscores")
+		}
+	}
+
+	return nil
+}
+
+// generateVariantName creates a display name from variant attributes
+func (s *ProductService) generateVariantName(attributes map[string]interface{}) string {
+	// Sort attribute keys for consistent ordering
+	keys := make([]string, 0, len(attributes))
+	for k := range attributes {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// Build name from attribute values
+	var parts []string
+	for _, k := range keys {
+		v := attributes[k]
+		parts = append(parts, fmt.Sprintf("%v", v))
+	}
+
+	return strings.Join(parts, " - ")
+}
+
+// getVariantPrice returns variant price or base product price
+func (s *ProductService) getVariantPrice(variantPrice *float64, basePrice float64) float64 {
+	if variantPrice != nil && *variantPrice > 0 {
+		return *variantPrice
+	}
+	return basePrice
+}
+
+// indexProductWithVariants indexes product with variants in OpenSearch
+func (s *ProductService) indexProductWithVariants(product *models.StorefrontProduct) {
+	if err := s.searchRepo.IndexProduct(context.Background(), product); err != nil {
+		logger.Error().Err(err).Msgf("Failed to index product %d with variants in OpenSearch", product.ID)
+	} else {
+		logger.Info().Msgf("Successfully indexed product %d with %d variants in OpenSearch", product.ID, len(product.Variants))
+	}
 }

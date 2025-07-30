@@ -14556,6 +14556,339 @@
                 }
             }
         },
+        "/api/v1/public/categories/{category_id}/attributes": {
+            "get": {
+                "description": "Public endpoint for getting all attributes that can be used for products in a specific category - no authentication required",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public-variants"
+                ],
+                "summary": "Get available attributes for a category (public endpoint)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {}
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/storefronts/{slug}/products/{product_id}": {
+            "get": {
+                "description": "Public endpoint for getting basic product information - no authentication required",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public-variants"
+                ],
+                "summary": "Get product information (public endpoint)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.StorefrontProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/storefronts/{slug}/products/{product_id}/variants": {
+            "get": {
+                "description": "Public endpoint for getting product variants - no authentication required",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public-variants"
+                ],
+                "summary": "Get product variants for buyers (public endpoint)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Storefront slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/backend_internal_proj_storefront_types.ProductVariant"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/variants/attributes": {
+            "get": {
+                "description": "Public endpoint for getting all available variant attributes - no authentication required",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public-variants"
+                ],
+                "summary": "Get all variant attributes (public endpoint)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/backend_internal_proj_storefront_types.ProductVariantAttribute"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/variants/attributes/{attribute_id}/values": {
+            "get": {
+                "description": "Public endpoint for getting all possible values for a specific variant attribute - no authentication required",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public-variants"
+                ],
+                "summary": "Get values for a variant attribute (public endpoint)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Attribute ID",
+                        "name": "attribute_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/backend_internal_proj_storefront_types.ProductVariantAttributeValue"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/variants/{variant_id}": {
+            "get": {
+                "description": "Public endpoint for getting specific variant details - no authentication required",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public-variants"
+                ],
+                "summary": "Get variant by ID (public endpoint)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Variant ID",
+                        "name": "variant_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_storefront_types.ProductVariant"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/reviews": {
             "get": {
                 "description": "Returns paginated list of reviews with filters",
@@ -17096,6 +17429,56 @@
                 }
             }
         },
+        "/api/v1/storefront/products/{product_id}/variant-matrix": {
+            "get": {
+                "description": "Returns all possible variant combinations and existing variants",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Get variant matrix for a product",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_storefront_types.VariantMatrixResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefront/products/{product_id}/variants": {
             "get": {
                 "description": "Returns all variants for a specific product",
@@ -17124,6 +17507,224 @@
                         "schema": {
                             "type": "array",
                             "items": {}
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/products/{product_id}/variants/analytics": {
+            "get": {
+                "description": "Returns analytics data for product variants",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Get variant analytics",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_storefront_types.VariantAnalyticsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/products/{product_id}/variants/bulk-update-stock": {
+            "post": {
+                "description": "Updates stock quantities for multiple variants at once",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Bulk update stock quantities",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Stock updates",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_storefront_types.BulkUpdateStockRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/products/{product_id}/variants/export": {
+            "get": {
+                "description": "Exports all variants of a product to CSV format",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Export variants to CSV",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefront/products/{product_id}/variants/import": {
+            "post": {
+                "description": "Imports multiple variants from a CSV file",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Import variants from CSV",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "CSV file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
@@ -17419,6 +18020,63 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing variant's information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "variants"
+                ],
+                "summary": "Update a variant",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Variant ID",
+                        "name": "variant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated variant data",
+                        "name": "variant",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_storefront_types.UpdateVariantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_storefront_types.ProductVariant"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -19933,7 +20591,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Creates a new product for the storefront",
+                "description": "Creates a new product for the storefront with optional variants support",
                 "consumes": [
                     "application/json"
                 ],
@@ -19953,7 +20611,7 @@
                         "required": true
                     },
                     {
-                        "description": "Product data",
+                        "description": "Product data with optional variants",
                         "name": "product",
                         "in": "body",
                         "required": true,
@@ -19964,7 +20622,7 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created product",
+                        "description": "Created product with variants",
                         "schema": {
                             "$ref": "#/definitions/backend_internal_domain_models.StorefrontProduct"
                         }
@@ -23827,6 +24485,10 @@
                     "description": "Location fields",
                     "type": "boolean"
                 },
+                "has_variants": {
+                    "description": "Variant fields",
+                    "type": "boolean"
+                },
                 "individual_address": {
                     "type": "string"
                 },
@@ -23866,6 +24528,15 @@
                 "stock_quantity": {
                     "type": "integer",
                     "minimum": 0
+                },
+                "variant_settings": {
+                    "$ref": "#/definitions/backend_internal_domain_models.VariantSettings"
+                },
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.CreateVariantInline"
+                    }
                 }
             }
         },
@@ -23980,6 +24651,50 @@
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "backend_internal_domain_models.CreateVariantInline": {
+            "type": "object",
+            "required": [
+                "variant_attributes"
+            ],
+            "properties": {
+                "barcode": {
+                    "type": "string"
+                },
+                "compare_at_price": {
+                    "type": "number"
+                },
+                "cost_price": {
+                    "type": "number"
+                },
+                "dimensions": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "is_default": {
+                    "type": "boolean"
+                },
+                "low_stock_threshold": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "stock_quantity": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "variant_attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "weight": {
+                    "type": "number"
                 }
             }
         },
@@ -27379,6 +28094,35 @@
                 }
             }
         },
+        "backend_internal_domain_models.VariantSettings": {
+            "type": "object",
+            "properties": {
+                "continue_selling": {
+                    "description": "continue selling when out of stock",
+                    "type": "boolean"
+                },
+                "require_shipping": {
+                    "type": "boolean"
+                },
+                "selected_attributes": {
+                    "description": "which attributes are used for variants",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "taxable_product": {
+                    "type": "boolean"
+                },
+                "track_inventory": {
+                    "type": "boolean"
+                },
+                "weight_unit": {
+                    "description": "kg, g, lb, oz",
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_search.AdvancedGeoFilters": {
             "type": "object",
             "properties": {
@@ -28610,6 +29354,359 @@
                 "min_weight": {
                     "description": "Минимальное значение веса",
                     "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.AttributeValue": {
+            "type": "object",
+            "properties": {
+                "color_hex": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "is_custom": {
+                    "description": "true if added by seller",
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.BulkUpdateStockRequest": {
+            "type": "object",
+            "required": [
+                "updates"
+            ],
+            "properties": {
+                "updates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_storefront_types.StockUpdateItem"
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.ProductVariant": {
+            "type": "object",
+            "properties": {
+                "available_quantity": {
+                    "description": "NEW: computed field",
+                    "type": "integer"
+                },
+                "barcode": {
+                    "type": "string"
+                },
+                "compare_at_price": {
+                    "type": "number"
+                },
+                "cost_price": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "dimensions": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "images": {
+                    "description": "Related data",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_storefront_types.ProductVariantImage"
+                    }
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_default": {
+                    "type": "boolean"
+                },
+                "low_stock_threshold": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "reserved_quantity": {
+                    "description": "NEW",
+                    "type": "integer"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "sold_count": {
+                    "type": "integer"
+                },
+                "stock_quantity": {
+                    "type": "integer"
+                },
+                "stock_status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "variant_attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "view_count": {
+                    "type": "integer"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.ProductVariantAttribute": {
+            "type": "object",
+            "properties": {
+                "affects_stock": {
+                    "description": "NEW: determines if this attribute requires separate stock tracking",
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "text, color, image, number",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.ProductVariantAttributeValue": {
+            "type": "object",
+            "properties": {
+                "attribute_id": {
+                    "type": "integer"
+                },
+                "color_hex": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_popular": {
+                    "description": "NEW",
+                    "type": "boolean"
+                },
+                "metadata": {
+                    "description": "NEW",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "usage_count": {
+                    "description": "NEW",
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.ProductVariantImage": {
+            "type": "object",
+            "properties": {
+                "alt_text": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "display_order": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "is_main": {
+                    "type": "boolean"
+                },
+                "thumbnail_url": {
+                    "type": "string"
+                },
+                "variant_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.StockUpdateItem": {
+            "type": "object",
+            "required": [
+                "variant_id"
+            ],
+            "properties": {
+                "stock_quantity": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "variant_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.UpdateVariantRequest": {
+            "type": "object",
+            "properties": {
+                "barcode": {
+                    "type": "string"
+                },
+                "compare_at_price": {
+                    "type": "number"
+                },
+                "cost_price": {
+                    "type": "number"
+                },
+                "dimensions": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_default": {
+                    "type": "boolean"
+                },
+                "low_stock_threshold": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "stock_quantity": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "variant_attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.VariantAnalyticsResponse": {
+            "type": "object",
+            "properties": {
+                "best_seller": {
+                    "$ref": "#/definitions/backend_internal_proj_storefront_types.ProductVariant"
+                },
+                "low_stock_variants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_storefront_types.ProductVariant"
+                    }
+                },
+                "sales_by_attribute": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "stock_by_attribute": {
+                    "description": "e.g. {\"color\": {\"red\": 50, \"blue\": 30}}",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "total_sold": {
+                    "type": "integer"
+                },
+                "total_stock": {
+                    "type": "integer"
+                },
+                "total_variants": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_storefront_types.VariantMatrixResponse": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "description": "available attributes and their values",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/backend_internal_proj_storefront_types.AttributeValue"
+                        }
+                    }
+                },
+                "existing_variants": {
+                    "description": "already created variants",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_storefront_types.ProductVariant"
+                    }
+                },
+                "possible_combinations": {
+                    "description": "total number of possible combinations",
+                    "type": "integer"
                 }
             }
         },

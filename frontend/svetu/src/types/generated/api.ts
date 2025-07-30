@@ -14238,6 +14238,413 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/public/categories/{category_id}/attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get available attributes for a category (public endpoint)
+     * @description Public endpoint for getting all attributes that can be used for products in a specific category - no authentication required
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          category_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': unknown[];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/storefronts/{slug}/products/{product_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get product information (public endpoint)
+     * @description Public endpoint for getting basic product information - no authentication required
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/storefronts/{slug}/products/{product_id}/variants': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get product variants for buyers (public endpoint)
+     * @description Public endpoint for getting product variants - no authentication required
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_proj_storefront_types.ProductVariant'][];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/variants/{variant_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get variant by ID (public endpoint)
+     * @description Public endpoint for getting specific variant details - no authentication required
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Variant ID */
+          variant_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_proj_storefront_types.ProductVariant'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/variants/attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all variant attributes (public endpoint)
+     * @description Public endpoint for getting all available variant attributes - no authentication required
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_proj_storefront_types.ProductVariantAttribute'][];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/variants/attributes/{attribute_id}/values': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get values for a variant attribute (public endpoint)
+     * @description Public endpoint for getting all possible values for a specific variant attribute - no authentication required
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Attribute ID */
+          attribute_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_proj_storefront_types.ProductVariantAttributeValue'][];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/reviews': {
     parameters: {
       query?: never;
@@ -16693,6 +17100,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefront/products/{product_id}/variant-matrix': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get variant matrix for a product
+     * @description Returns all possible variant combinations and existing variants
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_proj_storefront_types.VariantMatrixResponse'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefront/products/{product_id}/variants': {
     parameters: {
       query?: never;
@@ -16751,6 +17222,281 @@ export interface paths {
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefront/products/{product_id}/variants/analytics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get variant analytics
+     * @description Returns analytics data for product variants
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_proj_storefront_types.VariantAnalyticsResponse'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefront/products/{product_id}/variants/bulk-update-stock': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk update stock quantities
+     * @description Updates stock quantities for multiple variants at once
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Stock updates */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_storefront_types.BulkUpdateStockRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefront/products/{product_id}/variants/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export variants to CSV
+     * @description Exports all variants of a product to CSV format
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'text/csv': string;
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'text/csv': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'text/csv': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefront/products/{product_id}/variants/import': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import variants from CSV
+     * @description Imports multiple variants from a CSV file
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description CSV file
+             */
+            file: string;
+          };
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -16958,7 +17704,60 @@ export interface paths {
         };
       };
     };
-    put?: never;
+    /**
+     * Update a variant
+     * @description Updates an existing variant's information
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Variant ID */
+          variant_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Updated variant data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_storefront_types.UpdateVariantRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_proj_storefront_types.ProductVariant'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
     post?: never;
     /**
      * Delete a variant
@@ -18938,7 +19737,7 @@ export interface paths {
     put?: never;
     /**
      * Create a storefront product
-     * @description Creates a new product for the storefront
+     * @description Creates a new product for the storefront with optional variants support
      */
     post: {
       parameters: {
@@ -18950,14 +19749,14 @@ export interface paths {
         };
         cookie?: never;
       };
-      /** @description Product data */
+      /** @description Product data with optional variants */
       requestBody: {
         content: {
           'application/json': components['schemas']['backend_internal_domain_models.CreateProductRequest'];
         };
       };
       responses: {
-        /** @description Created product */
+        /** @description Created product with variants */
         201: {
           headers: {
             [name: string]: unknown;
@@ -22992,6 +23791,8 @@ export interface components {
       description: string;
       /** @description Location fields */
       has_individual_location?: boolean;
+      /** @description Variant fields */
+      has_variants?: boolean;
       individual_address?: string;
       individual_latitude?: number;
       individual_longitude?: number;
@@ -23003,6 +23804,8 @@ export interface components {
       show_on_map?: boolean;
       sku?: string;
       stock_quantity?: number;
+      variant_settings?: components['schemas']['backend_internal_domain_models.VariantSettings'];
+      variants?: components['schemas']['backend_internal_domain_models.CreateVariantInline'][];
     };
     'backend_internal_domain_models.CreateReviewConfirmationRequest': {
       notes?: string;
@@ -23036,6 +23839,23 @@ export interface components {
       description?: string;
       name: string;
       variables?: number[];
+    };
+    'backend_internal_domain_models.CreateVariantInline': {
+      barcode?: string;
+      compare_at_price?: number;
+      cost_price?: number;
+      dimensions?: {
+        [key: string]: unknown;
+      };
+      is_default?: boolean;
+      low_stock_threshold?: number;
+      price?: number;
+      sku?: string;
+      stock_quantity?: number;
+      variant_attributes: {
+        [key: string]: unknown;
+      };
+      weight?: number;
     };
     'backend_internal_domain_models.CustomUIComponent': {
       /** @example category */
@@ -24230,6 +25050,17 @@ export interface components {
       total_reviews?: number;
       user_id?: number;
     };
+    'backend_internal_domain_models.VariantSettings': {
+      /** @description continue selling when out of stock */
+      continue_selling?: boolean;
+      require_shipping?: boolean;
+      /** @description which attributes are used for variants */
+      selected_attributes?: string[];
+      taxable_product?: boolean;
+      track_inventory?: boolean;
+      /** @description kg, g, lb, oz */
+      weight_unit?: string;
+    };
     'backend_internal_domain_search.AdvancedGeoFilters': {
       /** @description Фильтр по плотности объявлений */
       density_filter?: components['schemas']['backend_internal_domain_search.DensityFilter'];
@@ -24631,6 +25462,143 @@ export interface components {
       max_weight_change?: number;
       /** @description Минимальное значение веса */
       min_weight?: number;
+    };
+    'backend_internal_proj_storefront_types.AttributeValue': {
+      color_hex?: string;
+      display_name?: string;
+      image_url?: string;
+      /** @description true if added by seller */
+      is_custom?: boolean;
+      value?: string;
+    };
+    'backend_internal_proj_storefront_types.BulkUpdateStockRequest': {
+      updates: components['schemas']['backend_internal_proj_storefront_types.StockUpdateItem'][];
+    };
+    'backend_internal_proj_storefront_types.ProductVariant': {
+      /** @description NEW: computed field */
+      available_quantity?: number;
+      barcode?: string;
+      compare_at_price?: number;
+      cost_price?: number;
+      created_at?: string;
+      dimensions?: {
+        [key: string]: unknown;
+      };
+      id?: number;
+      /** @description Related data */
+      images?: components['schemas']['backend_internal_proj_storefront_types.ProductVariantImage'][];
+      is_active?: boolean;
+      is_default?: boolean;
+      low_stock_threshold?: number;
+      price?: number;
+      product_id?: number;
+      /** @description NEW */
+      reserved_quantity?: number;
+      sku?: string;
+      sold_count?: number;
+      stock_quantity?: number;
+      stock_status?: string;
+      updated_at?: string;
+      variant_attributes?: {
+        [key: string]: unknown;
+      };
+      view_count?: number;
+      weight?: number;
+    };
+    'backend_internal_proj_storefront_types.ProductVariantAttribute': {
+      /** @description NEW: determines if this attribute requires separate stock tracking */
+      affects_stock?: boolean;
+      created_at?: string;
+      display_name?: string;
+      id?: number;
+      is_required?: boolean;
+      name?: string;
+      sort_order?: number;
+      /** @description text, color, image, number */
+      type?: string;
+      updated_at?: string;
+    };
+    'backend_internal_proj_storefront_types.ProductVariantAttributeValue': {
+      attribute_id?: number;
+      color_hex?: string;
+      created_at?: string;
+      display_name?: string;
+      id?: number;
+      image_url?: string;
+      is_active?: boolean;
+      /** @description NEW */
+      is_popular?: boolean;
+      /** @description NEW */
+      metadata?: {
+        [key: string]: unknown;
+      };
+      sort_order?: number;
+      updated_at?: string;
+      /** @description NEW */
+      usage_count?: number;
+      value?: string;
+    };
+    'backend_internal_proj_storefront_types.ProductVariantImage': {
+      alt_text?: string;
+      created_at?: string;
+      display_order?: number;
+      id?: number;
+      image_url?: string;
+      is_main?: boolean;
+      thumbnail_url?: string;
+      variant_id?: number;
+    };
+    'backend_internal_proj_storefront_types.StockUpdateItem': {
+      stock_quantity?: number;
+      variant_id: number;
+    };
+    'backend_internal_proj_storefront_types.UpdateVariantRequest': {
+      barcode?: string;
+      compare_at_price?: number;
+      cost_price?: number;
+      dimensions?: {
+        [key: string]: unknown;
+      };
+      is_active?: boolean;
+      is_default?: boolean;
+      low_stock_threshold?: number;
+      price?: number;
+      sku?: string;
+      stock_quantity?: number;
+      variant_attributes?: {
+        [key: string]: unknown;
+      };
+      weight?: number;
+    };
+    'backend_internal_proj_storefront_types.VariantAnalyticsResponse': {
+      best_seller?: components['schemas']['backend_internal_proj_storefront_types.ProductVariant'];
+      low_stock_variants?: components['schemas']['backend_internal_proj_storefront_types.ProductVariant'][];
+      sales_by_attribute?: {
+        [key: string]: {
+          [key: string]: number;
+        };
+      };
+      /** @description e.g. {"color": {"red": 50, "blue": 30}} */
+      stock_by_attribute?: {
+        [key: string]: {
+          [key: string]: number;
+        };
+      };
+      total_sold?: number;
+      total_stock?: number;
+      total_variants?: number;
+    };
+    'backend_internal_proj_storefront_types.VariantMatrixResponse': {
+      /** @description available attributes and their values */
+      attributes?: {
+        [
+          key: string
+        ]: components['schemas']['backend_internal_proj_storefront_types.AttributeValue'][];
+      };
+      /** @description already created variants */
+      existing_variants?: components['schemas']['backend_internal_proj_storefront_types.ProductVariant'][];
+      /** @description total number of possible combinations */
+      possible_combinations?: number;
     };
     'backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem': {
       address?: string;
