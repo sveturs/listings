@@ -23,9 +23,9 @@ export default function SafeImage({
   const urlToCheck = src || '';
   const safeUrl = getSafeImageUrl(urlToCheck);
 
-  // Отладка для объявления 177
-  if (src && src.includes('177')) {
-    console.log('SafeImage - Item 177 debug:', {
+  // Отладка для всех изображений в SimilarListings
+  if (src && (src.includes('177') || window.SimilarListingsImageDebug)) {
+    console.log('SafeImage debug:', {
       src,
       urlToCheck,
       safeUrl,
@@ -85,14 +85,14 @@ export default function SafeImage({
         alt={alt}
         sizes={props.sizes || (props.fill ? '100vw' : undefined)}
         onLoad={() => {
-          if (src && src.includes('177')) {
-            console.log('SafeImage - Item 177 onLoad fired');
+          if (src && (src.includes('177') || window.SimilarListingsImageDebug)) {
+            console.log('SafeImage onLoad fired:', src);
           }
           setIsLoading(false);
         }}
         onError={(e) => {
-          if (src && src.includes('177')) {
-            console.log('SafeImage - Item 177 onError fired:', e);
+          if (src && (src.includes('177') || window.SimilarListingsImageDebug)) {
+            console.log('SafeImage onError fired:', src, e);
           }
           setHasError(true);
           setIsLoading(false);

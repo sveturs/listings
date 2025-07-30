@@ -1934,8 +1934,33 @@ func (s *MarketplaceService) getSimilarStorefrontProducts(ctx context.Context, l
 		return s.getFallbackSimilarListings(ctx, listingID, limit)
 	}
 
-	log.Printf("Найдено %d похожих товаров витрин для объявления %d", len(similarListings), listingID)
-	return similarListings, nil
+	// ИСПРАВЛЕНИЕ: Дозагружаем полные данные объявлений с изображениями
+	var enrichedListings []*models.MarketplaceListing
+	for _, partialListing := range similarListings {
+		// Загружаем полные данные объявления, включая изображения
+		fullListing, err := s.GetListingByID(ctx, partialListing.ID)
+		if err != nil {
+			log.Printf("Ошибка загрузки полных данных объявления %d: %v", partialListing.ID, err)
+			// Если не удалось загрузить полные данные, используем частичные
+			enrichedListings = append(enrichedListings, partialListing)
+			continue
+		}
+		
+		// Сохраняем метаданные о скоре похожести из частичного объявления
+		if partialListing.Metadata != nil {
+			if fullListing.Metadata == nil {
+				fullListing.Metadata = make(map[string]interface{})
+			}
+			if similarityScore, exists := partialListing.Metadata["similarity_score"]; exists {
+				fullListing.Metadata["similarity_score"] = similarityScore
+			}
+		}
+		
+		enrichedListings = append(enrichedListings, fullListing)
+	}
+	
+	log.Printf("Найдено %d похожих товаров витрин для объявления %d (с загруженными изображениями)", len(enrichedListings), listingID)
+	return enrichedListings, nil
 }
 
 // getFallbackSimilarListings - запасной вариант поиска похожих объявлений через обычный marketplace поиск
