@@ -27326,6 +27326,10 @@ const docTemplate = `{
                     "description": "Location fields",
                     "type": "boolean"
                 },
+                "has_variants": {
+                    "description": "Variant fields",
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -30277,6 +30281,14 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "user": {
+                    "description": "Информация о продавце",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/internal_proj_global_handler.UnifiedUserInfo"
+                        }
+                    ]
+                },
                 "views_count": {
                     "description": "Для расчета популярности",
                     "type": "integer"
@@ -30381,6 +30393,23 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_global_handler.UnifiedUserInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_verified": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "picture_url": {
                     "type": "string"
                 }
             }

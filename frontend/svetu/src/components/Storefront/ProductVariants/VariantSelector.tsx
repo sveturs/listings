@@ -57,7 +57,12 @@ export default function VariantSelector({
   const [loading, setLoading] = useState(true);
 
   const loadVariants = useCallback(async () => {
-    console.log('VariantSelector: Loading variants for productId:', productId, 'storefrontSlug:', storefrontSlug);
+    console.log(
+      'VariantSelector: Loading variants for productId:',
+      productId,
+      'storefrontSlug:',
+      storefrontSlug
+    );
     try {
       const response = await fetch(
         `/api/v1/public/storefronts/${storefrontSlug}/products/${productId}/variants`
@@ -94,7 +99,8 @@ export default function VariantSelector({
           variantData.find((v: ProductVariant) => v.is_default) ||
           variantData[0];
         if (defaultVariant) {
-          const defaultAttrs = defaultVariant.variant_attributes || defaultVariant.attributes;
+          const defaultAttrs =
+            defaultVariant.variant_attributes || defaultVariant.attributes;
           if (defaultAttrs) {
             // Convert attributes to string-based format for compatibility
             const stringAttributes: Record<string, string> = {};
@@ -105,7 +111,10 @@ export default function VariantSelector({
           }
         }
       } else {
-        console.error('VariantSelector: Failed to load variants, response not ok:', response.status);
+        console.error(
+          'VariantSelector: Failed to load variants, response not ok:',
+          response.status
+        );
       }
     } catch (error) {
       console.error('VariantSelector: Failed to load variants:', error);
@@ -203,7 +212,7 @@ export default function VariantSelector({
     loading,
     variantsLength: variants.length,
     selectedVariant,
-    availableAttributes: Object.keys(availableAttributes)
+    availableAttributes: Object.keys(availableAttributes),
   });
 
   if (loading) {
@@ -307,7 +316,7 @@ export default function VariantSelector({
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Cross for unavailable colors */}
                         {!isAvailable && (
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -316,13 +325,15 @@ export default function VariantSelector({
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Color name label */}
-                      <span className={`
+                      <span
+                        className={`
                         text-xs text-center capitalize leading-tight min-w-0 max-w-16
                         ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-600'}
                         ${!isAvailable ? 'text-gray-400' : ''}
-                      `}>
+                      `}
+                      >
                         {value}
                       </span>
                     </button>
@@ -336,7 +347,11 @@ export default function VariantSelector({
                 onChange={(e) => updateAttribute(attributeName, e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">{t('variants.selectOption', { attribute: getAttributeDisplayName(attributeName) })}</option>
+                <option value="">
+                  {t('variants.selectOption', {
+                    attribute: getAttributeDisplayName(attributeName),
+                  })}
+                </option>
                 {values.map((value) => (
                   <option
                     key={value}
@@ -355,7 +370,9 @@ export default function VariantSelector({
       {/* Stock Status */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">{t('variants.availability')}</span>
+          <span className="text-sm text-gray-600">
+            {t('variants.availability')}
+          </span>
           <span
             className={`text-sm font-medium ${
               getStockStatus() === 'in_stock'
@@ -379,7 +396,9 @@ export default function VariantSelector({
             {selectedVariant?.reserved_quantity &&
               selectedVariant.reserved_quantity > 0 && (
                 <div className="text-xs text-amber-600">
-                  {t('variants.reserved', { count: selectedVariant.reserved_quantity })}
+                  {t('variants.reserved', {
+                    count: selectedVariant.reserved_quantity,
+                  })}
                 </div>
               )}
           </div>

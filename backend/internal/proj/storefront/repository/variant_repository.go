@@ -936,9 +936,7 @@ func (r *VariantRepository) ImportVariants(ctx context.Context, productID int, c
 		return 0, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil {
-			// Transaction might already be committed, ignore error
-		}
+		_ = tx.Rollback() // ignore error - transaction might already be committed
 	}()
 
 	importedCount := 0

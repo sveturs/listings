@@ -24783,6 +24783,8 @@ export interface components {
       description?: string;
       /** @description Location fields */
       has_individual_location?: boolean;
+      /** @description Variant fields */
+      has_variants?: boolean;
       id?: number;
       /** @description Relations */
       images?: components['schemas']['backend_internal_domain_models.StorefrontProductImage'][];
@@ -25824,6 +25826,8 @@ export interface components {
       score?: number;
       /** @description Только для storefront товаров */
       storefront?: components['schemas']['internal_proj_global_handler.UnifiedStorefrontInfo'];
+      /** @description Информация о продавце */
+      user?: components['schemas']['internal_proj_global_handler.UnifiedUserInfo'];
       /** @description Для расчета популярности */
       views_count?: number;
     };
@@ -25863,6 +25867,12 @@ export interface components {
       name?: string;
       rating?: number;
       slug?: string;
+    };
+    'internal_proj_global_handler.UnifiedUserInfo': {
+      id?: number;
+      is_verified?: boolean;
+      name?: string;
+      picture_url?: string;
     };
     'internal_proj_marketplace_handler.AddMessageRequest': {
       content: string;

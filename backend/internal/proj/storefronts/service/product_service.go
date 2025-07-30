@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -183,7 +183,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 	if err != nil {
 		return nil, fmt.Errorf("failed to start transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Create product
 	product, err := s.storage.CreateStorefrontProduct(ctx, storefrontID, req)
@@ -241,7 +241,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 
 	// Index product in OpenSearch (after transaction is committed)
 	if s.searchRepo != nil {
-		go s.indexProductWithVariants(product)
+		go s.indexProductWithVariants(ctx, product)
 	}
 
 	return product, nil
@@ -781,10 +781,10 @@ func (s *ProductService) generateAttributeKey(attributes map[string]interface{})
 
 	keyStr := strings.Join(parts, ";")
 
-	// Create MD5 hash for shorter key
-	hasher := md5.New()
+	// Create SHA256 hash for key
+	hasher := sha256.New()
 	hasher.Write([]byte(keyStr))
-	return hex.EncodeToString(hasher.Sum(nil))
+	return hex.EncodeToString(hasher.Sum(nil))[:16]
 }
 
 // validateSKU validates SKU format
@@ -795,7 +795,7 @@ func (s *ProductService) validateSKU(sku string) error {
 
 	// Check for valid characters (alphanumeric, dash, underscore)
 	for _, r := range sku {
-		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_') {
+		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') && (r < '0' || r > '9') && r != '-' && r != '_' {
 			return errors.New("SKU can only contain letters, numbers, dashes and underscores")
 		}
 	}
@@ -831,8 +831,8 @@ func (s *ProductService) getVariantPrice(variantPrice *float64, basePrice float6
 }
 
 // indexProductWithVariants indexes product with variants in OpenSearch
-func (s *ProductService) indexProductWithVariants(product *models.StorefrontProduct) {
-	if err := s.searchRepo.IndexProduct(context.Background(), product); err != nil {
+func (s *ProductService) indexProductWithVariants(ctx context.Context, product *models.StorefrontProduct) {
+	if err := s.searchRepo.IndexProduct(ctx, product); err != nil {
 		logger.Error().Err(err).Msgf("Failed to index product %d with variants in OpenSearch", product.ID)
 	} else {
 		logger.Info().Msgf("Successfully indexed product %d with %d variants in OpenSearch", product.ID, len(product.Variants))

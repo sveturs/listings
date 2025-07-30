@@ -275,20 +275,20 @@ func (s *OrderServiceTx) createOrderItemTx(ctx context.Context, tx *sqlx.Tx, ite
 
 // createOrderInTx создает заказ в рамках транзакции
 func (s *OrderServiceTx) createOrderInTx(ctx context.Context, tx *sqlx.Tx, order *models.StorefrontOrder) (*models.StorefrontOrder, error) {
-	return s.OrderService.createOrderInTransaction(ctx, tx, order)
+	return s.createOrderInTransaction(ctx, tx, order)
 }
 
 // updateOrderInTx обновляет заказ в рамках транзакции
 func (s *OrderServiceTx) updateOrderInTx(ctx context.Context, tx *sqlx.Tx, order *models.StorefrontOrder) error {
-	return s.OrderService.updateOrderTx(ctx, tx, order)
+	return s.updateOrderTx(ctx, tx, order)
 }
 
 // clearCartInTx очищает корзину в рамках транзакции
 func (s *OrderServiceTx) clearCartInTx(ctx context.Context, tx *sqlx.Tx, cartID int64) error {
-	return s.OrderService.clearCartTx(ctx, tx, cartID)
+	return s.clearCartTx(ctx, tx, cartID)
 }
 
 // reserveStockInTx резервирует товар в рамках транзакции
 func (s *OrderServiceTx) reserveStockInTx(ctx context.Context, tx *sqlx.Tx, productID int64, variantID *int64, quantity int, orderID int64) (*models.InventoryReservation, error) {
-	return s.OrderService.createReservationTx(ctx, tx, productID, variantID, quantity, orderID)
+	return s.createReservationTx(ctx, tx, productID, variantID, quantity, orderID)
 }

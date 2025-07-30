@@ -47,17 +47,25 @@ export default function VariantSelectionModal({
       const response = await fetch(
         `/api/v1/storefronts/slug/${storefrontSlug}/products/${productId}`
       );
-      console.log('VariantSelectionModal: API response status:', response.status);
+      console.log(
+        'VariantSelectionModal: API response status:',
+        response.status
+      );
       if (response.ok) {
         const data = await response.json();
         console.log('VariantSelectionModal: API data:', data);
         console.log('VariantSelectionModal: data.variants:', data.variants);
-        console.log('VariantSelectionModal: variants length:', data.variants?.length);
+        console.log(
+          'VariantSelectionModal: variants length:',
+          data.variants?.length
+        );
         if (data.variants && data.variants.length > 0) {
           console.log('VariantSelectionModal: Setting hasVariants to true');
           setHasVariants(true);
         } else {
-          console.log('VariantSelectionModal: No variants found, adding directly to cart');
+          console.log(
+            'VariantSelectionModal: No variants found, adding directly to cart'
+          );
           // No variants, add directly to cart
           handleAdd();
         }
@@ -93,7 +101,7 @@ export default function VariantSelectionModal({
     isLoading,
     hasVariants,
     selectedVariant,
-    shouldShowVariantSelector: !isLoading && hasVariants
+    shouldShowVariantSelector: !isLoading && hasVariants,
   });
 
   return (

@@ -120,7 +120,17 @@ export function adaptMarketplaceItem(item: MarketplaceItem): UnifiedProduct {
           totalReviews: 25, // TODO: Получать из API
           verified: false, // TODO: Получать из API
         }
-      : undefined,
+      : item.storefront
+        ? {
+            id: item.storefront.id,
+            name: item.storefront.name,
+            email: '',
+            pictureUrl: '',
+            rating: 4.8, // TODO: Получать из API
+            totalReviews: 25, // TODO: Получать из API
+            verified: true, // Витрины считаем верифицированными
+          }
+        : undefined,
     storefront: item.storefront
       ? {
           id: item.storefront.id,
@@ -200,6 +210,27 @@ export function adaptStorefrontProduct(
           slug: product.category.slug || '',
         }
       : undefined,
+
+    // Продавец (витрина)
+    seller: storefrontInfo
+      ? {
+          id: storefrontInfo.id,
+          name: storefrontInfo.name,
+          email: '',
+          pictureUrl: '',
+          rating: 4.8, // TODO: Получать из API
+          totalReviews: 25, // TODO: Получать из API
+          verified: true, // Витрины считаем верифицированными
+        }
+      : {
+          id: product.storefront_id || 0,
+          name: 'Store', // TODO: Получать из API
+          email: '',
+          pictureUrl: '',
+          rating: 4.8, // TODO: Получать из API
+          totalReviews: 25, // TODO: Получать из API
+          verified: true,
+        },
 
     // Витрина
     storefront: storefrontInfo || {

@@ -27,7 +27,7 @@ func (s *VariantServiceImpl) BulkCreateVariants(ctx context.Context, productID i
 		Int("product_id", productID).
 		Int("variants_count", len(variants)).
 		Msg("Starting bulk variant creation")
-		
+
 	// Set productID for all variants
 	for i := range variants {
 		variants[i].ProductID = productID
@@ -40,7 +40,7 @@ func (s *VariantServiceImpl) BulkCreateVariants(ctx context.Context, productID i
 			Int("variant_index", i).
 			Interface("variant_request", variantReq).
 			Msg("Creating variant")
-			
+
 		variant, err := s.variantRepo.CreateVariant(ctx, &variantReq)
 		if err != nil {
 			logger.Error().

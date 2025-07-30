@@ -78,7 +78,7 @@ type UnifiedSearchItem struct {
 	Images      []UnifiedProductImage  `json:"images"`
 	Category    UnifiedCategoryInfo    `json:"category"`
 	Location    *UnifiedLocationInfo   `json:"location,omitempty"`
-	User        *UnifiedUserInfo       `json:"user,omitempty"`        // Информация о продавце
+	User        *UnifiedUserInfo       `json:"user,omitempty"`       // Информация о продавце
 	Storefront  *UnifiedStorefrontInfo `json:"storefront,omitempty"` // Только для storefront товаров
 	Score       float64                `json:"score"`
 	Highlights  map[string][]string    `json:"highlights,omitempty"`

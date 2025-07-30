@@ -159,25 +159,25 @@ export default function ListingPage({ params }: Props) {
     if (hasVariants && _selectedVariant) {
       // Если вариант выбран, добавляем напрямую в корзину
       console.log('Adding variant to cart:', _selectedVariant);
-      
+
       try {
         _dispatch(
           addItem({
-            productId: listing.id,
+            productId: listing?.id || 0,
             variantId: _selectedVariant.id,
             name: getTranslatedValue('title'),
             variantName: _selectedVariant.sku,
-            price: _selectedVariant.price || listing.price,
+            price: _selectedVariant.price || listing?.price || 0,
             currency: 'RSD',
             quantity: 1,
-            stockQuantity: _selectedVariant.stock_quantity,
+            stockQuantity: _selectedVariant.stock_quantity || 0,
             image: images[0]?.public_url || '',
-            storefrontId: listing.storefront_id,
-            storefrontName: listing.storefront.name,
-            storefrontSlug: listing.storefront.slug,
+            storefrontId: listing?.storefront_id || 0,
+            storefrontName: listing?.storefront?.name || '',
+            storefrontSlug: listing?.storefront?.slug || '',
           })
         );
-        
+
         console.log('Successfully added variant to cart');
       } catch (error) {
         console.error('Failed to add variant to cart:', error);
@@ -976,26 +976,31 @@ export default function ListingPage({ params }: Props) {
           basePrice={listing.price}
           baseCurrency="RSD"
           onAddToCart={(variant, quantity) => {
-            console.log('Adding to cart from modal:', variant, 'quantity:', quantity);
-            
+            console.log(
+              'Adding to cart from modal:',
+              variant,
+              'quantity:',
+              quantity
+            );
+
             try {
               _dispatch(
                 addItem({
-                  productId: listing.id,
+                  productId: listing?.id || 0,
                   variantId: variant?.id,
                   name: getTranslatedValue('title'),
                   variantName: variant?.sku,
-                  price: variant?.price || listing.price,
+                  price: variant?.price || listing?.price || 0,
                   currency: 'RSD',
                   quantity: quantity,
-                  stockQuantity: variant?.stock_quantity,
+                  stockQuantity: variant?.stock_quantity || 0,
                   image: images[0]?.public_url || '',
-                  storefrontId: listing.storefront_id,
-                  storefrontName: listing.storefront.name,
-                  storefrontSlug: listing.storefront.slug,
+                  storefrontId: listing?.storefront_id || 0,
+                  storefrontName: listing?.storefront?.name || '',
+                  storefrontSlug: listing?.storefront?.slug || '',
                 })
               );
-              
+
               console.log('Successfully added to cart from modal');
               setShowVariantModal(false);
             } catch (error) {

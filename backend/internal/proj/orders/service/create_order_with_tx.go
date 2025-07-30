@@ -27,9 +27,7 @@ func (s *OrderService) CreateOrderWithTx(ctx context.Context, db *sqlx.DB, req *
 			return fmt.Errorf("failed to begin transaction: %w", err)
 		}
 		defer func() {
-			if err := tx.Rollback(); err != nil {
-				// Transaction might already be committed, ignore error
-			}
+			_ = tx.Rollback() // ignore error - transaction might already be committed
 		}()
 
 		// 1. Проверяем существование витрины
