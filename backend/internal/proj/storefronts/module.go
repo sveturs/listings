@@ -3,6 +3,7 @@ package storefronts
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -15,6 +16,7 @@ import (
 	"backend/internal/storage/postgres"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
 )
 
 // Module представляет модуль витрин с продуктами
@@ -785,6 +787,27 @@ type storageAdapter struct {
 	db *postgres.Database
 }
 
+// sqlxTransactionWrapper wraps sqlx.Tx to implement Transaction interface
+type sqlxTransactionWrapper struct {
+	tx *sqlx.Tx
+}
+
+func (t *sqlxTransactionWrapper) Rollback() error {
+	return t.tx.Rollback()
+}
+
+func (t *sqlxTransactionWrapper) Commit() error {
+	return t.tx.Commit()
+}
+
+func (t *sqlxTransactionWrapper) GetPgxTx() interface{} {
+	return t.tx
+}
+
+func (t *sqlxTransactionWrapper) GetSqlxTx() *sqlx.Tx {
+	return t.tx
+}
+
 // GetStorefrontProducts delegates to database
 func (s *storageAdapter) GetStorefrontProducts(ctx context.Context, filter models.ProductFilter) ([]*models.StorefrontProduct, error) {
 	return s.db.GetStorefrontProducts(ctx, filter)
@@ -848,9 +871,27 @@ func (s *storageAdapter) GetStorefrontByID(ctx context.Context, id int) (*models
 
 // BeginTx starts a new transaction
 func (s *storageAdapter) BeginTx(ctx context.Context) (storefrontService.Transaction, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
+	// Get sqlx.DB from database
+	sqlxDB := s.db.GetSQLXDB()
+	
+	// Start transaction
+	tx, err := sqlxDB.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-	return tx, nil
+	
+	// Wrap the transaction
+	return &sqlxTransactionWrapper{tx: tx}, nil
+}
+
+// CreateStorefrontProductTx creates a product within a transaction
+func (s *storageAdapter) CreateStorefrontProductTx(ctx context.Context, tx storefrontService.Transaction, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
+	// Get the underlying sqlx.Tx from interface
+	sqlxWrapper, ok := tx.(*sqlxTransactionWrapper)
+	if !ok {
+		return nil, fmt.Errorf("invalid transaction type")
+	}
+	
+	// Call the database method with the transaction
+	return s.db.CreateStorefrontProductTx(ctx, sqlxWrapper.tx, storefrontID, req)
 }

@@ -7,6 +7,8 @@ import (
 	"backend/internal/logger"
 	"backend/internal/proj/storefront/repository"
 	variantTypes "backend/internal/proj/storefront/types"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // VariantService handles business logic for product variants
@@ -52,6 +54,42 @@ func (s *VariantServiceImpl) BulkCreateVariants(ctx context.Context, productID i
 		}
 		createdVariants = append(createdVariants, variant)
 	}
+
+	return createdVariants, nil
+}
+
+// BulkCreateVariantsTx creates multiple variants for a product within a transaction
+func (s *VariantServiceImpl) BulkCreateVariantsTx(ctx context.Context, tx interface{}, productID int, variants []variantTypes.CreateVariantRequest) ([]*variantTypes.ProductVariant, error) {
+	logger.Info().
+		Int("product_id", productID).
+		Int("variants_count", len(variants)).
+		Msg("Starting bulk variant creation with transaction")
+
+	// Convert the transaction interface to *sqlx.Tx
+	sqlxTx, ok := tx.(*sqlx.Tx)
+	if !ok {
+		// Try to get sqlx.Tx from Transaction interface
+		if txWrapper, ok := tx.(interface{ GetSqlxTx() *sqlx.Tx }); ok {
+			sqlxTx = txWrapper.GetSqlxTx()
+		} else {
+			return nil, fmt.Errorf("invalid transaction type")
+		}
+	}
+
+	// Use the transactional method from repository
+	createdVariants, err := s.variantRepo.BulkCreateVariantsTx(ctx, sqlxTx, productID, variants)
+	if err != nil {
+		logger.Error().
+			Err(err).
+			Int("product_id", productID).
+			Msg("Failed to create variants in transaction")
+		return nil, err
+	}
+
+	logger.Info().
+		Int("product_id", productID).
+		Int("created_count", len(createdVariants)).
+		Msg("Successfully created variants in transaction")
 
 	return createdVariants, nil
 }
