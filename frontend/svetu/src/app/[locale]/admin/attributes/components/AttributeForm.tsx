@@ -29,7 +29,12 @@ export default function AttributeForm({
   const t = useTranslations('admin.attributes');
   const tCommon = useTranslations('admin.common');
 
-  const [formData, setFormData] = useState<Partial<Attribute>>({
+  const [formData, setFormData] = useState<Partial<Attribute & {
+    variant_type?: 'text' | 'number' | 'select' | 'multiselect' | 'boolean' | 'date' | 'range';
+    variant_is_required?: boolean;
+    variant_sort_order?: number;
+    variant_affects_stock?: boolean;
+  }>>({
     name: '',
     display_name: '',
     attribute_type: 'text',
@@ -40,6 +45,11 @@ export default function AttributeForm({
     sort_order: 0,
     show_in_card: false,
     show_in_list: false,
+    is_variant_compatible: false,
+    variant_type: 'multiselect',
+    variant_is_required: false,
+    variant_sort_order: 0,
+    variant_affects_stock: false,
     unit: '',
     min_value: undefined,
     max_value: undefined,
@@ -72,6 +82,11 @@ export default function AttributeForm({
         sort_order: attribute.sort_order || 0,
         show_in_card: attribute.show_in_card || false,
         show_in_list: attribute.show_in_list || false,
+        is_variant_compatible: attribute.is_variant_compatible || false,
+        variant_type: (attribute as any).variant_type || 'multiselect',
+        variant_is_required: (attribute as any).variant_is_required || false,
+        variant_sort_order: (attribute as any).variant_sort_order || 0,
+        variant_affects_stock: (attribute as any).variant_affects_stock || false,
         unit: attribute.unit || '',
         min_value: attribute.min_value,
         max_value: attribute.max_value,
@@ -576,7 +591,132 @@ export default function AttributeForm({
             />
           </label>
         </div>
+
+        <div className="form-control">
+          <label className="label cursor-pointer">
+            <span className="label-text flex items-center gap-2">
+              🔄 {t('isVariantCompatible')}
+            </span>
+            <input
+              type="checkbox"
+              name="is_variant_compatible"
+              checked={formData.is_variant_compatible}
+              onChange={handleChange}
+              className="checkbox checkbox-secondary"
+            />
+          </label>
+          <label className="label">
+            <span className="label-text-alt">Позволяет использовать атрибут для создания вариантов товаров</span>
+          </label>
+        </div>
       </div>
+
+      {/* Секция настроек вариативного атрибута */}
+      {formData.is_variant_compatible && (
+        <>
+          <div className="divider flex items-center gap-2">
+            <span className="text-lg">🔄</span>
+            <span>Настройки вариативного атрибута</span>
+          </div>
+
+          <div className="alert alert-info">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="stroke-current shrink-0 w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <div>
+              <h3 className="font-bold">Вариативный атрибут</h3>
+              <div className="text-xs">Эти настройки определяют, как атрибут будет использоваться при создании вариантов товаров</div>
+            </div>
+          </div>
+
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Тип вариативного атрибута</span>
+            </label>
+            <select
+              name="variant_type"
+              value={formData.variant_type || 'multiselect'}
+              onChange={handleChange}
+              className="select select-bordered"
+            >
+              <option value="text">Текст</option>
+              <option value="number">Число</option>
+              <option value="select">Выбор (один)</option>
+              <option value="multiselect">Множественный выбор</option>
+              <option value="boolean">Да/Нет</option>
+              <option value="date">Дата</option>
+              <option value="range">Диапазон</option>
+            </select>
+            <label className="label">
+              <span className="label-text-alt">Для большинства случаев рекомендуется "Множественный выбор"</span>
+            </label>
+          </div>
+
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Порядок сортировки</span>
+            </label>
+            <input
+              type="number"
+              name="variant_sort_order"
+              value={formData.variant_sort_order || 0}
+              onChange={handleChange}
+              className="input input-bordered"
+              min="0"
+              placeholder="0"
+            />
+            <label className="label">
+              <span className="label-text-alt">Чем меньше число, тем выше в списке будет атрибут</span>
+            </label>
+          </div>
+
+          <div className="space-y-2">
+            <div className="form-control">
+              <label className="label cursor-pointer">
+                <span className="label-text">Обязательный для вариантов</span>
+                <input
+                  type="checkbox"
+                  name="variant_is_required"
+                  checked={formData.variant_is_required}
+                  onChange={handleChange}
+                  className="checkbox checkbox-primary"
+                />
+              </label>
+              <label className="label">
+                <span className="label-text-alt">Если включено, пользователь обязан выбрать значение для создания вариантов</span>
+              </label>
+            </div>
+
+            <div className="form-control">
+              <label className="label cursor-pointer">
+                <span className="label-text flex items-center gap-2">
+                  📦 <span>Влияет на остатки товара</span>
+                </span>
+                <input
+                  type="checkbox"
+                  name="variant_affects_stock"
+                  checked={formData.variant_affects_stock}
+                  onChange={handleChange}
+                  className="checkbox checkbox-warning"
+                />
+              </label>
+              <label className="label">
+                <span className="label-text-alt">Если включено, каждый вариант будет иметь отдельный учёт остатков</span>
+              </label>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="flex gap-2 items-center">
         <button
@@ -753,13 +893,13 @@ export default function AttributeForm({
         )}
 
       <div className="flex gap-2 pt-4">
-        <button type="submit" className="btn btn-primary flex-1">
+        <button type="submit" className="btn btn-primary">
           {tCommon('save')}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="btn btn-ghost flex-1"
+          className="btn btn-ghost"
         >
           {tCommon('cancel')}
         </button>

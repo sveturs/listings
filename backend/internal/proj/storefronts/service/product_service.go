@@ -178,12 +178,14 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 		}
 	}
 
+	// TODO: Fix transaction handling with variants
+	// Currently disabled due to conflict with variant creation
 	// Start transaction
-	tx, err := s.storage.BeginTx(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to start transaction: %w", err)
-	}
-	defer func() { _ = tx.Rollback() }()
+	// tx, err := s.storage.BeginTx(ctx)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to start transaction: %w", err)
+	// }
+	// defer func() { _ = tx.Rollback() }()
 
 	// Create product
 	product, err := s.storage.CreateStorefrontProduct(ctx, storefrontID, req)
@@ -235,9 +237,9 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 	}
 
 	// Commit transaction
-	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
-	}
+	// if err := tx.Commit(); err != nil {
+	// 	return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	// }
 
 	// Index product in OpenSearch (after transaction is committed)
 	if s.searchRepo != nil {

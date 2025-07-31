@@ -891,6 +891,7 @@
       "catalog": "Catalog",
       "categories": "Categories",
       "attributes": "Attributes",
+      "variantAttributes": "Varijantni atributi",
       "attributeGroups": "Attribute Groups",
       "content": "Content",
       "listings": "oglasa",
@@ -972,6 +973,7 @@
       "isFilterable": "Filterable",
       "showInCard": "Show in Card",
       "showInList": "Show in List",
+      "isVariantCompatible": "Može da se koristi za varijante proizvoda",
       "translations": "Translations",
       "displayNameTranslations": "Prevodi naziva atributa",
       "optionTranslations": "Prevodi opcija",
@@ -1019,6 +1021,36 @@
       "attributes": "Atributi u grupi",
       "availableAttributes": "Dostupni atributi",
       "selectedAttributes": "Izabrani atributi"
+    },
+    "variantAttributes": {
+      "title": "Varijantni atributi",
+      "description": "Upravljanje atributima za varijante proizvoda",
+      "addAttribute": "Dodaj varijantni atribut",
+      "editAttribute": "Izmeni varijantni atribut",
+      "systemName": "Sistemsko ime",
+      "displayName": "Naziv za prikaz",
+      "type": "Tip",
+      "isRequired": "Obavezno",
+      "affectsStock": "Utiče na zalihe",
+      "settings": "Podešavanja",
+      "sortOrder": "Redosled sortiranja",
+      "systemNamePlaceholder": "npr.: color, size, memory",
+      "displayNamePlaceholder": "npr.: Boja, Veličina, Memorija",
+      "systemNameHint": "Samo latinična slova, brojevi i donje crte",
+      "sortOrderHint": "Redosled prikaza u interfejsu",
+      "isRequiredHint": "Da li mora biti navedena vrednost pri kreiranju varijante",
+      "affectsStockHint": "Da li različite vrednosti zahtevaju odvojeno praćenje zaliha",
+      "validationError": "Molimo popunite obavezna polja",
+      "allTypes": "Svi tipovi",
+      "types": {
+        "text": "Tekst",
+        "number": "Broj",
+        "select": "Izbor",
+        "multiselect": "Višestruki izbor",
+        "boolean": "Logički",
+        "date": "Datum",
+        "range": "Opseg"
+      }
     },
     "translations": {
       "status": "Status prevoda",
@@ -2737,6 +2769,7 @@
       "continue": "Nastavi",
       "noVariantsConfigured": "Varijante nisu konfigurisane",
       "setupAttributesFirst": "Prvo podesi atribute proizvoda da kreiraš varijante",
+      "willGenerateVariants": "Biće kreirano {count} varijanti",
       "setupAttributes": "Podesi atribute",
       "noAttributesForCategory": "Nema specifičnih atributa za ovu kategoriju",
       "selectDifferentCategory": "Izaberite drugu kategoriju ili prvo podesite atribute",
@@ -2765,7 +2798,8 @@
       "setPricePrompt": "Postavi istu cenu za sve varijante:",
       "main": "Glavna",
       "attributesFromPreviousStep": "Atributi izabrani na prethodnom koraku. Izaberite vrednosti da kreirate varijante:",
-      "stock": {
+      "stock": "Zalihe",
+      "stockStatus": {
         "in_stock": "Na lageru",
         "low_stock": "Malo na lageru",
         "out_of_stock": "Nema na lageru"

@@ -1,4 +1,9 @@
 # CLAUDE.md
+- ## Important Notes
+нужно реализовать план:
+/data/hostel-booking-system/docs/ADMIN_VARIANT_ATTRIBUTES_EXTENSION_PLAN.md
+
+
 - НИКОГДА НЕ ДОБАВЛЯЙ Claude в авторы или соавторы. к примеру как ты сейчас захотел сделать: "Generated with [Claude Code](https://claude.ai/code)"
 
 ## ⚠️ КРИТИЧЕСКИ ВАЖНОЕ ПРАВИЛО: Изменения в базе данных

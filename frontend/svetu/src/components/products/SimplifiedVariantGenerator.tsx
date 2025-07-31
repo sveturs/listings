@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { adminApi } from '@/services/admin';
 import VariantStockManager from './VariantStockManager';
 
 interface SimplifiedVariantGeneratorProps {
@@ -75,145 +76,51 @@ export default function SimplifiedVariantGenerator({
   React.useEffect(() => {
     const fetchVariantAttributes = async () => {
       try {
-        console.log(
-          'Using hardcoded variant attributes for category:',
-          categorySlug
-        );
+        console.log('Loading variant attributes for category:', categorySlug);
 
-        // Временное решение: используем захардкоженные данные
-        const hardcodedAttributes = [
-          {
-            id: 1,
-            name: 'color',
-            display_name: 'Color',
-            type: 'select',
-            is_required: false,
-            affects_stock: false,
-          },
-          {
-            id: 2,
-            name: 'size',
-            display_name: 'Size',
-            type: 'select',
-            is_required: false,
-            affects_stock: true,
-          },
-          {
-            id: 3,
-            name: 'material',
-            display_name: 'Material',
-            type: 'select',
-            is_required: false,
-            affects_stock: false,
-          },
-          {
-            id: 4,
-            name: 'pattern',
-            display_name: 'Pattern',
-            type: 'select',
-            is_required: false,
-            affects_stock: false,
-          },
-          {
-            id: 5,
-            name: 'style',
-            display_name: 'Style',
-            type: 'select',
-            is_required: false,
-            affects_stock: false,
-          },
-          {
-            id: 6,
-            name: 'memory',
-            display_name: 'Memory (RAM)',
-            type: 'select',
-            is_required: false,
-            affects_stock: true,
-          },
-          {
-            id: 7,
-            name: 'storage',
-            display_name: 'Storage',
-            type: 'select',
-            is_required: false,
-            affects_stock: true,
-          },
-          {
-            id: 8,
-            name: 'connectivity',
-            display_name: 'Connectivity',
-            type: 'select',
-            is_required: false,
-            affects_stock: false,
-          },
-          {
-            id: 9,
-            name: 'bundle',
-            display_name: 'Bundle',
-            type: 'select',
-            is_required: false,
-            affects_stock: true,
-          },
-          {
-            id: 10,
-            name: 'capacity',
-            display_name: 'Capacity',
-            type: 'select',
-            is_required: false,
-            affects_stock: true,
-          },
-          {
-            id: 11,
-            name: 'power',
-            display_name: 'Power',
-            type: 'select',
-            is_required: false,
-            affects_stock: false,
-          },
-        ];
+        // Загружаем вариативные атрибуты через API
+        const response = await adminApi.variantAttributes.getAll(1, 100);
+        
+        console.log('Available variant attributes from API:', response.data);
+        
+        // Фильтруем атрибуты которые уже выбраны в selectedAttributes 
+        // и имеют соответствующие атрибуты в категории
+        const relevantAttributes = response.data.filter(variantAttr => {
+          // Ищем соответствующий атрибут в selectedAttributes по названию
+          const matchingCategoryAttr = categoryAttributes.find(catAttr => 
+            catAttr.name.toLowerCase() === variantAttr.name.toLowerCase() ||
+            catAttr.display_name.toLowerCase().includes(variantAttr.name.toLowerCase()) ||
+            variantAttr.name.toLowerCase().includes(catAttr.name.toLowerCase())
+          );
+          
+          if (matchingCategoryAttr) {
+            // Проверяем, есть ли выбранные значения для этого атрибута
+            const hasSelectedValues = selectedAttributes[matchingCategoryAttr.id] && 
+                                    selectedAttributes[matchingCategoryAttr.id].length > 0;
+            
+            console.log(`Variant attribute "${variantAttr.name}" matches category attribute "${matchingCategoryAttr.name}", has selected values:`, hasSelectedValues);
+            return hasSelectedValues;
+          }
+          
+          return false;
+        });
 
-        // Фильтруем атрибуты на основе категории
-        const categoryAttributesMap: Record<string, string[]> = {
-          smartphones: ['color', 'memory', 'storage'],
-          'womens-clothing': ['color', 'size', 'material', 'pattern', 'style'],
-          'mens-clothing': ['color', 'size', 'material', 'pattern', 'style'],
-          'kids-clothing': ['color', 'size', 'material', 'pattern'],
-          'sports-clothing': ['color', 'size', 'material'],
-          shoes: ['color', 'size', 'material', 'style'],
-          bags: ['color', 'size', 'material', 'style', 'pattern'],
-          accessories: ['color', 'size', 'material', 'style', 'pattern'],
-          computers: ['color', 'memory', 'storage', 'connectivity'],
-          'gaming-consoles': ['color', 'storage', 'bundle'],
-          'electronics-accessories': ['color', 'connectivity', 'bundle'],
-          'home-appliances': ['color', 'capacity', 'power'],
-          furniture: ['color', 'material', 'style'],
-          kitchenware: ['color', 'capacity', 'material'],
-        };
-
-        const allowedAttributes = categoryAttributesMap[categorySlug] || [];
-
-        // Фильтруем атрибуты
-        const filteredAttributes = hardcodedAttributes.filter((attr) =>
-          allowedAttributes.includes(attr.name.toLowerCase())
-        );
-
-        console.log(
-          'Filtered attributes for',
-          categorySlug,
-          ':',
-          filteredAttributes
-        );
-        setAvailableVariantAttributes(filteredAttributes);
+        console.log('Relevant variant attributes for category:', relevantAttributes);
+        setAvailableVariantAttributes(relevantAttributes);
       } catch (error) {
         console.error('Failed to load variant attributes:', error);
+        // Fallback к пустому массиву
+        setAvailableVariantAttributes([]);
       } finally {
         setLoading(false);
       }
     };
 
-    console.log('categorySlug effect triggered:', categorySlug);
-    fetchVariantAttributes();
-  }, [categorySlug]);
+    if (categorySlug && categoryAttributes.length > 0) {
+      console.log('categorySlug effect triggered:', categorySlug);
+      fetchVariantAttributes();
+    }
+  }, [categorySlug, categoryAttributes, selectedAttributes]);
 
   // Фильтруем атрибуты которые могут быть использованы для вариантов
   const variantAttributes = React.useMemo(() => {

@@ -92,6 +92,7 @@ export interface Attribute {
   default_value?: string | number | boolean;
   show_in_card?: boolean;
   show_in_list?: boolean;
+  is_variant_compatible?: boolean;
   translations?: Record<string, string>;
   option_translations?: Record<string, Record<string, string>>;
 }
@@ -912,4 +913,131 @@ export const adminApi = {
     );
     return (response.data as any).data || {};
   },
+
+  // Variant Attributes API
+  variantAttributes: {
+    async getAll(
+      page: number = 1,
+      limit: number = 20,
+      search?: string,
+      type?: string
+    ): Promise<{
+      data: VariantAttribute[];
+      total: number;
+      page: number;
+      total_pages: number;
+    }> {
+      const headers = await getAuthHeaders();
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+
+      if (search) params.append('search', search);
+      if (type) params.append('type', type);
+
+      const response = await fetch(
+        `/api/v1/admin/variant-attributes?${params.toString()}`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    },
+
+    async getById(id: number): Promise<VariantAttribute> {
+      const headers = await getAuthHeaders();
+
+      const response = await fetch(`/api/v1/admin/variant-attributes/${id}`, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.data || data;
+    },
+
+    async create(
+      attribute: Partial<VariantAttribute>
+    ): Promise<{ id: number; message: string }> {
+      const headers = await getAuthHeaders();
+
+      const response = await fetch('/api/v1/admin/variant-attributes', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(attribute),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    async update(
+      id: number,
+      attribute: Partial<VariantAttribute>
+    ): Promise<any> {
+      const headers = await getAuthHeaders();
+
+      const response = await fetch(`/api/v1/admin/variant-attributes/${id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(attribute),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    async delete(id: number): Promise<{ message: string }> {
+      const headers = await getAuthHeaders();
+
+      const response = await fetch(`/api/v1/admin/variant-attributes/${id}`, {
+        method: 'DELETE',
+        headers,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+  },
 };
+
+// Additional types for variant attributes
+export interface VariantAttribute {
+  id: number;
+  name: string;
+  display_name: string;
+  type: 'text' | 'number' | 'select' | 'multiselect' | 'boolean' | 'date' | 'range';
+  is_required: boolean;
+  sort_order: number;
+  affects_stock: boolean;
+  created_at: string;
+  updated_at: string;
+}

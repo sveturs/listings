@@ -117,10 +117,8 @@ export default function AttributeGroupsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div
-          className={`lg:col-span-${showForm || showAttributes ? '2' : '3'}`}
-        >
+      <div className="grid grid-cols-1 gap-6">
+        <div className="col-span-1">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {groups.length === 0 ? (
               <div className="col-span-full text-center py-8">
@@ -226,42 +224,57 @@ export default function AttributeGroupsPage() {
           </div>
         </div>
 
-        {showForm && (
-          <div className="lg:col-span-1">
-            <div className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <h2 className="card-title">
-                  {isEditing
-                    ? t('attributeGroups.editGroup')
-                    : t('attributeGroups.addGroup')}
-                </h2>
-                <GroupForm
-                  group={selectedGroup}
-                  onSave={handleSaveGroup}
-                  onCancel={() => setShowForm(false)}
-                />
-              </div>
+      {/* Modal for Group Form */}
+      {showForm && (
+        <div className="modal modal-open">
+          <div className="modal-box w-11/12 max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">
+                {isEditing
+                  ? t('attributeGroups.editGroup')
+                  : t('attributeGroups.addGroup')}
+              </h2>
+              <button 
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => setShowForm(false)}
+              >
+                ✕
+              </button>
             </div>
+            <GroupForm
+              group={selectedGroup}
+              onSave={handleSaveGroup}
+              onCancel={() => setShowForm(false)}
+            />
           </div>
-        )}
+          <div className="modal-backdrop" onClick={() => setShowForm(false)}></div>
+        </div>
+      )}
 
-        {showAttributes && selectedGroup && (
-          <div className="lg:col-span-1">
-            <div className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <h2 className="card-title">
-                  {t('attributeGroups.attributes')}:{' '}
-                  {selectedGroup.display_name}
-                </h2>
-                <GroupAttributes
-                  group={selectedGroup}
-                  onUpdate={loadGroups}
-                  onClose={() => setShowAttributes(false)}
-                />
-              </div>
+      {/* Modal for Group Attributes */}
+      {showAttributes && selectedGroup && (
+        <div className="modal modal-open">
+          <div className="modal-box w-11/12 max-w-4xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">
+                {t('attributeGroups.attributes')}: {selectedGroup.display_name}
+              </h2>
+              <button 
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => setShowAttributes(false)}
+              >
+                ✕
+              </button>
             </div>
+            <GroupAttributes
+              group={selectedGroup}
+              onUpdate={loadGroups}
+              onClose={() => setShowAttributes(false)}
+            />
           </div>
-        )}
+          <div className="modal-backdrop" onClick={() => setShowAttributes(false)}></div>
+        </div>
+      )}
       </div>
     </div>
   );

@@ -39,9 +39,9 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 	query := `
 		INSERT INTO category_attributes (
 			name, display_name, attribute_type, icon, options, validation_rules, 
-			is_searchable, is_filterable, is_required, sort_order, custom_component
+			is_searchable, is_filterable, is_required, sort_order, custom_component, is_variant_compatible
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id, created_at
 	`
 
@@ -61,6 +61,7 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 		attribute.IsRequired,
 		attribute.SortOrder,
 		attribute.CustomComponent,
+		attribute.IsVariantCompatible,
 	).Scan(&id, &createdAt)
 	if err != nil {
 		return 0, fmt.Errorf("не удалось создать атрибут: %w", err)
@@ -217,8 +218,9 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 			is_filterable = $8, 
 			is_required = $9, 
 			sort_order = $10,
-			custom_component = $11
-		WHERE id = $12
+			custom_component = $11,
+			is_variant_compatible = $12
+		WHERE id = $13
 	`
 
 	_, err = s.storage.Exec(
@@ -234,6 +236,7 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 		attribute.IsRequired,
 		attribute.SortOrder,
 		attribute.CustomComponent,
+		attribute.IsVariantCompatible,
 		attribute.ID,
 	)
 	if err != nil {
@@ -395,7 +398,8 @@ func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*mod
 	query := `
 		SELECT 
 			id, name, display_name, attribute_type, COALESCE(icon, '') as icon, options, validation_rules, 
-			is_searchable, is_filterable, is_required, sort_order, created_at, COALESCE(custom_component, '') as custom_component
+			is_searchable, is_filterable, is_required, sort_order, created_at, COALESCE(custom_component, '') as custom_component,
+			is_variant_compatible
 		FROM category_attributes
 		WHERE id = $1
 	`
@@ -417,6 +421,7 @@ func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*mod
 		&attribute.SortOrder,
 		&attribute.CreatedAt,
 		&attribute.CustomComponent,
+		&attribute.IsVariantCompatible,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось получить атрибут: %w", err)
@@ -704,6 +709,7 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 				a.id, a.name, a.display_name, a.attribute_type, a.options, a.validation_rules,
 				a.is_searchable, a.is_filterable, cam.is_required, a.sort_order, a.created_at,
 				COALESCE(cam.custom_component, a.custom_component) as custom_component,
+				a.is_variant_compatible,
 				cam.sort_order as effective_sort_order,
 				'direct' as source
 			FROM category_attributes a
@@ -719,6 +725,7 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 				a.attribute_type, a.options, a.validation_rules,
 				a.is_searchable, a.is_filterable, a.is_required, a.sort_order, a.created_at,
 				a.custom_component,
+				a.is_variant_compatible,
 				-- Сортировка для групп: сначала по группе, потом по атрибуту внутри группы
 				(cag.sort_order * 1000 + agi.sort_order) as effective_sort_order,
 				'group' as source
@@ -732,10 +739,10 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 		)
 		SELECT DISTINCT id, name, display_name, attribute_type, options, validation_rules,
 			is_searchable, is_filterable, is_required, sort_order, created_at, 
-			custom_component, MIN(effective_sort_order) as final_sort_order
+			custom_component, is_variant_compatible, MIN(effective_sort_order) as final_sort_order
 		FROM combined_attributes
 		GROUP BY id, name, display_name, attribute_type, options, validation_rules,
-			is_searchable, is_filterable, is_required, sort_order, created_at, custom_component
+			is_searchable, is_filterable, is_required, sort_order, created_at, custom_component, is_variant_compatible
 		ORDER BY final_sort_order, id
 	`
 
@@ -769,6 +776,7 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 			&attribute.SortOrder,
 			&attribute.CreatedAt,
 			&customComponent,
+			&attribute.IsVariantCompatible,
 			&finalSortOrder,
 		)
 

@@ -7,24 +7,25 @@ import (
 
 // CategoryAttribute представляет атрибут категории
 type CategoryAttribute struct {
-	ID                 int                          `json:"id"`
-	Name               string                       `json:"name"`
-	DisplayName        string                       `json:"display_name"`
-	AttributeType      string                       `json:"attribute_type"`
-	Icon               string                       `json:"icon,omitempty"`
-	Options            json.RawMessage              `json:"options,omitempty"`
-	ValidRules         json.RawMessage              `json:"validation_rules,omitempty"`
-	IsSearchable       bool                         `json:"is_searchable"`
-	IsFilterable       bool                         `json:"is_filterable"`
-	IsRequired         bool                         `json:"is_required"`
-	ShowInCard         bool                         `json:"show_in_card"`
-	ShowInList         bool                         `json:"show_in_list"`
-	SortOrder          int                          `json:"sort_order"`
-	CreatedAt          time.Time                    `json:"created_at"`
-	Translations       map[string]string            `json:"translations,omitempty"`
-	OptionTranslations map[string]map[string]string `json:"option_translations,omitempty"`
-	CustomComponent    string                       `json:"custom_component,omitempty"`
-	TranslatedOptions  json.RawMessage              `json:"translated_options,omitempty"`
+	ID                  int                          `json:"id"`
+	Name                string                       `json:"name"`
+	DisplayName         string                       `json:"display_name"`
+	AttributeType       string                       `json:"attribute_type"`
+	Icon                string                       `json:"icon,omitempty"`
+	Options             json.RawMessage              `json:"options,omitempty"`
+	ValidRules          json.RawMessage              `json:"validation_rules,omitempty"`
+	IsSearchable        bool                         `json:"is_searchable"`
+	IsFilterable        bool                         `json:"is_filterable"`
+	IsRequired          bool                         `json:"is_required"`
+	ShowInCard          bool                         `json:"show_in_card"`
+	ShowInList          bool                         `json:"show_in_list"`
+	SortOrder           int                          `json:"sort_order"`
+	CreatedAt           time.Time                    `json:"created_at"`
+	Translations        map[string]string            `json:"translations,omitempty"`
+	OptionTranslations  map[string]map[string]string `json:"option_translations,omitempty"`
+	CustomComponent     string                       `json:"custom_component,omitempty"`
+	TranslatedOptions   json.RawMessage              `json:"translated_options,omitempty"`
+	IsVariantCompatible bool                         `json:"is_variant_compatible"`
 }
 
 // AttributeOptions содержит опции для атрибутов типа select
