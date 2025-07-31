@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
-import { VariantAttribute } from '../page';
+import { VariantAttribute } from '@/services/admin';
 
 interface VariantAttributeFormProps {
   attribute?: VariantAttribute | null;
@@ -54,7 +54,9 @@ export default function VariantAttributeForm({
         type === 'checkbox'
           ? (e.target as HTMLInputElement).checked
           : type === 'number'
-            ? value ? Number(value) : 0
+            ? value
+              ? Number(value)
+              : 0
             : value,
     }));
 
@@ -197,11 +199,7 @@ export default function VariantAttributeForm({
         <button type="submit" className="btn btn-primary">
           {tCommon('save')}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn btn-ghost"
-        >
+        <button type="button" onClick={onCancel} className="btn btn-ghost">
           {tCommon('cancel')}
         </button>
       </div>

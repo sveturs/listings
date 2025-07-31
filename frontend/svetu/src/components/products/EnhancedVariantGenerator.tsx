@@ -23,7 +23,6 @@ interface EnhancedVariantGeneratorProps {
 
 export default function EnhancedVariantGenerator({
   categorySlug,
-  categoryAttributes,
   basePrice,
   onGenerate,
   onCancel,

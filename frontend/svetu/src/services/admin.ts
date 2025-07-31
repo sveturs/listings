@@ -1034,7 +1034,14 @@ export interface VariantAttribute {
   id: number;
   name: string;
   display_name: string;
-  type: 'text' | 'number' | 'select' | 'multiselect' | 'boolean' | 'date' | 'range';
+  type:
+    | 'text'
+    | 'number'
+    | 'select'
+    | 'multiselect'
+    | 'boolean'
+    | 'date'
+    | 'range';
   is_required: boolean;
   sort_order: number;
   affects_stock: boolean;

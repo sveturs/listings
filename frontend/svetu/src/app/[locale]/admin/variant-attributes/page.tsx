@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -14,7 +14,8 @@ export default function VariantAttributesPage() {
   const t = useTranslations('admin');
   const [attributes, setAttributes] = useState<VariantAttribute[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAttribute, setSelectedAttribute] = useState<VariantAttribute | null>(null);
+  const [selectedAttribute, setSelectedAttribute] =
+    useState<VariantAttribute | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,41 +54,46 @@ export default function VariantAttributesPage() {
     initAuth();
   }, []);
 
-  useEffect(() => {
-    if (isInitialized) {
-      loadAttributes();
-    }
-  }, [isInitialized, currentPage, debouncedSearchTerm, filterType]);
-
-  // Сбрасываем на первую страницу при изменении поиска или фильтра
-  useEffect(() => {
-    if (isInitialized && currentPage !== 1) {
-      setCurrentPage(1);
-    }
-  }, [debouncedSearchTerm, filterType]);
-
-  const loadAttributes = async () => {
+  const loadAttributes = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       const response = await adminApi.variantAttributes.getAll(
         currentPage,
         pageSize,
         debouncedSearchTerm,
         filterType
       );
-      
+
       setAttributes(response.data);
       setTotalPages(response.total_pages || 0);
       setTotalItems(response.total || 0);
-
     } catch (error) {
       toast.error(t('common.error'));
       console.error('Failed to load variant attributes:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, debouncedSearchTerm, filterType, t]);
+
+  useEffect(() => {
+    if (isInitialized) {
+      loadAttributes();
+    }
+  }, [
+    isInitialized,
+    currentPage,
+    debouncedSearchTerm,
+    filterType,
+    loadAttributes,
+  ]);
+
+  // Сбрасываем на первую страницу при изменении поиска или фильтра
+  useEffect(() => {
+    if (isInitialized && currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchTerm, filterType, isInitialized, currentPage]);
 
   const handleAddAttribute = () => {
     setSelectedAttribute(null);
@@ -98,7 +104,9 @@ export default function VariantAttributesPage() {
   const handleEditAttribute = async (attribute: VariantAttribute) => {
     try {
       // Загружаем полные данные атрибута
-      const fullAttribute = await adminApi.variantAttributes.getById(attribute.id);
+      const fullAttribute = await adminApi.variantAttributes.getById(
+        attribute.id
+      );
       setSelectedAttribute(fullAttribute);
       setIsEditing(true);
       setShowForm(true);
@@ -187,32 +195,35 @@ export default function VariantAttributesPage() {
           />
         </div>
 
-      {/* Modal for Variant Attribute Form */}
-      {showForm && (
-        <div className="modal modal-open">
-          <div className="modal-box w-11/12 max-w-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">
-                {isEditing
-                  ? t('variantAttributes.editAttribute')
-                  : t('variantAttributes.addAttribute')}
-              </h2>
-              <button 
-                className="btn btn-sm btn-circle btn-ghost"
-                onClick={() => setShowForm(false)}
-              >
-                ✕
-              </button>
+        {/* Modal for Variant Attribute Form */}
+        {showForm && (
+          <div className="modal modal-open">
+            <div className="modal-box w-11/12 max-w-2xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">
+                  {isEditing
+                    ? t('variantAttributes.editAttribute')
+                    : t('variantAttributes.addAttribute')}
+                </h2>
+                <button
+                  className="btn btn-sm btn-circle btn-ghost"
+                  onClick={() => setShowForm(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <VariantAttributeForm
+                attribute={selectedAttribute}
+                onSave={handleSaveAttribute}
+                onCancel={() => setShowForm(false)}
+              />
             </div>
-            <VariantAttributeForm
-              attribute={selectedAttribute}
-              onSave={handleSaveAttribute}
-              onCancel={() => setShowForm(false)}
-            />
+            <div
+              className="modal-backdrop"
+              onClick={() => setShowForm(false)}
+            ></div>
           </div>
-          <div className="modal-backdrop" onClick={() => setShowForm(false)}></div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

@@ -140,7 +140,9 @@ export default function AdminLayout({
                 <li>
                   <Link
                     href="/admin/variant-attributes"
-                    className={isActive('/admin/variant-attributes') ? 'active' : ''}
+                    className={
+                      isActive('/admin/variant-attributes') ? 'active' : ''
+                    }
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

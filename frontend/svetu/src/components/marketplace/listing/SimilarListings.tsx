@@ -210,7 +210,7 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                           : null;
 
                       // Отладка изображений в похожих объявлениях
-                      if (window.SimilarListingsImageDebug) {
+                      if ((window as any).SimilarListingsImageDebug) {
                         console.log('SimilarListings SafeImage src debug:', {
                           listingId: listing.id,
                           title: listing.title,
@@ -329,7 +329,7 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                             : null;
 
                         // Отладка изображений в похожих объявлениях (List view)
-                        if (window.SimilarListingsImageDebug) {
+                        if ((window as any).SimilarListingsImageDebug) {
                           console.log(
                             'SimilarListings SafeImage src debug (List view):',
                             {

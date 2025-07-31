@@ -224,57 +224,64 @@ export default function AttributeGroupsPage() {
           </div>
         </div>
 
-      {/* Modal for Group Form */}
-      {showForm && (
-        <div className="modal modal-open">
-          <div className="modal-box w-11/12 max-w-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">
-                {isEditing
-                  ? t('attributeGroups.editGroup')
-                  : t('attributeGroups.addGroup')}
-              </h2>
-              <button 
-                className="btn btn-sm btn-circle btn-ghost"
-                onClick={() => setShowForm(false)}
-              >
-                ✕
-              </button>
+        {/* Modal for Group Form */}
+        {showForm && (
+          <div className="modal modal-open">
+            <div className="modal-box w-11/12 max-w-2xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">
+                  {isEditing
+                    ? t('attributeGroups.editGroup')
+                    : t('attributeGroups.addGroup')}
+                </h2>
+                <button
+                  className="btn btn-sm btn-circle btn-ghost"
+                  onClick={() => setShowForm(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <GroupForm
+                group={selectedGroup}
+                onSave={handleSaveGroup}
+                onCancel={() => setShowForm(false)}
+              />
             </div>
-            <GroupForm
-              group={selectedGroup}
-              onSave={handleSaveGroup}
-              onCancel={() => setShowForm(false)}
-            />
+            <div
+              className="modal-backdrop"
+              onClick={() => setShowForm(false)}
+            ></div>
           </div>
-          <div className="modal-backdrop" onClick={() => setShowForm(false)}></div>
-        </div>
-      )}
+        )}
 
-      {/* Modal for Group Attributes */}
-      {showAttributes && selectedGroup && (
-        <div className="modal modal-open">
-          <div className="modal-box w-11/12 max-w-4xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">
-                {t('attributeGroups.attributes')}: {selectedGroup.display_name}
-              </h2>
-              <button 
-                className="btn btn-sm btn-circle btn-ghost"
-                onClick={() => setShowAttributes(false)}
-              >
-                ✕
-              </button>
+        {/* Modal for Group Attributes */}
+        {showAttributes && selectedGroup && (
+          <div className="modal modal-open">
+            <div className="modal-box w-11/12 max-w-4xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">
+                  {t('attributeGroups.attributes')}:{' '}
+                  {selectedGroup.display_name}
+                </h2>
+                <button
+                  className="btn btn-sm btn-circle btn-ghost"
+                  onClick={() => setShowAttributes(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <GroupAttributes
+                group={selectedGroup}
+                onUpdate={loadGroups}
+                onClose={() => setShowAttributes(false)}
+              />
             </div>
-            <GroupAttributes
-              group={selectedGroup}
-              onUpdate={loadGroups}
-              onClose={() => setShowAttributes(false)}
-            />
+            <div
+              className="modal-backdrop"
+              onClick={() => setShowAttributes(false)}
+            ></div>
           </div>
-          <div className="modal-backdrop" onClick={() => setShowAttributes(false)}></div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

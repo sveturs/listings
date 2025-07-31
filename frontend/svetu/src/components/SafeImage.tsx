@@ -24,7 +24,10 @@ export default function SafeImage({
   const safeUrl = getSafeImageUrl(urlToCheck);
 
   // Отладка для всех изображений в SimilarListings
-  if (src && (src.includes('177') || window.SimilarListingsImageDebug)) {
+  if (
+    src &&
+    (src.includes('177') || (window as any).SimilarListingsImageDebug)
+  ) {
     console.log('SafeImage debug:', {
       src,
       urlToCheck,
@@ -87,7 +90,7 @@ export default function SafeImage({
         onLoad={() => {
           if (
             src &&
-            (src.includes('177') || window.SimilarListingsImageDebug)
+            (src.includes('177') || (window as any).SimilarListingsImageDebug)
           ) {
             console.log('SafeImage onLoad fired:', src);
           }
@@ -96,7 +99,7 @@ export default function SafeImage({
         onError={(e) => {
           if (
             src &&
-            (src.includes('177') || window.SimilarListingsImageDebug)
+            (src.includes('177') || (window as any).SimilarListingsImageDebug)
           ) {
             console.log('SafeImage onError fired:', src, e);
           }

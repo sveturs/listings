@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useRef } from 'react';
-import { VariantAttribute } from '../page';
+import { VariantAttribute } from '@/services/admin';
 
 interface VariantAttributeListProps {
   attributes: VariantAttribute[];
@@ -61,12 +61,22 @@ export default function VariantAttributeList({
             >
               <option value="">{t('variantAttributes.allTypes')}</option>
               <option value="text">{t('variantAttributes.types.text')}</option>
-              <option value="number">{t('variantAttributes.types.number')}</option>
-              <option value="select">{t('variantAttributes.types.select')}</option>
-              <option value="multiselect">{t('variantAttributes.types.multiselect')}</option>
-              <option value="boolean">{t('variantAttributes.types.boolean')}</option>
+              <option value="number">
+                {t('variantAttributes.types.number')}
+              </option>
+              <option value="select">
+                {t('variantAttributes.types.select')}
+              </option>
+              <option value="multiselect">
+                {t('variantAttributes.types.multiselect')}
+              </option>
+              <option value="boolean">
+                {t('variantAttributes.types.boolean')}
+              </option>
               <option value="date">{t('variantAttributes.types.date')}</option>
-              <option value="range">{t('variantAttributes.types.range')}</option>
+              <option value="range">
+                {t('variantAttributes.types.range')}
+              </option>
             </select>
           </div>
         </div>
@@ -200,8 +210,8 @@ export default function VariantAttributeList({
           <div className="flex justify-between items-center mt-4">
             <div className="text-sm text-base-content/70">
               {t('common.showing')} {(currentPage - 1) * pageSize + 1} -{' '}
-              {Math.min(currentPage * pageSize, totalItems)}{' '}
-              {t('common.of')} {totalItems} {t('common.items')}
+              {Math.min(currentPage * pageSize, totalItems)} {t('common.of')}{' '}
+              {totalItems} {t('common.items')}
             </div>
             <div className="join">
               <button

@@ -29,12 +29,23 @@ export default function AttributeForm({
   const t = useTranslations('admin.attributes');
   const tCommon = useTranslations('admin.common');
 
-  const [formData, setFormData] = useState<Partial<Attribute & {
-    variant_type?: 'text' | 'number' | 'select' | 'multiselect' | 'boolean' | 'date' | 'range';
-    variant_is_required?: boolean;
-    variant_sort_order?: number;
-    variant_affects_stock?: boolean;
-  }>>({
+  const [formData, setFormData] = useState<
+    Partial<
+      Attribute & {
+        variant_type?:
+          | 'text'
+          | 'number'
+          | 'select'
+          | 'multiselect'
+          | 'boolean'
+          | 'date'
+          | 'range';
+        variant_is_required?: boolean;
+        variant_sort_order?: number;
+        variant_affects_stock?: boolean;
+      }
+    >
+  >({
     name: '',
     display_name: '',
     attribute_type: 'text',
@@ -86,7 +97,8 @@ export default function AttributeForm({
         variant_type: (attribute as any).variant_type || 'multiselect',
         variant_is_required: (attribute as any).variant_is_required || false,
         variant_sort_order: (attribute as any).variant_sort_order || 0,
-        variant_affects_stock: (attribute as any).variant_affects_stock || false,
+        variant_affects_stock:
+          (attribute as any).variant_affects_stock || false,
         unit: attribute.unit || '',
         min_value: attribute.min_value,
         max_value: attribute.max_value,
@@ -606,7 +618,9 @@ export default function AttributeForm({
             />
           </label>
           <label className="label">
-            <span className="label-text-alt">Позволяет использовать атрибут для создания вариантов товаров</span>
+            <span className="label-text-alt">
+              Позволяет использовать атрибут для создания вариантов товаров
+            </span>
           </label>
         </div>
       </div>
@@ -635,7 +649,10 @@ export default function AttributeForm({
             </svg>
             <div>
               <h3 className="font-bold">Вариативный атрибут</h3>
-              <div className="text-xs">Эти настройки определяют, как атрибут будет использоваться при создании вариантов товаров</div>
+              <div className="text-xs">
+                Эти настройки определяют, как атрибут будет использоваться при
+                создании вариантов товаров
+              </div>
             </div>
           </div>
 
@@ -658,7 +675,10 @@ export default function AttributeForm({
               <option value="range">Диапазон</option>
             </select>
             <label className="label">
-              <span className="label-text-alt">Для большинства случаев рекомендуется "Множественный выбор"</span>
+              <span className="label-text-alt">
+                Для большинства случаев рекомендуется &ldquo;Множественный
+                выбор&rdquo;
+              </span>
             </label>
           </div>
 
@@ -676,7 +696,9 @@ export default function AttributeForm({
               placeholder="0"
             />
             <label className="label">
-              <span className="label-text-alt">Чем меньше число, тем выше в списке будет атрибут</span>
+              <span className="label-text-alt">
+                Чем меньше число, тем выше в списке будет атрибут
+              </span>
             </label>
           </div>
 
@@ -693,7 +715,10 @@ export default function AttributeForm({
                 />
               </label>
               <label className="label">
-                <span className="label-text-alt">Если включено, пользователь обязан выбрать значение для создания вариантов</span>
+                <span className="label-text-alt">
+                  Если включено, пользователь обязан выбрать значение для
+                  создания вариантов
+                </span>
               </label>
             </div>
 
@@ -711,7 +736,10 @@ export default function AttributeForm({
                 />
               </label>
               <label className="label">
-                <span className="label-text-alt">Если включено, каждый вариант будет иметь отдельный учёт остатков</span>
+                <span className="label-text-alt">
+                  Если включено, каждый вариант будет иметь отдельный учёт
+                  остатков
+                </span>
               </label>
             </div>
           </div>
@@ -896,11 +924,7 @@ export default function AttributeForm({
         <button type="submit" className="btn btn-primary">
           {tCommon('save')}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn btn-ghost"
-        >
+        <button type="button" onClick={onCancel} className="btn btn-ghost">
           {tCommon('cancel')}
         </button>
       </div>

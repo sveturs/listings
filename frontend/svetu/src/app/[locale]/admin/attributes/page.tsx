@@ -157,20 +157,22 @@ export default function AttributesPage() {
     }
   };
 
-  const handleSaveAttribute = async (data: Partial<Attribute & {
-    variant_type?: string;
-    variant_is_required?: boolean;
-    variant_sort_order?: number;
-    variant_affects_stock?: boolean;
-  }>) => {
+  const handleSaveAttribute = async (
+    data: Partial<
+      Attribute & {
+        variant_type?: string;
+        variant_is_required?: boolean;
+        variant_sort_order?: number;
+        variant_affects_stock?: boolean;
+      }
+    >
+  ) => {
     try {
-      let savedAttribute;
-      
       if (isEditing && selectedAttribute) {
-        savedAttribute = await adminApi.attributes.update(selectedAttribute.id, data);
+        await adminApi.attributes.update(selectedAttribute.id, data);
         toast.success(t('common.saveSuccess'));
       } else {
-        savedAttribute = await adminApi.attributes.create(data);
+        await adminApi.attributes.create(data);
         toast.success(t('common.saveSuccess'));
       }
 
@@ -180,7 +182,14 @@ export default function AttributesPage() {
           const variantAttributeData = {
             name: data.name!,
             display_name: data.display_name!,
-            type: data.variant_type || 'multiselect',
+            type: (data.variant_type || 'multiselect') as
+              | 'number'
+              | 'boolean'
+              | 'range'
+              | 'text'
+              | 'date'
+              | 'select'
+              | 'multiselect',
             is_required: data.variant_is_required || false,
             sort_order: data.variant_sort_order || 0,
             affects_stock: data.variant_affects_stock || false,
@@ -192,12 +201,15 @@ export default function AttributesPage() {
           });
         } catch (variantError) {
           console.error('Failed to create variant attribute:', variantError);
-          toast.warning('Атрибут создан, но не удалось создать соответствующий вариативный атрибут. Создайте его вручную в разделе "Вариативные атрибуты".', {
-            duration: 6000,
-          });
+          toast.warning(
+            'Атрибут создан, но не удалось создать соответствующий вариативный атрибут. Создайте его вручную в разделе "Вариативные атрибуты".',
+            {
+              duration: 6000,
+            }
+          );
         }
       }
-      
+
       setShowForm(false);
       await loadAttributes();
     } catch (error) {
@@ -476,32 +488,35 @@ export default function AttributesPage() {
           </div>
         </div>
 
-      {/* Modal for Attribute Form */}
-      {showForm && (
-        <div className="modal modal-open">
-          <div className="modal-box w-11/12 max-w-4xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">
-                {isEditing
-                  ? t('attributes.editAttribute')
-                  : t('attributes.addAttribute')}
-              </h2>
-              <button 
-                className="btn btn-sm btn-circle btn-ghost"
-                onClick={() => setShowForm(false)}
-              >
-                ✕
-              </button>
+        {/* Modal for Attribute Form */}
+        {showForm && (
+          <div className="modal modal-open">
+            <div className="modal-box w-11/12 max-w-4xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">
+                  {isEditing
+                    ? t('attributes.editAttribute')
+                    : t('attributes.addAttribute')}
+                </h2>
+                <button
+                  className="btn btn-sm btn-circle btn-ghost"
+                  onClick={() => setShowForm(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <AttributeForm
+                attribute={selectedAttribute}
+                onSave={handleSaveAttribute}
+                onCancel={() => setShowForm(false)}
+              />
             </div>
-            <AttributeForm
-              attribute={selectedAttribute}
-              onSave={handleSaveAttribute}
-              onCancel={() => setShowForm(false)}
-            />
+            <div
+              className="modal-backdrop"
+              onClick={() => setShowForm(false)}
+            ></div>
           </div>
-          <div className="modal-backdrop" onClick={() => setShowForm(false)}></div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

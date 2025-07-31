@@ -34,7 +34,7 @@ export default function SimplifiedVariantGenerator({
   const [availableVariantAttributes, setAvailableVariantAttributes] = useState<
     any[]
   >([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   // Обновляем slug если он передан через пропсы
   React.useEffect(() => {
@@ -80,32 +80,44 @@ export default function SimplifiedVariantGenerator({
 
         // Загружаем вариативные атрибуты через API
         const response = await adminApi.variantAttributes.getAll(1, 100);
-        
+
         console.log('Available variant attributes from API:', response.data);
-        
-        // Фильтруем атрибуты которые уже выбраны в selectedAttributes 
+
+        // Фильтруем атрибуты которые уже выбраны в selectedAttributes
         // и имеют соответствующие атрибуты в категории
-        const relevantAttributes = response.data.filter(variantAttr => {
+        const relevantAttributes = response.data.filter((variantAttr) => {
           // Ищем соответствующий атрибут в selectedAttributes по названию
-          const matchingCategoryAttr = categoryAttributes.find(catAttr => 
-            catAttr.name.toLowerCase() === variantAttr.name.toLowerCase() ||
-            catAttr.display_name.toLowerCase().includes(variantAttr.name.toLowerCase()) ||
-            variantAttr.name.toLowerCase().includes(catAttr.name.toLowerCase())
+          const matchingCategoryAttr = categoryAttributes.find(
+            (catAttr) =>
+              catAttr.name.toLowerCase() === variantAttr.name.toLowerCase() ||
+              catAttr.display_name
+                .toLowerCase()
+                .includes(variantAttr.name.toLowerCase()) ||
+              variantAttr.name
+                .toLowerCase()
+                .includes(catAttr.name.toLowerCase())
           );
-          
+
           if (matchingCategoryAttr) {
             // Проверяем, есть ли выбранные значения для этого атрибута
-            const hasSelectedValues = selectedAttributes[matchingCategoryAttr.id] && 
-                                    selectedAttributes[matchingCategoryAttr.id].length > 0;
-            
-            console.log(`Variant attribute "${variantAttr.name}" matches category attribute "${matchingCategoryAttr.name}", has selected values:`, hasSelectedValues);
+            const hasSelectedValues =
+              selectedAttributes[matchingCategoryAttr.id] &&
+              selectedAttributes[matchingCategoryAttr.id].length > 0;
+
+            console.log(
+              `Variant attribute "${variantAttr.name}" matches category attribute "${matchingCategoryAttr.name}", has selected values:`,
+              hasSelectedValues
+            );
             return hasSelectedValues;
           }
-          
+
           return false;
         });
 
-        console.log('Relevant variant attributes for category:', relevantAttributes);
+        console.log(
+          'Relevant variant attributes for category:',
+          relevantAttributes
+        );
         setAvailableVariantAttributes(relevantAttributes);
       } catch (error) {
         console.error('Failed to load variant attributes:', error);
