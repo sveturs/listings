@@ -3298,7 +3298,11 @@
       "averagePrice": "Средняя цена",
       "manageVariants": "Управление вариантами",
       "variant": "Вариант",
-      "stock": "Остаток",
+      "stock": {
+        "in_stock": "В наличии",
+        "low_stock": "Мало на складе",
+        "out_of_stock": "Нет в наличии"
+      },
       "price": "Цена",
       "status": "Статус",
       "inStock": "В наличии",
@@ -3311,7 +3315,11 @@
       "main": "Основной",
       "attributesFromPreviousStep": "Атрибуты выбраны на предыдущем шаге. Выберите значения для создания вариантов:",
       "selectedCount": "Выбрано: {count} из {total}",
-      "stock": "Остаток",
+      "stock": {
+        "in_stock": "В наличии",
+        "low_stock": "Мало на складе",
+        "out_of_stock": "Нет в наличии"
+      },
       "stockStatus": {
         "in_stock": "В наличии",
         "low_stock": "Мало",
