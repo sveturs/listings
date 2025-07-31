@@ -288,7 +288,11 @@ func (r *VariantRepository) BulkCreateVariantsTx(ctx context.Context, tx *sqlx.T
 	for i, variantReq := range variants {
 		variant, err := r.CreateVariantTx(ctx, tx, &variantReq)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create variant %d (SKU: %s): %w", i, variantReq.SKU, err)
+			skuStr := ""
+			if variantReq.SKU != nil {
+				skuStr = *variantReq.SKU
+			}
+			return nil, fmt.Errorf("failed to create variant %d (SKU: %s): %w", i, skuStr, err)
 		}
 		createdVariants = append(createdVariants, variant)
 	}

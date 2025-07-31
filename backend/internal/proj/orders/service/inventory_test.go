@@ -3,14 +3,12 @@ package service
 import (
 	"context"
 	"testing"
-
-	"backend/internal/domain/models"
 )
 
 // TestInventoryTrackingAfterPurchase проверяет корректность обновления остатков товара после покупки
 func TestInventoryTrackingAfterPurchase(t *testing.T) {
 	// Настройка тестовой среды
-	ctx := context.Background()
+	_ = context.Background()
 
 	// TODO: Подключить тестовую БД
 	// db, cleanup := setupTestDB(t)
@@ -69,7 +67,7 @@ func TestInventoryTrackingAfterPurchase(t *testing.T) {
 
 // TestInventoryConsistency проверяет консистентность данных в инвентаре
 func TestInventoryConsistency(t *testing.T) {
-	ctx := context.Background()
+	_ = context.Background()
 
 	t.Run("stock_and_reservations_match", func(t *testing.T) {
 		t.Skip("Требуется настройка тестовой БД")
@@ -88,38 +86,4 @@ func TestInventoryConsistency(t *testing.T) {
 	})
 }
 
-// Вспомогательные функции для будущих тестов
-
-func createTestProduct(t *testing.T, initialStock int) *models.StorefrontProduct {
-	// TODO: Реализовать создание тестового товара
-	return &models.StorefrontProduct{
-		Name:          "Test Product",
-		StockQuantity: initialStock,
-		Price:         100.0,
-		IsActive:      true,
-	}
-}
-
-func createTestVariant(t *testing.T, productID int64, initialStock int) *models.StorefrontProductVariant {
-	// TODO: Реализовать создание тестового варианта
-	return &models.StorefrontProductVariant{
-		ProductID:     productID,
-		Name:          "Test Variant",
-		StockQuantity: initialStock,
-		Price:         120.0,
-		IsActive:      true,
-	}
-}
-
-func createTestOrder(t *testing.T, items []models.OrderItemRequest) *models.CreateOrderRequest {
-	// TODO: Реализовать создание тестового заказа
-	return &models.CreateOrderRequest{
-		StorefrontID:    1,
-		Items:           items,
-		ShippingMethod:  "standard",
-		PaymentMethod:   "card",
-		CustomerNotes:   "Test order",
-		ShippingAddress: map[string]interface{}{},
-		BillingAddress:  map[string]interface{}{},
-	}
-}
+// TODO: Добавить вспомогательные функции для тестов когда будет готова тестовая среда

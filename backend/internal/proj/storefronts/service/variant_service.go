@@ -68,11 +68,20 @@ func (s *VariantServiceImpl) BulkCreateVariantsTx(ctx context.Context, tx interf
 	// Convert the transaction interface to *sqlx.Tx
 	sqlxTx, ok := tx.(*sqlx.Tx)
 	if !ok {
-		// Try to get sqlx.Tx from Transaction interface
+		// Try to get sqlx.Tx from Transaction interface using GetSqlxTx method
 		if txWrapper, ok := tx.(interface{ GetSqlxTx() *sqlx.Tx }); ok {
 			sqlxTx = txWrapper.GetSqlxTx()
 		} else {
-			return nil, fmt.Errorf("invalid transaction type")
+			// Try to get from GetPgxTx method and cast to *sqlx.Tx
+			if txInterface, ok := tx.(interface{ GetPgxTx() interface{} }); ok {
+				if pgxTx, ok := txInterface.GetPgxTx().(*sqlx.Tx); ok {
+					sqlxTx = pgxTx
+				} else {
+					return nil, fmt.Errorf("GetPgxTx returned non-sqlx.Tx type")
+				}
+			} else {
+				return nil, fmt.Errorf("invalid transaction type: does not implement GetSqlxTx() or GetPgxTx()")
+			}
 		}
 	}
 

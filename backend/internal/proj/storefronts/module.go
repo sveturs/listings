@@ -873,13 +873,13 @@ func (s *storageAdapter) GetStorefrontByID(ctx context.Context, id int) (*models
 func (s *storageAdapter) BeginTx(ctx context.Context) (storefrontService.Transaction, error) {
 	// Get sqlx.DB from database
 	sqlxDB := s.db.GetSQLXDB()
-	
+
 	// Start transaction
 	tx, err := sqlxDB.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Wrap the transaction
 	return &sqlxTransactionWrapper{tx: tx}, nil
 }
@@ -891,7 +891,7 @@ func (s *storageAdapter) CreateStorefrontProductTx(ctx context.Context, tx store
 	if !ok {
 		return nil, fmt.Errorf("invalid transaction type")
 	}
-	
+
 	// Call the database method with the transaction
 	return s.db.CreateStorefrontProductTx(ctx, sqlxWrapper.tx, storefrontID, req)
 }

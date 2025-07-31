@@ -55,7 +55,7 @@ type Storage interface {
 
 	// Transaction support
 	BeginTx(ctx context.Context) (Transaction, error)
-	
+
 	// Transactional methods
 	CreateStorefrontProductTx(ctx context.Context, tx Transaction, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error)
 }
