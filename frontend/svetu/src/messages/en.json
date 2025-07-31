@@ -3074,7 +3074,12 @@
       "main": "Main",
       "attributesFromPreviousStep": "Attributes selected on previous step. Choose values to create variants:",
       "selectedCount": "Selected: {count} of {total}",
-      "stock": "Stock",
+      "stock": {
+        "in_stock": "In Stock",
+        "low_stock": "Low Stock",
+        "out_of_stock": "Out of Stock"
+      },
+      "units": "pcs",
       "stockStatus": {
         "in_stock": "In Stock",
         "low_stock": "Low Stock",

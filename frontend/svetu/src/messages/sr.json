@@ -2798,7 +2798,12 @@
       "setPricePrompt": "Postavi istu cenu za sve varijante:",
       "main": "Glavna",
       "attributesFromPreviousStep": "Atributi izabrani na prethodnom koraku. Izaberite vrednosti da kreirate varijante:",
-      "stock": "Zalihe",
+      "stock": {
+        "in_stock": "Na lageru",
+        "low_stock": "Malo na lageru",
+        "out_of_stock": "Nema na lageru"
+      },
+      "units": "kom",
       "stockStatus": {
         "in_stock": "Na lageru",
         "low_stock": "Malo na lageru",

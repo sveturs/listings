@@ -3162,6 +3162,12 @@
       "inStock": "В наличии",
       "lowStock": "Мало на складе",
       "outOfStock": "Нет в наличии",
+      "stock": {
+        "in_stock": "В наличии",
+        "low_stock": "Мало на складе",
+        "out_of_stock": "Нет в наличии"
+      },
+      "units": "шт.",
       "productImages": "Фотографии товара",
       "maxImages": "Макс. 5 фото",
       "maxImagesError": "Можно загрузить максимум 5 изображений",
