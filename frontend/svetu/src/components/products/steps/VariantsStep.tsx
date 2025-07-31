@@ -260,6 +260,7 @@ function SimpleVariantConfig({
   selectedAttributes,
   t,
 }: SimpleVariantConfigProps) {
+  const { state } = useCreateProduct();
   const [_basePrice] = useState(productData.price || 0);
   const [categoryAttributes, setCategoryAttributes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -336,6 +337,8 @@ function SimpleVariantConfig({
           basePrice={productData.price || 0}
           onGenerate={handleGenerateVariants}
           onCancel={() => {}}
+          categoryId={productData.category_id}
+          categorySlug={state.category?.slug}
         />
       </div>
     </div>

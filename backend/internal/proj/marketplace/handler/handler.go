@@ -56,6 +56,7 @@ type Handler struct {
 	MarketplaceHandler *MarketplaceHandler
 	Orders             *OrderHandler
 	CategoryDetector   *CategoryDetectorHandler
+	VariantAttributes  *VariantAttributesHandler
 	service            globalService.ServicesInterface
 }
 
@@ -143,6 +144,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			MarketplaceHandler: marketplaceHandler,
 			Orders:             orderHandler,
 			CategoryDetector:   categoryDetectorHandler,
+			VariantAttributes:  NewVariantAttributesHandler(services),
 			service:            services,
 		}
 	}
@@ -221,6 +223,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Карта - геопространственные маршруты
 	marketplace.Get("/map/bounds", h.GetListingsInBounds)
 	marketplace.Get("/map/clusters", h.GetMapClusters)
+
+	// Вариативные атрибуты
+	marketplace.Get("/product-variant-attributes", h.VariantAttributes.GetProductVariantAttributes)
+	marketplace.Get("/categories/:slug/variant-attributes", h.VariantAttributes.GetCategoryVariantAttributes)
 
 	// Обновлено: маршруты API переводов используют обработчик переводов
 	translation := app.Group("/api/v1/translation")

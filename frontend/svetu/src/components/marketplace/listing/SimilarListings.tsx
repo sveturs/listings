@@ -63,8 +63,8 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
             id: item.id,
             title: item.title,
             images: item.images,
-            hasImages: !!(item.images && item.images.length > 0)
-          }))
+            hasImages: !!(item.images && item.images.length > 0),
+          })),
         });
 
         if (items.length > 0) {
@@ -72,13 +72,17 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
           const filteredListings = items.filter(
             (item: MarketplaceItem) => item.id !== listingId
           );
-          
+
           console.log('SimilarListings Filtered:', {
             totalFiltered: filteredListings.length,
-            withImages: filteredListings.filter(item => item.images && item.images.length > 0).length,
-            firstWithImages: filteredListings.find(item => item.images && item.images.length > 0)
+            withImages: filteredListings.filter(
+              (item) => item.images && item.images.length > 0
+            ).length,
+            firstWithImages: filteredListings.find(
+              (item) => item.images && item.images.length > 0
+            ),
           });
-          
+
           setAllListings(filteredListings);
           // Показываем первые 20 объявлений
           setDisplayedListings(filteredListings.slice(0, ITEMS_PER_LOAD));
@@ -200,22 +204,25 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                 <div className="relative aspect-square rounded-lg overflow-hidden bg-base-200 mb-2">
                   <SafeImage
                     src={(() => {
-                      const imageUrl = listing.images && listing.images.length > 0
-                        ? config.buildImageUrl(listing.images[0].public_url)
-                        : null;
-                      
+                      const imageUrl =
+                        listing.images && listing.images.length > 0
+                          ? config.buildImageUrl(listing.images[0].public_url)
+                          : null;
+
                       // Отладка изображений в похожих объявлениях
                       if (window.SimilarListingsImageDebug) {
                         console.log('SimilarListings SafeImage src debug:', {
                           listingId: listing.id,
                           title: listing.title,
-                          hasImages: !!(listing.images && listing.images.length > 0),
+                          hasImages: !!(
+                            listing.images && listing.images.length > 0
+                          ),
                           rawImageUrl: listing.images?.[0]?.public_url,
                           builtImageUrl: imageUrl,
-                          imagesArray: listing.images
+                          imagesArray: listing.images,
                         });
                       }
-                      
+
                       return imageUrl;
                     })()}
                     alt={listing.title}
@@ -316,22 +323,28 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                   >
                     <SafeImage
                       src={(() => {
-                        const imageUrl = listing.images && listing.images.length > 0
-                          ? config.buildImageUrl(listing.images[0].public_url)
-                          : null;
-                        
+                        const imageUrl =
+                          listing.images && listing.images.length > 0
+                            ? config.buildImageUrl(listing.images[0].public_url)
+                            : null;
+
                         // Отладка изображений в похожих объявлениях (List view)
                         if (window.SimilarListingsImageDebug) {
-                          console.log('SimilarListings SafeImage src debug (List view):', {
-                            listingId: listing.id,
-                            title: listing.title,
-                            hasImages: !!(listing.images && listing.images.length > 0),
-                            rawImageUrl: listing.images?.[0]?.public_url,
-                            builtImageUrl: imageUrl,
-                            imagesArray: listing.images
-                          });
+                          console.log(
+                            'SimilarListings SafeImage src debug (List view):',
+                            {
+                              listingId: listing.id,
+                              title: listing.title,
+                              hasImages: !!(
+                                listing.images && listing.images.length > 0
+                              ),
+                              rawImageUrl: listing.images?.[0]?.public_url,
+                              builtImageUrl: imageUrl,
+                              imagesArray: listing.images,
+                            }
+                          );
                         }
-                        
+
                         return imageUrl;
                       })()}
                       alt={listing.title}

@@ -85,13 +85,19 @@ export default function SafeImage({
         alt={alt}
         sizes={props.sizes || (props.fill ? '100vw' : undefined)}
         onLoad={() => {
-          if (src && (src.includes('177') || window.SimilarListingsImageDebug)) {
+          if (
+            src &&
+            (src.includes('177') || window.SimilarListingsImageDebug)
+          ) {
             console.log('SafeImage onLoad fired:', src);
           }
           setIsLoading(false);
         }}
         onError={(e) => {
-          if (src && (src.includes('177') || window.SimilarListingsImageDebug)) {
+          if (
+            src &&
+            (src.includes('177') || window.SimilarListingsImageDebug)
+          ) {
             console.log('SafeImage onError fired:', src, e);
           }
           setHasError(true);

@@ -4206,6 +4206,46 @@ paths:
       summary: Get transaction history
       tags:
         - balance
+  "/api/v1/categories/{slug}/variant-attributes":
+    get:
+      description: Returns variant attributes suitable for specific category
+      parameters:
+        - description: Category slug
+          in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Variant attributes for category
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.ProductVariantAttrib\
+                            ute"
+                        type: array
+                    type: object
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get variant attributes for category
+      tags:
+        - marketplace-variant-attributes
   /api/v1/contacts:
     get:
       description: Возвращает список контактов с фильтрацией по статусу и пагинацией
@@ -9926,6 +9966,33 @@ paths:
       summary: Process payment webhook
       tags:
         - payments
+  /api/v1/product-variant-attributes:
+    get:
+      description: Returns list of all product variant attributes
+      responses:
+        "200":
+          description: List of variant attributes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.ProductVariantAttrib\
+                            ute"
+                        type: array
+                    type: object
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get product variant attributes
+      tags:
+        - marketplace-variant-attributes
   "/api/v1/public/categories/{category_id}/attributes":
     get:
       description: Public endpoint for getting all attributes that can be used for
@@ -18308,6 +18375,27 @@ components:
           type: integer
         total_value:
           type: number
+      type: object
+    backend_internal_domain_models.ProductVariantAttribute:
+      properties:
+        affects_stock:
+          type: boolean
+        created_at:
+          type: string
+        display_name:
+          type: string
+        id:
+          type: integer
+        is_required:
+          type: boolean
+        name:
+          type: string
+        sort_order:
+          type: integer
+        type:
+          type: string
+        updated_at:
+          type: string
       type: object
     backend_internal_domain_models.RatingBreakdown:
       properties:

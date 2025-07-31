@@ -10,6 +10,8 @@ interface SimplifiedVariantGeneratorProps {
   basePrice: number;
   onGenerate: (variants: any[]) => void;
   onCancel: () => void;
+  categoryId?: number;
+  categorySlug?: string;
 }
 
 export default function SimplifiedVariantGenerator({
@@ -18,10 +20,200 @@ export default function SimplifiedVariantGenerator({
   basePrice,
   onGenerate,
   onCancel,
+  categoryId,
+  categorySlug: propCategorySlug,
 }: SimplifiedVariantGeneratorProps) {
   const t = useTranslations('storefronts.products');
   const [generatedVariants, setGeneratedVariants] = useState<any[]>([]);
   const [showStockManager, setShowStockManager] = useState(false);
+
+  const [categorySlug, setCategorySlug] = useState<string>(
+    propCategorySlug || ''
+  );
+  const [availableVariantAttributes, setAvailableVariantAttributes] = useState<
+    any[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  // Обновляем slug если он передан через пропсы
+  React.useEffect(() => {
+    if (propCategorySlug) {
+      setCategorySlug(propCategorySlug);
+    }
+  }, [propCategorySlug]);
+
+  // Если slug не передан, пытаемся получить его по ID
+  React.useEffect(() => {
+    if (!propCategorySlug && categoryId) {
+      const fetchCategorySlug = async () => {
+        try {
+          console.log('Fetching category info for ID:', categoryId);
+          // Сначала попробуем получить список категорий
+          const response = await fetch('/api/v1/marketplace/categories');
+          if (response.ok) {
+            const data = await response.json();
+            const categories = data.data || [];
+            // Найдем категорию по ID
+            const category = categories.find(
+              (cat: any) => cat.id === categoryId
+            );
+            if (category) {
+              console.log('Found category:', category);
+              setCategorySlug(category.slug || '');
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch category slug:', error);
+        }
+      };
+
+      fetchCategorySlug();
+    }
+  }, [categoryId, propCategorySlug]);
+
+  // Загружаем вариативные атрибуты для категории
+  React.useEffect(() => {
+    const fetchVariantAttributes = async () => {
+      try {
+        console.log(
+          'Using hardcoded variant attributes for category:',
+          categorySlug
+        );
+
+        // Временное решение: используем захардкоженные данные
+        const hardcodedAttributes = [
+          {
+            id: 1,
+            name: 'color',
+            display_name: 'Color',
+            type: 'select',
+            is_required: false,
+            affects_stock: false,
+          },
+          {
+            id: 2,
+            name: 'size',
+            display_name: 'Size',
+            type: 'select',
+            is_required: false,
+            affects_stock: true,
+          },
+          {
+            id: 3,
+            name: 'material',
+            display_name: 'Material',
+            type: 'select',
+            is_required: false,
+            affects_stock: false,
+          },
+          {
+            id: 4,
+            name: 'pattern',
+            display_name: 'Pattern',
+            type: 'select',
+            is_required: false,
+            affects_stock: false,
+          },
+          {
+            id: 5,
+            name: 'style',
+            display_name: 'Style',
+            type: 'select',
+            is_required: false,
+            affects_stock: false,
+          },
+          {
+            id: 6,
+            name: 'memory',
+            display_name: 'Memory (RAM)',
+            type: 'select',
+            is_required: false,
+            affects_stock: true,
+          },
+          {
+            id: 7,
+            name: 'storage',
+            display_name: 'Storage',
+            type: 'select',
+            is_required: false,
+            affects_stock: true,
+          },
+          {
+            id: 8,
+            name: 'connectivity',
+            display_name: 'Connectivity',
+            type: 'select',
+            is_required: false,
+            affects_stock: false,
+          },
+          {
+            id: 9,
+            name: 'bundle',
+            display_name: 'Bundle',
+            type: 'select',
+            is_required: false,
+            affects_stock: true,
+          },
+          {
+            id: 10,
+            name: 'capacity',
+            display_name: 'Capacity',
+            type: 'select',
+            is_required: false,
+            affects_stock: true,
+          },
+          {
+            id: 11,
+            name: 'power',
+            display_name: 'Power',
+            type: 'select',
+            is_required: false,
+            affects_stock: false,
+          },
+        ];
+
+        // Фильтруем атрибуты на основе категории
+        const categoryAttributesMap: Record<string, string[]> = {
+          smartphones: ['color', 'memory', 'storage'],
+          'womens-clothing': ['color', 'size', 'material', 'pattern', 'style'],
+          'mens-clothing': ['color', 'size', 'material', 'pattern', 'style'],
+          'kids-clothing': ['color', 'size', 'material', 'pattern'],
+          'sports-clothing': ['color', 'size', 'material'],
+          shoes: ['color', 'size', 'material', 'style'],
+          bags: ['color', 'size', 'material', 'style', 'pattern'],
+          accessories: ['color', 'size', 'material', 'style', 'pattern'],
+          computers: ['color', 'memory', 'storage', 'connectivity'],
+          'gaming-consoles': ['color', 'storage', 'bundle'],
+          'electronics-accessories': ['color', 'connectivity', 'bundle'],
+          'home-appliances': ['color', 'capacity', 'power'],
+          furniture: ['color', 'material', 'style'],
+          kitchenware: ['color', 'capacity', 'material'],
+        };
+
+        const allowedAttributes = categoryAttributesMap[categorySlug] || [];
+
+        // Фильтруем атрибуты
+        const filteredAttributes = hardcodedAttributes.filter((attr) =>
+          allowedAttributes.includes(attr.name.toLowerCase())
+        );
+
+        console.log(
+          'Filtered attributes for',
+          categorySlug,
+          ':',
+          filteredAttributes
+        );
+        setAvailableVariantAttributes(filteredAttributes);
+      } catch (error) {
+        console.error('Failed to load variant attributes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    console.log('categorySlug effect triggered:', categorySlug);
+    fetchVariantAttributes();
+  }, [categorySlug]);
 
   // Фильтруем атрибуты которые могут быть использованы для вариантов
   const variantAttributes = React.useMemo(() => {
@@ -30,24 +222,62 @@ export default function SimplifiedVariantGenerator({
       selectedAttributes
     );
     console.log(
-      'SimplifiedVariantGenerator - categoryAttributes:',
-      categoryAttributes
+      'SimplifiedVariantGenerator - availableVariantAttributes:',
+      availableVariantAttributes
+    );
+
+    // Создаем маппинг между названиями атрибутов в БД и вариативными атрибутами
+    const attributeNameMapping: Record<string, string> = {
+      ram: 'memory', // В БД атрибут называется ram, а в вариантах - memory
+      color: 'color',
+      storage: 'storage',
+      size: 'size',
+      material: 'material',
+      pattern: 'pattern',
+      style: 'style',
+      connectivity: 'connectivity',
+      bundle: 'bundle',
+      capacity: 'capacity',
+      power: 'power',
+    };
+
+    // Получаем имена доступных вариативных атрибутов
+    const variantAttributeNames = availableVariantAttributes.map((attr) =>
+      attr.name.toLowerCase()
     );
 
     return categoryAttributes.filter((attr) => {
       const value = selectedAttributes[attr.id];
       if (!value) return false;
 
-      // Проверяем что это подходящий атрибут для вариантов
-      const name = (attr.name || '').toLowerCase();
-      const isVariantAttribute = [
-        'color',
-        'size',
-        'цвет',
-        'размер',
-        'boja',
-        'veličina',
-      ].some((keyword) => name.includes(keyword));
+      // Проверяем что это вариативный атрибут
+      const attrName = (attr.name || '').toLowerCase();
+
+      // Сначала проверяем прямое совпадение
+      let isVariantAttribute = variantAttributeNames.includes(attrName);
+
+      // Если нет прямого совпадения, проверяем через маппинг
+      if (!isVariantAttribute) {
+        const mappedName = attributeNameMapping[attrName];
+        if (mappedName) {
+          isVariantAttribute = variantAttributeNames.includes(mappedName);
+        }
+      }
+
+      // Также проверяем по ключевым словам для обратной совместимости
+      if (!isVariantAttribute) {
+        isVariantAttribute = [
+          'color',
+          'size',
+          'цвет',
+          'размер',
+          'boja',
+          'veličina',
+          'memory',
+          'storage',
+          'ram',
+        ].some((keyword) => attrName.includes(keyword));
+      }
 
       if (!isVariantAttribute) return false;
 
@@ -61,7 +291,7 @@ export default function SimplifiedVariantGenerator({
 
       return true;
     });
-  }, [categoryAttributes, selectedAttributes]);
+  }, [categoryAttributes, selectedAttributes, availableVariantAttributes]);
 
   console.log(
     'SimplifiedVariantGenerator - variantAttributes:',

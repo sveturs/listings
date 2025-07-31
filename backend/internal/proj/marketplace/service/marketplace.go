@@ -1945,7 +1945,7 @@ func (s *MarketplaceService) getSimilarStorefrontProducts(ctx context.Context, l
 			enrichedListings = append(enrichedListings, partialListing)
 			continue
 		}
-		
+
 		// Сохраняем метаданные о скоре похожести из частичного объявления
 		if partialListing.Metadata != nil {
 			if fullListing.Metadata == nil {
@@ -1955,10 +1955,10 @@ func (s *MarketplaceService) getSimilarStorefrontProducts(ctx context.Context, l
 				fullListing.Metadata["similarity_score"] = similarityScore
 			}
 		}
-		
+
 		enrichedListings = append(enrichedListings, fullListing)
 	}
-	
+
 	log.Printf("Найдено %d похожих товаров витрин для объявления %d (с загруженными изображениями)", len(enrichedListings), listingID)
 	return enrichedListings, nil
 }
