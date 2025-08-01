@@ -328,7 +328,10 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
                       {/* Категория */}
                       {item.category?.name && (
                         <div className="text-xs text-base-content/60 mb-1">
-                          {item.category.name}
+                          {item.category.translations &&
+                          item.category.translations[locale]
+                            ? item.category.translations[locale]
+                            : item.category.name}
                         </div>
                       )}
 
@@ -633,7 +636,9 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
           {/* Категория */}
           {item.category?.name && (
             <div className="text-xs text-base-content/60">
-              {item.category.name}
+              {item.category.translations && item.category.translations[locale]
+                ? item.category.translations[locale]
+                : item.category.name}
             </div>
           )}
 

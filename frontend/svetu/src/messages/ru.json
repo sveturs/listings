@@ -95,6 +95,11 @@
     "email": "Email",
     "share": "Поделиться",
     "searching": "Поиск...",
+    "selectedCount": "Выбрано: {count}",
+    "selectOptions": "Выберите опции...",
+    "enterValue": "Введите {field}",
+    "requiredFields": "Обязательные поля",
+    "optionalFields": "Дополнительные поля",
     "eco": {
       "secondHand": "Б/У",
       "refurbished": "Восстановлен",
@@ -458,6 +463,10 @@
       "userContacts": "Мои контакты",
       "createListing": "Подать объявление"
     },
+    "theme": {
+      "light": "Светлая тема",
+      "dark": "Темная тема"
+    },
     "search": {
       "placeholder": "Поиск товаров и услуг..."
     }
@@ -603,6 +612,9 @@
     "loggingOut": "Выход...",
     "profile": "Профиль",
     "myContacts": "Мои контакты",
+    "myListings": "Мои объявления",
+    "myStorefronts": "Мои витрины",
+    "myOrders": "Мои заказы",
     "adminPanel": "Панель администратора",
     "common": {
       "close": "Закрыть"
@@ -981,6 +993,25 @@
       "accountTemporarilyLocked": "Аккаунт временно заблокирован из-за множественных неудачных попыток. Попробуйте через 1 час."
     }
   },
+  "cars": {
+    "make": "Марка",
+    "model": "Модель",
+    "generation": "Поколение",
+    "selectMake": "Выберите марку",
+    "selectModel": "Выберите модель",
+    "selectGeneration": "Выберите поколение",
+    "selectMakeFirst": "Сначала выберите марку",
+    "searchMake": "Поиск марки...",
+    "loading": "Загрузка...",
+    "loadingMakes": "Загрузка марок...",
+    "loadingModels": "Загрузка моделей...",
+    "loadingGenerations": "Загрузка поколений...",
+    "noModelsFound": "Модели для этой марки не найдены",
+    "noGenerationsFound": "Поколения для этой модели не найдены",
+    "noModels": "Нет моделей",
+    "domestic": "Отечественная",
+    "clear": "Очистить"
+  },
   "admin": {
     "title": "Панель администратора",
     "manage": "Управление",
@@ -1123,6 +1154,7 @@
       "showInCard": "Показывать в карточке",
       "showInList": "Показывать в списке",
       "isVariantCompatible": "Может использоваться для вариантов товаров",
+      "affectsStock": "Влияет на остатки",
       "translations": "Переводы",
       "displayNameTranslations": "Переводы названия атрибута",
       "optionTranslations": "Переводы опций",
@@ -1249,8 +1281,37 @@
         "multiselect": "Множественный выбор",
         "boolean": "Логический",
         "date": "Дата",
-        "range": "Диапазон"
-      }
+        "range": "Диапазон",
+        "color": "Цвет",
+        "size": "Размер",
+        "memory": "Память",
+        "storage": "Хранилище",
+        "material": "Материал",
+        "capacity": "Емкость",
+        "power": "Мощность",
+        "connectivity": "Подключение",
+        "style": "Стиль",
+        "pattern": "Узор",
+        "weight": "Вес",
+        "bundle": "Комплект"
+      },
+      "manageLinks": "Управление связями",
+      "manageMappings": "Управление связями атрибутов",
+      "mappingTitle": "Связывание атрибутов для",
+      "mappingDescription": "Выберите атрибуты категорий, которые будут связаны с этим вариативным атрибутом",
+      "searchAttributes": "Поиск атрибутов...",
+      "autoDetect": "Автоопределение",
+      "autoDetectSuccess": "Автоматически найдено связей: {count}",
+      "autoDetectNoResults": "Автоматически не удалось найти подходящие атрибуты",
+      "noAttributesFound": "Атрибуты не найдены",
+      "previouslyLinked": "Ранее связан",
+      "selectedCount": "Выбрано атрибутов: {count}",
+      "saveMappings": "Сохранить связи",
+      "saving": "Сохранение...",
+      "cancel": "Отмена",
+      "loadMappingsError": "Ошибка загрузки связей",
+      "saveMappingsSuccess": "Связи успешно сохранены",
+      "saveMappingsError": "Ошибка сохранения связей"
     },
     "attributeGroups": {
       "title": "Группы атрибутов",
@@ -1608,6 +1669,7 @@
       "showInCard": "Показывать в карточке",
       "showInList": "Показывать в списке",
       "isVariantCompatible": "Может использоваться для вариантов товаров",
+      "affectsStock": "Влияет на остатки",
       "translations": "Переводы",
       "displayNameTranslations": "Переводы названия атрибута",
       "optionTranslations": "Переводы опций",
@@ -1825,6 +1887,7 @@
     "connectionError": "Ошибка при подключении Telegram"
   },
   "marketplace": {
+    "allCategories": "Все категории",
     "create": {
       "title": "Создать",
       "selectOptions": "Выберите опции",
@@ -4220,7 +4283,11 @@
   },
   "listing": {
     "listingDetails": "Детали объявления",
-    "delivery": "Доставка"
+    "delivery": "Доставка",
+    "additionalInfo": "Дополнительная информация",
+    "noAttributesForCategory": "Для категории \"{category}\" дополнительные атрибуты не требуются.",
+    "whyAttributesImportant": "Почему это важно?",
+    "attributesHelpBuyers": "Заполненные атрибуты помогают покупателям лучше найти ваш товар и повышают доверие к объявлению."
   },
   "bentoGrid": {
     "search": {

@@ -516,7 +516,11 @@ export default function SearchBar({
                     </div>
                     {suggestion.category && (
                       <div className="text-xs text-base-content/60 truncate">
-                        {t('inCategory')}: {suggestion.category.name}
+                        {t('inCategory')}:{' '}
+                        {suggestion.category.translations &&
+                        suggestion.category.translations[locale]
+                          ? suggestion.category.translations[locale]
+                          : suggestion.category.name}
                       </div>
                     )}
                   </div>

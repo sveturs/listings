@@ -31,6 +31,7 @@ export interface UnifiedCategoryInfo {
   id: number;
   name: string;
   slug: string;
+  translations?: Record<string, string>;
 }
 
 // Тип для информации о местоположении

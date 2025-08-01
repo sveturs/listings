@@ -655,7 +655,7 @@ export const BentoGridMapEnhanced: React.FC<BentoGridMapEnhancedProps> = ({
       // Если это маркер, показываем информацию о нём
       setSelectedListing(feature.properties.id);
       // Можно добавить popup или перенаправление
-      window.open(`/sr/listing/${feature.properties.id}`, '_blank');
+      window.open(`/marketplace/${feature.properties.id}`, '_blank');
     }
   }, []);
 
@@ -779,7 +779,7 @@ export const BentoGridMapEnhanced: React.FC<BentoGridMapEnhancedProps> = ({
               anchor="bottom"
               onClick={(e) => {
                 e.originalEvent.stopPropagation();
-                window.open(`/sr/listing/${listing.id}`, '_blank');
+                window.open(`/marketplace/${listing.id}`, '_blank');
               }}
             >
               <div className="relative group cursor-pointer">

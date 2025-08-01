@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { MarketplaceService } from '@/services/marketplace';
 import type { components } from '@/types/generated/api';
+import { renderCategoryIcon } from '@/utils/iconMapper';
 
 type MarketplaceCategory =
   components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -157,13 +158,13 @@ export default function CategorySidebar({
 
           {!hasChildren && <div className="w-4" />}
 
-          {category.icon && (
-            <span className="text-base-content/70 text-sm">
-              {category.icon}
-            </span>
-          )}
+          {renderCategoryIcon(category.icon, 'w-4 h-4 text-base-content/70')}
 
-          <span className="text-sm font-medium truncate">{category.name}</span>
+          <span className="text-sm font-medium truncate">
+            {category.translations && category.translations[locale]
+              ? category.translations[locale]
+              : category.name}
+          </span>
 
           {category.listing_count !== undefined &&
             category.listing_count > 0 && (

@@ -3736,6 +3736,97 @@ paths:
       summary: Get user transactions (Admin)
       tags:
         - admin-users
+  "/api/v1/admin/variant-attributes/{id}/mappings":
+    get:
+      description: Gets all category attribute mappings for a variant attribute
+      parameters:
+        - description: Variant attribute ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Category attributes linked to this variant attribute
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.CategoryAttribute"
+                        type: array
+                    type: object
+        "400":
+          description: marketplace.invalidID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.getMappingsError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get variant attribute mappings
+      tags:
+        - marketplace-admin-variant-attributes
+    put:
+      description: Updates category attribute mappings for a variant attribute
+      parameters:
+        - description: Variant attribute ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                category_attribute_ids:
+                  items:
+                    type: integer
+                  type: array
+              type: object
+        description: Array of category attribute IDs to link
+        required: true
+      responses:
+        "200":
+          description: marketplace.mappingsUpdated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        type: string
+                    type: object
+        "400":
+          description: marketplace.invalidData
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.updateMappingsError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Update variant attribute mappings
+      tags:
+        - marketplace-admin-variant-attributes
   /api/v1/analytics/event:
     post:
       description: Records an analytics event for a storefront
@@ -4436,6 +4527,202 @@ paths:
       summary: Get transaction history
       tags:
         - balance
+  /api/v1/cars/makes:
+    get:
+      description: Get all available car makes from the database
+      parameters:
+        - description: Filter by country
+          in: query
+          name: country
+          schema:
+            type: string
+        - description: Filter domestic brands
+          in: query
+          name: is_domestic
+          schema:
+            type: boolean
+        - description: Show only active brands
+          in: query
+          name: active_only
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: List of car makes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.CarMake"
+                        type: array
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get all car makes
+      tags:
+        - marketplace-cars
+  "/api/v1/cars/makes/{make_slug}/models":
+    get:
+      description: Get all car models for a specific make
+      parameters:
+        - description: Car make slug
+          in: path
+          name: make_slug
+          required: true
+          schema:
+            type: string
+        - description: Show only active models
+          in: query
+          name: active_only
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: List of car models
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.CarModel"
+                        type: array
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Make not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get car models by make
+      tags:
+        - marketplace-cars
+  /api/v1/cars/makes/search:
+    get:
+      description: Search car makes by name with fuzzy matching
+      parameters:
+        - description: Search query
+          in: query
+          name: q
+          required: true
+          schema:
+            type: string
+        - description: Limit results
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.CarMake"
+                        type: array
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Search car makes
+      tags:
+        - marketplace-cars
+  "/api/v1/cars/models/{model_id}/generations":
+    get:
+      description: Get all generations for a specific car model
+      parameters:
+        - description: Car model ID
+          in: path
+          name: model_id
+          required: true
+          schema:
+            type: integer
+        - description: Show only active generations
+          in: query
+          name: active_only
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: List of car generations
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.CarGeneration"
+                        type: array
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get car generations by model
+      tags:
+        - marketplace-cars
   "/api/v1/categories/{slug}/variant-attributes":
     get:
       description: Returns variant attributes suitable for specific category
@@ -17019,8 +17306,85 @@ components:
         reason:
           type: string
       type: object
+    backend_internal_domain_models.CarGeneration:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: integer
+        is_active:
+          type: boolean
+        model:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_models.CarModel"
+          description: Поля для JOIN
+        model_id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        sort_order:
+          type: integer
+        updated_at:
+          type: string
+        year_end:
+          type: integer
+        year_start:
+          type: integer
+      type: object
+    backend_internal_domain_models.CarMake:
+      properties:
+        country:
+          type: string
+        created_at:
+          type: string
+        id:
+          type: integer
+        is_active:
+          type: boolean
+        is_domestic:
+          type: boolean
+        logo_url:
+          type: string
+        name:
+          type: string
+        popularity_rs:
+          type: integer
+        slug:
+          type: string
+        sort_order:
+          type: integer
+        updated_at:
+          type: string
+      type: object
+    backend_internal_domain_models.CarModel:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: integer
+        is_active:
+          type: boolean
+        make:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_models.CarMake"
+          description: Поля для JOIN
+        make_id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        sort_order:
+          type: integer
+        updated_at:
+          type: string
+      type: object
     backend_internal_domain_models.CategoryAttribute:
       properties:
+        affects_stock:
+          type: boolean
         attribute_type:
           type: string
         created_at:

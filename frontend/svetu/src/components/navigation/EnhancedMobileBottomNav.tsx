@@ -48,7 +48,6 @@ export const EnhancedMobileBottomNav: React.FC<
       icon: PlusCircle,
       label: t('create'),
       href: '/create-listing-choice',
-      authRequired: true,
       color: 'text-primary',
     },
     {
@@ -123,9 +122,10 @@ export const EnhancedMobileBottomNav: React.FC<
               <Link
                 key={item.href}
                 href={localizedHref}
-                className={`relative group flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                className={`relative group flex items-center gap-2 px-3 py-2 rounded-lg transition-colors tooltip tooltip-top ${
                   active ? 'bg-primary/10 text-primary' : 'hover:bg-base-200'
                 }`}
+                data-tip={item.label}
                 onClick={() => setActiveIndex(index)}
               >
                 {/* Иконка */}

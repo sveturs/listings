@@ -58,6 +58,7 @@ type Handler struct {
 	Orders                 *OrderHandler
 	CategoryDetector       *CategoryDetectorHandler
 	VariantAttributes      *VariantAttributesHandler
+	Cars                   *CarsHandler
 	service                globalService.ServicesInterface
 }
 
@@ -147,6 +148,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			Orders:                 orderHandler,
 			CategoryDetector:       categoryDetectorHandler,
 			VariantAttributes:      NewVariantAttributesHandler(services),
+			Cars:                   NewCarsHandler(services.Marketplace()),
 			service:                services,
 		}
 	}
@@ -173,6 +175,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		MarketplaceHandler:     nil,
 		Orders:                 nil,
 		CategoryDetector:       nil,
+		Cars:                   NewCarsHandler(services.Marketplace()),
 		service:                services,
 	}
 }
@@ -226,6 +229,11 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Карта - геопространственные маршруты
 	marketplace.Get("/map/bounds", h.GetListingsInBounds)
 	marketplace.Get("/map/clusters", h.GetMapClusters)
+
+	// Автомобильные марки и модели
+	if h.Cars != nil {
+		h.Cars.RegisterRoutes(marketplace)
+	}
 
 	// Вариативные атрибуты
 	marketplace.Get("/product-variant-attributes", h.VariantAttributes.GetProductVariantAttributes)
@@ -319,6 +327,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Get("/variant-attributes/:id", h.AdminVariantAttributes.GetVariantAttributeByID)
 	adminRoutes.Put("/variant-attributes/:id", h.AdminVariantAttributes.UpdateVariantAttribute)
 	adminRoutes.Delete("/variant-attributes/:id", h.AdminVariantAttributes.DeleteVariantAttribute)
+	// Маршруты для управления связями вариативных атрибутов
+	adminRoutes.Get("/variant-attributes/:id/mappings", h.AdminVariantAttributes.GetVariantAttributeMappings)
+	adminRoutes.Put("/variant-attributes/:id/mappings", h.AdminVariantAttributes.UpdateVariantAttributeMappings)
 
 	// Маршруты для шаблонов (должны быть перед :id, чтобы не конфликтовать)
 	adminRoutes.Get("/custom-components/templates", h.CustomComponents.ListTemplates)

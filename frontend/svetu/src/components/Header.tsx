@@ -19,7 +19,7 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated } = useAuthContext();
+  const { isAuthenticated } = useAuthContext();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -71,12 +71,7 @@ export default function Header() {
     }
   };
 
-  const navItems = [
-    { href: '/blog', label: t('nav.blog') },
-    { href: '/news', label: t('nav.news') },
-    { href: '/map', label: t('nav.map') },
-    { href: '/contacts', label: t('nav.contacts') },
-  ];
+  const navItems = [{ href: '/map', label: t('nav.map') }];
 
   return (
     <>
@@ -107,7 +102,23 @@ export default function Header() {
               >
                 {navItems.map((item) => (
                   <li key={item.href}>
-                    <Link href={item.href}>{item.label}</Link>
+                    <Link href={item.href} className="flex items-center gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                        />
+                      </svg>
+                      {item.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -134,8 +145,25 @@ export default function Header() {
             <ul className="menu menu-horizontal px-1">
               {navItems.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-sm">
-                    {item.label}
+                  <Link
+                    href={item.href}
+                    className="text-sm tooltip tooltip-bottom"
+                    data-tip={item.label}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                      />
+                    </svg>
                   </Link>
                 </li>
               ))}
@@ -147,10 +175,11 @@ export default function Header() {
             {/* Корзина - показываем всегда для B2C товаров */}
             {mounted && <CartIcon />}
 
-            {mounted && isAuthenticated && user && (
+            {mounted && (
               <Link
                 href="/create-listing-choice"
-                className="btn btn-primary btn-sm hidden md:flex"
+                className="btn btn-primary btn-sm hidden md:flex tooltip tooltip-bottom"
+                data-tip={t('nav.createListing')}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

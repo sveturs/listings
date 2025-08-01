@@ -93,6 +93,7 @@ export interface Attribute {
   show_in_card?: boolean;
   show_in_list?: boolean;
   is_variant_compatible?: boolean;
+  affects_stock?: boolean;
   translations?: Record<string, string>;
   option_translations?: Record<string, Record<string, string>>;
 }
@@ -1025,6 +1026,52 @@ export const adminApi = {
 
       const data = await response.json();
       return data;
+    },
+
+    // API методы для управления связями между атрибутами
+    async getVariantAttributeMappings(
+      variantAttributeId: number
+    ): Promise<any[]> {
+      const headers = await getAuthHeaders();
+      const response = await fetch(
+        `/api/v1/admin/variant-attributes/${variantAttributeId}/mappings`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.data || [];
+    },
+
+    async updateVariantAttributeMappings(
+      variantAttributeId: number,
+      categoryAttributeIds: number[]
+    ): Promise<any> {
+      const headers = await getAuthHeaders();
+      const response = await fetch(
+        `/api/v1/admin/variant-attributes/${variantAttributeId}/mappings`,
+        {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            category_attribute_ids: categoryAttributeIds,
+          }),
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
     },
   },
 };

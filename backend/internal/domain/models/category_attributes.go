@@ -26,6 +26,7 @@ type CategoryAttribute struct {
 	CustomComponent     string                       `json:"custom_component,omitempty"`
 	TranslatedOptions   json.RawMessage              `json:"translated_options,omitempty"`
 	IsVariantCompatible bool                         `json:"is_variant_compatible"`
+	AffectsStock        bool                         `json:"affects_stock"`
 }
 
 // AttributeOptions содержит опции для атрибутов типа select

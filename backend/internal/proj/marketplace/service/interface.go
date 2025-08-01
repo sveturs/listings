@@ -97,6 +97,12 @@ type MarketplaceServiceInterface interface {
 	GetCategoryAttributeGroups(ctx context.Context, categoryID int) ([]*models.AttributeGroup, error)
 	AttachAttributeGroupToCategory(ctx context.Context, categoryID int, groupID int, sortOrder int) (int, error)
 	DetachAttributeGroupFromCategory(ctx context.Context, categoryID int, groupID int) error
+
+	// Методы для работы с автомобильными марками и моделями
+	GetCarMakes(ctx context.Context, country string, isDomestic bool, isMotorcycle bool, activeOnly bool) ([]models.CarMake, error)
+	GetCarModelsByMake(ctx context.Context, makeSlug string, activeOnly bool) ([]models.CarModel, error)
+	GetCarGenerationsByModel(ctx context.Context, modelID int, activeOnly bool) ([]models.CarGeneration, error)
+	SearchCarMakes(ctx context.Context, query string, limit int) ([]models.CarMake, error)
 }
 
 type ContactsServiceInterface interface {
@@ -108,6 +114,9 @@ type ContactsServiceInterface interface {
 	UpdatePrivacySettings(ctx context.Context, userID int, req *models.UpdatePrivacySettingsRequest) (*models.UserPrivacySettings, error)
 	AreContacts(ctx context.Context, userID1, userID2 int) (bool, error)
 }
+
+// Interface является алиасом для MarketplaceServiceInterface
+type Interface = MarketplaceServiceInterface
 
 // CreateOrderRequest запрос на создание заказа
 type CreateOrderRequest struct {
