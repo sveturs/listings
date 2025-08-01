@@ -10,6 +10,7 @@ import {
   Eye,
   MessageCircle,
   ShoppingBag,
+  ShoppingCart,
   Star,
   Expand,
 } from 'lucide-react';
@@ -31,6 +32,9 @@ import { QuickView } from '@/components/ui/QuickView';
 import { DistanceBadge } from '@/components/ui/DistanceBadge';
 import { DiscountBadge } from '@/components/ui/DiscountBadge';
 import { PriceHistoryModal } from '@/components/marketplace/PriceHistoryModal';
+import { useDispatch } from 'react-redux';
+import { addItem } from '@/store/slices/localCartSlice';
+import type { AppDispatch } from '@/store';
 
 interface EnhancedListingCardProps {
   item: MarketplaceItem;
@@ -48,6 +52,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   onToggleFavorite,
 }) => {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const [mounted, setMounted] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isProcessingFavorite, setIsProcessingFavorite] = useState(false);
@@ -146,7 +151,13 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
       return;
     }
 
-    router.push(`/${locale}/marketplace/${item.id}/buy`);
+    // Для товаров витрин добавляем в корзину
+    if (isOnlinePurchaseAvailable()) {
+      handleAddToCart();
+    } else {
+      // Для обычных товаров переходим на страницу покупки (можно убрать или оставить для legacy)
+      router.push(`/${locale}/marketplace/${item.id}/buy`);
+    }
   };
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
@@ -187,6 +198,25 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
 
   const isOnlinePurchaseAvailable = () => {
     return item.product_type === 'storefront' && item.storefront_id;
+  };
+
+  const handleAddToCart = () => {
+    if (!item.storefront_id) return;
+
+    dispatch(
+      addItem({
+        productId: item.id,
+        name: item.title,
+        price: item.price || 0,
+        quantity: 1,
+        storefrontId: item.storefront_id,
+        storefrontName: item.storefront?.name || 'Store',
+        storefrontSlug: item.storefront?.slug || 'store',
+        image: mainImage?.public_url || '',
+        currency: 'RSD',
+        stockQuantity: 100, // TODO: get from API
+      })
+    );
   };
 
   const getItemUrl = () => {
@@ -405,8 +435,8 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
                                   onClick={handleBuyClick}
                                   className="btn btn-primary btn-sm"
                                 >
-                                  <ShoppingBag className="w-4 h-4" />
-                                  {t('buy')}
+                                  <ShoppingCart className="w-4 h-4" />
+                                  {t('addToCart')}
                                 </button>
                               )}
                               <button
@@ -477,7 +507,13 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
                 | 'used'
                 | 'refurbished'
                 | undefined,
+              storefrontId: item.storefront_id,
+              storefrontName: item.storefront?.name,
+              storefrontSlug: item.storefront?.slug,
+              stockQuantity: 100, // TODO: get from API
             }}
+            onAddToCart={handleAddToCart}
+            onContact={() => handleChatClick({} as React.MouseEvent)}
           />
         )}
 
@@ -694,8 +730,9 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
                     <button
                       onClick={handleBuyClick}
                       className="btn btn-primary btn-xs"
+                      title={t('addToCart')}
                     >
-                      <ShoppingBag className="w-3 h-3" />
+                      <ShoppingCart className="w-3 h-3" />
                     </button>
                   )}
                   <button
@@ -753,7 +790,13 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
               | 'used'
               | 'refurbished'
               | undefined,
+            storefrontId: item.storefront_id,
+            storefrontName: item.storefront?.name,
+            storefrontSlug: item.storefront?.slug,
+            stockQuantity: 100, // TODO: get from API
           }}
+          onAddToCart={handleAddToCart}
+          onContact={() => handleChatClick({} as React.MouseEvent)}
         />
       )}
 

@@ -1,39 +1,72 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { selectCartItemsCount } from '@/store/slices/cartSlice';
+import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
+import { motion, AnimatePresence } from 'framer-motion';
+import { selectCartItemsCount } from '@/store/slices/localCartSlice';
+import MiniCart from './MiniCart';
 
-interface CartIconProps {
-  onClick: () => void;
-  className?: string;
-}
-
-export default function CartIcon({ onClick, className = '' }: CartIconProps) {
+export default function CartIcon() {
+  const locale = useLocale();
+  const router = useRouter();
   const itemsCount = useSelector(selectCartItemsCount);
+  const [showMiniCart, setShowMiniCart] = useState(false);
+  const iconRef = useRef<HTMLElement>(null);
+
+  const handleClick = () => {
+    // На мобильных устройствах сразу переходим в корзину
+    if (window.innerWidth < 768) {
+      router.push(`/${locale}/cart`);
+    } else {
+      setShowMiniCart(!showMiniCart);
+    }
+  };
 
   return (
-    <div className={`indicator cursor-pointer ${className}`} onClick={onClick}>
-      {itemsCount > 0 && (
-        <span className="indicator-item badge badge-primary badge-sm">
-          {itemsCount > 99 ? '99+' : itemsCount}
-        </span>
-      )}
-
-      <svg
-        className="h-6 w-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
+    <div className="relative">
+      <button
+        ref={iconRef as React.RefObject<HTMLButtonElement>}
+        onClick={handleClick}
+        className="btn btn-ghost btn-circle relative"
+        aria-label="Shopping cart"
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z"
-        />
-      </svg>
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+
+        {/* Badge с количеством товаров */}
+        <AnimatePresence>
+          {itemsCount > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="absolute -top-1 -right-1 bg-primary text-primary-content rounded-full w-5 h-5 text-xs flex items-center justify-center font-bold"
+            >
+              {itemsCount > 99 ? '99+' : itemsCount}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </button>
+
+      {/* Mini Cart Dropdown */}
+      <MiniCart
+        isOpen={showMiniCart}
+        onClose={() => setShowMiniCart(false)}
+        anchorRef={iconRef}
+      />
     </div>
   );
 }

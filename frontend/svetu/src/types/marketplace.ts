@@ -62,6 +62,11 @@ export interface MarketplaceItem {
   product_type?: 'marketplace' | 'storefront';
   storefront_id?: number;
   storefront_slug?: string;
+  storefront?: {
+    id: number;
+    name: string;
+    slug: string;
+  };
   // Атрибуты объявления
   attributes?: Array<{
     attribute_id?: number;

@@ -1,6 +1,8 @@
 package orders
 
 import (
+	"fmt"
+	
 	"backend/internal/middleware"
 	"backend/internal/proj/orders/handler"
 	"backend/internal/proj/orders/service"
@@ -31,8 +33,15 @@ func NewModule(db storage.Storage) (*Module, error) {
 	// Пока используем nil для productRepo - TODO: реализовать позже
 	orderService := service.NewOrderService(orderRepo, cartRepo, nil, storefrontRepo, inventoryManager, *log)
 
-	// Создаем handler
-	ordersHandler := handler.NewOrdersHandler(orderService, inventoryManager)
+	// Получаем sqlx.DB для транзакций
+	postgresDB, ok := db.(*postgres.Database)
+	if !ok {
+		return nil, fmt.Errorf("expected postgres.Database, got %T", db)
+	}
+	sqlxDB := postgresDB.GetSQLXDB()
+
+	// Создаем handler с поддержкой транзакций
+	ordersHandler := handler.NewOrdersHandler(orderService, inventoryManager, sqlxDB)
 
 	return &Module{
 		Handler: ordersHandler,

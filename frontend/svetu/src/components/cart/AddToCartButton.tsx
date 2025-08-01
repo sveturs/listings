@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useTranslations } from 'next-intl';
-import { addToCart, selectCartLoading } from '@/store/slices/cartSlice';
+import { addItem } from '@/store/slices/localCartSlice';
 import type { AppDispatch } from '@/store';
 import type { components } from '@/types/generated/api';
 
@@ -17,8 +17,12 @@ interface ProductForCart {
   currency?: string;
   image?: string;
   storefrontId: number;
+  storefrontName?: string;
+  storefrontSlug?: string;
   stockQuantity?: number;
   stockStatus?: string;
+  minOrderQuantity?: number;
+  maxOrderQuantity?: number;
 }
 
 interface AddToCartButtonProps {
@@ -40,29 +44,41 @@ export default function AddToCartButton({
 }: AddToCartButtonProps) {
   const t = useTranslations('cart');
   const dispatch = useDispatch<AppDispatch>();
-  const loading = useSelector(selectCartLoading);
+  const [loading, setLoading] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
   const handleAddToCart = async () => {
     if (!product.id || disabled) return;
 
     try {
-      await dispatch(
-        addToCart({
+      setLoading(true);
+
+      // Add to local cart
+      dispatch(
+        addItem({
+          productId: product.id,
+          variantId: variant?.id,
+          name: product.name,
+          variantName: variant?.name,
+          price: variant?.price || product.price,
+          currency: product.currency || 'RSD',
+          quantity,
+          stockQuantity: variant?.stock_quantity || product.stockQuantity,
+          image: product.image,
           storefrontId: product.storefrontId,
-          item: {
-            product_id: product.id,
-            quantity,
-            variant_id: variant?.id,
-          },
+          storefrontName: product.storefrontName || product.name,
+          storefrontSlug:
+            product.storefrontSlug || window.location.pathname.split('/')[3],
         })
-      ).unwrap();
+      );
 
       // Show success feedback
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 2000);
     } catch (error) {
       console.error('Failed to add to cart:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

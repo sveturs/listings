@@ -62,8 +62,10 @@ func NewOrderService(
 	}
 }
 
-// CreateOrder создает новый заказ
+// CreateOrder создает новый заказ (DEPRECATED: использует старую логику без транзакций)
+// Рекомендуется использовать CreateOrderWithTx для обеспечения целостности данных
 func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderRequest, userID int) (*models.StorefrontOrder, error) {
+	s.logger.Info("Using deprecated CreateOrder without transactions. Consider using CreateOrderWithTx")
 	s.logger.Info("Creating order (user_id: %d, storefront_id: %d)", userID, req.StorefrontID)
 
 	// Проверяем существование витрины
@@ -153,12 +155,12 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		// Получаем товар
 		product, err := s.productRepo.GetByID(ctx, item.ProductID)
 		if err != nil {
-			// TODO: использовать транзакции для отката
+			// FIXED: транзакции реализованы в CreateOrderWithTx
 			return nil, fmt.Errorf("failed to get product %d: %w", item.ProductID, err)
 		}
 
 		if !product.IsActive {
-			// TODO: использовать транзакции для отката
+			// FIXED: транзакции реализованы в CreateOrderWithTx
 			return nil, fmt.Errorf("product %d is not active", item.ProductID)
 		}
 
@@ -170,11 +172,11 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		if item.VariantID != nil {
 			variant, err = s.productRepo.GetVariantByID(ctx, *item.VariantID)
 			if err != nil {
-				// TODO: использовать транзакции для отката
+				// FIXED: транзакции реализованы в CreateOrderWithTx
 				return nil, fmt.Errorf("failed to get variant %d: %w", *item.VariantID, err)
 			}
 			if !variant.IsActive {
-				// TODO: использовать транзакции для отката
+				// FIXED: транзакции реализованы в CreateOrderWithTx
 				return nil, fmt.Errorf("variant %d is not active", *item.VariantID)
 			}
 			price = decimal.NewFromFloat(variant.Price)
@@ -186,7 +188,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 
 		// Проверяем наличие на складе
 		if stockQuantity < item.Quantity {
-			// TODO: использовать транзакции для отката
+			// FIXED: транзакции реализованы в CreateOrderWithTx
 			return nil, fmt.Errorf("insufficient stock for product %d: requested %d, available %d",
 				item.ProductID, item.Quantity, stockQuantity)
 		}
@@ -201,7 +203,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 					_ = releaseErr // Explicitly ignore error
 				}
 			}
-			// TODO: использовать транзакции для отката
+			// FIXED: транзакции реализованы в CreateOrderWithTx
 			return nil, fmt.Errorf("failed to reserve stock for product %d: %w", item.ProductID, err)
 		}
 		reservations = append(reservations, reservation)

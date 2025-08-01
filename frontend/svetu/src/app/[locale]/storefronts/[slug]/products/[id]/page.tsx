@@ -8,6 +8,7 @@ import { storefrontApi } from '@/services/storefrontApi';
 import type { components } from '@/types/generated/api';
 import SafeImage from '@/components/SafeImage';
 import AddToCartButton from '@/components/cart/AddToCartButton';
+import VariantSelector from '@/components/Storefront/ProductVariants/VariantSelector';
 import {
   formatAddressWithPrivacy,
   type LocationPrivacyLevel,
@@ -17,6 +18,19 @@ type StorefrontProduct =
   components['schemas']['backend_internal_domain_models.StorefrontProduct'];
 type Storefront =
   components['schemas']['backend_internal_domain_models.Storefront'];
+type ProductVariant =
+  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'] & {
+    images?: Array<{
+      id: number;
+      image_url: string;
+      thumbnail_url?: string;
+      alt_text?: string;
+      is_main: boolean;
+    }>;
+    stock_status?: string;
+    available_quantity?: number;
+    is_default?: boolean;
+  };
 
 type Props = {
   params: Promise<{ slug: string; id: string }>;
@@ -30,6 +44,10 @@ export default function StorefrontProductPage({ params }: Props) {
   const [storefront, setStorefront] = useState<Storefront | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    null
+  );
+  const [hasVariants, setHasVariants] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +62,11 @@ export default function StorefrontProductPage({ params }: Props) {
 
         setProduct(productData);
         setStorefront(storefrontData);
+
+        // Check if product has variants
+        if (productData.variants && productData.variants.length > 0) {
+          setHasVariants(true);
+        }
       } catch (error) {
         console.error('Error fetching product:', error);
       } finally {
@@ -53,6 +76,10 @@ export default function StorefrontProductPage({ params }: Props) {
 
     fetchData();
   }, [slug, id]);
+
+  const handleVariantChange = (variant: ProductVariant | null) => {
+    setSelectedVariant(variant);
+  };
 
   if (isLoading) {
     return (
@@ -323,21 +350,47 @@ export default function StorefrontProductPage({ params }: Props) {
               </div>
             )}
 
+            {/* Variant Selection */}
+            {hasVariants && (
+              <div className="pt-4">
+                <VariantSelector
+                  productId={product.id!}
+                  basePrice={product.price || 0}
+                  baseCurrency={product.currency || 'RSD'}
+                  onVariantChange={handleVariantChange}
+                  className="mb-4"
+                />
+              </div>
+            )}
+
             {/* Add to Cart */}
             <div className="pt-4">
               <AddToCartButton
                 product={{
                   id: product.id!,
                   name: product.name!,
-                  price: product.price!,
+                  price: selectedVariant?.price || product.price || 0,
                   currency: product.currency || 'RSD',
                   image: mainImage,
                   storefrontId: product.storefront_id!,
-                  stockQuantity: product.stock_quantity || 0,
-                  stockStatus: product.stock_status || 'out_of_stock',
+                  storefrontName: storefront?.name,
+                  storefrontSlug: storefront?.slug,
+                  stockQuantity:
+                    selectedVariant?.available_quantity ??
+                    selectedVariant?.stock_quantity ??
+                    product.stock_quantity ??
+                    0,
+                  stockStatus:
+                    selectedVariant?.stock_status ||
+                    product.stock_status ||
+                    'out_of_stock',
                 }}
+                variant={selectedVariant || undefined}
                 className="btn btn-primary btn-lg w-full"
-                disabled={product.stock_status === 'out_of_stock'}
+                disabled={
+                  (selectedVariant?.stock_status || product.stock_status) ===
+                  'out_of_stock'
+                }
               />
             </div>
 

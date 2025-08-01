@@ -349,10 +349,241 @@ func (h *VariantHandler) DeleteVariant(c *fiber.Ctx) error {
 		})
 	}
 
-	// TODO: Implement soft delete in repository
-	// For now, return success message
+	err = h.variantRepo.DeleteVariant(c.Context(), variantID)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete variant",
+		})
+	}
+
 	return c.JSON(fiber.Map{
 		"message":    "Variant deleted successfully",
 		"variant_id": variantID,
 	})
+}
+
+// UpdateVariant godoc
+// @Summary Update a variant
+// @Description Updates an existing variant's information
+// @Tags variants
+// @Accept json
+// @Produce json
+// @Param variant_id path int true "Variant ID"
+// @Param variant body types.UpdateVariantRequest true "Updated variant data"
+// @Success 200 {object} types.ProductVariant
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/storefront/variants/{variant_id} [put]
+func (h *VariantHandler) UpdateVariant(c *fiber.Ctx) error {
+	variantID, err := strconv.Atoi(c.Params("variant_id"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid variant ID",
+		})
+	}
+
+	var req types.UpdateVariantRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	variant, err := h.variantRepo.UpdateVariant(c.Context(), variantID, &req)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update variant",
+		})
+	}
+
+	return c.JSON(variant)
+}
+
+// GetVariantMatrix godoc
+// @Summary Get variant matrix for a product
+// @Description Returns all possible variant combinations and existing variants
+// @Tags variants
+// @Accept json
+// @Produce json
+// @Param product_id path int true "Product ID"
+// @Success 200 {object} types.VariantMatrixResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/storefront/products/{product_id}/variant-matrix [get]
+func (h *VariantHandler) GetVariantMatrix(c *fiber.Ctx) error {
+	productID, err := strconv.Atoi(c.Params("product_id"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	matrix, err := h.variantRepo.GetVariantMatrix(c.Context(), productID)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get variant matrix",
+		})
+	}
+
+	return c.JSON(matrix)
+}
+
+// BulkUpdateStock godoc
+// @Summary Bulk update stock quantities
+// @Description Updates stock quantities for multiple variants at once
+// @Tags variants
+// @Accept json
+// @Produce json
+// @Param product_id path int true "Product ID"
+// @Param request body types.BulkUpdateStockRequest true "Stock updates"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/storefront/products/{product_id}/variants/bulk-update-stock [post]
+func (h *VariantHandler) BulkUpdateStock(c *fiber.Ctx) error {
+	productID, err := strconv.Atoi(c.Params("product_id"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	var req types.BulkUpdateStockRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	updatedCount, err := h.variantRepo.BulkUpdateStock(c.Context(), productID, &req)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update stock",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Stock updated successfully",
+		"updated_count": updatedCount,
+	})
+}
+
+// GetVariantAnalytics godoc
+// @Summary Get variant analytics
+// @Description Returns analytics data for product variants
+// @Tags variants
+// @Accept json
+// @Produce json
+// @Param product_id path int true "Product ID"
+// @Success 200 {object} types.VariantAnalyticsResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/storefront/products/{product_id}/variants/analytics [get]
+func (h *VariantHandler) GetVariantAnalytics(c *fiber.Ctx) error {
+	productID, err := strconv.Atoi(c.Params("product_id"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	analytics, err := h.variantRepo.GetVariantAnalytics(c.Context(), productID)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get analytics",
+		})
+	}
+
+	return c.JSON(analytics)
+}
+
+// ImportVariants godoc
+// @Summary Import variants from CSV
+// @Description Imports multiple variants from a CSV file
+// @Tags variants
+// @Accept multipart/form-data
+// @Produce json
+// @Param product_id path int true "Product ID"
+// @Param file formData file true "CSV file"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/storefront/products/{product_id}/variants/import [post]
+func (h *VariantHandler) ImportVariants(c *fiber.Ctx) error {
+	productID, err := strconv.Atoi(c.Params("product_id"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "No file uploaded",
+		})
+	}
+
+	// Open the file
+	src, err := file.Open()
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to open file",
+		})
+	}
+	defer src.Close()
+
+	// Read file content
+	fileData := make([]byte, file.Size)
+	_, err = src.Read(fileData)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to read file",
+		})
+	}
+
+	importedCount, err := h.variantRepo.ImportVariants(c.Context(), productID, fileData)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to import variants: " + err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Variants imported successfully",
+		"imported_count": importedCount,
+	})
+}
+
+// ExportVariants godoc
+// @Summary Export variants to CSV
+// @Description Exports all variants of a product to CSV format
+// @Tags variants
+// @Accept json
+// @Produce text/csv
+// @Param product_id path int true "Product ID"
+// @Success 200 {file} binary
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/storefront/products/{product_id}/variants/export [get]
+func (h *VariantHandler) ExportVariants(c *fiber.Ctx) error {
+	productID, err := strconv.Atoi(c.Params("product_id"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	csvData, fileName, err := h.variantRepo.ExportVariants(c.Context(), productID)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to export variants",
+		})
+	}
+
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename="+fileName)
+	
+	c.Send(csvData)
+	return nil
 }

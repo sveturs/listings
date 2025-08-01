@@ -19,6 +19,7 @@ import {
   getFullLocalizedAddress,
 } from '@/utils/addressUtils';
 import { PageTransition } from '@/components/ui/PageTransition';
+import AddToCartButton from '@/components/cart/AddToCartButton';
 
 interface User {
   id: number;
@@ -102,6 +103,14 @@ interface Listing {
   seller_total_listings?: number;
   helpful_votes?: number;
   not_helpful_votes?: number;
+  storefront_id?: number;
+  product_type?: string;
+  storefront?: {
+    id: number;
+    name: string;
+    slug: string;
+    is_active: boolean;
+  };
 }
 
 type Props = {
@@ -435,6 +444,30 @@ export default function ListingPage({ params }: Props) {
                     )}
                   </div>
 
+                  {/* Add to Cart button for storefront products */}
+                  {listing.storefront_id &&
+                    listing.storefront &&
+                    user &&
+                    user.id !== listing.user_id && (
+                      <div className="mt-4">
+                        <AddToCartButton
+                          product={{
+                            id: listing.id,
+                            name: getTranslatedValue('title'),
+                            price: listing.price,
+                            image: images[0]?.public_url || '',
+                            storefrontId: listing.storefront_id,
+                            storefrontName: listing.storefront.name,
+                            storefrontSlug: listing.storefront.slug,
+                            stockQuantity: 100, // TODO: get real stock from API
+                            minOrderQuantity: 1,
+                            maxOrderQuantity: 10,
+                          }}
+                          className="btn-block"
+                        />
+                      </div>
+                    )}
+
                   {listing.location && (
                     <p className="flex items-center gap-2 mt-4 text-base-content/70">
                       <svg
@@ -727,22 +760,40 @@ export default function ListingPage({ params }: Props) {
               </div>
             </div>
             {user && user.id !== listing.user_id && (
-              <button onClick={handleChatClick} className="btn btn-primary">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              <div className="flex gap-2">
+                {listing.storefront_id && listing.storefront && (
+                  <AddToCartButton
+                    product={{
+                      id: listing.id,
+                      name: getTranslatedValue('title'),
+                      price: listing.price,
+                      image: images[0]?.public_url || '',
+                      storefrontId: listing.storefront_id,
+                      storefrontName: listing.storefront.name,
+                      storefrontSlug: listing.storefront.slug,
+                      stockQuantity: 100, // TODO: get real stock from API
+                      minOrderQuantity: 1,
+                      maxOrderQuantity: 10,
+                    }}
                   />
-                </svg>
-                {locale === 'ru' ? 'Написать' : 'Message'}
-              </button>
+                )}
+                <button onClick={handleChatClick} className="btn btn-primary">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  {locale === 'ru' ? 'Написать' : 'Message'}
+                </button>
+              </div>
             )}
           </div>
         </div>

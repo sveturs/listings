@@ -65,12 +65,6 @@ export default function Header() {
     }
   }, [isAuthenticated, isLoginModalOpen]);
 
-  const handleCartClick = () => {
-    if (currentStorefrontId) {
-      setIsCartModalOpen(true);
-    }
-  };
-
   const handleCheckout = () => {
     if (currentStorefrontId) {
       router.push(`/checkout?storefront=${currentStorefrontId}`);
@@ -150,13 +144,8 @@ export default function Header() {
 
           {/* Правая часть */}
           <div className="flex-none flex items-center gap-2">
-            {/* Корзина - показываем только если есть активная витрина */}
-            {mounted && currentStorefrontId && (
-              <CartIcon
-                onClick={handleCartClick}
-                className="btn btn-ghost btn-sm"
-              />
-            )}
+            {/* Корзина - показываем всегда для B2C товаров */}
+            {mounted && <CartIcon />}
 
             {mounted && isAuthenticated && user && (
               <Link
