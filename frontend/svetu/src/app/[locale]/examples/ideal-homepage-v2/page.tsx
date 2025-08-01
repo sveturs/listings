@@ -591,7 +591,7 @@ const IdealHomepageV2 = () => {
                       src="https://www.openstreetmap.org/export/embed.html?bbox=20.35,44.75,20.55,44.88&amp;layer=mapnik"
                       style={{ border: 0 }}
                     />
-                    
+
                     {/* Полупрозрачный оверлей для лучшей видимости маркеров */}
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-green-500/10 pointer-events-none" />
 
@@ -609,14 +609,62 @@ const IdealHomepageV2 = () => {
 
                     {/* Маркеры товаров с реалистичными локациями для Белграда */}
                     {[
-                      { top: '25%', left: '45%', price: '250€', category: 'Электроника', address: 'Knez Mihailova' },
-                      { top: '35%', left: '55%', price: '450€', category: 'Мебель', address: 'Vračar' },
-                      { top: '55%', left: '40%', price: '120€', category: 'Одежда', address: 'Novi Beograd' },
-                      { top: '40%', left: '65%', price: '800€/мес', category: 'Квартира', address: 'Dedinje' },
-                      { top: '65%', left: '50%', price: '50€', category: 'Книги', address: 'Zemun' },
-                      { top: '30%', left: '35%', price: '350€', category: 'Спорт', address: 'Kalemegdan' },
-                      { top: '45%', left: '30%', price: '15,000€', category: 'Авто', address: 'Autokomanda' },
-                      { top: '50%', left: '60%', price: '90€', category: 'Хобби', address: 'Zvezdara' },
+                      {
+                        top: '25%',
+                        left: '45%',
+                        price: '250€',
+                        category: 'Электроника',
+                        address: 'Knez Mihailova',
+                      },
+                      {
+                        top: '35%',
+                        left: '55%',
+                        price: '450€',
+                        category: 'Мебель',
+                        address: 'Vračar',
+                      },
+                      {
+                        top: '55%',
+                        left: '40%',
+                        price: '120€',
+                        category: 'Одежда',
+                        address: 'Novi Beograd',
+                      },
+                      {
+                        top: '40%',
+                        left: '65%',
+                        price: '800€/мес',
+                        category: 'Квартира',
+                        address: 'Dedinje',
+                      },
+                      {
+                        top: '65%',
+                        left: '50%',
+                        price: '50€',
+                        category: 'Книги',
+                        address: 'Zemun',
+                      },
+                      {
+                        top: '30%',
+                        left: '35%',
+                        price: '350€',
+                        category: 'Спорт',
+                        address: 'Kalemegdan',
+                      },
+                      {
+                        top: '45%',
+                        left: '30%',
+                        price: '15,000€',
+                        category: 'Авто',
+                        address: 'Autokomanda',
+                      },
+                      {
+                        top: '50%',
+                        left: '60%',
+                        price: '90€',
+                        category: 'Хобби',
+                        address: 'Zvezdara',
+                      },
                     ].map((marker, idx) => (
                       <div
                         key={idx}
@@ -631,18 +679,24 @@ const IdealHomepageV2 = () => {
                               fill="currentColor"
                               viewBox="0 0 24 24"
                             >
-                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                             </svg>
                             <div className="absolute top-1 left-1/2 -translate-x-1/2 text-white text-xs font-bold">
                               {idx + 1}
                             </div>
                           </div>
-                          
+
                           {/* Информация при наведении */}
                           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur px-4 py-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-30 whitespace-nowrap">
-                            <p className="font-bold text-lg text-orange-600">{marker.price}</p>
-                            <p className="text-sm font-medium text-gray-800">{marker.category}</p>
-                            <p className="text-xs text-gray-600 mt-1">📍 {marker.address}</p>
+                            <p className="font-bold text-lg text-orange-600">
+                              {marker.price}
+                            </p>
+                            <p className="text-sm font-medium text-gray-800">
+                              {marker.category}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              📍 {marker.address}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -664,8 +718,12 @@ const IdealHomepageV2 = () => {
                           <span className="text-xs">Ваше местоположение</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                          <svg
+                            className="w-4 h-4 text-orange-500"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
                           </svg>
                           <span className="text-xs">Товары поблизости</span>
                         </div>
@@ -675,13 +733,33 @@ const IdealHomepageV2 = () => {
                     {/* Контролы карты */}
                     <div className="absolute top-4 right-4 flex flex-col gap-2">
                       <button className="btn btn-circle btn-sm bg-white/90 backdrop-blur shadow-lg hover:bg-white">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
                         </svg>
                       </button>
                       <button className="btn btn-circle btn-sm bg-white/90 backdrop-blur shadow-lg hover:bg-white">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M20 12H4"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -696,11 +774,15 @@ const IdealHomepageV2 = () => {
                 {/* Статистика по районам */}
                 <div className="card bg-base-100 shadow-lg">
                   <div className="card-body">
-                    <h3 className="card-title text-lg mb-3">📊 В вашем районе</h3>
+                    <h3 className="card-title text-lg mb-3">
+                      📊 В вашем районе
+                    </h3>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Всего объявлений</span>
-                        <span className="badge badge-primary badge-lg">1,234</span>
+                        <span className="badge badge-primary badge-lg">
+                          1,234
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Новых сегодня</span>
@@ -717,10 +799,16 @@ const IdealHomepageV2 = () => {
                 {/* Быстрые фильтры */}
                 <div className="card bg-base-100 shadow-lg">
                   <div className="card-body">
-                    <h3 className="card-title text-lg mb-3">⚡ Быстрые фильтры</h3>
+                    <h3 className="card-title text-lg mb-3">
+                      ⚡ Быстрые фильтры
+                    </h3>
                     <div className="flex flex-wrap gap-2">
-                      <button className="btn btn-sm btn-outline">До 500€</button>
-                      <button className="btn btn-sm btn-outline">Сегодня</button>
+                      <button className="btn btn-sm btn-outline">
+                        До 500€
+                      </button>
+                      <button className="btn btn-sm btn-outline">
+                        Сегодня
+                      </button>
                       <button className="btn btn-sm btn-outline">С фото</button>
                       <button className="btn btn-sm btn-outline">Рядом</button>
                       <button className="btn btn-sm btn-outline">Срочно</button>
@@ -732,12 +820,24 @@ const IdealHomepageV2 = () => {
                 <div className="card bg-gradient-to-r from-primary to-secondary text-primary-content">
                   <div className="card-body">
                     <h3 className="card-title text-white">Исследуйте карту</h3>
-                    <p className="text-sm opacity-90">Найдите товары в любом районе города</p>
+                    <p className="text-sm opacity-90">
+                      Найдите товары в любом районе города
+                    </p>
                     <div className="card-actions justify-end mt-3">
                       <Link href="/map" className="btn btn-white btn-sm">
                         Открыть карту
-                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-4 h-4 ml-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </Link>
                     </div>

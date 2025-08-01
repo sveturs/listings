@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, PlusCircle, MessageCircle, User } from 'lucide-react';
+import { Home, Search, PlusCircle, MessageCircle, User, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useAuthContext } from '@/contexts/AuthContext';
 
@@ -16,7 +16,13 @@ interface NavItem {
   color?: string;
 }
 
-export const EnhancedMobileBottomNav: React.FC = () => {
+interface EnhancedMobileBottomNavProps {
+  onClose?: () => void;
+}
+
+export const EnhancedMobileBottomNav: React.FC<
+  EnhancedMobileBottomNavProps
+> = ({ onClose }) => {
   const pathname = usePathname();
   const t = useTranslations('navigation');
   const { isAuthenticated } = useAuthContext();
@@ -104,80 +110,88 @@ export const EnhancedMobileBottomNav: React.FC = () => {
   };
 
   return (
-    <nav className="btm-nav btm-nav-sm md:hidden bg-base-100 border-t border-base-200 relative">
-      {/* Анимированный индикатор */}
+    <nav className="md:hidden bg-base-100 border-t border-base-200 relative">
+      <div className="flex items-center justify-between px-2 py-2">
+        {/* Навигационные элементы */}
+        <div className="flex items-center justify-around flex-1">
+          {visibleItems.map((item, index) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            const localizedHref = getLocalizedHref(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={localizedHref}
+                className={`relative group flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                  active ? 'bg-primary/10 text-primary' : 'hover:bg-base-200'
+                }`}
+                onClick={() => setActiveIndex(index)}
+              >
+                {/* Иконка */}
+                <div className="relative">
+                  <Icon
+                    className={`
+                      w-5 h-5 transition-all duration-200
+                      ${
+                        active
+                          ? 'text-primary scale-110'
+                          : item.color || 'text-base-content/60'
+                      }
+                      group-hover:scale-110
+                    `}
+                  />
+
+                  {/* Бейдж */}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="badge badge-error badge-xs absolute -top-1 -right-2 animate-pulse">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
+
+                  {/* Ripple эффект для центральной кнопки */}
+                  {item.href === '/create-listing-choice' && (
+                    <div className="absolute inset-0 -m-2">
+                      <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Подпись - скрываем на маленьких экранах */}
+                <span
+                  className={`
+                    hidden sm:block text-xs transition-all duration-200
+                    ${
+                      active
+                        ? 'text-primary font-medium'
+                        : 'text-base-content/60'
+                    }
+                  `}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Кнопка закрытия */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="btn btn-ghost btn-sm btn-circle ml-2"
+            aria-label={t('close')}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Анимированный индикатор активного элемента */}
       <div
         className="absolute top-0 h-0.5 bg-primary transition-all duration-300 ease-out"
         style={indicatorStyle}
       />
-
-      {visibleItems.map((item, index) => {
-        const Icon = item.icon;
-        const active = isActive(item.href);
-        const localizedHref = getLocalizedHref(item.href);
-
-        return (
-          <Link
-            key={item.href}
-            href={localizedHref}
-            className={`${active ? 'active' : ''} relative group`}
-            onClick={() => setActiveIndex(index)}
-          >
-            <div className="flex flex-col items-center justify-center h-full">
-              {/* Фоновая подсветка при наведении */}
-              <div className="absolute inset-0 bg-primary/5 scale-0 group-hover:scale-100 transition-transform duration-200 rounded-lg" />
-
-              {/* Иконка с анимацией */}
-              <div className="relative">
-                <Icon
-                  className={`
-                    w-5 h-5 transition-all duration-200
-                    ${
-                      active
-                        ? 'text-primary scale-110'
-                        : item.color || 'text-base-content/60'
-                    }
-                    group-hover:scale-110
-                  `}
-                />
-
-                {/* Анимированный бейдж */}
-                {item.badge !== undefined && item.badge > 0 && (
-                  <span className="badge badge-error badge-xs absolute -top-1 -right-2 animate-pulse">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                )}
-
-                {/* Ripple эффект для центральной кнопки */}
-                {item.href === '/create-listing-choice' && (
-                  <div className="absolute inset-0 -m-2">
-                    <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
-                  </div>
-                )}
-              </div>
-
-              {/* Подпись с анимацией */}
-              <span
-                className={`
-                  text-xs mt-1 transition-all duration-200
-                  ${
-                    active
-                      ? 'text-primary font-medium translate-y-0'
-                      : 'text-base-content/60 translate-y-0.5'
-                  }
-                `}
-              >
-                {item.label}
-              </span>
-
-              {/* Точка для активного элемента */}
-              {active && (
-                <div className="absolute bottom-1 w-1 h-1 bg-primary rounded-full animate-pulse" />
-              )}
-            </div>
-          </Link>
-        );
-      })}
     </nav>
   );
 };

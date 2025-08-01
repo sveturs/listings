@@ -40,3 +40,22 @@ func (r *MarketplaceRepository) GetListingByID(ctx context.Context, id int) (*mo
 
 	return &listing, nil
 }
+
+// GetCategoryByID получает категорию по ID
+func (r *MarketplaceRepository) GetCategoryByID(ctx context.Context, id int32) (*models.MarketplaceCategory, error) {
+	var category models.MarketplaceCategory
+	query := `
+		SELECT 
+			id, parent_id, name, slug, icon, 
+			created_at, level, count as listing_count
+		FROM marketplace_categories
+		WHERE id = $1
+	`
+
+	err := r.db.GetContext(ctx, &category, query, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "ошибка получения категории")
+	}
+
+	return &category, nil
+}

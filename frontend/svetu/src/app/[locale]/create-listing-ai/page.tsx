@@ -38,16 +38,22 @@ import {
   ArrowRight,
   ImageIcon,
   MapPin as MapPinIcon,
+  Shield,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from '@/utils/toast';
 import { useTranslations, useLocale } from 'next-intl';
 import { claudeAI } from '@/services/ai/claude.service';
+import { categoryDetector } from '@/services/categoryDetector';
 import type { CreateListingState } from '@/contexts/CreateListingContext';
 import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
 import { extractLocationFromImages } from '@/utils/exifUtils';
+import { formatAddressWithPrivacy } from '@/utils/addressPrivacy';
 import LocationPicker from '@/components/GIS/LocationPicker';
+import LocationPrivacySettingsWithAddress, {
+  LocationPrivacyLevel,
+} from '@/components/GIS/LocationPrivacySettingsWithAddress';
 
 export default function AIPoweredListingCreationPage() {
   const router = useRouter();
@@ -77,6 +83,12 @@ export default function AIPoweredListingCreationPage() {
     source: 'exif' | 'profile' | 'manual';
   } | null>(null);
 
+  // Состояние для приватности адреса
+  const [locationPrivacyLevel, setLocationPrivacyLevel] =
+    useState<LocationPrivacyLevel['id']>('street');
+  const [fullAddress, setFullAddress] = useState<string>(''); // Полный адрес для сохранения в БД
+  const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+
   // AI generated data
   const [aiData, setAiData] = useState({
     title: '',
@@ -85,6 +97,8 @@ export default function AIPoweredListingCreationPage() {
     description: '',
     category: '',
     categoryProbabilities: [] as { name: string; probability: number }[],
+    categoryDetectionStatsId: null as number | null,
+    matchedKeywords: [] as string[],
     price: '',
     priceRange: { min: 0, max: 0 },
     attributes: {} as Record<string, string>,
@@ -118,7 +132,7 @@ export default function AIPoweredListingCreationPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Геокодирование
-  const { validateAddress } = useAddressGeocoding({
+  const geocoding = useAddressGeocoding({
     country: ['rs'], // Сербия
     language: 'sr',
   });
@@ -226,6 +240,123 @@ export default function AIPoweredListingCreationPage() {
     }
   };
 
+  // Get category data by name/slug
+  const getCategoryData = (
+    categoryName: string
+  ): { id: number; name: string; slug: string } => {
+    // Проверка на undefined или пустую строку
+    if (!categoryName) {
+      return { id: 1, name: 'General', slug: 'general' };
+    }
+
+    const normalizedName = categoryName.toLowerCase().trim();
+
+    // 1. Обработка подкатегорий из AI анализа
+    if (normalizedName.includes('/')) {
+      // Разбираем путь категории
+      const parts = normalizedName.split('/');
+
+      // Проверяем для автозапчастей и шин
+      if (parts.includes('auto-parts') && parts.includes('tires-wheels')) {
+        // Ищем категорию "Gume i točkovi" (ID: 1304)
+        const tiresCategory = categories.find(
+          (cat) =>
+            cat.id === 1304 ||
+            cat.slug === 'tires-and-wheels' ||
+            cat.name.toLowerCase().includes('gume') ||
+            cat.name.toLowerCase().includes('točkovi')
+        );
+        if (tiresCategory) {
+          return {
+            id: tiresCategory.id,
+            name: tiresCategory.name,
+            slug: tiresCategory.slug,
+          };
+        }
+      }
+
+      // Для других автозапчастей
+      if (parts.includes('auto-parts') && !parts.includes('tires-wheels')) {
+        // Возвращаем категорию "Auto delovi" (ID: 1303)
+        const autoPartsCategory = categories.find(
+          (cat) =>
+            cat.id === 1303 ||
+            cat.slug === 'auto-parts' ||
+            cat.name.toLowerCase().includes('auto delovi')
+        );
+        if (autoPartsCategory) {
+          return {
+            id: autoPartsCategory.id,
+            name: autoPartsCategory.name,
+            slug: autoPartsCategory.slug,
+          };
+        }
+      }
+
+      // Для автомобилей
+      if (parts.includes('cars')) {
+        const carsCategory = categories.find(
+          (cat) =>
+            cat.id === 1301 ||
+            cat.slug === 'cars' ||
+            cat.name.toLowerCase().includes('lični automobili')
+        );
+        if (carsCategory) {
+          return {
+            id: carsCategory.id,
+            name: carsCategory.name,
+            slug: carsCategory.slug,
+          };
+        }
+      }
+    }
+
+    // 2. Поиск по имени/slug категории
+    const category = categories.find(
+      (cat) =>
+        cat.slug === normalizedName ||
+        cat.name.toLowerCase() === normalizedName ||
+        normalizedName.includes(cat.slug)
+    );
+
+    if (category) {
+      return { id: category.id, name: category.name, slug: category.slug };
+    }
+
+    // 3. Маппинг основных категорий
+    const categoryMap: Record<string, number> = {
+      electronics: 1001,
+      fashion: 1002,
+      automotive: 1003,
+      'real-estate': 1004,
+      'home-garden': 1005,
+      agriculture: 1006,
+      industrial: 1007,
+      'food-beverages': 1008,
+      services: 1009,
+      'sports-recreation': 1010,
+    };
+
+    const mappedId = categoryMap[normalizedName];
+    if (mappedId) {
+      const mappedCategory = categories.find((cat) => cat.id === mappedId);
+      if (mappedCategory) {
+        return {
+          id: mappedCategory.id,
+          name: mappedCategory.name,
+          slug: mappedCategory.slug,
+        };
+      }
+    }
+
+    // Возвращаем автомобильную категорию по умолчанию для automotive
+    if (normalizedName.includes('automotive')) {
+      return { id: 1003, name: 'Automobili', slug: 'automotive' };
+    }
+
+    return { id: 1, name: 'General', slug: 'general' };
+  };
+
   // Convert image to base64
   const convertToBase64 = async (imageUrl: string): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -252,6 +383,60 @@ export default function AIPoweredListingCreationPage() {
     setError(null);
 
     try {
+      // Пытаемся извлечь геолокацию из EXIF данных перед AI анализом
+      console.log('Processing images, checking EXIF data...');
+      let exifLocationData = null;
+      try {
+        const exifLocation = await extractLocationFromImages(imageFiles);
+        console.log('EXIF extraction during processing:', exifLocation);
+        if (exifLocation) {
+          console.log('Found EXIF location during processing:', exifLocation);
+          setDetectedLocation({
+            latitude: exifLocation.latitude,
+            longitude: exifLocation.longitude,
+            source: 'exif',
+          });
+
+          // Геокодируем координаты в адрес
+          const geocodedAddress = await geocoding.reverseGeocode(
+            exifLocation.latitude,
+            exifLocation.longitude
+          );
+
+          if (geocodedAddress) {
+            console.log('Geocoded address during processing:', geocodedAddress);
+
+            // Сохраняем полный адрес
+            const fullAddressStr =
+              geocodedAddress.address || geocodedAddress.place_name;
+            setFullAddress(fullAddressStr);
+
+            // Форматируем адрес с учетом приватности по умолчанию (улица)
+            const privateAddress = formatAddressWithPrivacy(fullAddressStr, {
+              showHouseNumber: false,
+              showStreet: true,
+              showCity: true,
+              showRegion: true,
+            });
+
+            // Сохраняем адрес для использования ниже
+            exifLocationData = {
+              city:
+                geocodedAddress.city ||
+                geocodedAddress.address_components.city ||
+                'Белград',
+              region:
+                geocodedAddress.region ||
+                geocodedAddress.address_components.district ||
+                'Сербия',
+              suggestedLocation: privateAddress,
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Error extracting EXIF during processing:', error);
+      }
+
       // Convert first image to base64
       const base64Image = await convertToBase64(images[0]);
 
@@ -278,7 +463,7 @@ export default function AIPoweredListingCreationPage() {
         price: analysis.price?.replace(/[^\d.,]/g, '').replace(',', '.') || '',
         selectedTitleIndex: 0,
         publishTime: '19:00',
-        location: {
+        location: exifLocationData || {
           city: analysis.location?.city || 'Белград',
           region: analysis.location?.region || 'Сербия',
           suggestedLocation: analysis.location?.suggestedLocation || '',
@@ -287,10 +472,66 @@ export default function AIPoweredListingCreationPage() {
         insights: analysis.insights || {},
       });
 
-      // Загружаем атрибуты для выбранной категории
-      const categoryData = getCategoryData(analysis.category);
-      if (categoryData && categoryData.id) {
-        await loadCategoryAttributes(categoryData.id);
+      // Используем новую систему определения категории если есть categoryHints
+      if (analysis.categoryHints) {
+        try {
+          const detectionResult = await categoryDetector.detectCategory(
+            analysis.categoryHints,
+            analysis.title,
+            analysis.description,
+            locale
+          );
+
+          if (detectionResult.category_id) {
+            // Находим категорию по ID
+            const detectedCategory = categories.find(
+              (cat) => cat.id === detectionResult.category_id
+            );
+            if (detectedCategory) {
+              // Обновляем категорию в aiData
+              setAiData((prev) => ({
+                ...prev,
+                category: detectedCategory.slug,
+                categoryDetectionStatsId: detectionResult.stats_id || null,
+                categoryProbabilities:
+                  detectionResult.alternative_categories?.map((alt) => ({
+                    name: alt.category_slug,
+                    probability: alt.confidence_score,
+                  })) || [],
+                // Сохраняем найденные ключевые слова для последующей передачи на backend
+                matchedKeywords:
+                  detectionResult.debug_info?.matched_keywords || [],
+              }));
+
+              // Загружаем атрибуты для определенной категории
+              await loadCategoryAttributes(detectionResult.category_id);
+
+              // Показываем пользователю уровень уверенности
+              if (detectionResult.confidence_score < 0.7) {
+                toast.info(t('ai.category_detection.low_confidence'));
+              } else {
+                toast.success(
+                  t('ai.category_detection.success', {
+                    category: detectedCategory.name,
+                  })
+                );
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Category detection error:', error);
+          // Fallback к старой системе
+          const categoryData = getCategoryData(analysis.category);
+          if (categoryData && categoryData.id) {
+            await loadCategoryAttributes(categoryData.id);
+          }
+        }
+      } else {
+        // Fallback к старой системе если нет categoryHints
+        const categoryData = getCategoryData(analysis.category);
+        if (categoryData && categoryData.id) {
+          await loadCategoryAttributes(categoryData.id);
+        }
       }
 
       // Perform A/B testing on title variants
@@ -315,16 +556,20 @@ export default function AIPoweredListingCreationPage() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleImageUpload called');
     const files = e.target.files;
     if (files) {
       const filesArray = Array.from(files);
+      console.log('Processing', filesArray.length, 'files');
       const newImages = filesArray.map((file) => URL.createObjectURL(file));
       setImages([...images, ...newImages].slice(0, 8));
       setImageFiles([...imageFiles, ...filesArray].slice(0, 8));
 
       // Пытаемся извлечь геолокацию из EXIF данных
+      console.log('Attempting to extract EXIF location...');
       try {
         const exifLocation = await extractLocationFromImages(filesArray);
+        console.log('EXIF extraction result:', exifLocation);
         if (exifLocation) {
           console.log('Detected location from EXIF:', exifLocation);
           setDetectedLocation({
@@ -333,19 +578,59 @@ export default function AIPoweredListingCreationPage() {
             source: 'exif',
           });
 
-          // Обновляем данные локации в AI данных
-          setAiData((prev) => ({
-            ...prev,
-            location: {
-              ...prev.location,
-              suggestedLocation: `Локация из фото: ${exifLocation.latitude.toFixed(4)}, ${exifLocation.longitude.toFixed(4)}`,
-            },
-          }));
+          // Геокодируем координаты в адрес
+          const geocodedAddress = await geocoding.reverseGeocode(
+            exifLocation.latitude,
+            exifLocation.longitude
+          );
 
-          toast.success(t('ai.success_messages.location_detected'));
+          if (geocodedAddress) {
+            console.log('Geocoded address:', geocodedAddress);
+
+            // Сохраняем полный адрес
+            const fullAddressStr =
+              geocodedAddress.address || geocodedAddress.place_name;
+            setFullAddress(fullAddressStr);
+
+            // Форматируем адрес с учетом приватности по умолчанию (улица)
+            const privateAddress = formatAddressWithPrivacy(fullAddressStr, {
+              showHouseNumber: false,
+              showStreet: true,
+              showCity: true,
+              showRegion: true,
+            });
+
+            // Обновляем данные локации в AI данных с реальным адресом
+            setAiData((prev) => ({
+              ...prev,
+              location: {
+                city:
+                  geocodedAddress.city ||
+                  geocodedAddress.address_components.city ||
+                  'Белград',
+                region:
+                  geocodedAddress.region ||
+                  geocodedAddress.address_components.district ||
+                  'Сербия',
+                suggestedLocation: privateAddress,
+              },
+            }));
+
+            // Используем нейтральное сообщение без упоминания AI
+            toast.success(t('location_detected_from_photo'));
+          } else {
+            // Если не удалось геокодировать, показываем координаты
+            setAiData((prev) => ({
+              ...prev,
+              location: {
+                ...prev.location,
+                suggestedLocation: `Координаты: ${exifLocation.latitude.toFixed(4)}, ${exifLocation.longitude.toFixed(4)}`,
+              },
+            }));
+          }
         }
-      } catch {
-        console.log('No location data found in images');
+      } catch (error) {
+        console.log('Error processing location data:', error);
       }
     }
   };
@@ -756,15 +1041,49 @@ export default function AIPoweredListingCreationPage() {
 
               {aiData.categoryProbabilities &&
                 aiData.categoryProbabilities.length > 0 && (
-                  <div className="alert alert-info mt-4">
-                    <Check className="w-4 h-4" />
-                    <span className="text-sm">
-                      {t('ai.enhance.category_auto_selected', {
-                        category:
-                          getCategoryData(aiData.category)?.name ||
-                          aiData.category,
-                      })}
-                    </span>
+                  <div className="mt-4">
+                    <div className="alert alert-info">
+                      <Check className="w-4 h-4" />
+                      <span className="text-sm">
+                        {t('ai.enhance.category_auto_selected', {
+                          category:
+                            getCategoryData(aiData.category)?.name ||
+                            aiData.category,
+                        })}
+                      </span>
+                    </div>
+                    <div className="mt-2">
+                      <label className="label">
+                        <span className="label-text">
+                          {t('ai.enhance.manual_category_selection')}
+                        </span>
+                      </label>
+                      <select
+                        className="select select-bordered w-full"
+                        value={getCategoryData(aiData.category)?.id || ''}
+                        onChange={(e) => {
+                          const selectedCat = categories.find(
+                            (cat) => cat.id === Number(e.target.value)
+                          );
+                          if (selectedCat) {
+                            setAiData({
+                              ...aiData,
+                              category: selectedCat.slug,
+                            });
+                            loadCategoryAttributes(selectedCat.id);
+                          }
+                        }}
+                      >
+                        <option value="">
+                          {t('ai.enhance.select_category')}
+                        </option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 )}
             </div>
@@ -959,13 +1278,88 @@ export default function AIPoweredListingCreationPage() {
                 </button>
               </div>
               {aiData.location.suggestedLocation && (
-                <div className="alert alert-info mt-4">
-                  <Lightbulb className="w-4 h-4" />
-                  <span className="text-sm">
-                    {t('ai.location.ai_suggests')}{' '}
-                    {aiData.location.suggestedLocation}
-                  </span>
-                </div>
+                <>
+                  <div className="alert alert-info mt-4">
+                    <Lightbulb className="w-4 h-4" />
+                    <span className="text-sm">
+                      {fullAddress
+                        ? `${t('location_detected_from_photo')}: ${aiData.location.suggestedLocation}`
+                        : `${t('ai.location.ai_suggests')} ${aiData.location.suggestedLocation}`}
+                    </span>
+                  </div>
+
+                  {/* Настройки приватности */}
+                  {(detectedLocation || fullAddress) && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowPrivacySettings(!showPrivacySettings)
+                        }
+                        className="btn btn-outline btn-sm gap-2"
+                      >
+                        <Shield className="w-4 h-4" />
+                        {t('privacy_settings')}
+                        <svg
+                          className={`w-4 h-4 transition-transform ${showPrivacySettings ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+
+                      {showPrivacySettings && (
+                        <div className="mt-4 p-4 bg-base-100 rounded-lg">
+                          <LocationPrivacySettingsWithAddress
+                            selectedLevel={locationPrivacyLevel}
+                            onLevelChange={(level) => {
+                              setLocationPrivacyLevel(level);
+                              // Обновляем отображаемый адрес
+                              if (fullAddress) {
+                                const options = {
+                                  showHouseNumber: level === 'exact',
+                                  showStreet:
+                                    level === 'exact' || level === 'street',
+                                  showCity: true,
+                                  showRegion: level !== 'city',
+                                  showCountry: level === 'city',
+                                };
+                                const updatedAddress = formatAddressWithPrivacy(
+                                  fullAddress,
+                                  options
+                                );
+                                setAiData((prev) => ({
+                                  ...prev,
+                                  location: {
+                                    ...prev.location,
+                                    suggestedLocation: updatedAddress,
+                                  },
+                                }));
+                              }
+                            }}
+                            location={
+                              detectedLocation
+                                ? {
+                                    lat: detectedLocation.latitude,
+                                    lng: detectedLocation.longitude,
+                                  }
+                                : undefined
+                            }
+                            fullAddress={fullAddress}
+                            showPreview={true}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -1351,75 +1745,6 @@ export default function AIPoweredListingCreationPage() {
     </motion.div>
   );
 
-  const getCategoryData = (
-    categoryName: string
-  ): { id: number; name: string; slug: string } => {
-    // Проверка на undefined или пустую строку
-    if (!categoryName) {
-      return { id: 1, name: 'General', slug: 'general' };
-    }
-
-    // Пытаемся найти категорию по разным критериям
-    const normalizedName = categoryName.toLowerCase().trim();
-
-    // 1. Точное совпадение по slug
-    let category = categories.find((cat) => cat.slug === normalizedName);
-
-    // 2. Частичное совпадение по slug (категория содержит искомое слово)
-    if (!category) {
-      category = categories.find(
-        (cat) =>
-          cat.slug.toLowerCase().includes(normalizedName) ||
-          normalizedName.includes(cat.slug.toLowerCase())
-      );
-    }
-
-    // 3. Поиск по переводам названия (если есть поле translations)
-    if (!category) {
-      category = categories.find((cat) => {
-        if (cat.translations) {
-          return Object.values(cat.translations).some(
-            (translation) =>
-              typeof translation === 'string' &&
-              (translation.toLowerCase().includes(normalizedName) ||
-                normalizedName.includes(translation.toLowerCase()))
-          );
-        }
-        return false;
-      });
-    }
-
-    // 4. Поиск по имени категории
-    if (!category) {
-      category = categories.find(
-        (cat) =>
-          cat.name.toLowerCase().includes(normalizedName) ||
-          normalizedName.includes(cat.name.toLowerCase())
-      );
-    }
-
-    // 5. Если ничего не нашли, используем первую категорию или дефолтную
-    if (!category && categories.length > 0) {
-      // Пытаемся найти категорию "Services" или "Other" как универсальную
-      category =
-        categories.find(
-          (cat) =>
-            cat.slug === 'services' ||
-            cat.slug === 'other' ||
-            cat.slug === 'misc'
-        ) || categories[0];
-    }
-
-    // Логирование для отладки
-    console.log('Category mapping:', {
-      aiCategory: categoryName,
-      foundCategory: category,
-      availableCategories: categories.length,
-    });
-
-    return category || { id: 1, name: 'General', slug: 'general' };
-  };
-
   const publishListing = async () => {
     let listingData: CreateListingState | undefined;
 
@@ -1471,7 +1796,7 @@ export default function AIPoweredListingCreationPage() {
           `${aiData.location.suggestedLocation || ''} ${aiData.location.city || 'Белград'} ${aiData.location.region || 'Сербия'}`.trim();
 
         try {
-          const geoResult = await validateAddress(fullAddress);
+          const geoResult = await geocoding.validateAddress(fullAddress);
           if (geoResult.success && geoResult.location) {
             latitude = geoResult.location.lat;
             longitude = geoResult.location.lng;
@@ -1495,6 +1820,7 @@ export default function AIPoweredListingCreationPage() {
         location: {
           latitude,
           longitude,
+          // Отправляем адрес с учетом приватности
           address:
             aiData.location.suggestedLocation ||
             aiData.location.city ||
@@ -1630,6 +1956,12 @@ export default function AIPoweredListingCreationPage() {
         // Язык оригинала
         originalLanguage: locale,
 
+        // ID статистики определения категории
+        categoryDetectionStatsId: aiData.categoryDetectionStatsId || undefined,
+
+        // Ключевые слова, использованные для определения категории
+        detectedKeywords: aiData.matchedKeywords || undefined,
+
         // Метаданные
         isPublished: true,
         isDraft: false,
@@ -1637,7 +1969,10 @@ export default function AIPoweredListingCreationPage() {
 
       // Создаем объявление
       const { ListingsService } = await import('@/services/listings');
-      const response = await ListingsService.createListing(listingData);
+      const response = await ListingsService.createListing(
+        listingData,
+        locationPrivacyLevel
+      );
 
       if (response.data?.id) {
         // Загружаем изображения
@@ -2076,12 +2411,30 @@ export default function AIPoweredListingCreationPage() {
                     source: 'manual',
                   });
 
+                  // Сохраняем полный адрес
+                  setFullAddress(location.address);
+
+                  // Форматируем адрес с учетом текущего уровня приватности
+                  const options = {
+                    showHouseNumber: locationPrivacyLevel === 'exact',
+                    showStreet:
+                      locationPrivacyLevel === 'exact' ||
+                      locationPrivacyLevel === 'street',
+                    showCity: true,
+                    showRegion: locationPrivacyLevel !== 'city',
+                    showCountry: locationPrivacyLevel === 'city',
+                  };
+                  const privateAddress = formatAddressWithPrivacy(
+                    location.address,
+                    options
+                  );
+
                   setAiData((prev) => ({
                     ...prev,
                     location: {
                       city: location.city,
                       region: location.region,
-                      suggestedLocation: location.address,
+                      suggestedLocation: privateAddress,
                     },
                   }));
 

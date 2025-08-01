@@ -35,12 +35,22 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
 		LEFT JOIN marketplace_categories c ON p.category_id = c.id
-		WHERE p.storefront_id = $1`
+		WHERE p.storefront_id = $1 AND p.is_active = true`
 
 	args := []interface{}{filter.StorefrontID}
 	argIndex := 2
 
 	// Apply filters
+	// Если явно указан фильтр по активности, используем его
+	if filter.IsActive != nil {
+		if *filter.IsActive {
+			// Уже есть в базовом запросе
+		} else {
+			// Заменяем условие на показ только неактивных
+			query = strings.Replace(query, "AND p.is_active = true", "AND p.is_active = false", 1)
+		}
+	}
+
 	if filter.CategoryID != nil {
 		query += fmt.Sprintf(" AND p.category_id = $%d", argIndex)
 		args = append(args, *filter.CategoryID)
@@ -156,7 +166,9 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			c.ID = int(categoryID.Int64)
 			c.Name = categoryName.String
 			c.Slug = categorySlug.String
-			c.Icon = categoryIcon.String
+			if categoryIcon.Valid {
+				c.Icon = &categoryIcon.String
+			}
 			if categoryParentID.Valid {
 				parentID := int(categoryParentID.Int64)
 				c.ParentID = &parentID
@@ -250,7 +262,9 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 		c.ID = int(categoryID.Int64)
 		c.Name = categoryName.String
 		c.Slug = categorySlug.String
-		c.Icon = categoryIcon.String
+		if categoryIcon.Valid {
+			c.Icon = &categoryIcon.String
+		}
 		if categoryParentID.Valid {
 			parentID := int(categoryParentID.Int64)
 			c.ParentID = &parentID
@@ -530,17 +544,46 @@ func (s *Database) UpdateStorefrontProduct(ctx context.Context, storefrontID, pr
 	return nil
 }
 
-// DeleteStorefrontProduct deletes a product
+// DeleteStorefrontProduct soft deletes a product by setting is_active to false
 func (s *Database) DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error {
-	query := `DELETE FROM storefront_products WHERE id = $1 AND storefront_id = $2`
-
-	result, err := s.pool.Exec(ctx, query, productID, storefrontID)
+	// Начинаем транзакцию для атомарности операции
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to delete storefront product: %w", err)
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			// Игнорируем ошибку если транзакция уже была завершена
+			_ = rollbackErr
+		}
+	}()
+
+	// Деактивируем товар в storefront_products
+	query := `UPDATE storefront_products 
+		SET is_active = false, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = $1 AND storefront_id = $2 AND is_active = true`
+	result, err := tx.Exec(ctx, query, productID, storefrontID)
+	if err != nil {
+		return fmt.Errorf("failed to deactivate storefront product: %w", err)
 	}
 
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("product not found")
+		return fmt.Errorf("product not found or already deleted")
+	}
+
+	// Обновляем статус в marketplace_listings на 'disabled'
+	updateQuery := `UPDATE marketplace_listings 
+		SET status = 'disabled', updated_at = CURRENT_TIMESTAMP 
+		WHERE id = $1 AND storefront_id = $2`
+
+	_, err = tx.Exec(ctx, updateQuery, productID, storefrontID)
+	if err != nil {
+		return fmt.Errorf("failed to update marketplace listing status: %w", err)
+	}
+
+	// Коммитим транзакцию
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil
@@ -932,15 +975,16 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 		}
 	}()
 
-	// Delete products that belong to the storefront
+	// Soft delete products that belong to the storefront
 	rows, err := tx.Query(ctx,
-		`DELETE FROM storefront_products
-		WHERE id = ANY($1) AND storefront_id = $2
+		`UPDATE storefront_products
+		SET is_active = false, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ANY($1) AND storefront_id = $2 AND is_active = true
 		RETURNING id`,
 		pq.Array(productIDs), storefrontID,
 	)
 	if err != nil {
-		return nil, []error{fmt.Errorf("failed to delete products: %w", err)}
+		return nil, []error{fmt.Errorf("failed to deactivate products: %w", err)}
 	}
 	defer rows.Close()
 
@@ -948,6 +992,19 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 		var id int
 		if err := rows.Scan(&id); err == nil {
 			deletedIDs = append(deletedIDs, id)
+		}
+	}
+
+	// Обновляем статус в marketplace_listings для удалённых товаров
+	if len(deletedIDs) > 0 {
+		_, err = tx.Exec(ctx,
+			`UPDATE marketplace_listings 
+			SET status = 'disabled', updated_at = CURRENT_TIMESTAMP 
+			WHERE id = ANY($1) AND storefront_id = $2`,
+			pq.Array(deletedIDs), storefrontID,
+		)
+		if err != nil {
+			return nil, []error{fmt.Errorf("failed to update marketplace listings status: %w", err)}
 		}
 	}
 

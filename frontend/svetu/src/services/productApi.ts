@@ -55,9 +55,9 @@ export const productApi = {
    */
   bulkDelete: async (storefrontSlug: string, productIds: number[]) => {
     const request: BulkDeleteProductsRequest = { product_ids: productIds };
-    const response = await apiClient.post<BulkDeleteProductsResponse>(
+    const response = await apiClient.delete<BulkDeleteProductsResponse>(
       `/api/v1/storefronts/slug/${storefrontSlug}/products/bulk/delete`,
-      request
+      { data: request }
     );
     return response.data;
   },

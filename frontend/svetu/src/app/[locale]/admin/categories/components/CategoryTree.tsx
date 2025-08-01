@@ -12,6 +12,7 @@ interface CategoryTreeProps {
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
   onManageAttributes?: (category: Category) => void;
+  onManageKeywords?: (category: Category) => void;
   onReorder: (orderedIds: number[]) => void;
   onMove: (categoryId: number, newParentId: number) => void;
 }
@@ -22,6 +23,7 @@ interface CategoryNodeProps {
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
   onManageAttributes?: (category: Category) => void;
+  onManageKeywords?: (category: Category) => void;
   categories: Category[];
   isLast: boolean;
   parentLines: boolean[];
@@ -33,6 +35,7 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
   onEdit,
   onDelete,
   onManageAttributes,
+  onManageKeywords,
   categories,
   isLast,
   parentLines,
@@ -221,6 +224,27 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
                 </a>
               </li>
             )}
+            {onManageKeywords && (
+              <li>
+                <a onClick={() => onManageKeywords(category)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                    />
+                  </svg>
+                  {t('categories.keywords.title')}
+                </a>
+              </li>
+            )}
             <li className="divider my-0"></li>
             <li>
               <a
@@ -284,6 +308,7 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
               onEdit={onEdit}
               onDelete={onDelete}
               onManageAttributes={onManageAttributes}
+              onManageKeywords={onManageKeywords}
               categories={categories}
               isLast={index === childCategories.length - 1}
               parentLines={[...parentLines, !isLast]}
@@ -300,6 +325,7 @@ export default function CategoryTree({
   onEdit,
   onDelete,
   onManageAttributes,
+  onManageKeywords,
   onReorder: _onReorder,
   onMove: _onMove,
 }: CategoryTreeProps) {
@@ -359,6 +385,7 @@ export default function CategoryTree({
           onEdit={onEdit}
           onDelete={onDelete}
           onManageAttributes={onManageAttributes}
+          onManageKeywords={onManageKeywords}
           categories={filteredCategories}
           isLast={index === rootCategories.length - 1}
           parentLines={[]}

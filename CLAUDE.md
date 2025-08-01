@@ -22,7 +22,8 @@ backend/migrations/000XXX_description.down.sql
 
 # 2. Примени миграцию через мигратор
 ```
-
+## отчистка кэша redis 
+docker exec hostel_redis redis-cli FLUSHALL
 ## Работа с API документацией
 
 Для экономии контекста используй swagger.json через JSON MCP:
@@ -95,6 +96,15 @@ sudo systemctl restart postgresql
 - **LOCATION_PICKER_INSTRUCTION.md** - использование компонента LocationPicker для выбора адреса
 - **memory-bank/tasks/004-storefront-dashboard-improvements.md** - план улучшений панели управления витринами
 - **memory-bank/current-task.md** - текущий прогресс работы над dashboard
+
+## Инструкции по работе с базой данных
+
+- **memory-bank/instructions/adding-categories-and-translations.md** - как правильно добавлять категории и переводы в БД
+
+## Документация по AI и умному поиску категорий
+
+- **memory-bank/combined-category-detection-approach.md** - комбинированный подход к определению категорий через AI
+- **memory-bank/tasks/006-smart-category-detection-implementation.md** - детальное задание на реализацию умного поиска категорий
 
 ## IMPORTANT INSTRUCTIONS
 

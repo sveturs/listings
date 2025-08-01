@@ -23,6 +23,10 @@ export const SmartMobileBottomNav: React.FC = () => {
     setLastScrollY(currentScrollY);
   }, [lastScrollY]);
 
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+  }, []);
+
   useEffect(() => {
     window.addEventListener('scroll', handleScroll, { passive: true });
 
@@ -39,7 +43,7 @@ export const SmartMobileBottomNav: React.FC = () => {
         ${isVisible ? 'translate-y-0' : 'translate-y-full'}
       `}
     >
-      <EnhancedMobileBottomNav />
+      <EnhancedMobileBottomNav onClose={handleClose} />
     </div>
   );
 };

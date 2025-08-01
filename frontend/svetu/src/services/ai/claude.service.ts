@@ -4,6 +4,11 @@ interface ProductAnalysis {
   title: string;
   titleVariants: string[];
   description: string;
+  categoryHints?: {
+    domain: string;
+    productType: string;
+    keywords: string[];
+  };
   category: string;
   categoryProbabilities: { name: string; probability: number }[];
   price: string;

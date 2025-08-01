@@ -54,6 +54,7 @@ function convertToMarketplaceItem(
     user_id: 0,
     product_type: unifiedItem.product_type,
     storefront_id: unifiedItem.storefront?.id,
+    storefront_slug: unifiedItem.storefront?.slug,
   };
 }
 

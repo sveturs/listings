@@ -98,7 +98,7 @@ const EscrowPayment = () => {
         <AnimatedSection animation="fadeIn">
           <div className="mb-8">
             <ul className="steps steps-horizontal w-full">
-              {escrowSteps.map((step, idx) => (
+              {escrowSteps.map((step) => (
                 <li
                   key={step.id}
                   className={`step ${step.status === 'completed' ? 'step-primary' : ''}`}

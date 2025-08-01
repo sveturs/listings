@@ -14,6 +14,7 @@ export interface CreateListingRequest {
   city: string;
   country: string;
   show_on_map: boolean;
+  location_privacy?: string;
   attributes?: Array<{
     attribute_id: number;
     text_value?: string;
@@ -26,6 +27,12 @@ export interface CreateListingRequest {
 
   // Язык оригинала
   original_language?: string;
+
+  // ID статистики определения категории для обновления success_rate
+  category_detection_stats_id?: number;
+
+  // Ключевые слова, которые были использованы для определения категории
+  detected_keywords?: string[];
 
   // Региональные поля
   payment_methods?: string[];
@@ -59,7 +66,8 @@ export interface UploadImagesResponse {
 
 export class ListingsService {
   static async createListing(
-    data: CreateListingState
+    data: CreateListingState,
+    locationPrivacy?: string
   ): Promise<CreateListingResponse> {
     // Отладочное логирование состояния формы
     console.log('CreateListing Data:', JSON.stringify(data, null, 2));
@@ -78,6 +86,7 @@ export class ListingsService {
       country: data.location?.country || 'Србија',
       show_on_map:
         data.location?.latitude && data.location?.longitude ? true : false,
+      location_privacy: locationPrivacy,
 
       // Региональные поля сохраняем в атрибутах
       payment_methods: data.payment.methods,
@@ -98,6 +107,16 @@ export class ListingsService {
     // Добавляем язык оригинала, если он указан
     if (data.originalLanguage) {
       request.original_language = data.originalLanguage;
+    }
+
+    // Добавляем ID статистики определения категории
+    if (data.categoryDetectionStatsId) {
+      request.category_detection_stats_id = data.categoryDetectionStatsId;
+    }
+
+    // Добавляем ключевые слова для определения категории
+    if (data.detectedKeywords && data.detectedKeywords.length > 0) {
+      request.detected_keywords = data.detectedKeywords;
     }
 
     // Отладочное логирование запроса к API

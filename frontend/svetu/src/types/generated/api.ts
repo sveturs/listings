@@ -2029,6 +2029,128 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/categories/{category_id}/keywords': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get category keywords
+     * @description Returns all keywords for a specific category
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          category_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Keywords list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CategoryKeyword'][];
+            };
+          };
+        };
+        /** @description Invalid category ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Category not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Add keyword to category
+     * @description Adds a new keyword to the specified category
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          category_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Keyword data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CategoryKeywordRequest'];
+        };
+      };
+      responses: {
+        /** @description Created keyword */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CategoryKeyword'];
+            };
+          };
+        };
+        /** @description Invalid request data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/categories/{id}/translate': {
     parameters: {
       query?: never;
@@ -2095,6 +2217,135 @@ export interface paths {
       };
     };
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/categories/keywords/{keyword_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update category keyword
+     * @description Updates an existing keyword
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Keyword ID */
+          keyword_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Updated keyword data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CategoryKeywordUpdateRequest'];
+        };
+      };
+      responses: {
+        /** @description Updated keyword */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CategoryKeyword'];
+            };
+          };
+        };
+        /** @description Invalid request data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Keyword not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Delete category keyword
+     * @description Deletes a keyword from category
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Keyword ID */
+          keyword_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Keyword deleted */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid keyword ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Keyword not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     options?: never;
     head?: never;
     patch?: never;
@@ -9301,6 +9552,71 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/categories/{category_id}/keywords': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить ключевые слова категории
+     * @description Возвращает список ключевых слов с весами для указанной категории
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Язык (ru, en, sr) */
+          language?: string;
+        };
+        header?: never;
+        path: {
+          /** @description ID категории */
+          category_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Список ключевых слов */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.CategoryKeywordResponse'][];
+            };
+          };
+        };
+        /** @description Категория не найдена */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/categories/{id}/attribute-ranges': {
     parameters: {
       query?: never;
@@ -9421,6 +9737,139 @@ export interface paths {
       };
     };
     put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/categories/detect': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Определить категорию по ключевым словам и атрибутам
+     * @description Использует комбинированный подход с ключевыми словами и similarity search
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные для определения категории */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_marketplace_handler.DetectCategoryRequest'];
+        };
+      };
+      responses: {
+        /** @description Результат определения категории */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.DetectCategoryResponse'];
+            };
+          };
+        };
+        /** @description Недостаточно данных */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/categories/detect/{stats_id}/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Подтвердить или исправить выбор категории
+     * @description Обновляет статистику для улучшения алгоритма
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID записи статистики */
+          stats_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Данные подтверждения */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_marketplace_handler.UpdateConfirmationRequest'];
+        };
+      };
+      responses: {
+        /** @description Успешное обновление */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: boolean;
+              };
+            };
+          };
+        };
+        /** @description Некорректный запрос */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     post?: never;
     delete?: never;
     options?: never;
@@ -22404,6 +22853,30 @@ export interface components {
       show_in_list?: boolean;
       sort_order?: number;
     };
+    'backend_internal_domain_models.CategoryKeyword': {
+      category_id?: number;
+      created_at?: string;
+      id?: number;
+      is_negative?: boolean;
+      keyword?: string;
+      keyword_type?: string;
+      language?: string;
+      source?: string;
+      success_rate?: number;
+      updated_at?: string;
+      usage_count?: number;
+      weight?: number;
+    };
+    'backend_internal_domain_models.CategoryKeywordRequest': {
+      is_negative?: boolean;
+      keyword: string;
+      keyword_type: string;
+      language: string;
+      weight?: number;
+    };
+    'backend_internal_domain_models.CategoryKeywordUpdateRequest': {
+      weight?: number;
+    };
     'backend_internal_domain_models.CategorySuggestion': {
       id?: number;
       listing_count?: number;
@@ -22843,6 +23316,7 @@ export interface components {
       is_favorite?: boolean;
       latitude?: number;
       location?: string;
+      location_privacy?: string;
       longitude?: number;
       /** @description Для хранения дополнительной информации, включая данные о скидке */
       metadata?: {
@@ -22855,6 +23329,8 @@ export interface components {
       review_count?: number;
       show_on_map?: boolean;
       status?: string;
+      /** @description данные витрины */
+      storefront?: components['schemas']['backend_internal_domain_models.Storefront'];
       /** @description связь с витриной */
       storefront_id?: number;
       title?: string;
@@ -24423,6 +24899,12 @@ export interface components {
     'internal_proj_marketplace_handler.AddMessageRequest': {
       content: string;
     };
+    'internal_proj_marketplace_handler.AlternativeCategoryResponse': {
+      category_id?: number;
+      category_name?: string;
+      category_slug?: string;
+      confidence_score?: number;
+    };
     'internal_proj_marketplace_handler.AttributeCreateResponse': {
       /** @example 123 */
       id?: number;
@@ -24495,6 +24977,16 @@ export interface components {
       /** @example 10 */
       total_count?: number;
     };
+    'internal_proj_marketplace_handler.CategoryKeywordResponse': {
+      id?: number;
+      is_negative?: boolean;
+      keyword?: string;
+      keyword_type?: string;
+      language?: string;
+      success_rate?: number;
+      usage_count?: number;
+      weight?: number;
+    };
     'internal_proj_marketplace_handler.CategoryTranslationResult': {
       /** @example 123 */
       category_id?: number;
@@ -24523,6 +25015,43 @@ export interface components {
       message?: string;
       /** @enum {string} */
       payment_method: 'card' | 'bank_transfer';
+    };
+    'internal_proj_marketplace_handler.DebugInfo': {
+      keyword_score?: number;
+      matched_keywords?: string[];
+      similarity_score?: number;
+    };
+    'internal_proj_marketplace_handler.DetectCategoryRequest': {
+      attributes?: {
+        [key: string]: unknown;
+      };
+      description?: string;
+      /** @example electronics */
+      domain?: string;
+      include_debug_info?: boolean;
+      /** @example [
+       *       "телефон",
+       *       "смартфон",
+       *       "айфон"
+       *     ] */
+      keywords?: string[];
+      /** @example ru */
+      language?: string;
+      /** @example smartphone */
+      product_type?: string;
+      title?: string;
+    };
+    'internal_proj_marketplace_handler.DetectCategoryResponse': {
+      alternative_categories?: components['schemas']['internal_proj_marketplace_handler.AlternativeCategoryResponse'][];
+      category_id?: number;
+      category_name?: string;
+      category_slug?: string;
+      confidence_score?: number;
+      debug_info?: components['schemas']['internal_proj_marketplace_handler.DebugInfo'];
+      method?: string;
+      processing_time_ms?: number;
+      stats_id?: number;
+      warning?: string;
     };
     'internal_proj_marketplace_handler.DetectLanguageRequest': {
       /** @example Hello world */
@@ -24799,6 +25328,10 @@ export interface components {
     'internal_proj_marketplace_handler.UnreadCountData': {
       /** @example 5 */
       count?: number;
+    };
+    'internal_proj_marketplace_handler.UpdateConfirmationRequest': {
+      confirmed?: boolean;
+      selected_category_id?: number;
     };
     'internal_proj_marketplace_handler.UpdateFieldTranslationRequest': {
       /** @example manual */

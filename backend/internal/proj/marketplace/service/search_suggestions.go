@@ -116,12 +116,16 @@ func (s *MarketplaceService) getCategorySuggestions(
 
 	suggestions := make([]SuggestionItem, 0, len(categories))
 	for _, cat := range categories {
+		iconStr := ""
+		if cat.Icon != nil {
+			iconStr = *cat.Icon
+		}
 		suggestions = append(suggestions, SuggestionItem{
 			Type:       SuggestionTypeCategory,
 			Value:      cat.Slug,
 			Label:      cat.Name,
 			CategoryID: cat.ID,
-			Icon:       cat.Icon,
+			Icon:       iconStr,
 			Count:      cat.ListingCount,
 			Metadata: map[string]interface{}{
 				"parent_id": cat.ParentID,

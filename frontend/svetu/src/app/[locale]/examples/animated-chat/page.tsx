@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { SveTuLogoStatic } from '@/components/logos/SveTuLogoStatic';
 import { AnimatedSection } from '@/components/ui/AnimatedSection';
 
 const AnimatedChat = () => {
@@ -218,14 +217,16 @@ const AnimatedChat = () => {
                         {/* Reactions */}
                         {message.reactions.length > 0 && (
                           <div className="absolute -bottom-3 right-0 flex gap-1">
-                            {message.reactions.map((reaction, idx) => (
-                              <span
-                                key={idx}
-                                className={`text-lg ${selectedEmoji === reaction ? 'animate-bounce' : ''}`}
-                              >
-                                {reaction}
-                              </span>
-                            ))}
+                            {message.reactions.map(
+                              (reaction: string, idx: number) => (
+                                <span
+                                  key={idx}
+                                  className={`text-lg ${selectedEmoji === reaction ? 'animate-bounce' : ''}`}
+                                >
+                                  {reaction}
+                                </span>
+                              )
+                            )}
                           </div>
                         )}
                       </div>

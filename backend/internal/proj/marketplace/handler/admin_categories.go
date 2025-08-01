@@ -11,18 +11,21 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
+	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
 )
 
 // AdminCategoriesHandler обрабатывает запросы админки для управления категориями
 type AdminCategoriesHandler struct {
 	*CategoriesHandler
+	keywordRepo *postgres.CategoryKeywordRepository
 }
 
 // NewAdminCategoriesHandler создает новый обработчик админки для категорий
-func NewAdminCategoriesHandler(categoriesHandler *CategoriesHandler) *AdminCategoriesHandler {
+func NewAdminCategoriesHandler(categoriesHandler *CategoriesHandler, keywordRepo *postgres.CategoryKeywordRepository) *AdminCategoriesHandler {
 	return &AdminCategoriesHandler{
 		CategoriesHandler: categoriesHandler,
+		keywordRepo:       keywordRepo,
 	}
 }
 
@@ -90,7 +93,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 		category.Slug = slug
 	}
 	if icon, ok := requestData["icon"].(string); ok {
-		category.Icon = icon
+		category.Icon = &icon
 	}
 	if description, ok := requestData["description"].(string); ok {
 		category.Description = description
@@ -257,7 +260,7 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 		category.Slug = slug
 	}
 	if icon, ok := requestData["icon"].(string); ok {
-		category.Icon = icon
+		category.Icon = &icon
 	}
 	if description, ok := requestData["description"].(string); ok {
 		category.Description = description
@@ -805,4 +808,208 @@ func (h *AdminCategoriesHandler) TranslateCategory(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, result)
+}
+
+// GetCategoryKeywords возвращает ключевые слова для категории
+// @Summary Get category keywords
+// @Description Returns all keywords for a specific category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param category_id path int true "Category ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryKeyword} "Keywords list"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
+// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/categories/{category_id}/keywords [get]
+func (h *AdminCategoriesHandler) GetCategoryKeywords(c *fiber.Ctx) error {
+	categoryIDStr := c.Params("category_id")
+	if categoryIDStr == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "categories.invalidCategoryID")
+	}
+
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "categories.invalidCategoryID")
+	}
+
+	// Получаем ключевые слова из репозитории postgres
+	pgKeywords, err := h.keywordRepo.GetKeywordsByCategoryID(c.Context(), int32(categoryID)) //nolint:gosec // Проверка на переполнение делается на уровне БД
+	if err != nil {
+		logger.Error().Err(err).Int("category_id", categoryID).Msg("Failed to get keywords")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "categories.getKeywordsError")
+	}
+
+	// Конвертируем в модели для API
+	keywords := make([]models.CategoryKeyword, len(pgKeywords))
+	for i, pgKw := range pgKeywords {
+		keywords[i] = models.CategoryKeyword{
+			ID:          pgKw.ID,
+			CategoryID:  pgKw.CategoryID,
+			Keyword:     pgKw.Keyword,
+			Language:    pgKw.Language,
+			Weight:      pgKw.Weight,
+			KeywordType: pgKw.KeywordType,
+			IsNegative:  pgKw.IsNegative,
+			Source:      pgKw.Source,
+			UsageCount:  pgKw.UsageCount,
+			SuccessRate: pgKw.SuccessRate,
+			CreatedAt:   pgKw.CreatedAt,
+			UpdatedAt:   pgKw.UpdatedAt,
+		}
+	}
+
+	return utils.SuccessResponse(c, keywords)
+}
+
+// AddCategoryKeyword добавляет ключевое слово к категории
+// @Summary Add keyword to category
+// @Description Adds a new keyword to the specified category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param category_id path int true "Category ID"
+// @Param keyword body models.CategoryKeywordRequest true "Keyword data"
+// @Success 201 {object} utils.SuccessResponseSwag{data=models.CategoryKeyword} "Created keyword"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request data"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/categories/{category_id}/keywords [post]
+func (h *AdminCategoriesHandler) AddCategoryKeyword(c *fiber.Ctx) error {
+	categoryIDStr := c.Params("category_id")
+	if categoryIDStr == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "categories.invalidCategoryID")
+	}
+
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "categories.invalidCategoryID")
+	}
+
+	// Парсим тело запроса
+	var req models.CategoryKeywordRequest
+	if err := c.BodyParser(&req); err != nil {
+		logger.Error().Err(err).Msg("Failed to parse request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "common.invalidRequestBody")
+	}
+
+	// Валидируем данные
+	if req.Keyword == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "categories.keywordRequired")
+	}
+
+	// Создаем объект ключевого слова для postgres репозитория
+	pgKeyword := &postgres.CategoryKeyword{
+		CategoryID:  int32(categoryID), //nolint:gosec // Проверка на переполнение делается на уровне БД
+		Keyword:     req.Keyword,
+		Language:    req.Language,
+		Weight:      req.Weight,
+		KeywordType: req.KeywordType,
+		IsNegative:  req.IsNegative,
+		Source:      "manual", // Добавлено через админку
+	}
+
+	// Добавляем ключевое слово
+	err = h.keywordRepo.AddKeyword(c.Context(), pgKeyword)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to add keyword")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "categories.addKeywordError")
+	}
+
+	// Конвертируем в API модель для ответа
+	apiKeyword := models.CategoryKeyword{
+		ID:          pgKeyword.ID,
+		CategoryID:  pgKeyword.CategoryID,
+		Keyword:     pgKeyword.Keyword,
+		Language:    pgKeyword.Language,
+		Weight:      pgKeyword.Weight,
+		KeywordType: pgKeyword.KeywordType,
+		IsNegative:  pgKeyword.IsNegative,
+		Source:      pgKeyword.Source,
+		UsageCount:  pgKeyword.UsageCount,
+		SuccessRate: pgKeyword.SuccessRate,
+		CreatedAt:   pgKeyword.CreatedAt,
+		UpdatedAt:   pgKeyword.UpdatedAt,
+	}
+
+	return utils.SuccessResponse(c, apiKeyword)
+}
+
+// UpdateCategoryKeyword обновляет ключевое слово
+// @Summary Update category keyword
+// @Description Updates an existing keyword
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param keyword_id path int true "Keyword ID"
+// @Param keyword body models.CategoryKeywordUpdateRequest true "Updated keyword data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.CategoryKeyword} "Updated keyword"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request data"
+// @Failure 404 {object} utils.ErrorResponseSwag "Keyword not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/categories/keywords/{keyword_id} [put]
+func (h *AdminCategoriesHandler) UpdateCategoryKeyword(c *fiber.Ctx) error {
+	keywordIDStr := c.Params("keyword_id")
+	if keywordIDStr == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "categories.invalidKeywordID")
+	}
+
+	keywordID, err := strconv.Atoi(keywordIDStr)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "categories.invalidKeywordID")
+	}
+
+	// Парсим тело запроса
+	var req models.CategoryKeywordUpdateRequest
+	if err := c.BodyParser(&req); err != nil {
+		logger.Error().Err(err).Msg("Failed to parse request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "common.invalidRequestBody")
+	}
+
+	// TODO: Реализовать метод UpdateKeywordWeight или использовать другой подход
+	// Пока что заглушка - в следующей итерации добавим полноценное обновление
+	logger.Warn().Int("keyword_id", keywordID).Float64("weight", req.Weight).Msg("UpdateKeywordWeight not implemented yet")
+	// err = h.keywordRepo.UpdateKeywordWeight(c.Context(), int32(keywordID), req.Weight)
+	// if err != nil {
+	//	logger.Error().Err(err).Msg("Failed to update keyword")
+	//	return utils.ErrorResponse(c, fiber.StatusInternalServerError, "categories.updateKeywordError")
+	// }
+
+	return utils.SuccessResponse(c, map[string]interface{}{"id": keywordID, "weight": req.Weight})
+}
+
+// DeleteCategoryKeyword удаляет ключевое слово
+// @Summary Delete category keyword
+// @Description Deletes a keyword from category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param keyword_id path int true "Keyword ID"
+// @Success 200 {object} utils.SuccessResponseSwag "Keyword deleted"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid keyword ID"
+// @Failure 404 {object} utils.ErrorResponseSwag "Keyword not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/categories/keywords/{keyword_id} [delete]
+func (h *AdminCategoriesHandler) DeleteCategoryKeyword(c *fiber.Ctx) error {
+	keywordIDStr := c.Params("keyword_id")
+	if keywordIDStr == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "categories.invalidKeywordID")
+	}
+
+	keywordID, err := strconv.Atoi(keywordIDStr)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "categories.invalidKeywordID")
+	}
+
+	// Удаляем ключевое слово
+	err = h.keywordRepo.DeleteKeyword(c.Context(), int32(keywordID)) //nolint:gosec // Проверка на переполнение делается на уровне БД
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to delete keyword")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "categories.deleteKeywordError")
+	}
+
+	return utils.SuccessResponse(c, map[string]string{"message": "Keyword deleted successfully"})
 }

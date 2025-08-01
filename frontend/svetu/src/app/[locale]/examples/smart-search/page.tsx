@@ -271,7 +271,7 @@ const SmartSearch = () => {
                     Найдено: 1,234 объявления
                   </h2>
                   <p className="text-sm text-base-content/60">
-                    по запросу "{searchQuery || 'все товары'}"
+                    по запросу &ldquo;{searchQuery || 'все товары'}&rdquo;
                   </p>
                 </div>
                 <select

@@ -1,21 +1,10 @@
 {
   "countries": {
-    "Сербия": "Serbia",
-    "Serbia": "Serbia",
-    "Россия": "Russia",
-    "Russia": "Russia",
-    "США": "USA",
-    "USA": "USA",
-    "Германия": "Germany",
-    "Germany": "Germany",
-    "Франция": "France",
-    "France": "France",
-    "Италия": "Italy",
-    "Italy": "Italy",
-    "Испания": "Spain",
-    "Spain": "Spain",
-    "Великобритания": "United Kingdom",
-    "United Kingdom": "United Kingdom"
+    "RS": "Serbia",
+    "BA": "Bosnia and Herzegovina",
+    "HR": "Croatia",
+    "ME": "Montenegro",
+    "MK": "North Macedonia"
   },
   "common": {
     "next": "Next",
@@ -72,14 +61,12 @@
     "saveSuccess": "Successfully saved",
     "deleteSuccess": "Successfully deleted",
     "total": "Total",
-    "showing": "Showing",
-    "of": "of",
-    "items": "items",
     "translate": "Translate",
     "continue": "Continue",
     "change": "Change",
     "required": "Required",
     "select": "Select",
+    "progress": "Progress",
     "accessDenied": "Access Denied",
     "minutes": "minutes",
     "km": "km",
@@ -91,7 +78,6 @@
     "processing": "Processing...",
     "uploading": "Uploading...",
     "optional": "Optional",
-    "progress": "Progress",
     "buy": "Buy",
     "comingSoon": "Coming Soon",
     "popular": "Popular",
@@ -116,8 +102,6 @@
     "publish": "Publish",
     "free_above": "Free above",
     "all": "All",
-    "reviews": "reviews",
-    "notSpecified": "Not specified",
     "rating": "Rating",
     "share": "Share",
     "viewGrid": "Grid view",
@@ -340,7 +324,8 @@
     "search": "Search",
     "create": "Create",
     "chats": "Chats",
-    "profile": "Profile"
+    "profile": "Profile",
+    "close": "Close"
   },
   "header": {
     "nav": {
@@ -944,6 +929,43 @@
       "manageAttributes": "Manage Attributes",
       "translate": "Translate",
       "translationStatus": "Translation Status",
+      "keywords": {
+        "title": "Keywords",
+        "addKeyword": "Add Keyword",
+        "keywordPlaceholder": "Enter keyword",
+        "keywordRequired": "Keyword is required",
+        "weight": "Weight",
+        "negative": "Negative",
+        "allLanguages": "All languages",
+        "add": "Add",
+        "addSuccess": "Keyword added",
+        "addError": "Error adding keyword",
+        "deleteConfirm": "Delete this keyword?",
+        "deleteSuccess": "Keyword deleted",
+        "deleteError": "Error deleting keyword",
+        "updateSuccess": "Keyword updated",
+        "updateError": "Error updating keyword",
+        "loadError": "Error loading keywords",
+        "noKeywords": "No keywords found",
+        "usage": "Usage",
+        "types": {
+          "general": "General",
+          "main": "Main",
+          "synonym": "Synonym",
+          "brand": "Brand",
+          "attribute": "Attribute",
+          "context": "Context",
+          "pattern": "Pattern"
+        },
+        "info": {
+          "title": "Keywords System Information",
+          "weights": "Weight (0-10): affects priority in category search",
+          "types": "Types: main, synonyms, brands, attributes",
+          "negative": "Negative words: if found, category is excluded",
+          "languages": "Languages: ru, en, sr or * for all languages",
+          "statistics": "Statistics: usage count and success rate"
+        }
+      },
       "saveCategory": "Save Category",
       "cancelEdit": "Cancel",
       "deleteCategory": "Delete Category",
@@ -1035,7 +1057,10 @@
         "profile_updated": "User profile updated successfully",
         "status_updated": "User status updated successfully",
         "deleted": "User deleted successfully"
-      }
+      },
+      "title": "User Management",
+      "comingSoon": "This feature is coming soon",
+      "description": "User management functionality is under development"
     },
     "balance": {
       "title": "My Balance",
@@ -1548,13 +1573,7 @@
     "imageGallery": {
       "clickToZoom": "Click to zoom"
     },
-    "condition": {
-      "new": "New",
-      "like_new": "Like new",
-      "used": "Used",
-      "refurbished": "Refurbished",
-      "damaged": "Damaged"
-    },
+    "condition": "Condition",
     "invalidData": "Invalid data format",
     "duplicateTitle": "Listing with this title already exists",
     "createError": "Failed to create listing",
@@ -1724,7 +1743,23 @@
     "deleteCategoryError": "Failed to delete category",
     "buy": "Buy",
     "confirmPurchase": "Confirm Purchase",
-    "seller": "Seller",
+    "seller": {
+      "title": "Seller",
+      "noReviews": "No reviews yet",
+      "memberSince": "Member since",
+      "responseRate": "Response rate",
+      "responseTime": "Response time",
+      "verified": "Verified",
+      "experienced": "Experienced",
+      "sendMessage": "Send Message",
+      "showPhone": "Show Phone",
+      "allItems": "All seller items",
+      "yourListing": "This is your listing",
+      "edit": "Edit",
+      "signInToContact": "Sign in to contact seller",
+      "signIn": "Sign In",
+      "platformProtection": "All transactions protected by platform rules"
+    },
     "paymentMethod": "Payment Method",
     "payFromBalance": "Pay from Balance",
     "availableBalance": "Available balance",
@@ -1758,35 +1793,16 @@
     "published": "Published",
     "characteristics": "Characteristics",
     "andMore": "and {count} more",
-    "seller": "Seller",
     "views": "Views",
     "rating": "Rating",
     "category": "Category",
     "area": "Area",
     "rooms": "Rooms",
-    "condition": "Condition",
     "type": "Type",
     "year": "Year",
     "addToFavorites": "Add to Favorites",
     "share": "Share",
     "newSeller": "New",
-    "seller": {
-      "title": "Seller",
-      "noReviews": "No reviews yet",
-      "memberSince": "Member since",
-      "responseRate": "Response rate",
-      "responseTime": "Response time",
-      "verified": "Verified",
-      "experienced": "Experienced",
-      "sendMessage": "Send Message",
-      "showPhone": "Show Phone",
-      "allItems": "All seller items",
-      "yourListing": "This is your listing",
-      "edit": "Edit",
-      "signInToContact": "Sign in to contact seller",
-      "signIn": "Sign In",
-      "platformProtection": "All transactions protected by platform rules"
-    },
     "iconPicker": {
       "placeholder": "Select an icon",
       "close": "Close",
@@ -2013,6 +2029,8 @@
     "subtitle_regional": "Create listings according to Serbian market standards",
     "auth_required": "You must be logged in to post a listing",
     "success": "Listing posted successfully!",
+    "location_detected_from_photo": "Location detected from photo",
+    "privacy_settings": "Privacy settings",
     "data_saving_mode": "Data saving mode is enabled",
     "script_mode": "Script mode",
     "description": "Description",
@@ -2286,6 +2304,10 @@
       "category": {
         "title": "Category"
       },
+      "category_detection": {
+        "low_confidence": "Category detected with low confidence. Please check and adjust if needed",
+        "success": "Category detected: {category}"
+      },
       "title_section": {
         "title": "Title (A/B testing)",
         "change": "Change",
@@ -2362,6 +2384,8 @@
         "ai_recommends": "AI recommends adding:",
         "category_title": "Category",
         "category_auto_selected": "AI automatically selected category: {category}",
+        "manual_category_selection": "Or select category manually:",
+        "select_category": "Select category",
         "title_ab_testing": "Title (A/B testing)",
         "change": "Change",
         "ai_choice": "AI choice",
@@ -2614,13 +2638,6 @@
       "city_required": "City must be at least 2 characters",
       "postal_code_required": "Postal code must be at least 4 characters"
     }
-  },
-  "countries": {
-    "RS": "Serbia",
-    "BA": "Bosnia and Herzegovina",
-    "HR": "Croatia",
-    "ME": "Montenegro",
-    "MK": "North Macedonia"
   },
   "payment_methods": {
     "cash": "Cash",
