@@ -681,6 +681,9 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		if tempUserName.Valid {
 			listing.User.Name = tempUserName.String
 		}
+		// Заполняем ID пользователя
+		listing.User.ID = listing.UserID
+		log.Printf("DEBUG GetListings: listing.ID=%d, listing.UserID=%d, listing.User.ID=%d", listing.ID, listing.UserID, listing.User.ID)
 		if tempStorefrontID.Valid {
 			sfID := int(tempStorefrontID.Int32)
 			listing.StorefrontID = &sfID
@@ -2761,14 +2764,16 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 
 	err := s.pool.QueryRow(ctx, `
         SELECT
-            sp.id, sp.storefront_id, 0 as user_id, sp.category_id, sp.name, sp.description,
+            sp.id, sp.storefront_id, sf.user_id, sp.category_id, sp.name, sp.description,
             sp.price, 'new' as condition, 'active' as status, '' as location,
             0 as latitude, 0 as longitude, '' as city, '' as country,
             sp.view_count, sp.created_at, sp.updated_at, false as show_on_map, 'sr' as original_language,
-            '' as user_name, '' as user_email, sp.created_at as user_created_at,
-            '' as user_picture_url, '' as user_phone,
+            u.name as user_name, u.email as user_email, u.created_at as user_created_at,
+            u.picture_url as user_picture_url, u.phone as user_phone,
             c.name as category_name, c.slug as category_slug, '{}'::jsonb as metadata
         FROM storefront_products sp
+        LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
+        LEFT JOIN users u ON sf.user_id = u.id
         LEFT JOIN marketplace_categories c ON sp.category_id = c.id
         WHERE sp.id = $1 AND sp.is_active = true
     `, id).Scan(

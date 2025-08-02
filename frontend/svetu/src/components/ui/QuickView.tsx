@@ -14,6 +14,15 @@ import {
 } from 'lucide-react';
 import { DistanceBadge } from './DistanceBadge';
 import Image from 'next/image';
+import { useDispatch } from 'react-redux';
+import { addItem } from '@/store/slices/localCartSlice';
+import type { AppDispatch } from '@/store';
+import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
+import { useAuth } from '@/contexts/AuthContext';
+import type { components } from '@/types/generated/api';
+
+type ProductVariant =
+  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
 
 interface QuickViewProps {
   isOpen: boolean;
@@ -58,6 +67,9 @@ export const QuickView: React.FC<QuickViewProps> = ({
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [showVariantModal, setShowVariantModal] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -83,6 +95,45 @@ export const QuickView: React.FC<QuickViewProps> = ({
     setCurrentImageIndex((prev) =>
       prev === product.images.length - 1 ? 0 : prev + 1
     );
+  };
+
+  const handleAddToCartClick = () => {
+    if (product.storefrontId) {
+      // Для товаров витрин показываем модальное окно выбора вариантов
+      setShowVariantModal(true);
+    } else if (onAddToCart) {
+      // Для обычных товаров вызываем переданный обработчик
+      onAddToCart();
+    }
+  };
+
+  const handleAddToCartWithVariant = (
+    variant: ProductVariant | null,
+    quantity: number
+  ) => {
+    if (!product.storefrontId) return;
+
+    dispatch(
+      addItem({
+        productId: parseInt(product.id),
+        variantId: variant?.id,
+        name: product.title,
+        variantName: variant?.name,
+        price:
+          variant?.price ||
+          parseFloat(product.price.replace(/[^\d.]/g, '')) ||
+          0,
+        quantity,
+        storefrontId: product.storefrontId,
+        storefrontName: product.storefrontName || 'Store',
+        storefrontSlug: product.storefrontSlug || 'store',
+        image: product.images[0] || '',
+        currency: 'RSD',
+        stockQuantity: variant?.stock_quantity || product.stockQuantity || 100,
+      })
+    );
+
+    setShowVariantModal(false);
   };
 
   if (!isOpen) return null;
@@ -287,9 +338,9 @@ export const QuickView: React.FC<QuickViewProps> = ({
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-4">
-                  {product.storefrontId && onAddToCart ? (
+                  {product.storefrontId && isAuthenticated ? (
                     <button
-                      onClick={onAddToCart}
+                      onClick={handleAddToCartClick}
                       className="btn btn-primary flex-1"
                     >
                       <ShoppingCart className="w-5 h-5" />В корзину
@@ -325,6 +376,21 @@ export const QuickView: React.FC<QuickViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Variant Selection Modal */}
+      {showVariantModal && product.storefrontSlug && (
+        <VariantSelectionModal
+          isOpen={showVariantModal}
+          onClose={() => setShowVariantModal(false)}
+          productId={parseInt(product.id)}
+          productName={product.title}
+          productImage={product.images[0]}
+          storefrontSlug={product.storefrontSlug}
+          basePrice={parseFloat(product.price.replace(/[^\d.]/g, '')) || 0}
+          baseCurrency="RSD"
+          onAddToCart={handleAddToCartWithVariant}
+        />
+      )}
     </>
   );
 };

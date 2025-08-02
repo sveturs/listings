@@ -32,6 +32,9 @@ type StorefrontProduct struct {
 	LocationPrivacy       *string  `json:"location_privacy,omitempty" db:"location_privacy"`
 	ShowOnMap             bool     `json:"show_on_map" db:"show_on_map"`
 
+	// Variant fields
+	HasVariants bool `json:"has_variants" db:"has_variants"`
+
 	// Relations
 	Images   []StorefrontProductImage   `json:"images" db:"-"`
 	Category *MarketplaceCategory       `json:"category,omitempty" db:"-"`
@@ -246,6 +249,11 @@ type CreateProductRequest struct {
 	IndividualLongitude   *float64 `json:"individual_longitude,omitempty"`
 	LocationPrivacy       *string  `json:"location_privacy,omitempty" validate:"omitempty,oneof=exact street district city"`
 	ShowOnMap             *bool    `json:"show_on_map,omitempty"`
+
+	// Variant fields
+	HasVariants     bool                  `json:"has_variants"`
+	Variants        []CreateVariantInline `json:"variants,omitempty" validate:"omitempty,dive"`
+	VariantSettings *VariantSettings      `json:"variant_settings,omitempty"`
 }
 
 // UpdateProductRequest represents a request to update a product
@@ -377,4 +385,29 @@ type BulkOperationError struct {
 	Index     int    `json:"index,omitempty"`      // Index in the request array
 	ProductID int    `json:"product_id,omitempty"` // Product ID if available
 	Error     string `json:"error"`                // Error message
+}
+
+// CreateVariantInline represents variant data for creating together with a product
+type CreateVariantInline struct {
+	SKU               *string                `json:"sku,omitempty"`
+	Barcode           *string                `json:"barcode,omitempty"`
+	Price             *float64               `json:"price,omitempty"`
+	CompareAtPrice    *float64               `json:"compare_at_price,omitempty"`
+	CostPrice         *float64               `json:"cost_price,omitempty"`
+	StockQuantity     int                    `json:"stock_quantity" validate:"min=0"`
+	LowStockThreshold *int                   `json:"low_stock_threshold,omitempty"`
+	VariantAttributes map[string]interface{} `json:"variant_attributes" validate:"required"`
+	Weight            *float64               `json:"weight,omitempty"`
+	Dimensions        map[string]interface{} `json:"dimensions,omitempty"`
+	IsDefault         bool                   `json:"is_default"`
+}
+
+// VariantSettings represents settings for product variants
+type VariantSettings struct {
+	TrackInventory     bool     `json:"track_inventory"`
+	ContinueSelling    bool     `json:"continue_selling"` // continue selling when out of stock
+	RequireShipping    bool     `json:"require_shipping"`
+	TaxableProduct     bool     `json:"taxable_product"`
+	WeightUnit         string   `json:"weight_unit,omitempty"` // kg, g, lb, oz
+	SelectedAttributes []string `json:"selected_attributes"`   // which attributes are used for variants
 }

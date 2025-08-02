@@ -32,7 +32,9 @@ func WithTx(ctx context.Context, db TxBeginner, fn func(*sqlx.Tx) error) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback() // ignore error - transaction might already be committed
+	}()
 
 	if err := fn(tx); err != nil {
 		return err

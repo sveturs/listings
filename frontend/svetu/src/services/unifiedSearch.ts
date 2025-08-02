@@ -63,6 +63,12 @@ export interface UnifiedSearchItem {
     lat?: number;
     lng?: number;
   };
+  user?: {
+    id: number;
+    name: string;
+    picture_url?: string;
+    is_verified?: boolean;
+  };
   storefront?: {
     id: number;
     name: string;

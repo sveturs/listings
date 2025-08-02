@@ -55,8 +55,14 @@ export default function AttributeSetup({
 
   const loadAvailableAttributes = useCallback(async () => {
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/categories/${categoryId}/attributes`
+        `/api/v1/storefronts/storefront/categories/${categoryId}/attributes`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (response.ok) {
         const attributes = await response.json();
@@ -74,8 +80,14 @@ export default function AttributeSetup({
 
   const loadCurrentSetup = useCallback(async () => {
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/attributes`
+        `/api/v1/storefronts/storefront/products/${productId}/attributes`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (response.ok) {
         const currentAttributes = await response.json();
@@ -118,8 +130,14 @@ export default function AttributeSetup({
 
   const loadGlobalValues = async (attributeId: number) => {
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/variants/attributes/${attributeId}/values`
+        `/api/v1/public/variants/attributes/${attributeId}/values`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
       );
       if (response.ok) {
         const values = await response.json();

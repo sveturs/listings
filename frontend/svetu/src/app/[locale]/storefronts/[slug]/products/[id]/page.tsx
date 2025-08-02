@@ -355,6 +355,7 @@ export default function StorefrontProductPage({ params }: Props) {
               <div className="pt-4">
                 <VariantSelector
                   productId={product.id!}
+                  storefrontSlug={slug}
                   basePrice={product.price || 0}
                   baseCurrency={product.currency || 'RSD'}
                   onVariantChange={handleVariantChange}

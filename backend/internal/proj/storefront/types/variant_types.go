@@ -7,20 +7,20 @@ import (
 
 // ProductVariantAttribute represents a variant attribute (color, size, etc.)
 type ProductVariantAttribute struct {
-	ID          int       `json:"id" db:"id"`
-	Name        string    `json:"name" db:"name"`
-	DisplayName string    `json:"display_name" db:"display_name"`
-	Type        string    `json:"type" db:"type"` // text, color, image, number
-	IsRequired  bool      `json:"is_required" db:"is_required"`
-	SortOrder   int       `json:"sort_order" db:"sort_order"`
-	AffectsStock bool     `json:"affects_stock" db:"affects_stock"` // NEW: determines if this attribute requires separate stock tracking
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+	ID           int       `json:"id" db:"id"`
+	Name         string    `json:"name" db:"name"`
+	DisplayName  string    `json:"display_name" db:"display_name"`
+	Type         string    `json:"type" db:"type"` // text, color, image, number
+	IsRequired   bool      `json:"is_required" db:"is_required"`
+	SortOrder    int       `json:"sort_order" db:"sort_order"`
+	AffectsStock bool      `json:"affects_stock" db:"affects_stock"` // NEW: determines if this attribute requires separate stock tracking
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // ProductVariantAttributeValue represents possible values for an attribute
 type ProductVariantAttributeValue struct {
-	ID          int       `json:"id" db:"id"`
+	ID          int                    `json:"id" db:"id"`
 	AttributeID int                    `json:"attribute_id" db:"attribute_id"`
 	Value       string                 `json:"value" db:"value"`
 	DisplayName string                 `json:"display_name" db:"display_name"`
@@ -28,8 +28,8 @@ type ProductVariantAttributeValue struct {
 	ImageURL    *string                `json:"image_url,omitempty" db:"image_url"`
 	SortOrder   int                    `json:"sort_order" db:"sort_order"`
 	IsActive    bool                   `json:"is_active" db:"is_active"`
-	IsPopular   bool                   `json:"is_popular" db:"is_popular"` // NEW
-	UsageCount  int                    `json:"usage_count" db:"usage_count"` // NEW
+	IsPopular   bool                   `json:"is_popular" db:"is_popular"`       // NEW
+	UsageCount  int                    `json:"usage_count" db:"usage_count"`     // NEW
 	Metadata    map[string]interface{} `json:"metadata,omitempty" db:"metadata"` // NEW
 	CreatedAt   time.Time              `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time              `json:"updated_at" db:"updated_at"`
@@ -45,7 +45,7 @@ type ProductVariant struct {
 	CompareAtPrice    *float64               `json:"compare_at_price,omitempty" db:"compare_at_price"`
 	CostPrice         *float64               `json:"cost_price,omitempty" db:"cost_price"`
 	StockQuantity     int                    `json:"stock_quantity" db:"stock_quantity"`
-	ReservedQuantity  int                    `json:"reserved_quantity" db:"reserved_quantity"` // NEW
+	ReservedQuantity  int                    `json:"reserved_quantity" db:"reserved_quantity"`   // NEW
 	AvailableQuantity int                    `json:"available_quantity" db:"available_quantity"` // NEW: computed field
 	StockStatus       string                 `json:"stock_status" db:"stock_status"`
 	LowStockThreshold *int                   `json:"low_stock_threshold,omitempty" db:"low_stock_threshold"`
@@ -228,18 +228,18 @@ type StockUpdateItem struct {
 
 // VariantMatrixResponse represents all possible variant combinations
 type VariantMatrixResponse struct {
-	Attributes      map[string][]AttributeValue `json:"attributes"`      // available attributes and their values
-	ExistingVariants []ProductVariant           `json:"existing_variants"` // already created variants
-	PossibleCombinations int                   `json:"possible_combinations"` // total number of possible combinations
+	Attributes           map[string][]AttributeValue `json:"attributes"`            // available attributes and their values
+	ExistingVariants     []ProductVariant            `json:"existing_variants"`     // already created variants
+	PossibleCombinations int                         `json:"possible_combinations"` // total number of possible combinations
 }
 
 // VariantAnalyticsResponse represents analytics data for variants
 type VariantAnalyticsResponse struct {
-	TotalVariants    int                    `json:"total_variants"`
-	TotalStock       int                    `json:"total_stock"`
-	TotalSold        int                    `json:"total_sold"`
-	BestSeller       *ProductVariant        `json:"best_seller,omitempty"`
-	LowStockVariants []ProductVariant       `json:"low_stock_variants"`
+	TotalVariants    int                       `json:"total_variants"`
+	TotalStock       int                       `json:"total_stock"`
+	TotalSold        int                       `json:"total_sold"`
+	BestSeller       *ProductVariant           `json:"best_seller,omitempty"`
+	LowStockVariants []ProductVariant          `json:"low_stock_variants"`
 	StockByAttribute map[string]map[string]int `json:"stock_by_attribute"` // e.g. {"color": {"red": 50, "blue": 30}}
 	SalesByAttribute map[string]map[string]int `json:"sales_by_attribute"`
 }

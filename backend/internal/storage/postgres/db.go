@@ -183,9 +183,10 @@ func (db *Database) GetSQLXDB() *sqlx.DB {
 	if db.sqlxDB != nil {
 		return db.sqlxDB
 	}
-	// Иначе создаем новый из пула
+	// Создаем новый sqlx.DB из пула и СОХРАНЯЕМ его
 	stdDB := stdlib.OpenDBFromPool(db.pool)
-	return sqlx.NewDb(stdDB, "pgx")
+	db.sqlxDB = sqlx.NewDb(stdDB, "pgx")
+	return db.sqlxDB
 }
 
 func (db *Database) FileStorage() filestorage.FileStorageInterface {

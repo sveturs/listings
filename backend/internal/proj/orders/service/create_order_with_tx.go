@@ -26,7 +26,9 @@ func (s *OrderService) CreateOrderWithTx(ctx context.Context, db *sqlx.DB, req *
 		if err != nil {
 			return fmt.Errorf("failed to begin transaction: %w", err)
 		}
-		defer tx.Rollback()
+		defer func() {
+			_ = tx.Rollback() // ignore error - transaction might already be committed
+		}()
 
 		// 1. Проверяем существование витрины
 		storefront, err := s.getStorefrontTx(ctx, tx, req.StorefrontID)
@@ -157,7 +159,6 @@ func (s *OrderService) CreateOrderWithTx(ctx context.Context, db *sqlx.DB, req *
 		s.logger.Info("Order created successfully with transaction (order_id: %d)", createdOrder.ID)
 		return nil
 	}()
-
 	if err != nil {
 		// Если произошла ошибка, освобождаем все резервирования
 		for _, reservation := range reservations {
@@ -316,7 +317,6 @@ func (s *OrderService) createOrderInTransaction(ctx context.Context, tx *sqlx.Tx
 		order.PaymentStatus,
 		order.Metadata,
 	).Scan(&createdOrder.ID, &createdOrder.CreatedAt, &createdOrder.UpdatedAt)
-
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +365,6 @@ func (s *OrderService) createReservationTx(ctx context.Context, tx *sqlx.Tx, pro
 		&reservation.ExpiresAt,
 		&reservation.CreatedAt,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -450,4 +449,3 @@ func (s *OrderService) clearCartTx(ctx context.Context, tx *sqlx.Tx, cartID int6
 	_, err = tx.ExecContext(ctx, updateCartQuery, cartID)
 	return err
 }
-

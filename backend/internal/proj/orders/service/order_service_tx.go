@@ -28,7 +28,7 @@ func NewOrderServiceTx(orderService *OrderService, db *sqlx.DB) *OrderServiceTx 
 // CreateOrderTx создает новый заказ в транзакции
 func (s *OrderServiceTx) CreateOrderTx(ctx context.Context, req *models.CreateOrderRequest, userID int) (*models.StorefrontOrder, error) {
 	var createdOrder *models.StorefrontOrder
-	
+
 	err := orderRepo.WithTx(ctx, s.db, func(tx *sqlx.Tx) error {
 		s.logger.Info("Creating order in transaction (user_id: %d, storefront_id: %d)", userID, req.StorefrontID)
 
@@ -92,7 +92,6 @@ func (s *OrderServiceTx) CreateOrderTx(ctx context.Context, req *models.CreateOr
 		s.logger.Info("Order created successfully (order_id: %d)", createdOrder.ID)
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +102,7 @@ func (s *OrderServiceTx) CreateOrderTx(ctx context.Context, req *models.CreateOr
 // getOrderItems получает позиции заказа из корзины или запроса
 func (s *OrderServiceTx) getOrderItems(ctx context.Context, req *models.CreateOrderRequest, userID int) ([]models.OrderItemRequest, error) {
 	var items []models.OrderItemRequest
-	
+
 	if req.CartID != nil {
 		// Из корзины
 		cart, err := s.cartRepo.GetByID(ctx, *req.CartID)
@@ -276,20 +275,20 @@ func (s *OrderServiceTx) createOrderItemTx(ctx context.Context, tx *sqlx.Tx, ite
 
 // createOrderInTx создает заказ в рамках транзакции
 func (s *OrderServiceTx) createOrderInTx(ctx context.Context, tx *sqlx.Tx, order *models.StorefrontOrder) (*models.StorefrontOrder, error) {
-	return s.OrderService.createOrderInTransaction(ctx, tx, order)
+	return s.createOrderInTransaction(ctx, tx, order)
 }
 
 // updateOrderInTx обновляет заказ в рамках транзакции
 func (s *OrderServiceTx) updateOrderInTx(ctx context.Context, tx *sqlx.Tx, order *models.StorefrontOrder) error {
-	return s.OrderService.updateOrderTx(ctx, tx, order)
+	return s.updateOrderTx(ctx, tx, order)
 }
 
 // clearCartInTx очищает корзину в рамках транзакции
 func (s *OrderServiceTx) clearCartInTx(ctx context.Context, tx *sqlx.Tx, cartID int64) error {
-	return s.OrderService.clearCartTx(ctx, tx, cartID)
+	return s.clearCartTx(ctx, tx, cartID)
 }
 
 // reserveStockInTx резервирует товар в рамках транзакции
 func (s *OrderServiceTx) reserveStockInTx(ctx context.Context, tx *sqlx.Tx, productID int64, variantID *int64, quantity int, orderID int64) (*models.InventoryReservation, error) {
-	return s.OrderService.createReservationTx(ctx, tx, productID, variantID, quantity, orderID)
+	return s.createReservationTx(ctx, tx, productID, variantID, quantity, orderID)
 }

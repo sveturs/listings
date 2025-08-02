@@ -915,6 +915,9 @@ definitions:
       has_individual_location:
         description: Location fields
         type: boolean
+      has_variants:
+        description: Variant fields
+        type: boolean
       individual_address:
         type: string
       individual_latitude:
@@ -944,6 +947,12 @@ definitions:
       stock_quantity:
         minimum: 0
         type: integer
+      variant_settings:
+        $ref: '#/definitions/backend_internal_domain_models.VariantSettings'
+      variants:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.CreateVariantInline'
+        type: array
     required:
     - category_id
     - currency
@@ -1030,6 +1039,36 @@ definitions:
     required:
     - component_id
     - name
+    type: object
+  backend_internal_domain_models.CreateVariantInline:
+    properties:
+      barcode:
+        type: string
+      compare_at_price:
+        type: number
+      cost_price:
+        type: number
+      dimensions:
+        additionalProperties: true
+        type: object
+      is_default:
+        type: boolean
+      low_stock_threshold:
+        type: integer
+      price:
+        type: number
+      sku:
+        type: string
+      stock_quantity:
+        minimum: 0
+        type: integer
+      variant_attributes:
+        additionalProperties: true
+        type: object
+      weight:
+        type: number
+    required:
+    - variant_attributes
     type: object
   backend_internal_domain_models.CustomUIComponent:
     properties:
@@ -2793,6 +2832,9 @@ definitions:
       has_individual_location:
         description: Location fields
         type: boolean
+      has_variants:
+        description: Variant fields
+        type: boolean
       id:
         type: integer
       images:
@@ -3310,6 +3352,26 @@ definitions:
         type: integer
       user_id:
         type: integer
+    type: object
+  backend_internal_domain_models.VariantSettings:
+    properties:
+      continue_selling:
+        description: continue selling when out of stock
+        type: boolean
+      require_shipping:
+        type: boolean
+      selected_attributes:
+        description: which attributes are used for variants
+        items:
+          type: string
+        type: array
+      taxable_product:
+        type: boolean
+      track_inventory:
+        type: boolean
+      weight_unit:
+        description: kg, g, lb, oz
+        type: string
     type: object
   backend_internal_domain_search.AdvancedGeoFilters:
     properties:
@@ -4149,6 +4211,245 @@ definitions:
         description: Минимальное значение веса
         type: number
     type: object
+  backend_internal_proj_storefront_types.AttributeValue:
+    properties:
+      color_hex:
+        type: string
+      display_name:
+        type: string
+      image_url:
+        type: string
+      is_custom:
+        description: true if added by seller
+        type: boolean
+      value:
+        type: string
+    type: object
+  backend_internal_proj_storefront_types.BulkUpdateStockRequest:
+    properties:
+      updates:
+        items:
+          $ref: '#/definitions/backend_internal_proj_storefront_types.StockUpdateItem'
+        minItems: 1
+        type: array
+    required:
+    - updates
+    type: object
+  backend_internal_proj_storefront_types.ProductVariant:
+    properties:
+      available_quantity:
+        description: 'NEW: computed field'
+        type: integer
+      barcode:
+        type: string
+      compare_at_price:
+        type: number
+      cost_price:
+        type: number
+      created_at:
+        type: string
+      dimensions:
+        additionalProperties: true
+        type: object
+      id:
+        type: integer
+      images:
+        description: Related data
+        items:
+          $ref: '#/definitions/backend_internal_proj_storefront_types.ProductVariantImage'
+        type: array
+      is_active:
+        type: boolean
+      is_default:
+        type: boolean
+      low_stock_threshold:
+        type: integer
+      price:
+        type: number
+      product_id:
+        type: integer
+      reserved_quantity:
+        description: NEW
+        type: integer
+      sku:
+        type: string
+      sold_count:
+        type: integer
+      stock_quantity:
+        type: integer
+      stock_status:
+        type: string
+      updated_at:
+        type: string
+      variant_attributes:
+        additionalProperties: true
+        type: object
+      view_count:
+        type: integer
+      weight:
+        type: number
+    type: object
+  backend_internal_proj_storefront_types.ProductVariantAttribute:
+    properties:
+      affects_stock:
+        description: 'NEW: determines if this attribute requires separate stock tracking'
+        type: boolean
+      created_at:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: integer
+      is_required:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+      type:
+        description: text, color, image, number
+        type: string
+      updated_at:
+        type: string
+    type: object
+  backend_internal_proj_storefront_types.ProductVariantAttributeValue:
+    properties:
+      attribute_id:
+        type: integer
+      color_hex:
+        type: string
+      created_at:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      is_popular:
+        description: NEW
+        type: boolean
+      metadata:
+        additionalProperties: true
+        description: NEW
+        type: object
+      sort_order:
+        type: integer
+      updated_at:
+        type: string
+      usage_count:
+        description: NEW
+        type: integer
+      value:
+        type: string
+    type: object
+  backend_internal_proj_storefront_types.ProductVariantImage:
+    properties:
+      alt_text:
+        type: string
+      created_at:
+        type: string
+      display_order:
+        type: integer
+      id:
+        type: integer
+      image_url:
+        type: string
+      is_main:
+        type: boolean
+      thumbnail_url:
+        type: string
+      variant_id:
+        type: integer
+    type: object
+  backend_internal_proj_storefront_types.StockUpdateItem:
+    properties:
+      stock_quantity:
+        minimum: 0
+        type: integer
+      variant_id:
+        type: integer
+    required:
+    - variant_id
+    type: object
+  backend_internal_proj_storefront_types.UpdateVariantRequest:
+    properties:
+      barcode:
+        type: string
+      compare_at_price:
+        type: number
+      cost_price:
+        type: number
+      dimensions:
+        additionalProperties: true
+        type: object
+      is_active:
+        type: boolean
+      is_default:
+        type: boolean
+      low_stock_threshold:
+        type: integer
+      price:
+        type: number
+      sku:
+        type: string
+      stock_quantity:
+        minimum: 0
+        type: integer
+      variant_attributes:
+        additionalProperties: true
+        type: object
+      weight:
+        type: number
+    type: object
+  backend_internal_proj_storefront_types.VariantAnalyticsResponse:
+    properties:
+      best_seller:
+        $ref: '#/definitions/backend_internal_proj_storefront_types.ProductVariant'
+      low_stock_variants:
+        items:
+          $ref: '#/definitions/backend_internal_proj_storefront_types.ProductVariant'
+        type: array
+      sales_by_attribute:
+        additionalProperties:
+          additionalProperties:
+            type: integer
+          type: object
+        type: object
+      stock_by_attribute:
+        additionalProperties:
+          additionalProperties:
+            type: integer
+          type: object
+        description: 'e.g. {"color": {"red": 50, "blue": 30}}'
+        type: object
+      total_sold:
+        type: integer
+      total_stock:
+        type: integer
+      total_variants:
+        type: integer
+    type: object
+  backend_internal_proj_storefront_types.VariantMatrixResponse:
+    properties:
+      attributes:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/backend_internal_proj_storefront_types.AttributeValue'
+          type: array
+        description: available attributes and their values
+        type: object
+      existing_variants:
+        description: already created variants
+        items:
+          $ref: '#/definitions/backend_internal_proj_storefront_types.ProductVariant'
+        type: array
+      possible_combinations:
+        description: total number of possible combinations
+        type: integer
+    type: object
   backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem:
     properties:
       address:
@@ -4530,6 +4831,10 @@ definitions:
         allOf:
         - $ref: '#/definitions/internal_proj_global_handler.UnifiedStorefrontInfo'
         description: Только для storefront товаров
+      user:
+        allOf:
+        - $ref: '#/definitions/internal_proj_global_handler.UnifiedUserInfo'
+        description: Информация о продавце
       views_count:
         description: Для расчета популярности
         type: integer
@@ -4600,6 +4905,17 @@ definitions:
       rating:
         type: number
       slug:
+        type: string
+    type: object
+  internal_proj_global_handler.UnifiedUserInfo:
+    properties:
+      id:
+        type: integer
+      is_verified:
+        type: boolean
+      name:
+        type: string
+      picture_url:
         type: string
     type: object
   internal_proj_marketplace_handler.AddMessageRequest:
@@ -15541,6 +15857,233 @@ paths:
       summary: Process payment webhook
       tags:
       - payments
+  /api/v1/public/categories/{category_id}/attributes:
+    get:
+      consumes:
+      - application/json
+      description: Public endpoint for getting all attributes that can be used for
+        products in a specific category - no authentication required
+      parameters:
+      - description: Category ID
+        in: path
+        name: category_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get available attributes for a category (public endpoint)
+      tags:
+      - public-variants
+  /api/v1/public/storefronts/{slug}/products/{product_id}:
+    get:
+      consumes:
+      - application/json
+      description: Public endpoint for getting basic product information - no authentication
+        required
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_internal_domain_models.StorefrontProduct'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get product information (public endpoint)
+      tags:
+      - public-variants
+  /api/v1/public/storefronts/{slug}/products/{product_id}/variants:
+    get:
+      consumes:
+      - application/json
+      description: Public endpoint for getting product variants - no authentication
+        required
+      parameters:
+      - description: Storefront slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_proj_storefront_types.ProductVariant'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get product variants for buyers (public endpoint)
+      tags:
+      - public-variants
+  /api/v1/public/variants/{variant_id}:
+    get:
+      consumes:
+      - application/json
+      description: Public endpoint for getting specific variant details - no authentication
+        required
+      parameters:
+      - description: Variant ID
+        in: path
+        name: variant_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_internal_proj_storefront_types.ProductVariant'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get variant by ID (public endpoint)
+      tags:
+      - public-variants
+  /api/v1/public/variants/attributes:
+    get:
+      consumes:
+      - application/json
+      description: Public endpoint for getting all available variant attributes -
+        no authentication required
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_proj_storefront_types.ProductVariantAttribute'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all variant attributes (public endpoint)
+      tags:
+      - public-variants
+  /api/v1/public/variants/attributes/{attribute_id}/values:
+    get:
+      consumes:
+      - application/json
+      description: Public endpoint for getting all possible values for a specific
+        variant attribute - no authentication required
+      parameters:
+      - description: Attribute ID
+        in: path
+        name: attribute_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/backend_internal_proj_storefront_types.ProductVariantAttributeValue'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get values for a variant attribute (public endpoint)
+      tags:
+      - public-variants
   /api/v1/reviews:
     get:
       consumes:
@@ -17077,6 +17620,39 @@ paths:
       summary: Get configured attributes for a product
       tags:
       - variants
+  /api/v1/storefront/products/{product_id}/variant-matrix:
+    get:
+      consumes:
+      - application/json
+      description: Returns all possible variant combinations and existing variants
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_internal_proj_storefront_types.VariantMatrixResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get variant matrix for a product
+      tags:
+      - variants
   /api/v1/storefront/products/{product_id}/variants:
     get:
       consumes:
@@ -17109,6 +17685,151 @@ paths:
               type: string
             type: object
       summary: Get variants for a product
+      tags:
+      - variants
+  /api/v1/storefront/products/{product_id}/variants/analytics:
+    get:
+      consumes:
+      - application/json
+      description: Returns analytics data for product variants
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_internal_proj_storefront_types.VariantAnalyticsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get variant analytics
+      tags:
+      - variants
+  /api/v1/storefront/products/{product_id}/variants/bulk-update-stock:
+    post:
+      consumes:
+      - application/json
+      description: Updates stock quantities for multiple variants at once
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Stock updates
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_storefront_types.BulkUpdateStockRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Bulk update stock quantities
+      tags:
+      - variants
+  /api/v1/storefront/products/{product_id}/variants/export:
+    get:
+      consumes:
+      - application/json
+      description: Exports all variants of a product to CSV format
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Export variants to CSV
+      tags:
+      - variants
+  /api/v1/storefront/products/{product_id}/variants/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Imports multiple variants from a CSV file
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: CSV file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Import variants from CSV
       tags:
       - variants
   /api/v1/storefront/products/attributes/setup:
@@ -17249,6 +17970,44 @@ paths:
               type: string
             type: object
       summary: Get variant by ID
+      tags:
+      - variants
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing variant's information
+      parameters:
+      - description: Variant ID
+        in: path
+        name: variant_id
+        required: true
+        type: integer
+      - description: Updated variant data
+        in: body
+        name: variant
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_storefront_types.UpdateVariantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_internal_proj_storefront_types.ProductVariant'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a variant
       tags:
       - variants
   /api/v1/storefront/variants/attributes:
@@ -18404,14 +19163,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new product for the storefront
+      description: Creates a new product for the storefront with optional variants
+        support
       parameters:
       - description: Storefront slug
         in: path
         name: slug
         required: true
         type: string
-      - description: Product data
+      - description: Product data with optional variants
         in: body
         name: product
         required: true
@@ -18421,7 +19181,7 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created product
+          description: Created product with variants
           schema:
             $ref: '#/definitions/backend_internal_domain_models.StorefrontProduct'
         "400":

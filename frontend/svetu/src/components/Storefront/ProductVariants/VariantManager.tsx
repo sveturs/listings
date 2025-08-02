@@ -8,11 +8,11 @@ import type { components } from '@/types/generated/api';
 type ProductVariant =
   components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
 type VariantMatrixResponse =
-  components['schemas']['backend_internal_proj_storefront_handler.VariantMatrixResponse'];
+  components['schemas']['backend_internal_proj_storefront_types.VariantMatrixResponse'];
 type BulkUpdateStockRequest =
-  components['schemas']['backend_internal_proj_storefront_handler.BulkUpdateStockRequest'];
+  components['schemas']['backend_internal_proj_storefront_types.BulkUpdateStockRequest'];
 type VariantAnalyticsResponse =
-  components['schemas']['backend_internal_proj_storefront_handler.VariantAnalyticsResponse'];
+  components['schemas']['backend_internal_proj_storefront_types.VariantAnalyticsResponse'];
 
 interface VariantManagerProps {
   productId: number;
@@ -42,7 +42,7 @@ interface ProductVariantAttribute {
 
 export default function VariantManager({
   productId,
-  storefrontId,
+  storefrontId: _storefrontId,
   onSave,
   onCancel,
 }: VariantManagerProps) {
@@ -57,7 +57,7 @@ export default function VariantManager({
   const [selectedAttributes, setSelectedAttributes] = useState<
     Record<string, string[]>
   >({});
-  const [variantMatrix, setVariantMatrix] =
+  const [_variantMatrix, setVariantMatrix] =
     useState<VariantMatrixResponse | null>(null);
   const [analytics, setAnalytics] = useState<VariantAnalyticsResponse | null>(
     null
@@ -75,9 +75,16 @@ export default function VariantManager({
 
   // Load data functions
   const loadVariants = useCallback(async () => {
+    if (productId <= 0) return; // Skip for new products
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/variants`
+        `/api/v1/storefronts/storefront/products/${productId}/variants`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (response.ok) {
         const data = await response.json();
@@ -90,7 +97,12 @@ export default function VariantManager({
 
   const loadAttributes = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/storefront/variants/attributes');
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('/api/v1/public/variants/attributes', {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setAttributes(
@@ -109,8 +121,14 @@ export default function VariantManager({
 
   const loadAttributeValues = async (attributeId: number) => {
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/variants/attributes/${attributeId}/values`
+        `/api/v1/public/variants/attributes/${attributeId}/values`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
       );
       if (response.ok) {
         const values = await response.json();
@@ -128,9 +146,16 @@ export default function VariantManager({
   };
 
   const loadVariantMatrix = useCallback(async () => {
+    if (productId <= 0) return; // Skip for new products
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/variant-matrix`
+        `/api/v1/storefronts/storefront/products/${productId}/variant-matrix`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (response.ok) {
         const data = await response.json();
@@ -142,9 +167,16 @@ export default function VariantManager({
   }, [productId]);
 
   const loadAnalytics = useCallback(async () => {
+    if (productId <= 0) return; // Skip for new products
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/variants/analytics`
+        `/api/v1/storefronts/storefront/products/${productId}/variants/analytics`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (response.ok) {
         const data = await response.json();
@@ -159,12 +191,18 @@ export default function VariantManager({
   useEffect(() => {
     const initializeData = async () => {
       setLoading(true);
-      await Promise.all([
-        loadVariants(),
-        loadAttributes(),
-        loadVariantMatrix(),
-        loadAnalytics(),
-      ]);
+      // Only load variants-related data if we have a valid productId
+      if (productId > 0) {
+        await Promise.all([
+          loadVariants(),
+          loadAttributes(),
+          loadVariantMatrix(),
+          loadAnalytics(),
+        ]);
+      } else {
+        // For new products, only load attributes
+        await loadAttributes();
+      }
       setLoading(false);
     };
 
@@ -189,13 +227,18 @@ export default function VariantManager({
         base_price: 0,
       };
 
-      const response = await fetch('/api/v1/storefront/variants/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(
+        '/api/v1/storefronts/storefront/variants/generate',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(request),
+        }
+      );
 
       if (response.ok) {
         await loadVariants();
@@ -225,12 +268,14 @@ export default function VariantManager({
         })),
       };
 
+      const token = localStorage.getItem('access_token');
       const response = await fetch(
-        `/api/v1/storefront/products/${productId}/variants/bulk-update-stock`,
+        `/api/v1/storefronts/storefront/products/${productId}/variants/bulk-update-stock`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(request),
         }
@@ -490,7 +535,9 @@ function AttributeSelectionTab({
                 <div className="stat-value text-primary">
                   {combinationsCount}
                 </div>
-                <div className="stat-desc">{t('variantsWillBeCreated')}</div>
+                <div className="stat-desc">
+                  {t('variantsWillBeCreated', { count: combinationsCount })}
+                </div>
               </div>
             </div>
 
@@ -1073,7 +1120,11 @@ interface AnalyticsTabProps {
   t: (key: string, params?: any) => string;
 }
 
-function AnalyticsTab({ analytics, variants, t }: AnalyticsTabProps) {
+function AnalyticsTab({
+  analytics,
+  variants: _variants,
+  t,
+}: AnalyticsTabProps) {
   if (!analytics) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -1134,10 +1185,11 @@ function AnalyticsTab({ analytics, variants, t }: AnalyticsTabProps) {
             <div className="flex justify-between items-center">
               <div>
                 <div className="font-medium">
-                  {analytics.best_seller.name ||
-                    Object.entries(analytics.best_seller.attributes || {})
-                      .map(([k, v]) => `${k}: ${v}`)
-                      .join(', ')}
+                  {Object.entries(
+                    analytics.best_seller.variant_attributes || {}
+                  )
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join(', ') || 'Variant'}
                 </div>
                 {analytics.best_seller.sku && (
                   <div className="text-sm text-gray-500">

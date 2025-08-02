@@ -98,8 +98,13 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
   };
 
   const handleNext = () => {
+    console.log('PhotosStep handleNext called');
+    console.log('Images count:', images.length);
     if (validateImages()) {
+      console.log('Validation passed, calling onNext');
       onNext();
+    } else {
+      console.log('Validation failed');
     }
   };
 

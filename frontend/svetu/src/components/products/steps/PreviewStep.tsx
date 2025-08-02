@@ -70,7 +70,7 @@ export default function PreviewStep({
     try {
       setSubmitting(true);
 
-      // Подготавливаем данные для отправки, включая местоположение
+      // Подготавливаем данные для отправки, включая местоположение и варианты
       const productDataWithLocation = {
         ...state.productData,
         ...(state.location && !state.location.useStorefrontLocation
@@ -86,6 +86,16 @@ export default function PreviewStep({
             }
           : {
               has_individual_location: false,
+            }),
+        // Добавляем варианты если они есть
+        ...(state.hasVariants && state.variants.length > 0
+          ? {
+              has_variants: true,
+              variants: state.variants,
+              variant_settings: state.variantSettings,
+            }
+          : {
+              has_variants: false,
             }),
       };
 
@@ -379,6 +389,64 @@ export default function PreviewStep({
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Варианты */}
+          {state.hasVariants && state.variants.length > 0 && (
+            <div className="card bg-base-100 shadow-xl">
+              <div className="card-body">
+                <h4 className="card-title text-lg mb-4 flex items-center gap-2">
+                  <span className="text-xl">🎯</span>
+                  {t('storefronts.products.variants')}
+                </h4>
+
+                <div className="overflow-x-auto">
+                  <table className="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>{t('storefronts.products.variant')}</th>
+                        <th>{t('storefronts.products.sku')}</th>
+                        <th>{t('storefronts.products.price')}</th>
+                        <th>{t('storefronts.products.stock')}</th>
+                        <th>{t('storefronts.products.default')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {state.variants.map((variant, index) => (
+                        <tr key={index}>
+                          <td>
+                            {Object.entries(variant.variant_attributes)
+                              .map(([k, v]) => `${k}: ${v}`)
+                              .join(', ')}
+                          </td>
+                          <td>{variant.sku || '-'}</td>
+                          <td>
+                            {variant.price
+                              ? formatPrice(
+                                  variant.price,
+                                  state.productData.currency || 'RSD'
+                                )
+                              : t('storefronts.products.basePrice')}
+                          </td>
+                          <td>{variant.stock_quantity}</td>
+                          <td>
+                            {variant.is_default && (
+                              <span className="badge badge-primary badge-sm">
+                                {t('storefronts.products.default')}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="text-sm text-base-content/60 mt-2">
+                  {t('storefronts.products.totalVariants')}:{' '}
+                  {state.variants.length}
                 </div>
               </div>
             </div>

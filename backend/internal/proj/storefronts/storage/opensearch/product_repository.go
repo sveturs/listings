@@ -203,7 +203,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 			availableQuantity := variant.StockQuantity
 			// TODO: добавить логику расчета зарезервированного количества из inventory_reservations
 			// Пока используем только stock_quantity
-			
+
 			varDoc := map[string]interface{}{
 				"id":                 variant.ID,
 				"name":               variant.Name,
@@ -219,11 +219,12 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 
 			// Определяем статус наличия варианта
 			var stockStatus string
-			if availableQuantity <= 0 {
+			switch {
+			case availableQuantity <= 0:
 				stockStatus = "out_of_stock"
-			} else if availableQuantity <= 5 { // TODO: сделать настраиваемым
+			case availableQuantity <= 5: // TODO: сделать настраиваемым
 				stockStatus = "low_stock"
-			} else {
+			default:
 				stockStatus = "in_stock"
 			}
 			varDoc["stock_status"] = stockStatus
@@ -261,13 +262,13 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		doc["variant_count"] = len(product.Variants)
 		doc["price_min"] = minPrice
 		doc["price_max"] = maxPrice
-		
+
 		// Обновляем общую информацию о наличии с учетом вариантов
 		doc["total_variant_stock"] = totalVariantStock
 		doc["total_variant_reserved"] = totalVariantReserved
 		doc["total_variant_available"] = totalVariantStock - totalVariantReserved
 		doc["has_available_variants"] = hasStockVariants
-		
+
 		// Перезаписываем inventory с учетом вариантов
 		doc["inventory"] = map[string]interface{}{
 			"quantity":           totalVariantStock,

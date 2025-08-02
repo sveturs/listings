@@ -259,10 +259,12 @@ export function ProductList({
                   }}
                 >
                   <option value="all">{t('allProducts')}</option>
-                  <option value="in_stock">{t('stock.in_stock')}</option>
-                  <option value="low_stock">{t('stock.low_stock')}</option>
+                  <option value="in_stock">{t('stockStatus.in_stock')}</option>
+                  <option value="low_stock">
+                    {t('stockStatus.low_stock')}
+                  </option>
                   <option value="out_of_stock">
-                    {t('stock.out_of_stock')}
+                    {t('stockStatus.out_of_stock')}
                   </option>
                 </select>
               </div>

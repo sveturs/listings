@@ -16,6 +16,7 @@ func (m *Middleware) CORS() fiber.Handler {
 			"http://localhost:3000",       // для бэкенда
 			"http://localhost:3001",       // для фронтенда
 			"http://localhost:3002",       // для фронтенда
+			"http://localhost:8080",       // для тестирования
 			"http://hostel_frontend:3001", // для Docker
 			"http://backend:3000",         // для Docker
 			"http://100.88.44.15:3000",    // IP адрес бэкенда

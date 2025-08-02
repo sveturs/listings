@@ -1,11 +1,15 @@
 package storefronts
 
 import (
+	"context"
 	"errors"
 
+	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	"backend/internal/proj/global/service"
+	storefrontHandler "backend/internal/proj/storefront/handler"
+	"backend/internal/proj/storefront/repository"
 	"backend/internal/proj/storefronts/handler"
 	storefrontService "backend/internal/proj/storefronts/service"
 	"backend/internal/storage/postgres"
@@ -15,49 +19,58 @@ import (
 
 // Module представляет модуль витрин с продуктами
 type Module struct {
-	services          service.ServicesInterface
-	storefrontHandler *handler.StorefrontHandler
-	productHandler    *handler.ProductHandler
-	importHandler     *handler.ImportHandler
-	imageHandler      *handler.ImageHandler
-	dashboardHandler  *handler.DashboardHandler
+	services             service.ServicesInterface
+	storefrontHandler    *handler.StorefrontHandler
+	productHandler       *handler.ProductHandler
+	importHandler        *handler.ImportHandler
+	imageHandler         *handler.ImageHandler
+	dashboardHandler     *handler.DashboardHandler
+	variantHandler       *storefrontHandler.VariantHandler
+	publicVariantHandler *storefrontHandler.PublicVariantHandler
 }
 
 // NewModule создает новый модуль витрин
 func NewModule(services service.ServicesInterface) *Module {
 	storefrontSvc := services.Storefront()
-	// ProductService использует тот же storage, что и все остальные сервисы
-	// Предполагаем, что Storage реализует нужные методы
-	productStorage, ok := services.Storage().(storefrontService.Storage)
-	if !ok {
-		// Если storage не реализует нужный интерфейс, создаем заглушку
-		panic("Storage does not implement product storage interface")
-	}
+	// Создаем адаптер для storage
+	db := services.Storage().(*postgres.Database)
+	productStorage := &storageAdapter{db: db}
 	// Получаем OpenSearch репозиторий для товаров витрин
 	var searchRepo storefrontService.ProductSearchRepository
 	if osProductRepo := services.Storage().StorefrontProductSearch(); osProductRepo != nil {
 		searchRepo = osProductRepo.(storefrontService.ProductSearchRepository)
 	}
-	productSvc := storefrontService.NewProductService(productStorage, searchRepo)
+
+	// Создаем variant repository и service
+	variantRepo := repository.NewVariantRepository(db.GetSQLXDB())
+	variantService := storefrontService.NewVariantService(variantRepo)
+
+	// Создаем ProductService с VariantService
+	productSvc := storefrontService.NewProductService(productStorage, searchRepo, variantService)
 
 	// Создаем сервис импорта
 	importSvc := storefrontService.NewImportService(productSvc)
 
 	// Создаем единый ImageService
-	db := services.Storage().(*postgres.Database)
 	imageRepo := postgres.NewImageRepository(db.GetSQLXDB())
 	imageService := services.NewImageService(services.FileStorage(), imageRepo)
 
 	// Получаем storefront repository
 	storefrontRepo := services.Storage().Storefront().(postgres.StorefrontRepository)
 
+	// Создаем variant handlers (используем уже созданный variantRepo)
+	variantHandler := storefrontHandler.NewVariantHandler(variantRepo)
+	publicVariantHandler := storefrontHandler.NewPublicVariantHandler(variantRepo)
+
 	return &Module{
-		services:          services,
-		storefrontHandler: handler.NewStorefrontHandler(storefrontSvc),
-		productHandler:    handler.NewProductHandler(productSvc),
-		importHandler:     handler.NewImportHandler(importSvc),
-		imageHandler:      handler.NewImageHandler(imageService, productSvc),
-		dashboardHandler:  handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
+		services:             services,
+		storefrontHandler:    handler.NewStorefrontHandler(storefrontSvc),
+		productHandler:       handler.NewProductHandler(productSvc),
+		importHandler:        handler.NewImportHandler(importSvc),
+		imageHandler:         handler.NewImageHandler(imageService, productSvc),
+		dashboardHandler:     handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
+		variantHandler:       variantHandler,
+		publicVariantHandler: publicVariantHandler,
 	}
 }
 
@@ -92,6 +105,11 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		// Публичные маршруты товаров с использованием slug
 		public.Get("/slug/:slug/products", m.getProductsBySlug)
 		public.Get("/slug/:slug/products/:id", m.getProductBySlug)
+
+		// Публичные маршруты для вариантов товаров (БЕЗ АВТОРИЗАЦИИ)
+		public.Get("/slug/:slug/products/:product_id/variants", m.publicVariantHandler.GetProductVariantsPublic)
+		public.Get("/:slug/products/:product_id", m.publicVariantHandler.GetProductPublic)
+		public.Get("/variants/:variant_id", m.publicVariantHandler.GetVariantByIDPublic)
 
 		// Параметризованные маршруты (должны быть последними)
 		// Получение витрины
@@ -181,6 +199,49 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Get("/:slug/dashboard/recent-orders", m.dashboardHandler.GetRecentOrders)
 		protected.Get("/:slug/dashboard/low-stock", m.dashboardHandler.GetLowStockProducts)
 		protected.Get("/:slug/dashboard/notifications", m.dashboardHandler.GetDashboardNotifications)
+
+		// Приватные маршруты для управления вариантами товаров (требуют авторизации)
+		variants := protected.Group("/storefront")
+		{
+			// Глобальные атрибуты вариантов
+			variants.Get("/variants/attributes", m.variantHandler.GetVariantAttributes)
+			variants.Get("/variants/attributes/:attribute_id/values", m.variantHandler.GetVariantAttributeValues)
+
+			// Управление вариантами товара
+			variants.Get("/products/:product_id/variants", m.variantHandler.GetVariantsByProductID)
+			variants.Post("/variants", m.variantHandler.CreateVariant)
+			variants.Put("/variants/:variant_id", m.variantHandler.UpdateVariant)
+			variants.Delete("/variants/:variant_id", m.variantHandler.DeleteVariant)
+			variants.Get("/variants/:variant_id", m.variantHandler.GetVariantByID)
+
+			// Генерация и массовые операции
+			variants.Post("/variants/generate", m.variantHandler.GenerateVariants)
+			variants.Post("/variants/bulk", m.variantHandler.BulkCreateVariants)
+			variants.Get("/products/:product_id/variant-matrix", m.variantHandler.GetVariantMatrix)
+			variants.Post("/products/:product_id/variants/bulk-update-stock", m.variantHandler.BulkUpdateStock)
+			variants.Get("/products/:product_id/variants/analytics", m.variantHandler.GetVariantAnalytics)
+
+			// CSV импорт/экспорт
+			variants.Post("/products/:product_id/variants/import", m.variantHandler.ImportVariants)
+			variants.Get("/products/:product_id/variants/export", m.variantHandler.ExportVariants)
+
+			// Настройка атрибутов товара
+			variants.Post("/products/attributes/setup", m.variantHandler.SetupProductAttributes)
+			variants.Get("/products/:product_id/attributes", m.variantHandler.GetProductAttributes)
+			variants.Get("/categories/:category_id/attributes", m.variantHandler.GetAvailableAttributesForCategory)
+		}
+	}
+
+	// Публичные маршруты для вариантов (БЕЗ АВТОРИЗАЦИИ)
+	publicVariants := api.Group("/public")
+	{
+		// Публичные endpoints для покупателей
+		publicVariants.Get("/storefronts/:slug/products/:product_id", m.publicVariantHandler.GetProductPublic)
+		publicVariants.Get("/storefronts/:slug/products/:product_id/variants", m.publicVariantHandler.GetProductVariantsPublic)
+		publicVariants.Get("/variants/attributes", m.publicVariantHandler.GetVariantAttributesPublic)
+		publicVariants.Get("/variants/attributes/:attribute_id/values", m.publicVariantHandler.GetVariantAttributeValuesPublic)
+		publicVariants.Get("/variants/:variant_id", m.publicVariantHandler.GetVariantByIDPublic)
+		publicVariants.Get("/categories/:category_id/attributes", m.publicVariantHandler.GetAvailableAttributesForCategoryPublic)
 	}
 
 	// Публичные маршруты импорта (для получения шаблонов и документации)
@@ -717,4 +778,79 @@ func (m *Module) setMainProductImageBySlugDirect(c *fiber.Ctx) error {
 	}
 
 	return m.imageHandler.SetMainProductImage(c)
+}
+
+// storageAdapter adapts postgres.Database to storefrontService.Storage interface
+type storageAdapter struct {
+	db *postgres.Database
+}
+
+// GetStorefrontProducts delegates to database
+func (s *storageAdapter) GetStorefrontProducts(ctx context.Context, filter models.ProductFilter) ([]*models.StorefrontProduct, error) {
+	return s.db.GetStorefrontProducts(ctx, filter)
+}
+
+// GetStorefrontProduct delegates to database
+func (s *storageAdapter) GetStorefrontProduct(ctx context.Context, storefrontID, productID int) (*models.StorefrontProduct, error) {
+	return s.db.GetStorefrontProduct(ctx, storefrontID, productID)
+}
+
+// CreateStorefrontProduct delegates to database
+func (s *storageAdapter) CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
+	return s.db.CreateStorefrontProduct(ctx, storefrontID, req)
+}
+
+// UpdateStorefrontProduct delegates to database
+func (s *storageAdapter) UpdateStorefrontProduct(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error {
+	return s.db.UpdateStorefrontProduct(ctx, storefrontID, productID, req)
+}
+
+// DeleteStorefrontProduct delegates to database
+func (s *storageAdapter) DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error {
+	return s.db.DeleteStorefrontProduct(ctx, storefrontID, productID)
+}
+
+// UpdateProductInventory delegates to database
+func (s *storageAdapter) UpdateProductInventory(ctx context.Context, storefrontID, productID int, userID int, req *models.UpdateInventoryRequest) error {
+	return s.db.UpdateProductInventory(ctx, storefrontID, productID, userID, req)
+}
+
+// GetProductStats delegates to database
+func (s *storageAdapter) GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error) {
+	return s.db.GetProductStats(ctx, storefrontID)
+}
+
+// BulkCreateProducts delegates to database
+func (s *storageAdapter) BulkCreateProducts(ctx context.Context, storefrontID int, products []models.CreateProductRequest) ([]int, []error) {
+	return s.db.BulkCreateProducts(ctx, storefrontID, products)
+}
+
+// BulkUpdateProducts delegates to database
+func (s *storageAdapter) BulkUpdateProducts(ctx context.Context, storefrontID int, updates []models.BulkUpdateItem) ([]int, []error) {
+	return s.db.BulkUpdateProducts(ctx, storefrontID, updates)
+}
+
+// BulkDeleteProducts delegates to database
+func (s *storageAdapter) BulkDeleteProducts(ctx context.Context, storefrontID int, productIDs []int) ([]int, []error) {
+	return s.db.BulkDeleteProducts(ctx, storefrontID, productIDs)
+}
+
+// BulkUpdateStatus delegates to database
+func (s *storageAdapter) BulkUpdateStatus(ctx context.Context, storefrontID int, productIDs []int, isActive bool) ([]int, []error) {
+	return s.db.BulkUpdateStatus(ctx, storefrontID, productIDs, isActive)
+}
+
+// GetStorefrontByID delegates to database
+func (s *storageAdapter) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
+	storefrontRepo := s.db.Storefront().(postgres.StorefrontRepository)
+	return storefrontRepo.GetByID(ctx, id)
+}
+
+// BeginTx starts a new transaction
+func (s *storageAdapter) BeginTx(ctx context.Context) (storefrontService.Transaction, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
 }

@@ -135,7 +135,14 @@
       "friday": "Пятница",
       "saturday": "Суббота",
       "sunday": "Воскресенье"
-    }
+    },
+    "stockStatus": {
+      "in_stock": "В наличии",
+      "low_stock": "Мало",
+      "out_of_stock": "Нет в наличии"
+    },
+    "units": "шт.",
+    "storefront": "витрина"
   },
   "cart": {
     "title": "Корзина",
@@ -1731,6 +1738,11 @@
     "connectionError": "Ошибка при подключении Telegram"
   },
   "marketplace": {
+    "create": {
+      "title": "Создать",
+      "selectOptions": "Выберите опции",
+      "noOptions": "Нет доступных опций"
+    },
     "filters": {
       "title": "Фильтры",
       "clearAll": "Очистить все",
@@ -2972,6 +2984,21 @@
       "variants": "Варианты",
       "generateMatrix": "Создать матрицу",
       "possibleCombinations": "Возможные комбинации",
+      "loading": "Загрузка...",
+      "subtitle": "Управление вариантами товара и остатками",
+      "cancel": "Отмена",
+      "save": "Сохранить",
+      "tabs": {
+        "attributes": "Атрибуты",
+        "variants": "Варианты",
+        "stock": "Остатки",
+        "analytics": "Аналитика"
+      },
+      "selectAttributesHelp": "Выберите значения атрибутов для генерации вариантов",
+      "generationSummary": "Итог генерации",
+      "totalCombinations": "Всего комбинаций",
+      "variantsWillBeCreated": "Будет создано вариантов: {count}",
+      "generating": "Генерация...",
       "existingVariants": "Существующие варианты",
       "priceModifiers": "Модификаторы цены",
       "stockQuantities": "Количество на складе",
@@ -3164,6 +3191,39 @@
       "aspectRatio": "Соотношение сторон",
       "totalPhotos": "Всего фотографий",
       "photosStepDescription": "Добавьте фотографии для демонстрации вашего товара",
+      "productPhotos": "Фотографии товара",
+      "productPhotosDescription": "Добавьте качественные фотографии для демонстрации вашего товара",
+      "uploadPhotos": "Загрузить фотографии",
+      "dragDropPhotos": "Перетащите фотографии сюда",
+      "maxImagesError": "Максимум 10 фотографий разрешено",
+      "variantStockManager": "Управление остатками вариантов",
+      "configureStockAndPrices": "Настройка остатков и цен для вариантов",
+      "backToSettings": "Назад к настройкам",
+      "confirmVariants": "Подтвердить варианты",
+      "totalVariants": "Всего вариантов",
+      "totalStock": "Общий остаток",
+      "averagePrice": "Средняя цена",
+      "manageVariants": "Управление вариантами",
+      "variant": "Вариант",
+      "stock": "Остаток",
+      "price": "Цена",
+      "status": "Статус",
+      "inStock": "В наличии",
+      "outOfStock": "Нет в наличии",
+      "quickActions": "Быстрые действия",
+      "setStockForAll": "Установить остаток для всех",
+      "setPriceForAll": "Установить цену для всех",
+      "setStockPrompt": "Установить одинаковый остаток для всех вариантов:",
+      "setPricePrompt": "Установить одинаковую цену для всех вариантов:",
+      "main": "Основной",
+      "attributesFromPreviousStep": "Атрибуты выбраны на предыдущем шаге. Выберите значения для создания вариантов:",
+      "selectedCount": "Выбрано: {count} из {total}",
+      "stock": {
+        "in_stock": "В наличии",
+        "low_stock": "Мало",
+        "out_of_stock": "Нет в наличии"
+      },
+      "noVariantsToManage": "Нет вариантов для управления",
       "imagesRequired": "Необходимо загрузить хотя бы одну фотографию",
       "invalidImagesError": "Пожалуйста, выберите корректные изображения (макс. 10МБ каждое)",
       "previewProduct": "Предварительный просмотр",
@@ -3182,6 +3242,7 @@
       "advancedVariantsDescription": "Полный контроль над атрибутами вариантов и управлением остатками",
       "skipVariants": "Пропустить варианты",
       "continue": "Продолжить",
+      "cancel": "Отмена",
       "noVariantsConfigured": "Варианты не настроены",
       "setupAttributesFirst": "Сначала настройте атрибуты товара для создания вариантов",
       "setupAttributes": "Настроить атрибуты",
@@ -3205,12 +3266,13 @@
       "hasSubcategories": "Есть подкатегории",
       "productsCount": "товаров",
       "selectedCategory": "Выбранная категория",
-      "stock": {
+      "stockStatus": {
         "in_stock": "В наличии",
         "low_stock": "Мало",
         "out_of_stock": "Нет в наличии"
       },
       "units": "шт.",
+      "storefront": "витрина",
       "edit": "Редактировать",
       "loadMore": "Загрузить еще",
       "actions": "Действия",
@@ -3250,7 +3312,8 @@
         "invalidImageType": "Пожалуйста, выберите корректные файлы изображений (PNG, JPG)",
         "imageTooLarge": "Файл изображения слишком большой (максимум 10МБ)",
         "atLeastOneImage": "Пожалуйста, добавьте хотя бы одно изображение товара"
-      }
+      },
+      "default": "По умолчанию"
     },
     "noProducts": "Товары пока не добавлены",
     "storeInfo": "Информация о магазине",
@@ -4088,6 +4151,15 @@
       "title": "Обновления",
       "newPerHour": "{count} новых за час",
       "priceDrops": "{count} снижений цен"
+    }
+  },
+  "storefront": {
+    "products": {
+      "attributes": "Атрибуты товара",
+      "default": "По умолчанию"
+    },
+    "categories": {
+      "attributes": "Атрибуты категории"
     }
   }
 }

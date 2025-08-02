@@ -7,7 +7,8 @@ import {
   UnifiedSearchItem,
 } from '@/services/unifiedSearch';
 import { MarketplaceItem } from '@/types/marketplace';
-import { EnhancedListingCard } from '@/components/marketplace/EnhancedListingCard';
+import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
+import { adaptMarketplaceItem } from '@/utils/product-adapters';
 import ViewToggle from '@/components/common/ViewToggle';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import GridColumnsToggle from '@/components/common/GridColumnsToggle';
@@ -341,15 +342,19 @@ export default function MarketplaceList({
             : 'space-y-4'
         }
       >
-        {items.map((item) => (
-          <EnhancedListingCard
-            key={item.id}
-            item={convertToMarketplaceItem(item)}
-            locale={locale}
-            viewMode={viewMode}
-            gridColumns={viewMode === 'grid' ? gridColumns : undefined}
-          />
-        ))}
+        {items.map((item) => {
+          const marketplaceItem = convertToMarketplaceItem(item);
+          const unifiedProduct = adaptMarketplaceItem(marketplaceItem);
+          return (
+            <UnifiedProductCard
+              key={item.id}
+              product={unifiedProduct}
+              locale={locale}
+              viewMode={viewMode}
+              gridColumns={viewMode === 'grid' ? gridColumns : undefined}
+            />
+          );
+        })}
       </div>
 
       {/* Показываем скелетоны при загрузке следующей страницы */}
