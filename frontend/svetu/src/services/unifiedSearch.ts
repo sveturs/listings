@@ -98,6 +98,7 @@ export interface SearchSuggestion {
     id: number;
     name: string;
     slug: string;
+    translations?: Record<string, string>;
   };
   product_id?: number;
 }
@@ -258,6 +259,7 @@ export class UnifiedSearchService {
             id: item.category_id,
             name: item.label || item.value,
             slug: item.value || item.category_id.toString(),
+            translations: item.translations || undefined,
           },
         };
       }

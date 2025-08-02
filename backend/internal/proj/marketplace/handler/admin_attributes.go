@@ -246,7 +246,8 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 	// Получаем атрибуты с пагинацией и фильтрами
 	query := fmt.Sprintf(`
 		SELECT id, name, display_name, attribute_type, COALESCE(icon, '') as icon, options, validation_rules,
-		is_searchable, is_filterable, is_required, sort_order, created_at
+		is_searchable, is_filterable, is_required, sort_order, created_at, COALESCE(custom_component, '') as custom_component,
+		is_variant_compatible, affects_stock
 		FROM category_attributes
 		%s
 		ORDER BY sort_order, id
@@ -282,6 +283,9 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 			&attribute.IsRequired,
 			&attribute.SortOrder,
 			&attribute.CreatedAt,
+			&attribute.CustomComponent,
+			&attribute.IsVariantCompatible,
+			&attribute.AffectsStock,
 		)
 		if err != nil {
 			logger.Error().Err(err).Msg("Failed to scan attribute")

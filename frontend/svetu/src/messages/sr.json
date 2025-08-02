@@ -103,7 +103,12 @@
       "friday": "Petak",
       "saturday": "Subota",
       "sunday": "Nedelja"
-    }
+    },
+    "selectedCount": "Izabrano: {count}",
+    "selectOptions": "Izaberite opcije...",
+    "enterValue": "Unesite {field}",
+    "requiredFields": "Obavezna polja",
+    "optionalFields": "Dodatna polja"
   },
   "cart": {
     "title": "Shopping Cart",
@@ -128,6 +133,7 @@
     "userContacts": "Moji kontakti",
     "profile": "Profil",
     "logout": "Odjavi se",
+    "close": "Zatvori",
     "search": "Pretraga",
     "create": "Dodaj",
     "chats": "Poruke",
@@ -330,6 +336,10 @@
       "createListing": "Kreiraj oglas",
       "map": "Mapa"
     },
+    "theme": {
+      "light": "Svetla tema",
+      "dark": "Tamna tema"
+    },
     "search": {
       "placeholder": "Pretražite proizvode i usluge..."
     }
@@ -476,6 +486,9 @@
     "loggingOut": "Odjavljuje se...",
     "profile": "Profil",
     "myContacts": "Moji kontakti",
+    "myListings": "Moji oglasi",
+    "myStorefronts": "Moje prodavnice",
+    "myOrders": "Moje porudžbine",
     "adminPanel": "Admin panel",
     "common": {
       "close": "Zatvori"
@@ -854,6 +867,25 @@
       "accountTemporarilyLocked": "Account temporarily locked due to multiple failed attempts. Please try again in 1 hour."
     }
   },
+  "cars": {
+    "make": "Marka",
+    "model": "Model",
+    "generation": "Generacija",
+    "selectMake": "Izaberite marku",
+    "selectModel": "Izaberite model",
+    "selectGeneration": "Izaberite generaciju",
+    "selectMakeFirst": "Prvo izaberite marku",
+    "searchMake": "Pretraži marku...",
+    "loading": "Učitavanje...",
+    "loadingMakes": "Učitavanje marki...",
+    "loadingModels": "Učitavanje modela...",
+    "loadingGenerations": "Učitavanje generacija...",
+    "noModelsFound": "Nisu pronađeni modeli za ovu marku",
+    "noGenerationsFound": "Nisu pronađene generacije za ovaj model",
+    "noModels": "Nema modela",
+    "domestic": "Domaća",
+    "clear": "Obriši"
+  },
   "admin": {
     "checkError": "Failed to verify administrator privileges",
     "required": "Administrator privileges required",
@@ -974,6 +1006,7 @@
       "showInCard": "Show in Card",
       "showInList": "Show in List",
       "isVariantCompatible": "Može da se koristi za varijante proizvoda",
+      "affectsStock": "Utiče na zalihe",
       "translations": "Translations",
       "displayNameTranslations": "Prevodi naziva atributa",
       "optionTranslations": "Prevodi opcija",
@@ -1553,6 +1586,7 @@
     "connectionError": "Greška pri povezivanju Telegrama"
   },
   "marketplace": {
+    "allCategories": "Sve kategorije",
     "filters": {
       "title": "Филтери",
       "clearAll": "Обриши све",
@@ -2798,7 +2832,12 @@
       "setPricePrompt": "Postavi istu cenu za sve varijante:",
       "main": "Glavna",
       "attributesFromPreviousStep": "Atributi izabrani na prethodnom koraku. Izaberite vrednosti da kreirate varijante:",
-      "stock": "Zalihe",
+      "stock": {
+        "in_stock": "Na lageru",
+        "low_stock": "Malo na lageru",
+        "out_of_stock": "Nema na lageru"
+      },
+      "units": "kom",
       "stockStatus": {
         "in_stock": "Na lageru",
         "low_stock": "Malo na lageru",
@@ -3670,5 +3709,13 @@
       "newPerHour": "{count} novih po satu",
       "priceDrops": "{count} sniženja cena"
     }
+  },
+  "listing": {
+    "listingDetails": "Detalji oglasa",
+    "delivery": "Dostava",
+    "additionalInfo": "Dodatne informacije",
+    "noAttributesForCategory": "Za kategoriju \"{category}\" nisu potrebni dodatni atributi.",
+    "whyAttributesImportant": "Zašto je ovo važno?",
+    "attributesHelpBuyers": "Popunjeni atributi pomažu kupcima da lakše pronađu vaš proizvod i povećavaju poverenje u oglas."
   }
 }

@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export const ThemeToggle: React.FC = () => {
+  const t = useTranslations('header');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = useState(false);
 
@@ -40,7 +42,8 @@ export const ThemeToggle: React.FC = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="btn btn-ghost btn-circle"
+      className="btn btn-ghost btn-circle tooltip tooltip-bottom"
+      data-tip={theme === 'light' ? t('theme.dark') : t('theme.light')}
       aria-label={
         theme === 'light' ? 'Включить темную тему' : 'Включить светлую тему'
       }

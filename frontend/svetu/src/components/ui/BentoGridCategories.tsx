@@ -8,6 +8,7 @@ import type { components } from '@/types/generated/api';
 import { CategoryModal } from './CategoryModal';
 import { FilterModal } from './FilterModal';
 import { DesktopFilters } from './DesktopFilters';
+import { renderCategoryIcon } from '@/utils/iconMapper';
 
 type MarketplaceCategory =
   components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -139,9 +140,13 @@ export const BentoGridCategories: React.FC<BentoGridCategoriesProps> = ({
 
           {!hasChildren && <div className="w-5" />}
 
-          {category.icon && <span className="text-lg">{category.icon}</span>}
+          {renderCategoryIcon(category.icon, 'w-5 h-5 text-base-content/70')}
 
-          <span className="flex-1">{category.name}</span>
+          <span className="flex-1">
+            {category.translations && category.translations[locale]
+              ? category.translations[locale]
+              : category.name}
+          </span>
 
           {category.listing_count !== undefined &&
             category.listing_count > 0 && (

@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
-import { X, ChevronRight } from 'lucide-react';
+import { X, ChevronRight, LayoutGrid } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
+import { renderCategoryIcon } from '@/utils/iconMapper';
 
 type MarketplaceCategory =
   components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -32,7 +34,21 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   onCategorySelect,
   title,
 }) => {
+  const locale = useLocale();
+  const t = useTranslations('marketplace');
+
   if (!isOpen) return null;
+
+  // Функция для подсчета общего количества товаров во всех категориях
+  const getTotalListingsCount = (cats: CategoryTreeNode[]): number => {
+    return cats.reduce((total, cat) => {
+      const catCount = cat.listing_count || 0;
+      const childrenCount = cat.children
+        ? getTotalListingsCount(cat.children)
+        : 0;
+      return total + catCount + childrenCount;
+    }, 0);
+  };
 
   const handleCategoryClick = (categoryId: number) => {
     onCategorySelect(categoryId);
@@ -71,9 +87,13 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
           {!hasChildren && <div className="w-5" />}
 
-          {category.icon && <span className="text-lg">{category.icon}</span>}
+          {renderCategoryIcon(category.icon, 'w-5 h-5 text-base-content/70')}
 
-          <span className="flex-1">{category.name}</span>
+          <span className="flex-1">
+            {category.translations && category.translations[locale]
+              ? category.translations[locale]
+              : category.name}
+          </span>
 
           {category.listing_count !== undefined &&
             category.listing_count > 0 && (
@@ -117,6 +137,31 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4">
             <div className="space-y-1">
+              {/* Кнопка "Все категории" */}
+              <div
+                className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all hover:bg-base-200 ${
+                  !selectedCategoryId
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : ''
+                }`}
+                onClick={() => {
+                  onCategorySelect(null);
+                  onClose();
+                }}
+              >
+                <div className="btn btn-ghost btn-xs p-0 min-h-0 h-5 w-5 invisible" />
+                <div className="w-5" />
+                <LayoutGrid className="w-5 h-5 text-base-content/70" />
+                <span className="flex-1 font-semibold">
+                  {t('allCategories')}
+                </span>
+                <span className="badge badge-primary badge-sm">
+                  {getTotalListingsCount(categories)}
+                </span>
+              </div>
+
+              <div className="divider my-2" />
+
               {categories.length === 0 ? (
                 <p className="text-base-content/60 text-center py-8">
                   Нет доступных категорий
@@ -126,21 +171,6 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               )}
             </div>
           </div>
-
-          {/* Clear button */}
-          {selectedCategoryId && (
-            <div className="p-4 border-t border-base-200">
-              <button
-                onClick={() => {
-                  onCategorySelect(null);
-                  onClose();
-                }}
-                className="btn btn-outline btn-block"
-              >
-                Очистить выбор
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </>

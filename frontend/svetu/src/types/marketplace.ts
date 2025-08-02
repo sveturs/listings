@@ -45,6 +45,7 @@ export interface MarketplaceItem {
     id: number;
     name: string;
     slug: string;
+    translations?: Record<string, string>;
   };
   condition?: string;
   status?: string;
@@ -100,6 +101,7 @@ export interface ListingFormData {
     id: number;
     name: string;
     slug: string;
+    translations?: Record<string, string>;
   };
   trust?: {
     phoneVerified: boolean;

@@ -518,6 +518,24 @@ func (m *MockStorage) ExpandSearchQuery(ctx context.Context, query string, langu
 func (m *MockStorage) SearchCategoriesFuzzy(ctx context.Context, searchTerm string, language string, similarityThreshold float64) ([]interface{}, error) {
 	return []interface{}{}, nil
 }
+
+// Car-related methods
+func (m *MockStorage) GetCarMakes(ctx context.Context, country string, isDomestic bool, isMotorcycle bool, activeOnly bool) ([]models.CarMake, error) {
+	return []models.CarMake{}, nil
+}
+
+func (m *MockStorage) GetCarModelsByMake(ctx context.Context, makeSlug string, activeOnly bool) ([]models.CarModel, error) {
+	return []models.CarModel{}, nil
+}
+
+func (m *MockStorage) GetCarGenerationsByModel(ctx context.Context, modelID int, activeOnly bool) ([]models.CarGeneration, error) {
+	return []models.CarGeneration{}, nil
+}
+
+func (m *MockStorage) SearchCarMakes(ctx context.Context, query string, limit int) ([]models.CarMake, error) {
+	return []models.CarMake{}, nil
+}
+
 func (m *MockStorage) Close()                         {}
 func (m *MockStorage) Ping(ctx context.Context) error { return nil }
 

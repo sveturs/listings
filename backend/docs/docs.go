@@ -5612,6 +5612,143 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/variant-attributes/{id}/mappings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets all category attribute mappings for a variant attribute",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-variant-attributes"
+                ],
+                "summary": "Get variant attribute mappings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Variant attribute ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category attributes linked to this variant attribute",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CategoryAttribute"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidID",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.getMappingsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates category attribute mappings for a variant attribute",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-admin-variant-attributes"
+                ],
+                "summary": "Update variant attribute mappings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Variant attribute ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Array of category attribute IDs to link",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "category_attribute_ids": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "marketplace.mappingsUpdated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidData",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.updateMappingsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/analytics/event": {
             "post": {
                 "description": "Records an analytics event for a storefront",
@@ -6640,6 +6777,287 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "balance.getTransactionsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cars/makes": {
+            "get": {
+                "description": "Get all available car makes from the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-cars"
+                ],
+                "summary": "Get all car makes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by country",
+                        "name": "country",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter domestic brands",
+                        "name": "is_domestic",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Show only active brands",
+                        "name": "active_only",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of car makes",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CarMake"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cars/makes/search": {
+            "get": {
+                "description": "Search car makes by name with fuzzy matching",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-cars"
+                ],
+                "summary": "Search car makes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CarMake"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cars/makes/{make_slug}/models": {
+            "get": {
+                "description": "Get all car models for a specific make",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-cars"
+                ],
+                "summary": "Get car models by make",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Car make slug",
+                        "name": "make_slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Show only active models",
+                        "name": "active_only",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of car models",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CarModel"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Make not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cars/models/{model_id}/generations": {
+            "get": {
+                "description": "Get all generations for a specific car model",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-cars"
+                ],
+                "summary": "Get car generations by model",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Car model ID",
+                        "name": "model_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Show only active generations",
+                        "name": "active_only",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of car generations",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.CarGeneration"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Model not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -24386,9 +24804,130 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_models.CarGeneration": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "model": {
+                    "description": "Поля для JOIN",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.CarModel"
+                        }
+                    ]
+                },
+                "model_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "year_end": {
+                    "type": "integer"
+                },
+                "year_start": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.CarMake": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_domestic": {
+                    "type": "boolean"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "popularity_rs": {
+                    "type": "integer"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.CarModel": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "make": {
+                    "description": "Поля для JOIN",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.CarMake"
+                        }
+                    ]
+                },
+                "make_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_models.CategoryAttribute": {
             "type": "object",
             "properties": {
+                "affects_stock": {
+                    "type": "boolean"
+                },
                 "attribute_type": {
                     "type": "string"
                 },

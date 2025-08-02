@@ -57,6 +57,7 @@ export default function AttributeForm({
     show_in_card: false,
     show_in_list: false,
     is_variant_compatible: false,
+    affects_stock: false,
     variant_type: 'multiselect',
     variant_is_required: false,
     variant_sort_order: 0,
@@ -94,6 +95,7 @@ export default function AttributeForm({
         show_in_card: attribute.show_in_card || false,
         show_in_list: attribute.show_in_list || false,
         is_variant_compatible: attribute.is_variant_compatible || false,
+        affects_stock: attribute.affects_stock || false,
         variant_type: (attribute as any).variant_type || 'multiselect',
         variant_is_required: (attribute as any).variant_is_required || false,
         variant_sort_order: (attribute as any).variant_sort_order || 0,
@@ -623,6 +625,29 @@ export default function AttributeForm({
             </span>
           </label>
         </div>
+
+        {formData.is_variant_compatible && (
+          <div className="form-control">
+            <label className="label cursor-pointer">
+              <span className="label-text flex items-center gap-2">
+                📦 {t('affectsStock')}
+              </span>
+              <input
+                type="checkbox"
+                name="affects_stock"
+                checked={formData.affects_stock}
+                onChange={handleChange}
+                className="checkbox checkbox-warning"
+              />
+            </label>
+            <label className="label">
+              <span className="label-text-alt">
+                Влияет ли данный атрибут на учет остатков товара (например,
+                размер или цвет могут влиять на остатки)
+              </span>
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Секция настроек вариативного атрибута */}

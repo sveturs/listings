@@ -39,9 +39,9 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 	query := `
 		INSERT INTO category_attributes (
 			name, display_name, attribute_type, icon, options, validation_rules, 
-			is_searchable, is_filterable, is_required, sort_order, custom_component, is_variant_compatible
+			is_searchable, is_filterable, is_required, sort_order, custom_component, is_variant_compatible, affects_stock
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		RETURNING id, created_at
 	`
 
@@ -62,6 +62,7 @@ func (s *MarketplaceService) CreateAttribute(ctx context.Context, attribute *mod
 		attribute.SortOrder,
 		attribute.CustomComponent,
 		attribute.IsVariantCompatible,
+		attribute.AffectsStock,
 	).Scan(&id, &createdAt)
 	if err != nil {
 		return 0, fmt.Errorf("не удалось создать атрибут: %w", err)
@@ -219,8 +220,9 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 			is_required = $9, 
 			sort_order = $10,
 			custom_component = $11,
-			is_variant_compatible = $12
-		WHERE id = $13
+			is_variant_compatible = $12,
+			affects_stock = $13
+		WHERE id = $14
 	`
 
 	_, err = s.storage.Exec(
@@ -237,6 +239,7 @@ func (s *MarketplaceService) UpdateAttribute(ctx context.Context, attribute *mod
 		attribute.SortOrder,
 		attribute.CustomComponent,
 		attribute.IsVariantCompatible,
+		attribute.AffectsStock,
 		attribute.ID,
 	)
 	if err != nil {
@@ -399,7 +402,7 @@ func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*mod
 		SELECT 
 			id, name, display_name, attribute_type, COALESCE(icon, '') as icon, options, validation_rules, 
 			is_searchable, is_filterable, is_required, sort_order, created_at, COALESCE(custom_component, '') as custom_component,
-			is_variant_compatible
+			is_variant_compatible, affects_stock
 		FROM category_attributes
 		WHERE id = $1
 	`
@@ -422,6 +425,7 @@ func (s *MarketplaceService) GetAttributeByID(ctx context.Context, id int) (*mod
 		&attribute.CreatedAt,
 		&attribute.CustomComponent,
 		&attribute.IsVariantCompatible,
+		&attribute.AffectsStock,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось получить атрибут: %w", err)

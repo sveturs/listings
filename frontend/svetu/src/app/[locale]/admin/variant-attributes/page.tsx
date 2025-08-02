@@ -7,6 +7,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { adminApi, VariantAttribute } from '@/services/admin';
 import VariantAttributeList from './components/VariantAttributeList';
 import VariantAttributeForm from './components/VariantAttributeForm';
+import AttributeMappingEditor from './components/AttributeMappingEditor';
 
 // VariantAttribute type imported from @/services/admin
 
@@ -21,6 +22,9 @@ export default function VariantAttributesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showMappingEditor, setShowMappingEditor] = useState(false);
+  const [mappingAttribute, setMappingAttribute] =
+    useState<VariantAttribute | null>(null);
 
   // Пагинация
   const [currentPage, setCurrentPage] = useState(1);
@@ -146,6 +150,17 @@ export default function VariantAttributesPage() {
     }
   };
 
+  const handleManageLinks = (attribute: VariantAttribute) => {
+    setMappingAttribute(attribute);
+    setShowMappingEditor(true);
+  };
+
+  const handleCloseMappingEditor = () => {
+    setShowMappingEditor(false);
+    setMappingAttribute(null);
+    loadAttributes(); // Перезагружаем список для обновления данных
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -192,6 +207,7 @@ export default function VariantAttributesPage() {
             onPageChange={setCurrentPage}
             onEdit={handleEditAttribute}
             onDelete={handleDeleteAttribute}
+            onManageLinks={handleManageLinks}
           />
         </div>
 
@@ -221,6 +237,34 @@ export default function VariantAttributesPage() {
             <div
               className="modal-backdrop"
               onClick={() => setShowForm(false)}
+            ></div>
+          </div>
+        )}
+
+        {/* Modal for Attribute Mapping Editor */}
+        {showMappingEditor && mappingAttribute && (
+          <div className="modal modal-open">
+            <div className="modal-box w-11/12 max-w-3xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">
+                  {t('variantAttributes.manageMappings')}
+                </h2>
+                <button
+                  className="btn btn-sm btn-circle btn-ghost"
+                  onClick={handleCloseMappingEditor}
+                >
+                  ✕
+                </button>
+              </div>
+              <AttributeMappingEditor
+                variantAttribute={mappingAttribute}
+                onSave={handleCloseMappingEditor}
+                onCancel={handleCloseMappingEditor}
+              />
+            </div>
+            <div
+              className="modal-backdrop"
+              onClick={handleCloseMappingEditor}
             ></div>
           </div>
         )}

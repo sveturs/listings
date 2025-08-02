@@ -47,7 +47,28 @@
     "search": "Search",
     "filter": "Filter",
     "actions": "Actions",
-    "active": "Active",
+    "active": "Active"
+  },
+  "cars": {
+    "make": "Make",
+    "model": "Model",
+    "generation": "Generation",
+    "selectMake": "Select make",
+    "selectModel": "Select model",
+    "selectGeneration": "Select generation",
+    "selectMakeFirst": "Select make first",
+    "searchMake": "Search make...",
+    "loading": "Loading...",
+    "loadingMakes": "Loading makes...",
+    "loadingModels": "Loading models...",
+    "loadingGenerations": "Loading generations...",
+    "noModelsFound": "No models found for this make",
+    "noGenerationsFound": "No generations found for this model",
+    "noModels": "No models",
+    "domestic": "Domestic",
+    "clear": "Clear"
+  },
+  "admin": {
     "inactive": "Inactive",
     "activate": "Activate",
     "deactivate": "Deactivate",
@@ -85,6 +106,11 @@
     "closed": "Closed",
     "open": "Open",
     "searching": "Searching...",
+    "selectedCount": "Selected: {count}",
+    "selectOptions": "Select options...",
+    "enterValue": "Enter {field}",
+    "requiredFields": "Required fields",
+    "optionalFields": "Optional fields",
     "eco": {
       "secondHand": "Second-hand",
       "refurbished": "Refurbished",
@@ -441,6 +467,10 @@
       "userContacts": "My Contacts",
       "createListing": "Create Listing"
     },
+    "theme": {
+      "light": "Light theme",
+      "dark": "Dark theme"
+    },
     "search": {
       "placeholder": "Search products and services..."
     }
@@ -587,6 +617,9 @@
     "loggingOut": "Logging out...",
     "profile": "Profile",
     "myContacts": "My Contacts",
+    "myListings": "My Listings",
+    "myStorefronts": "My Storefronts",
+    "myOrders": "My Orders",
     "adminPanel": "Admin Panel",
     "common": {
       "close": "Close"
@@ -1096,6 +1129,7 @@
       "showInCard": "Show in Card",
       "showInList": "Show in List",
       "isVariantCompatible": "Can be used for product variants",
+      "affectsStock": "Affects Stock",
       "translations": "Translations",
       "displayNameTranslations": "Attribute Name Translations",
       "optionTranslations": "Option Translations",
@@ -1181,8 +1215,37 @@
         "multiselect": "Multi-select",
         "boolean": "Boolean",
         "date": "Date",
-        "range": "Range"
-      }
+        "range": "Range",
+        "color": "Color",
+        "size": "Size",
+        "memory": "Memory",
+        "storage": "Storage",
+        "material": "Material",
+        "capacity": "Capacity",
+        "power": "Power",
+        "connectivity": "Connectivity",
+        "style": "Style",
+        "pattern": "Pattern",
+        "weight": "Weight",
+        "bundle": "Bundle"
+      },
+      "manageLinks": "Manage Links",
+      "manageMappings": "Manage Attribute Mappings",
+      "mappingTitle": "Link Attributes for",
+      "mappingDescription": "Select category attributes that will be linked to this variant attribute",
+      "searchAttributes": "Search attributes...",
+      "autoDetect": "Auto-detect",
+      "autoDetectSuccess": "Automatically found {count} links",
+      "autoDetectNoResults": "Could not automatically find suitable attributes",
+      "noAttributesFound": "No attributes found",
+      "previouslyLinked": "Previously linked",
+      "selectedCount": "Selected attributes: {count}",
+      "saveMappings": "Save Mappings",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "loadMappingsError": "Error loading mappings",
+      "saveMappingsSuccess": "Mappings saved successfully",
+      "saveMappingsError": "Error saving mappings"
     },
     "listings": {
       "title": "Listings Management",
@@ -1526,6 +1589,7 @@
       "showInCard": "Show in Card",
       "showInList": "Show in List",
       "isVariantCompatible": "Can be used for product variants",
+      "affectsStock": "Affects Stock",
       "translations": "Translations",
       "displayNameTranslations": "Attribute Name Translations",
       "optionTranslations": "Option Translations",
@@ -1743,6 +1807,7 @@
     "connectionError": "Error connecting Telegram"
   },
   "marketplace": {
+    "allCategories": "All categories",
     "create": {
       "title": "Create",
       "selectOptions": "Select options",
@@ -3074,7 +3139,12 @@
       "main": "Main",
       "attributesFromPreviousStep": "Attributes selected on previous step. Choose values to create variants:",
       "selectedCount": "Selected: {count} of {total}",
-      "stock": "Stock",
+      "stock": {
+        "in_stock": "In Stock",
+        "low_stock": "Low Stock",
+        "out_of_stock": "Out of Stock"
+      },
+      "units": "pcs",
       "stockStatus": {
         "in_stock": "In Stock",
         "low_stock": "Low Stock",
@@ -4085,5 +4155,13 @@
     "categories": {
       "attributes": "Category Attributes"
     }
+  },
+  "listing": {
+    "listingDetails": "Listing details",
+    "delivery": "Delivery",
+    "additionalInfo": "Additional information",
+    "noAttributesForCategory": "No additional attributes required for category \"{category}\".",
+    "whyAttributesImportant": "Why is this important?",
+    "attributesHelpBuyers": "Filled attributes help buyers find your product better and increase trust in the listing."
   }
 }

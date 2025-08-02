@@ -5175,6 +5175,121 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/variant-attributes/{id}/mappings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get variant attribute mappings
+     * @description Gets all category attribute mappings for a variant attribute
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Variant attribute ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Category attributes linked to this variant attribute */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CategoryAttribute'][];
+            };
+          };
+        };
+        /** @description marketplace.invalidID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.getMappingsError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update variant attribute mappings
+     * @description Updates category attribute mappings for a variant attribute
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Variant attribute ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Array of category attribute IDs to link */
+      requestBody: {
+        content: {
+          'application/json': {
+            category_attribute_ids?: number[];
+          };
+        };
+      };
+      responses: {
+        /** @description marketplace.mappingsUpdated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description marketplace.invalidData */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.updateMappingsError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/analytics/event': {
     parameters: {
       query?: never;
@@ -6229,6 +6344,284 @@ export interface paths {
           };
         };
         /** @description balance.getTransactionsError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/cars/makes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all car makes
+     * @description Get all available car makes from the database
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Filter by country */
+          country?: string;
+          /** @description Filter domestic brands */
+          is_domestic?: boolean;
+          /** @description Show only active brands */
+          active_only?: boolean;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of car makes */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CarMake'][];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/cars/makes/{make_slug}/models': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get car models by make
+     * @description Get all car models for a specific make
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Show only active models */
+          active_only?: boolean;
+        };
+        header?: never;
+        path: {
+          /** @description Car make slug */
+          make_slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of car models */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CarModel'][];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Make not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/cars/makes/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search car makes
+     * @description Search car makes by name with fuzzy matching
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Search query */
+          q: string;
+          /** @description Limit results */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CarMake'][];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/cars/models/{model_id}/generations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get car generations by model
+     * @description Get all generations for a specific car model
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Show only active generations */
+          active_only?: boolean;
+        };
+        header?: never;
+        path: {
+          /** @description Car model ID */
+          model_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of car generations */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CarGeneration'][];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Model not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
         500: {
           headers: {
             [name: string]: unknown;
@@ -24018,7 +24411,47 @@ export interface components {
     'backend_internal_domain_models.CancelOrderRequest': {
       reason?: string;
     };
+    'backend_internal_domain_models.CarGeneration': {
+      created_at?: string;
+      id?: number;
+      is_active?: boolean;
+      /** @description Поля для JOIN */
+      model?: components['schemas']['backend_internal_domain_models.CarModel'];
+      model_id?: number;
+      name?: string;
+      slug?: string;
+      sort_order?: number;
+      updated_at?: string;
+      year_end?: number;
+      year_start?: number;
+    };
+    'backend_internal_domain_models.CarMake': {
+      country?: string;
+      created_at?: string;
+      id?: number;
+      is_active?: boolean;
+      is_domestic?: boolean;
+      logo_url?: string;
+      name?: string;
+      popularity_rs?: number;
+      slug?: string;
+      sort_order?: number;
+      updated_at?: string;
+    };
+    'backend_internal_domain_models.CarModel': {
+      created_at?: string;
+      id?: number;
+      is_active?: boolean;
+      /** @description Поля для JOIN */
+      make?: components['schemas']['backend_internal_domain_models.CarMake'];
+      make_id?: number;
+      name?: string;
+      slug?: string;
+      sort_order?: number;
+      updated_at?: string;
+    };
     'backend_internal_domain_models.CategoryAttribute': {
+      affects_stock?: boolean;
       attribute_type?: string;
       created_at?: string;
       custom_component?: string;

@@ -1115,6 +1115,23 @@ func (ts *testStorage) IsSlugUnique(ctx context.Context, slug string, excludeID 
 	return true, nil
 }
 
+// Car-related methods
+func (ts *testStorage) GetCarMakes(ctx context.Context, country string, isDomestic bool, isMotorcycle bool, activeOnly bool) ([]models.CarMake, error) {
+	return []models.CarMake{}, nil
+}
+
+func (ts *testStorage) GetCarModelsByMake(ctx context.Context, makeSlug string, activeOnly bool) ([]models.CarModel, error) {
+	return []models.CarModel{}, nil
+}
+
+func (ts *testStorage) GetCarGenerationsByModel(ctx context.Context, modelID int, activeOnly bool) ([]models.CarGeneration, error) {
+	return []models.CarGeneration{}, nil
+}
+
+func (ts *testStorage) SearchCarMakes(ctx context.Context, query string, limit int) ([]models.CarMake, error) {
+	return []models.CarMake{}, nil
+}
+
 // testTransaction - простая реализация транзакции для тестов
 type testTransaction struct {
 	tx *sql.Tx

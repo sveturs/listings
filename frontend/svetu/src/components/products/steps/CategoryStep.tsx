@@ -48,9 +48,7 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
               categories.forEach((cat) => {
                 // Пропускаем дубликаты
                 if (seenIds.has(cat.id)) {
-                  console.warn(
-                    `CategoryStep - Duplicate category ID found: ${cat.id}`
-                  );
+                  // Тихо пропускаем дубликаты - они уже обработаны
                   return;
                 }
 

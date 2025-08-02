@@ -318,3 +318,50 @@ type CategoryKeywordRequest struct {
 type CategoryKeywordUpdateRequest struct {
 	Weight float64 `json:"weight" validate:"gte=0,lte=10"`
 }
+
+// CarMake представляет марку автомобиля
+type CarMake struct {
+	ID           int       `json:"id" db:"id"`
+	Name         string    `json:"name" db:"name"`
+	Slug         string    `json:"slug" db:"slug"`
+	LogoURL      *string   `json:"logo_url,omitempty" db:"logo_url"`
+	Country      *string   `json:"country,omitempty" db:"country"`
+	IsActive     bool      `json:"is_active" db:"is_active"`
+	SortOrder    int       `json:"sort_order" db:"sort_order"`
+	IsDomestic   bool      `json:"is_domestic" db:"is_domestic"`
+	PopularityRS int       `json:"popularity_rs" db:"popularity_rs"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// CarModel представляет модель автомобиля
+type CarModel struct {
+	ID        int       `json:"id" db:"id"`
+	MakeID    int       `json:"make_id" db:"make_id"`
+	Name      string    `json:"name" db:"name"`
+	Slug      string    `json:"slug" db:"slug"`
+	IsActive  bool      `json:"is_active" db:"is_active"`
+	SortOrder int       `json:"sort_order" db:"sort_order"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+
+	// Поля для JOIN
+	Make *CarMake `json:"make,omitempty"`
+}
+
+// CarGeneration представляет поколение модели автомобиля
+type CarGeneration struct {
+	ID        int       `json:"id" db:"id"`
+	ModelID   int       `json:"model_id" db:"model_id"`
+	Name      string    `json:"name" db:"name"`
+	Slug      string    `json:"slug" db:"slug"`
+	YearStart int       `json:"year_start" db:"year_start"`
+	YearEnd   *int      `json:"year_end,omitempty" db:"year_end"`
+	IsActive  bool      `json:"is_active" db:"is_active"`
+	SortOrder int       `json:"sort_order" db:"sort_order"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+
+	// Поля для JOIN
+	Model *CarModel `json:"model,omitempty"`
+}

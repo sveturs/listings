@@ -32,6 +32,7 @@ import {
   FileText,
   Users,
   Loader2,
+  Car,
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -40,9 +41,23 @@ import { useTranslations } from 'next-intl';
 import { ListingsService } from '@/services/listings';
 import type { CreateListingState } from '@/contexts/CreateListingContext';
 import type { components } from '@/types/generated/api';
+import CategorySelector from '@/components/listing/CategorySelector';
+import CategoryAttributes from '@/components/listing/CategoryAttributes';
+import { CarSelectorCompact } from '@/components/cars';
 
 type MarketplaceCategory =
   components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+
+interface AttributeValue {
+  attribute_id: number;
+  attribute_name: string;
+  display_name: string;
+  attribute_type: string;
+  text_value?: string;
+  numeric_value?: number;
+  boolean_value?: boolean;
+  unit?: string;
+}
 
 export default function CreateListingSmartPage() {
   const router = useRouter();
@@ -70,7 +85,7 @@ export default function CreateListingSmartPage() {
     city: 'Белград',
     country: 'Србија',
     deliveryMethods: ['pickup'],
-    attributes: {} as Record<string, any>,
+    attributes: {} as Record<number, AttributeValue>,
   });
   const _suggestions = {
     title: '',
@@ -86,6 +101,13 @@ export default function CreateListingSmartPage() {
   // Drag & Drop состояние
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  // Состояние для выбора автомобиля
+  const [carSelection, setCarSelection] = useState<{
+    make?: any;
+    model?: any;
+    generation?: any;
+  }>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,8 +139,8 @@ export default function CreateListingSmartPage() {
     fetchCategories();
   }, [fetchCategories]);
 
-  // Category-specific attributes
-  const categoryAttributes: Record<
+  // Category-specific attributes (legacy, now using API)
+  const _categoryAttributes: Record<
     string,
     Array<{ id: string; label: string; type: string; options?: string[] }>
   > = {
@@ -301,8 +323,8 @@ export default function CreateListingSmartPage() {
     },
   ];
 
-  // Получаем популярные категории из загруженных
-  const getPopularCategories = () => {
+  // Получаем популярные категории из загруженных (legacy, replaced by CategorySelector)
+  const _getPopularCategories = () => {
     const popularSlugs = [
       'electronics',
       'fashion',
@@ -597,6 +619,49 @@ export default function CreateListingSmartPage() {
       });
       toast.success('Шаблон применен! Отредактируйте детали');
     }
+  };
+
+  const handleAttributeChange = (
+    attributeId: number,
+    value: AttributeValue
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      attributes: {
+        ...prev.attributes,
+        [attributeId]: value,
+      },
+    }));
+  };
+
+  const isCarCategory = (category: MarketplaceCategory | null): boolean => {
+    if (!category) return false;
+    // Проверяем slug категории и родительской категории
+    const carSlugs = ['automotive', 'cars', 'licni-automobili'];
+    return (
+      carSlugs.includes(category.slug || '') ||
+      (!!category.parent_id &&
+        categories.some(
+          (c) => c.id === category.parent_id && carSlugs.includes(c.slug || '')
+        ))
+    );
+  };
+
+  const handleCategorySelect = (category: MarketplaceCategory) => {
+    setSelectedCategory(category);
+    setFormData((prev) => ({
+      ...prev,
+      category: category.slug || '',
+      categoryId: category.id || 0,
+      // Очищаем атрибуты при смене категории
+      attributes: {},
+    }));
+    // Сбрасываем выбор автомобиля при смене категории
+    setCarSelection({});
+
+    toast.success(
+      `Выбрана категория: ${category.translations?.name || category.name}`
+    );
   };
 
   const handlePublish = async () => {
@@ -1133,41 +1198,15 @@ export default function CreateListingSmartPage() {
                 />
               </div>
 
-              {/* Category Pills */}
+              {/* Category Selector */}
               {!quickMode && (
-                <div>
-                  <label className="label">
-                    <span className="label-text font-semibold">Категория</span>
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {getPopularCategories().map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => {
-                          const fullCategory = categories.find(
-                            (c) => c.id === cat.id
-                          );
-                          if (fullCategory) {
-                            setSelectedCategory(fullCategory);
-                            setFormData({
-                              ...formData,
-                              category: cat.slug,
-                              categoryId: cat.id || 0,
-                            });
-                          }
-                        }}
-                        className={`btn btn-sm ${
-                          formData.categoryId === cat.id
-                            ? 'btn-primary'
-                            : 'btn-outline'
-                        } gap-1`}
-                      >
-                        <span>{cat.icon}</span>
-                        {cat.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <CategorySelector
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  onCategorySelect={handleCategorySelect}
+                  locale={locale}
+                  compact={true}
+                />
               )}
 
               {/* Price with comparison */}
@@ -1337,120 +1376,63 @@ export default function CreateListingSmartPage() {
             </div>
           </div>
 
-          {/* Dynamic Attributes based on Category */}
-          {false && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="card bg-base-200"
-            >
+          {/* Car Selector for automotive categories */}
+          {selectedCategory && isCarCategory(selectedCategory) && (
+            <div className="card bg-base-200 mb-6">
               <div className="card-body">
-                <h3 className="card-title text-base">
-                  <Package className="w-4 h-4" />
-                  Дополнительная информация
+                <h3 className="card-title text-base mb-4">
+                  <Car className="w-5 h-5" />
+                  Выберите автомобиль
                 </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* {selectedCategory?.attributes?.map((attr) => {
-                      const attrName =
-                        attr.translations?.name || attr.name || '';
-                      return (
-                        <div key={attr.id} className="form-control">
-                          <label className="label">
-                            <span className="label-text">{attrName}</span>
-                          </label>
-                          {attr.input_type === 'select' &&
-                          attr.allowed_values ? (
-                            <select
-                              className="select select-bordered select-sm"
-                              value={
-                                formData.attributes[attr.id || 0]?.text_value ||
-                                ''
-                              }
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  attributes: {
-                                    ...formData.attributes,
-                                    [attr.id || 0]: {
-                                      attribute_id: attr.id || 0,
-                                      attribute_name: attr.name || '',
-                                      display_name: attrName,
-                                      attribute_type: attr.value_type || 'text',
-                                      text_value: e.target.value,
-                                      unit: attr.unit,
-                                    },
-                                  },
-                                })
-                              }
-                            >
-                              <option value="">Выберите...</option>
-                              {attr.allowed_values.map((option) => (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
-                          ) : attr.value_type === 'numeric' ? (
-                            <input
-                              type="number"
-                              className="input input-bordered input-sm"
-                              placeholder={`Введите ${attrName.toLowerCase()}`}
-                              value={
-                                formData.attributes[attr.id || 0]
-                                  ?.numeric_value || ''
-                              }
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  attributes: {
-                                    ...formData.attributes,
-                                    [attr.id || 0]: {
-                                      attribute_id: attr.id || 0,
-                                      attribute_name: attr.name || '',
-                                      display_name: attrName,
-                                      attribute_type:
-                                        attr.value_type || 'numeric',
-                                      numeric_value:
-                                        parseFloat(e.target.value) || 0,
-                                      unit: attr.unit,
-                                    },
-                                  },
-                                })
-                              }
-                            />
-                          ) : (
-                            <input
-                              type="text"
-                              className="input input-bordered input-sm"
-                              placeholder={`Введите ${attrName.toLowerCase()}`}
-                              value={
-                                formData.attributes[attr.id || 0]?.text_value ||
-                                ''
-                              }
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  attributes: {
-                                    ...formData.attributes,
-                                    [attr.id || 0]: {
-                                      attribute_id: attr.id || 0,
-                                      attribute_name: attr.name || '',
-                                      display_name: attrName,
-                                      attribute_type: attr.value_type || 'text',
-                                      text_value: e.target.value,
-                                      unit: attr.unit,
-                                    },
-                                  },
-                                })
-                              }
-                            />
-                          )}
-                        </div>
-                      );
-                    })} */}
-                </div>
+                <CarSelectorCompact
+                  value={carSelection}
+                  onChange={(selection) => {
+                    setCarSelection(selection);
+                    // Обновляем заголовок и атрибуты при выборе машины
+                    if (selection.make && selection.model) {
+                      const newTitle =
+                        `${selection.make?.name || ''} ${selection.model?.name || ''}`.trim();
+                      setFormData((prev) => ({
+                        ...prev,
+                        title: prev.title
+                          ? `${prev.title} ${newTitle}`
+                          : newTitle,
+                        // Добавляем марку и модель как атрибуты
+                        attributes: {
+                          ...prev.attributes,
+                          // Марка
+                          make: {
+                            attribute_id: 0,
+                            attribute_name: 'make',
+                            display_name: 'Марка',
+                            attribute_type: 'text',
+                            text_value: selection.make?.name || '',
+                          },
+                          // Модель
+                          model: {
+                            attribute_id: 0,
+                            attribute_name: 'model',
+                            display_name: 'Модель',
+                            attribute_type: 'text',
+                            text_value: selection.model?.name || '',
+                          },
+                        },
+                      }));
+                    }
+                  }}
+                />
               </div>
-            </motion.div>
+            </div>
+          )}
+
+          {/* Category Attributes */}
+          {selectedCategory && (
+            <CategoryAttributes
+              selectedCategory={selectedCategory}
+              attributes={formData.attributes}
+              onAttributeChange={handleAttributeChange}
+              locale={locale}
+            />
           )}
 
           {/* Location Card */}
@@ -1632,23 +1614,30 @@ export default function CreateListingSmartPage() {
               )}
 
               {/* Display attributes in preview */}
-              {formData.category && categoryAttributes[formData.category] && (
+              {Object.keys(formData.attributes).length > 0 && (
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  {categoryAttributes[formData.category]
-                    .filter((attr) => formData.attributes[attr.id])
-                    .map((attr) => (
+                  {Object.values(formData.attributes).map((attr) => {
+                    const value =
+                      attr.text_value ||
+                      attr.numeric_value ||
+                      (attr.boolean_value ? 'Да' : 'Нет');
+                    if (!value) return null;
+
+                    return (
                       <div
-                        key={attr.id}
+                        key={attr.attribute_id}
                         className="flex justify-between py-2 border-b border-base-200"
                       >
                         <span className="text-sm text-base-content/60">
-                          {attr.label}
+                          {attr.display_name}
                         </span>
                         <span className="text-sm font-medium">
-                          {formData.attributes[attr.id]}
+                          {value}
+                          {attr.unit && ` ${attr.unit}`}
                         </span>
                       </div>
-                    ))}
+                    );
+                  })}
                 </div>
               )}
 

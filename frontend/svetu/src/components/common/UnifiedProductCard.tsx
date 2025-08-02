@@ -313,7 +313,10 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
                       {/* Категория */}
                       {product.category?.name && (
                         <div className="text-xs text-base-content/60 mb-1">
-                          {product.category.name}
+                          {product.category.translations &&
+                          product.category.translations[locale]
+                            ? product.category.translations[locale]
+                            : product.category.name}
                         </div>
                       )}
 
@@ -704,7 +707,10 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
           {/* Категория */}
           {product.category?.name && (
             <div className="text-xs text-base-content/60">
-              {product.category.name}
+              {product.category.translations &&
+              product.category.translations[locale]
+                ? product.category.translations[locale]
+                : product.category.name}
             </div>
           )}
 

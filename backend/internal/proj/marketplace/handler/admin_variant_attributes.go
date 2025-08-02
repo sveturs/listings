@@ -312,3 +312,158 @@ func (h *AdminVariantAttributesHandler) GetVariantAttributeByID(c *fiber.Ctx) er
 
 	return utils.SuccessResponse(c, attr)
 }
+
+// GetVariantAttributeMappings получает связи вариативного атрибута с атрибутами категорий
+// @Summary Get variant attribute mappings
+// @Description Gets all category attribute mappings for a variant attribute
+// @Tags marketplace-admin-variant-attributes
+// @Produce json
+// @Param id path int true "Variant attribute ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttribute} "Category attributes linked to this variant attribute"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidID"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getMappingsError"
+// @Security BearerAuth
+// @Router /api/v1/admin/variant-attributes/{id}/mappings [get]
+func (h *AdminVariantAttributesHandler) GetVariantAttributeMappings(c *fiber.Ctx) error {
+	ctx := context.Background()
+
+	variantAttrID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidID")
+	}
+
+	// Получаем все атрибуты категорий, связанные с этим вариативным атрибутом
+	query := `
+		SELECT 
+			ca.id,
+			ca.name,
+			ca.display_name,
+			ca.attribute_type,
+			ca.options,
+			ca.is_searchable,
+			ca.is_filterable,
+			ca.is_required,
+			ca.is_variant_compatible,
+			ca.affects_stock,
+			ca.sort_order
+		FROM category_attributes ca
+		INNER JOIN variant_attribute_mappings vam ON ca.id = vam.category_attribute_id
+		WHERE vam.variant_attribute_id = $1
+		ORDER BY ca.name
+	`
+
+	rows, err := h.services.Storage().Query(ctx, query, variantAttrID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get variant attribute mappings")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getMappingsError")
+	}
+	defer rows.Close()
+
+	var mappings []models.CategoryAttribute
+	for rows.Next() {
+		var attr models.CategoryAttribute
+		err := rows.Scan(
+			&attr.ID,
+			&attr.Name,
+			&attr.DisplayName,
+			&attr.AttributeType,
+			&attr.Options,
+			&attr.IsSearchable,
+			&attr.IsFilterable,
+			&attr.IsRequired,
+			&attr.IsVariantCompatible,
+			&attr.AffectsStock,
+			&attr.SortOrder,
+		)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to scan category attribute")
+			continue
+		}
+		mappings = append(mappings, attr)
+	}
+
+	return utils.SuccessResponse(c, mappings)
+}
+
+// UpdateVariantAttributeMappings обновляет связи вариативного атрибута с атрибутами категорий
+// @Summary Update variant attribute mappings
+// @Description Updates category attribute mappings for a variant attribute
+// @Tags marketplace-admin-variant-attributes
+// @Accept json
+// @Produce json
+// @Param id path int true "Variant attribute ID"
+// @Param body body object{category_attribute_ids=[]int} true "Array of category attribute IDs to link"
+// @Success 200 {object} utils.SuccessResponseSwag{data=string} "marketplace.mappingsUpdated"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateMappingsError"
+// @Security BearerAuth
+// @Router /api/v1/admin/variant-attributes/{id}/mappings [put]
+func (h *AdminVariantAttributesHandler) UpdateVariantAttributeMappings(c *fiber.Ctx) error {
+	ctx := context.Background()
+
+	variantAttrID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidID")
+	}
+
+	// Парсим тело запроса
+	var body struct {
+		CategoryAttributeIDs []int `json:"category_attribute_ids"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
+	}
+
+	// Начинаем транзакцию
+	tx, err := h.services.Storage().BeginTx(ctx, nil)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to begin transaction")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateMappingsError")
+	}
+	defer tx.Rollback()
+
+	// Удаляем старые связи
+	_, err = tx.Exec(ctx, "DELETE FROM variant_attribute_mappings WHERE variant_attribute_id = $1", variantAttrID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to delete old mappings")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateMappingsError")
+	}
+
+	// Создаем новые связи
+	for _, catAttrID := range body.CategoryAttributeIDs {
+		// Проверяем, что атрибут категории существует и имеет is_variant_compatible = true
+		var isCompatible bool
+		err = tx.QueryRow(ctx, 
+			"SELECT is_variant_compatible FROM category_attributes WHERE id = $1", 
+			catAttrID,
+		).Scan(&isCompatible)
+		if err != nil {
+			logger.Error().Err(err).Int("category_attribute_id", catAttrID).Msg("Category attribute not found")
+			continue
+		}
+
+		if !isCompatible {
+			logger.Warn().Int("category_attribute_id", catAttrID).Msg("Category attribute is not variant compatible")
+			continue
+		}
+
+		// Создаем связь
+		_, err = tx.Exec(ctx, `
+			INSERT INTO variant_attribute_mappings (variant_attribute_id, category_attribute_id)
+			VALUES ($1, $2)
+			ON CONFLICT (variant_attribute_id, category_attribute_id) DO NOTHING
+		`, variantAttrID, catAttrID)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to insert mapping")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateMappingsError")
+		}
+	}
+
+	// Подтверждаем транзакцию
+	if err := tx.Commit(); err != nil {
+		logger.Error().Err(err).Msg("Failed to commit transaction")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateMappingsError")
+	}
+
+	return utils.SuccessResponse(c, "marketplace.mappingsUpdated")
+}

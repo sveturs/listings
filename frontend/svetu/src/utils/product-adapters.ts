@@ -106,6 +106,7 @@ export function adaptMarketplaceItem(item: MarketplaceItem): UnifiedProduct {
           id: item.category.id,
           name: item.category.name,
           slug: item.category.slug,
+          translations: item.category.translations,
         }
       : undefined,
 
@@ -208,6 +209,7 @@ export function adaptStorefrontProduct(
           id: product.category.id || 0,
           name: product.category.name || '',
           slug: product.category.slug || '',
+          translations: product.category.translations,
         }
       : undefined,
 
