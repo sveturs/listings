@@ -48,6 +48,8 @@ type MarketplaceServiceInterface interface {
 	SearchCategoriesFuzzy(ctx context.Context, searchTerm string, language string, similarityThreshold float64) ([]CategorySearchResult, error)
 
 	// атрибуты
+	GetProductVariantAttributes(ctx context.Context) ([]*models.ProductVariantAttribute, error)
+	GetCategoryVariantAttributes(ctx context.Context, categorySlug string) ([]*models.ProductVariantAttribute, error)
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)
 	GetCategoryAttributesWithLang(ctx context.Context, categoryID int, lang string) ([]models.CategoryAttribute, error)
 	SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error

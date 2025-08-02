@@ -160,6 +160,146 @@ func (r *VariantRepository) CreateVariant(ctx context.Context, req *types.Create
 	return r.GetVariantByID(ctx, variant.ID)
 }
 
+// CreateVariantTx creates a new product variant using the provided transaction
+func (r *VariantRepository) CreateVariantTx(ctx context.Context, tx *sqlx.Tx, req *types.CreateVariantRequest) (*types.ProductVariant, error) {
+	// If this is set as default, unset other defaults for this product
+	if req.IsDefault {
+		_, err := tx.ExecContext(ctx,
+			"UPDATE storefront_product_variants SET is_default = false WHERE product_id = $1",
+			req.ProductID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Marshal JSON fields
+	variantAttrsJSON, err := json.Marshal(req.VariantAttributes)
+	if err != nil {
+		return nil, err
+	}
+
+	var dimensionsJSON []byte
+	if req.Dimensions != nil {
+		dimensionsJSON, err = json.Marshal(req.Dimensions)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Determine stock status
+	stockStatus := "in_stock"
+	if req.StockQuantity == 0 {
+		stockStatus = "out_of_stock"
+	} else if req.LowStockThreshold != nil && req.StockQuantity <= *req.LowStockThreshold {
+		stockStatus = "low_stock"
+	}
+
+	// Insert variant
+	query := `
+		INSERT INTO storefront_product_variants (
+			product_id, sku, barcode, price, compare_at_price, cost_price,
+			stock_quantity, stock_status, low_stock_threshold, variant_attributes,
+			weight, dimensions, is_default, is_active
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, true
+		) RETURNING id, created_at, updated_at`
+
+	var variant types.ProductVariant
+	err = tx.QueryRowContext(ctx, query,
+		req.ProductID, req.SKU, req.Barcode, req.Price, req.CompareAtPrice, req.CostPrice,
+		req.StockQuantity, stockStatus, req.LowStockThreshold, variantAttrsJSON,
+		req.Weight, dimensionsJSON, req.IsDefault,
+	).Scan(&variant.ID, &variant.CreatedAt, &variant.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set other fields
+	variant.ProductID = req.ProductID
+	variant.SKU = req.SKU
+	variant.Barcode = req.Barcode
+	variant.Price = req.Price
+	variant.CompareAtPrice = req.CompareAtPrice
+	variant.CostPrice = req.CostPrice
+	variant.StockQuantity = req.StockQuantity
+	variant.StockStatus = stockStatus
+	variant.LowStockThreshold = req.LowStockThreshold
+	variant.VariantAttributes = req.VariantAttributes
+	variant.Weight = req.Weight
+	variant.Dimensions = req.Dimensions
+	variant.IsDefault = req.IsDefault
+	variant.IsActive = true
+
+	// Create variant images
+	if len(req.Images) > 0 {
+		for i, img := range req.Images {
+			imageQuery := `
+				INSERT INTO storefront_product_variant_images (
+					variant_id, image_url, thumbnail_url, alt_text, display_order, is_main
+				) VALUES ($1, $2, $3, $4, $5, $6)`
+
+			_, err = tx.ExecContext(ctx, imageQuery,
+				variant.ID, img.ImageURL, img.ThumbnailURL, img.AltText,
+				img.DisplayOrder, img.IsMain && i == 0) // Only first image can be main if multiple are marked
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// Note: Don't commit the transaction here, let the caller do it
+	// Return the variant with all populated data
+	return &variant, nil
+}
+
+// BulkCreateVariantsTx creates multiple variants in a single transaction
+func (r *VariantRepository) BulkCreateVariantsTx(ctx context.Context, tx *sqlx.Tx, productID int, variants []types.CreateVariantRequest) ([]*types.ProductVariant, error) {
+	if len(variants) == 0 {
+		return []*types.ProductVariant{}, nil
+	}
+
+	createdVariants := make([]*types.ProductVariant, 0, len(variants))
+
+	// Ensure productID is set for all variants
+	for i := range variants {
+		variants[i].ProductID = productID
+	}
+
+	// Check if any variant is set as default
+	hasDefault := false
+	for _, v := range variants {
+		if v.IsDefault {
+			hasDefault = true
+			break
+		}
+	}
+
+	// If we have a default variant, unset all existing defaults for this product
+	if hasDefault {
+		_, err := tx.ExecContext(ctx,
+			"UPDATE storefront_product_variants SET is_default = false WHERE product_id = $1",
+			productID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unset existing default variants: %w", err)
+		}
+	}
+
+	// Create each variant
+	for i, variantReq := range variants {
+		variant, err := r.CreateVariantTx(ctx, tx, &variantReq)
+		if err != nil {
+			skuStr := ""
+			if variantReq.SKU != nil {
+				skuStr = *variantReq.SKU
+			}
+			return nil, fmt.Errorf("failed to create variant %d (SKU: %s): %w", i, skuStr, err)
+		}
+		createdVariants = append(createdVariants, variant)
+	}
+
+	return createdVariants, nil
+}
+
 // GetVariantByID returns a variant by ID with images
 func (r *VariantRepository) GetVariantByID(ctx context.Context, id int) (*types.ProductVariant, error) {
 	query := `

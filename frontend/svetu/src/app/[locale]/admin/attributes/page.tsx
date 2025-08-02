@@ -157,7 +157,16 @@ export default function AttributesPage() {
     }
   };
 
-  const handleSaveAttribute = async (data: Partial<Attribute>) => {
+  const handleSaveAttribute = async (
+    data: Partial<
+      Attribute & {
+        variant_type?: string;
+        variant_is_required?: boolean;
+        variant_sort_order?: number;
+        variant_affects_stock?: boolean;
+      }
+    >
+  ) => {
     try {
       if (isEditing && selectedAttribute) {
         await adminApi.attributes.update(selectedAttribute.id, data);
@@ -166,6 +175,41 @@ export default function AttributesPage() {
         await adminApi.attributes.create(data);
         toast.success(t('common.saveSuccess'));
       }
+
+      // Если включена совместимость с вариантами, создаем соответствующий вариативный атрибут
+      if (data.is_variant_compatible && !isEditing) {
+        try {
+          const variantAttributeData = {
+            name: data.name!,
+            display_name: data.display_name!,
+            type: (data.variant_type || 'multiselect') as
+              | 'number'
+              | 'boolean'
+              | 'range'
+              | 'text'
+              | 'date'
+              | 'select'
+              | 'multiselect',
+            is_required: data.variant_is_required || false,
+            sort_order: data.variant_sort_order || 0,
+            affects_stock: data.variant_affects_stock || false,
+          };
+
+          await adminApi.variantAttributes.create(variantAttributeData);
+          toast.success('Вариативный атрибут также создан успешно!', {
+            duration: 4000,
+          });
+        } catch (variantError) {
+          console.error('Failed to create variant attribute:', variantError);
+          toast.warning(
+            'Атрибут создан, но не удалось создать соответствующий вариативный атрибут. Создайте его вручную в разделе "Вариативные атрибуты".',
+            {
+              duration: 6000,
+            }
+          );
+        }
+      }
+
       setShowForm(false);
       await loadAttributes();
     } catch (error) {
@@ -205,8 +249,8 @@ export default function AttributesPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className={showForm ? 'lg:col-span-2' : 'lg:col-span-3'}>
+      <div className="grid grid-cols-1 gap-6">
+        <div className="col-span-1">
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               {/* Filters */}
@@ -444,22 +488,33 @@ export default function AttributesPage() {
           </div>
         </div>
 
+        {/* Modal for Attribute Form */}
         {showForm && (
-          <div className="lg:col-span-1">
-            <div className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <h2 className="card-title">
+          <div className="modal modal-open">
+            <div className="modal-box w-11/12 max-w-4xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">
                   {isEditing
                     ? t('attributes.editAttribute')
                     : t('attributes.addAttribute')}
                 </h2>
-                <AttributeForm
-                  attribute={selectedAttribute}
-                  onSave={handleSaveAttribute}
-                  onCancel={() => setShowForm(false)}
-                />
+                <button
+                  className="btn btn-sm btn-circle btn-ghost"
+                  onClick={() => setShowForm(false)}
+                >
+                  ✕
+                </button>
               </div>
+              <AttributeForm
+                attribute={selectedAttribute}
+                onSave={handleSaveAttribute}
+                onCancel={() => setShowForm(false)}
+              />
             </div>
+            <div
+              className="modal-backdrop"
+              onClick={() => setShowForm(false)}
+            ></div>
           </div>
         )}
       </div>

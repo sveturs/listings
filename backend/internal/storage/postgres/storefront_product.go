@@ -11,6 +11,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -366,6 +367,104 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 			Int("storefront_id", storefrontID).
 			Str("name", req.Name).
 			Msg("Failed to create storefront product")
+		return nil, fmt.Errorf("failed to create storefront product: %w", err)
+	}
+
+	// Populate the product with request data
+	product.StorefrontID = storefrontID
+	product.Name = req.Name
+	product.Description = req.Description
+	product.Price = req.Price
+	product.Currency = req.Currency
+	product.CategoryID = req.CategoryID
+	product.SKU = req.SKU
+	product.Barcode = req.Barcode
+	product.StockQuantity = req.StockQuantity
+	product.IsActive = req.IsActive
+	product.Attributes = req.Attributes
+	product.HasIndividualLocation = hasIndividualLocation
+	product.IndividualAddress = req.IndividualAddress
+	product.IndividualLatitude = req.IndividualLatitude
+	product.IndividualLongitude = req.IndividualLongitude
+	product.LocationPrivacy = req.LocationPrivacy
+	product.ShowOnMap = showOnMap
+	product.HasVariants = req.HasVariants
+
+	return &product, nil
+}
+
+// CreateStorefrontProductTx creates a new product within a transaction
+func (s *Database) CreateStorefrontProductTx(ctx context.Context, tx *sqlx.Tx, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
+	// Log incoming request
+	logger.Info().
+		Int("storefront_id", storefrontID).
+		Str("name", req.Name).
+		Float64("price", req.Price).
+		Int("category_id", req.CategoryID).
+		Interface("attributes", req.Attributes).
+		Msg("Creating storefront product with transaction")
+
+	var attributesJSON []byte
+	if req.Attributes != nil {
+		var err error
+		attributesJSON, err = json.Marshal(req.Attributes)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to marshal attributes")
+			return nil, fmt.Errorf("failed to marshal attributes: %w", err)
+		}
+	}
+
+	query := `
+		INSERT INTO storefront_products (
+			storefront_id, name, description, price, currency, category_id,
+			sku, barcode, stock_quantity, is_active, attributes,
+			has_individual_location, individual_address, individual_latitude,
+			individual_longitude, location_privacy, show_on_map, has_variants
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+		RETURNING id, stock_status, created_at, updated_at`
+
+	// Log query parameters
+	logger.Debug().
+		Int("storefront_id", storefrontID).
+		Str("name", req.Name).
+		Str("description", req.Description).
+		Float64("price", req.Price).
+		Str("currency", req.Currency).
+		Int("category_id", req.CategoryID).
+		Interface("sku", req.SKU).
+		Interface("barcode", req.Barcode).
+		Int("stock_quantity", req.StockQuantity).
+		Bool("is_active", req.IsActive).
+		Str("attributes_json", string(attributesJSON)).
+		Msg("Executing INSERT query with transaction")
+
+	// Prepare location values
+	hasIndividualLocation := req.HasIndividualLocation != nil && *req.HasIndividualLocation
+	showOnMap := req.ShowOnMap == nil || *req.ShowOnMap // Default true
+
+	// Handle empty strings as NULL for SKU and Barcode
+	var sku, barcode interface{}
+	if req.SKU != nil && *req.SKU != "" {
+		sku = req.SKU
+	}
+	if req.Barcode != nil && *req.Barcode != "" {
+		barcode = req.Barcode
+	}
+
+	var product models.StorefrontProduct
+	err := tx.QueryRowContext(
+		ctx, query,
+		storefrontID, req.Name, req.Description, req.Price, req.Currency, req.CategoryID,
+		sku, barcode, req.StockQuantity, req.IsActive, attributesJSON,
+		hasIndividualLocation, req.IndividualAddress, req.IndividualLatitude,
+		req.IndividualLongitude, req.LocationPrivacy, showOnMap, req.HasVariants,
+	).Scan(&product.ID, &product.StockStatus, &product.CreatedAt, &product.UpdatedAt)
+	if err != nil {
+		logger.Error().
+			Err(err).
+			Int("storefront_id", storefrontID).
+			Str("name", req.Name).
+			Msg("Failed to create storefront product with transaction")
 		return nil, fmt.Errorf("failed to create storefront product: %w", err)
 	}
 

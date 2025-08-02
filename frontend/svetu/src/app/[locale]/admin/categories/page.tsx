@@ -171,8 +171,8 @@ export default function CategoriesPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6">
+        <div className="col-span-1">
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <CategoryTree
@@ -187,61 +187,65 @@ export default function CategoriesPage() {
             </div>
           </div>
         </div>
-
-        <div className="lg:col-span-1">
-          {showForm && (
-            <div className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <h2 className="card-title">
-                  {isEditing
-                    ? t('categories.editCategory')
-                    : t('categories.addCategory')}
-                </h2>
-                <CategoryForm
-                  category={selectedCategory}
-                  categories={categories}
-                  onSave={handleSaveCategory}
-                  onCancel={() => setShowForm(false)}
-                />
-              </div>
-            </div>
-          )}
-
-          {showAttributes && selectedCategory && (
-            <div className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <h2 className="card-title">
-                  {t('sections.attributes')}: {selectedCategory.name}
-                </h2>
-                <CategoryAttributesOptimized
-                  category={selectedCategory}
-                  onUpdate={loadCategories}
-                />
-              </div>
-            </div>
-          )}
-
-          {!showForm && !showAttributes && (
-            <div className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <h2 className="card-title">{t('categories.title')}</h2>
-                <p className="text-base-content/60">
-                  {t('categories.description')}
-                </p>
-                <div className="stats stats-vertical shadow mt-4">
-                  <div className="stat">
-                    <div className="stat-title">{t('common.total')}</div>
-                    <div className="stat-value">{categories.length}</div>
-                    <div className="stat-desc">
-                      {t('categories.totalCategories')}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* Modal for Category Form */}
+      {showForm && (
+        <div className="modal modal-open">
+          <div className="modal-box w-11/12 max-w-4xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">
+                {isEditing
+                  ? t('categories.editCategory')
+                  : t('categories.addCategory')}
+              </h2>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => setShowForm(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <CategoryForm
+              category={selectedCategory}
+              categories={categories}
+              onSave={handleSaveCategory}
+              onCancel={() => setShowForm(false)}
+            />
+          </div>
+          <div
+            className="modal-backdrop"
+            onClick={() => setShowForm(false)}
+          ></div>
+        </div>
+      )}
+
+      {/* Modal for Category Attributes */}
+      {showAttributes && selectedCategory && (
+        <div className="modal modal-open">
+          <div className="modal-box w-11/12 max-w-6xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">
+                {t('sections.attributes')}: {selectedCategory.name}
+              </h2>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => setShowAttributes(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <CategoryAttributesOptimized
+              category={selectedCategory}
+              onUpdate={loadCategories}
+            />
+          </div>
+          <div
+            className="modal-backdrop"
+            onClick={() => setShowAttributes(false)}
+          ></div>
+        </div>
+      )}
 
       {/* Modal for managing keywords */}
       {selectedCategory && (

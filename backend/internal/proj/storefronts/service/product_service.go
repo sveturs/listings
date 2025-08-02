@@ -22,6 +22,7 @@ type ProductSearchRepository = opensearch.ProductSearchRepository
 // VariantService interface for variant operations
 type VariantService interface {
 	BulkCreateVariants(ctx context.Context, productID int, variants []variantTypes.CreateVariantRequest) ([]*variantTypes.ProductVariant, error)
+	BulkCreateVariantsTx(ctx context.Context, tx interface{}, productID int, variants []variantTypes.CreateVariantRequest) ([]*variantTypes.ProductVariant, error)
 	CreateVariant(ctx context.Context, req *variantTypes.CreateVariantRequest) (*variantTypes.ProductVariant, error)
 	GetVariantsByProductID(ctx context.Context, productID int) ([]*variantTypes.ProductVariant, error)
 }
@@ -54,12 +55,17 @@ type Storage interface {
 
 	// Transaction support
 	BeginTx(ctx context.Context) (Transaction, error)
+
+	// Transactional methods
+	CreateStorefrontProductTx(ctx context.Context, tx Transaction, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error)
 }
 
 // Transaction interface for database transactions
 type Transaction interface {
 	Rollback() error
 	Commit() error
+	// GetPgxTx returns the underlying pgx.Tx for use with repository methods
+	GetPgxTx() interface{} // Returns pgx.Tx but using interface{} to avoid import cycle
 }
 
 // NewProductService creates a new product service
@@ -185,8 +191,8 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	// Create product
-	product, err := s.storage.CreateStorefrontProduct(ctx, storefrontID, req)
+	// Create product within transaction
+	product, err := s.storage.CreateStorefrontProductTx(ctx, tx, storefrontID, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
@@ -211,7 +217,8 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 			}
 		}
 
-		createdVariants, err := s.variantService.BulkCreateVariants(ctx, product.ID, variantRequests)
+		// Use transactional variant creation
+		createdVariants, err := s.variantService.BulkCreateVariantsTx(ctx, tx, product.ID, variantRequests)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create variants: %w", err)
 		}

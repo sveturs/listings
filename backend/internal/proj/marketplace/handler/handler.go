@@ -41,22 +41,24 @@ type SuggestionItem struct {
 
 // Handler combines all marketplace handlers
 type Handler struct {
-	Listings           *ListingsHandler
-	Images             *ImagesHandler
-	Categories         *CategoriesHandler
-	Search             *SearchHandler
-	Translations       *TranslationsHandler
-	Favorites          *FavoritesHandler
-	Indexing           *IndexingHandler
-	Chat               *ChatHandler
-	AdminCategories    *AdminCategoriesHandler
-	AdminAttributes    *AdminAttributesHandler
-	AdminTranslations  *AdminTranslationsHandler
-	CustomComponents   *CustomComponentHandler
-	MarketplaceHandler *MarketplaceHandler
-	Orders             *OrderHandler
-	CategoryDetector   *CategoryDetectorHandler
-	service            globalService.ServicesInterface
+	Listings               *ListingsHandler
+	Images                 *ImagesHandler
+	Categories             *CategoriesHandler
+	Search                 *SearchHandler
+	Translations           *TranslationsHandler
+	Favorites              *FavoritesHandler
+	Indexing               *IndexingHandler
+	Chat                   *ChatHandler
+	AdminCategories        *AdminCategoriesHandler
+	AdminAttributes        *AdminAttributesHandler
+	AdminVariantAttributes *AdminVariantAttributesHandler
+	AdminTranslations      *AdminTranslationsHandler
+	CustomComponents       *CustomComponentHandler
+	MarketplaceHandler     *MarketplaceHandler
+	Orders                 *OrderHandler
+	CategoryDetector       *CategoryDetectorHandler
+	VariantAttributes      *VariantAttributesHandler
+	service                globalService.ServicesInterface
 }
 
 func (h *Handler) GetPrefix() string {
@@ -128,22 +130,24 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		}
 
 		return &Handler{
-			Listings:           NewListingsHandler(services),
-			Images:             NewImagesHandler(services),
-			Categories:         categoriesHandler,
-			Search:             NewSearchHandler(services),
-			Translations:       NewTranslationsHandler(services),
-			Favorites:          NewFavoritesHandler(services),
-			Indexing:           NewIndexingHandler(services),
-			Chat:               NewChatHandler(services, services.Config()),
-			AdminCategories:    adminCategoriesHandler,
-			AdminAttributes:    NewAdminAttributesHandler(services),
-			AdminTranslations:  NewAdminTranslationsHandler(services),
-			CustomComponents:   customComponentHandler,
-			MarketplaceHandler: marketplaceHandler,
-			Orders:             orderHandler,
-			CategoryDetector:   categoryDetectorHandler,
-			service:            services,
+			Listings:               NewListingsHandler(services),
+			Images:                 NewImagesHandler(services),
+			Categories:             categoriesHandler,
+			Search:                 NewSearchHandler(services),
+			Translations:           NewTranslationsHandler(services),
+			Favorites:              NewFavoritesHandler(services),
+			Indexing:               NewIndexingHandler(services),
+			Chat:                   NewChatHandler(services, services.Config()),
+			AdminCategories:        adminCategoriesHandler,
+			AdminAttributes:        NewAdminAttributesHandler(services),
+			AdminVariantAttributes: NewAdminVariantAttributesHandler(services),
+			AdminTranslations:      NewAdminTranslationsHandler(services),
+			CustomComponents:       customComponentHandler,
+			MarketplaceHandler:     marketplaceHandler,
+			Orders:                 orderHandler,
+			CategoryDetector:       categoryDetectorHandler,
+			VariantAttributes:      NewVariantAttributesHandler(services),
+			service:                services,
 		}
 	}
 
@@ -153,22 +157,23 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 	logger.Info().Interface("adminCategoriesHandler", adminCategoriesHandler).Msg("Created AdminCategoriesHandler (fallback)")
 
 	return &Handler{
-		Listings:           NewListingsHandler(services),
-		Images:             NewImagesHandler(services),
-		Categories:         categoriesHandler,
-		Search:             NewSearchHandler(services),
-		Translations:       NewTranslationsHandler(services),
-		Favorites:          NewFavoritesHandler(services),
-		Indexing:           NewIndexingHandler(services),
-		Chat:               NewChatHandler(services, services.Config()),
-		AdminCategories:    adminCategoriesHandler,
-		AdminAttributes:    NewAdminAttributesHandler(services),
-		AdminTranslations:  NewAdminTranslationsHandler(services),
-		CustomComponents:   nil,
-		MarketplaceHandler: nil,
-		Orders:             nil,
-		CategoryDetector:   nil,
-		service:            services,
+		Listings:               NewListingsHandler(services),
+		Images:                 NewImagesHandler(services),
+		Categories:             categoriesHandler,
+		Search:                 NewSearchHandler(services),
+		Translations:           NewTranslationsHandler(services),
+		Favorites:              NewFavoritesHandler(services),
+		Indexing:               NewIndexingHandler(services),
+		Chat:                   NewChatHandler(services, services.Config()),
+		AdminCategories:        adminCategoriesHandler,
+		AdminAttributes:        NewAdminAttributesHandler(services),
+		AdminVariantAttributes: NewAdminVariantAttributesHandler(services),
+		AdminTranslations:      NewAdminTranslationsHandler(services),
+		CustomComponents:       nil,
+		MarketplaceHandler:     nil,
+		Orders:                 nil,
+		CategoryDetector:       nil,
+		service:                services,
 	}
 }
 
@@ -221,6 +226,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Карта - геопространственные маршруты
 	marketplace.Get("/map/bounds", h.GetListingsInBounds)
 	marketplace.Get("/map/clusters", h.GetMapClusters)
+
+	// Вариативные атрибуты
+	marketplace.Get("/product-variant-attributes", h.VariantAttributes.GetProductVariantAttributes)
+	marketplace.Get("/categories/:slug/variant-attributes", h.VariantAttributes.GetCategoryVariantAttributes)
 
 	// Обновлено: маршруты API переводов используют обработчик переводов
 	translation := app.Group("/api/v1/translation")
@@ -303,6 +312,13 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Get("/categories/:categoryId/attributes/export", h.AdminAttributes.ExportCategoryAttributes)
 	adminRoutes.Post("/categories/:categoryId/attributes/import", h.AdminAttributes.ImportCategoryAttributes)
 	adminRoutes.Post("/categories/:targetCategoryId/attributes/copy", h.AdminAttributes.CopyAttributesSettings)
+
+	// Регистрируем маршруты администрирования вариативных атрибутов
+	adminRoutes.Get("/variant-attributes", h.AdminVariantAttributes.GetVariantAttributes)
+	adminRoutes.Post("/variant-attributes", h.AdminVariantAttributes.CreateVariantAttribute)
+	adminRoutes.Get("/variant-attributes/:id", h.AdminVariantAttributes.GetVariantAttributeByID)
+	adminRoutes.Put("/variant-attributes/:id", h.AdminVariantAttributes.UpdateVariantAttribute)
+	adminRoutes.Delete("/variant-attributes/:id", h.AdminVariantAttributes.DeleteVariantAttribute)
 
 	// Маршруты для шаблонов (должны быть перед :id, чтобы не конфликтовать)
 	adminRoutes.Get("/custom-components/templates", h.CustomComponents.ListTemplates)

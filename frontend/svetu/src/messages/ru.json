@@ -999,6 +999,7 @@
       "delete": "Удалить",
       "save": "Сохранить",
       "cancel": "Отмена",
+      "translate": "Перевести",
       "saveSuccess": "Успешно сохранено",
       "showing": "Показано",
       "of": "из",
@@ -1016,6 +1017,7 @@
       "catalog": "Каталог",
       "categories": "Категории",
       "attributes": "Атрибуты",
+      "variantAttributes": "Вариативные атрибуты",
       "attributeGroups": "Группы атрибутов",
       "content": "Контент",
       "listings": "Объявления",
@@ -1120,6 +1122,7 @@
       "isFilterable": "Доступен для фильтрации",
       "showInCard": "Показывать в карточке",
       "showInList": "Показывать в списке",
+      "isVariantCompatible": "Может использоваться для вариантов товаров",
       "translations": "Переводы",
       "displayNameTranslations": "Переводы названия атрибута",
       "optionTranslations": "Переводы опций",
@@ -1218,6 +1221,36 @@
       "addOption": "Добавить опцию",
       "translating": "Перевод...",
       "validation": "Валидация"
+    },
+    "variantAttributes": {
+      "title": "Вариативные атрибуты",
+      "description": "Управление атрибутами для вариантов товаров",
+      "addAttribute": "Добавить вариативный атрибут",
+      "editAttribute": "Редактировать вариативный атрибут",
+      "systemName": "Системное имя",
+      "displayName": "Отображаемое название",
+      "type": "Тип",
+      "isRequired": "Обязательный",
+      "affectsStock": "Влияет на остатки",
+      "settings": "Настройки",
+      "sortOrder": "Порядок сортировки",
+      "systemNamePlaceholder": "например: color, size, memory",
+      "displayNamePlaceholder": "например: Цвет, Размер, Память",
+      "systemNameHint": "Только латинские буквы, цифры и подчеркивания",
+      "sortOrderHint": "Порядок отображения в интерфейсе",
+      "isRequiredHint": "Обязательно ли указывать значение при создании варианта",
+      "affectsStockHint": "Влияют ли разные значения на отдельный учет остатков",
+      "validationError": "Заполните обязательные поля",
+      "allTypes": "Все типы",
+      "types": {
+        "text": "Текст",
+        "number": "Число",
+        "select": "Выбор",
+        "multiselect": "Множественный выбор",
+        "boolean": "Логический",
+        "date": "Дата",
+        "range": "Диапазон"
+      }
     },
     "attributeGroups": {
       "title": "Группы атрибутов",
@@ -1560,6 +1593,60 @@
       "translationFailed": "Перевод не удался",
       "unexpectedError": "Произошла неожиданная ошибка",
       "name": "Название"
+    },
+    "attributes": {
+      "title": "Атрибуты",
+      "description": "Управление атрибутами товаров и их типами",
+      "addAttribute": "Добавить атрибут",
+      "editAttribute": "Редактировать атрибут",
+      "attributeName": "Название атрибута",
+      "displayName": "Отображаемое название",
+      "attributeType": "Тип атрибута",
+      "isRequired": "Обязательный",
+      "isSearchable": "Доступен для поиска",
+      "isFilterable": "Доступен для фильтрации",
+      "showInCard": "Показывать в карточке",
+      "showInList": "Показывать в списке",
+      "isVariantCompatible": "Может использоваться для вариантов товаров",
+      "translations": "Переводы",
+      "displayNameTranslations": "Переводы названия атрибута",
+      "optionTranslations": "Переводы опций",
+      "unit": "Единица измерения",
+      "minValue": "Мин. значение",
+      "maxValue": "Макс. значение",
+      "minLength": "Мин. длина",
+      "maxLength": "Макс. длина",
+      "pattern": "Шаблон",
+      "defaultValue": "Значение по умолчанию",
+      "systemName": "Системное имя",
+      "type": "Тип",
+      "usedInCategories": "Используется в категориях",
+      "allTypes": "Все типы",
+      "icon": "Иконка",
+      "options": "Опции",
+      "addOption": "Добавить опцию",
+      "validation": "Валидация",
+      "types": {
+        "text": "Текст",
+        "number": "Число",
+        "select": "Выбор",
+        "multiselect": "Множественный выбор",
+        "boolean": "Да/Нет",
+        "date": "Дата",
+        "range": "Диапазон",
+        "location": "Местоположение",
+        "file": "Файл",
+        "gallery": "Галерея"
+      },
+      "validationRules": {
+        "title": "Правила валидации",
+        "addRule": "Добавить правило",
+        "required": "Обязательное",
+        "minLength": "Минимальная длина",
+        "maxLength": "Максимальная длина",
+        "pattern": "Шаблон",
+        "noRules": "Правила валидации не настроены"
+      }
     }
   },
   "validation": {
@@ -3218,7 +3305,8 @@
       "main": "Основной",
       "attributesFromPreviousStep": "Атрибуты выбраны на предыдущем шаге. Выберите значения для создания вариантов:",
       "selectedCount": "Выбрано: {count} из {total}",
-      "stock": {
+      "stock": "Остаток",
+      "stockStatus": {
         "in_stock": "В наличии",
         "low_stock": "Мало",
         "out_of_stock": "Нет в наличии"
@@ -3245,6 +3333,7 @@
       "cancel": "Отмена",
       "noVariantsConfigured": "Варианты не настроены",
       "setupAttributesFirst": "Сначала настройте атрибуты товара для создания вариантов",
+      "willGenerateVariants": "Будет создано {count} вариантов",
       "setupAttributes": "Настроить атрибуты",
       "steps": {
         "category": "Категория",
@@ -3313,7 +3402,10 @@
         "imageTooLarge": "Файл изображения слишком большой (максимум 10МБ)",
         "atLeastOneImage": "Пожалуйста, добавьте хотя бы одно изображение товара"
       },
-      "default": "По умолчанию"
+      "default": "По умолчанию",
+      "back": "Назад",
+      "generateVariants": "Сгенерировать варианты",
+      "noVariantAttributes": "Для данной категории вариативные атрибуты недоступны"
     },
     "noProducts": "Товары пока не добавлены",
     "storeInfo": "Информация о магазине",

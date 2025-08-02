@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { adminApi } from '@/services/admin';
 import VariantStockManager from './VariantStockManager';
 
 interface SimplifiedVariantGeneratorProps {
@@ -10,6 +11,8 @@ interface SimplifiedVariantGeneratorProps {
   basePrice: number;
   onGenerate: (variants: any[]) => void;
   onCancel: () => void;
+  categoryId?: number;
+  categorySlug?: string;
 }
 
 export default function SimplifiedVariantGenerator({
@@ -18,10 +21,118 @@ export default function SimplifiedVariantGenerator({
   basePrice,
   onGenerate,
   onCancel,
+  categoryId,
+  categorySlug: propCategorySlug,
 }: SimplifiedVariantGeneratorProps) {
   const t = useTranslations('storefronts.products');
   const [generatedVariants, setGeneratedVariants] = useState<any[]>([]);
   const [showStockManager, setShowStockManager] = useState(false);
+
+  const [categorySlug, setCategorySlug] = useState<string>(
+    propCategorySlug || ''
+  );
+  const [availableVariantAttributes, setAvailableVariantAttributes] = useState<
+    any[]
+  >([]);
+  const [_loading, setLoading] = useState(true);
+
+  // Обновляем slug если он передан через пропсы
+  React.useEffect(() => {
+    if (propCategorySlug) {
+      setCategorySlug(propCategorySlug);
+    }
+  }, [propCategorySlug]);
+
+  // Если slug не передан, пытаемся получить его по ID
+  React.useEffect(() => {
+    if (!propCategorySlug && categoryId) {
+      const fetchCategorySlug = async () => {
+        try {
+          console.log('Fetching category info for ID:', categoryId);
+          // Сначала попробуем получить список категорий
+          const response = await fetch('/api/v1/marketplace/categories');
+          if (response.ok) {
+            const data = await response.json();
+            const categories = data.data || [];
+            // Найдем категорию по ID
+            const category = categories.find(
+              (cat: any) => cat.id === categoryId
+            );
+            if (category) {
+              console.log('Found category:', category);
+              setCategorySlug(category.slug || '');
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch category slug:', error);
+        }
+      };
+
+      fetchCategorySlug();
+    }
+  }, [categoryId, propCategorySlug]);
+
+  // Загружаем вариативные атрибуты для категории
+  React.useEffect(() => {
+    const fetchVariantAttributes = async () => {
+      try {
+        console.log('Loading variant attributes for category:', categorySlug);
+
+        // Загружаем вариативные атрибуты через API
+        const response = await adminApi.variantAttributes.getAll(1, 100);
+
+        console.log('Available variant attributes from API:', response.data);
+
+        // Фильтруем атрибуты которые уже выбраны в selectedAttributes
+        // и имеют соответствующие атрибуты в категории
+        const relevantAttributes = response.data.filter((variantAttr) => {
+          // Ищем соответствующий атрибут в selectedAttributes по названию
+          const matchingCategoryAttr = categoryAttributes.find(
+            (catAttr) =>
+              catAttr.name.toLowerCase() === variantAttr.name.toLowerCase() ||
+              catAttr.display_name
+                .toLowerCase()
+                .includes(variantAttr.name.toLowerCase()) ||
+              variantAttr.name
+                .toLowerCase()
+                .includes(catAttr.name.toLowerCase())
+          );
+
+          if (matchingCategoryAttr) {
+            // Проверяем, есть ли выбранные значения для этого атрибута
+            const hasSelectedValues =
+              selectedAttributes[matchingCategoryAttr.id] &&
+              selectedAttributes[matchingCategoryAttr.id].length > 0;
+
+            console.log(
+              `Variant attribute "${variantAttr.name}" matches category attribute "${matchingCategoryAttr.name}", has selected values:`,
+              hasSelectedValues
+            );
+            return hasSelectedValues;
+          }
+
+          return false;
+        });
+
+        console.log(
+          'Relevant variant attributes for category:',
+          relevantAttributes
+        );
+        setAvailableVariantAttributes(relevantAttributes);
+      } catch (error) {
+        console.error('Failed to load variant attributes:', error);
+        // Fallback к пустому массиву
+        setAvailableVariantAttributes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (categorySlug && categoryAttributes.length > 0) {
+      console.log('categorySlug effect triggered:', categorySlug);
+      fetchVariantAttributes();
+    }
+  }, [categorySlug, categoryAttributes, selectedAttributes]);
 
   // Фильтруем атрибуты которые могут быть использованы для вариантов
   const variantAttributes = React.useMemo(() => {
@@ -30,24 +141,62 @@ export default function SimplifiedVariantGenerator({
       selectedAttributes
     );
     console.log(
-      'SimplifiedVariantGenerator - categoryAttributes:',
-      categoryAttributes
+      'SimplifiedVariantGenerator - availableVariantAttributes:',
+      availableVariantAttributes
+    );
+
+    // Создаем маппинг между названиями атрибутов в БД и вариативными атрибутами
+    const attributeNameMapping: Record<string, string> = {
+      ram: 'memory', // В БД атрибут называется ram, а в вариантах - memory
+      color: 'color',
+      storage: 'storage',
+      size: 'size',
+      material: 'material',
+      pattern: 'pattern',
+      style: 'style',
+      connectivity: 'connectivity',
+      bundle: 'bundle',
+      capacity: 'capacity',
+      power: 'power',
+    };
+
+    // Получаем имена доступных вариативных атрибутов
+    const variantAttributeNames = availableVariantAttributes.map((attr) =>
+      attr.name.toLowerCase()
     );
 
     return categoryAttributes.filter((attr) => {
       const value = selectedAttributes[attr.id];
       if (!value) return false;
 
-      // Проверяем что это подходящий атрибут для вариантов
-      const name = (attr.name || '').toLowerCase();
-      const isVariantAttribute = [
-        'color',
-        'size',
-        'цвет',
-        'размер',
-        'boja',
-        'veličina',
-      ].some((keyword) => name.includes(keyword));
+      // Проверяем что это вариативный атрибут
+      const attrName = (attr.name || '').toLowerCase();
+
+      // Сначала проверяем прямое совпадение
+      let isVariantAttribute = variantAttributeNames.includes(attrName);
+
+      // Если нет прямого совпадения, проверяем через маппинг
+      if (!isVariantAttribute) {
+        const mappedName = attributeNameMapping[attrName];
+        if (mappedName) {
+          isVariantAttribute = variantAttributeNames.includes(mappedName);
+        }
+      }
+
+      // Также проверяем по ключевым словам для обратной совместимости
+      if (!isVariantAttribute) {
+        isVariantAttribute = [
+          'color',
+          'size',
+          'цвет',
+          'размер',
+          'boja',
+          'veličina',
+          'memory',
+          'storage',
+          'ram',
+        ].some((keyword) => attrName.includes(keyword));
+      }
 
       if (!isVariantAttribute) return false;
 
@@ -61,7 +210,7 @@ export default function SimplifiedVariantGenerator({
 
       return true;
     });
-  }, [categoryAttributes, selectedAttributes]);
+  }, [categoryAttributes, selectedAttributes, availableVariantAttributes]);
 
   console.log(
     'SimplifiedVariantGenerator - variantAttributes:',
