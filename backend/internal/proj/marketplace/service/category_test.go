@@ -1101,6 +1101,9 @@ func (ts *testStorage) SearchListingsAdvanced(ctx context.Context, params interf
 }
 func (ts *testStorage) Close()                         {}
 func (ts *testStorage) Ping(ctx context.Context) error { return nil }
+func (ts *testStorage) GetCarMakeBySlug(ctx context.Context, slug string) (*models.CarMake, error) {
+	return nil, ErrNotImplemented
+}
 
 // Marketplace specific methods
 func (ts *testStorage) GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error) {

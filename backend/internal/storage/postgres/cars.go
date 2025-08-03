@@ -124,6 +124,28 @@ func (d *Database) GetCarGenerationsByModel(ctx context.Context, modelID int, ac
 	return generations, nil
 }
 
+// GetCarMakeBySlug возвращает марку автомобиля по slug
+func (d *Database) GetCarMakeBySlug(ctx context.Context, slug string) (*models.CarMake, error) {
+	var make models.CarMake
+
+	query := `
+		SELECT id, name, slug, logo_url, country, is_active, sort_order, 
+		       is_domestic, popularity_rs, created_at, updated_at
+		FROM car_makes
+		WHERE slug = $1
+	`
+
+	err := d.sqlxDB.GetContext(ctx, &make, query, slug)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("car make not found: %s", slug)
+		}
+		return nil, err
+	}
+
+	return &make, nil
+}
+
 // SearchCarMakes выполняет поиск марок автомобилей по названию
 func (d *Database) SearchCarMakes(ctx context.Context, query string, limit int) ([]models.CarMake, error) {
 	var makes []models.CarMake

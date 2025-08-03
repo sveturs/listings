@@ -18,7 +18,7 @@ interface QuickFiltersProps {
 
 // Предопределенные быстрые фильтры для категорий
 const quickFiltersByCategory: Record<string, QuickFilter[]> = {
-  // Автомобили
+  // Автомобили (старый ID)
   '2000': [
     {
       id: 'new-cars',
@@ -42,6 +42,81 @@ const quickFiltersByCategory: Record<string, QuickFilter[]> = {
       icon: '✅',
       filters: {
         damaged: false,
+      },
+    },
+  ],
+  // Автомобили (новые ID)
+  '1301': [
+    // Личные автомобили
+    {
+      id: 'new-cars',
+      label: 'filters.quickOptions.new',
+      icon: '✨',
+      filters: {
+        condition: 'new',
+      },
+    },
+    {
+      id: 'low-mileage',
+      label: 'filters.quickOptions.lowMileage',
+      icon: '🚗',
+      filters: {
+        mileage: { max: 50000 },
+      },
+    },
+    {
+      id: 'no-damage',
+      label: 'filters.quickOptions.noDamage',
+      icon: '✅',
+      filters: {
+        damaged: false,
+      },
+    },
+  ],
+  '1302': [
+    // Коммерческие автомобили
+    {
+      id: 'with-warranty',
+      label: 'filters.quickOptions.withWarranty',
+      icon: '🛡️',
+      filters: {
+        has_warranty: true,
+      },
+    },
+    {
+      id: 'low-mileage',
+      label: 'filters.quickOptions.lowMileage',
+      icon: '🚛',
+      filters: {
+        mileage: { max: 100000 },
+      },
+    },
+    {
+      id: 'ready-to-work',
+      label: 'filters.quickOptions.readyToWork',
+      icon: '💼',
+      filters: {
+        technical_inspection: true,
+      },
+    },
+  ],
+  // Автомобили (старый диапазон ID для совместимости)
+  '10101': [
+    // Zastava Vehicles
+    {
+      id: 'new-cars',
+      label: 'filters.quickOptions.new',
+      icon: '✨',
+      filters: {
+        condition: 'new',
+      },
+    },
+    {
+      id: 'low-mileage',
+      label: 'filters.quickOptions.lowMileage',
+      icon: '🚗',
+      filters: {
+        mileage: { max: 50000 },
       },
     },
   ],

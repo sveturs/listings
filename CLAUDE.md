@@ -1,10 +1,48 @@
 # CLAUDE.md
+
+## 🔐 JWT Token Generator
+
+В директории `backend/scripts` есть утилита для создания JWT токенов для тестирования:
+
+### Генератор `create_test_jwt.go`
+```bash
+# Создает токен для user_id=1, email=test@example.com на 24 часа
+cd backend && go run scripts/create_test_jwt.go
+
+# С использованием JWT_SECRET из .env
+cd backend && JWT_SECRET=$(grep JWT_SECRET .env | cut -d '=' -f2) go run scripts/create_test_jwt.go
+```
+
+### Пример использования в API запросах:
+```bash
+# Получаем токен
+TOKEN=$(cd backend && go run scripts/create_test_jwt.go)
+
+# Используем в запросе
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/protected-endpoint
+
+# Или для реальных запросов с корректным JWT_SECRET
+TOKEN=$(cd backend && JWT_SECRET=$(grep JWT_SECRET .env | cut -d '=' -f2) go run scripts/create_test_jwt.go)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/user/profile
+```
+
 - ## Important Notes
 нужно реализовать план:
 /data/hostel-booking-system/docs/ADMIN_VARIANT_ATTRIBUTES_EXTENSION_PLAN.md
 
 актуальный статус автомобильного раздела:
 /data/hostel-booking-system/docs/AUTOMOTIVE_SECTION_STATUS_AND_PLAN.md
+
+## 🚗 Автомобильная система - Аудит и очистка
+**Новые документы (02.08.2025):**
+- **AUTOMOTIVE_AUDIT_REPORT.md** - полный аудит автомобильной части с выявленными проблемами
+- **AUTOMOTIVE_CLEANUP_PLAN.md** - детальный 10-дневный план очистки и унификации
+
+**Основные проблемы:**
+- 4 пустые таблицы БД с 17 избыточными индексами
+- 3 параллельные системы в backend (дублирование)
+- Отсутствует интеграция с основным маркетплейсом
+- VIN декодирование создано, но не подключено
 
 - НИКОГДА НЕ ДОБАВЛЯЙ Claude в авторы или соавторы. к примеру как ты сейчас захотел сделать: "Generated with [Claude Code](https://claude.ai/code)"
 

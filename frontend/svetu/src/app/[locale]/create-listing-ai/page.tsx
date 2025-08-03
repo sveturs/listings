@@ -54,6 +54,8 @@ import LocationPicker from '@/components/GIS/LocationPicker';
 import LocationPrivacySettingsWithAddress, {
   LocationPrivacyLevel,
 } from '@/components/GIS/LocationPrivacySettingsWithAddress';
+import { CarSelectorCompact } from '@/components/cars';
+import { Car } from 'lucide-react';
 
 export default function AIPoweredListingCreationPage() {
   const router = useRouter();
@@ -71,6 +73,13 @@ export default function AIPoweredListingCreationPage() {
   const [categories, setCategories] = useState<
     Array<{ id: number; name: string; slug: string; translations?: any }>
   >([]);
+
+  // Состояние для выбора автомобиля
+  const [carSelection, setCarSelection] = useState<{
+    make?: any;
+    model?: any;
+    generation?: any;
+  }>({});
 
   // Category attributes
   const [categoryAttributes, setCategoryAttributes] = useState<any[]>([]);
@@ -357,6 +366,36 @@ export default function AIPoweredListingCreationPage() {
     return { id: 1, name: 'General', slug: 'general' };
   };
 
+  // Проверка, является ли категория автомобильной
+  const isCarCategory = (categorySlug: string): boolean => {
+    if (!categorySlug) return false;
+    const carCategories = [
+      'automotive',
+      'cars',
+      'automobili',
+      'licni-automobili',
+    ];
+    const normalizedSlug = categorySlug.toLowerCase();
+
+    // Проверяем основные автомобильные категории
+    if (carCategories.includes(normalizedSlug)) {
+      return true;
+    }
+
+    // Проверяем ID категории
+    const categoryData = getCategoryData(categorySlug);
+    if (categoryData.id >= 1301 && categoryData.id <= 1302) {
+      return true;
+    }
+
+    // Проверяем по ID в диапазоне 10100-10199 (старый диапазон)
+    if (categoryData.id >= 10100 && categoryData.id < 10200) {
+      return true;
+    }
+
+    return false;
+  };
+
   // Convert image to base64
   const convertToBase64 = async (imageUrl: string): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -502,6 +541,9 @@ export default function AIPoweredListingCreationPage() {
                 matchedKeywords:
                   detectionResult.debug_info?.matched_keywords || [],
               }));
+
+              // Сбрасываем выбор автомобиля при автоматическом определении категории
+              setCarSelection({});
 
               // Загружаем атрибуты для определенной категории
               await loadCategoryAttributes(detectionResult.category_id);
@@ -1071,6 +1113,8 @@ export default function AIPoweredListingCreationPage() {
                               category: selectedCat.slug,
                             });
                             loadCategoryAttributes(selectedCat.id);
+                            // Сбрасываем выбор автомобиля при смене категории
+                            setCarSelection({});
                           }
                         }}
                       >
@@ -1415,6 +1459,57 @@ export default function AIPoweredListingCreationPage() {
               </div>
             </div>
           </div>
+
+          {/* Car Selector for automotive categories */}
+          {aiData.category && isCarCategory(aiData.category) && (
+            <div className="card bg-base-200 mb-6">
+              <div className="card-body">
+                <h3 className="card-title text-base mb-4">
+                  <Car className="w-5 h-5" />
+                  {t('cars.selectCar')}
+                </h3>
+                <CarSelectorCompact
+                  value={carSelection}
+                  onChange={(selection) => {
+                    setCarSelection(selection);
+                    // Обновляем атрибуты при выборе машины
+                    if (selection.make && selection.model) {
+                      setAiData((prev) => ({
+                        ...prev,
+                        attributes: {
+                          ...prev.attributes,
+                          // Марка
+                          make: selection.make?.name || '',
+                          // Модель
+                          model: selection.model?.name || '',
+                        },
+                      }));
+
+                      // Если заголовок пуст или это стандартный заголовок, обновляем его
+                      const currentTitle =
+                        aiData.titleVariants[aiData.selectedTitleIndex] ||
+                        aiData.title;
+                      if (
+                        !currentTitle ||
+                        currentTitle.toLowerCase().includes('автомобиль')
+                      ) {
+                        const newTitle =
+                          `${selection.make?.name || ''} ${selection.model?.name || ''}`.trim();
+                        setAiData((prev) => ({
+                          ...prev,
+                          title: newTitle,
+                          titleVariants: [
+                            newTitle,
+                            ...prev.titleVariants.slice(1),
+                          ],
+                        }));
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Attributes */}
           {(Object.keys(aiData.attributes).length > 0 ||

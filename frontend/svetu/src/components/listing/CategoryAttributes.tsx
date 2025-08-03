@@ -125,7 +125,7 @@ export default function CategoryAttributes({
                 if (translated !== translationKey) {
                   label = translated;
                 }
-              } catch (e) {
+              } catch {
                 // Игнорируем ошибку если ключ не найден
               }
             }
@@ -137,7 +137,7 @@ export default function CategoryAttributes({
                 if (translated !== translationKey) {
                   label = translated;
                 }
-              } catch (e) {
+              } catch {
                 // Игнорируем ошибку если ключ не найден
               }
             }

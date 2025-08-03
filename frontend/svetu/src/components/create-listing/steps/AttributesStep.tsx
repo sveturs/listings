@@ -8,6 +8,8 @@ import {
   CategoryAttributeMapping,
 } from '@/services/marketplace';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
+import { CarSelector } from '@/components/cars/CarSelector';
+import type { CarSelection } from '@/types/cars';
 
 interface AttributeFormData {
   attribute_id: number;
@@ -49,6 +51,8 @@ export default function AttributesStep({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(['basic', 'technical'])
   );
+  const [carSelection, setCarSelection] = useState<CarSelection>({});
+  const [isAutomotiveCategory, setIsAutomotiveCategory] = useState(false);
 
   useEffect(() => {
     const loadAttributes = async () => {
@@ -59,6 +63,11 @@ export default function AttributesStep({
 
       try {
         setLoading(true);
+
+        // Проверяем, является ли категория автомобильной (ID >= 10100 и < 10200)
+        const isAuto = state.category.id >= 10100 && state.category.id < 10200;
+        setIsAutomotiveCategory(isAuto);
+
         const response = await MarketplaceService.getCategoryAttributes(
           state.category.id
         );
@@ -133,6 +142,45 @@ export default function AttributesStep({
   useEffect(() => {
     dispatch({ type: 'SET_ATTRIBUTES', payload: formData });
   }, [formData, dispatch]);
+
+  // Обновляем атрибуты при изменении выбора автомобиля
+  useEffect(() => {
+    if (isAutomotiveCategory && carSelection.make) {
+      const makeAttr = attributes.find(
+        (a) => a.attribute?.name === 'car_make_id'
+      );
+      const modelAttr = attributes.find(
+        (a) => a.attribute?.name === 'car_model_id'
+      );
+      const selectedMake = carSelection.make; // Сохраняем ссылку для TypeScript
+      const selectedModel = carSelection.model;
+
+      setFormData((prev) => ({
+        ...prev,
+        ...(makeAttr?.attribute?.id && {
+          [makeAttr.attribute.id]: {
+            attribute_id: makeAttr.attribute.id,
+            attribute_name: 'car_make_id',
+            display_name: 'Car Make ID',
+            attribute_type: 'number',
+            numeric_value: selectedMake.id,
+            display_value: selectedMake.name,
+          },
+        }),
+        ...(selectedModel &&
+          modelAttr?.attribute?.id && {
+            [modelAttr.attribute.id]: {
+              attribute_id: modelAttr.attribute.id,
+              attribute_name: 'car_model_id',
+              display_name: 'Car Model ID',
+              attribute_type: 'number',
+              numeric_value: selectedModel.id,
+              display_value: selectedModel.name,
+            },
+          }),
+      }));
+    }
+  }, [carSelection, isAutomotiveCategory, attributes]);
 
   // Группируем атрибуты по логическим группам
   const groupAttributes = useCallback((): AttributeGroup[] => {
@@ -367,6 +415,15 @@ export default function AttributesStep({
     const attribute = mapping.attribute;
     if (!attribute) return null;
 
+    // Для автомобильных категорий используем CarSelector для марки и модели
+    if (
+      isAutomotiveCategory &&
+      (attribute.name === 'car_make_id' || attribute.name === 'car_model_id')
+    ) {
+      // Скрываем отдельные поля для марки и модели, так как они управляются через CarSelector
+      return null;
+    }
+
     const formAttribute = formData[attribute.id];
     const value =
       formAttribute?.text_value ||
@@ -504,6 +561,17 @@ export default function AttributesStep({
     .filter((mapping) => mapping.is_required && mapping.attribute)
     .every((mapping) => {
       const attr = mapping.attribute!;
+
+      // Для автомобильных атрибутов проверяем carSelection
+      if (isAutomotiveCategory) {
+        if (attr.name === 'car_make_id') {
+          return !!carSelection.make;
+        }
+        if (attr.name === 'car_model_id') {
+          return !!carSelection.model;
+        }
+      }
+
       const formAttr = formData[attr.id];
       if (!formAttr) return false;
 
@@ -556,6 +624,27 @@ export default function AttributesStep({
             </div>
           ) : (
             <div className="space-y-6 mb-8">
+              {/* Для автомобильных категорий показываем CarSelector */}
+              {isAutomotiveCategory && (
+                <div className="card bg-base-100 shadow-lg">
+                  <div className="card-body">
+                    <h3 className="card-title text-xl flex items-center gap-3">
+                      <span className="text-2xl">🚗</span>
+                      {t('create_listing.attributes.groups.car_selection')}
+                      <div className="badge badge-warning">
+                        {t('common.required')}
+                      </div>
+                    </h3>
+                    <CarSelector
+                      value={carSelection}
+                      onChange={setCarSelection}
+                      required={true}
+                      className="mt-4"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Сводка обязательных полей */}
               {attributes.some((mapping) => mapping.is_required) && (
                 <div className="alert alert-info">

@@ -7059,6 +7059,62 @@
                 }
             }
         },
+        "/api/v1/cars/vin/{vin}/decode": {
+            "get": {
+                "description": "Decode vehicle identification number (VIN) to get vehicle information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-cars"
+                ],
+                "summary": "Decode VIN number",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "VIN number (17 characters)",
+                        "name": "vin",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "VIN decode result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.VINDecodeResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid VIN",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/categories/{slug}/variant-attributes": {
             "get": {
                 "description": "Returns variant attributes suitable for specific category",
@@ -29101,6 +29157,106 @@
                 },
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.VINDecodeResult": {
+            "type": "object",
+            "properties": {
+                "body_type": {
+                    "type": "string"
+                },
+                "decoded_at": {
+                    "type": "string"
+                },
+                "drive_type": {
+                    "type": "string"
+                },
+                "engine": {
+                    "$ref": "#/definitions/backend_internal_domain_models.VINEngineInfo"
+                },
+                "fuel_type": {
+                    "type": "string"
+                },
+                "make_id": {
+                    "type": "integer"
+                },
+                "make_name": {
+                    "type": "string"
+                },
+                "manufacturer": {
+                    "$ref": "#/definitions/backend_internal_domain_models.VINManufacturerInfo"
+                },
+                "model_id": {
+                    "type": "integer"
+                },
+                "model_name": {
+                    "type": "string"
+                },
+                "raw_data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "source": {
+                    "description": "nhtsa, vehicle_databases, etc",
+                    "type": "string"
+                },
+                "transmission": {
+                    "type": "string"
+                },
+                "trim": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
+                },
+                "vin": {
+                    "type": "string"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.VINEngineInfo": {
+            "type": "object",
+            "properties": {
+                "configuration": {
+                    "description": "inline, V, etc",
+                    "type": "string"
+                },
+                "cylinders": {
+                    "type": "integer"
+                },
+                "displacement": {
+                    "description": "в литрах",
+                    "type": "number"
+                },
+                "power_hp": {
+                    "type": "integer"
+                },
+                "power_kw": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.VINManufacturerInfo": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plant_city": {
+                    "type": "string"
+                },
+                "plant_code": {
+                    "type": "string"
                 }
             }
         },

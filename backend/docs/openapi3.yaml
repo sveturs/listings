@@ -4723,6 +4723,43 @@ paths:
       summary: Get car generations by model
       tags:
         - marketplace-cars
+  "/api/v1/cars/vin/{vin}/decode":
+    get:
+      description: Decode vehicle identification number (VIN) to get vehicle information
+      parameters:
+        - description: VIN number (17 characters)
+          in: path
+          name: vin
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: VIN decode result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.VINDecodeResult"
+                    type: object
+        "400":
+          description: Invalid VIN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Decode VIN number
+      tags:
+        - marketplace-cars
   "/api/v1/categories/{slug}/variant-attributes":
     get:
       description: Returns variant attributes suitable for specific category
@@ -20208,6 +20245,73 @@ components:
           type: integer
         user_id:
           type: integer
+      type: object
+    backend_internal_domain_models.VINDecodeResult:
+      properties:
+        body_type:
+          type: string
+        decoded_at:
+          type: string
+        drive_type:
+          type: string
+        engine:
+          $ref: "#/components/schemas/backend_internal_domain_models.VINEngineInfo"
+        fuel_type:
+          type: string
+        make_id:
+          type: integer
+        make_name:
+          type: string
+        manufacturer:
+          $ref: "#/components/schemas/backend_internal_domain_models.VINManufacturerInfo"
+        model_id:
+          type: integer
+        model_name:
+          type: string
+        raw_data:
+          additionalProperties: true
+          type: object
+        source:
+          description: nhtsa, vehicle_databases, etc
+          type: string
+        transmission:
+          type: string
+        trim:
+          type: string
+        valid:
+          type: boolean
+        vin:
+          type: string
+        year:
+          type: integer
+      type: object
+    backend_internal_domain_models.VINEngineInfo:
+      properties:
+        configuration:
+          description: inline, V, etc
+          type: string
+        cylinders:
+          type: integer
+        displacement:
+          description: в литрах
+          type: number
+        power_hp:
+          type: integer
+        power_kw:
+          type: integer
+        type:
+          type: string
+      type: object
+    backend_internal_domain_models.VINManufacturerInfo:
+      properties:
+        country:
+          type: string
+        name:
+          type: string
+        plant_city:
+          type: string
+        plant_code:
+          type: string
       type: object
     backend_internal_domain_models.VariantSettings:
       properties:

@@ -224,7 +224,7 @@ func (s *Server) setupMiddleware() {
 
 	// TODO: Добавить middleware для метрик
 
-	s.app.Use("/ws", s.middleware.AuthRequiredJWT)
+	// Удалено глобальное применение AuthRequiredJWT
 }
 
 func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние маршруты

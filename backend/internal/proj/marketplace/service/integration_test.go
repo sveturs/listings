@@ -538,6 +538,9 @@ func (m *MockStorage) SearchCarMakes(ctx context.Context, query string, limit in
 
 func (m *MockStorage) Close()                         {}
 func (m *MockStorage) Ping(ctx context.Context) error { return nil }
+func (m *MockStorage) GetCarMakeBySlug(ctx context.Context, slug string) (*models.CarMake, error) {
+	return nil, errors.New("not implemented")
+}
 
 // Создание тестового сервиса
 func createTestService() *MarketplaceService {

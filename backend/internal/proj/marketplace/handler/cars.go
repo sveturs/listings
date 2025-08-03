@@ -12,13 +12,15 @@ import (
 
 // CarsHandler handles car makes and models endpoints
 type CarsHandler struct {
-	service service.Interface
+	service    service.Interface
+	carService *service.UnifiedCarService
 }
 
 // NewCarsHandler creates new cars handler
-func NewCarsHandler(service service.Interface) *CarsHandler {
+func NewCarsHandler(service service.Interface, carService *service.UnifiedCarService) *CarsHandler {
 	return &CarsHandler{
-		service: service,
+		service:    service,
+		carService: carService,
 	}
 }
 
@@ -36,6 +38,8 @@ func NewCarsHandler(service service.Interface) *CarsHandler {
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/cars/makes [get]
 func (h *CarsHandler) GetCarMakes(c *fiber.Ctx) error {
+	logger.Info().Msg("GetCarMakes handler called")
+
 	// Parse query parameters
 	country := c.Query("country")
 	isDomestic := c.QueryBool("is_domestic", false)
@@ -155,6 +159,43 @@ func (h *CarsHandler) SearchCarMakes(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, makes)
 }
 
+// DecodeVIN godoc
+// @Summary Decode VIN number
+// @Description Decode vehicle identification number (VIN) to get vehicle information
+// @Tags marketplace-cars
+// @Accept json
+// @Produce json
+// @Param vin path string true "VIN number (17 characters)"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.VINDecodeResult} "VIN decode result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid VIN"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/cars/vin/{vin}/decode [get]
+func (h *CarsHandler) DecodeVIN(c *fiber.Ctx) error {
+	vin := c.Params("vin")
+	if vin == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.required")
+	}
+
+	// Проверяем, что carService инициализирован
+	if h.carService == nil {
+		logger.Error().Msg("UnifiedCarService not initialized")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "general.serviceError")
+	}
+
+	// Декодируем VIN
+	result, err := h.carService.DecodeVIN(c.Context(), vin)
+	if err != nil {
+		logger.Error().Err(err).Str("vin", vin).Msg("Failed to decode VIN")
+		// Если VIN некорректный, возвращаем 400
+		if err.Error() == "invalid VIN length" || err.Error() == "VIN decoder is disabled" {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidVIN")
+		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "general.decodeError")
+	}
+
+	return utils.SuccessResponse(c, result)
+}
+
 // RegisterRoutes registers car-related routes
 func (h *CarsHandler) RegisterRoutes(router fiber.Router) {
 	cars := router.Group("/cars")
@@ -164,4 +205,7 @@ func (h *CarsHandler) RegisterRoutes(router fiber.Router) {
 	cars.Get("/makes/search", h.SearchCarMakes)
 	cars.Get("/makes/:make_slug/models", h.GetCarModels)
 	cars.Get("/models/:model_id/generations", h.GetCarGenerations)
+
+	// VIN декодирование (может потребовать авторизацию в будущем)
+	cars.Get("/vin/:vin/decode", h.DecodeVIN)
 }

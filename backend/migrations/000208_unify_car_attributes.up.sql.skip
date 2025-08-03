@@ -1,0 +1,205 @@
+-- Унификация автомобильных атрибутов
+
+-- 1. Добавляем поля data_source и options в category_attributes если их нет
+ALTER TABLE category_attributes 
+ADD COLUMN IF NOT EXISTS data_source VARCHAR(100),
+ADD COLUMN IF NOT EXISTS options JSONB DEFAULT '{}';
+
+-- 2. Обновляем существующий атрибут car_make для использования с автомобилями
+UPDATE category_attributes 
+SET 
+    attribute_type = 'select',
+    data_source = 'api_external',
+    options = jsonb_build_object(
+        'source_table', 'car_makes',
+        'value_field', 'id',
+        'label_field', 'name',
+        'slug_field', 'slug',
+        'search_enabled', true
+    )
+WHERE name = 'car_make';
+
+-- 3. Создаем новый атрибут car_model_dynamic для динамической загрузки моделей
+INSERT INTO category_attributes (name, display_name, attribute_type, is_required, is_searchable, is_filterable, data_source, options)
+VALUES (
+    'car_model_dynamic',
+    'Model',
+    'select',
+    false,
+    true,
+    true,
+    'api_external',
+    jsonb_build_object(
+        'source_table', 'car_models',
+        'value_field', 'id',
+        'label_field', 'name',
+        'slug_field', 'slug',
+        'depends_on', 'car_make_id',
+        'load_dynamically', true,
+        'filter_by', 'make_id'
+    )
+) ON CONFLICT (name) DO NOTHING;
+
+-- 4. Создаем атрибут для поколения автомобиля
+INSERT INTO category_attributes (name, display_name, attribute_type, is_required, is_searchable, is_filterable, data_source, options)
+VALUES (
+    'car_generation_dynamic',
+    'Generation',
+    'select',
+    false,
+    false,
+    true,
+    'api_external',
+    jsonb_build_object(
+        'source_table', 'car_generations',
+        'value_field', 'id',
+        'label_field', 'name',
+        'depends_on', 'car_model_id',
+        'load_dynamically', true,
+        'filter_by', 'model_id'
+    )
+) ON CONFLICT (name) DO NOTHING;
+
+-- 5. Обновляем car_make_id для правильной работы
+UPDATE category_attributes 
+SET 
+    display_name = 'Car Make',
+    attribute_type = 'select',
+    data_source = 'api_external',
+    options = jsonb_build_object(
+        'source_table', 'car_makes',
+        'value_field', 'id',
+        'label_field', 'name',
+        'search_enabled', true
+    )
+WHERE name = 'car_make_id';
+
+-- 6. Обновляем car_model_id для правильной работы
+UPDATE category_attributes 
+SET 
+    display_name = 'Car Model',
+    attribute_type = 'select',
+    data_source = 'api_external',
+    options = jsonb_build_object(
+        'source_table', 'car_models',
+        'value_field', 'id',
+        'label_field', 'name',
+        'depends_on', 'car_make_id',
+        'load_dynamically', true,
+        'filter_by', 'make_id'
+    )
+WHERE name = 'car_model_id';
+
+-- 7. Обновляем car_generation_id
+UPDATE category_attributes 
+SET 
+    display_name = 'Car Generation',
+    attribute_type = 'select',
+    data_source = 'api_external',
+    options = jsonb_build_object(
+        'source_table', 'car_generations',
+        'value_field', 'id',
+        'label_field', 'name',
+        'depends_on', 'car_model_id',
+        'load_dynamically', true,
+        'filter_by', 'model_id'
+    )
+WHERE name = 'car_generation_id';
+
+-- 8. Удаляем старые неиспользуемые атрибуты
+DELETE FROM category_attribute_mapping 
+WHERE attribute_id IN (
+    SELECT id FROM category_attributes 
+    WHERE name IN ('car_model', 'car_make') -- старые текстовые атрибуты
+);
+
+DELETE FROM category_attributes 
+WHERE name IN ('car_model', 'car_make');
+
+-- 9. Добавляем новые атрибуты к автомобильным категориям
+INSERT INTO category_attribute_mapping (category_id, attribute_id, is_enabled, is_required, sort_order)
+SELECT 
+    c.id as category_id,
+    a.id as attribute_id,
+    true as is_enabled,
+    CASE 
+        WHEN a.name = 'car_make_id' THEN true 
+        ELSE false 
+    END as is_required,
+    CASE 
+        WHEN a.name = 'car_make_id' THEN 1
+        WHEN a.name = 'car_model_id' THEN 2
+        WHEN a.name = 'car_generation_id' THEN 3
+        ELSE 10
+    END as sort_order
+FROM marketplace_categories c
+CROSS JOIN category_attributes a
+WHERE c.id >= 10100 AND c.id < 10200 -- автомобильные категории
+  AND a.name IN ('car_model_dynamic', 'car_generation_dynamic')
+  AND NOT EXISTS (
+      SELECT 1 FROM category_attribute_mapping cam2 
+      WHERE cam2.category_id = c.id AND cam2.attribute_id = a.id
+  );
+
+-- 10. Обновляем sort_order для существующих маппингов
+UPDATE category_attribute_mapping cam
+SET sort_order = CASE 
+    WHEN a.name = 'car_make_id' THEN 1
+    WHEN a.name = 'car_model_id' THEN 2
+    WHEN a.name = 'car_generation_id' THEN 3
+    WHEN a.name = 'car_model_dynamic' THEN 2
+    WHEN a.name = 'car_generation_dynamic' THEN 3
+    ELSE cam.sort_order
+END
+FROM category_attributes a
+WHERE cam.attribute_id = a.id
+  AND cam.category_id >= 10100 
+  AND cam.category_id < 10200
+  AND a.name LIKE 'car_%';
+
+-- 11. Добавляем технические атрибуты для автомобилей
+INSERT INTO category_attributes (name, display_name, attribute_type, is_required, is_searchable, is_filterable, options)
+VALUES 
+    ('car_year', 'Year', 'number', false, true, true, '{"min": 1900, "max": 2030}'::jsonb),
+    ('car_mileage', 'Mileage (km)', 'number', false, true, true, '{"min": 0, "max": 1000000, "step": 1000}'::jsonb),
+    ('car_fuel_type', 'Fuel Type', 'select', false, true, true, '{"options": ["Gasoline", "Diesel", "Hybrid", "Electric", "LPG", "CNG"]}'::jsonb),
+    ('car_transmission', 'Transmission', 'select', false, true, true, '{"options": ["Manual", "Automatic", "CVT", "DCT"]}'::jsonb),
+    ('car_body_type', 'Body Type', 'select', false, true, true, '{"options": ["Sedan", "Hatchback", "SUV", "Wagon", "Coupe", "Convertible", "Minivan", "Pickup"]}'::jsonb),
+    ('car_drive_type', 'Drive Type', 'select', false, true, true, '{"options": ["FWD", "RWD", "AWD", "4WD"]}'::jsonb),
+    ('car_color', 'Color', 'select', false, true, true, '{"options": ["White", "Black", "Silver", "Gray", "Red", "Blue", "Green", "Brown", "Beige", "Other"]}'::jsonb),
+    ('car_doors', 'Number of Doors', 'select', false, false, true, '{"options": ["2", "3", "4", "5"]}'::jsonb),
+    ('car_seats', 'Number of Seats', 'select', false, false, true, '{"options": ["2", "4", "5", "7", "8", "9+"]}'::jsonb),
+    ('car_engine_size', 'Engine Size (L)', 'decimal', false, true, true, '{"min": 0.5, "max": 10.0, "step": 0.1}'::jsonb)
+ON CONFLICT (name) DO NOTHING;
+
+-- 12. Привязываем технические атрибуты к автомобильным категориям
+INSERT INTO category_attribute_mapping (category_id, attribute_id, is_enabled, is_required, sort_order)
+SELECT 
+    c.id as category_id,
+    a.id as attribute_id,
+    true as is_enabled,
+    false as is_required,
+    CASE 
+        WHEN a.name = 'car_year' THEN 4
+        WHEN a.name = 'car_mileage' THEN 5
+        WHEN a.name = 'car_fuel_type' THEN 6
+        WHEN a.name = 'car_transmission' THEN 7
+        WHEN a.name = 'car_body_type' THEN 8
+        ELSE 20
+    END as sort_order
+FROM marketplace_categories c
+CROSS JOIN category_attributes a
+WHERE c.id >= 10100 AND c.id < 10200 -- автомобильные категории
+  AND a.name IN ('car_year', 'car_mileage', 'car_fuel_type', 'car_transmission', 'car_body_type')
+  AND NOT EXISTS (
+      SELECT 1 FROM category_attribute_mapping cam2 
+      WHERE cam2.category_id = c.id AND cam2.attribute_id = a.id
+  );
+
+-- 13. Создаем индексы для улучшения производительности
+CREATE INDEX IF NOT EXISTS idx_category_attributes_data_source ON category_attributes(data_source);
+CREATE INDEX IF NOT EXISTS idx_category_attributes_name_type ON category_attributes(name, attribute_type);
+
+-- 14. Добавляем комментарии
+COMMENT ON COLUMN category_attributes.data_source IS 'Источник данных для атрибута: manual, api_external, ai_generated, imported, computed';
+COMMENT ON COLUMN category_attributes.options IS 'JSON конфигурация для атрибута: source_table, depends_on, filter_by и т.д.';

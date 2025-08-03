@@ -25,3 +25,8 @@ func (s *MarketplaceService) GetCarGenerationsByModel(ctx context.Context, model
 func (s *MarketplaceService) SearchCarMakes(ctx context.Context, query string, limit int) ([]models.CarMake, error) {
 	return s.storage.SearchCarMakes(ctx, query, limit)
 }
+
+// GetCarMakeBySlug возвращает марку автомобиля по slug
+func (s *MarketplaceService) GetCarMakeBySlug(ctx context.Context, slug string) (*models.CarMake, error) {
+	return s.storage.GetCarMakeBySlug(ctx, slug)
+}

@@ -1,5 +1,7 @@
 # План расширения админки для управления вариативными атрибутами
 
+## Дата актуализации: 03.08.2025
+
 ## Текущее состояние
 
 ### Существующий функционал админки атрибутов
@@ -202,6 +204,51 @@ CREATE TABLE category_variant_attributes (
 2. История изменений
 3. Экспорт/импорт конфигурации
 
+## Интеграция с автомобильным разделом
+
+### Специфика автомобильных атрибутов
+1. **Связь с внешними справочниками:**
+   - `car_make_id` → таблица `car_makes` (98 записей)
+   - `car_model_id` → таблица `car_models` (3,020 записей)
+   - Использование внешних API для валидации
+
+2. **Вариативные атрибуты для авто:**
+   - `engine_type` (1.4 TSI, 2.0 TDI) - влияет на цену
+   - `color` - не влияет на остатки
+   - `trim_level` (Comfortline, Highline) - влияет на комплектацию
+
+3. **Источники данных:**
+   ```typescript
+   interface AttributeDataSource {
+     type: 'internal' | 'database' | 'api';
+     config: {
+       table?: string;         // для type: 'database'
+       valueField?: string;    // поле для значения
+       labelField?: string;    // поле для отображения
+       apiEndpoint?: string;   // для type: 'api'
+       cacheTime?: number;     // время кэширования
+     };
+   }
+   ```
+
+### Примеры конфигурации:
+```sql
+-- Атрибут car_make_id использует внешнюю таблицу
+UPDATE category_attributes 
+SET data_source = 'database',
+    data_source_config = '{
+      "table": "car_makes",
+      "valueField": "id",
+      "labelField": "name",
+      "sortField": "popularity_rs"
+    }'
+WHERE name = 'car_make_id';
+
+-- Атрибут engine_type как вариативный
+INSERT INTO product_variant_attributes (name, display_name, affects_stock)
+VALUES ('engine_type', 'Engine Type', false);
+```
+
 ## Технические детали
 
 ### Frontend компоненты
@@ -247,8 +294,17 @@ backend/internal/proj/admin/
 
 ## Следующие шаги
 
-1. Согласовать план с командой
-2. Создать детальные макеты UI
-3. Начать с реализации Фазы 1 (расширение модели)
-4. Провести тестирование с реальными данными
-5. Поэтапный rollout функционала
+1. **Приоритет для автомобильного раздела:**
+   - Создать миграцию для поля `data_source` в `category_attributes`
+   - Настроить связь car_make_id/car_model_id с таблицами
+   - Добавить вариативные атрибуты для автомобилей (engine_type, trim_level)
+
+2. **Общая реализация:**
+   - Расширить модель атрибутов полем `is_variant_compatible`
+   - Создать UI для управления вариативными атрибутами
+   - Интегрировать с существующей системой витрин
+
+3. **Тестирование:**
+   - Проверить работу с большим объемом данных (3,000+ моделей)
+   - Валидация связей между атрибутами
+   - Производительность при фильтрации

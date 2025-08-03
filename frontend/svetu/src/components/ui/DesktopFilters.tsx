@@ -1,8 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Filter } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+// Ленивая загрузка CarFilters только когда нужно
+const CarFilters = lazy(() =>
+  import('@/components/marketplace/CarFilters').then((module) => ({
+    default: module.CarFilters,
+  }))
+);
 
 interface DesktopFiltersProps {
   filters: Record<string, any>;
@@ -13,10 +20,21 @@ interface DesktopFiltersProps {
 export const DesktopFilters: React.FC<DesktopFiltersProps> = ({
   filters,
   onFiltersChange,
+  selectedCategoryId,
 }) => {
   const t = useTranslations('marketplace');
   const [localFilters, setLocalFilters] = useState(filters);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Проверяем, является ли категория автомобильной
+  const isCarCategory =
+    selectedCategoryId &&
+    // Новые ID для автомобилей
+    ((selectedCategoryId >= 1301 && selectedCategoryId <= 1302) ||
+      // Старый диапазон для совместимости
+      (selectedCategoryId >= 10100 && selectedCategoryId < 10200) ||
+      // Старый ID
+      selectedCategoryId === 2000);
 
   useEffect(() => {
     setLocalFilters(filters);
@@ -58,6 +76,28 @@ export const DesktopFilters: React.FC<DesktopFiltersProps> = ({
   const activeFiltersCount = Object.values(localFilters).filter(
     (v) => v !== undefined && v !== ''
   ).length;
+
+  // Если это автомобильная категория, показываем специализированные фильтры
+  if (isCarCategory) {
+    return (
+      <div className="hidden lg:block col-span-1 row-span-1">
+        <Suspense
+          fallback={
+            <div className="bg-base-100 rounded-2xl shadow-xl p-6">
+              <div className="skeleton h-8 w-32 mb-4"></div>
+              <div className="space-y-2">
+                <div className="skeleton h-12 w-full"></div>
+                <div className="skeleton h-12 w-full"></div>
+                <div className="skeleton h-12 w-full"></div>
+              </div>
+            </div>
+          }
+        >
+          <CarFilters onFiltersChange={onFiltersChange} className="h-full" />
+        </Suspense>
+      </div>
+    );
+  }
 
   return (
     <div className="hidden lg:block col-span-1 row-span-1 bg-base-100 rounded-2xl shadow-xl overflow-hidden">

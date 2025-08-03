@@ -66,7 +66,36 @@
     "noGenerationsFound": "No generations found for this model",
     "noModels": "No models",
     "domestic": "Domestic",
-    "clear": "Clear"
+    "clear": "Clear",
+    "filters": {
+      "title": "Car Filters",
+      "reset": "Reset",
+      "allMakes": "All makes",
+      "allModels": "All models",
+      "year": "Year",
+      "from": "From",
+      "to": "To",
+      "price": "Price",
+      "mileage": "Mileage",
+      "maxMileage": "Maximum mileage (km)",
+      "fuelType": "Fuel type",
+      "allFuelTypes": "All types",
+      "petrol": "Petrol",
+      "diesel": "Diesel",
+      "electric": "Electric",
+      "hybrid": "Hybrid",
+      "lpg": "LPG",
+      "transmission": "Transmission",
+      "allTransmissions": "All types",
+      "manual": "Manual",
+      "automatic": "Automatic",
+      "semiAutomatic": "Semi-automatic",
+      "condition": "Condition",
+      "allConditions": "Any",
+      "new": "New",
+      "used": "Used",
+      "damaged": "Needs repair"
+    }
   },
   "admin": {
     "inactive": "Inactive",
@@ -2388,7 +2417,8 @@
         "condition": "Condition and warranty",
         "accessories": "Accessories",
         "dimensions": "Dimensions and weight",
-        "other": "Additional"
+        "other": "Additional",
+        "car_selection": "Car Selection"
       }
     },
     "photos": {
