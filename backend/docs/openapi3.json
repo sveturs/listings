@@ -3317,6 +3317,156 @@
                 }
             }
         },
+        "/api/v1/admin/categories/{id}/variant-attributes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets list of variant attributes available for products in this category",
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Get category variant attributes",
+                "parameters": [
+                    {
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category variant attributes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.CategoryVariantAttribute"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidCategoryId",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.getCategoryVariantAttributesError",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the list of variant attributes available for products in this category",
+                "tags": [
+                    "marketplace-admin-categories"
+                ],
+                "summary": "Update category variant attributes",
+                "parameters": [
+                    {
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.CategoryVariantAttributesRequest"
+                            }
+                        }
+                    },
+                    "description": "List of variant attributes with their settings",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "marketplace.categoryVariantAttributesUpdated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.invalidData",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.updateCategoryVariantAttributesError",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/marketplace/attributes": {
             "get": {
                 "security": [
@@ -29399,6 +29549,65 @@
                         "type": "object",
                         "additionalProperties": {
                             "type": "string"
+                        }
+                    }
+                }
+            },
+            "backend_internal_domain_models.CategoryVariantAttribute": {
+                "type": "object",
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_required": {
+                        "type": "boolean"
+                    },
+                    "sort_order": {
+                        "type": "integer"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "variant_attribute": {
+                        "description": "Вложенные данные для удобства",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.ProductVariantAttribute"
+                            }
+                        ]
+                    },
+                    "variant_attribute_name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "backend_internal_domain_models.CategoryVariantAttributeUpdate": {
+                "type": "object",
+                "properties": {
+                    "is_required": {
+                        "type": "boolean"
+                    },
+                    "sort_order": {
+                        "type": "integer"
+                    },
+                    "variant_attribute_name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "backend_internal_domain_models.CategoryVariantAttributesRequest": {
+                "type": "object",
+                "properties": {
+                    "variant_attributes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/backend_internal_domain_models.CategoryVariantAttributeUpdate"
                         }
                     }
                 }

@@ -1137,6 +1137,7 @@
       },
       "saveCategory": "Save Category",
       "cancelEdit": "Cancel",
+      "variantAttributes": "Variant Attributes",
       "deleteCategory": "Delete Category",
       "confirmDelete": "Are you sure you want to delete this category?",
       "categoryDeleted": "Category deleted successfully",
@@ -1274,7 +1275,16 @@
       "cancel": "Cancel",
       "loadMappingsError": "Error loading mappings",
       "saveMappingsSuccess": "Mappings saved successfully",
-      "saveMappingsError": "Error saving mappings"
+      "saveMappingsError": "Error saving mappings",
+      "dragDropTitle": "Drag & Drop Mapping",
+      "dragDropHint": "Drag attributes between columns to create or remove links",
+      "availableAttributes": "Available Attributes",
+      "linkedAttributes": "Linked Attributes",
+      "linkedWith": "Linked with",
+      "noMatchingAttributes": "No matching attributes",
+      "noAvailableAttributes": "No available attributes",
+      "noLinkedAttributes": "No linked attributes yet",
+      "mappingsUpdated": "Mappings updated successfully"
     },
     "listings": {
       "title": "Listings Management",

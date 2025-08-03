@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { adminApi } from '@/services/admin';
 import { toast } from '@/utils/toast';
@@ -35,11 +35,7 @@ export default function AttributeMappingEditor({
     new Set()
   );
 
-  useEffect(() => {
-    loadAttributes();
-  }, [variantAttribute.id]);
-
-  const loadAttributes = async () => {
+  const loadAttributes = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -83,7 +79,11 @@ export default function AttributeMappingEditor({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [variantAttribute.id, t]);
+
+  useEffect(() => {
+    loadAttributes();
+  }, [variantAttribute.id, loadAttributes]);
 
   const handleToggleAttribute = (attributeId: number) => {
     setSelectedAttributes((prev) => {

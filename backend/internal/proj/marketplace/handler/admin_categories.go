@@ -1013,3 +1013,170 @@ func (h *AdminCategoriesHandler) DeleteCategoryKeyword(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, map[string]string{"message": "Keyword deleted successfully"})
 }
+
+// GetCategoryVariantAttributes получает список вариативных атрибутов для категории
+// @Summary Get category variant attributes
+// @Description Gets list of variant attributes available for products in this category
+// @Tags marketplace-admin-categories
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryVariantAttribute} "Category variant attributes"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoryVariantAttributesError"
+// @Security BearerAuth
+// @Router /api/v1/admin/categories/{id}/variant-attributes [get]
+func (h *AdminCategoriesHandler) GetCategoryVariantAttributes(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	categoryID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
+	}
+
+	// Получаем вариативные атрибуты для категории
+	query := `
+		SELECT 
+			cva.id,
+			cva.category_id,
+			cva.variant_attribute_name,
+			cva.sort_order,
+			cva.is_required,
+			cva.created_at,
+			cva.updated_at,
+			pva.id as "variant_attribute.id",
+			pva.name as "variant_attribute.name",
+			pva.display_name as "variant_attribute.display_name",
+			pva.type as "variant_attribute.type",
+			pva.is_required as "variant_attribute.is_required",
+			pva.sort_order as "variant_attribute.sort_order",
+			pva.affects_stock as "variant_attribute.affects_stock"
+		FROM category_variant_attributes cva
+		LEFT JOIN product_variant_attributes pva ON cva.variant_attribute_name = pva.name
+		WHERE cva.category_id = $1
+		ORDER BY cva.sort_order, cva.variant_attribute_name
+	`
+
+	rows, err := h.services.Storage().Query(ctx, query, categoryID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get category variant attributes")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getCategoryVariantAttributesError")
+	}
+	defer rows.Close()
+
+	var attributes []models.CategoryVariantAttribute
+	for rows.Next() {
+		var attr models.CategoryVariantAttribute
+		var varAttr models.ProductVariantAttribute
+
+		err := rows.Scan(
+			&attr.ID,
+			&attr.CategoryID,
+			&attr.VariantAttributeName,
+			&attr.SortOrder,
+			&attr.IsRequired,
+			&attr.CreatedAt,
+			&attr.UpdatedAt,
+			&varAttr.ID,
+			&varAttr.Name,
+			&varAttr.DisplayName,
+			&varAttr.Type,
+			&varAttr.IsRequired,
+			&varAttr.SortOrder,
+			&varAttr.AffectsStock,
+		)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to scan category variant attribute")
+			continue
+		}
+
+		if varAttr.ID > 0 {
+			attr.VariantAttribute = &varAttr
+		}
+
+		attributes = append(attributes, attr)
+	}
+
+	return utils.SuccessResponse(c, attributes)
+}
+
+// UpdateCategoryVariantAttributes обновляет список вариативных атрибутов для категории
+// @Summary Update category variant attributes
+// @Description Updates the list of variant attributes available for products in this category
+// @Tags marketplace-admin-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param body body models.CategoryVariantAttributesRequest true "List of variant attributes with their settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=string} "marketplace.categoryVariantAttributesUpdated"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateCategoryVariantAttributesError"
+// @Security BearerAuth
+// @Router /api/v1/admin/categories/{id}/variant-attributes [put]
+func (h *AdminCategoriesHandler) UpdateCategoryVariantAttributes(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	categoryID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidCategoryId")
+	}
+
+	var req models.CategoryVariantAttributesRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
+	}
+
+	// Начинаем транзакцию
+	tx, err := h.services.Storage().BeginTx(ctx, nil)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to begin transaction")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateCategoryVariantAttributesError")
+	}
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			logger.Debug().Err(err).Msg("Transaction rollback")
+		}
+	}()
+
+	// Удаляем старые связи
+	_, err = tx.Exec(ctx, "DELETE FROM category_variant_attributes WHERE category_id = $1", categoryID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to delete old variant attributes")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateCategoryVariantAttributesError")
+	}
+
+	// Создаем новые связи
+	for _, varAttr := range req.VariantAttributes {
+		// Проверяем, что вариативный атрибут существует
+		var exists bool
+		err = tx.QueryRow(ctx,
+			"SELECT EXISTS(SELECT 1 FROM product_variant_attributes WHERE name = $1)",
+			varAttr.VariantAttributeName,
+		).Scan(&exists)
+		if err != nil || !exists {
+			logger.Warn().Str("variant_attribute_name", varAttr.VariantAttributeName).Msg("Variant attribute not found")
+			continue
+		}
+
+		// Создаем связь
+		_, err = tx.Exec(ctx, `
+			INSERT INTO category_variant_attributes (
+				category_id, variant_attribute_name, sort_order, is_required
+			) VALUES ($1, $2, $3, $4)
+		`, categoryID, varAttr.VariantAttributeName, varAttr.SortOrder, varAttr.IsRequired)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to insert category variant attribute")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateCategoryVariantAttributesError")
+		}
+	}
+
+	// Подтверждаем транзакцию
+	if err := tx.Commit(); err != nil {
+		logger.Error().Err(err).Msg("Failed to commit transaction")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateCategoryVariantAttributesError")
+	}
+
+	// Инвалидируем кеш категории
+	h.InvalidateCategoryCache()
+
+	return utils.SuccessResponse(c, "marketplace.categoryVariantAttributesUpdated")
+}

@@ -8,6 +8,7 @@ import CategoryTree from './components/CategoryTree';
 import CategoryForm from './components/CategoryForm';
 import CategoryAttributesOptimized from './components/CategoryAttributesOptimized';
 import CategoryKeywordsModal from './components/CategoryKeywordsModal';
+import CategoryVariantAttributesModal from './components/CategoryVariantAttributesModal';
 
 export default function CategoriesPage() {
   const t = useTranslations('admin');
@@ -19,6 +20,8 @@ export default function CategoriesPage() {
   const [showForm, setShowForm] = useState(false);
   const [showAttributes, setShowAttributes] = useState(false);
   const [showKeywordsModal, setShowKeywordsModal] = useState(false);
+  const [showVariantAttributesModal, setShowVariantAttributesModal] =
+    useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -85,6 +88,11 @@ export default function CategoriesPage() {
   const handleManageKeywords = (category: Category) => {
     setSelectedCategory(category);
     setShowKeywordsModal(true);
+  };
+
+  const handleManageVariantAttributes = (category: Category) => {
+    setSelectedCategory(category);
+    setShowVariantAttributesModal(true);
   };
 
   const handleDeleteCategory = async (category: Category) => {
@@ -181,6 +189,7 @@ export default function CategoriesPage() {
                 onDelete={handleDeleteCategory}
                 onManageAttributes={handleManageAttributes}
                 onManageKeywords={handleManageKeywords}
+                onManageVariantAttributes={handleManageVariantAttributes}
                 onReorder={handleReorderCategories}
                 onMove={handleMoveCategory}
               />
@@ -254,6 +263,16 @@ export default function CategoriesPage() {
           categoryName={selectedCategory.name}
           isOpen={showKeywordsModal}
           onClose={() => setShowKeywordsModal(false)}
+        />
+      )}
+
+      {/* Modal for managing variant attributes */}
+      {selectedCategory && (
+        <CategoryVariantAttributesModal
+          categoryId={selectedCategory.id}
+          categoryName={selectedCategory.name}
+          isOpen={showVariantAttributesModal}
+          onClose={() => setShowVariantAttributesModal(false)}
         />
       )}
     </div>

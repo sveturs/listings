@@ -2513,6 +2513,119 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/categories/{id}/variant-attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get category variant attributes
+     * @description Gets list of variant attributes available for products in this category
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Category variant attributes */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CategoryVariantAttribute'][];
+            };
+          };
+        };
+        /** @description marketplace.invalidCategoryId */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.getCategoryVariantAttributesError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update category variant attributes
+     * @description Updates the list of variant attributes available for products in this category
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description List of variant attributes with their settings */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CategoryVariantAttributesRequest'];
+        };
+      };
+      responses: {
+        /** @description marketplace.categoryVariantAttributesUpdated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description marketplace.invalidData */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.updateCategoryVariantAttributesError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/categories/keywords/{keyword_id}': {
     parameters: {
       query?: never;
@@ -24598,6 +24711,25 @@ export interface components {
       translations?: {
         [key: string]: string;
       };
+    };
+    'backend_internal_domain_models.CategoryVariantAttribute': {
+      category_id?: number;
+      created_at?: string;
+      id?: number;
+      is_required?: boolean;
+      sort_order?: number;
+      updated_at?: string;
+      /** @description Вложенные данные для удобства */
+      variant_attribute?: components['schemas']['backend_internal_domain_models.ProductVariantAttribute'];
+      variant_attribute_name?: string;
+    };
+    'backend_internal_domain_models.CategoryVariantAttributeUpdate': {
+      is_required?: boolean;
+      sort_order?: number;
+      variant_attribute_name?: string;
+    };
+    'backend_internal_domain_models.CategoryVariantAttributesRequest': {
+      variant_attributes?: components['schemas']['backend_internal_domain_models.CategoryVariantAttributeUpdate'][];
     };
     'backend_internal_domain_models.ChatAttachment': {
       /** @description MIME тип */

@@ -7,7 +7,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { adminApi, VariantAttribute } from '@/services/admin';
 import VariantAttributeList from './components/VariantAttributeList';
 import VariantAttributeForm from './components/VariantAttributeForm';
-import AttributeMappingEditor from './components/AttributeMappingEditor';
+import DragDropMappingEditor from './components/DragDropMappingEditor';
 
 // VariantAttribute type imported from @/services/admin
 
@@ -256,7 +256,7 @@ export default function VariantAttributesPage() {
                   ✕
                 </button>
               </div>
-              <AttributeMappingEditor
+              <DragDropMappingEditor
                 variantAttribute={mappingAttribute}
                 onSave={handleCloseMappingEditor}
                 onCancel={handleCloseMappingEditor}

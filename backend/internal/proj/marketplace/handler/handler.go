@@ -319,6 +319,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Put("/categories/keywords/:keyword_id", h.AdminCategories.UpdateCategoryKeyword)
 	adminRoutes.Delete("/categories/keywords/:keyword_id", h.AdminCategories.DeleteCategoryKeyword)
 
+	// Маршруты для управления вариативными атрибутами категорий
+	adminRoutes.Get("/categories/:id/variant-attributes", h.AdminCategories.GetCategoryVariantAttributes)
+	adminRoutes.Put("/categories/:id/variant-attributes", h.AdminCategories.UpdateCategoryVariantAttributes)
+
 	// Регистрируем маршруты администрирования атрибутов
 	adminRoutes.Post("/attributes", h.AdminAttributes.CreateAttribute)
 	adminRoutes.Get("/attributes", h.AdminAttributes.GetAttributes)

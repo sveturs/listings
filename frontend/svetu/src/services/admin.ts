@@ -316,6 +316,24 @@ export const adminApi = {
       return response.data as any as { message: string };
     },
 
+    // Variant attributes for category
+    async getVariantAttributes(categoryId: number): Promise<any[]> {
+      const response = await apiClient.get(
+        `/api/v1/admin/categories/${categoryId}/variant-attributes`
+      );
+      return response.data as any[];
+    },
+
+    async updateVariantAttributes(
+      categoryId: number,
+      data: { variant_attributes: any[] }
+    ): Promise<void> {
+      await apiClient.put(
+        `/api/v1/admin/categories/${categoryId}/variant-attributes`,
+        data
+      );
+    },
+
     // Category attributes
     async getAttributes(categoryId: number): Promise<Attribute[]> {
       const headers: Record<string, string> = {
