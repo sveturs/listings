@@ -6640,6 +6640,68 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/cars/vin/{vin}/decode': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Decode VIN number
+     * @description Decode vehicle identification number (VIN) to get vehicle information
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description VIN number (17 characters) */
+          vin: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description VIN decode result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.VINDecodeResult'];
+            };
+          };
+        };
+        /** @description Invalid VIN */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/categories/{slug}/variant-attributes': {
     parameters: {
       query?: never;
@@ -25899,6 +25961,44 @@ export interface components {
       rating_5?: number;
       total_reviews?: number;
       user_id?: number;
+    };
+    'backend_internal_domain_models.VINDecodeResult': {
+      body_type?: string;
+      decoded_at?: string;
+      drive_type?: string;
+      engine?: components['schemas']['backend_internal_domain_models.VINEngineInfo'];
+      fuel_type?: string;
+      make_id?: number;
+      make_name?: string;
+      manufacturer?: components['schemas']['backend_internal_domain_models.VINManufacturerInfo'];
+      model_id?: number;
+      model_name?: string;
+      raw_data?: {
+        [key: string]: unknown;
+      };
+      /** @description nhtsa, vehicle_databases, etc */
+      source?: string;
+      transmission?: string;
+      trim?: string;
+      valid?: boolean;
+      vin?: string;
+      year?: number;
+    };
+    'backend_internal_domain_models.VINEngineInfo': {
+      /** @description inline, V, etc */
+      configuration?: string;
+      cylinders?: number;
+      /** @description в литрах */
+      displacement?: number;
+      power_hp?: number;
+      power_kw?: number;
+      type?: string;
+    };
+    'backend_internal_domain_models.VINManufacturerInfo': {
+      country?: string;
+      name?: string;
+      plant_city?: string;
+      plant_code?: string;
     };
     'backend_internal_domain_models.VariantSettings': {
       /** @description continue selling when out of stock */

@@ -87,12 +87,16 @@ func (s *Storage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) 
 
 func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
+	var password sql.NullString
 	err := s.pool.QueryRow(ctx, `
-        SELECT id, name, email, google_id, picture_url, phone, created_at
+        SELECT id, name, email, google_id, picture_url, phone, created_at, password, provider
         FROM users WHERE email = $1
-    `, email).Scan(&user.ID, &user.Name, &user.Email, &user.GoogleID, &user.PictureURL, &user.Phone, &user.CreatedAt)
+    `, email).Scan(&user.ID, &user.Name, &user.Email, &user.GoogleID, &user.PictureURL, &user.Phone, &user.CreatedAt, &password, &user.Provider)
 	if err != nil {
 		return nil, err
+	}
+	if password.Valid {
+		user.Password = &password.String
 	}
 	return user, nil
 }

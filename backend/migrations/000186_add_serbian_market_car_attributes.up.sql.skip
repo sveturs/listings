@@ -1,0 +1,198 @@
+-- Add Serbian market specific attributes for cars
+
+-- 1. Vehicle origin attribute
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3200, 'poreklo_vozila', 'Poreklo vozila', 'select', '{"options": ["domace", "uvoz_eu", "uvoz_svajcarska", "ostalo"]}', '{}', true, true, false, 100, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3200', 'name', 'sr', 'Poreklo vozila'),
+('attribute', '3200', 'name', 'en', 'Vehicle Origin'),
+('attribute', '3200', 'name', 'ru', 'Происхождение автомобиля');
+
+-- 2. Registration valid until
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3201, 'registrovan_do', 'Registrovan do', 'date', '{}', '{}', true, true, false, 101, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3201', 'name', 'sr', 'Registrovan do'),
+('attribute', '3201', 'name', 'en', 'Registration Valid Until'),
+('attribute', '3201', 'name', 'ru', 'Регистрация до');
+
+-- 3. Euro emission standard
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3202, 'euro_standard', 'Euro standard', 'select', '{"options": ["euro_1", "euro_2", "euro_3", "euro_4", "euro_5", "euro_6", "euro_6d"]}', '{}', true, true, false, 102, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3202', 'name', 'sr', 'Euro standard'),
+('attribute', '3202', 'name', 'en', 'Euro Standard'),
+('attribute', '3202', 'name', 'ru', 'Евро стандарт');
+
+-- 4. First owner
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3203, 'prvi_vlasnik', 'Prvi vlasnik', 'boolean', '{}', '{}', true, true, false, 103, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3203', 'name', 'sr', 'Prvi vlasnik'),
+('attribute', '3203', 'name', 'en', 'First Owner'),
+('attribute', '3203', 'name', 'ru', 'Первый владелец');
+
+-- 5. Service book
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3204, 'servisna_knjiga', 'Servisna knjiga', 'boolean', '{}', '{}', true, true, false, 104, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3204', 'name', 'sr', 'Servisna knjiga'),
+('attribute', '3204', 'name', 'en', 'Service Book'),
+('attribute', '3204', 'name', 'ru', 'Сервисная книжка');
+
+-- 6. Garage kept
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3205, 'garaziran', 'Garažiran', 'boolean', '{}', '{}', true, true, false, 105, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3205', 'name', 'sr', 'Garažiran'),
+('attribute', '3205', 'name', 'en', 'Garage Kept'),
+('attribute', '3205', 'name', 'ru', 'Гаражное хранение');
+
+-- 7. Exchange possible
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3206, 'zamena', 'Zamena', 'boolean', '{}', '{}', true, true, false, 106, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3206', 'name', 'sr', 'Zamena moguća'),
+('attribute', '3206', 'name', 'en', 'Exchange Possible'),
+('attribute', '3206', 'name', 'ru', 'Возможен обмен');
+
+-- 8. Exchange description
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3207, 'zamena_opis', 'Opis zamene', 'text', '{}', '{"maxLength": 500}', true, false, false, 107, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3207', 'name', 'sr', 'Opis željene zamene'),
+('attribute', '3207', 'name', 'en', 'Exchange Description'),
+('attribute', '3207', 'name', 'ru', 'Описание желаемого обмена');
+
+-- 9. Customs paid
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3208, 'placene_dazbine', 'Plaćene dažbine', 'boolean', '{}', '{}', true, true, false, 108, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3208', 'name', 'sr', 'Plaćene dažbine'),
+('attribute', '3208', 'name', 'en', 'Customs Paid'),
+('attribute', '3208', 'name', 'ru', 'Пошлины оплачены');
+
+-- 10. Fixed price
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3209, 'cena_fiksna', 'Fiksna cena', 'boolean', '{}', '{}', true, true, false, 109, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3209', 'name', 'sr', 'Fiksna cena'),
+('attribute', '3209', 'name', 'en', 'Fixed Price'),
+('attribute', '3209', 'name', 'ru', 'Фиксированная цена');
+
+-- 11. Battery capacity (for electric vehicles)
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3210, 'battery_capacity', 'Kapacitet baterije', 'number', '{}', '{"min": 0, "max": 200, "step": 0.1}', true, true, false, 110, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3210', 'name', 'sr', 'Kapacitet baterije (kWh)'),
+('attribute', '3210', 'name', 'en', 'Battery Capacity (kWh)'),
+('attribute', '3210', 'name', 'ru', 'Емкость батареи (кВтч)');
+
+-- 12. Charging type (for electric vehicles)
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3211, 'charging_type', 'Tip punjenja', 'multiselect', '{"options": ["type2", "ccs", "chademo", "schuko"]}', '{}', true, true, false, 111, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3211', 'name', 'sr', 'Tip punjenja'),
+('attribute', '3211', 'name', 'en', 'Charging Type'),
+('attribute', '3211', 'name', 'ru', 'Тип зарядки');
+
+-- 13. Range (for electric vehicles)
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3212, 'range_km', 'Domet', 'number', '{}', '{"min": 0, "max": 1000, "step": 1}', true, true, false, 112, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3212', 'name', 'sr', 'Domet (km)'),
+('attribute', '3212', 'name', 'en', 'Range (km)'),
+('attribute', '3212', 'name', 'ru', 'Запас хода (км)');
+
+-- Map Serbian market attributes to car categories
+INSERT INTO category_attribute_mapping (category_id, attribute_id, is_required, sort_order) VALUES
+-- Personal cars (1301)
+(1301, 3200, false, 100), -- Vehicle origin
+(1301, 3201, false, 101), -- Registration valid until
+(1301, 3202, false, 102), -- Euro standard
+(1301, 3203, false, 103), -- First owner
+(1301, 3204, false, 104), -- Service book
+(1301, 3205, false, 105), -- Garage kept
+(1301, 3206, false, 106), -- Exchange possible
+(1301, 3207, false, 107), -- Exchange description
+(1301, 3208, false, 108), -- Customs paid
+(1301, 3209, false, 109), -- Fixed price
+
+-- Electric cars (10170)
+(10170, 3210, false, 110), -- Battery capacity
+(10170, 3211, false, 111), -- Charging type
+(10170, 3212, false, 112), -- Range
+
+-- Hybrid cars (10171)
+(10171, 3210, false, 110), -- Battery capacity
+(10171, 3212, false, 112), -- Range
+
+-- Import categories also need origin attributes
+(10111, 3200, true, 100), -- EU import - origin required
+(10111, 3208, true, 108), -- EU import - customs required
+(10112, 3200, true, 100), -- Swiss import - origin required
+(10112, 3208, true, 108), -- Swiss import - customs required
+(10113, 3200, true, 100), -- Foreign plates - origin required
+
+-- Commercial vehicles (10121) - trucks
+(10121, 3200, false, 100), -- Vehicle origin
+(10121, 3201, false, 101), -- Registration valid until
+(10121, 3202, false, 102), -- Euro standard
+(10121, 3208, false, 108), -- Customs paid
+
+-- Motorcycles (1302)
+(1302, 3200, false, 100), -- Vehicle origin
+(1302, 3201, false, 101), -- Registration valid until
+(1302, 3203, false, 103), -- First owner
+(1302, 3204, false, 104), -- Service book
+(1302, 3205, false, 105), -- Garage kept
+(1302, 3206, false, 106), -- Exchange possible
+(1302, 3207, false, 107), -- Exchange description
+(1302, 3208, false, 108), -- Customs paid
+(1302, 3209, false, 109), -- Fixed price
+
+-- Electric motorcycles (10187)
+(10187, 3210, false, 110), -- Battery capacity
+(10187, 3211, false, 111), -- Charging type
+(10187, 3212, false, 112); -- Range
+
+-- Update existing car_make attribute to reference our new table
+UPDATE category_attributes 
+SET validation_rules = '{"source": "car_makes", "display": "name", "value": "slug"}'
+WHERE name = 'car_make';
+
+-- Update existing motorcycle_make attribute to reference our new table
+UPDATE category_attributes 
+SET validation_rules = '{"source": "car_makes", "display": "name", "value": "slug", "filter": {"is_motorcycle": true}}'
+WHERE name = 'motorcycle_make';
+
+-- Add model selection attributes
+INSERT INTO category_attributes (id, name, display_name, attribute_type, options, validation_rules, is_searchable, is_filterable, is_required, sort_order, is_variant_compatible) VALUES
+(3213, 'car_model_id', 'Model automobila', 'select', '{}', '{"source": "car_models", "display": "name", "value": "id", "depends_on": "car_make"}', true, true, false, 16, false),
+(3214, 'motorcycle_model_id', 'Model motocikla', 'select', '{}', '{"source": "car_models", "display": "name", "value": "id", "depends_on": "motorcycle_make"}', true, true, false, 16, false);
+
+INSERT INTO translations (entity_type, entity_id, field_name, language, translated_text) VALUES
+('attribute', '3213', 'name', 'sr', 'Model automobila'),
+('attribute', '3213', 'name', 'en', 'Car Model'),
+('attribute', '3213', 'name', 'ru', 'Модель автомобиля'),
+('attribute', '3214', 'name', 'sr', 'Model motocikla'),
+('attribute', '3214', 'name', 'en', 'Motorcycle Model'),
+('attribute', '3214', 'name', 'ru', 'Модель мотоцикла');
+
+-- Map model attributes to categories
+INSERT INTO category_attribute_mapping (category_id, attribute_id, is_required, sort_order) VALUES
+(1301, 3213, false, 16), -- Car model for personal cars
+(1302, 3214, false, 16); -- Motorcycle model for motorcycles

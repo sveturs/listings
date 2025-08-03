@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -36,11 +35,11 @@ type CarAPIModel struct {
 
 // Структуры БД
 type DBMake struct {
-	ID           int    `db:"id"`
-	Name         string `db:"name"`
-	Slug         string `db:"slug"`
-	ExternalID   string `db:"external_id"`
-	IsDomestic   bool   `db:"is_domestic"`
+	ID         int    `db:"id"`
+	Name       string `db:"name"`
+	Slug       string `db:"slug"`
+	ExternalID string `db:"external_id"`
+	IsDomestic bool   `db:"is_domestic"`
 }
 
 func main() {
@@ -78,7 +77,7 @@ func main() {
 
 func importMakes(db *sqlx.DB, dataDir string) error {
 	// Читаем файл с марками
-	data, err := ioutil.ReadFile(filepath.Join(dataDir, "makes", "all_makes.json"))
+	data, err := os.ReadFile(filepath.Join(dataDir, "makes", "all_makes.json"))
 	if err != nil {
 		return fmt.Errorf("read makes file: %w", err)
 	}
@@ -100,20 +99,24 @@ func importMakes(db *sqlx.DB, dataDir string) error {
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err.Error() != "sql: transaction has already been committed or rolled back" {
+			log.Printf("Error rolling back transaction: %v", err)
+		}
+	}()
 
 	imported := 0
 	updated := 0
 	skipped := 0
 
-	for _, make := range makes {
+	for _, carMake := range makes {
 		// Проверяем существует ли марка по external_id или имени
 		var existingID int
 		err := tx.Get(&existingID, `
 			SELECT id FROM car_makes 
 			WHERE external_id = $1 OR LOWER(name) = LOWER($2)
 			LIMIT 1`,
-			fmt.Sprintf("carapi_%d", make.ID), make.Name)
+			fmt.Sprintf("carapi_%d", carMake.ID), carMake.Name)
 
 		if err == nil {
 			// Обновляем существующую
@@ -123,31 +126,34 @@ func importMakes(db *sqlx.DB, dataDir string) error {
 				    last_sync_at = NOW(),
 				    metadata = jsonb_build_object('carapi_id', $3::int)
 				WHERE id = $1`,
-				existingID, fmt.Sprintf("carapi_%d", make.ID), make.ID)
-			
+				existingID, fmt.Sprintf("carapi_%d", carMake.ID), carMake.ID)
+
 			if err != nil {
-				log.Printf("Failed to update make %s: %v", make.Name, err)
+				log.Printf("Failed to update make %s: %v", carMake.Name, err)
 			} else {
 				updated++
 			}
 		} else {
 			// Создаем новую
-			slug := generateSlug(make.Name)
-			
+			slug := generateSlug(carMake.Name)
+
 			// Проверяем уникальность slug
 			var slugCount int
-			tx.Get(&slugCount, "SELECT COUNT(*) FROM car_makes WHERE slug = $1", slug)
+			if err := tx.Get(&slugCount, "SELECT COUNT(*) FROM car_makes WHERE slug = $1", slug); err != nil {
+				log.Printf("Error checking slug uniqueness: %v", err)
+				continue
+			}
 			if slugCount > 0 {
-				slug = fmt.Sprintf("%s-%d", slug, make.ID)
+				slug = fmt.Sprintf("%s-%d", slug, carMake.ID)
 			}
 
 			_, err = tx.Exec(`
 				INSERT INTO car_makes (name, slug, external_id, last_sync_at, metadata, is_domestic, popularity_rs)
 				VALUES ($1, $2, $3, NOW(), jsonb_build_object('carapi_id', $4::int), false, 0)`,
-				make.Name, slug, fmt.Sprintf("carapi_%d", make.ID), make.ID)
+				carMake.Name, slug, fmt.Sprintf("carapi_%d", carMake.ID), carMake.ID)
 
 			if err != nil {
-				log.Printf("Failed to insert make %s: %v", make.Name, err)
+				log.Printf("Failed to insert make %s: %v", carMake.Name, err)
 				skipped++
 			} else {
 				imported++
@@ -166,7 +172,7 @@ func importMakes(db *sqlx.DB, dataDir string) error {
 func importModels(db *sqlx.DB, dataDir string) error {
 	// Получаем все марки из БД для маппинга
 	makeMap := make(map[string]int) // external_id -> db_id
-	
+
 	rows, err := db.Query("SELECT id, external_id FROM car_makes WHERE external_id IS NOT NULL")
 	if err != nil {
 		return fmt.Errorf("get makes: %w", err)
@@ -185,9 +191,18 @@ func importModels(db *sqlx.DB, dataDir string) error {
 
 	// Читаем все файлы с моделями
 	modelsDir := filepath.Join(dataDir, "models")
-	files, err := ioutil.ReadDir(modelsDir)
+	entries, err := os.ReadDir(modelsDir)
 	if err != nil {
 		return fmt.Errorf("read models dir: %w", err)
+	}
+
+	var files []os.FileInfo
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+		files = append(files, info)
 	}
 
 	totalImported := 0
@@ -200,7 +215,7 @@ func importModels(db *sqlx.DB, dataDir string) error {
 		}
 
 		// Читаем файл
-		data, err := ioutil.ReadFile(filepath.Join(modelsDir, file.Name()))
+		data, err := os.ReadFile(filepath.Join(modelsDir, file.Name()))
 		if err != nil {
 			log.Printf("Failed to read %s: %v", file.Name(), err)
 			continue
@@ -220,7 +235,7 @@ func importModels(db *sqlx.DB, dataDir string) error {
 
 		// Импортируем модели
 		tx, _ := db.Beginx()
-		
+
 		for _, model := range models {
 			// Находим make_id в нашей БД
 			makeExternalID := fmt.Sprintf("carapi_%d", model.MakeID)
@@ -247,20 +262,23 @@ func importModels(db *sqlx.DB, dataDir string) error {
 					    last_sync_at = NOW(),
 					    metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('carapi_id', $3::int)
 					WHERE id = $1`,
-					existingID, 
+					existingID,
 					fmt.Sprintf("carapi_%d", model.ID),
 					model.ID)
-				
+
 				if err == nil {
 					totalUpdated++
 				}
 			} else {
 				// Создаем новую
 				slug := generateSlug(model.Name)
-				
+
 				// Проверяем уникальность slug для этой марки
 				var slugCount int
-				tx.Get(&slugCount, "SELECT COUNT(*) FROM car_models WHERE make_id = $1 AND slug = $2", dbMakeID, slug)
+				if err := tx.Get(&slugCount, "SELECT COUNT(*) FROM car_models WHERE make_id = $1 AND slug = $2", dbMakeID, slug); err != nil {
+					log.Printf("Error checking model slug uniqueness: %v", err)
+					continue
+				}
 				if slugCount > 0 {
 					slug = fmt.Sprintf("%s-%d", slug, model.ID)
 				}
@@ -280,8 +298,10 @@ func importModels(db *sqlx.DB, dataDir string) error {
 				}
 			}
 		}
-		
-		tx.Commit()
+
+		if err := tx.Commit(); err != nil {
+			log.Printf("Error committing transaction: %v", err)
+		}
 	}
 
 	log.Printf("Models: imported=%d, updated=%d, skipped=%d", totalImported, totalUpdated, totalSkipped)
@@ -304,24 +324,24 @@ func addSerbianMakes(db *sqlx.DB) error {
 	}
 
 	added := 0
-	for _, make := range serbianMakes {
+	for _, carMake := range serbianMakes {
 		// Проверяем существует ли
 		var exists bool
-		err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM car_makes WHERE LOWER(name) = LOWER($1))", make.Name)
+		err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM car_makes WHERE LOWER(name) = LOWER($1))", carMake.Name)
 		if err != nil || exists {
 			continue
 		}
 
-		slug := generateSlug(make.Name)
+		slug := generateSlug(carMake.Name)
 		_, err = db.Exec(`
 			INSERT INTO car_makes (name, slug, country, is_domestic, popularity_rs, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-			make.Name, slug, make.Country, make.IsDomestic, make.PopularityRS)
+			carMake.Name, slug, carMake.Country, carMake.IsDomestic, carMake.PopularityRS)
 
 		if err != nil {
-			log.Printf("Failed to add Serbian make %s: %v", make.Name, err)
+			log.Printf("Failed to add Serbian make %s: %v", carMake.Name, err)
 		} else {
-			log.Printf("Added Serbian make: %s", make.Name)
+			log.Printf("Added Serbian make: %s", carMake.Name)
 			added++
 		}
 	}
@@ -334,25 +354,28 @@ func showStatistics(db *sqlx.DB) {
 	log.Println("\n=== Final Statistics ===")
 
 	var stats struct {
-		TotalMakes       int `db:"total_makes"`
-		DomesticMakes    int `db:"domestic_makes"`
-		MakesWithExtID   int `db:"makes_with_ext_id"`
-		TotalModels      int `db:"total_models"`
-		ModelsWithExtID  int `db:"models_with_ext_id"`
+		TotalMakes      int `db:"total_makes"`
+		DomesticMakes   int `db:"domestic_makes"`
+		MakesWithExtID  int `db:"makes_with_ext_id"`
+		TotalModels     int `db:"total_models"`
+		ModelsWithExtID int `db:"models_with_ext_id"`
 	}
 
-	db.Get(&stats, `
+	if err := db.Get(&stats, `
 		SELECT 
 			(SELECT COUNT(*) FROM car_makes) as total_makes,
 			(SELECT COUNT(*) FROM car_makes WHERE is_domestic = true) as domestic_makes,
 			(SELECT COUNT(*) FROM car_makes WHERE external_id IS NOT NULL) as makes_with_ext_id,
 			(SELECT COUNT(*) FROM car_models) as total_models,
 			(SELECT COUNT(*) FROM car_models WHERE external_id IS NOT NULL) as models_with_ext_id
-	`)
+	`); err != nil {
+		log.Printf("Error getting stats: %v", err)
+		return
+	}
 
-	log.Printf("Total makes: %d (domestic: %d, from CarAPI: %d)", 
+	log.Printf("Total makes: %d (domestic: %d, from CarAPI: %d)",
 		stats.TotalMakes, stats.DomesticMakes, stats.MakesWithExtID)
-	log.Printf("Total models: %d (from CarAPI: %d)", 
+	log.Printf("Total models: %d (from CarAPI: %d)",
 		stats.TotalModels, stats.ModelsWithExtID)
 
 	// Топ марок по количеству моделей

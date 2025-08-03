@@ -148,7 +148,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			Orders:                 orderHandler,
 			CategoryDetector:       categoryDetectorHandler,
 			VariantAttributes:      NewVariantAttributesHandler(services),
-			Cars:                   NewCarsHandler(services.Marketplace()),
+			Cars:                   NewCarsHandler(services.Marketplace(), services.UnifiedCar()),
 			service:                services,
 		}
 	}
@@ -175,7 +175,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		MarketplaceHandler:     nil,
 		Orders:                 nil,
 		CategoryDetector:       nil,
-		Cars:                   NewCarsHandler(services.Marketplace()),
+		Cars:                   NewCarsHandler(services.Marketplace(), services.UnifiedCar()),
 		service:                services,
 	}
 }
@@ -196,6 +196,18 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/listings/:id/similar", h.Search.GetSimilarListings)
 	marketplace.Get("/categories/:id/attribute-ranges", h.Categories.GetAttributeRanges)
 	marketplace.Get("/enhanced-suggestions", h.GetEnhancedSuggestions)
+
+	// Cars routes (public endpoints)
+	if h.Cars != nil {
+		cars := app.Group("/api/v1/cars") // Отдельная группа для автомобилей
+		cars.Get("/makes", h.Cars.GetCarMakes)
+		cars.Get("/makes/search", h.Cars.SearchCarMakes)
+		cars.Get("/makes/:make_slug/models", h.Cars.GetCarModels)
+		cars.Get("/models/:model_id/generations", h.Cars.GetCarGenerations)
+		cars.Get("/vin/:vin/decode", h.Cars.DecodeVIN)
+
+		logger.Info().Msg("Registered cars routes")
+	}
 
 	// Fuzzy search routes
 	marketplace.Get("/test-fuzzy-search", h.Search.TestFuzzySearch)

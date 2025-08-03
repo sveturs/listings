@@ -59,6 +59,9 @@ type ServicesInterface interface {
 	// SearchLogs возвращает сервис для логирования поисковых запросов
 	SearchLogs() SearchLogsServiceInterface
 
+	// UnifiedCar возвращает сервис для работы с автомобилями
+	UnifiedCar() *marketplaceService.UnifiedCarService
+
 	// NewImageService создает новый ImageService
 	NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface) *services.ImageService
 }

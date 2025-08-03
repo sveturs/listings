@@ -420,7 +420,12 @@ func (h *AdminVariantAttributesHandler) UpdateVariantAttributeMappings(c *fiber.
 		logger.Error().Err(err).Msg("Failed to begin transaction")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateMappingsError")
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			// Игнорируем ошибку, если транзакция уже завершена
+			logger.Debug().Err(err).Msg("Transaction rollback")
+		}
+	}()
 
 	// Удаляем старые связи
 	_, err = tx.Exec(ctx, "DELETE FROM variant_attribute_mappings WHERE variant_attribute_id = $1", variantAttrID)
@@ -433,8 +438,8 @@ func (h *AdminVariantAttributesHandler) UpdateVariantAttributeMappings(c *fiber.
 	for _, catAttrID := range body.CategoryAttributeIDs {
 		// Проверяем, что атрибут категории существует и имеет is_variant_compatible = true
 		var isCompatible bool
-		err = tx.QueryRow(ctx, 
-			"SELECT is_variant_compatible FROM category_attributes WHERE id = $1", 
+		err = tx.QueryRow(ctx,
+			"SELECT is_variant_compatible FROM category_attributes WHERE id = $1",
 			catAttrID,
 		).Scan(&isCompatible)
 		if err != nil {

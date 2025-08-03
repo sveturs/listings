@@ -1010,7 +1010,36 @@
     "noGenerationsFound": "Поколения для этой модели не найдены",
     "noModels": "Нет моделей",
     "domestic": "Отечественная",
-    "clear": "Очистить"
+    "clear": "Очистить",
+    "filters": {
+      "title": "Фильтры автомобилей",
+      "reset": "Сбросить",
+      "allMakes": "Все марки",
+      "allModels": "Все модели",
+      "year": "Год выпуска",
+      "from": "От",
+      "to": "До",
+      "price": "Цена",
+      "mileage": "Пробег",
+      "maxMileage": "Максимальный пробег (км)",
+      "fuelType": "Тип топлива",
+      "allFuelTypes": "Все типы",
+      "petrol": "Бензин",
+      "diesel": "Дизель",
+      "electric": "Электро",
+      "hybrid": "Гибрид",
+      "lpg": "Газ (LPG)",
+      "transmission": "Коробка передач",
+      "allTransmissions": "Все типы",
+      "manual": "Механическая",
+      "automatic": "Автоматическая",
+      "semiAutomatic": "Полуавтомат",
+      "condition": "Состояние",
+      "allConditions": "Любое",
+      "new": "Новый",
+      "used": "Б/У",
+      "damaged": "Требует ремонта"
+    }
   },
   "admin": {
     "title": "Панель администратора",
@@ -2480,7 +2509,8 @@
         "condition": "Состояние и гарантия",
         "accessories": "Комплектация",
         "dimensions": "Размеры и вес",
-        "other": "Дополнительно"
+        "other": "Дополнительно",
+        "car_selection": "Выбор автомобиля"
       }
     },
     "photos": {

@@ -4,8 +4,10 @@ package service
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 
 	"backend/internal/cache"
@@ -44,6 +46,7 @@ type Service struct {
 	chatAttachment   *marketplaceService.ChatAttachmentService
 	unifiedSearch    UnifiedSearchServiceInterface
 	behaviorTracking behaviorTrackingService.BehaviorTrackingService
+	unifiedCar       *marketplaceService.UnifiedCarService
 }
 
 func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config, translationSvc marketplaceService.TranslationServiceInterface) *Service {
@@ -72,6 +75,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 
 	// Создаем Redis кеш если настроен
 	var cacheAdapter marketplaceService.CacheInterface
+	var redisClient *redis.Client
 	if cfg.Redis.URL != "" {
 		logger := logrus.New()
 		redisCache, err := cache.NewRedisCache(
@@ -87,6 +91,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 			// Продолжаем работу без кеша
 		} else {
 			cacheAdapter = cache.NewAdapter(redisCache)
+			redisClient = redisCache.GetClient()
 			log.Println("Redis cache initialized successfully")
 		}
 	} else {
@@ -127,6 +132,14 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 	// Установка сервиса вложений в marketplace сервис
 	marketplaceSvc.SetChatAttachmentService(chatAttachmentSvc)
 
+	// Создаем UnifiedCarService
+	carServiceConfig := &marketplaceService.CarServiceConfig{
+		CacheTTL:          24 * time.Hour,
+		CacheEnabled:      redisClient != nil,
+		VINDecoderEnabled: false, // TODO: включить когда будет готово
+	}
+	unifiedCarSvc := marketplaceService.NewUnifiedCarService(storage, redisClient, carServiceConfig)
+
 	// Создаем экземпляр Service
 	s := &Service{
 		users:            userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.JWTSecret, cfg.JWTExpirationHours),
@@ -145,6 +158,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 		fileStorage:      fileStorageSvc,
 		chatAttachment:   chatAttachmentSvc,
 		behaviorTracking: behaviorTrackingSvc,
+		unifiedCar:       unifiedCarSvc,
 	}
 
 	// Теперь создаем сервис витрин с правильными зависимостями
@@ -158,6 +172,11 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 	s.unifiedSearch = NewUnifiedSearchService(s)
 
 	return s
+}
+
+// UnifiedCar возвращает сервис для работы с автомобилями
+func (s *Service) UnifiedCar() *marketplaceService.UnifiedCarService {
+	return s.unifiedCar
 }
 
 func (s *Service) Shutdown() {

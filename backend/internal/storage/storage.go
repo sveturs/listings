@@ -228,6 +228,7 @@ type Storage interface {
 
 	// Car Makes and Models methods
 	GetCarMakes(ctx context.Context, country string, isDomestic bool, isMotorcycle bool, activeOnly bool) ([]models.CarMake, error)
+	GetCarMakeBySlug(ctx context.Context, slug string) (*models.CarMake, error)
 	GetCarModelsByMake(ctx context.Context, makeSlug string, activeOnly bool) ([]models.CarModel, error)
 	GetCarGenerationsByModel(ctx context.Context, modelID int, activeOnly bool) ([]models.CarGeneration, error)
 	SearchCarMakes(ctx context.Context, query string, limit int) ([]models.CarMake, error)

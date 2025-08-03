@@ -17,6 +17,11 @@ type RedisCache struct {
 	logger *logrus.Logger
 }
 
+// GetClient возвращает низкоуровневый Redis клиент
+func (r *RedisCache) GetClient() *redis.Client {
+	return r.client
+}
+
 // NewRedisCache создает новый экземпляр Redis кеша
 func NewRedisCache(ctx context.Context, url string, password string, db int, poolSize int, logger *logrus.Logger) (*RedisCache, error) {
 	options := &redis.Options{
