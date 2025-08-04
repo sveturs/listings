@@ -113,3 +113,6 @@ export function AuthErrorBoundary({ children }: { children: ReactNode }) {
     <ErrorBoundaryClass messages={messages}>{children}</ErrorBoundaryClass>
   );
 }
+
+// Экспортируем класс для использования в других местах
+export default ErrorBoundaryClass;

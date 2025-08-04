@@ -42,7 +42,6 @@ export default function AttributesStep({
 }: AttributesStepProps) {
   const t = useTranslations('create_listing');
   const tCommon = useTranslations('common');
-  const tCreate_listing.attributes = useTranslations('create_listing');
   const locale = useLocale();
   const { state, dispatch } = useCreateListing();
   const [attributes, setAttributes] = useState<CategoryAttributeMapping[]>([]);
@@ -194,32 +193,32 @@ export default function AttributesStep({
       { name: string; icon: string; priority: number }
     > = {
       basic: {
-        name: tCreate_listing.attributes('groups.basic'),
+        name: t('attributes.groups.basic'),
         icon: '🏷️',
         priority: 1,
       },
       technical: {
-        name: tCreate_listing.attributes('groups.technical'),
+        name: t('attributes.groups.technical'),
         icon: '⚙️',
         priority: 2,
       },
       condition: {
-        name: tCreate_listing.attributes('groups.condition'),
+        name: t('attributes.groups.condition'),
         icon: '✨',
         priority: 3,
       },
       accessories: {
-        name: tCreate_listing.attributes('groups.accessories'),
+        name: t('attributes.groups.accessories'),
         icon: '📦',
         priority: 4,
       },
       dimensions: {
-        name: tCreate_listing.attributes('groups.dimensions'),
+        name: t('attributes.groups.dimensions'),
         icon: '📏',
         priority: 5,
       },
       other: {
-        name: tCreate_listing.attributes('groups.other'),
+        name: t('attributes.groups.other'),
         icon: '📋',
         priority: 6,
       },
@@ -601,10 +600,10 @@ export default function AttributesStep({
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4 flex items-center">
-            🏷️ {tCreate_listing.attributes('title')}
+            🏷️ {t('attributes.title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {tCreate_listing.attributes('description')}
+            {t('attributes.description')}
           </p>
 
           {attributes.length === 0 ? (
@@ -622,7 +621,7 @@ export default function AttributesStep({
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 ></path>
               </svg>
-              <span>{tCreate_listing.attributes('none_required')}</span>
+              <span>{t('attributes.none_required')}</span>
             </div>
           ) : (
             <div className="space-y-6 mb-8">
@@ -632,7 +631,7 @@ export default function AttributesStep({
                   <div className="card-body">
                     <h3 className="card-title text-xl flex items-center gap-3">
                       <span className="text-2xl">🚗</span>
-                      {tCreate_listing.attributes('groups.car_selection')}
+                      {t('attributes.groups.car_selection')}
                       <div className="badge badge-warning">
                         {tCommon('required')}
                       </div>
@@ -801,10 +800,10 @@ export default function AttributesStep({
             </svg>
             <div className="text-sm">
               <p className="font-medium">
-                💡 {tCreate_listing.attributes('tip')}
+                💡 {t('attributes.tip')}
               </p>
               <p className="text-xs mt-1">
-                {tCreate_listing.attributes('tip_description')}
+                {t('attributes.tip_description')}
               </p>
             </div>
           </div>

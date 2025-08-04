@@ -28,7 +28,6 @@ export default function PreviewStep({
 }: PreviewStepProps) {
   const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
-  const tStorefronts.products.privacy = useTranslations('storefronts');
   const locale = useLocale();
   const router = useRouter();
   const { state } = useCreateProduct();
@@ -495,13 +494,13 @@ export default function PreviewStep({
                         </span>
                         <span className="text-base-content">
                           {state.location.privacyLevel === 'exact' &&
-                            tStorefronts.products.privacy('exact')}
+                            t('products.privacy.exact')}
                           {state.location.privacyLevel === 'street' &&
-                            tStorefronts.products.privacy('street')}
+                            t('products.privacy.street')}
                           {state.location.privacyLevel === 'district' &&
-                            tStorefronts.products.privacy('district')}
+                            t('products.privacy.district')}
                           {state.location.privacyLevel === 'city' &&
-                            tStorefronts.products.privacy('city')}
+                            t('products.privacy.city')}
                         </span>
                       </div>
 

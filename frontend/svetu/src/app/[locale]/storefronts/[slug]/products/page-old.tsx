@@ -39,7 +39,6 @@ export default function ProductsPage({ params }: PageProps) {
   const t = useTranslations('storefronts');
   const tStorefronts = useTranslations('storefronts');
   const tCommon = useTranslations('common');
-  const tCommon = useTranslations('common');
   const locale = useLocale();
   const [products, setProducts] = useState<StorefrontProduct[]>([]);
   const [loading, setLoading] = useState(true);

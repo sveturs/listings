@@ -5,7 +5,7 @@ import { PublicEnvScript } from 'next-runtime-env';
 import { routing } from '@/i18n/routing';
 import { ModularIntlProvider } from '@/providers/ModularIntlProvider';
 import { loadMessages } from '@/lib/i18n/loadMessages';
-import Header from '@/components/Header';
+import HeaderWrapper from '@/components/HeaderWrapper';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ReduxProvider } from '@/components/ReduxProvider';
 import WebSocketManager from '@/components/WebSocketManager';
@@ -93,6 +93,8 @@ export default async function RootLayout({
     'cart',
     'map', // Добавляем map модуль для компонентов GIS
     'marketplace', // И marketplace, так как многие компоненты его используют
+    'admin', // Добавляем admin для страниц админки
+    'cars', // Добавляем cars для car-selector
   ]);
 
   return (
@@ -111,7 +113,7 @@ export default async function RootLayout({
               <VisibleCitiesProvider>
                 <AuthStateManager />
                 <WebSocketManager />
-                <Header />
+                <HeaderWrapper />
                 <main className="min-h-screen pt-16 pb-16 md:pb-0">
                   {children}
                 </main>

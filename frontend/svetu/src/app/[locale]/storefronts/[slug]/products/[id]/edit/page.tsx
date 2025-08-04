@@ -24,8 +24,7 @@ function EditProductPageContent({
   slug: string;
   productId: number;
 }) {
-  const t = useTranslations('storefronts');
-  const tStorefronts.products.errors = useTranslations('storefronts');
+  const tStorefronts = useTranslations('storefronts');
   const { state, loadProduct, dispatch } = useEditProduct();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +42,7 @@ function EditProductPageContent({
         loadProduct(product);
       } catch (error: any) {
         console.error('Error loading product:', error);
-        setError(error.message || tStorefronts.products.errors('loadFailed'));
+        setError(error.message || tStorefronts('products.errors.loadFailed'));
       } finally {
         setIsLoading(false);
         dispatch({ type: 'SET_LOADING', payload: false });
@@ -51,7 +50,7 @@ function EditProductPageContent({
     };
 
     fetchProduct();
-  }, [slug, productId, loadProduct, dispatch, t]);
+  }, [slug, productId, loadProduct, dispatch, tStorefronts]);
 
   if (isLoading) {
     return (
@@ -59,7 +58,7 @@ function EditProductPageContent({
         <div className="text-center">
           <span className="loading loading-spinner loading-lg"></span>
           <p className="mt-4 text-base-content/70">
-            {t('loadingProduct')}
+            {tStorefronts('loadingProduct')}
           </p>
         </div>
       </div>
@@ -71,14 +70,14 @@ function EditProductPageContent({
       <div className="container mx-auto px-4 py-8">
         <div className="bg-error/10 border border-error rounded-2xl p-6 text-center">
           <h3 className="text-lg font-semibold text-error mb-2">
-            {tStorefronts.products.errors('loadFailed')}
+            {tStorefronts('products.errors.loadFailed')}
           </h3>
           <p className="text-error/80 mb-4">{error}</p>
           <Link
             href={`/storefronts/${slug}/products`}
             className="btn btn-primary"
           >
-            {t('backToProducts')}
+            {tStorefronts('products.backToProducts')}
           </Link>
         </div>
       </div>
@@ -90,13 +89,13 @@ function EditProductPageContent({
       <div className="container mx-auto px-4 py-8">
         <div className="bg-error/10 border border-error rounded-2xl p-6 text-center">
           <h3 className="text-lg font-semibold text-error mb-2">
-            {tStorefronts.products.errors('productNotFound')}
+            {tStorefronts('products.errors.productNotFound')}
           </h3>
           <Link
             href={`/storefronts/${slug}/products`}
             className="btn btn-primary"
           >
-            {t('backToProducts')}
+            {tStorefronts('products.backToProducts')}
           </Link>
         </div>
       </div>
@@ -107,9 +106,9 @@ function EditProductPageContent({
 }
 
 export default function EditProductPage({ params }: PageProps) {
+  const tStorefronts = useTranslations('storefronts');
   const [slug, setSlug] = useState<string>('');
   const [productId, setProductId] = useState<number>(0);
-  const t = useTranslations('storefronts');
   const locale = useLocale();
 
   useEffect(() => {
@@ -137,13 +136,13 @@ export default function EditProductPage({ params }: PageProps) {
             className="inline-flex items-center text-primary hover:underline mb-4"
           >
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
-            {t('backToProducts')}
+            {tStorefronts('products.backToProducts')}
           </Link>
           <h1 className="text-3xl font-bold text-base-content">
-            {t('editProduct')}
+            {tStorefronts('products.editProduct')}
           </h1>
           <p className="text-base-content/70 mt-2">
-            {t('editProductDescription')}
+            {tStorefronts('editProductDescription')}
           </p>
         </div>
       </div>

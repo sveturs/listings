@@ -49,7 +49,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
 
   // Fallback функция для копирования в буфер обмена
   const fallbackCopyToClipboard = (text: string) => {
-    const textArea = document.createElement('listingActions.textarea');
+    const textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.style.position = 'fixed';
     textArea.style.left = '-999999px';

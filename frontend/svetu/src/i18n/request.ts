@@ -21,6 +21,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     'map',
     'storefronts',
     'admin', // Добавляем admin так как он используется в storefronts странице
+    'cars', // Добавляем cars для car-selector
   ]);
 
   return {

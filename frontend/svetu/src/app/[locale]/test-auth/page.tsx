@@ -19,11 +19,15 @@ export default function TestAuthPage() {
       };
 
       // Сохраняем в sessionStorage
-      sessionStorage.setItem('user', JSON.stringify(testUser));
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('user', JSON.stringify(testUser));
+      }
 
       // Также сохраняем токены для имитации авторизации
-      localStorage.setItem('access_token', 'fake-access-token-for-testing');
-      localStorage.setItem('refresh_token', 'fake-refresh-token-for-testing');
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('access_token', 'fake-access-token-for-testing');
+        localStorage.setItem('refresh_token', 'fake-refresh-token-for-testing');
+      }
 
       setStatus(`✓ Установлен пользователь БЕЗ прав админа: ${testUser.email}`);
       setError('');
@@ -45,9 +49,13 @@ export default function TestAuthPage() {
         created_at: new Date().toISOString(),
       };
 
-      sessionStorage.setItem('user', JSON.stringify(adminUser));
-      localStorage.setItem('access_token', 'fake-access-token-for-admin');
-      localStorage.setItem('refresh_token', 'fake-refresh-token-for-admin');
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('user', JSON.stringify(adminUser));
+      }
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('access_token', 'fake-access-token-for-admin');
+        localStorage.setItem('refresh_token', 'fake-refresh-token-for-admin');
+      }
 
       setStatus(
         `✓ Установлен пользователь С правами админа: ${adminUser.email}`
@@ -61,16 +69,22 @@ export default function TestAuthPage() {
   };
 
   const clearAuth = () => {
-    sessionStorage.removeItem('user');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      sessionStorage.removeItem('user');
+    }
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+    }
     setStatus('✓ Все данные авторизации очищены');
     setError('');
     console.log('[TestAuth] Auth cleared');
   };
 
   const getCurrentUser = () => {
-    const userStr = sessionStorage.getItem('user');
+    const userStr = (typeof window !== 'undefined' && window.sessionStorage) 
+      ? sessionStorage.getItem('user') 
+      : null;
     if (userStr) {
       try {
         const user = JSON.parse(userStr);

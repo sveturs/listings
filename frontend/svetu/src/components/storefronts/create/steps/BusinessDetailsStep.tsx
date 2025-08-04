@@ -14,7 +14,6 @@ export default function BusinessDetailsStep({
   onBack,
 }: BusinessDetailsStepProps) {
   const t = useTranslations('create_storefront');
-  const tCreate_storefront.errors = useTranslations('create_storefront');
   const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -24,17 +23,17 @@ export default function BusinessDetailsStep({
 
     // Email validation if provided
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = tCreate_storefront.errors('email_invalid');
+      newErrors.email = t('errors.email_invalid');
     }
 
     // Phone validation if provided
     if (formData.phone && !/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
-      newErrors.phone = tCreate_storefront.errors('phone_invalid');
+      newErrors.phone = t('errors.phone_invalid');
     }
 
     // Website validation if provided
     if (formData.website && !/^https?:\/\/.+\..+/.test(formData.website)) {
-      newErrors.website = tCreate_storefront.errors('website_invalid');
+      newErrors.website = t('errors.website_invalid');
     }
 
     setErrors(newErrors);

@@ -13,7 +13,6 @@ export default function EditAttributesStep({
   onBack,
 }: EditAttributesStepProps) {
   const t = useTranslations('storefronts');
-  const tStorefronts.products.steps = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const { state } = useEditProduct();
 
@@ -25,7 +24,7 @@ export default function EditAttributesStep({
           <span className="text-2xl">⚙️</span>
         </div>
         <h3 className="text-2xl font-bold text-base-content mb-2">
-          {tStorefronts.products.steps('attributes')}
+          {t('products.steps.attributes')}
         </h3>
         <p className="text-base-content/70">
           {t('categoryAttributesDescription')}

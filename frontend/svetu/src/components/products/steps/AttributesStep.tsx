@@ -29,9 +29,8 @@ export default function AttributesStep({
   onNext,
   onBack,
 }: AttributesStepProps) {
-  const t = useTranslations('common');
-  const tStorefronts.products.attributeGroups = useTranslations('storefronts');
-  const tStorefronts.products = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
+  const t = useTranslations('storefronts');
   const locale = useLocale();
   const { state, setAttribute, setError, clearError } = useCreateProduct();
   const [attributes, setAttributes] = useState<CategoryAttribute[]>([]);
@@ -103,32 +102,32 @@ export default function AttributesStep({
       { name: string; icon: string; priority: number }
     > = {
       basic: {
-        name: tStorefronts.products.attributeGroups('basic'),
+        name: t('products.attributeGroups.basic'),
         icon: '🏷️',
         priority: 1,
       },
       technical: {
-        name: tStorefronts.products.attributeGroups('technical'),
+        name: t('products.attributeGroups.technical'),
         icon: '⚙️',
         priority: 2,
       },
       condition: {
-        name: tStorefronts.products.attributeGroups('condition'),
+        name: t('products.attributeGroups.condition'),
         icon: '✨',
         priority: 3,
       },
       accessories: {
-        name: tStorefronts.products.attributeGroups('accessories'),
+        name: t('products.attributeGroups.accessories'),
         icon: '📦',
         priority: 4,
       },
       dimensions: {
-        name: tStorefronts.products.attributeGroups('dimensions'),
+        name: t('products.attributeGroups.dimensions'),
         icon: '📏',
         priority: 5,
       },
       other: {
-        name: tStorefronts.products.attributeGroups('other'),
+        name: t('products.attributeGroups.other'),
         icon: '📋',
         priority: 99,
       },
@@ -405,10 +404,10 @@ export default function AttributesStep({
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-base-content mb-4">
-          {tStorefronts.products('categoryAttributes')}
+          {t('products.categoryAttributes')}
         </h2>
         <p className="text-lg text-base-content/70">
-          {tStorefronts.products('categoryAttributesDescription')}
+          {t('products.categoryAttributesDescription')}
         </p>
         {state.category && (
           <div className="badge badge-primary badge-lg mt-2">
@@ -421,10 +420,10 @@ export default function AttributesStep({
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🎉</div>
           <h3 className="text-2xl font-bold text-base-content mb-2">
-            {tStorefronts.products('noAttributesTitle')}
+            {t('products.noAttributesTitle')}
           </h3>
           <p className="text-lg text-base-content/70">
-            {tStorefronts.products('noAttributesMessage')}
+            {t('products.noAttributesMessage')}
           </p>
         </div>
       ) : (
@@ -445,7 +444,7 @@ export default function AttributesStep({
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 ></path>
               </svg>
-              <span>{tStorefronts.products('requiredFieldsInfo')}</span>
+              <span>{t('products.requiredFieldsInfo')}</span>
             </div>
           )}
 

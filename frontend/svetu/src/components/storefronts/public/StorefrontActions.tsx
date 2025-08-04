@@ -124,10 +124,10 @@ export default function StorefrontActions({ storefront, isOwner }: StorefrontAct
                   if (!method || typeof method.method_type !== 'string') return null;
                   return (
                     <div key={index} className="badge badge-outline">
-                      {method.method_type === 'cash' && tStorefronts.payment_methods('cash')}
-                      {method.method_type === 'card' && tStorefronts.payment_methods('card')}
-                      {method.method_type === 'bank_transfer' && tStorefronts.payment_methods('bank_transfer')}
-                      {method.method_type === 'cod' && tStorefronts.payment_methods('cod')}
+                      {method.method_type === 'cash' && t('storefronts.payment_methods.cash')}
+                      {method.method_type === 'card' && t('storefronts.payment_methods.card')}
+                      {method.method_type === 'bank_transfer' && t('storefronts.payment_methods.bank_transfer')}
+                      {method.method_type === 'cod' && t('storefronts.payment_methods.cod')}
                     </div>
                   );
                 })}

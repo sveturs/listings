@@ -14,7 +14,6 @@ export default function EditBasicInfoStep({
   onBack,
 }: EditBasicInfoStepProps) {
   const t = useTranslations('storefronts');
-  const tStorefronts.products.steps = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const { state, setProductData, setError, clearError } = useEditProduct();
 
@@ -71,7 +70,7 @@ export default function EditBasicInfoStep({
           <span className="text-2xl">📝</span>
         </div>
         <h3 className="text-2xl font-bold text-base-content mb-2">
-          {tStorefronts.products.steps('basic')}
+          {t('products.steps.basic')}
         </h3>
         <p className="text-base-content/70">
           {t('basicInformationDescription')}

@@ -43,11 +43,11 @@ export default function StaffSetupStep({
     const newErrors: Record<string, string> = {};
 
     if (!newStaffMember.email) {
-      newErrors.email = tCreate_storefront.errors('email_required');
+      newErrors.email = t('errors.email_required');
     } else if (!validateEmail(newStaffMember.email)) {
-      newErrors.email = tCreate_storefront.errors('email_invalid');
+      newErrors.email = t('errors.email_invalid');
     } else if (formData.staff?.some((s) => s.email === newStaffMember.email)) {
-      newErrors.email = tCreate_storefront.errors('email_duplicate');
+      newErrors.email = t('errors.email_duplicate');
     }
 
     setErrors(newErrors);
@@ -109,17 +109,17 @@ export default function StaffSetupStep({
                       <div className="flex gap-4 mt-1 text-xs">
                         {member.canManageProducts && (
                           <span className="badge badge-sm">
-                            {tPermissions('products')}
+                            {t('permissions.products')}
                           </span>
                         )}
                         {member.canManageOrders && (
                           <span className="badge badge-sm">
-                            {tPermissions('orders')}
+                            {t('permissions.orders')}
                           </span>
                         )}
                         {member.canManageSettings && (
                           <span className="badge badge-sm">
-                            {tPermissions('settings')}
+                            {t('permissions.settings')}
                           </span>
                         )}
                       </div>
@@ -190,9 +190,9 @@ export default function StaffSetupStep({
                       })
                     }
                   >
-                    <option value="staff">{tRoles('staff')}</option>
-                    <option value="manager">{tRoles('manager')}</option>
-                    <option value="admin">{tRoles('admin')}</option>
+                    <option value="staff">{t('roles.staff')}</option>
+                    <option value="manager">{t('roles.manager')}</option>
+                    <option value="admin">{t('roles.admin')}</option>
                   </select>
                 </div>
               </div>
@@ -215,7 +215,7 @@ export default function StaffSetupStep({
                       }
                     />
                     <span className="label-text ml-2">
-                      {tPermissions('products')}
+                      {t('permissions.products')}
                     </span>
                   </label>
                   <label className="cursor-pointer label justify-start">
@@ -231,7 +231,7 @@ export default function StaffSetupStep({
                       }
                     />
                     <span className="label-text ml-2">
-                      {tPermissions('orders')}
+                      {t('permissions.orders')}
                     </span>
                   </label>
                   <label className="cursor-pointer label justify-start">
@@ -247,7 +247,7 @@ export default function StaffSetupStep({
                       }
                     />
                     <span className="label-text ml-2">
-                      {tPermissions('settings')}
+                      {t('permissions.settings')}
                     </span>
                   </label>
                 </div>

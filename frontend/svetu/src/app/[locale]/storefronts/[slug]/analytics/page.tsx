@@ -53,7 +53,7 @@ ChartJS.register(
 export default function StorefrontAnalyticsPage() {
   const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
-  const tAdmin.common = useTranslations('admin');
+  const tAdmin = useTranslations('admin');
   const locale = useLocale();
   const router = useRouter();
   const params = useParams();
@@ -142,7 +142,7 @@ export default function StorefrontAnalyticsPage() {
             <div className="text-center">
               <span className="loading loading-spinner loading-lg text-primary"></span>
               <p className="mt-4 text-base-content/60">
-                {tAdmin.common('loading')}
+                {tAdmin('common.loading')}
               </p>
             </div>
           </div>

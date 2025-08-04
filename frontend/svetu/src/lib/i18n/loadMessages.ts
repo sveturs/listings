@@ -44,8 +44,8 @@ export async function loadMessages(
   for (const mod of modules) {
     const cacheKey = `${locale}-${mod}`;
 
-    // Проверяем кэш
-    if (moduleCache.has(cacheKey)) {
+    // Проверяем кэш (отключаем в development для hot reload)
+    if (process.env.NODE_ENV !== 'development' && moduleCache.has(cacheKey)) {
       Object.assign(messages, moduleCache.get(cacheKey));
       continue;
     }

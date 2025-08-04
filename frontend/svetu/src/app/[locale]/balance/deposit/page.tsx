@@ -12,7 +12,7 @@ const PRESET_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 
 export default function DepositPage() {
   const t = useTranslations('admin');
-  const tAdmin.balance.error = useTranslations('admin');
+  const tAdmin = useTranslations('admin');
   const tProfile = useTranslations('profile');
   const tCommon = useTranslations('common');
   const locale = useLocale();
@@ -60,11 +60,11 @@ export default function DepositPage() {
         window.location.href = response.data.payment_url;
       } else {
         console.error('Invalid response structure:', response);
-        toast.error(tAdmin.balance.error('deposit_failed'));
+        toast.error(tAdmin('balance.error.deposit_failed'));
       }
     } catch (error) {
       console.error('Deposit error:', error);
-      toast.error(tAdmin.balance.error('deposit_failed'));
+      toast.error(tAdmin('balance.error.deposit_failed'));
     } finally {
       setIsProcessing(false);
     }

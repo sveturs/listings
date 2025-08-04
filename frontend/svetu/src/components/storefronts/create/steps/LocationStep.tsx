@@ -22,7 +22,6 @@ interface LocationData {
 
 export default function LocationStep({ onNext, onBack }: LocationStepProps) {
   const t = useTranslations('create_storefront');
-  const tCreate_storefront.location = useTranslations('create_storefront');
   const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -101,10 +100,10 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4">
-            {tCreate_storefront.location('title')}
+            {t('location.title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {tCreate_storefront.location('subtitle')}
+            {t('location.subtitle')}
           </p>
 
           {/* Выбор местоположения */}
@@ -132,7 +131,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
               <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text">
-                    {tCreate_storefront.location('postal_code')}
+                    {t('location.postal_code')}
                   </span>
                   <span className="label-text-alt text-error">*</span>
                 </label>

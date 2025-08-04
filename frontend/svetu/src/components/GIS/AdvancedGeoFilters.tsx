@@ -56,6 +56,7 @@ export default function AdvancedGeoFilters({
   currentLocation,
   className = '',
 }: AdvancedGeoFiltersProps) {
+  const tMap = useTranslations('map');
   const commonT = useTranslations('common');
   const t = (key: string) => commonT(`map.${key}`);
 
@@ -371,9 +372,7 @@ export default function AdvancedGeoFilters({
 
             {poiResults.length > 0 && (
               <div className="text-sm text-base-content/70">
-                {t('gis.advancedFilters.foundPOIs', {
-                  count: poiResults.length,
-                })}
+                {t('gis.advancedFilters.foundPOIs')} ({poiResults.length})
               </div>
             )}
           </div>

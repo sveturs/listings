@@ -14,8 +14,6 @@ interface PhotosStepProps {
 
 export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
   const t = useTranslations('create_listing');
-  const tCreate_listing.photos.tips = useTranslations('create_listing');
-  const tCreate_listing.photos.trust_tip = useTranslations('create_listing');
   const tCommon = useTranslations('common');
   const { state, dispatch } = useCreateListing();
   const [photos, setPhotos] = useState<string[]>(state.images || []);
@@ -285,13 +283,13 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                 </svg>
                 <div className="text-sm">
                   <p className="font-medium">
-                    💡 {tCreate_listing.photos.tips('title')}
+                    💡 {t('photos.tips.title')}
                   </p>
                   <ul className="text-xs mt-2 space-y-1">
-                    <li>• {tCreate_listing.photos.tips('quality')}</li>
-                    <li>• {tCreate_listing.photos.tips('lighting')}</li>
-                    <li>• {tCreate_listing.photos.tips('angles')}</li>
-                    <li>• {tCreate_listing.photos.tips('defects')}</li>
+                    <li>• {t('photos.tips.quality')}</li>
+                    <li>• {t('photos.tips.lighting')}</li>
+                    <li>• {t('photos.tips.angles')}</li>
+                    <li>• {t('photos.tips.defects')}</li>
                   </ul>
                 </div>
               </div>
@@ -315,10 +313,10 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
             </svg>
             <div className="text-sm">
               <p className="font-medium">
-                🤝 {tCreate_listing.photos.trust_tip('title')}
+                🤝 {t('photos.trust_tip.title')}
               </p>
               <p className="text-xs mt-1">
-                {tCreate_listing.photos.trust_tip('description')}
+                {t('photos.trust_tip.description')}
               </p>
             </div>
           </div>

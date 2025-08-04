@@ -203,12 +203,12 @@ export default function ListingFilters({
                   }
                 >
                   <option value="">{t('anyCondition')}</option>
-                  <option value="new">{tRootCondition('new')}</option>
-                  <option value="used">{tRootCondition('used')}</option>
+                  <option value="new">{tCondition('new')}</option>
+                  <option value="used">{tCondition('used')}</option>
                   <option value="refurbished">
-                    {tRootCondition('refurbished')}
+                    {tCondition('refurbished')}
                   </option>
-                  <option value="damaged">{tRootCondition('damaged')}</option>
+                  <option value="damaged">{tCondition('damaged')}</option>
                 </select>
               </div>
 

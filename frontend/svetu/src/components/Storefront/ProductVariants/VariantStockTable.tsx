@@ -400,7 +400,7 @@ export default function VariantStockTable({
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('variants.a');
+        const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
         a.download = `product-${productId}-variants.csv`;
@@ -722,7 +722,7 @@ export default function VariantStockTable({
               )}
               <th>
                 <button
-                  onClick={() => handleSort('variants.name')}
+                  onClick={() => handleSort('name')}
                   className="btn btn-ghost btn-sm"
                 >
                   {t('variants.variant')}
@@ -735,7 +735,7 @@ export default function VariantStockTable({
               </th>
               <th>
                 <button
-                  onClick={() => handleSort('variants.sku')}
+                  onClick={() => handleSort('sku')}
                   className="btn btn-ghost btn-sm"
                 >
                   {t('variants.sku')}
@@ -748,7 +748,7 @@ export default function VariantStockTable({
               </th>
               <th>
                 <button
-                  onClick={() => handleSort('variants.price')}
+                  onClick={() => handleSort('price')}
                   className="btn btn-ghost btn-sm"
                 >
                   {t('variants.price')}
@@ -761,7 +761,7 @@ export default function VariantStockTable({
               </th>
               <th>
                 <button
-                  onClick={() => handleSort('variants.stock')}
+                  onClick={() => handleSort('stock')}
                   className="btn btn-ghost btn-sm"
                 >
                   {t('variants.stock')}
@@ -775,7 +775,7 @@ export default function VariantStockTable({
               <th>{t('variants.status')}</th>
               <th>
                 <button
-                  onClick={() => handleSort('variants.updated_at')}
+                  onClick={() => handleSort('updated_at')}
                   className="btn btn-ghost btn-sm"
                 >
                   {t('variants.lastUpdated')}

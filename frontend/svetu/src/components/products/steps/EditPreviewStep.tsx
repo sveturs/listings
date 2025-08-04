@@ -29,8 +29,6 @@ export default function EditPreviewStep({
   productId,
 }: EditPreviewStepProps) {
   const t = useTranslations('storefronts');
-  const tStorefronts.products.errors = useTranslations('storefronts');
-  const tStorefronts.products.steps = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const router = useRouter();
@@ -119,7 +117,7 @@ export default function EditPreviewStep({
         payload: {
           field: 'submit',
           message:
-            error.message || tStorefronts.products.errors('updateFailed'),
+            error.message || t('products.errors.updateFailed'),
         },
       });
     } finally {
@@ -137,7 +135,7 @@ export default function EditPreviewStep({
       <div className="text-center">
         <EyeIcon className="w-16 h-16 text-primary mx-auto mb-4" />
         <h3 className="text-2xl font-bold text-base-content mb-2">
-          {tStorefronts.products.steps('preview')}
+          {t('products.steps.preview')}
         </h3>
         <p className="text-base-content/70">
           {t('previewStepDescription')}

@@ -11,9 +11,7 @@ interface BasicInfoStepProps {
 
 export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
   const t = useTranslations('create_listing');
-  const tCreate_listing.basic_info = useTranslations('create_listing');
   const tCommon = useTranslations('common');
-  const tCreate_listing.regional_tips = useTranslations('create_listing');
   const { state, setBasicInfo, setLocalization } = useCreateListing();
   const [formData, setFormData] = useState({
     title: state.title || '',
@@ -114,10 +112,10 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4 flex items-center">
-            📝 {tCreate_listing.basic_info('title')}
+            📝 {t('basic_info.title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {tCreate_listing.basic_info('description')}
+            {t('basic_info.description')}
           </p>
 
           <div className="space-y-6">
@@ -375,12 +373,12 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
               </svg>
               <div className="text-sm">
                 <p className="font-medium">
-                  💡 {tCreate_listing.regional_tips('title')}
+                  💡 {t('regional_tips.title')}
                 </p>
                 <ul className="text-xs mt-2 space-y-1">
-                  <li>• {tCreate_listing.regional_tips('pricing')}</li>
-                  <li>• {tCreate_listing.regional_tips('description')}</li>
-                  <li>• {tCreate_listing.regional_tips('honesty')}</li>
+                  <li>• {t('regional_tips.pricing')}</li>
+                  <li>• {t('regional_tips.description')}</li>
+                  <li>• {t('regional_tips.honesty')}</li>
                 </ul>
               </div>
             </div>

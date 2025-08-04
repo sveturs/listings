@@ -23,8 +23,6 @@ export default function EditPhotosStep({
   onBack,
 }: EditPhotosStepProps) {
   const t = useTranslations('storefronts');
-  const tStorefronts.products.errors = useTranslations('storefronts');
-  const tStorefronts.products.steps = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const {
     state,
@@ -57,13 +55,13 @@ export default function EditPhotosStep({
 
         // Проверка типа файла
         if (!file.type.startsWith('image/')) {
-          setError('images', tStorefronts.products.errors('invalidImageType'));
+          setError('images', t('products.errors.invalidImageType'));
           continue;
         }
 
         // Проверка размера файла (максимум 10MB)
         if (file.size > 10 * 1024 * 1024) {
-          setError('images', tStorefronts.products.errors('imageTooLarge'));
+          setError('images', t('products.errors.imageTooLarge'));
           continue;
         }
 
@@ -96,7 +94,7 @@ export default function EditPhotosStep({
 
   const handleNext = () => {
     if (totalImages === 0) {
-      setError('images', tStorefronts.products.errors('atLeastOneImage'));
+      setError('images', t('products.errors.atLeastOneImage'));
       return;
     }
 
@@ -123,7 +121,7 @@ export default function EditPhotosStep({
       <div className="text-center">
         <PhotoIcon className="w-16 h-16 text-primary mx-auto mb-4" />
         <h3 className="text-2xl font-bold text-base-content mb-2">
-          {tStorefronts.products.steps('photos')}
+          {t('products.steps.photos')}
         </h3>
         <p className="text-base-content/70">
           {t('photosStepDescription')}

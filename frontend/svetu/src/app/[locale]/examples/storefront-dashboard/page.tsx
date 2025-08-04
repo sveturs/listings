@@ -6,7 +6,7 @@ import { SveTuLogoStatic } from '@/components/logos/SveTuLogoStatic';
 import { AnimatedSection } from '@/components/ui/AnimatedSection';
 
 const StorefrontDashboard = () => {
-  const t = useTranslations('dashboard');
+  const t = useTranslations('storefronts');
   const [activeTab, setActiveTab] = useState<
     'overview' | 'products' | 'analytics' | 'settings'
   >('overview');

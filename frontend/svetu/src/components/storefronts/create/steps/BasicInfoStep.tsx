@@ -11,8 +11,6 @@ interface BasicInfoStepProps {
 
 export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
   const t = useTranslations('create_storefront');
-  const tCreate_storefront.errors = useTranslations('create_storefront');
-  const tCreate_storefront.business_types = useTranslations('create_storefront');
   const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -39,7 +37,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
       if (file.size > 5 * 1024 * 1024) {
         setErrors({
           ...errors,
-          logo: tCreate_storefront.errors('logo_too_large'),
+          logo: t('errors.logo_too_large'),
         });
         return;
       }
@@ -60,7 +58,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
       if (file.size > 10 * 1024 * 1024) {
         setErrors({
           ...errors,
-          banner: tCreate_storefront.errors('banner_too_large'),
+          banner: t('errors.banner_too_large'),
         });
         return;
       }
@@ -78,13 +76,13 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name || formData.name.length < 3) {
-      newErrors.name = tCreate_storefront.errors('name_required');
+      newErrors.name = t('errors.name_required');
     }
 
     if (!formData.slug || formData.slug.length < 3) {
-      newErrors.slug = tCreate_storefront.errors('slug_required');
+      newErrors.slug = t('errors.slug_required');
     } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = tCreate_storefront.errors('slug_invalid');
+      newErrors.slug = t('errors.slug_invalid');
     }
 
     if (!formData.description || formData.description.length < 20) {
@@ -197,19 +195,19 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
               onChange={(e) => updateFormData({ businessType: e.target.value })}
             >
               <option value="retail">
-                {tCreate_storefront.business_types('retail')}
+                {t('business_types.retail')}
               </option>
               <option value="service">
-                {tCreate_storefront.business_types('service')}
+                {t('business_types.service')}
               </option>
               <option value="restaurant">
-                {tCreate_storefront.business_types('restaurant')}
+                {t('business_types.restaurant')}
               </option>
               <option value="grocery">
-                {tCreate_storefront.business_types('grocery')}
+                {t('business_types.grocery')}
               </option>
               <option value="other">
-                {tCreate_storefront.business_types('other')}
+                {t('business_types.other')}
               </option>
             </select>
           </div>

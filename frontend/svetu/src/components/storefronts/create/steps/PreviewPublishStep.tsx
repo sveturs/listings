@@ -23,10 +23,6 @@ export default function PreviewPublishStep({
   onComplete,
 }: PreviewPublishStepProps) {
   const t = useTranslations('create_storefront');
-  const tCreate_storefront.preview = useTranslations('create_storefront');
-  const tCreate_storefront.basic_info = useTranslations('create_storefront');
-  const tCreate_storefront.business_details = useTranslations('create_storefront');
-  const tCreate_storefront.location = useTranslations('create_storefront');
   const tCommon = useTranslations('common');
   const tPermissions = useTranslations('permissions');
   const { formData, isSubmitting, submitStorefront } =
@@ -44,10 +40,10 @@ export default function PreviewPublishStep({
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4">
-            {tCreate_storefront.preview('title')}
+            {t('preview.title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {tCreate_storefront.preview('subtitle')}
+            {t('preview.subtitle')}
           </p>
 
           {/* Preview sections */}
@@ -60,22 +56,22 @@ export default function PreviewPublishStep({
                 </h3>
                 <div className="space-y-2">
                   <p>
-                    <strong>{tCreate_storefront.basic_info('name')}:</strong>{' '}
+                    <strong>{t('basic_info.name')}:</strong>{' '}
                     {formData.name}
                   </p>
                   <p>
-                    <strong>{tCreate_storefront.basic_info('slug')}:</strong>{' '}
+                    <strong>{t('basic_info.slug')}:</strong>{' '}
                     svetu.rs/{formData.slug}
                   </p>
                   <p>
                     <strong>
-                      {tCreate_storefront.basic_info('description')}:
+                      {t('basic_info.description')}:
                     </strong>{' '}
                     {formData.description}
                   </p>
                   <p>
                     <strong>
-                      {tCreate_storefront.basic_info('business_type')}:
+                      {t('basic_info.business_type')}:
                     </strong>{' '}
                     {t(
                       `create_storefront.business_types.${formData.businessType}`
@@ -106,7 +102,7 @@ export default function PreviewPublishStep({
                   {formData.taxNumber && (
                     <p>
                       <strong>
-                        {tCreate_storefront.business_details('tax_number')}:
+                        {t('business_details.tax_number')}:
                       </strong>{' '}
                       {formData.taxNumber}
                     </p>
@@ -114,7 +110,7 @@ export default function PreviewPublishStep({
                   {formData.vatNumber && (
                     <p>
                       <strong>
-                        {tCreate_storefront.business_details('vat_number')}:
+                        {t('business_details.vat_number')}:
                       </strong>{' '}
                       {formData.vatNumber}
                     </p>
@@ -122,7 +118,7 @@ export default function PreviewPublishStep({
                   {formData.phone && (
                     <p>
                       <strong>
-                        {tCreate_storefront.business_details('phone')}:
+                        {t('business_details.phone')}:
                       </strong>{' '}
                       {formData.phone}
                     </p>
@@ -130,7 +126,7 @@ export default function PreviewPublishStep({
                   {formData.email && (
                     <p>
                       <strong>
-                        {tCreate_storefront.business_details('email')}:
+                        {t('business_details.email')}:
                       </strong>{' '}
                       {formData.email}
                     </p>
@@ -138,7 +134,7 @@ export default function PreviewPublishStep({
                   {formData.website && (
                     <p>
                       <strong>
-                        {tCreate_storefront.business_details('website')}:
+                        {t('business_details.website')}:
                       </strong>{' '}
                       {formData.website}
                     </p>
@@ -155,27 +151,27 @@ export default function PreviewPublishStep({
                 </h3>
                 <div className="space-y-2">
                   <p>
-                    <strong>{tCreate_storefront.location('address')}:</strong>{' '}
+                    <strong>{t('location.address')}:</strong>{' '}
                     {formData.address}
                   </p>
                   <p>
-                    <strong>{tCreate_storefront.location('city')}:</strong>{' '}
+                    <strong>{t('location.city')}:</strong>{' '}
                     {formData.city}
                   </p>
                   <p>
                     <strong>
-                      {tCreate_storefront.location('postal_code')}:
+                      {t('location.postal_code')}:
                     </strong>{' '}
                     {formData.postalCode}
                   </p>
                   <p>
-                    <strong>{tCreate_storefront.location('country')}:</strong>{' '}
+                    <strong>{t('location.country')}:</strong>{' '}
                     {t(`countries.${formData.country}`)}
                   </p>
                   {formData.latitude && formData.longitude && (
                     <p>
                       <strong>
-                        {tCreate_storefront.location('coordinates')}:
+                        {t('location.coordinates')}:
                       </strong>{' '}
                       {formData.latitude.toFixed(6)},{' '}
                       {formData.longitude.toFixed(6)}
@@ -273,13 +269,13 @@ export default function PreviewPublishStep({
                         </p>
                         <div className="flex gap-2 text-sm text-base-content/70">
                           {member.canManageProducts && (
-                            <span>• {tPermissions('products')}</span>
+                            <span>• {t('permissions.products')}</span>
                           )}
                           {member.canManageOrders && (
-                            <span>• {tPermissions('orders')}</span>
+                            <span>• {t('permissions.orders')}</span>
                           )}
                           {member.canManageSettings && (
-                            <span>• {tPermissions('settings')}</span>
+                            <span>• {t('permissions.settings')}</span>
                           )}
                         </div>
                       </div>

@@ -38,9 +38,8 @@ import {
 export default function StorefrontDashboardPage() {
   const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
-  const tAdmin.common = useTranslations('admin');
-  const tStorefronts.products = useTranslations('storefronts');
-  const tStorefronts.delivery = useTranslations('storefronts');
+  const tAdmin = useTranslations('admin');
+  const tStorefronts = useTranslations('storefronts');
   const locale = useLocale();
   const router = useRouter();
   const params = useParams();
@@ -116,7 +115,7 @@ export default function StorefrontDashboardPage() {
             <div className="text-center">
               <span className="loading loading-spinner loading-lg text-primary"></span>
               <p className="mt-4 text-base-content/60">
-                {tAdmin.common('loading')}
+                {tAdmin('common.loading')}
               </p>
             </div>
           </div>
@@ -266,7 +265,7 @@ export default function StorefrontDashboardPage() {
                     className="btn btn-outline"
                   >
                     <ShoppingBagIcon className="w-5 h-5" />
-                    {tStorefronts.products('title')}
+                    {tStorefronts('products.title')}
                   </Link>
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/customers`}
@@ -287,8 +286,8 @@ export default function StorefrontDashboardPage() {
                     className="btn btn-outline"
                   >
                     <TruckIcon className="w-5 h-5" />
-                    {tStorefronts.delivery('title') ||
-                      tStorefronts.delivery('shipping')}
+                    {tStorefronts('delivery.title') ||
+                      tStorefronts('delivery.shipping')}
                   </Link>
                 </div>
               </div>
@@ -322,7 +321,7 @@ export default function StorefrontDashboardPage() {
                         <tr>
                           <th>{t('orderId')}</th>
                           <th>{t('customer')}</th>
-                          <th>{tStorefronts.products('title')}</th>
+                          <th>{tStorefronts('products.title')}</th>
                           <th>{t('total')}</th>
                           <th>{tCommon('status')}</th>
                           <th>{tCommon('actions')}</th>

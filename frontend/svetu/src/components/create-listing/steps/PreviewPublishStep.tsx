@@ -18,9 +18,7 @@ export default function PreviewPublishStep({
   onComplete: _onComplete,
 }: PreviewPublishStepProps) {
   const t = useTranslations('create_listing');
-  const tCreate_listing.errors = useTranslations('create_listing');
   const tCreate_listing = useTranslations('create_listing');
-  const tCreate_listing.preview.rules = useTranslations('create_listing');
   const tCommon = useTranslations('common');
   const router = useRouter();
   const { state, saveDraft, publish } = useCreateListing();
@@ -71,7 +69,7 @@ export default function PreviewPublishStep({
           );
         } catch (imageError) {
           console.error('Error uploading images:', imageError);
-          toast.error(tCreate_listing.errors('image_upload_failed'));
+          toast.error(t('errors.image_upload_failed'));
         } finally {
           setUploadingImages(false);
         }
@@ -92,7 +90,7 @@ export default function PreviewPublishStep({
       }, 1000);
     } catch (error) {
       console.error('Error publishing:', error);
-      toast.error(tCreate_listing.errors('publish_failed'));
+      toast.error(t('errors.publish_failed'));
     } finally {
       setIsPublishing(false);
     }
@@ -107,7 +105,7 @@ export default function PreviewPublishStep({
       toast.success(tCreate_listing('draft_saved'));
     } catch (error) {
       console.error('Error saving draft:', error);
-      toast.error(tCreate_listing.errors('draft_save_failed'));
+      toast.error(t('errors.draft_save_failed'));
     } finally {
       setIsSavingDraft(false);
     }

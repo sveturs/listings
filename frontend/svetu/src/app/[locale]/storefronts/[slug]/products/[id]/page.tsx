@@ -41,9 +41,8 @@ export default function StorefrontProductPage({ params }: Props) {
   const locale = useLocale();
   const t = useTranslations('products');
   const tCommon = useTranslations('common');
-  const tStorefronts.products = useTranslations('storefronts');
-  const tCart = useTranslations('cart');
   const tStorefronts = useTranslations('storefronts');
+  const tCart = useTranslations('cart');
   const tOrders = useTranslations('orders');
   const [product, setProduct] = useState<StorefrontProduct | null>(null);
   const [storefront, setStorefront] = useState<Storefront | null>(null);
@@ -164,7 +163,7 @@ export default function StorefrontProductPage({ params }: Props) {
             </li>
             <li>
               <Link href={`/${locale}/storefronts/${slug}/products`}>
-                {tStorefronts.products('title')}
+                {tStorefronts('products.title')}
               </Link>
             </li>
             <li className="text-base-content/60">{product.name}</li>
