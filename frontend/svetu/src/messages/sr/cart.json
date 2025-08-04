@@ -1,0 +1,83 @@
+{
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "remove": "Ukloni",
+    "clear": "Clear Cart",
+    "checkout": "Checkout",
+    "total": "Total",
+    "addToCart": "Add to Cart",
+    "added": "Added!",
+    "outOfStock": "Out of Stock",
+    "quantity": "Quantity"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "emptyCart": "Your cart is empty",
+    "continueShopping": "Continue Shopping",
+    "shippingAddress": "Shipping Address",
+    "billingAddress": "Billing Address",
+    "sameAsShipping": "Same as shipping address",
+    "street": "Street Address",
+    "city": "Grad",
+    "state": "State/Province",
+    "postalCode": "Postal Code",
+    "country": "Država",
+    "phone": "Phone Number",
+    "paymentMethod": "Payment Method",
+    "orderNotes": "Order Notes",
+    "orderNotesPlaceholder": "Add any special instructions for your order (optional)",
+    "orderSummary": "Order Summary",
+    "quantity": "Qty",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "tax": "Tax",
+    "total": "Total",
+    "placeOrder": "Place Order",
+    "processing": "Processing...",
+    "buyerInfo": "Buyer Information",
+    "name": "Full Name",
+    "email": "Email Address",
+    "address": "Delivery Address",
+    "seller": "Prodavac",
+    "platformFee": "Platform Fee",
+    "codFee": "Cash on Delivery Fee",
+    "agreeToTerms": "I agree to the terms and conditions",
+    "securePayment": "Secure Payment"
+  },
+  "payment": {
+    "selectMethod": "Select Payment Method",
+    "selectMethodRequired": "Please select a payment method",
+    "methods": {
+      "card": "Credit/Debit Card",
+      "cardDescription": "Pay securely with your credit or debit card",
+      "cashOnDelivery": "Cash on Delivery",
+      "cashOnDeliveryDescription": "Pay when you receive your order",
+      "bankTransfer": "Bank Transfer",
+      "bankTransferDescription": "Direct transfer to our bank account"
+    },
+    "additionalFee": "Additional fee",
+    "securePaymentInfo": "Your payment information is encrypted and secure",
+    "escrow": {
+      "held": "Payment Held in Escrow",
+      "heldDescription": "Your payment is securely held for {days} days",
+      "released": "Payment Released",
+      "releasedDescription": "Payment has been released to the seller",
+      "refunded": "Payment Refunded",
+      "refundedDescription": "Payment has been refunded to your account",
+      "pending": "Payment Pending",
+      "pendingDescription": "Your payment will be processed after confirmation",
+      "releaseDate": "Release date",
+      "buyerProtection": "Buyer protection is active for this transaction:",
+      "confirmReceipt": "Confirm receipt to release payment early",
+      "disputeOption": "Open a dispute if there are issues",
+      "autoRelease": "Automatic release after {days} days",
+      "sellerTier": "Seller tier",
+      "tier": {
+        "new": "New Seller",
+        "verified": "Verified Seller",
+        "gold": "Gold Seller"
+      }
+    }
+  }
+}
