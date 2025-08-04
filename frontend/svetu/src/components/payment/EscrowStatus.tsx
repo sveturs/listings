@@ -24,7 +24,7 @@ export default function EscrowStatus({
   releaseDate,
   sellerTier = 'new',
 }: EscrowStatusProps) {
-  const t = useTranslations('payment.escrow');
+  const t = useTranslations('payment');
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('sr-RS', {

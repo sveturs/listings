@@ -15,10 +15,8 @@ export default function StorefrontHeader({
   isOwner: _isOwner,
   onImageClick 
 }: StorefrontHeaderProps) {
-  const t = useTranslations('storefronts.business_types');
-  const tStorefronts = useTranslations('storefronts');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
-  const tStorefronts.products = useTranslations('storefronts.products');
   
   const bannerImage = storefront.banner_url || storefront.banner_image_url || '/storefront-banner-default.jpg';
   const logoImage = storefront.logo_url || '/storefront-logo-default.png';

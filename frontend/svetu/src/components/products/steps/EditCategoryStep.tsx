@@ -15,7 +15,7 @@ interface EditCategoryStepProps {
 }
 
 export default function EditCategoryStep({ onNext }: EditCategoryStepProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const { state, setCategory, setError, clearError } = useEditProduct();
   const [allCategories, setAllCategories] = useState<MarketplaceCategory[]>([]);

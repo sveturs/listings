@@ -30,8 +30,8 @@ export default function AttributesStep({
   onBack,
 }: AttributesStepProps) {
   const t = useTranslations('common');
-  const tStorefronts.products.attributeGroups = useTranslations('storefronts.products.attributeGroups');
-  const tStorefronts.products = useTranslations('storefronts.products');
+  const tStorefronts.products.attributeGroups = useTranslations('storefronts');
+  const tStorefronts.products = useTranslations('storefronts');
   const locale = useLocale();
   const { state, setAttribute, setError, clearError } = useCreateProduct();
   const [attributes, setAttributes] = useState<CategoryAttribute[]>([]);

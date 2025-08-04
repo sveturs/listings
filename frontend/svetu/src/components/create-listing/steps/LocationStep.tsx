@@ -27,7 +27,7 @@ interface LocationData {
 }
 
 export default function LocationStep({ onNext, onBack }: LocationStepProps) {
-  const t = useTranslations('create_listing.location');
+  const t = useTranslations('create_listing');
   const tCommon = useTranslations('common');
   const { state, dispatch } = useCreateListing();
   const [step, setStep] = useState<'select' | 'privacy'>('select');

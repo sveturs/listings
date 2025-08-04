@@ -23,7 +23,7 @@ export default function BusinessHoursStep({
   onBack,
 }: BusinessHoursStepProps) {
   const t = useTranslations('common');
-  const tCreate_storefront.business_hours = useTranslations('create_storefront.business_hours');
+  const tCreate_storefront.business_hours = useTranslations('create_storefront');
   const { formData, updateFormData } = useCreateStorefrontContext();
 
   const handleHoursChange = (dayIndex: number, field: string, value: any) => {

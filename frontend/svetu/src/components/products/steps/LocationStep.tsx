@@ -22,7 +22,7 @@ interface LocationData {
 }
 
 export default function LocationStep({ onNext, onBack }: LocationStepProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const { state, setLocation, setError, clearError } = useCreateProduct();
 

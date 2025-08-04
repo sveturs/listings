@@ -10,7 +10,7 @@ import { toast } from '@/utils/toast';
 // Убираем дублирующий useBalance - используем данные из BalanceWidget
 
 export default function WithdrawPage() {
-  const t = useTranslations('admin.balance');
+  const t = useTranslations('admin');
   const tProfile = useTranslations('profile');
   const locale = useLocale();
   const [amount, setAmount] = useState('');

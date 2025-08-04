@@ -21,8 +21,8 @@ interface LocationData {
 }
 
 export default function LocationStep({ onNext, onBack }: LocationStepProps) {
-  const t = useTranslations('create_storefront.errors');
-  const tCreate_storefront.location = useTranslations('create_storefront.location');
+  const t = useTranslations('create_storefront');
+  const tCreate_storefront.location = useTranslations('create_storefront');
   const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [errors, setErrors] = useState<Record<string, string>>({});

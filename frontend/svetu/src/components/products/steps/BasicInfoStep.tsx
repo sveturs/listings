@@ -10,7 +10,7 @@ interface BasicInfoStepProps {
 }
 
 export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const { state, setProductData, setError, clearError } = useCreateProduct();
   const [formData, setFormData] = useState({

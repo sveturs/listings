@@ -29,7 +29,7 @@ export default function PaymentMethodSelector({
   amount,
   currency = 'RSD',
 }: PaymentMethodSelectorProps) {
-  const t = useTranslations('payment.methods');
+  const t = useTranslations('payment');
   const tPayment = useTranslations('payment');
 
   const paymentMethods: PaymentMethod[] = [

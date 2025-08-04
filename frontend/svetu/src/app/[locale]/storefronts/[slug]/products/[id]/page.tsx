@@ -41,7 +41,7 @@ export default function StorefrontProductPage({ params }: Props) {
   const locale = useLocale();
   const t = useTranslations('products');
   const tCommon = useTranslations('common');
-  const tStorefronts.products = useTranslations('storefronts.products');
+  const tStorefronts.products = useTranslations('storefronts');
   const tCart = useTranslations('cart');
   const tStorefronts = useTranslations('storefronts');
   const tOrders = useTranslations('orders');

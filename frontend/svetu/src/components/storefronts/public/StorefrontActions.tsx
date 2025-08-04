@@ -14,7 +14,6 @@ interface StorefrontActionsProps {
 export default function StorefrontActions({ storefront, isOwner }: StorefrontActionsProps) {
   const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
-  const tStorefronts.payment_methods = useTranslations('storefronts.payment_methods');
   const locale = useLocale();
   const router = useRouter();
   const { user } = useAuth();

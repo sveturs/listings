@@ -25,7 +25,7 @@ const STEPS = [
 ];
 
 export default function ProductWizard({ storefrontSlug }: ProductWizardProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const { state, goToStep, nextStep, prevStep } = useCreateProduct();
 
   const renderStepContent = () => {

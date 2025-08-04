@@ -21,7 +21,7 @@ export default function Pagination({
   onItemsPerPageChange,
   itemsPerPageOptions = [25, 50, 100, 200, 500],
 }: PaginationProps) {
-  const t = useTranslations('admin.pagination');
+  const t = useTranslations('admin');
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];

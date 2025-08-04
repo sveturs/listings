@@ -40,9 +40,9 @@ export default function AttributesStep({
   onNext,
   onBack,
 }: AttributesStepProps) {
-  const t = useTranslations('create_listing.attributes.groups');
+  const t = useTranslations('create_listing');
   const tCommon = useTranslations('common');
-  const tCreate_listing.attributes = useTranslations('create_listing.attributes');
+  const tCreate_listing.attributes = useTranslations('create_listing');
   const locale = useLocale();
   const { state, dispatch } = useCreateListing();
   const [attributes, setAttributes] = useState<CategoryAttributeMapping[]>([]);

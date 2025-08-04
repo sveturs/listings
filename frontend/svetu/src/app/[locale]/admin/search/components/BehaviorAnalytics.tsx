@@ -34,7 +34,7 @@ ChartJS.register(
 );
 
 export default function BehaviorAnalytics() {
-  const t = useTranslations('admin.search.behavior');
+  const t = useTranslations('admin');
   const tCommon = useTranslations('common');
 
   const [loading, setLoading] = useState(true);

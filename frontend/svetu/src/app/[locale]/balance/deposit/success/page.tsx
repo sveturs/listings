@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { BalanceWidget } from '@/components/balance/BalanceWidget';
 
 export default function DepositSuccessPage() {
-  const t = useTranslations('admin.balance');
+  const t = useTranslations('admin');
   const tProfile = useTranslations('profile');
   const locale = useLocale();
   const searchParams = useSearchParams();

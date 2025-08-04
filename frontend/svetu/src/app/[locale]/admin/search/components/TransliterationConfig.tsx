@@ -74,7 +74,7 @@ const BUILTIN_RULES = {
 };
 
 export default function TransliterationConfig() {
-  const t = useTranslations('admin.search.transliteration');
+  const t = useTranslations('admin');
   const [selectedLanguage, setSelectedLanguage] = useState<'ru' | 'sr'>('ru');
   const [testText, setTestText] = useState('');
   const [transliteratedText, setTransliteratedText] = useState('');

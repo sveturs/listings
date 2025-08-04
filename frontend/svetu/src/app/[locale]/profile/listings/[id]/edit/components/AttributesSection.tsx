@@ -45,7 +45,7 @@ export function AttributesSection({
   errors = {},
   onChange,
 }: AttributesSectionProps) {
-  const t = useTranslations('profile.listings.editListing');
+  const t = useTranslations('profile');
   const [attributes, setAttributes] = useState<CategoryAttribute[]>([]);
   const [loading, setLoading] = useState(true);
 

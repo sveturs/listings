@@ -22,9 +22,9 @@ export default function EditPhotosStep({
   onNext,
   onBack,
 }: EditPhotosStepProps) {
-  const t = useTranslations('storefronts.products');
-  const tStorefronts.products.errors = useTranslations('storefronts.products.errors');
-  const tStorefronts.products.steps = useTranslations('storefronts.products.steps');
+  const t = useTranslations('storefronts');
+  const tStorefronts.products.errors = useTranslations('storefronts');
+  const tStorefronts.products.steps = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const {
     state,

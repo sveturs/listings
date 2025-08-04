@@ -13,9 +13,9 @@ interface PhotosStepProps {
 }
 
 export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
-  const t = useTranslations('create_listing.photos');
-  const tCreate_listing.photos.tips = useTranslations('create_listing.photos.tips');
-  const tCreate_listing.photos.trust_tip = useTranslations('create_listing.photos.trust_tip');
+  const t = useTranslations('create_listing');
+  const tCreate_listing.photos.tips = useTranslations('create_listing');
+  const tCreate_listing.photos.trust_tip = useTranslations('create_listing');
   const tCommon = useTranslations('common');
   const { state, dispatch } = useCreateListing();
   const [photos, setPhotos] = useState<string[]>(state.images || []);

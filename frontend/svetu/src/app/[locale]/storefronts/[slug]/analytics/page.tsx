@@ -53,7 +53,7 @@ ChartJS.register(
 export default function StorefrontAnalyticsPage() {
   const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
-  const tAdmin.common = useTranslations('admin.common');
+  const tAdmin.common = useTranslations('admin');
   const locale = useLocale();
   const router = useRouter();
   const params = useParams();

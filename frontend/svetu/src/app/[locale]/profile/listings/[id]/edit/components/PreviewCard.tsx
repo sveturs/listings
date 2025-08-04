@@ -23,7 +23,7 @@ interface PreviewCardProps {
 }
 
 export function PreviewCard({ data, viewMode }: PreviewCardProps) {
-  const t = useTranslations('profile.listings.editListing');
+  const t = useTranslations('profile');
 
   const mainImage = data.images.find((img) => img.is_main) || data.images[0];
 

@@ -36,7 +36,7 @@ export default function ProductsPage({ params }: PageProps) {
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
   }, [params]);
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tStorefronts = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const tCommon = useTranslations('common');

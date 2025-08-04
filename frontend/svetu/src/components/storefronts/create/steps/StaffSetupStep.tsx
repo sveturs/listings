@@ -21,8 +21,7 @@ export default function StaffSetupStep({
   onNext,
   onBack,
 }: StaffSetupStepProps) {
-  const t = useTranslations('create_storefront.staff_setup');
-  const tCreate_storefront.errors = useTranslations('create_storefront.errors');
+  const t = useTranslations('create_storefront');
   const tPermissions = useTranslations('permissions');
   const tRoles = useTranslations('roles');
   const tCommon = useTranslations('common');

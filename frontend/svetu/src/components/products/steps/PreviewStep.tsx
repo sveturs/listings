@@ -26,9 +26,9 @@ export default function PreviewStep({
   onBack,
   storefrontSlug,
 }: PreviewStepProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
-  const tStorefronts.products.privacy = useTranslations('storefronts.products.privacy');
+  const tStorefronts.products.privacy = useTranslations('storefronts');
   const locale = useLocale();
   const router = useRouter();
   const { state } = useCreateProduct();

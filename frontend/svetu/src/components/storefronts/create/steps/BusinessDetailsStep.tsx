@@ -13,8 +13,8 @@ export default function BusinessDetailsStep({
   onNext,
   onBack,
 }: BusinessDetailsStepProps) {
-  const t = useTranslations('create_storefront.business_details');
-  const tCreate_storefront.errors = useTranslations('create_storefront.errors');
+  const t = useTranslations('create_storefront');
+  const tCreate_storefront.errors = useTranslations('create_storefront');
   const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [errors, setErrors] = useState<Record<string, string>>({});

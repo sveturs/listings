@@ -18,7 +18,7 @@ interface SearchConfig {
 }
 
 export default function SearchConfig() {
-  const t = useTranslations('admin.search.config');
+  const t = useTranslations('admin');
   const [config, setConfig] = useState<SearchConfig>({
     fuzzySearchEnabled: true,
     fuzzySearchThreshold: 0.3,

@@ -12,8 +12,8 @@ export default function EditAttributesStep({
   onNext,
   onBack,
 }: EditAttributesStepProps) {
-  const t = useTranslations('storefronts.products');
-  const tStorefronts.products.steps = useTranslations('storefronts.products.steps');
+  const t = useTranslations('storefronts');
+  const tStorefronts.products.steps = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const { state } = useEditProduct();
 

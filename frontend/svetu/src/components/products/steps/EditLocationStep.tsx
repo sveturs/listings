@@ -25,7 +25,7 @@ export default function EditLocationStep({
   onNext,
   onBack,
 }: EditLocationStepProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const { state, setLocation, setError, clearError } = useEditProduct();
 

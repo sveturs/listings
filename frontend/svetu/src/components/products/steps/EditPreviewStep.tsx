@@ -28,9 +28,9 @@ export default function EditPreviewStep({
   storefrontSlug,
   productId,
 }: EditPreviewStepProps) {
-  const t = useTranslations('storefronts.products');
-  const tStorefronts.products.errors = useTranslations('storefronts.products.errors');
-  const tStorefronts.products.steps = useTranslations('storefronts.products.steps');
+  const t = useTranslations('storefronts');
+  const tStorefronts.products.errors = useTranslations('storefronts');
+  const tStorefronts.products.steps = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const router = useRouter();

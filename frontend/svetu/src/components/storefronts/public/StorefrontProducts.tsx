@@ -19,9 +19,7 @@ interface StorefrontProductsProps {
 
 export default function StorefrontProducts({ storefrontSlug }: StorefrontProductsProps) {
   const t = useTranslations('products');
-  const tStorefronts.products = useTranslations('storefronts.products');
   const tStorefronts = useTranslations('storefronts');
-  const tCommon = useTranslations('common');
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const [products, setProducts] = useState<StorefrontProduct[]>([]);

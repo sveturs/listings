@@ -27,7 +27,7 @@ export default function EditProductWizard({
   storefrontSlug,
   productId,
 }: EditProductWizardProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const { state, goToStep, nextStep, prevStep } = useEditProduct();
 
   const renderStepContent = () => {

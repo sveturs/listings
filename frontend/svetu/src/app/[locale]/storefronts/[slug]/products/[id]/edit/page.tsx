@@ -24,8 +24,8 @@ function EditProductPageContent({
   slug: string;
   productId: number;
 }) {
-  const t = useTranslations('storefronts.products');
-  const tStorefronts.products.errors = useTranslations('storefronts.products.errors');
+  const t = useTranslations('storefronts');
+  const tStorefronts.products.errors = useTranslations('storefronts');
   const { state, loadProduct, dispatch } = useEditProduct();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +109,7 @@ function EditProductPageContent({
 export default function EditProductPage({ params }: PageProps) {
   const [slug, setSlug] = useState<string>('');
   const [productId, setProductId] = useState<number>(0);
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const locale = useLocale();
 
   useEffect(() => {

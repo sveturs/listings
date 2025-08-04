@@ -18,7 +18,7 @@ export default function StepWizard({
   currentStep,
   onStepClick,
 }: StepWizardProps) {
-  const t = useTranslations('create_listing.hints');
+  const t = useTranslations('create_listing');
 
   return (
     <div className="w-full mb-8">

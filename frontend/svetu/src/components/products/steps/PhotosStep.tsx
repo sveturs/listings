@@ -12,7 +12,7 @@ interface PhotosStepProps {
 }
 
 export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const { state, setImages, setError, clearError } = useCreateProduct();
   const [images, setImagesState] = useState<File[]>(state.images || []);

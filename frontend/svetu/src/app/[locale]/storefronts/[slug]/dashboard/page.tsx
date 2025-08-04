@@ -38,9 +38,9 @@ import {
 export default function StorefrontDashboardPage() {
   const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
-  const tAdmin.common = useTranslations('admin.common');
-  const tStorefronts.products = useTranslations('storefronts.products');
-  const tStorefronts.delivery = useTranslations('storefronts.delivery');
+  const tAdmin.common = useTranslations('admin');
+  const tStorefronts.products = useTranslations('storefronts');
+  const tStorefronts.delivery = useTranslations('storefronts');
   const locale = useLocale();
   const router = useRouter();
   const params = useParams();

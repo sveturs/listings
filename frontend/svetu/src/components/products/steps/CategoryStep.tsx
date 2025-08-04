@@ -15,7 +15,7 @@ interface CategoryStepProps {
 }
 
 export default function CategoryStep({ onNext }: CategoryStepProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const { state, setCategory, setError, clearError } = useCreateProduct();
   const [allCategories, setAllCategories] = useState<MarketplaceCategory[]>([]);

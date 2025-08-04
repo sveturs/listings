@@ -26,7 +26,7 @@ interface SynonymResponse {
 }
 
 export default function SynonymManager() {
-  const t = useTranslations('admin.search.synonyms');
+  const t = useTranslations('admin');
   const [synonyms, setSynonyms] = useState<Synonym[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'ru' | 'sr'>(

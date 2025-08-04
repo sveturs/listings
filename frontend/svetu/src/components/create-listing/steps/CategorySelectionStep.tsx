@@ -101,7 +101,7 @@ interface CategorySelectionStepProps {
 export default function CategorySelectionStep({
   onNext,
 }: CategorySelectionStepProps) {
-  const t = useTranslations('create_listing.category');
+  const t = useTranslations('create_listing');
   const tMarketplace = useTranslations('marketplace');
   const tCommon = useTranslations('common');
   const locale = useLocale();

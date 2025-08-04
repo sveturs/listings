@@ -40,7 +40,7 @@ export default function PaymentDeliveryStep({
   onNext,
   onBack,
 }: PaymentDeliveryStepProps) {
-  const t = useTranslations('create_storefront.payment_delivery');
+  const t = useTranslations('create_storefront');
   const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [newDeliveryOption, setNewDeliveryOption] = useState<DeliveryOption>({

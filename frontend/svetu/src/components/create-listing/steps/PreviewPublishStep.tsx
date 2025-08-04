@@ -17,10 +17,10 @@ export default function PreviewPublishStep({
   onBack,
   onComplete: _onComplete,
 }: PreviewPublishStepProps) {
-  const t = useTranslations('create_listing.preview');
-  const tCreate_listing.errors = useTranslations('create_listing.errors');
+  const t = useTranslations('create_listing');
+  const tCreate_listing.errors = useTranslations('create_listing');
   const tCreate_listing = useTranslations('create_listing');
-  const tCreate_listing.preview.rules = useTranslations('create_listing.preview.rules');
+  const tCreate_listing.preview.rules = useTranslations('create_listing');
   const tCommon = useTranslations('common');
   const router = useRouter();
   const { state, saveDraft, publish } = useCreateListing();

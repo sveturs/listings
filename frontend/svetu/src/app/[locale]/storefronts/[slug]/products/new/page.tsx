@@ -16,7 +16,7 @@ interface PageProps {
 
 export default function NewProductPage({ params }: PageProps) {
   const [slug, setSlug] = useState<string>('');
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const locale = useLocale();
 

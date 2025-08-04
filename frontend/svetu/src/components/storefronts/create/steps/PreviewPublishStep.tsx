@@ -22,11 +22,11 @@ export default function PreviewPublishStep({
   onBack,
   onComplete,
 }: PreviewPublishStepProps) {
-  const t = useTranslations('create_storefront.steps');
-  const tCreate_storefront.preview = useTranslations('create_storefront.preview');
-  const tCreate_storefront.basic_info = useTranslations('create_storefront.basic_info');
-  const tCreate_storefront.business_details = useTranslations('create_storefront.business_details');
-  const tCreate_storefront.location = useTranslations('create_storefront.location');
+  const t = useTranslations('create_storefront');
+  const tCreate_storefront.preview = useTranslations('create_storefront');
+  const tCreate_storefront.basic_info = useTranslations('create_storefront');
+  const tCreate_storefront.business_details = useTranslations('create_storefront');
+  const tCreate_storefront.location = useTranslations('create_storefront');
   const tCommon = useTranslations('common');
   const tPermissions = useTranslations('permissions');
   const { formData, isSubmitting, submitStorefront } =

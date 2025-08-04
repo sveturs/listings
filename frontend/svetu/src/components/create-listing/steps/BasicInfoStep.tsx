@@ -11,9 +11,9 @@ interface BasicInfoStepProps {
 
 export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
   const t = useTranslations('create_listing');
-  const tCreate_listing.basic_info = useTranslations('create_listing.basic_info');
+  const tCreate_listing.basic_info = useTranslations('create_listing');
   const tCommon = useTranslations('common');
-  const tCreate_listing.regional_tips = useTranslations('create_listing.regional_tips');
+  const tCreate_listing.regional_tips = useTranslations('create_listing');
   const { state, setBasicInfo, setLocalization } = useCreateListing();
   const [formData, setFormData] = useState({
     title: state.title || '',
