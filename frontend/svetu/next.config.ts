@@ -125,7 +125,7 @@ const nextConfig: NextConfig = {
       },
       // Кэширование модулей переводов
       {
-        source: '/_next/static/chunks/src_messages_*.js',
+        source: '/_next/static/chunks/src_messages_:path*.js',
         headers: [
           {
             key: 'Cache-Control',
