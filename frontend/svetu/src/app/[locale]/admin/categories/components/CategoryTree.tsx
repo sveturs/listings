@@ -13,6 +13,7 @@ interface CategoryTreeProps {
   onDelete: (category: Category) => void;
   onManageAttributes?: (category: Category) => void;
   onManageKeywords?: (category: Category) => void;
+  onManageVariantAttributes?: (category: Category) => void;
   onReorder: (orderedIds: number[]) => void;
   onMove: (categoryId: number, newParentId: number) => void;
 }
@@ -24,6 +25,7 @@ interface CategoryNodeProps {
   onDelete: (category: Category) => void;
   onManageAttributes?: (category: Category) => void;
   onManageKeywords?: (category: Category) => void;
+  onManageVariantAttributes?: (category: Category) => void;
   categories: Category[];
   isLast: boolean;
   parentLines: boolean[];
@@ -36,6 +38,7 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
   onDelete,
   onManageAttributes,
   onManageKeywords,
+  onManageVariantAttributes,
   categories,
   isLast,
   parentLines,
@@ -245,6 +248,27 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
                 </a>
               </li>
             )}
+            {onManageVariantAttributes && (
+              <li>
+                <a onClick={() => onManageVariantAttributes(category)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
+                    />
+                  </svg>
+                  {t('categories.variantAttributes')}
+                </a>
+              </li>
+            )}
             <li className="divider my-0"></li>
             <li>
               <a
@@ -309,6 +333,7 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
               onDelete={onDelete}
               onManageAttributes={onManageAttributes}
               onManageKeywords={onManageKeywords}
+              onManageVariantAttributes={onManageVariantAttributes}
               categories={categories}
               isLast={index === childCategories.length - 1}
               parentLines={[...parentLines, !isLast]}
@@ -326,6 +351,7 @@ export default function CategoryTree({
   onDelete,
   onManageAttributes,
   onManageKeywords,
+  onManageVariantAttributes,
   onReorder: _onReorder,
   onMove: _onMove,
 }: CategoryTreeProps) {
@@ -386,6 +412,7 @@ export default function CategoryTree({
           onDelete={onDelete}
           onManageAttributes={onManageAttributes}
           onManageKeywords={onManageKeywords}
+          onManageVariantAttributes={onManageVariantAttributes}
           categories={filteredCategories}
           isLast={index === rootCategories.length - 1}
           parentLines={[]}

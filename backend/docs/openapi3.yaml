@@ -1849,6 +1849,95 @@ paths:
       summary: Auto-translate category
       tags:
         - marketplace-admin-categories
+  "/api/v1/admin/categories/{id}/variant-attributes":
+    get:
+      description: Gets list of variant attributes available for products in this category
+      parameters:
+        - description: Category ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Category variant attributes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.CategoryVariantAttri\
+                            bute"
+                        type: array
+                    type: object
+        "400":
+          description: marketplace.invalidCategoryId
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.getCategoryVariantAttributesError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get category variant attributes
+      tags:
+        - marketplace-admin-categories
+    put:
+      description: Updates the list of variant attributes available for products in
+        this category
+      parameters:
+        - description: Category ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_domain_models.CategoryVariantAttri\
+                butesRequest"
+        description: List of variant attributes with their settings
+        required: true
+      responses:
+        "200":
+          description: marketplace.categoryVariantAttributesUpdated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        type: string
+                    type: object
+        "400":
+          description: marketplace.invalidData
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.updateCategoryVariantAttributesError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Update category variant attributes
+      tags:
+        - marketplace-admin-categories
   "/api/v1/admin/categories/keywords/{keyword_id}":
     delete:
       description: Deletes a keyword from category
@@ -17591,6 +17680,45 @@ components:
           additionalProperties:
             type: string
           type: object
+      type: object
+    backend_internal_domain_models.CategoryVariantAttribute:
+      properties:
+        category_id:
+          type: integer
+        created_at:
+          type: string
+        id:
+          type: integer
+        is_required:
+          type: boolean
+        sort_order:
+          type: integer
+        updated_at:
+          type: string
+        variant_attribute:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_models.ProductVariantAttrib\
+                ute"
+          description: Вложенные данные для удобства
+        variant_attribute_name:
+          type: string
+      type: object
+    backend_internal_domain_models.CategoryVariantAttributeUpdate:
+      properties:
+        is_required:
+          type: boolean
+        sort_order:
+          type: integer
+        variant_attribute_name:
+          type: string
+      type: object
+    backend_internal_domain_models.CategoryVariantAttributesRequest:
+      properties:
+        variant_attributes:
+          items:
+            $ref: "#/components/schemas/backend_internal_domain_models.CategoryVariantAttri\
+              buteUpdate"
+          type: array
       type: object
     backend_internal_domain_models.ChatAttachment:
       properties:

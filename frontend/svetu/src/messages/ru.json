@@ -1340,7 +1340,17 @@
       "cancel": "Отмена",
       "loadMappingsError": "Ошибка загрузки связей",
       "saveMappingsSuccess": "Связи успешно сохранены",
-      "saveMappingsError": "Ошибка сохранения связей"
+      "saveMappingsError": "Ошибка сохранения связей",
+      "dragDropTitle": "Перетаскивание атрибутов",
+      "dragDropHint": "Перетащите атрибуты из левой колонки в правую для создания связей. Используйте автоопределение для быстрого поиска похожих атрибутов.",
+      "availableAttributes": "Доступные атрибуты",
+      "linkedAttributes": "Связанные атрибуты",
+      "linkedWith": "Связано с",
+      "noMatchingAttributes": "Нет подходящих атрибутов",
+      "noAvailableAttributes": "Нет доступных атрибутов",
+      "noLinkedAttributes": "Нет связанных атрибутов. Перетащите атрибуты сюда.",
+      "autoDetectError": "Ошибка автоопределения",
+      "mappingsUpdated": "Связи обновлены"
     },
     "attributeGroups": {
       "title": "Группы атрибутов",

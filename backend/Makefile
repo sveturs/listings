@@ -79,7 +79,28 @@ lint-lll:
 	@echo "Running lll linter only..."
 	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --enable-only=lll ./...
 
-pre-commit: format-check lint
+test:
+	@echo "Running Go tests..."
+	go test ./... -v -count=1
+	@echo "✅ Tests completed!"
+
+test-short:
+	@echo "Running Go tests (short mode)..."
+	go test ./... -short -run "^(Test|Benchmark).*" -skip "Integration|OpenSearch"
+	@echo "✅ Short tests completed!"
+
+test-unit:
+	@echo "Running unit tests only..."
+	go test ./... -run "^(Test|Benchmark).*" -skip "Integration|OpenSearch|RealWorld"
+	@echo "✅ Unit tests completed!"
+
+test-coverage:
+	@echo "Running Go tests with coverage..."
+	go test ./... -cover -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "✅ Coverage report generated: coverage.html"
+
+pre-commit: format-check lint test-short
 	@echo "✅ Pre-commit checks passed!"
 
 migrate_up:
