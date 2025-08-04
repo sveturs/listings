@@ -1,5 +1,5 @@
 // Автосгенерированный файл для модульной загрузки переводов
-// Сгенерирован: 2025-08-04T08:43:46.168Z
+// Сгенерирован: 2025-08-04T08:52:02.412Z
 // НЕ РЕДАКТИРУЙТЕ ВРУЧНУЮ!
 
 // Базовые переводы (загружаются всегда)
@@ -11,9 +11,12 @@ export type TranslationModule =
   | 'auth'
   | 'cars'
   | 'cart'
+  | 'chat'
   | 'common'
   | 'marketplace'
   | 'misc'
+  | 'realEstate'
+  | 'services'
   | 'storefront';
 
 // Карта модулей для динамической загрузки
@@ -22,8 +25,11 @@ export const moduleLoaders = {
   'auth': () => import('./auth.json'),
   'cars': () => import('./cars.json'),
   'cart': () => import('./cart.json'),
+  'chat': () => import('./chat.json'),
   'marketplace': () => import('./marketplace.json'),
   'misc': () => import('./misc.json'),
+  'realEstate': () => import('./realEstate.json'),
+  'services': () => import('./services.json'),
   'storefront': () => import('./storefront.json')
 };
 

@@ -1,8 +1,10 @@
 import { getTranslations } from 'next-intl/server';
+import { NextIntlClientProvider } from 'next-intl';
 import { UnifiedSearchService } from '@/services/unifiedSearch';
 import configManager from '@/config';
 import HomePageClient from './HomePageClient';
 import { getHomePageData } from './actions';
+import { loadMessages } from '@/lib/i18n/loadMessages';
 
 export default async function Home({
   params,
@@ -11,6 +13,15 @@ export default async function Home({
 }) {
   const { locale } = await params;
   const t = await getTranslations('home');
+
+  // Проверяем, используем ли модульную систему
+  const useModular = process.env.USE_MODULAR_I18N === 'true';
+  
+  // Загружаем необходимые модули для главной страницы
+  let additionalMessages = {};
+  if (useModular) {
+    additionalMessages = await loadMessages(locale as any, ['marketplace']);
+  }
 
   // Проверяем feature flags
   const _paymentsEnabled = configManager.isFeatureEnabled('enablePayments');
@@ -28,50 +39,28 @@ export default async function Home({
 
   if (!skipSSR) {
     try {
-      // SSR загрузка данных через унифицированный поиск с таймаутом и обработкой ошибок
-      const [marketplaceResult, homePageResult] = await Promise.allSettled([
-        UnifiedSearchService.search({
-          query: '',
-          product_types: ['marketplace', 'storefront'],
-          sort_by: 'date',
-          sort_order: 'desc',
-          page: 1,
-          limit: 20,
-        }),
-        getHomePageData(locale),
-      ]);
-
-      if (marketplaceResult.status === 'fulfilled') {
-        const _marketplaceData = marketplaceResult.value;
-      } else {
-        console.error(
-          'SSR marketplace search failed:',
-          marketplaceResult.reason
-        );
-      }
-
-      if (homePageResult.status === 'fulfilled') {
-        homePageData = homePageResult.value;
-      } else {
-        console.error(
-          'SSR home page data fetch failed:',
-          homePageResult.reason
-        );
-      }
-    } catch (err) {
-      error = err as Error;
-      console.error('SSR fetch failed:', error);
-      // Не падаем, просто загрузим данные на клиенте
+      homePageData = await getHomePageData(locale);
+    } catch (e) {
+      console.error('[SSR] Failed to load homepage data:', e);
+      error = e instanceof Error ? e : new Error('Failed to load data');
     }
   }
 
-  return (
+  return useModular ? (
+    <NextIntlClientProvider messages={additionalMessages}>
+      <HomePageClient
+        initialData={homePageData}
+        error={error}
+        locale={locale}
+        skipSSR={skipSSR}
+      />
+    </NextIntlClientProvider>
+  ) : (
     <HomePageClient
-      title={t('marketplace')}
-      description={t('description')}
-      createListingText={t('createListing')}
-      homePageData={homePageData}
+      initialData={homePageData}
+      error={error}
       locale={locale}
+      skipSSR={skipSSR}
     />
   );
 }
