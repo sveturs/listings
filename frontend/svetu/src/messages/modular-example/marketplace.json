@@ -4,7 +4,7 @@
   "latestListings": "Последние объявления",
   "allCategories": "Все категории",
   "searchPlaceholder": "Поиск товаров и услуг...",
-  
+
   "listing": {
     "title": "Название",
     "description": "Описание",
@@ -25,7 +25,7 @@
       "pending": "На модерации"
     }
   },
-  
+
   "actions": {
     "addToFavorites": "В избранное",
     "removeFromFavorites": "Удалить из избранного",
@@ -38,7 +38,7 @@
     "contactSeller": "Связаться с продавцом",
     "makeOffer": "Предложить цену"
   },
-  
+
   "filters": {
     "title": "Фильтры",
     "priceRange": "Диапазон цен",
@@ -58,7 +58,7 @@
     "activeFilters": "Активные фильтры",
     "clearAll": "Очистить все"
   },
-  
+
   "sort": {
     "relevance": "По релевантности",
     "priceAsc": "Цена: по возрастанию",
@@ -68,7 +68,7 @@
     "viewsDesc": "По просмотрам",
     "distanceAsc": "По расстоянию"
   },
-  
+
   "categories": {
     "all": "Все категории",
     "transport": "Транспорт",
@@ -83,7 +83,7 @@
     "animals": "Животные",
     "other": "Другое"
   },
-  
+
   "seller": {
     "info": "Информация о продавце",
     "name": "Имя",
@@ -95,7 +95,7 @@
     "viewProfile": "Посмотреть профиль",
     "allListings": "Все объявления"
   },
-  
+
   "messages": {
     "listingCreated": "Объявление создано",
     "listingUpdated": "Объявление обновлено",

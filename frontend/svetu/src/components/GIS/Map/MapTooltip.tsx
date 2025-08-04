@@ -14,7 +14,8 @@ const MapTooltip: React.FC<MapTooltipProps> = ({
   visible,
   position,
 }) => {
-  const t = useTranslations();
+  const commonT = useTranslations('common');
+  const t = (key: string) => commonT(`map.${key}`);
 
   if (!visible) return null;
 

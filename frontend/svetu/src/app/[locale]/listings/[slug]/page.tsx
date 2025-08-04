@@ -64,7 +64,7 @@ export default function ListingDetailBySlugPage() {
   const params = useParams();
   const slug = params?.slug as string;
   const locale = params?.locale as string;
-  const t = useTranslations('marketplace.listing');
+  const t = useTranslations('marketplace');
   const _router = useRouter();
 
   const [listing, setListing] = useState<Listing | null>(null);
@@ -87,11 +87,11 @@ export default function ListingDetailBySlugPage() {
         if (!response.error && response.data) {
           setListing(response.data.data || response.data);
         } else {
-          setError(t('notFound'));
+          setError(t('listing.notFound'));
         }
       } catch (err) {
         console.error('Error fetching listing:', err);
-        setError(t('loadError'));
+        setError(t('listing.loadError'));
       } finally {
         setLoading(false);
       }
@@ -112,9 +112,9 @@ export default function ListingDetailBySlugPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">{t('notFound')}</h1>
+          <h1 className="text-2xl font-bold mb-4">{t('listing.notFound')}</h1>
           <Link href="/" className="btn btn-primary">
-            {t('backToHome')}
+            {t('listing.backToHome')}
           </Link>
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function ListingDetailBySlugPage() {
               <div className="card-body">
                 <h1 className="card-title text-3xl">{listing.title}</h1>
                 <div className="flex items-center gap-4 text-sm text-base-content/70">
-                  <span>{t('views', { count: listing.views_count })}</span>
+                  <span>{t('listing.views', { count: listing.views_count })}</span>
                   <span>•</span>
                   <span>
                     {new Date(listing.created_at).toLocaleDateString()}
@@ -334,7 +334,7 @@ export default function ListingDetailBySlugPage() {
                   <div>
                     <p className="font-semibold">{listing.user.name}</p>
                     <p className="text-sm text-base-content/70">
-                      {t('memberSince', {
+                      {t('listing.memberSince', {
                         date: new Date(listing.created_at).getFullYear(),
                       })}
                     </p>
@@ -342,7 +342,7 @@ export default function ListingDetailBySlugPage() {
                 </div>
 
                 <button className="btn btn-primary w-full">
-                  {t('contactSeller')}
+                  {t('listing.contactSeller')}
                 </button>
 
                 {/* Location */}
@@ -368,7 +368,7 @@ export default function ListingDetailBySlugPage() {
                           d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
                         />
                       </svg>
-                      {t('location')}
+                      {t('listing.location')}
                     </h3>
                     <p className="text-base-content/70">{listing.location}</p>
                   </div>

@@ -35,7 +35,7 @@ export default function CategoryVariantGenerator({
   onGenerate,
   onCancel,
 }: CategoryVariantGeneratorProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
 
   // Фильтруем атрибуты, подходящие для вариантов, которые были выбраны на шаге Attributes
   const stockAttributes = React.useMemo(() => {
@@ -81,7 +81,7 @@ export default function CategoryVariantGenerator({
 
       // Если это строка с запятыми, считаем количество
       if (typeof value === 'string' && value.includes(',')) {
-        return value.split(',').filter(Boolean).length > 1;
+        return value.split('products.,').filter(Boolean).length > 1;
       }
 
       return false;
@@ -271,8 +271,8 @@ export default function CategoryVariantGenerator({
             />
           </svg>
           <div>
-            <h3 className="font-bold">{t('noVariantAttributes')}</h3>
-            <div className="text-xs">{t('setupAttributesFirst')}</div>
+            <h3 className="font-bold">{t('products.noVariantAttributes')}</h3>
+            <div className="text-xs">{t('products.setupAttributesFirst')}</div>
           </div>
         </div>
 
@@ -301,13 +301,13 @@ export default function CategoryVariantGenerator({
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">
-            {t('configureStockAndPrices')}
+            {t('products.configureStockAndPrices')}
           </h3>
           <button
             onClick={() => setShowStockManager(false)}
             className="btn btn-outline btn-sm"
           >
-            ← {t('backToSettings')}
+            ← {t('products.backToSettings')}
           </button>
         </div>
 
@@ -321,13 +321,13 @@ export default function CategoryVariantGenerator({
             onClick={() => setShowStockManager(false)}
             className="btn btn-outline"
           >
-            {t('cancel')}
+            {t('products.cancel')}
           </button>
           <button
             onClick={() => handleVariantsConfirm(generatedVariants)}
             className="btn btn-primary"
           >
-            {t('confirmVariants')}
+            {t('products.confirmVariants')}
           </button>
         </div>
       </div>
@@ -352,7 +352,7 @@ export default function CategoryVariantGenerator({
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             ></path>
           </svg>
-          <span>{t('attributesFromPreviousStep')}</span>
+          <span>{t('products.attributesFromPreviousStep')}</span>
         </div>
 
         {stockAttributes.map((attr) => {
@@ -413,11 +413,11 @@ export default function CategoryVariantGenerator({
       {/* Настройки остатков */}
       <div className="divider"></div>
       <div className="space-y-4">
-        <h4 className="font-medium text-base-content">{t('stockSettings')}</h4>
+        <h4 className="font-medium text-base-content">{t('products.stockSettings')}</h4>
 
         <div className="form-control">
           <label className="label">
-            <span className="label-text">{t('defaultStockQuantity')}</span>
+            <span className="label-text">{t('products.defaultStockQuantity')}</span>
           </label>
           <input
             type="number"
@@ -446,7 +446,7 @@ export default function CategoryVariantGenerator({
                 }))
               }
             />
-            <span className="label-text">{t('useIndividualQuantities')}</span>
+            <span className="label-text">{t('products.useIndividualQuantities')}</span>
           </label>
         </div>
       </div>
@@ -466,20 +466,20 @@ export default function CategoryVariantGenerator({
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>{t('willGenerateVariants', { count: getTotalVariants() })}</span>
+        <span>{t('products.willGenerateVariants', { count: getTotalVariants() })}</span>
       </div>
 
       {/* Кнопки */}
       <div className="flex justify-end space-x-2">
         <button onClick={onCancel} className="btn btn-outline">
-          {t('cancel')}
+          {t('products.cancel')}
         </button>
         <button
           onClick={generateVariants}
           disabled={getTotalVariants() === 0}
           className="btn btn-primary"
         >
-          {t('generateVariants')}
+          {t('products.generateVariants')}
         </button>
       </div>
     </div>

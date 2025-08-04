@@ -27,7 +27,7 @@ export default function RangeAttribute({
   error,
   locale = 'ru',
 }: RangeAttributeProps) {
-  const t = useTranslations('marketplace.create');
+  const t = useTranslations('marketplace');
   const [minValue, setMinValue] = useState<string>('');
   const [maxValue, setMaxValue] = useState<string>('');
 
@@ -102,14 +102,14 @@ export default function RangeAttribute({
       <div className="flex gap-2 items-center">
         <div className="form-control flex-1">
           <label className="label py-0">
-            <span className="label-text text-xs">{t('from')}</span>
+            <span className="label-text text-xs">{t('create.from')}</span>
           </label>
           <input
             type="number"
             value={minValue}
             onChange={handleMinChange}
             className={`input input-bordered ${error || hasValidationError() ? 'input-error' : ''}`}
-            placeholder={t('min')}
+            placeholder={t('create.min')}
             min={attribute.min_value}
             max={attribute.max_value}
           />
@@ -119,14 +119,14 @@ export default function RangeAttribute({
 
         <div className="form-control flex-1">
           <label className="label py-0">
-            <span className="label-text text-xs">{t('to')}</span>
+            <span className="label-text text-xs">{t('create.to')}</span>
           </label>
           <input
             type="number"
             value={maxValue}
             onChange={handleMaxChange}
             className={`input input-bordered ${error || hasValidationError() ? 'input-error' : ''}`}
-            placeholder={t('max')}
+            placeholder={t('create.max')}
             min={attribute.min_value}
             max={attribute.max_value}
           />
@@ -142,7 +142,7 @@ export default function RangeAttribute({
       {hasValidationError() && (
         <label className="label">
           <span className="label-text-alt text-error">
-            {t('minGreaterThanMax')}
+            {t('create.minGreaterThanMax')}
           </span>
         </label>
       )}
@@ -159,10 +159,10 @@ export default function RangeAttribute({
           <span className="label-text-alt text-base-content/50">
             {attribute.min_value !== undefined &&
             attribute.max_value !== undefined
-              ? `${t('allowedRange')}: ${attribute.min_value} - ${attribute.max_value} ${attribute.unit || ''}`
+              ? `${t('create.allowedRange')}: ${attribute.min_value} - ${attribute.max_value} ${attribute.unit || ''}`
               : attribute.min_value !== undefined
-                ? `${t('minAllowed')}: ${attribute.min_value} ${attribute.unit || ''}`
-                : `${t('maxAllowed')}: ${attribute.max_value} ${attribute.unit || ''}`}
+                ? `${t('create.minAllowed')}: ${attribute.min_value} ${attribute.unit || ''}`
+                : `${t('create.maxAllowed')}: ${attribute.max_value} ${attribute.unit || ''}`}
           </span>
         </label>
       ) : null}

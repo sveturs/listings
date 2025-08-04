@@ -47,7 +47,21 @@
     "search": "Search",
     "filter": "Filter",
     "actions": "Actions",
-    "active": "Active"
+    "active": "Active",
+    "characteristics": "Characteristics",
+    "views": "Views",
+    "published": "Published",
+    "viewDetails": "View Details",
+    "contactSeller": "Contact Seller",
+    "addToFavorites": "Add to Favorites",
+    "errors": {
+      "authError": {
+        "title": "Authentication Error",
+        "description": "An error occurred while loading the authentication system. Please try reloading the page.",
+        "details": "Error details",
+        "reload": "Reload page"
+      }
+    }
   },
   "navigation": {
     "home": "Home",

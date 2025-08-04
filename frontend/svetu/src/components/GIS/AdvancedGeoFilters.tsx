@@ -56,7 +56,8 @@ export default function AdvancedGeoFilters({
   currentLocation,
   className = '',
 }: AdvancedGeoFiltersProps) {
-  const t = useTranslations();
+  const commonT = useTranslations('common');
+  const t = (key: string) => commonT(`map.${key}`);
 
   // Travel Time Filter State
   const [travelTimeEnabled, setTravelTimeEnabled] = useState(false);

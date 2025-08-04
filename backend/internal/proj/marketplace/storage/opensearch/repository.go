@@ -669,13 +669,13 @@ func (r *Repository) getListingTranslationsFromDB(ctx context.Context, listingID
 		WHERE entity_type = 'listing' AND entity_id = $1
 		ORDER BY language, field_name
 	`
-	
+
 	rows, err := r.storage.Query(ctx, query, listingID)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения запроса переводов: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var translations []DBTranslation
 	for rows.Next() {
 		var t DBTranslation
@@ -685,11 +685,11 @@ func (r *Repository) getListingTranslationsFromDB(ctx context.Context, listingID
 		}
 		translations = append(translations, t)
 	}
-	
+
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("ошибка итерации по переводам: %w", err)
 	}
-	
+
 	return translations, nil
 }
 
@@ -699,12 +699,12 @@ func (r *Repository) extractSupportedLanguages(translations []DBTranslation) []s
 	for _, t := range translations {
 		langMap[t.Language] = true
 	}
-	
+
 	var languages []string
 	for lang := range langMap {
 		languages = append(languages, lang)
 	}
-	
+
 	return languages
 }
 

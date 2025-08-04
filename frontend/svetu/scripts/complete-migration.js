@@ -11,322 +11,320 @@ const path = require('path');
 // Расширенный маппинг с учетом вложенных структур
 const COMPLETE_MAPPING = {
   // Common module - базовые элементы UI
-  'common': {
+  common: {
     module: 'common',
-    subkeys: ['*'] // Все подключи
+    subkeys: ['*'], // Все подключи
   },
-  'countries': {
+  countries: {
     module: 'common',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'languages': {
+  languages: {
     module: 'common',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'errors': {
+  errors: {
     module: 'common',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'validation': {
+  validation: {
     module: 'common',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'dateTime': {
+  dateTime: {
     module: 'common',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'toast': {
+  toast: {
     module: 'common',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'footer': {
+  footer: {
     module: 'common',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'header': {
+  header: {
     module: 'common',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'navigation': {
+  navigation: {
     module: 'common',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Auth module
-  'auth': {
+  auth: {
     module: 'auth',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'login': {
+  login: {
     module: 'auth',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'register': {
+  register: {
     module: 'auth',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'profile': {
+  profile: {
     module: 'auth',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'resetPassword': {
+  resetPassword: {
     module: 'auth',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'userMenu': {
+  userMenu: {
     module: 'auth',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'settings': {
+  settings: {
     module: 'auth',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Marketplace module
-  'home': {
+  home: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'marketplace': {
+  marketplace: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'listing': {
+  listing: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'listingDetails': {
+  listingDetails: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'listingActions': {
+  listingActions: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'listingForm': {
+  listingForm: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'categories': {
+  categories: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'comparison': {
+  comparison: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'favorites': {
+  favorites: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'priceHistory': {
+  priceHistory: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'seller': {
+  seller: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'buyer': {
+  buyer: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'map': {
+  map: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'filters': {
+  filters: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'sort': {
+  sort: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'search': {
+  search: {
     module: 'marketplace',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Admin module
-  'admin': {
+  admin: {
     module: 'admin',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'attributes': {
+  attributes: {
     module: 'admin',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'attributeGroups': {
+  attributeGroups: {
     module: 'admin',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'variantAttributes': {
+  variantAttributes: {
     module: 'admin',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'analytics': {
+  analytics: {
     module: 'admin',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'moderation': {
+  moderation: {
     module: 'admin',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Storefront module
-  'storefront': {
+  storefront: {
     module: 'storefront',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'store': {
+  store: {
     module: 'storefront',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'products': {
+  products: {
     module: 'storefront',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'dashboard': {
+  dashboard: {
     module: 'storefront',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'orders': {
+  orders: {
     module: 'storefront',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'inventory': {
+  inventory: {
     module: 'storefront',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'shopSettings': {
+  shopSettings: {
     module: 'storefront',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Cars module
-  'cars': {
+  cars: {
     module: 'cars',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'automotive': {
+  automotive: {
     module: 'cars',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'carDetails': {
+  carDetails: {
     module: 'cars',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'carFilters': {
+  carFilters: {
     module: 'cars',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'vinDecoder': {
+  vinDecoder: {
     module: 'cars',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Chat module
-  'chat': {
+  chat: {
     module: 'chat',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'messages': {
+  messages: {
     module: 'chat',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'conversations': {
+  conversations: {
     module: 'chat',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'notifications': {
+  notifications: {
     module: 'chat',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Cart module
-  'cart': {
+  cart: {
     module: 'cart',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'checkout': {
+  checkout: {
     module: 'cart',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'payment': {
+  payment: {
     module: 'cart',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'shipping': {
+  shipping: {
     module: 'cart',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'orderHistory': {
+  orderHistory: {
     module: 'cart',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Real Estate module
-  'realEstate': {
+  realEstate: {
     module: 'realEstate',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'property': {
+  property: {
     module: 'realEstate',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'propertyDetails': {
+  propertyDetails: {
     module: 'realEstate',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'propertyFilters': {
+  propertyFilters: {
     module: 'realEstate',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Services module
-  'services': {
+  services: {
     module: 'services',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'booking': {
+  booking: {
     module: 'services',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'serviceProviders': {
+  serviceProviders: {
     module: 'services',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'serviceCategories': {
+  serviceCategories: {
     module: 'services',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  
+
   // Special cases - остаются в misc
-  'blog': {
+  blog: {
     module: 'misc',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'news': {
+  news: {
     module: 'misc',
-    subkeys: ['*']
+    subkeys: ['*'],
   },
-  'metadata': {
+  metadata: {
     module: 'misc',
-    subkeys: ['*']
-  }
+    subkeys: ['*'],
+  },
 };
 
 // Функция для глубокого слияния объектов
 function deepMerge(target, source) {
   const output = Object.assign({}, target);
   if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
+    Object.keys(source).forEach((key) => {
       if (isObject(source[key])) {
-        if (!(key in target))
-          Object.assign(output, { [key]: source[key] });
-        else
-          output[key] = deepMerge(target[key], source[key]);
+        if (!(key in target)) Object.assign(output, { [key]: source[key] });
+        else output[key] = deepMerge(target[key], source[key]);
       } else {
         Object.assign(output, { [key]: source[key] });
       }
@@ -342,7 +340,7 @@ function isObject(item) {
 // Функция для создания или обновления модуля
 function ensureModule(langDir, moduleName) {
   const modulePath = path.join(langDir, `${moduleName}.json`);
-  
+
   if (!fs.existsSync(modulePath)) {
     fs.writeFileSync(modulePath, '{}');
   }
@@ -351,59 +349,61 @@ function ensureModule(langDir, moduleName) {
 // Главная функция миграции
 async function completeMigration() {
   console.log('🚀 Начинаем полную миграцию переводов\n');
-  
+
   const languages = ['ru', 'en', 'sr'];
   const globalStats = {
     totalMigrated: 0,
     totalRemaining: 0,
-    byModule: {}
+    byModule: {},
   };
-  
+
   for (const lang of languages) {
     console.log(`\n📦 Обработка языка: ${lang}`);
     console.log('─'.repeat(60));
-    
+
     const langDir = path.join(__dirname, '..', 'src', 'messages', lang);
     const miscPath = path.join(langDir, 'misc.json');
-    
+
     if (!fs.existsSync(miscPath)) {
       console.log('  ℹ️  misc.json не найден');
       continue;
     }
-    
+
     // Читаем misc.json
     const miscData = JSON.parse(fs.readFileSync(miscPath, 'utf8'));
     const totalKeys = Object.keys(miscData).length;
     console.log(`  📊 Найдено ${totalKeys} ключей в misc.json`);
-    
+
     // Создаем недостающие модули
-    const requiredModules = new Set(Object.values(COMPLETE_MAPPING).map(m => m.module));
-    requiredModules.forEach(module => {
+    const requiredModules = new Set(
+      Object.values(COMPLETE_MAPPING).map((m) => m.module)
+    );
+    requiredModules.forEach((module) => {
       if (module !== 'misc') {
         ensureModule(langDir, module);
       }
     });
-    
+
     // Распределяем переводы
     const moduleUpdates = {};
     const remainingMisc = {};
     let migratedCount = 0;
-    
+
     // Обрабатываем каждый ключ
     Object.entries(miscData).forEach(([key, value]) => {
       const mapping = COMPLETE_MAPPING[key];
-      
+
       if (mapping && mapping.module !== 'misc') {
         const targetModule = mapping.module;
-        
+
         if (!moduleUpdates[targetModule]) {
           moduleUpdates[targetModule] = {};
         }
-        
+
         // Добавляем весь объект с подключами
         moduleUpdates[targetModule][key] = value;
         migratedCount++;
-        
+
         // Обновляем статистику
         if (!globalStats.byModule[targetModule]) {
           globalStats.byModule[targetModule] = 0;
@@ -413,44 +413,48 @@ async function completeMigration() {
         remainingMisc[key] = value;
       }
     });
-    
+
     // Применяем обновления к модулям
     for (const [moduleName, updates] of Object.entries(moduleUpdates)) {
       const modulePath = path.join(langDir, `${moduleName}.json`);
-      
+
       // Читаем существующий модуль
       let moduleData = {};
       if (fs.existsSync(modulePath)) {
         moduleData = JSON.parse(fs.readFileSync(modulePath, 'utf8'));
       }
-      
+
       // Сливаем с новыми данными
       const mergedData = deepMerge(moduleData, updates);
-      
+
       // Сохраняем
       fs.writeFileSync(modulePath, JSON.stringify(mergedData, null, 2));
-      console.log(`  ✅ Обновлен ${moduleName}.json (+${Object.keys(updates).length} ключей)`);
+      console.log(
+        `  ✅ Обновлен ${moduleName}.json (+${Object.keys(updates).length} ключей)`
+      );
     }
-    
+
     // Обновляем misc.json
     if (Object.keys(remainingMisc).length > 0) {
       fs.writeFileSync(miscPath, JSON.stringify(remainingMisc, null, 2));
-      console.log(`  ⚠️  Осталось в misc.json: ${Object.keys(remainingMisc).length} ключей`);
+      console.log(
+        `  ⚠️  Осталось в misc.json: ${Object.keys(remainingMisc).length} ключей`
+      );
     } else {
       // Удаляем пустой misc.json
       fs.unlinkSync(miscPath);
       console.log(`  🗑️  misc.json удален (все ключи мигрированы)`);
     }
-    
+
     console.log(`  ✨ Мигрировано: ${migratedCount} из ${totalKeys} ключей`);
-    
+
     globalStats.totalMigrated += migratedCount;
     globalStats.totalRemaining += Object.keys(remainingMisc).length;
   }
-  
+
   // Обновляем index файлы
   updateIndexFiles();
-  
+
   // Выводим финальную статистику
   console.log('\n' + '='.repeat(60));
   console.log('📊 ФИНАЛЬНАЯ СТАТИСТИКА');
@@ -458,33 +462,36 @@ async function completeMigration() {
   console.log(`\n✅ Всего мигрировано: ${globalStats.totalMigrated} ключей`);
   console.log(`⚠️  Осталось в misc: ${globalStats.totalRemaining} ключей`);
   console.log(`\n📦 Распределение по модулям:`);
-  
+
   Object.entries(globalStats.byModule)
     .sort((a, b) => b[1] - a[1])
     .forEach(([module, count]) => {
       console.log(`   ${module.padEnd(15)} ${count} ключей`);
     });
-  
+
   console.log('\n✨ Миграция завершена!');
-  
+
   if (globalStats.totalRemaining > 0) {
-    console.log('\n⚠️  Оставшиеся ключи в misc.json требуют ручного распределения');
+    console.log(
+      '\n⚠️  Оставшиеся ключи в misc.json требуют ручного распределения'
+    );
   }
 }
 
 // Функция обновления index файлов
 function updateIndexFiles() {
   const languages = ['ru', 'en', 'sr'];
-  
-  languages.forEach(lang => {
+
+  languages.forEach((lang) => {
     const langDir = path.join(__dirname, '..', 'src', 'messages', lang);
     const indexPath = path.join(langDir, 'index.ts');
-    
+
     // Получаем список модулей
-    const modules = fs.readdirSync(langDir)
-      .filter(file => file.endsWith('.json'))
-      .map(file => file.replace('.json', ''));
-    
+    const modules = fs
+      .readdirSync(langDir)
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => file.replace('.json', ''));
+
     // Генерируем index.ts
     const indexContent = `// Автосгенерированный файл для модульной загрузки переводов
 // Сгенерирован: ${new Date().toISOString()}
@@ -495,13 +502,14 @@ import common from './common.json';
 
 // Типы модулей
 export type TranslationModule = 
-${modules.map(m => `  | '${m}'`).join('\n')};
+${modules.map((m) => `  | '${m}'`).join('\n')};
 
 // Карта модулей для динамической загрузки
 export const moduleLoaders = {
-${modules.filter(m => m !== 'common').map(m => 
-  `  '${m}': () => import('./${m}.json')`
-).join(',\n')}
+${modules
+  .filter((m) => m !== 'common')
+  .map((m) => `  '${m}': () => import('./${m}.json')`)
+  .join(',\n')}
 };
 
 // Функция загрузки модуля
@@ -520,10 +528,10 @@ export async function loadModule(moduleName: TranslationModule) {
 // Экспорт базовых переводов
 export default common;
 `;
-    
+
     fs.writeFileSync(indexPath, indexContent);
   });
-  
+
   console.log('\n✅ Обновлены index.ts файлы для всех языков');
 }
 

@@ -17,7 +17,7 @@ export default function DragDropMappingEditor({
   onSave,
   onCancel,
 }: DragDropMappingEditorProps) {
-  const t = useTranslations('admin.variantAttributes');
+  const t = useTranslations('admin');
   const [availableAttributes, setAvailableAttributes] = useState<Attribute[]>(
     []
   );
@@ -62,7 +62,7 @@ export default function DragDropMappingEditor({
       setAvailableAttributes(available);
     } catch (error) {
       console.error('Failed to load attributes:', error);
-      toast.error(t('loadMappingsError'));
+      toast.error(t('variantAttributes.loadMappingsError'));
     } finally {
       setIsLoading(false);
     }
@@ -174,13 +174,13 @@ export default function DragDropMappingEditor({
         );
         setLinkedAttributes((prev) => [...prev, ...autoDetected]);
 
-        toast.success(t('autoDetectSuccess', { count: autoDetected.length }));
+        toast.success(t('variantAttributes.autoDetectSuccess', { count: autoDetected.length }));
       } else {
-        toast.info(t('autoDetectNoResults'));
+        toast.info(t('variantAttributes.autoDetectNoResults'));
       }
     } catch (error) {
       console.error('Auto-detect failed:', error);
-      toast.error(t('autoDetectError'));
+      toast.error(t('variantAttributes.autoDetectError'));
     }
   };
 
@@ -194,11 +194,11 @@ export default function DragDropMappingEditor({
         linkedAttributes.map((attr) => attr.id)
       );
 
-      toast.success(t('mappingsUpdated'));
+      toast.success(t('variantAttributes.mappingsUpdated'));
       onSave?.();
     } catch (error) {
       console.error('Failed to save mappings:', error);
-      toast.error(t('saveMappingsError'));
+      toast.error(t('variantAttributes.saveMappingsError'));
     } finally {
       setIsSaving(false);
     }
@@ -236,8 +236,8 @@ export default function DragDropMappingEditor({
           />
         </svg>
         <div>
-          <h3 className="font-bold">{t('dragDropTitle')}</h3>
-          <div className="text-xs">{t('dragDropHint')}</div>
+          <h3 className="font-bold">{t('variantAttributes.dragDropTitle')}</h3>
+          <div className="text-xs">{t('variantAttributes.dragDropHint')}</div>
         </div>
       </div>
 
@@ -245,11 +245,11 @@ export default function DragDropMappingEditor({
         {/* Доступные атрибуты */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <h3 className="font-semibold">{t('availableAttributes')}</h3>
+            <h3 className="font-semibold">{t('variantAttributes.availableAttributes')}</h3>
             <button
               className="btn btn-sm btn-ghost"
               onClick={handleAutoDetect}
-              title={t('autoDetect')}
+              title={t('variantAttributes.autoDetect')}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -265,13 +265,13 @@ export default function DragDropMappingEditor({
                   d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                 />
               </svg>
-              {t('autoDetect')}
+              {t('variantAttributes.autoDetect')}
             </button>
           </div>
 
           <input
             type="text"
-            placeholder={t('searchAttributes')}
+            placeholder={t('variantAttributes.searchAttributes')}
             className="input input-bordered input-sm w-full"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -291,8 +291,8 @@ export default function DragDropMappingEditor({
             {filteredAvailable.length === 0 ? (
               <p className="text-base-content/50 text-center">
                 {searchQuery
-                  ? t('noMatchingAttributes')
-                  : t('noAvailableAttributes')}
+                  ? t('variantAttributes.noMatchingAttributes')
+                  : t('variantAttributes.noAvailableAttributes')}
               </p>
             ) : (
               <div className="space-y-2">
@@ -337,10 +337,10 @@ export default function DragDropMappingEditor({
 
         {/* Связанные атрибуты */}
         <div className="space-y-2">
-          <h3 className="font-semibold">{t('linkedAttributes')}</h3>
+          <h3 className="font-semibold">{t('variantAttributes.linkedAttributes')}</h3>
 
           <div className="text-sm text-base-content/70">
-            {t('linkedWith')}: <strong>{variantAttribute.display_name}</strong>
+            {t('variantAttributes.linkedWith')}: <strong>{variantAttribute.display_name}</strong>
           </div>
 
           <div
@@ -356,7 +356,7 @@ export default function DragDropMappingEditor({
           >
             {linkedAttributes.length === 0 ? (
               <p className="text-base-content/50 text-center">
-                {t('noLinkedAttributes')}
+                {t('variantAttributes.noLinkedAttributes')}
               </p>
             ) : (
               <div className="space-y-2">

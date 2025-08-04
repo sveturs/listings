@@ -30,7 +30,7 @@ export function TranslationStatus({
   onTranslateClick,
   compact = false,
 }: TranslationStatusProps) {
-  const t = useTranslations('admin.translations');
+  const t = useTranslations('admin');
   const tCommon = useTranslations('common');
   const [status, setStatus] = useState<TranslationStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,15 +101,15 @@ export function TranslationStatus({
   ) => {
     const langLabel = LANGUAGE_LABELS[lang] || lang;
     if (!fieldStatus) {
-      return `${langLabel}: ${t('notTranslated')}`;
+      return `${langLabel}: ${t('translations.notTranslated')}`;
     }
     if (fieldStatus.is_verified) {
-      return `${langLabel}: ${t('verified')}`;
+      return `${langLabel}: ${t('translations.verified')}`;
     }
     if (fieldStatus.is_machine_translated) {
-      return `${langLabel}: ${t('machineTranslated')}`;
+      return `${langLabel}: ${t('translations.machineTranslated')}`;
     }
-    return `${langLabel}: ${t('manualTranslated')}`;
+    return `${langLabel}: ${t('translations.manualTranslated')}`;
   };
 
   const allTranslated = LANGUAGES.every(
@@ -135,7 +135,7 @@ export function TranslationStatus({
           <button
             onClick={onTranslateClick}
             className="btn btn-ghost btn-xs"
-            title={t('translate')}
+            title={t('translations.translate')}
           >
             🌍
           </button>
@@ -147,14 +147,14 @@ export function TranslationStatus({
   return (
     <div className="p-2 bg-base-200 rounded-lg">
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-medium">{t('status')}</h4>
+        <h4 className="text-sm font-medium">{t('translations.status')}</h4>
         {onTranslateClick && !allTranslated && (
           <button
             onClick={onTranslateClick}
             className="btn btn-ghost btn-xs"
-            title={t('translate')}
+            title={t('translations.translate')}
           >
-            🌍 {t('translate')}
+            🌍 {t('translations.translate')}
           </button>
         )}
       </div>
@@ -172,7 +172,7 @@ export function TranslationStatus({
         })}
       </div>
       {allTranslated && (
-        <div className="mt-2 text-xs text-success">{t('allTranslated')}</div>
+        <div className="mt-2 text-xs text-success">{t('translations.allTranslated')}</div>
       )}
     </div>
   );

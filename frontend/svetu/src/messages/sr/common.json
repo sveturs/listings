@@ -108,7 +108,21 @@
     "selectOptions": "Izaberite opcije...",
     "enterValue": "Unesite {field}",
     "requiredFields": "Obavezna polja",
-    "optionalFields": "Dodatna polja"
+    "optionalFields": "Dodatna polja",
+    "characteristics": "Karakteristike",
+    "views": "Pregledi",
+    "published": "Objavljeno",
+    "viewDetails": "Prikaži detalje",
+    "contactSeller": "Kontaktiraj prodavca",
+    "addToFavorites": "Dodaj u omiljene",
+    "errors": {
+      "authError": {
+        "title": "Greška autorizacije",
+        "description": "Došlo je do greške prilikom učitavanja sistema autorizacije. Pokušajte da ponovo učitate stranicu.",
+        "details": "Detalji greške",
+        "reload": "Ponovo učitaj stranicu"
+      }
+    }
   },
   "navigation": {
     "home": "Početna",

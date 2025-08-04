@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/md5"
+
 	//	"encoding/json"
 	"fmt"
 	"sync"
@@ -163,7 +164,6 @@ func (s *CachedTranslationService) DetectLanguage(ctx context.Context, text stri
 	return s.underlying.DetectLanguage(ctx, text)
 }
 
-
 // ClearCache очищает все кэши
 func (s *CachedTranslationService) ClearCache(ctx context.Context) error {
 	// Очищаем локальный кэш
@@ -205,7 +205,7 @@ func (s *CachedTranslationService) GetCacheStats(ctx context.Context) map[string
 			size++
 			return true
 		})
-		
+
 		stats["local_cache"] = map[string]interface{}{
 			"enabled": true,
 			"size":    size,
@@ -251,7 +251,8 @@ func (s *CachedTranslationService) WarmupCache(ctx context.Context, translations
 	TargetLanguage string
 	Context        string
 	FieldName      string
-}) error {
+},
+) error {
 	logger.Info().Int("count", len(translations)).Msg("Starting translation cache warmup")
 
 	for i, t := range translations {

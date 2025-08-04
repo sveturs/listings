@@ -39,7 +39,7 @@ export default function VariantStockTable({
   storefrontId: _storefrontId,
   editable = true,
 }: VariantStockTableProps) {
-  const t = useTranslations('storefronts.variants');
+  const t = useTranslations('storefronts');
 
   // State management
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -227,11 +227,11 @@ export default function VariantStockTable({
     const status = getStockStatus(stock);
     switch (status) {
       case 'out_of_stock':
-        return <span className="badge badge-error">{t('outOfStock')}</span>;
+        return <span className="badge badge-error">{t('variants.outOfStock')}</span>;
       case 'low_stock':
-        return <span className="badge badge-warning">{t('lowStock')}</span>;
+        return <span className="badge badge-warning">{t('variants.lowStock')}</span>;
       case 'in_stock':
-        return <span className="badge badge-success">{t('inStock')}</span>;
+        return <span className="badge badge-success">{t('variants.inStock')}</span>;
     }
   };
 
@@ -303,7 +303,7 @@ export default function VariantStockTable({
       }
     } catch (error) {
       console.error('Failed to update stock:', error);
-      alert('Failed to update stock');
+      alert('variants.Failed to update stock');
     } finally {
       setUpdating(false);
     }
@@ -368,14 +368,14 @@ export default function VariantStockTable({
 
       if (response.ok) {
         await loadVariants();
-        alert(t('csvImportSuccess'));
+        alert(t('variants.csvImportSuccess'));
       } else {
         const error = await response.json();
         alert(`Import failed: ${error.error}`);
       }
     } catch (error) {
       console.error('Failed to import CSV:', error);
-      alert('Failed to import CSV');
+      alert('variants.Failed to import CSV');
     } finally {
       setImporting(false);
       if (fileInputRef.current) {
@@ -400,7 +400,7 @@ export default function VariantStockTable({
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement('variants.a');
         a.style.display = 'none';
         a.href = url;
         a.download = `product-${productId}-variants.csv`;
@@ -414,7 +414,7 @@ export default function VariantStockTable({
       }
     } catch (error) {
       console.error('Failed to export CSV:', error);
-      alert('Failed to export CSV');
+      alert('variants.Failed to export CSV');
     } finally {
       setExporting(false);
     }
@@ -433,7 +433,7 @@ export default function VariantStockTable({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2">{t('loading')}</span>
+        <span className="ml-2">{t('variants.loading')}</span>
       </div>
     );
   }
@@ -443,20 +443,20 @@ export default function VariantStockTable({
       {/* Header with stats */}
       <div className="stats shadow w-full">
         <div className="stat">
-          <div className="stat-title">{t('totalVariants')}</div>
+          <div className="stat-title">{t('variants.totalVariants')}</div>
           <div className="stat-value">{variants.length}</div>
           <div className="stat-desc">
-            {t('filteredCount', { count: filteredVariants.length })}
+            {t('variants.filteredCount', { count: filteredVariants.length })}
           </div>
         </div>
         <div className="stat">
-          <div className="stat-title">{t('totalStock')}</div>
+          <div className="stat-title">{t('variants.totalStock')}</div>
           <div className="stat-value">
             {variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)}
           </div>
         </div>
         <div className="stat">
-          <div className="stat-title">{t('lowStockCount')}</div>
+          <div className="stat-title">{t('variants.lowStockCount')}</div>
           <div className="stat-value text-warning">
             {
               variants.filter(
@@ -467,7 +467,7 @@ export default function VariantStockTable({
           </div>
         </div>
         <div className="stat">
-          <div className="stat-title">{t('outOfStockCount')}</div>
+          <div className="stat-title">{t('variants.outOfStockCount')}</div>
           <div className="stat-value text-error">
             {variants.filter((v) => (v.stock_quantity || 0) === 0).length}
           </div>
@@ -481,11 +481,11 @@ export default function VariantStockTable({
             {/* Search */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text">{t('search')}</span>
+                <span className="label-text">{t('variants.search')}</span>
               </label>
               <input
                 type="text"
-                placeholder={t('searchPlaceholder')}
+                placeholder={t('variants.searchPlaceholder')}
                 className="input input-bordered"
                 value={filters.search}
                 onChange={(e) =>
@@ -497,7 +497,7 @@ export default function VariantStockTable({
             {/* Status Filter */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text">{t('status')}</span>
+                <span className="label-text">{t('variants.status')}</span>
               </label>
               <select
                 className="select select-bordered"
@@ -509,17 +509,17 @@ export default function VariantStockTable({
                   }))
                 }
               >
-                <option value="all">{t('allStatuses')}</option>
-                <option value="in_stock">{t('inStock')}</option>
-                <option value="low_stock">{t('lowStock')}</option>
-                <option value="out_of_stock">{t('outOfStock')}</option>
+                <option value="all">{t('variants.allStatuses')}</option>
+                <option value="in_stock">{t('variants.inStock')}</option>
+                <option value="low_stock">{t('variants.lowStock')}</option>
+                <option value="out_of_stock">{t('variants.outOfStock')}</option>
               </select>
             </div>
 
             {/* Attribute Filter */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text">{t('attribute')}</span>
+                <span className="label-text">{t('variants.attribute')}</span>
               </label>
               <select
                 className="select select-bordered"
@@ -532,7 +532,7 @@ export default function VariantStockTable({
                   }))
                 }
               >
-                <option value="">{t('allAttributes')}</option>
+                <option value="">{t('variants.allAttributes')}</option>
                 {Object.keys(availableAttributes).map((attr) => (
                   <option key={attr} value={attr}>
                     {attr}
@@ -544,7 +544,7 @@ export default function VariantStockTable({
             {/* Attribute Value Filter */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text">{t('attributeValue')}</span>
+                <span className="label-text">{t('variants.attributeValue')}</span>
               </label>
               <select
                 className="select select-bordered"
@@ -557,7 +557,7 @@ export default function VariantStockTable({
                 }
                 disabled={!filters.attribute}
               >
-                <option value="">{t('allValues')}</option>
+                <option value="">{t('variants.allValues')}</option>
                 {filters.attribute &&
                   availableAttributes[filters.attribute] &&
                   Array.from(availableAttributes[filters.attribute]).map(
@@ -585,16 +585,16 @@ export default function VariantStockTable({
                     onClick={selectAll}
                     className="btn btn-sm btn-outline"
                   >
-                    {t('selectAll')}
+                    {t('variants.selectAll')}
                   </button>
                   <button
                     onClick={clearSelection}
                     className="btn btn-sm btn-outline"
                   >
-                    {t('clearSelection')}
+                    {t('variants.clearSelection')}
                   </button>
                   <span className="text-sm text-gray-600">
-                    {selectedVariants.size} {t('selected')}
+                    {selectedVariants.size} {t('variants.selected')}
                   </span>
                 </div>
 
@@ -610,9 +610,9 @@ export default function VariantStockTable({
                         )
                       }
                     >
-                      <option value="add">{t('add')}</option>
-                      <option value="subtract">{t('subtract')}</option>
-                      <option value="set">{t('setTo')}</option>
+                      <option value="add">{t('variants.add')}</option>
+                      <option value="subtract">{t('variants.subtract')}</option>
+                      <option value="set">{t('variants.setTo')}</option>
                     </select>
                     <input
                       type="number"
@@ -628,7 +628,7 @@ export default function VariantStockTable({
                       disabled={bulkValue === 0}
                       className="btn btn-sm btn-primary"
                     >
-                      {t('apply')}
+                      {t('variants.apply')}
                     </button>
                   </div>
                 )}
@@ -648,14 +648,14 @@ export default function VariantStockTable({
                   disabled={importing}
                   className={`btn btn-sm btn-outline ${importing ? 'loading' : ''}`}
                 >
-                  {importing ? t('importing') : t('importCSV')}
+                  {importing ? t('variants.importing') : t('variants.importCSV')}
                 </button>
                 <button
                   onClick={handleCSVExport}
                   disabled={exporting}
                   className={`btn btn-sm btn-outline ${exporting ? 'loading' : ''}`}
                 >
-                  {exporting ? t('exporting') : t('exportCSV')}
+                  {exporting ? t('variants.exporting') : t('variants.exportCSV')}
                 </button>
               </div>
             </div>
@@ -679,20 +679,20 @@ export default function VariantStockTable({
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 18.5c-.77.833.192 2.5 1.732 2.5z"
             ></path>
           </svg>
-          <span>{t('pendingUpdates', { count: pendingUpdates.size })}</span>
+          <span>{t('variants.pendingUpdates', { count: pendingUpdates.size })}</span>
           <div className="flex space-x-2">
             <button
               onClick={applyPendingUpdates}
               disabled={updating}
               className={`btn btn-sm btn-success ${updating ? 'loading' : ''}`}
             >
-              {updating ? t('saving') : t('saveChanges')}
+              {updating ? t('variants.saving') : t('variants.saveChanges')}
             </button>
             <button
               onClick={cancelPendingUpdates}
               className="btn btn-sm btn-outline"
             >
-              {t('cancel')}
+              {t('variants.cancel')}
             </button>
           </div>
         </div>
@@ -722,10 +722,10 @@ export default function VariantStockTable({
               )}
               <th>
                 <button
-                  onClick={() => handleSort('name')}
+                  onClick={() => handleSort('variants.name')}
                   className="btn btn-ghost btn-sm"
                 >
-                  {t('variant')}
+                  {t('variants.variant')}
                   {sort.field === 'name' && (
                     <span className="ml-1">
                       {sort.direction === 'asc' ? '↑' : '↓'}
@@ -735,10 +735,10 @@ export default function VariantStockTable({
               </th>
               <th>
                 <button
-                  onClick={() => handleSort('sku')}
+                  onClick={() => handleSort('variants.sku')}
                   className="btn btn-ghost btn-sm"
                 >
-                  {t('sku')}
+                  {t('variants.sku')}
                   {sort.field === 'sku' && (
                     <span className="ml-1">
                       {sort.direction === 'asc' ? '↑' : '↓'}
@@ -748,10 +748,10 @@ export default function VariantStockTable({
               </th>
               <th>
                 <button
-                  onClick={() => handleSort('price')}
+                  onClick={() => handleSort('variants.price')}
                   className="btn btn-ghost btn-sm"
                 >
-                  {t('price')}
+                  {t('variants.price')}
                   {sort.field === 'price' && (
                     <span className="ml-1">
                       {sort.direction === 'asc' ? '↑' : '↓'}
@@ -761,10 +761,10 @@ export default function VariantStockTable({
               </th>
               <th>
                 <button
-                  onClick={() => handleSort('stock')}
+                  onClick={() => handleSort('variants.stock')}
                   className="btn btn-ghost btn-sm"
                 >
-                  {t('stock')}
+                  {t('variants.stock')}
                   {sort.field === 'stock' && (
                     <span className="ml-1">
                       {sort.direction === 'asc' ? '↑' : '↓'}
@@ -772,13 +772,13 @@ export default function VariantStockTable({
                   )}
                 </button>
               </th>
-              <th>{t('status')}</th>
+              <th>{t('variants.status')}</th>
               <th>
                 <button
-                  onClick={() => handleSort('updated_at')}
+                  onClick={() => handleSort('variants.updated_at')}
                   className="btn btn-ghost btn-sm"
                 >
-                  {t('lastUpdated')}
+                  {t('variants.lastUpdated')}
                   {sort.field === 'updated_at' && (
                     <span className="ml-1">
                       {sort.direction === 'asc' ? '↑' : '↓'}
@@ -878,12 +878,12 @@ export default function VariantStockTable({
               />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              {variants.length === 0 ? t('noVariants') : t('noVariantsMatch')}
+              {variants.length === 0 ? t('variants.noVariants') : t('variants.noVariantsMatch')}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
               {variants.length === 0
-                ? t('noVariantsDescription')
-                : t('tryDifferentFilters')}
+                ? t('variants.noVariantsDescription')
+                : t('variants.tryDifferentFilters')}
             </p>
           </div>
         </div>

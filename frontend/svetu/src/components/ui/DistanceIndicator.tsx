@@ -18,7 +18,7 @@ export const DistanceIndicator: React.FC<DistanceIndicatorProps> = ({
   showTooltip = true,
   size = 'md',
 }) => {
-  const t = useTranslations('common.distance');
+  const t = useTranslations('common');
   // Размеры в зависимости от size
   const sizeClasses = {
     sm: 'text-xs gap-1',
@@ -69,22 +69,23 @@ export const DistanceIndicator: React.FC<DistanceIndicatorProps> = ({
 
     return (
       <div className="space-y-2 p-2">
-        <div className="font-medium">{t('fromYou')}</div>
+        <div className="font-medium">{t('distance.fromYou')}</div>
         <div className="text-sm space-y-1">
           <div>
             {distance < 1
-              ? t('meters', { count: Math.round(distance * 1000) })
-              : t('kilometers', { count: distance.toFixed(1) })}
+              ? t('distance.meters', { count: Math.round(distance * 1000) })
+              : t('distance.kilometers', { count: distance.toFixed(1) })}
           </div>
           <div className="text-base-content/70">
-            {t('walking', {
-              time: walkingTime < 60
-                ? t('minutes', { count: walkingTime })
-                : t('hours', { count: Math.round(walkingTime / 60) })
+            {t('distance.walking', {
+              time:
+                walkingTime < 60
+                  ? t('distance.minutes', { count: walkingTime })
+                  : t('distance.hours', { count: Math.round(walkingTime / 60) }),
             })}
           </div>
           {distance <= 1 && (
-            <div className="text-success">{t('walkingDistance')}</div>
+            <div className="text-success">{t('distance.walkingDistance')}</div>
           )}
         </div>
       </div>

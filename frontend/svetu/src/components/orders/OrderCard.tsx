@@ -70,15 +70,10 @@ export default function OrderCard({ order, onOrderUpdate }: OrderCardProps) {
   const handleCancelOrder = async () => {
     if (!order.id || !canCancelOrder()) return;
 
-    // Use toast confirmation with optional reason input
-    toast.warning(t('confirmCancel'), {
-      action: {
-        label: t('cancel'),
-        onClick: async () => {
-          await performCancelOrder();
-        }
-      }
-    });
+    // Use browser confirm dialog
+    if (window.confirm(t('confirmCancel'))) {
+      await performCancelOrder();
+    }
   };
 
   const performCancelOrder = async () => {

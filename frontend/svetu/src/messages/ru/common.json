@@ -100,6 +100,9 @@
     "enterValue": "Введите {field}",
     "requiredFields": "Обязательные поля",
     "optionalFields": "Дополнительные поля",
+    "characteristics": "Характеристики",
+    "views": "Просмотры",
+    "published": "Опубликовано",
     "eco": {
       "secondHand": "Б/У",
       "refurbished": "Восстановлен",
@@ -160,6 +163,17 @@
       "latitude": "Широта:",
       "longitude": "Долгота:",
       "specifyLocation": "Укажите местоположение"
+    },
+    "viewDetails": "Подробнее",
+    "contactSeller": "Связаться с продавцом",
+    "addToFavorites": "Добавить в избранное",
+    "errors": {
+      "authError": {
+        "title": "Ошибка авторизации",
+        "description": "Произошла ошибка при загрузке системы авторизации. Попробуйте перезагрузить страницу.",
+        "details": "Детали ошибки",
+        "reload": "Перезагрузить страницу"
+      }
     }
   },
   "navigation": {
@@ -310,6 +324,116 @@
     },
     "search": {
       "placeholder": "Поиск товаров и услуг..."
+    }
+  },
+  "map": {
+    "title": "Карта объявлений",
+    "description": "Найдите товары и услуги рядом с вами",
+    "loading": "Загрузка карты...",
+    "listings": "Объявления",
+    "storefronts": "Витрины",
+    "total": "Всего: {count}",
+    "showing": "Показано: {shown} из {total}",
+    "showZone": "Показать зону",
+    "minutesWalking": "{minutes} минут пешком",
+    "loadingIsochrone": "Загрузка зоны доступности...",
+    "clickToChangeMode": "Нажмите на иконку для смены режима",
+    "holdForSettings": "Удерживайте для настроек",
+    "hideHeader": "Скрыть шапку",
+    "showHeader": "Показать шапку",
+    "categories": {
+      "title": "Категории",
+      "realEstate": "Недвижимость",
+      "vehicles": "Транспорт",
+      "electronics": "Электроника",
+      "clothing": "Одежда",
+      "services": "Услуги",
+      "jobs": "Работа"
+    },
+    "search": {
+      "addressPlaceholder": "Поиск по адресу...",
+      "address": "По адресу",
+      "byAddress": "По адресу",
+      "byDistrict": "По району",  
+      "found": "Найдено",
+      "notFound": "Ничего не найдено",
+      "error": "Ошибка поиска"
+    },
+    "filters": {
+      "title": "Фильтры",
+      "category": "Категория", 
+      "allCategories": "Все категории",
+      "price": "Цена",
+      "priceFrom": "Цена от", 
+      "priceTo": "Цена до",
+      "radius": "Радиус поиска",
+      "resetFilters": "Сбросить фильтры",
+      "quickFilters": "Быстрые фильтры",
+      "quickOptions": {
+        "new": "Новое",
+        "lowMileage": "Малый пробег",
+        "noDamage": "Без повреждений",
+        "withWarranty": "С гарантией",
+        "readyToWork": "Готов к работе",
+        "withPhoto": "С фото",
+        "newBuilding": "Новостройка",
+        "withBalcony": "С балконом",
+        "furnished": "Меблированная",
+        "withParking": "С парковкой",
+        "withGarden": "С садом",
+        "withGarage": "С гаражом",
+        "likeNew": "Как новое",
+        "inBox": "В упаковке",
+        "fullTime": "Полная занятость",
+        "remote": "Удаленно",
+        "noExperience": "Без опыта"
+      }
+    },
+    "results": {
+      "showing": "Показано",
+      "listings": "объявлений"
+    },
+    "actions": {
+      "apply": "Применить",
+      "reset": "Сбросить"
+    },
+    "geolocation": {
+      "findMe": "Найти меня",
+      "error": "Ошибка определения местоположения"
+    },
+    "gis": {
+      "accessibilitySettings": "Настройки доступности",
+      "kilometers": "км",
+      "meters": "м",
+      "minutes": "минут",
+      "min": "мин",
+      "byRadius": "По радиусу",
+      "byWalkingTime": "По времени пешком",
+      "searchRadius": "Радиус поиска",
+      "walkingTime": "Время пешком",
+      "walkingSpeedNote": "Расчет основан на средней скорости ходьбы 5 км/ч",
+      "atAverageSpeed": "при средней скорости",
+      "searchAreaSettings": "Настройки области поиска"
+    },
+    "showAll": "Показать все",
+    "popularDistricts": "Популярные районы",
+    "controls": {
+      "walkingAccessibility": "Пешеходная доступность",
+      "searchRadius": "Радиус поиска",
+      "minutes": "минут",
+      "km": "км",
+      "m": "м",
+      "changeModeHint": "Кликните для смены режима",
+      "holdForSettings": "Удерживайте для настроек",
+      "singleClickHint": "Один клик - смена режима",
+      "mobileHint": "На мобильном: тап для смены режима",
+      "desktopHint": "На десктопе: клик или удержание",
+      "updatingIsochrone": "Обновление зоны доступности...",
+      "radiusControl": "Управление радиусом",
+      "walkingMode": "Пешеходный режим",
+      "distanceMode": "Режим расстояния", 
+      "minUnit": "мин",
+      "kmUnit": "км"
     }
   }
 }

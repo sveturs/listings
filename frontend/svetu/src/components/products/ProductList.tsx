@@ -43,7 +43,7 @@ export function ProductList({
   onLoadMore,
   totalCount = 0,
 }: ProductListProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const dispatch = useDispatch<AppDispatch>();
 
   const {
@@ -119,7 +119,7 @@ export function ProductList({
             <div className="relative flex-1 max-w-md">
               <input
                 type="text"
-                placeholder={t('searchPlaceholder')}
+                placeholder={t('products.searchPlaceholder')}
                 className="input input-bordered w-full pl-10"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
@@ -141,7 +141,7 @@ export function ProductList({
               className={`btn btn-ghost gap-2 ${showFilters ? 'btn-active' : ''}`}
             >
               <FiFilter className="w-4 h-4" />
-              {t('filters')}
+              {t('products.filters')}
               {Object.values(filters).some(
                 (v) => v !== null && v !== '' && v !== 'all'
               ) && <span className="badge badge-primary badge-sm">!</span>}
@@ -153,7 +153,7 @@ export function ProductList({
             {/* Счетчик */}
             {totalCount > 0 && (
               <span className="text-sm text-base-content/70">
-                {t('totalProducts', { count: totalCount })}
+                {t('products.totalProducts', { count: totalCount })}
               </span>
             )}
 
@@ -236,16 +236,16 @@ export function ProductList({
                     );
                   }}
                 >
-                  <option value="all">{t('allProducts')}</option>
-                  <option value="active">{t('activeOnly')}</option>
-                  <option value="inactive">{t('inactiveOnly')}</option>
+                  <option value="all">{t('products.allProducts')}</option>
+                  <option value="active">{t('products.activeOnly')}</option>
+                  <option value="inactive">{t('products.inactiveOnly')}</option>
                 </select>
               </div>
 
               {/* Статус склада */}
               <div>
                 <label className="label">
-                  <span className="label-text">{t('inventory')}</span>
+                  <span className="label-text">{t('products.inventory')}</span>
                 </label>
                 <select
                   className="select select-bordered w-full"
@@ -258,7 +258,7 @@ export function ProductList({
                     );
                   }}
                 >
-                  <option value="all">{t('allProducts')}</option>
+                  <option value="all">{t('products.allProducts')}</option>
                   <option value="in_stock">{t('stockStatus.in_stock')}</option>
                   <option value="low_stock">
                     {t('stockStatus.low_stock')}
@@ -272,12 +272,12 @@ export function ProductList({
               {/* Диапазон цен */}
               <div>
                 <label className="label">
-                  <span className="label-text">{t('priceRange')}</span>
+                  <span className="label-text">{t('products.priceRange')}</span>
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="number"
-                    placeholder={t('min')}
+                    placeholder={t('products.min')}
                     className="input input-bordered w-full"
                     value={filters.minPrice || ''}
                     onChange={(e) => {
@@ -293,7 +293,7 @@ export function ProductList({
                   <span className="self-center">-</span>
                   <input
                     type="number"
-                    placeholder={t('max')}
+                    placeholder={t('products.max')}
                     className="input input-bordered w-full"
                     value={filters.maxPrice || ''}
                     onChange={(e) => {
@@ -343,11 +343,11 @@ export function ProductList({
                     </label>
                   </th>
                 )}
-                <th>{t('productName')}</th>
-                <th>{t('inventory')}</th>
-                <th>{t('price')}</th>
+                <th>{t('products.productName')}</th>
+                <th>{t('products.inventory')}</th>
+                <th>{t('products.price')}</th>
                 <th>{t('bulk.status')}</th>
-                <th>{t('actions')}</th>
+                <th>{t('products.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -396,8 +396,8 @@ export function ProductList({
             Object.values(filters).some(
               (v) => v !== null && v !== '' && v !== 'all'
             )
-              ? t('noProductsFound')
-              : t('noProducts')}
+              ? t('products.noProductsFound')
+              : t('products.noProducts')}
           </p>
         </div>
       )}
@@ -415,7 +415,7 @@ export function ProductList({
           loading={loading}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          loadMoreText={t('loadMore')}
+          loadMoreText={t('products.loadMore')}
         />
       )}
     </div>

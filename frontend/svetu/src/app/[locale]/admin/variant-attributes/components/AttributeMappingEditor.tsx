@@ -24,7 +24,7 @@ export default function AttributeMappingEditor({
   onSave,
   onCancel,
 }: AttributeMappingEditorProps) {
-  const t = useTranslations('admin.variantAttributes');
+  const t = useTranslations('admin');
   const [categoryAttributes, setCategoryAttributes] = useState<
     LinkedAttribute[]
   >([]);
@@ -75,7 +75,7 @@ export default function AttributeMappingEditor({
       setSelectedAttributes(linkedIds);
     } catch (error) {
       console.error('Failed to load attributes:', error);
-      toast.error(t('loadMappingsError'));
+      toast.error(t('variantAttributes.loadMappingsError'));
     } finally {
       setIsLoading(false);
     }
@@ -116,9 +116,9 @@ export default function AttributeMappingEditor({
 
     if (autoDetected.size > 0) {
       setSelectedAttributes(autoDetected);
-      toast.success(t('autoDetectSuccess', { count: autoDetected.size }));
+      toast.success(t('variantAttributes.autoDetectSuccess', { count: autoDetected.size }));
     } else {
-      toast.info(t('autoDetectNoResults'));
+      toast.info(t('variantAttributes.autoDetectNoResults'));
     }
   };
 
@@ -132,11 +132,11 @@ export default function AttributeMappingEditor({
         Array.from(selectedAttributes)
       );
 
-      toast.success(t('saveMappingsSuccess'));
+      toast.success(t('variantAttributes.saveMappingsSuccess'));
       if (onSave) onSave();
     } catch (error) {
       console.error('Failed to save mappings:', error);
-      toast.error(t('saveMappingsError'));
+      toast.error(t('variantAttributes.saveMappingsError'));
     } finally {
       setIsSaving(false);
     }
@@ -162,10 +162,10 @@ export default function AttributeMappingEditor({
       {/* Header */}
       <div>
         <h3 className="text-lg font-semibold">
-          {t('mappingTitle')}: {variantAttribute.display_name}
+          {t('variantAttributes.mappingTitle')}: {variantAttribute.display_name}
         </h3>
         <p className="text-sm text-base-content/70 mt-1">
-          {t('mappingDescription')}
+          {t('variantAttributes.mappingDescription')}
         </p>
       </div>
 
@@ -174,7 +174,7 @@ export default function AttributeMappingEditor({
         <div className="flex-1">
           <input
             type="text"
-            placeholder={t('searchAttributes')}
+            placeholder={t('variantAttributes.searchAttributes')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input input-bordered input-sm w-full"
@@ -199,7 +199,7 @@ export default function AttributeMappingEditor({
               d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
             />
           </svg>
-          {t('autoDetect')}
+          {t('variantAttributes.autoDetect')}
         </button>
       </div>
 
@@ -207,7 +207,7 @@ export default function AttributeMappingEditor({
       <div className="border rounded-lg max-h-96 overflow-y-auto">
         {filteredAttributes.length === 0 ? (
           <div className="p-8 text-center text-base-content/60">
-            {t('noAttributesFound')}
+            {t('variantAttributes.noAttributesFound')}
           </div>
         ) : (
           <div className="divide-y">
@@ -230,7 +230,7 @@ export default function AttributeMappingEditor({
                 </div>
                 {attr.is_linked && !selectedAttributes.has(attr.id) && (
                   <span className="badge badge-ghost badge-sm">
-                    {t('previouslyLinked')}
+                    {t('variantAttributes.previouslyLinked')}
                   </span>
                 )}
               </label>
@@ -254,7 +254,7 @@ export default function AttributeMappingEditor({
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>{t('selectedCount', { count: selectedAttributes.size })}</span>
+        <span>{t('variantAttributes.selectedCount', { count: selectedAttributes.size })}</span>
       </div>
 
       {/* Actions */}
@@ -265,7 +265,7 @@ export default function AttributeMappingEditor({
             className="btn btn-ghost"
             disabled={isSaving}
           >
-            {t('cancel')}
+            {t('variantAttributes.cancel')}
           </button>
         )}
         <button
@@ -276,10 +276,10 @@ export default function AttributeMappingEditor({
           {isSaving ? (
             <>
               <span className="loading loading-spinner loading-sm"></span>
-              {t('saving')}
+              {t('variantAttributes.saving')}
             </>
           ) : (
-            t('saveMappings')
+            t('variantAttributes.saveMappings')
           )}
         </button>
       </div>

@@ -45,7 +45,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const t = useTranslations('marketplace.priceHistory');
+  const t = useTranslations('marketplace');
   const [priceHistory, setPriceHistory] = useState<PricePoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasManipulation, setHasManipulation] = useState(false);
@@ -61,7 +61,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error(t('failedToLoad'));
+        throw new Error(t('priceHistory.failedToLoad'));
       }
 
       const data = await response.json();
@@ -71,10 +71,10 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
       setLoading(false);
     } catch (error) {
       console.error('Error fetching price history:', error);
-      setError(t('error'));
+      setError(t('priceHistory.error'));
       setLoading(false);
     }
-  }, [listingId]);
+  }, [listingId, t]);
 
   useEffect(() => {
     if (isOpen && listingId) {
@@ -112,7 +112,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
     ),
     datasets: [
       {
-        label: t('currentPrice'),
+        label: t('priceHistory.currentPrice'),
         data: priceHistory.map((point) => point.price),
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -132,12 +132,14 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
       },
       title: {
         display: true,
-        text: t('chartTitle'),
+        text: t('priceHistory.chartTitle'),
       },
       tooltip: {
         callbacks: {
           label: function (context) {
-            return t('priceLabel', { price: context.parsed.y.toLocaleString() });
+            return t('priceHistory.priceLabel', {
+              price: context.parsed.y.toLocaleString(),
+            });
           },
         },
       },
@@ -147,7 +149,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
         beginAtZero: false,
         ticks: {
           callback: function (value) {
-            return `${value} ${t('currency')}`;
+            return `${value} ${t('priceHistory.currency')}`;
           },
         },
       },
@@ -169,15 +171,13 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
 
         <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
           <TrendingDown className="w-5 h-5" />
-          {t('title')}
+          {t('priceHistory.title')}
         </h3>
 
         {hasManipulation && (
           <div className="alert alert-warning mb-4">
             <AlertTriangle className="w-5 h-5" />
-            <span>
-              {t('manipulationWarning')}
-            </span>
+            <span>{t('priceHistory.manipulationWarning')}</span>
           </div>
         )}
 
@@ -191,7 +191,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
           </div>
         ) : priceHistory.length === 0 ? (
           <div className="text-center py-8 text-base-content/60">
-            <p>{t('noData')}</p>
+            <p>{t('priceHistory.noData')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -201,32 +201,32 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
 
             <div className="stats stats-horizontal w-full">
               <div className="stat">
-                <div className="stat-title">{t('currentPrice')}</div>
+                <div className="stat-title">{t('priceHistory.currentPrice')}</div>
                 <div className="stat-value text-lg">
                   {priceHistory[
                     priceHistory.length - 1
                   ]?.price.toLocaleString()}{' '}
-                  {t('currency')}
+                  {t('priceHistory.currency')}
                 </div>
               </div>
 
               <div className="stat">
-                <div className="stat-title">{t('maxPrice')}</div>
+                <div className="stat-title">{t('priceHistory.maxPrice')}</div>
                 <div className="stat-value text-lg">
                   {Math.max(
                     ...priceHistory.map((p) => p.price)
                   ).toLocaleString()}{' '}
-                  {t('currency')}
+                  {t('priceHistory.currency')}
                 </div>
               </div>
 
               <div className="stat">
-                <div className="stat-title">{t('minPrice')}</div>
+                <div className="stat-title">{t('priceHistory.minPrice')}</div>
                 <div className="stat-value text-lg">
                   {Math.min(
                     ...priceHistory.map((p) => p.price)
                   ).toLocaleString()}{' '}
-                  {t('currency')}
+                  {t('priceHistory.currency')}
                 </div>
               </div>
             </div>
@@ -235,7 +235,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
 
         <div className="modal-action">
           <button className="btn" onClick={onClose}>
-            {t('close')}
+            {t('priceHistory.close')}
           </button>
         </div>
       </div>

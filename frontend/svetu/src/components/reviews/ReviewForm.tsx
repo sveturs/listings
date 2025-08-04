@@ -43,7 +43,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   legacyOnSubmit,
 }) => {
   const locale = useLocale();
-  const t = useTranslations('reviews.form');
+  const t = useTranslations('reviews');
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [pros, setPros] = useState('');
@@ -182,10 +182,10 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           cons: cons.trim() || undefined,
           photos: uploadedPhotoUrls.length > 0 ? uploadedPhotoUrls : undefined,
         });
-        toast.success(t('success'));
+        toast.success(t('form.success'));
       } catch (error) {
         console.error('Failed to submit review (legacy):', error);
-        toast.error(t('error'));
+        toast.error(t('form.error'));
       }
       return;
     }
@@ -224,11 +224,11 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
       await publishReviewMutation.mutateAsync(draftReview.id);
 
       // Success - call callback
-      toast.success(t('success'));
+      toast.success(t('form.success'));
       onSuccess?.();
     } catch (error) {
       console.error('Failed to submit review:', error);
-      toast.error(t('error'));
+      toast.error(t('form.error'));
       setCurrentStep('form');
     }
   };
@@ -579,7 +579,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                {t('submit')}
+                {t('form.submit')}
               </>
             )}
           </button>
@@ -595,7 +595,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
             className="btn btn-ghost h-11 px-6 rounded-lg font-medium
                    hover:bg-base-200 transition-all duration-200"
           >
-            {t('cancel')}
+            {t('form.cancel')}
           </button>
         </div>
       </form>

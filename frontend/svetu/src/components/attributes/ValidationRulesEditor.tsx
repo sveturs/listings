@@ -54,7 +54,7 @@ export default function ValidationRulesEditor({
   onChange,
   attributeType = 'text',
 }: ValidationRulesEditorProps) {
-  const t = useTranslations('admin.attributes');
+  const t = useTranslations('admin');
   const [rules, setRules] = useState<Record<string, ValidationRule>>({});
   const [customPattern, setCustomPattern] = useState('');
   const [customMessage, setCustomMessage] = useState('');

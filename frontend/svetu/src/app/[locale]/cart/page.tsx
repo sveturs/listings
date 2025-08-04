@@ -67,16 +67,11 @@ export default function CartPage() {
   };
 
   const handleClearCart = () => {
-    // Show confirmation toast with action
-    toast.warning(t('confirmClear'), {
-      action: {
-        label: t('clear'),
-        onClick: () => {
-          dispatch(clearCart());
-          toast.success(t('cartCleared'));
-        }
-      }
-    });
+    // Show confirmation using browser confirm dialog
+    if (window.confirm(t('confirmClear'))) {
+      dispatch(clearCart());
+      toast.success(t('cartCleared'));
+    }
   };
 
   const handleCheckout = () => {

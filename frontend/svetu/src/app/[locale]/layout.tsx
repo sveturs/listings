@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import { notFound } from 'next/navigation';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { PublicEnvScript } from 'next-runtime-env';
 import { routing } from '@/i18n/routing';
 import { ModularIntlProvider } from '@/providers/ModularIntlProvider';
@@ -86,17 +85,15 @@ export default async function RootLayout({
     notFound();
   }
 
-  // Используем модульную систему или старую в зависимости от настроек
-  const useModular = process.env.USE_MODULAR_I18N === 'true';
-  
-  let messages;
-  if (useModular) {
-    // Загружаем базовые модули для layout
-    messages = await loadMessages(locale as any, ['common', 'navigation', 'auth']);
-  } else {
-    // Старая система - загружаем все сообщения
-    messages = await getMessages();
-  }
+  // Загружаем базовые модули для layout
+  const messages = await loadMessages(locale as any, [
+    'common',
+    'auth',
+    'misc',
+    'cart',
+    'map', // Добавляем map модуль для компонентов GIS
+    'marketplace', // И marketplace, так как многие компоненты его используют
+  ]);
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -108,39 +105,21 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        {useModular ? (
-          <ModularIntlProvider locale={locale} messages={messages}>
-            <ReduxProvider>
-              <AuthProvider>
-                <VisibleCitiesProvider>
-                  <AuthStateManager />
-                  <WebSocketManager />
-                  <Header />
-                  <main className="min-h-screen pt-16 pb-16 md:pb-0">
-                    {children}
-                  </main>
-                  <SmartMobileBottomNav />
-                </VisibleCitiesProvider>
-              </AuthProvider>
-            </ReduxProvider>
-          </ModularIntlProvider>
-        ) : (
-          <NextIntlClientProvider messages={messages}>
-            <ReduxProvider>
-              <AuthProvider>
-                <VisibleCitiesProvider>
-                  <AuthStateManager />
-                  <WebSocketManager />
-                  <Header />
-                  <main className="min-h-screen pt-16 pb-16 md:pb-0">
-                    {children}
-                  </main>
-                  <SmartMobileBottomNav />
-                </VisibleCitiesProvider>
-              </AuthProvider>
-            </ReduxProvider>
-          </NextIntlClientProvider>
-        )}
+        <ModularIntlProvider locale={locale} messages={messages}>
+          <ReduxProvider>
+            <AuthProvider>
+              <VisibleCitiesProvider>
+                <AuthStateManager />
+                <WebSocketManager />
+                <Header />
+                <main className="min-h-screen pt-16 pb-16 md:pb-0">
+                  {children}
+                </main>
+                <SmartMobileBottomNav />
+              </VisibleCitiesProvider>
+            </AuthProvider>
+          </ReduxProvider>
+        </ModularIntlProvider>
       </body>
     </html>
   );

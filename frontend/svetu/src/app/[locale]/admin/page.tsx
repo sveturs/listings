@@ -6,6 +6,6 @@ export default async function AdminPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  
+
   return <AdminPageWrapper locale={locale} />;
 }

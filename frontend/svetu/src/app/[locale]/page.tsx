@@ -1,6 +1,5 @@
-import { getTranslations } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
-import { UnifiedSearchService } from '@/services/unifiedSearch';
+import { getTranslations } from 'next-intl/server';
 import configManager from '@/config';
 import HomePageClient from './HomePageClient';
 import { getHomePageData } from './actions';
@@ -14,20 +13,18 @@ export default async function Home({
   const { locale } = await params;
   const t = await getTranslations('home');
 
-  // Проверяем, используем ли модульную систему
-  const useModular = process.env.USE_MODULAR_I18N === 'true';
-  
   // Загружаем необходимые модули для главной страницы
-  let additionalMessages = {};
-  if (useModular) {
-    additionalMessages = await loadMessages(locale as any, ['marketplace']);
-  }
+  const additionalMessages = await loadMessages(locale as any, [
+    'marketplace',
+    'misc',
+    'cars', // Добавляем модуль cars для поддержки автомобильных фильтров
+  ]);
 
   // Проверяем feature flags
   const _paymentsEnabled = configManager.isFeatureEnabled('enablePayments');
 
   const _marketplaceData = null;
-  let error: Error | null = null;
+  let _error: Error | null = null;
   let homePageData = null;
 
   // ВАЖНО: SSR загрузка отключена в development из-за проблем с сетевой конфигурацией
@@ -42,25 +39,19 @@ export default async function Home({
       homePageData = await getHomePageData(locale);
     } catch (e) {
       console.error('[SSR] Failed to load homepage data:', e);
-      error = e instanceof Error ? e : new Error('Failed to load data');
+      _error = e instanceof Error ? e : new Error('Failed to load data');
     }
   }
 
-  return useModular ? (
+  return (
     <NextIntlClientProvider messages={additionalMessages}>
       <HomePageClient
-        initialData={homePageData}
-        error={error}
+        title={t('title')}
+        description={t('description')}
+        createListingText={t('createListing')}
+        homePageData={homePageData}
         locale={locale}
-        skipSSR={skipSSR}
       />
     </NextIntlClientProvider>
-  ) : (
-    <HomePageClient
-      initialData={homePageData}
-      error={error}
-      locale={locale}
-      skipSSR={skipSSR}
-    />
   );
 }

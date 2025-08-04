@@ -21,6 +21,7 @@ import type { Feature, Polygon } from 'geojson';
 import { SmartFilters } from '@/components/marketplace/SmartFilters';
 import { QuickFilters } from '@/components/marketplace/QuickFilters';
 import { CategoryTreeSelector } from '@/components/common/CategoryTreeSelector';
+// import { TranslationDebugger } from '@/components/TranslationDebugger';
 
 // Функция для проверки, находится ли точка внутри полигона (Ray Casting Algorithm)
 function isPointInPolygon(
@@ -76,6 +77,7 @@ interface MapFilters {
 
 const MapPage: React.FC = () => {
   const t = useTranslations('map');
+  const commonT = useTranslations('common');
   const _router = useRouter();
   const searchParams = useSearchParams();
   const { search: geoSearch } = useGeoSearch();
@@ -554,7 +556,7 @@ const MapPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading listings:', error);
-      toast.error(t('errors.loadingFailed'));
+      toast.error(commonT('common.error'));
     } finally {
       setIsLoading(false);
     }
@@ -1002,6 +1004,7 @@ const MapPage: React.FC = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-base-100">
+      {/* <TranslationDebugger /> */}
       {/* Кнопка скрытия/показа хедера */}
       <button
         onClick={toggleHeader}

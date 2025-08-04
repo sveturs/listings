@@ -20,7 +20,7 @@ export default function VariantStockManager({
   variants,
   onVariantsChange,
 }: VariantStockManagerProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const [localVariants, setLocalVariants] =
     useState<ProductVariant[]>(variants);
 
@@ -73,7 +73,7 @@ export default function VariantStockManager({
   if (localVariants.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-base-content/70">{t('noVariantsToManage')}</p>
+        <p className="text-base-content/70">{t('products.noVariantsToManage')}</p>
       </div>
     );
   }
@@ -83,15 +83,15 @@ export default function VariantStockManager({
       {/* Сводка */}
       <div className="stats stats-horizontal shadow w-full">
         <div className="stat">
-          <div className="stat-title">{t('totalVariants')}</div>
+          <div className="stat-title">{t('products.totalVariants')}</div>
           <div className="stat-value text-primary">{localVariants.length}</div>
         </div>
         <div className="stat">
-          <div className="stat-title">{t('totalStock')}</div>
+          <div className="stat-title">{t('products.totalStock')}</div>
           <div className="stat-value text-secondary">{getTotalStock()}</div>
         </div>
         <div className="stat">
-          <div className="stat-title">{t('averagePrice')}</div>
+          <div className="stat-title">{t('products.averagePrice')}</div>
           <div className="stat-value text-accent">
             {Math.round(getAveragePrice())} RSD
           </div>
@@ -101,17 +101,17 @@ export default function VariantStockManager({
       {/* Таблица вариантов */}
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body">
-          <h3 className="card-title text-lg mb-4">{t('manageVariants')}</h3>
+          <h3 className="card-title text-lg mb-4">{t('products.manageVariants')}</h3>
 
           <div className="overflow-x-auto">
             <table className="table table-zebra">
               <thead>
                 <tr>
-                  <th>{t('variant')}</th>
+                  <th>{t('products.variant')}</th>
                   <th>SKU</th>
-                  <th>{t('price')} (RSD)</th>
-                  <th>{t('stock')}</th>
-                  <th>{t('status')}</th>
+                  <th>{t('products.price')} (RSD)</th>
+                  <th>{t('products.stock')}</th>
+                  <th>{t('products.status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -124,7 +124,7 @@ export default function VariantStockManager({
                       <div className="flex items-center gap-2">
                         {variant.is_default && (
                           <div className="badge badge-primary badge-sm">
-                            {t('main')}
+                            {t('products.main')}
                           </div>
                         )}
                         <span className="font-medium">
@@ -169,11 +169,11 @@ export default function VariantStockManager({
                     <td>
                       {variant.stock_quantity > 0 ? (
                         <div className="badge badge-success">
-                          {t('inStock')}
+                          {t('products.inStock')}
                         </div>
                       ) : (
                         <div className="badge badge-error">
-                          {t('outOfStock')}
+                          {t('products.outOfStock')}
                         </div>
                       )}
                     </td>
@@ -188,12 +188,12 @@ export default function VariantStockManager({
       {/* Быстрые действия */}
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body">
-          <h4 className="font-medium mb-4">{t('quickActions')}</h4>
+          <h4 className="font-medium mb-4">{t('products.quickActions')}</h4>
           <div className="flex flex-wrap gap-2">
             <button
               className="btn btn-outline btn-sm"
               onClick={() => {
-                const stock = prompt(t('setStockPrompt'));
+                const stock = prompt(t('products.setStockPrompt'));
                 if (stock) {
                   const stockNumber = parseInt(stock);
                   const updatedVariants = localVariants.map((variant) => ({
@@ -205,12 +205,12 @@ export default function VariantStockManager({
                 }
               }}
             >
-              {t('setStockForAll')}
+              {t('products.setStockForAll')}
             </button>
             <button
               className="btn btn-outline btn-sm"
               onClick={() => {
-                const price = prompt(t('setPricePrompt'));
+                const price = prompt(t('products.setPricePrompt'));
                 if (price) {
                   const priceNumber = parseFloat(price);
                   const updatedVariants = localVariants.map((variant) => ({
@@ -222,7 +222,7 @@ export default function VariantStockManager({
                 }
               }}
             >
-              {t('setPriceForAll')}
+              {t('products.setPriceForAll')}
             </button>
           </div>
         </div>

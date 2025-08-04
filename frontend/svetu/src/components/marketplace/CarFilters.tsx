@@ -15,7 +15,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
   onFiltersChange,
   className = '',
 }) => {
-  const t = useTranslations('cars.filters');
+  const t = useTranslations('cars');
 
   // Состояния для фильтров
   const [selectedMake, setSelectedMake] = useState<string>('');
@@ -134,14 +134,14 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
         <div className="flex items-center justify-between mb-4">
           <h3 className="card-title text-lg">
             <Car className="w-5 h-5" />
-            {t('title')}
+            {t('filters.title')}
           </h3>
           <button
             onClick={resetFilters}
             className="btn btn-ghost btn-sm"
-            aria-label={t('reset')}
+            aria-label={t('filters.reset')}
           >
-            {t('reset')}
+            {t('filters.reset')}
           </button>
         </div>
 
@@ -149,7 +149,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
           {/* Марка и модель */}
           <div className="space-y-2">
             <label className="label">
-              <span className="label-text font-medium">{t('make')}</span>
+              <span className="label-text font-medium">{t('filters.make')}</span>
             </label>
             <select
               value={selectedMake}
@@ -157,7 +157,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
               className="select select-bordered w-full"
               disabled={loadingMakes}
             >
-              <option value="">{t('allMakes')}</option>
+              <option value="">{t('filters.allMakes')}</option>
               {makes.map((make) => (
                 <option key={make.id} value={make.slug}>
                   {make.name}
@@ -168,7 +168,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
             {selectedMake && (
               <>
                 <label className="label">
-                  <span className="label-text font-medium">{t('model')}</span>
+                  <span className="label-text font-medium">{t('filters.model')}</span>
                 </label>
                 <select
                   value={selectedModel}
@@ -176,7 +176,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
                   className="select select-bordered w-full"
                   disabled={loadingModels || models.length === 0}
                 >
-                  <option value="">{t('allModels')}</option>
+                  <option value="">{t('filters.allModels')}</option>
                   {models.map((model) => (
                     <option key={model.id} value={model.slug}>
                       {model.name}
@@ -192,7 +192,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
             <label className="label">
               <span className="label-text font-medium">
                 <Calendar className="w-4 h-4 inline mr-1" />
-                {t('year')}
+                {t('filters.year')}
               </span>
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -201,7 +201,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
                 onChange={(e) => setYearFrom(e.target.value)}
                 className="select select-bordered select-sm"
               >
-                <option value="">{t('from')}</option>
+                <option value="">{t('filters.from')}</option>
                 {years.map((year) => (
                   <option key={year} value={year}>
                     {year}
@@ -213,7 +213,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
                 onChange={(e) => setYearTo(e.target.value)}
                 className="select select-bordered select-sm"
               >
-                <option value="">{t('to')}</option>
+                <option value="">{t('filters.to')}</option>
                 {years.map((year) => (
                   <option key={year} value={year}>
                     {year}
@@ -226,21 +226,21 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
           {/* Цена */}
           <div>
             <label className="label">
-              <span className="label-text font-medium">{t('price')}</span>
+              <span className="label-text font-medium">{t('filters.price')}</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="number"
                 value={priceFrom}
                 onChange={(e) => setPriceFrom(e.target.value)}
-                placeholder={t('from')}
+                placeholder={t('filters.from')}
                 className="input input-bordered input-sm"
               />
               <input
                 type="number"
                 value={priceTo}
                 onChange={(e) => setPriceTo(e.target.value)}
-                placeholder={t('to')}
+                placeholder={t('filters.to')}
                 className="input input-bordered input-sm"
               />
             </div>
@@ -251,14 +251,14 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
             <label className="label">
               <span className="label-text font-medium">
                 <Gauge className="w-4 h-4 inline mr-1" />
-                {t('mileage')}
+                {t('filters.mileage')}
               </span>
             </label>
             <input
               type="number"
               value={mileageMax}
               onChange={(e) => setMileageMax(e.target.value)}
-              placeholder={t('maxMileage')}
+              placeholder={t('filters.maxMileage')}
               className="input input-bordered input-sm w-full"
             />
           </div>
@@ -268,7 +268,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
             <label className="label">
               <span className="label-text font-medium">
                 <Fuel className="w-4 h-4 inline mr-1" />
-                {t('fuelType')}
+                {t('filters.fuelType')}
               </span>
             </label>
             <select
@@ -276,12 +276,12 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
               onChange={(e) => setFuelType(e.target.value)}
               className="select select-bordered select-sm w-full"
             >
-              <option value="">{t('allFuelTypes')}</option>
-              <option value="petrol">{t('petrol')}</option>
-              <option value="diesel">{t('diesel')}</option>
-              <option value="electric">{t('electric')}</option>
-              <option value="hybrid">{t('hybrid')}</option>
-              <option value="lpg">{t('lpg')}</option>
+              <option value="">{t('filters.allFuelTypes')}</option>
+              <option value="petrol">{t('filters.petrol')}</option>
+              <option value="diesel">{t('filters.diesel')}</option>
+              <option value="electric">{t('filters.electric')}</option>
+              <option value="hybrid">{t('filters.hybrid')}</option>
+              <option value="lpg">{t('filters.lpg')}</option>
             </select>
           </div>
 
@@ -290,7 +290,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
             <label className="label">
               <span className="label-text font-medium">
                 <Settings className="w-4 h-4 inline mr-1" />
-                {t('transmission')}
+                {t('filters.transmission')}
               </span>
             </label>
             <select
@@ -298,27 +298,27 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
               onChange={(e) => setTransmission(e.target.value)}
               className="select select-bordered select-sm w-full"
             >
-              <option value="">{t('allTransmissions')}</option>
-              <option value="manual">{t('manual')}</option>
-              <option value="automatic">{t('automatic')}</option>
-              <option value="semi-automatic">{t('semiAutomatic')}</option>
+              <option value="">{t('filters.allTransmissions')}</option>
+              <option value="manual">{t('filters.manual')}</option>
+              <option value="automatic">{t('filters.automatic')}</option>
+              <option value="semi-automatic">{t('filters.semiAutomatic')}</option>
             </select>
           </div>
 
           {/* Состояние */}
           <div>
             <label className="label">
-              <span className="label-text font-medium">{t('condition')}</span>
+              <span className="label-text font-medium">{t('filters.condition')}</span>
             </label>
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
               className="select select-bordered select-sm w-full"
             >
-              <option value="">{t('allConditions')}</option>
-              <option value="new">{t('new')}</option>
-              <option value="used">{t('used')}</option>
-              <option value="damaged">{t('damaged')}</option>
+              <option value="">{t('filters.allConditions')}</option>
+              <option value="new">{t('filters.new')}</option>
+              <option value="used">{t('filters.used')}</option>
+              <option value="damaged">{t('filters.damaged')}</option>
             </select>
           </div>
         </div>

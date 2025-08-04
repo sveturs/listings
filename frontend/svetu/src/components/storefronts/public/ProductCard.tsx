@@ -19,7 +19,7 @@ export default function ProductCard({
   storefrontId, 
   viewMode = 'grid' 
 }: ProductCardProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
 
   const mainImage = product.images?.find(img => img.is_default) || product.images?.[0];
   
@@ -71,7 +71,7 @@ export default function ProductCard({
                     {t(`stockStatus.${product.stock_status || 'in_stock'}`)}
                   </span>
                   <span className="text-sm text-base-content/70">
-                    ({product.stock_quantity} {t('units')})
+                    ({product.stock_quantity} {t('products.units')})
                   </span>
                 </div>
               </div>
@@ -155,7 +155,7 @@ export default function ProductCard({
             {t(`stockStatus.${product.stock_status || 'in_stock'}`)}
           </span>
           <span className="text-sm text-base-content/70">
-            ({product.stock_quantity} {t('units')})
+            ({product.stock_quantity} {t('products.units')})
           </span>
         </div>
 

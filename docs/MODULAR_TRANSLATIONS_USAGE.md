@@ -37,15 +37,17 @@ export function MarketplaceComponent() {
 }
 ```
 
-### Использование с namespace
+### Использование вложенных ключей
 
 ```typescript
-// Для вложенных ключей
-const t = useTranslations('marketplace.listing');
+// ВАЖНО: В модульной системе НЕ используются вложенные пути в useTranslations!
+// Правильно:
+const t = useTranslations('marketplace');
+t('listing.title') // для доступа к вложенному ключу
+t('listing.price')
 
-// Теперь можно использовать короткие ключи
-t('title') // вместо t('marketplace.listing.title')
-t('price') // вместо t('marketplace.listing.price')
+// Неправильно:
+// const t = useTranslations('marketplace.listing'); // Это вызовет ошибку!
 ```
 
 ## 📄 Обновление страниц

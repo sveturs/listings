@@ -24,7 +24,7 @@ export const ProductCard = memo(function ProductCard({
   onToggleSelect,
   viewMode = 'grid',
 }: ProductCardProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
 
   const mainImage =
     product.images?.find((img) => img.is_default) || product.images?.[0];
@@ -48,7 +48,7 @@ export const ProductCard = memo(function ProductCard({
       // Проверяем что клик не на чекбоксе или label
       if (
         !target.closest('input[type="checkbox"]') &&
-        !target.closest('label')
+        !target.closest('products.label')
       ) {
         e.preventDefault();
         onToggleSelect(product.id);
@@ -118,7 +118,7 @@ export const ProductCard = memo(function ProductCard({
             </span>
           )}
           <div className="text-sm opacity-50">
-            {product.stock_quantity} {t('units')}
+            {product.stock_quantity} {t('products.units')}
           </div>
         </td>
         <td>
@@ -130,7 +130,7 @@ export const ProductCard = memo(function ProductCard({
           <span
             className={`badge ${product.is_active ? 'badge-success' : 'badge-ghost'}`}
           >
-            {product.is_active ? t('active') : t('inactive')}
+            {product.is_active ? t('products.active') : t('products.inactive')}
           </span>
         </td>
         <td>
@@ -194,7 +194,7 @@ export const ProductCard = memo(function ProductCard({
         {/* Статус активности */}
         {!product.is_active && (
           <div className="absolute top-2 right-2">
-            <span className="badge badge-ghost">{t('inactive')}</span>
+            <span className="badge badge-ghost">{t('products.inactive')}</span>
           </div>
         )}
       </figure>
@@ -231,7 +231,7 @@ export const ProductCard = memo(function ProductCard({
               </span>
             )}
             <span className="text-sm text-base-content/70">
-              ({product.stock_quantity} {t('units')})
+              ({product.stock_quantity} {t('products.units')})
             </span>
           </div>
 
@@ -244,7 +244,7 @@ export const ProductCard = memo(function ProductCard({
                 onClick={(e) => e.stopPropagation()}
               >
                 <FiEdit2 className="w-4 h-4" />
-                {t('edit')}
+                {t('products.edit')}
               </Link>
             </div>
           )}

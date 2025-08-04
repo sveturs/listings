@@ -29,7 +29,7 @@ export function InlineTranslationEditor({
   onCancel,
   compact = false,
 }: InlineTranslationEditorProps) {
-  const t = useTranslations('admin.translations');
+  const t = useTranslations('admin');
   const locale = useLocale();
   const [isEditing, setIsEditing] = useState(false);
   const [translations, setTranslations] = useState(initialTranslations);
@@ -59,7 +59,7 @@ export function InlineTranslationEditor({
       await onSave(translations);
       setIsEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('saveFailed'));
+      setError(err instanceof Error ? err.message : t('translations.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -84,7 +84,7 @@ export function InlineTranslationEditor({
               <span className="text-sm">
                 {translations[locale] ||
                   translations[LANGUAGES[0]] ||
-                  t('notTranslated')}
+                  t('translations.notTranslated')}
               </span>
               <button
                 className="btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-opacity"
@@ -106,7 +106,7 @@ export function InlineTranslationEditor({
                   <span className="text-sm flex-1">
                     {translations[lang] || (
                       <span className="text-base-content/50">
-                        {t('notTranslated')}
+                        {t('translations.notTranslated')}
                       </span>
                     )}
                   </span>
@@ -119,7 +119,7 @@ export function InlineTranslationEditor({
                   handleEdit();
                 }}
               >
-                ✏️ {t('edit')}
+                ✏️ {t('translations.edit')}
               </button>
             </div>
           )}
@@ -143,7 +143,7 @@ export function InlineTranslationEditor({
               value={translations[lang] || ''}
               onChange={(e) => handleTranslationChange(lang, e.target.value)}
               className="input input-bordered input-sm w-full"
-              placeholder={t('enterTranslation')}
+              placeholder={t('translations.enterTranslation')}
               disabled={saving}
             />
           </div>
@@ -165,10 +165,10 @@ export function InlineTranslationEditor({
           {saving ? (
             <>
               <span className="loading loading-spinner loading-xs"></span>
-              {t('saving')}
+              {t('translations.saving')}
             </>
           ) : (
-            <>💾 {t('save')}</>
+            <>💾 {t('translations.save')}</>
           )}
         </button>
         <button
@@ -176,7 +176,7 @@ export function InlineTranslationEditor({
           disabled={saving}
           className="btn btn-ghost btn-sm flex-1"
         >
-          {t('cancel')}
+          {t('translations.cancel')}
         </button>
       </div>
     </div>

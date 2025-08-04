@@ -24,7 +24,7 @@ export default function SimplifiedVariantGenerator({
   categoryId,
   categorySlug: propCategorySlug,
 }: SimplifiedVariantGeneratorProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const [generatedVariants, setGeneratedVariants] = useState<any[]>([]);
   const [showStockManager, setShowStockManager] = useState(false);
 
@@ -204,7 +204,7 @@ export default function SimplifiedVariantGenerator({
       if (attr.attribute_type === 'multiselect') {
         if (Array.isArray(value)) return value.length > 0;
         if (typeof value === 'string' && value.includes(',')) {
-          return value.split(',').filter(Boolean).length > 0;
+          return value.split('products.,').filter(Boolean).length > 0;
         }
       }
 
@@ -230,7 +230,7 @@ export default function SimplifiedVariantGenerator({
         values = value;
       } else if (typeof value === 'string') {
         if (value.includes(',')) {
-          values = value.split(',').filter(Boolean);
+          values = value.split('products.,').filter(Boolean);
         } else {
           values = [value];
         }
@@ -298,7 +298,7 @@ export default function SimplifiedVariantGenerator({
       if (Array.isArray(value)) {
         count = value.length;
       } else if (typeof value === 'string' && value.includes(',')) {
-        count = value.split(',').filter(Boolean).length;
+        count = value.split('products.,').filter(Boolean).length;
       } else if (value) {
         count = 1;
       }
@@ -313,13 +313,13 @@ export default function SimplifiedVariantGenerator({
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">
-            {t('configureStockAndPrices')}
+            {t('products.configureStockAndPrices')}
           </h3>
           <button
             onClick={() => setShowStockManager(false)}
             className="btn btn-outline btn-sm"
           >
-            ← {t('backToSettings')}
+            ← {t('products.backToSettings')}
           </button>
         </div>
 
@@ -333,13 +333,13 @@ export default function SimplifiedVariantGenerator({
             onClick={() => setShowStockManager(false)}
             className="btn btn-outline"
           >
-            {t('cancel')}
+            {t('products.cancel')}
           </button>
           <button
             onClick={() => handleVariantsConfirm(generatedVariants)}
             className="btn btn-primary"
           >
-            {t('confirmVariants')}
+            {t('products.confirmVariants')}
           </button>
         </div>
       </div>
@@ -364,8 +364,8 @@ export default function SimplifiedVariantGenerator({
             />
           </svg>
           <div>
-            <h3 className="font-bold">{t('noVariantAttributes')}</h3>
-            <div className="text-xs">{t('setupAttributesFirst')}</div>
+            <h3 className="font-bold">{t('products.noVariantAttributes')}</h3>
+            <div className="text-xs">{t('products.setupAttributesFirst')}</div>
           </div>
         </div>
 
@@ -410,7 +410,7 @@ export default function SimplifiedVariantGenerator({
             values = value;
           } else if (typeof value === 'string') {
             if (value.includes(',')) {
-              values = value.split(',').filter(Boolean);
+              values = value.split('products.,').filter(Boolean);
             } else {
               values = [value];
             }
@@ -450,20 +450,20 @@ export default function SimplifiedVariantGenerator({
             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>{t('willGenerateVariants', { count: getTotalVariants() })}</span>
+        <span>{t('products.willGenerateVariants', { count: getTotalVariants() })}</span>
       </div>
 
       {/* Кнопки */}
       <div className="flex justify-end space-x-2">
         <button onClick={onCancel} className="btn btn-outline">
-          {t('cancel')}
+          {t('products.cancel')}
         </button>
         <button
           onClick={generateVariants}
           disabled={getTotalVariants() === 0}
           className="btn btn-primary"
         >
-          {t('generateVariants')}
+          {t('products.generateVariants')}
         </button>
       </div>
     </div>

@@ -51,13 +51,13 @@ func Localization(config ...LocalizationConfig) fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
 		locale := detectLocale(c, cfg)
-		
+
 		// Store locale in context
 		c.Locals(string(LocaleContextKey), locale)
-		
+
 		// Add locale to response headers for debugging
 		c.Set("X-Detected-Locale", locale)
-		
+
 		log.Debug().
 			Str("locale", locale).
 			Str("path", c.Path()).
@@ -113,21 +113,21 @@ func parseAcceptLanguage(acceptLang string, supportedLocales []string) string {
 
 	// Parse Accept-Language header: "en-US,en;q=0.9,ru;q=0.8,sr;q=0.7"
 	languages := strings.Split(acceptLang, ",")
-	
+
 	type langWithQuality struct {
 		lang    string
 		quality float32
 	}
-	
+
 	var parsed []langWithQuality
-	
+
 	for _, lang := range languages {
 		lang = strings.TrimSpace(lang)
 		parts := strings.Split(lang, ";")
-		
+
 		langCode := strings.TrimSpace(parts[0])
 		quality := float32(1.0) // Default quality
-		
+
 		// Parse quality value if present
 		if len(parts) > 1 {
 			for _, part := range parts[1:] {
@@ -140,15 +140,15 @@ func parseAcceptLanguage(acceptLang string, supportedLocales []string) string {
 				}
 			}
 		}
-		
+
 		// Extract main language code (en-US -> en)
 		if idx := strings.Index(langCode, "-"); idx > 0 {
 			langCode = langCode[:idx]
 		}
-		
+
 		parsed = append(parsed, langWithQuality{lang: langCode, quality: quality})
 	}
-	
+
 	// Sort by quality (highest first)
 	for i := 0; i < len(parsed)-1; i++ {
 		for j := i + 1; j < len(parsed); j++ {
@@ -157,14 +157,14 @@ func parseAcceptLanguage(acceptLang string, supportedLocales []string) string {
 			}
 		}
 	}
-	
+
 	// Find first supported language
 	for _, item := range parsed {
 		if isValidLocale(item.lang, supportedLocales) {
 			return item.lang
 		}
 	}
-	
+
 	return ""
 }
 

@@ -28,7 +28,7 @@ export function BatchTranslationModal({
   selectedNames = [],
   onComplete,
 }: BatchTranslationModalProps) {
-  const t = useTranslations('admin.translations');
+  const t = useTranslations('admin');
   const [translating, setTranslating] = useState(false);
   const [results, setResults] = useState<TranslationResult[]>([]);
   const [overallProgress, setOverallProgress] = useState(0);
@@ -72,7 +72,7 @@ export function BatchTranslationModal({
         const finalResults = initialResults.map((result) => ({
           ...result,
           status: 'error' as const,
-          error: t('translationFailed'),
+          error: t('translations.translationFailed'),
         }));
         setResults(finalResults);
       }
@@ -89,7 +89,7 @@ export function BatchTranslationModal({
         prev.map((result) => ({
           ...result,
           status: 'error',
-          error: error instanceof Error ? error.message : t('unexpectedError'),
+          error: error instanceof Error ? error.message : t('translations.unexpectedError'),
         }))
       );
       setOverallProgress(100);
@@ -151,7 +151,7 @@ export function BatchTranslationModal({
     <dialog className={`modal ${isOpen ? 'modal-open' : ''}`}>
       <div className="modal-box max-w-2xl">
         <h3 className="font-bold text-lg mb-4">
-          {t('batchTranslation')} -{' '}
+          {t('translations.batchTranslation')} -{' '}
           {t(entityType === 'category' ? 'categories' : 'attributes')}
         </h3>
 
@@ -159,7 +159,7 @@ export function BatchTranslationModal({
           {/* Информация о выбранных элементах */}
           <div className="alert alert-info">
             <span>
-              {t('selected')}: {selectedIds.length}{' '}
+              {t('translations.selected')}: {selectedIds.length}{' '}
               {t(entityType === 'category' ? 'categories' : 'attributes')}
             </span>
           </div>
@@ -168,7 +168,7 @@ export function BatchTranslationModal({
           {translating && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>{t('translating')}...</span>
+                <span>{t('translations.translating')}...</span>
                 <span>{Math.round(overallProgress)}%</span>
               </div>
               <progress
@@ -185,8 +185,8 @@ export function BatchTranslationModal({
               <table className="table table-sm">
                 <thead>
                   <tr>
-                    <th>{t('name')}</th>
-                    <th>{t('status')}</th>
+                    <th>{t('translations.name')}</th>
+                    <th>{t('translations.status')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -219,11 +219,11 @@ export function BatchTranslationModal({
           {!translating && results.length > 0 && (
             <div className="stats shadow">
               <div className="stat">
-                <div className="stat-title">{t('successful')}</div>
+                <div className="stat-title">{t('translations.successful')}</div>
                 <div className="stat-value text-success">{successCount}</div>
               </div>
               <div className="stat">
-                <div className="stat-title">{t('failed')}</div>
+                <div className="stat-title">{t('translations.failed')}</div>
                 <div className="stat-value text-error">{errorCount}</div>
               </div>
             </div>
@@ -233,12 +233,12 @@ export function BatchTranslationModal({
         <div className="modal-action">
           {!translating && errorCount > 0 && (
             <button onClick={handleRetryFailed} className="btn btn-warning">
-              🔄 {t('retryFailed')}
+              🔄 {t('translations.retryFailed')}
             </button>
           )}
           {!translating && results.length === 0 && (
             <button onClick={handleTranslate} className="btn btn-primary">
-              🌍 {t('startTranslation')}
+              🌍 {t('translations.startTranslation')}
             </button>
           )}
           <button
@@ -246,7 +246,7 @@ export function BatchTranslationModal({
             disabled={translating}
             className="btn btn-ghost"
           >
-            {t('close')}
+            {t('translations.close')}
           </button>
         </div>
       </div>

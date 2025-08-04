@@ -97,14 +97,14 @@ function DefaultErrorFallback({
 }
 
 export function AuthErrorBoundary({ children }: { children: ReactNode }) {
-  const t = useTranslations('errors.authError');
+  const t = useTranslations('common');
 
   const messages: ErrorMessages = useMemo(
     () => ({
-      title: t('title'),
-      description: t('description'),
-      details: t('details'),
-      reload: t('reload'),
+      title: t('errors.authError.title'),
+      description: t('errors.authError.description'),
+      details: t('errors.authError.details'),
+      reload: t('errors.authError.reload'),
     }),
     [t]
   );

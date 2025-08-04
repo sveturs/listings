@@ -146,19 +146,13 @@ export default function MyListingsPage() {
   };
 
   const handleDelete = async (listingId: number, listingTitle: string) => {
-    // Use toast confirmation instead of native confirm
-    toast.warning(`${t('confirmDelete')}: "${listingTitle}"`, {
-      action: {
-        label: t('delete'),
-        onClick: async () => {
-          await performDelete(listingId, listingTitle);
-        }
-      }
-    });
+    // Use browser confirm dialog
+    if (window.confirm(`${t('confirmDelete')}: "${listingTitle}"`)) {
+      await performDelete(listingId, listingTitle);
+    }
   };
 
-  const performDelete = async (listingId: number, listingTitle: string) => {
-
+  const performDelete = async (listingId: number, _listingTitle: string) => {
     try {
       setDeletingId(listingId);
 

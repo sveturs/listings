@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { loadMessages } from '@/lib/i18n/loadMessages';
 import { useLocale } from 'next-intl';
 
@@ -13,7 +13,7 @@ export function ModularTranslationExample() {
   const t = useTranslations();
   const [adminTranslations, setAdminTranslations] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  
+
   // Пример динамической загрузки модуля
   const loadAdminModule = async () => {
     setLoading(true);
@@ -26,11 +26,11 @@ export function ModularTranslationExample() {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="p-6 space-y-4">
       <h2 className="text-2xl font-bold">Пример модульных переводов</h2>
-      
+
       {/* Базовые переводы (всегда доступны) */}
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
@@ -40,13 +40,13 @@ export function ModularTranslationExample() {
           <p>{t('common.cancel')}</p>
         </div>
       </div>
-      
+
       {/* Динамически загружаемые переводы */}
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <h3 className="card-title">Динамические переводы (admin)</h3>
           {!adminTranslations ? (
-            <button 
+            <button
               className="btn btn-primary"
               onClick={loadAdminModule}
               disabled={loading}
@@ -61,7 +61,7 @@ export function ModularTranslationExample() {
           )}
         </div>
       </div>
-      
+
       {/* Использование с namespace */}
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
@@ -70,7 +70,8 @@ export function ModularTranslationExample() {
             {`const t = useTranslations('marketplace');`}
           </code>
           <p className="mt-2">
-            Это позволяет использовать короткие ключи: t('title') вместо t('marketplace.title')
+            Это позволяет использовать короткие ключи: t(&apos;title&apos;)
+            вместо t(&apos;marketplace.title&apos;)
           </p>
         </div>
       </div>

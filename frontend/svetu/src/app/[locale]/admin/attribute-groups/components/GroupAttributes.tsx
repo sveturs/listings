@@ -21,8 +21,8 @@ export default function GroupAttributes({
   onUpdate,
   onClose,
 }: GroupAttributesProps) {
-  const t = useTranslations('admin.attributeGroups');
-  const tCommon = useTranslations('admin.common');
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('admin');
 
   const [allAttributes, setAllAttributes] = useState<Attribute[]>([]);
   const [groupItems, setGroupItems] = useState<AttributeGroupItem[]>([]);
@@ -48,7 +48,7 @@ export default function GroupAttributes({
       const { items } = await adminApi.attributeGroups.getWithItems(group.id);
       setGroupItems(items || []);
     } catch (error) {
-      toast.error(tCommon('error'));
+      toast.error(tCommon('common.error'));
       console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
@@ -67,26 +67,26 @@ export default function GroupAttributes({
         sort_order: groupItems.length,
       });
 
-      toast.success(tCommon('saveSuccess'));
+      toast.success(tCommon('common.saveSuccess'));
       setSelectedAttribute(null);
       await loadData();
       onUpdate();
     } catch (error) {
-      toast.error(tCommon('error'));
+      toast.error(tCommon('common.error'));
       console.error('Failed to add attribute:', error);
     }
   };
 
   const handleRemoveAttribute = async (attributeId: number) => {
-    if (!confirm(tCommon('confirmDelete'))) return;
+    if (!confirm(tCommon('common.confirmDelete'))) return;
 
     try {
       await adminApi.attributeGroups.removeItem(group.id, attributeId);
-      toast.success(tCommon('deleteSuccess'));
+      toast.success(tCommon('common.deleteSuccess'));
       await loadData();
       onUpdate();
     } catch (error) {
-      toast.error(tCommon('error'));
+      toast.error(tCommon('common.error'));
       console.error('Failed to remove attribute:', error);
     }
   };
@@ -109,7 +109,7 @@ export default function GroupAttributes({
       {/* Add attribute */}
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('availableAttributes')}</span>
+          <span className="label-text">{t('attributeGroups.availableAttributes')}</span>
         </label>
         <div className="flex gap-2">
           <select
@@ -129,7 +129,7 @@ export default function GroupAttributes({
             className="btn btn-primary"
             disabled={!selectedAttribute}
           >
-            {tCommon('add')}
+            {tCommon('common.add')}
           </button>
         </div>
       </div>
@@ -137,7 +137,7 @@ export default function GroupAttributes({
       {/* Current attributes */}
       <div>
         <label className="label">
-          <span className="label-text">{t('selectedAttributes')}</span>
+          <span className="label-text">{t('attributeGroups.selectedAttributes')}</span>
         </label>
 
         {groupItems.length === 0 ? (
@@ -189,12 +189,12 @@ export default function GroupAttributes({
       </div>
 
       <div className="text-sm text-base-content/60">
-        <p>{t('dragToReorder')}</p>
+        <p>{t('attributeGroups.dragToReorder')}</p>
       </div>
 
       <div className="pt-4">
         <button onClick={onClose} className="btn btn-ghost w-full">
-          {tCommon('close')}
+          {tCommon('common.close')}
         </button>
       </div>
     </div>
