@@ -700,5 +700,28 @@
     "noAttributesForCategory": "Для категории \"{category}\" дополнительные атрибуты не требуются.",
     "whyAttributesImportant": "Почему это важно?",
     "attributesHelpBuyers": "Заполненные атрибуты помогают покупателям лучше найти ваш товар и повышают доверие к объявлению."
+  },
+  "home": {
+    "title": "Главная",
+    "marketplace": "Объявления",
+    "errorLoadingData": "Ошибка загрузки данных. Пожалуйста, попробуйте позже.",
+    "noItems": "Объявления не найдены",
+    "loadMore": "Загрузить еще",
+    "loading": "Загрузка...",
+    "createListing": "Подать объявление",
+    "latestListings": "Последние объявления",
+    "mapView": "Карта",
+    "listView": "Список",
+    "filters": "Фильтры",
+    "view": "Вид",
+    "activeFilters": "Активные фильтры",
+    "clearAll": "Очистить все",
+    "map": "Карта",
+    "switchToMapView": "Переключить на вид карты",
+    "switchToListView": "Переключить на вид списка",
+    "paymentsNowAvailable": "Платежи теперь доступны!",
+    "description": "Находите лучшие предложения от частных лиц и магазинов",
+    "privateListingsOnly": "Только частные объявления",
+    "privateListingsOnlyDescription": "Показывать только товары от частных продавцов"
   }
 }

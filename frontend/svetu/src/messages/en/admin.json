@@ -583,5 +583,21 @@
       "unexpectedError": "Unexpected error occurred",
       "name": "Name"
     }
+  },
+  "analytics": {
+    "error": {
+      "rate_limit_exceeded": "Too many requests. Please try again later.",
+      "invalid_request": "Invalid request format",
+      "validation_failed": "Request validation failed",
+      "failed_to_track": "Failed to track event",
+      "failed_to_get_metrics": "Failed to retrieve metrics",
+      "invalid_period_start": "Invalid start date format",
+      "invalid_period_end": "Invalid end date format",
+      "failed_to_get_events": "Failed to retrieve events",
+      "invalid_user_id": "Invalid user ID",
+      "invalid_session_id": "Invalid session ID",
+      "period_required": "Period start and end dates are required",
+      "failed_to_update_metrics": "Failed to update metrics"
+    }
   }
 }

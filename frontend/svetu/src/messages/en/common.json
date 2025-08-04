@@ -182,5 +182,22 @@
     "settingsUpdated": "Settings updated",
     "markedAsRead": "Notification marked as read",
     "updateError": "Error updating notification status"
+  },
+  "header": {
+    "nav": {
+      "blog": "Blog",
+      "news": "News",
+      "map": "Map",
+      "contacts": "Contacts",
+      "userContacts": "My Contacts",
+      "createListing": "Create Listing"
+    },
+    "theme": {
+      "light": "Light theme",
+      "dark": "Dark theme"
+    },
+    "search": {
+      "placeholder": "Search products and services..."
+    }
   }
 }

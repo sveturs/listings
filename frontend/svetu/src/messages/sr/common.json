@@ -281,5 +281,22 @@
     "HR": "Croatia",
     "ME": "Montenegro",
     "MK": "North Macedonia"
+  },
+  "header": {
+    "nav": {
+      "blog": "Blog",
+      "news": "Vesti",
+      "contacts": "Kontakti",
+      "userContacts": "My Contacts",
+      "createListing": "Kreiraj oglas",
+      "map": "Mapa"
+    },
+    "theme": {
+      "light": "Svetla tema",
+      "dark": "Tamna tema"
+    },
+    "search": {
+      "placeholder": "Pretražite proizvode i usluge..."
+    }
   }
 }

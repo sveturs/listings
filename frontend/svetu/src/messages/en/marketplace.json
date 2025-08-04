@@ -680,5 +680,28 @@
     "noAttributesForCategory": "No additional attributes required for category \"{category}\".",
     "whyAttributesImportant": "Why is this important?",
     "attributesHelpBuyers": "Filled attributes help buyers find your product better and increase trust in the listing."
+  },
+  "home": {
+    "title": "Home",
+    "marketplace": "Marketplace",
+    "errorLoadingData": "Error loading data. Please try again later.",
+    "noItems": "No items found",
+    "loadMore": "Load more",
+    "loading": "Loading...",
+    "createListing": "Create Listing",
+    "latestListings": "Latest Listings",
+    "mapView": "Map",
+    "listView": "List",
+    "filters": "Filters",
+    "view": "View",
+    "activeFilters": "Active filters",
+    "clearAll": "Clear all",
+    "map": "Map",
+    "switchToMapView": "Switch to map view",
+    "switchToListView": "Switch to list view",
+    "paymentsNowAvailable": "Payments are now available!",
+    "description": "Find the best deals from individuals and stores",
+    "privateListingsOnly": "Private listings only",
+    "privateListingsOnlyDescription": "Show only marketplace products from private sellers"
   }
 }

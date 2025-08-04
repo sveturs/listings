@@ -594,5 +594,21 @@
       "unexpectedError": "Произошла неожиданная ошибка",
       "name": "Название"
     }
+  },
+  "analytics": {
+    "error": {
+      "rate_limit_exceeded": "Слишком много запросов. Попробуйте позже.",
+      "invalid_request": "Неверный формат запроса",
+      "validation_failed": "Ошибка валидации запроса",
+      "failed_to_track": "Не удалось отследить событие",
+      "failed_to_get_metrics": "Не удалось получить метрики",
+      "invalid_period_start": "Неверный формат даты начала",
+      "invalid_period_end": "Неверный формат даты окончания",
+      "failed_to_get_events": "Не удалось получить события",
+      "invalid_user_id": "Неверный ID пользователя",
+      "invalid_session_id": "Неверный ID сессии",
+      "period_required": "Требуются даты начала и окончания периода",
+      "failed_to_update_metrics": "Не удалось обновить метрики"
+    }
   }
 }

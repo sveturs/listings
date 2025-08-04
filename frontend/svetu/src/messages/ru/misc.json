@@ -1,44 +1,4 @@
 {
-  "home": {
-    "title": "Главная",
-    "marketplace": "Объявления",
-    "errorLoadingData": "Ошибка загрузки данных. Пожалуйста, попробуйте позже.",
-    "noItems": "Объявления не найдены",
-    "loadMore": "Загрузить еще",
-    "loading": "Загрузка...",
-    "createListing": "Подать объявление",
-    "latestListings": "Последние объявления",
-    "mapView": "Карта",
-    "listView": "Список",
-    "filters": "Фильтры",
-    "view": "Вид",
-    "activeFilters": "Активные фильтры",
-    "clearAll": "Очистить все",
-    "map": "Карта",
-    "switchToMapView": "Переключить на вид карты",
-    "switchToListView": "Переключить на вид списка",
-    "paymentsNowAvailable": "Платежи теперь доступны!",
-    "description": "Находите лучшие предложения от частных лиц и магазинов",
-    "privateListingsOnly": "Только частные объявления",
-    "privateListingsOnlyDescription": "Показывать только товары от частных продавцов"
-  },
-  "header": {
-    "nav": {
-      "blog": "Блог",
-      "news": "Новости",
-      "map": "Карта",
-      "contacts": "Контакты",
-      "userContacts": "Мои контакты",
-      "createListing": "Подать объявление"
-    },
-    "theme": {
-      "light": "Светлая тема",
-      "dark": "Темная тема"
-    },
-    "search": {
-      "placeholder": "Поиск товаров и услуг..."
-    }
-  },
   "blog": {
     "title": "Блог",
     "description": "Добро пожаловать в наш блог. Здесь вы найдете интересные статьи и полезную информацию.",
@@ -1657,22 +1617,6 @@
       "encoding": "Кодировка",
       "maxFileSize": "Максимальный размер файла",
       "maxProducts": "Максимум товаров за импорт"
-    }
-  },
-  "analytics": {
-    "error": {
-      "rate_limit_exceeded": "Слишком много запросов. Попробуйте позже.",
-      "invalid_request": "Неверный формат запроса",
-      "validation_failed": "Ошибка валидации запроса",
-      "failed_to_track": "Не удалось отследить событие",
-      "failed_to_get_metrics": "Не удалось получить метрики",
-      "invalid_period_start": "Неверный формат даты начала",
-      "invalid_period_end": "Неверный формат даты окончания",
-      "failed_to_get_events": "Не удалось получить события",
-      "invalid_user_id": "Неверный ID пользователя",
-      "invalid_session_id": "Неверный ID сессии",
-      "period_required": "Требуются даты начала и окончания периода",
-      "failed_to_update_metrics": "Не удалось обновить метрики"
     }
   },
   "behaviorTracking": {

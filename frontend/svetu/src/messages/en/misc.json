@@ -1,44 +1,4 @@
 {
-  "home": {
-    "title": "Home",
-    "marketplace": "Marketplace",
-    "errorLoadingData": "Error loading data. Please try again later.",
-    "noItems": "No items found",
-    "loadMore": "Load more",
-    "loading": "Loading...",
-    "createListing": "Create Listing",
-    "latestListings": "Latest Listings",
-    "mapView": "Map",
-    "listView": "List",
-    "filters": "Filters",
-    "view": "View",
-    "activeFilters": "Active filters",
-    "clearAll": "Clear all",
-    "map": "Map",
-    "switchToMapView": "Switch to map view",
-    "switchToListView": "Switch to list view",
-    "paymentsNowAvailable": "Payments are now available!",
-    "description": "Find the best deals from individuals and stores",
-    "privateListingsOnly": "Private listings only",
-    "privateListingsOnlyDescription": "Show only marketplace products from private sellers"
-  },
-  "header": {
-    "nav": {
-      "blog": "Blog",
-      "news": "News",
-      "map": "Map",
-      "contacts": "Contacts",
-      "userContacts": "My Contacts",
-      "createListing": "Create Listing"
-    },
-    "theme": {
-      "light": "Light theme",
-      "dark": "Dark theme"
-    },
-    "search": {
-      "placeholder": "Search products and services..."
-    }
-  },
   "blog": {
     "title": "Blog",
     "description": "Welcome to our blog. Here you'll find interesting articles and useful information.",
@@ -1599,22 +1559,6 @@
       "encoding": "Encoding",
       "maxFileSize": "Maximum file size",
       "maxProducts": "Maximum products per import"
-    }
-  },
-  "analytics": {
-    "error": {
-      "rate_limit_exceeded": "Too many requests. Please try again later.",
-      "invalid_request": "Invalid request format",
-      "validation_failed": "Request validation failed",
-      "failed_to_track": "Failed to track event",
-      "failed_to_get_metrics": "Failed to retrieve metrics",
-      "invalid_period_start": "Invalid start date format",
-      "invalid_period_end": "Invalid end date format",
-      "failed_to_get_events": "Failed to retrieve events",
-      "invalid_user_id": "Invalid user ID",
-      "invalid_session_id": "Invalid session ID",
-      "period_required": "Period start and end dates are required",
-      "failed_to_update_metrics": "Failed to update metrics"
     }
   },
   "behaviorTracking": {

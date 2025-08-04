@@ -1,5 +1,5 @@
 // Автосгенерированный файл для модульной загрузки переводов
-// Сгенерирован: 2025-08-04T08:39:33.511Z
+// Сгенерирован: 2025-08-04T08:43:46.167Z
 // НЕ РЕДАКТИРУЙТЕ ВРУЧНУЮ!
 
 // Базовые переводы (загружаются всегда)
@@ -7,24 +7,24 @@ import common from './common.json';
 
 // Типы модулей
 export type TranslationModule = 
-  | 'common'
-  | 'auth'
-  | 'marketplace'
   | 'admin'
-  | 'storefront'
+  | 'auth'
   | 'cars'
   | 'cart'
-  | 'misc';
+  | 'common'
+  | 'marketplace'
+  | 'misc'
+  | 'storefront';
 
 // Карта модулей для динамической загрузки
 export const moduleLoaders = {
-  'auth': () => import('./auth.json'),
-  'marketplace': () => import('./marketplace.json'),
   'admin': () => import('./admin.json'),
-  'storefront': () => import('./storefront.json'),
+  'auth': () => import('./auth.json'),
   'cars': () => import('./cars.json'),
   'cart': () => import('./cart.json'),
-  'misc': () => import('./misc.json')
+  'marketplace': () => import('./marketplace.json'),
+  'misc': () => import('./misc.json'),
+  'storefront': () => import('./storefront.json')
 };
 
 // Функция загрузки модуля

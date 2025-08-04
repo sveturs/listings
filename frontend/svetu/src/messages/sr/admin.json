@@ -556,5 +556,21 @@
         "removed": "Administrator uspešno uklonjen"
       }
     }
+  },
+  "analytics": {
+    "error": {
+      "rate_limit_exceeded": "Previše zahteva. Pokušajte ponovo kasnije.",
+      "invalid_request": "Neispravan format zahteva",
+      "validation_failed": "Greška validacije zahteva",
+      "failed_to_track": "Nije moguće pratiti događaj",
+      "failed_to_get_metrics": "Nije moguće dobiti metrike",
+      "invalid_period_start": "Neispravan format početnog datuma",
+      "invalid_period_end": "Neispravan format završnog datuma",
+      "failed_to_get_events": "Nije moguće dobiti događaje",
+      "invalid_user_id": "Neispravan ID korisnika",
+      "invalid_session_id": "Neispravan ID sesije",
+      "period_required": "Potrebni su datumi početka i kraja perioda",
+      "failed_to_update_metrics": "Nije moguće ažurirati metrike"
+    }
   }
 }

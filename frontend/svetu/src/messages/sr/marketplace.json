@@ -672,5 +672,23 @@
     "noAttributesForCategory": "Za kategoriju \"{category}\" nisu potrebni dodatni atributi.",
     "whyAttributesImportant": "Zašto je ovo važno?",
     "attributesHelpBuyers": "Popunjeni atributi pomažu kupcima da lakše pronađu vaš proizvod i povećavaju poverenje u oglas."
+  },
+  "home": {
+    "title": "Početna",
+    "marketplace": "Oglasi",
+    "errorLoadingData": "Greška pri učitavanju podataka. Pokušajte ponovo kasnije.",
+    "noItems": "Nema pronađenih stavki",
+    "loadMore": "Učitaj još",
+    "loading": "Učitavanje...",
+    "createListing": "Kreiraj oglas",
+    "paymentsNowAvailable": "Plaćanja su sada dostupna!",
+    "description": "Pronađite najbolje ponude od pojedinaca i prodavnica",
+    "privateListingsOnly": "Samo privatni oglasi",
+    "privateListingsOnlyDescription": "Prikazati samo proizvode od privatnih prodavaca",
+    "latestListings": "Najnoviji oglasi",
+    "listView": "Prikaz liste",
+    "mapView": "Prikaz mape",
+    "switchToListView": "Prebaci na prikaz liste",
+    "switchToMapView": "Prebaci na prikaz mape"
   }
 }
