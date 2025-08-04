@@ -61,7 +61,19 @@
         "details": "Error details",
         "reload": "Reload page"
       }
-    }
+    },
+    "minutes": "Minutes",
+    "km": "Km",
+    "m": "M",
+    "resetFilters": "Reset Filters",
+    "translate": "Translate",
+    "systemName": "System Name",
+    "sortOrder": "Sort Order",
+    "isActive": "Is Active",
+    "translating": "Translating",
+    "saveSuccess": "Save Success",
+    "confirmDelete": "Confirm Delete",
+    "deleteSuccess": "Delete Success"
   },
   "navigation": {
     "home": "Home",
@@ -172,7 +184,12 @@
       "byDate": "By Date",
       "filters": "Filters",
       "resultsFor": "Search results for"
-    }
+    },
+    "notFound": "Not Found",
+    "addressPlaceholder": "Address Placeholder",
+    "address": "Address",
+    "byAddress": "By Address",
+    "byDistrict": "By District"
   },
   "validation": {
     "nameRequired": "Name is required",
@@ -213,5 +230,289 @@
     "search": {
       "placeholder": "Search products and services..."
     }
+  },
+  "justNow": "Just Now",
+  "hoursAgo": "Hours Ago",
+  "buy": "Buy",
+  "sendMessage": "Send Message",
+  "chat": "Chat",
+  "eco": {
+    "secondHand": "Second Hand",
+    "refurbished": "Refurbished",
+    "badge": "Badge"
+  },
+  "profile": "Profile",
+  "myContacts": "My Contacts",
+  "myListings": "My Listings",
+  "myStorefronts": "My Storefronts",
+  "myOrders": "My Orders",
+  "adminPanel": "Admin Panel",
+  "documentation": "Documentation",
+  "loggingOut": "Logging Out",
+  "logout": "Logout",
+  "login": {
+    "enter": "Enter"
+  },
+  "distance": {
+    "fromYou": "From You",
+    "walkingDistance": "Walking Distance"
+  },
+  "products": {
+    "title": "Title",
+    "noProducts": "No Products",
+    "outOfStock": "Out Of Stock",
+    "inStock": "In Stock",
+    "sold": "Sold"
+  },
+  "tryAgain": "Try Again",
+  "loadMore": "Load More",
+  "storefronts": {
+    "products": {
+      "title": "Title",
+      "errorLoadingProducts": "Error Loading Products",
+      "productDeleted": "Product Deleted",
+      "errorDeletingProduct": "Error Deleting Product",
+      "outOfStock": "Out Of Stock",
+      "lowStock": "Low Stock",
+      "inStock": "In Stock",
+      "importProducts": "Import Products",
+      "addProduct": "Add Product",
+      "searchPlaceholder": "Search Placeholder",
+      "allProducts": "All Products",
+      "activeOnly": "Active Only",
+      "inactiveOnly": "Inactive Only",
+      "noProductsFound": "No Products Found",
+      "noProducts": "No Products",
+      "addFirstProduct": "Add First Product",
+      "inactive": "Inactive",
+      "deleteProductTitle": "Delete Product Title"
+    },
+    "noProducts": "No Products",
+    "backToDashboard": "Back To Dashboard"
+  },
+  "condition": {
+    "new": "New",
+    "likeNew": "Like New",
+    "used": "Used",
+    "refurbished": "Refurbished"
+  },
+  "photos": "Photos",
+  "dateUnknown": "Date Unknown",
+  "secureDeal": "Secure Deal",
+  "addToCart": "Add To Cart",
+  "quickView": "Quick View",
+  "stockStatus": {
+    "out_of_stock": "Out_of_stock"
+  },
+  "storefront": "Storefront",
+  "units": "Units",
+  "from": "From",
+  "loading": "Loading...",
+  "translations": {
+    "notTranslated": "Not Translated",
+    "verified": "Verified",
+    "machineTranslated": "Machine Translated",
+    "manualTranslated": "Manual Translated",
+    "translate": "Translate",
+    "status": "Status",
+    "allTranslated": "All Translated"
+  },
+  "gis": {
+    "poi": {
+      "school": "School",
+      "hospital": "Hospital",
+      "metro": "Metro",
+      "supermarket": "Supermarket",
+      "park": "Park",
+      "bank": "Bank",
+      "pharmacy": "Pharmacy",
+      "busStop": "Bus Stop"
+    },
+    "transport": {
+      "walking": "Walking",
+      "driving": "Driving",
+      "cycling": "Cycling",
+      "transit": "Transit"
+    },
+    "advancedFilters": {
+      "title": "Title",
+      "travelTime": "Travel Time",
+      "maxTravelTime": "Max Travel Time",
+      "transportMode": "Transport Mode",
+      "nearPOI": "Near P O I",
+      "poiType": "Poi Type",
+      "maxDistance": "Max Distance",
+      "density": "Density",
+      "avoidCrowded": "Avoid Crowded",
+      "maxDensity": "Max Density",
+      "densityPlaceholder": "Density Placeholder"
+    },
+    "meters": "Meters",
+    "kilometers": "Kilometers"
+  },
+  "ru-RU": "Ru- R U",
+  "views": "Views",
+  "characteristics": "Characteristics",
+  "category": "Category",
+  "area": "Area",
+  "rooms": "Rooms",
+  "type": "Type",
+  "year": "Year",
+  "rating": "Rating",
+  "published": "Published",
+  "seller": "Seller",
+  "newSeller": "New Seller",
+  "viewDetails": "View Details",
+  "contactSeller": "Contact Seller",
+  "addToFavorites": "Add To Favorites",
+  "share": "Share",
+  "q": "Q",
+  "fuzzy": "Fuzzy",
+  "lat": "Lat",
+  "lon": "Lon",
+  "filters": {
+    "title": "Title",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "price": "Price",
+    "priceFrom": "Price From",
+    "priceTo": "Price To",
+    "resetFilters": "Reset Filters",
+    "radius": "Radius",
+    "period": "Period",
+    "periods": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "limit": "Limit"
+  },
+  "priceRange": "Price Range",
+  "sortBy": "Sort By",
+  "relevance": "Relevance",
+  "price": "Price",
+  "date": "Date",
+  "popularity": "Popularity",
+  "alwaysOpen": "Always Open",
+  "closedToday": "Closed Today",
+  "manageDescription": "Manage Description",
+  "createNew": "Create New",
+  "totalStorefronts": "Total Storefronts",
+  "activeCount": "Active Count",
+  "totalViews": "Total Views",
+  "totalProducts": "Total Products",
+  "acrossAllStorefronts": "Across All Storefronts",
+  "monthlyRevenue": "Monthly Revenue",
+  "thisMonth": "This Month",
+  "all": "All",
+  "active": "Active",
+  "inactive": "Inactive",
+  "noStorefronts": "No Storefronts",
+  "noStorefrontsInCategory": "No Storefronts In Category",
+  "createFirstStorefront": "Create First Storefront",
+  "createStorefront": "Create Storefront",
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "reviews": "Reviews",
+  "noDescription": "No Description",
+  "notSpecified": "Not Specified",
+  "orders": "Orders",
+  "dashboard": "Dashboard",
+  "settings": "Settings",
+  "viewPublicPage": "View Public Page",
+  "editDetails": "Edit Details",
+  "manageProducts": "Manage Products",
+  "manageStaff": "Manage Staff",
+  "manageReviews": "Manage Reviews",
+  "messages": "Messages",
+  "confirmDelete": "Confirm Delete",
+  "deleteSuccess": "Delete Success",
+  "error": "Error",
+  "attributes": "Attributes",
+  "categories": {
+    "realEstate": "Real Estate",
+    "vehicles": "Vehicles",
+    "electronics": "Electronics",
+    "clothing": "Clothing",
+    "services": "Services",
+    "jobs": "Jobs",
+    "title": "Title"
+  },
+  "priceFrom": "Price From",
+  "priceTo": "Price To",
+  "radius": "Radius",
+  "lng": "Lng",
+  "zoom": "Zoom",
+  "controls": {
+    "walkingAccessibility": "Walking Accessibility",
+    "searchRadius": "Search Radius",
+    "minutes": "Minutes",
+    "km": "Km",
+    "m": "M",
+    "changeModeHint": "Change Mode Hint",
+    "holdForSettings": "Hold For Settings",
+    "singleClickHint": "Single Click Hint",
+    "mobileHint": "Mobile Hint",
+    "desktopHint": "Desktop Hint",
+    "updatingIsochrone": "Updating Isochrone",
+    "radiusControl": "Radius Control",
+    "walkingMode": "Walking Mode",
+    "distanceMode": "Distance Mode",
+    "minUnit": "Min Unit",
+    "kmUnit": "Km Unit"
+  },
+  "showHeader": "Show Header",
+  "hideHeader": "Hide Header",
+  "popularDistricts": "Popular Districts",
+  "geolocation": {
+    "error": "Error",
+    "findMe": "Find Me"
+  },
+  "showAll": "Show All",
+  "results": {
+    "showing": "Showing",
+    "listings": "Listings"
+  },
+  "actions": {
+    "apply": "Apply",
+    "reset": "Reset"
+  },
+  "loadError": "Load Error",
+  "ctr": {
+    "label": "Label",
+    "chartTitle": "Chart Title",
+    "title": "Title"
+  },
+  "searches": "Searches",
+  "clicks": "Clicks",
+  "metrics": {
+    "totalClicks": "Total Clicks",
+    "avgCTR": "Avg C T R",
+    "avgPosition": "Avg Position",
+    "conversionRate": "Conversion Rate"
+  },
+  "searchClicks": {
+    "title": "Title",
+    "chartTitle": "Chart Title"
+  },
+  "topQueries": {
+    "title": "Title",
+    "query": "Query",
+    "searches": "Searches",
+    "ctr": "Ctr",
+    "avgPosition": "Avg Position",
+    "avgResults": "Avg Results"
+  },
+  "noData": "No data",
+  "itemPerformance": {
+    "title": "Title",
+    "item": "Item",
+    "impressions": "Impressions",
+    "clicks": "Clicks",
+    "ctr": "Ctr",
+    "avgPosition": "Avg Position",
+    "conversions": "Conversions"
   }
 }

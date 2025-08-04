@@ -174,7 +174,11 @@
         "details": "Детали ошибки",
         "reload": "Перезагрузить страницу"
       }
-    }
+    },
+    "systemName": "[RU] System Name",
+    "sortOrder": "[RU] Sort Order",
+    "isActive": "[RU] Is Active",
+    "translating": "[RU] Translating"
   },
   "navigation": {
     "home": "Главная",
@@ -284,7 +288,12 @@
     "popularSearches": "Популярные запросы",
     "loadingCities": "Загрузка городов...",
     "citiesWithDistrictsFound": "Найдено городов с районами: {count}",
-    "noCitiesWithDistricts": "В данной области нет городов с районами"
+    "noCitiesWithDistricts": "В данной области нет городов с районами",
+    "notFound": "[RU] Not Found",
+    "addressPlaceholder": "[RU] Address Placeholder",
+    "address": "[RU] Address",
+    "byAddress": "[RU] By Address",
+    "byDistrict": "[RU] By District"
   },
   "validation": {
     "nameRequired": "Имя обязательно для заполнения",
@@ -354,17 +363,17 @@
       "addressPlaceholder": "Поиск по адресу...",
       "address": "По адресу",
       "byAddress": "По адресу",
-      "byDistrict": "По району",  
+      "byDistrict": "По району",
       "found": "Найдено",
       "notFound": "Ничего не найдено",
       "error": "Ошибка поиска"
     },
     "filters": {
       "title": "Фильтры",
-      "category": "Категория", 
+      "category": "Категория",
       "allCategories": "Все категории",
       "price": "Цена",
-      "priceFrom": "Цена от", 
+      "priceFrom": "Цена от",
       "priceTo": "Цена до",
       "radius": "Радиус поиска",
       "resetFilters": "Сбросить фильтры",
@@ -431,9 +440,293 @@
       "updatingIsochrone": "Обновление зоны доступности...",
       "radiusControl": "Управление радиусом",
       "walkingMode": "Пешеходный режим",
-      "distanceMode": "Режим расстояния", 
+      "distanceMode": "Режим расстояния",
       "minUnit": "мин",
       "kmUnit": "км"
     }
+  },
+  "justNow": "[RU] Just Now",
+  "hoursAgo": "[RU] Hours Ago",
+  "buy": "[RU] Buy",
+  "sendMessage": "[RU] Send Message",
+  "chat": "[RU] Chat",
+  "eco": {
+    "secondHand": "[RU] Second Hand",
+    "refurbished": "[RU] Refurbished",
+    "badge": "[RU] Badge"
+  },
+  "profile": "[RU] Profile",
+  "myContacts": "[RU] My Contacts",
+  "myListings": "[RU] My Listings",
+  "myStorefronts": "[RU] My Storefronts",
+  "myOrders": "[RU] My Orders",
+  "adminPanel": "[RU] Admin Panel",
+  "documentation": "[RU] Documentation",
+  "loggingOut": "[RU] Logging Out",
+  "logout": "[RU] Logout",
+  "login": {
+    "enter": "[RU] Enter"
+  },
+  "distance": {
+    "fromYou": "[RU] From You",
+    "walkingDistance": "[RU] Walking Distance"
+  },
+  "products": {
+    "title": "[RU] Title",
+    "noProducts": "[RU] No Products",
+    "outOfStock": "[RU] Out Of Stock",
+    "inStock": "[RU] In Stock",
+    "sold": "[RU] Sold"
+  },
+  "tryAgain": "[RU] Try Again",
+  "loadMore": "[RU] Load More",
+  "storefronts": {
+    "products": {
+      "title": "[RU] Title",
+      "errorLoadingProducts": "[RU] Error Loading Products",
+      "productDeleted": "[RU] Product Deleted",
+      "errorDeletingProduct": "[RU] Error Deleting Product",
+      "outOfStock": "[RU] Out Of Stock",
+      "lowStock": "[RU] Low Stock",
+      "inStock": "[RU] In Stock",
+      "importProducts": "[RU] Import Products",
+      "addProduct": "[RU] Add Product",
+      "searchPlaceholder": "[RU] Search Placeholder",
+      "allProducts": "[RU] All Products",
+      "activeOnly": "[RU] Active Only",
+      "inactiveOnly": "[RU] Inactive Only",
+      "noProductsFound": "[RU] No Products Found",
+      "noProducts": "[RU] No Products",
+      "addFirstProduct": "[RU] Add First Product",
+      "inactive": "Неактивный",
+      "deleteProductTitle": "[RU] Delete Product Title"
+    },
+    "noProducts": "[RU] No Products",
+    "backToDashboard": "[RU] Back To Dashboard"
+  },
+  "condition": {
+    "new": "[RU] New",
+    "likeNew": "[RU] Like New",
+    "used": "[RU] Used",
+    "refurbished": "[RU] Refurbished"
+  },
+  "photos": "[RU] Photos",
+  "dateUnknown": "[RU] Date Unknown",
+  "secureDeal": "[RU] Secure Deal",
+  "addToCart": "[RU] Add To Cart",
+  "quickView": "[RU] Quick View",
+  "stockStatus": {
+    "out_of_stock": "[RU] Out_of_stock"
+  },
+  "storefront": "[RU] Storefront",
+  "units": "[RU] Units",
+  "from": "[RU] From",
+  "loading": "Загрузка...",
+  "translations": {
+    "notTranslated": "[RU] Not Translated",
+    "verified": "[RU] Verified",
+    "machineTranslated": "[RU] Machine Translated",
+    "manualTranslated": "[RU] Manual Translated",
+    "translate": "[RU] Translate",
+    "status": "[RU] Status",
+    "allTranslated": "[RU] All Translated"
+  },
+  "gis": {
+    "poi": {
+      "school": "[RU] School",
+      "hospital": "[RU] Hospital",
+      "metro": "[RU] Metro",
+      "supermarket": "[RU] Supermarket",
+      "park": "[RU] Park",
+      "bank": "[RU] Bank",
+      "pharmacy": "[RU] Pharmacy",
+      "busStop": "[RU] Bus Stop"
+    },
+    "transport": {
+      "walking": "[RU] Walking",
+      "driving": "[RU] Driving",
+      "cycling": "[RU] Cycling",
+      "transit": "[RU] Transit"
+    },
+    "advancedFilters": {
+      "title": "[RU] Title",
+      "travelTime": "[RU] Travel Time",
+      "maxTravelTime": "[RU] Max Travel Time",
+      "transportMode": "[RU] Transport Mode",
+      "nearPOI": "[RU] Near P O I",
+      "poiType": "[RU] Poi Type",
+      "maxDistance": "[RU] Max Distance",
+      "density": "[RU] Density",
+      "avoidCrowded": "[RU] Avoid Crowded",
+      "maxDensity": "[RU] Max Density",
+      "densityPlaceholder": "[RU] Density Placeholder"
+    },
+    "meters": "[RU] Meters",
+    "kilometers": "[RU] Kilometers"
+  },
+  "ru-RU": "[RU] Ru- R U",
+  "views": "[RU] Views",
+  "characteristics": "[RU] Characteristics",
+  "category": "[RU] Category",
+  "area": "[RU] Area",
+  "rooms": "[RU] Rooms",
+  "type": "[RU] Type",
+  "year": "[RU] Year",
+  "rating": "[RU] Rating",
+  "published": "[RU] Published",
+  "seller": "[RU] Seller",
+  "newSeller": "[RU] New Seller",
+  "viewDetails": "[RU] View Details",
+  "contactSeller": "[RU] Contact Seller",
+  "addToFavorites": "[RU] Add To Favorites",
+  "share": "[RU] Share",
+  "q": "[RU] Q",
+  "fuzzy": "[RU] Fuzzy",
+  "lat": "[RU] Lat",
+  "lon": "[RU] Lon",
+  "filters": {
+    "title": "[RU] Title",
+    "category": "[RU] Category",
+    "allCategories": "[RU] All Categories",
+    "price": "[RU] Price",
+    "priceFrom": "[RU] Price From",
+    "priceTo": "[RU] Price To",
+    "resetFilters": "[RU] Reset Filters",
+    "radius": "[RU] Radius",
+    "period": "[RU] Period",
+    "periods": {
+      "day": "[RU] Day",
+      "week": "[RU] Week",
+      "month": "[RU] Month"
+    },
+    "limit": "[RU] Limit"
+  },
+  "priceRange": "[RU] Price Range",
+  "sortBy": "[RU] Sort By",
+  "relevance": "[RU] Relevance",
+  "price": "[RU] Price",
+  "date": "[RU] Date",
+  "popularity": "[RU] Popularity",
+  "alwaysOpen": "[RU] Always Open",
+  "closedToday": "[RU] Closed Today",
+  "manageDescription": "[RU] Manage Description",
+  "createNew": "[RU] Create New",
+  "totalStorefronts": "[RU] Total Storefronts",
+  "activeCount": "[RU] Active Count",
+  "totalViews": "[RU] Total Views",
+  "totalProducts": "[RU] Total Products",
+  "acrossAllStorefronts": "[RU] Across All Storefronts",
+  "monthlyRevenue": "[RU] Monthly Revenue",
+  "thisMonth": "[RU] This Month",
+  "all": "Все",
+  "active": "Активный",
+  "inactive": "Неактивный",
+  "noStorefronts": "[RU] No Storefronts",
+  "noStorefrontsInCategory": "[RU] No Storefronts In Category",
+  "createFirstStorefront": "[RU] Create First Storefront",
+  "createStorefront": "[RU] Create Storefront",
+  "status": {
+    "active": "Активный",
+    "inactive": "Неактивный"
+  },
+  "reviews": "[RU] Reviews",
+  "noDescription": "[RU] No Description",
+  "notSpecified": "[RU] Not Specified",
+  "orders": "[RU] Orders",
+  "dashboard": "[RU] Dashboard",
+  "settings": "[RU] Settings",
+  "viewPublicPage": "[RU] View Public Page",
+  "editDetails": "[RU] Edit Details",
+  "manageProducts": "[RU] Manage Products",
+  "manageStaff": "[RU] Manage Staff",
+  "manageReviews": "[RU] Manage Reviews",
+  "messages": "[RU] Messages",
+  "confirmDelete": "[RU] Confirm Delete",
+  "deleteSuccess": "[RU] Delete Success",
+  "error": "Ошибка",
+  "attributes": "[RU] Attributes",
+  "categories": {
+    "realEstate": "[RU] Real Estate",
+    "vehicles": "[RU] Vehicles",
+    "electronics": "[RU] Electronics",
+    "clothing": "[RU] Clothing",
+    "services": "[RU] Services",
+    "jobs": "[RU] Jobs",
+    "title": "[RU] Title"
+  },
+  "priceFrom": "[RU] Price From",
+  "priceTo": "[RU] Price To",
+  "radius": "[RU] Radius",
+  "lng": "[RU] Lng",
+  "zoom": "[RU] Zoom",
+  "controls": {
+    "walkingAccessibility": "[RU] Walking Accessibility",
+    "searchRadius": "[RU] Search Radius",
+    "minutes": "[RU] Minutes",
+    "km": "[RU] Km",
+    "m": "[RU] M",
+    "changeModeHint": "[RU] Change Mode Hint",
+    "holdForSettings": "[RU] Hold For Settings",
+    "singleClickHint": "[RU] Single Click Hint",
+    "mobileHint": "[RU] Mobile Hint",
+    "desktopHint": "[RU] Desktop Hint",
+    "updatingIsochrone": "[RU] Updating Isochrone",
+    "radiusControl": "[RU] Radius Control",
+    "walkingMode": "[RU] Walking Mode",
+    "distanceMode": "[RU] Distance Mode",
+    "minUnit": "[RU] Min Unit",
+    "kmUnit": "[RU] Km Unit"
+  },
+  "showHeader": "[RU] Show Header",
+  "hideHeader": "[RU] Hide Header",
+  "popularDistricts": "[RU] Popular Districts",
+  "geolocation": {
+    "error": "Ошибка",
+    "findMe": "[RU] Find Me"
+  },
+  "showAll": "[RU] Show All",
+  "results": {
+    "showing": "[RU] Showing",
+    "listings": "[RU] Listings"
+  },
+  "actions": {
+    "apply": "[RU] Apply",
+    "reset": "[RU] Reset"
+  },
+  "loadError": "[RU] Load Error",
+  "ctr": {
+    "label": "[RU] Label",
+    "chartTitle": "[RU] Chart Title",
+    "title": "[RU] Title"
+  },
+  "searches": "[RU] Searches",
+  "clicks": "[RU] Clicks",
+  "metrics": {
+    "totalClicks": "[RU] Total Clicks",
+    "avgCTR": "[RU] Avg C T R",
+    "avgPosition": "[RU] Avg Position",
+    "conversionRate": "[RU] Conversion Rate"
+  },
+  "searchClicks": {
+    "title": "[RU] Title",
+    "chartTitle": "[RU] Chart Title"
+  },
+  "topQueries": {
+    "title": "[RU] Title",
+    "query": "[RU] Query",
+    "searches": "[RU] Searches",
+    "ctr": "[RU] Ctr",
+    "avgPosition": "[RU] Avg Position",
+    "avgResults": "[RU] Avg Results"
+  },
+  "noData": "Нет данных",
+  "itemPerformance": {
+    "title": "[RU] Title",
+    "item": "[RU] Item",
+    "impressions": "[RU] Impressions",
+    "clicks": "[RU] Clicks",
+    "ctr": "[RU] Ctr",
+    "avgPosition": "[RU] Avg Position",
+    "conversions": "[RU] Conversions"
   }
 }

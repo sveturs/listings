@@ -30,13 +30,16 @@ function setNestedValue(obj, path, value) {
   
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
-    if (!current[part]) {
+    if (!current[part] || typeof current[part] !== 'object') {
       current[part] = {};
     }
     current = current[part];
   }
   
-  current[parts[parts.length - 1]] = value;
+  const lastPart = parts[parts.length - 1];
+  if (lastPart && current) {
+    current[lastPart] = value;
+  }
 }
 
 // Функция для генерации значения по умолчанию
@@ -138,7 +141,21 @@ Object.entries(missingKeys).forEach(([module, keys]) => {
   // Фильтруем невалидные ключи
   const validKeys = keys.filter(key => {
     // Пропускаем пустые ключи и пути к файлам
-    if (!key || key.includes('/') || key.includes('@/') || key.trim() === ',' || key.trim() === '_') {
+    if (!key || 
+        key.includes('/') || 
+        key.includes('@/') || 
+        key.trim() === ',' || 
+        key.trim() === '_' ||
+        key.trim() === 'a' ||
+        key.trim() === 'T' ||
+        key.includes('2d') ||
+        key.includes('canvas') ||
+        key.length > 100 || // Слишком длинные ключи обычно ошибочные
+        /^[0-9]+$/.test(key) || // Числовые ключи
+        key.includes('Facebook') ||
+        key.includes('Instagram') ||
+        key.includes('Геолокация') || // Длинные сообщения на русском
+        key.includes('Не удалось')) {
       totalSkipped++;
       return false;
     }

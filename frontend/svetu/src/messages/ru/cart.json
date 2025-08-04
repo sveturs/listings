@@ -182,5 +182,37 @@
         "gold": "Золотой продавец"
       }
     }
-  }
+  },
+  "title": "[RU] Title",
+  "remove": "[RU] Remove",
+  "empty": "[RU] Empty",
+  "total": "[RU] Total",
+  "clear": "[RU] Clear",
+  "miniCart": {
+    "title": "[RU] Title",
+    "empty": "[RU] Empty",
+    "total": "[RU] Total",
+    "viewCart": "[RU] View Cart",
+    "checkout": "[RU] Checkout"
+  },
+  "added": "[RU] Added",
+  "outOfStock": "[RU] Out Of Stock",
+  "addToCart": "[RU] Add To Cart",
+  "confirmClear": "[RU] Confirm Clear",
+  "cartCleared": "[RU] Cart Cleared",
+  "emptyTitle": "[RU] Empty Title",
+  "emptyDescription": "[RU] Empty Description",
+  "continueShopping": "[RU] Continue Shopping",
+  "clearCart": "[RU] Clear Cart",
+  "subtotal": "[RU] Subtotal",
+  "promoCode": "[RU] Promo Code",
+  "enterPromoCode": "[RU] Enter Promo Code",
+  "apply": "[RU] Apply",
+  "orderSummary": "[RU] Order Summary",
+  "shipping": "[RU] Shipping",
+  "freeShipping": "[RU] Free Shipping",
+  "proceedToCheckout": "[RU] Proceed To Checkout",
+  "secureCheckout": "[RU] Secure Checkout",
+  "securePayment": "[RU] Secure Payment",
+  "recommendations": "[RU] Recommendations"
 }

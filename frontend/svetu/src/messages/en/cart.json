@@ -173,5 +173,37 @@
         "gold": "Gold Seller"
       }
     }
-  }
+  },
+  "title": "Title",
+  "remove": "Remove",
+  "empty": "Empty",
+  "total": "Total",
+  "clear": "Clear",
+  "miniCart": {
+    "title": "Title",
+    "empty": "Empty",
+    "total": "Total",
+    "viewCart": "View Cart",
+    "checkout": "Checkout"
+  },
+  "added": "Added",
+  "outOfStock": "Out Of Stock",
+  "addToCart": "Add To Cart",
+  "confirmClear": "Confirm Clear",
+  "cartCleared": "Cart Cleared",
+  "emptyTitle": "Empty Title",
+  "emptyDescription": "Empty Description",
+  "continueShopping": "Continue Shopping",
+  "clearCart": "Clear Cart",
+  "subtotal": "Subtotal",
+  "promoCode": "Promo Code",
+  "enterPromoCode": "Enter Promo Code",
+  "apply": "Apply",
+  "orderSummary": "Order Summary",
+  "shipping": "Shipping",
+  "freeShipping": "Free Shipping",
+  "proceedToCheckout": "Proceed To Checkout",
+  "secureCheckout": "Secure Checkout",
+  "securePayment": "Secure Payment",
+  "recommendations": "Recommendations"
 }
