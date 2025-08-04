@@ -18,7 +18,7 @@ export type TranslationModule =
   | 'misc'
   | 'realEstate'
   | 'services'
-  | 'storefront';
+  | 'storefronts';
 
 // Карта модулей для динамической загрузки
 export const moduleLoaders = {
@@ -32,7 +32,7 @@ export const moduleLoaders = {
   misc: () => import('./misc.json'),
   realEstate: () => import('./realEstate.json'),
   services: () => import('./services.json'),
-  storefront: () => import('./storefront.json'),
+  storefronts: () => import('./storefronts.json'),
 };
 
 // Функция загрузки модуля

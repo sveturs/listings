@@ -11,7 +11,7 @@ export type TranslationModule =
   | 'auth' // Авторизация и профиль
   | 'marketplace' // Маркетплейс и объявления
   | 'admin' // Админ панель
-  | 'storefront' // Витрины магазинов
+  | 'storefronts' // Витрины магазинов
   | 'cars' // Автомобильный раздел
   | 'chat' // Чат и сообщения
   | 'cart' // Корзина и заказы
@@ -67,8 +67,8 @@ export async function loadMessages(
         case 'admin':
           moduleData = await import(`@/messages/${locale}/admin.json`);
           break;
-        case 'storefront':
-          moduleData = await import(`@/messages/${locale}/storefront.json`);
+        case 'storefronts':
+          moduleData = await import(`@/messages/${locale}/storefronts.json`);
           break;
         case 'cars':
           moduleData = await import(`@/messages/${locale}/cars.json`);
@@ -154,7 +154,7 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
     modules.push('marketplace');
   }
   if (pathname.includes('/store') || pathname.includes('/storefront')) {
-    modules.push('storefront');
+    modules.push('storefronts');
   }
   if (pathname.includes('/cars') || pathname.includes('/automotive')) {
     modules.push('cars');
@@ -171,6 +171,10 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
     pathname.includes('/profile')
   ) {
     modules.push('auth');
+    // Для страницы storefronts в профиле также нужен модуль storefronts
+    if (pathname.includes('/profile/storefronts')) {
+      modules.push('storefronts');
+    }
   }
   if (pathname.includes('/real-estate') || pathname.includes('/property')) {
     modules.push('realEstate');

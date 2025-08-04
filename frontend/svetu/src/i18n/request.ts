@@ -19,6 +19,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
     'misc',
     'cart',
     'map',
+    'storefronts',
+    'admin', // Добавляем admin так как он используется в storefronts странице
   ]);
 
   return {

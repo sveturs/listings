@@ -41,7 +41,7 @@ export default function AttributeSetup({
   onSave,
   onCancel,
 }: AttributeSetupProps) {
-  const t = useTranslations('storefront');
+  const t = useTranslations('storefronts');
   const [availableAttributes, setAvailableAttributes] = useState<
     ProductVariantAttribute[]
   >([]);
@@ -375,7 +375,7 @@ interface CustomValueInputProps {
 }
 
 function CustomValueInput({ attributeType, onAdd }: CustomValueInputProps) {
-  const t = useTranslations('storefront');
+  const t = useTranslations('storefronts');
   const [value, setValue] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [colorHex, setColorHex] = useState('#000000');
