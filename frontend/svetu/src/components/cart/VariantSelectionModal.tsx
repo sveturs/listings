@@ -32,7 +32,8 @@ export default function VariantSelectionModal({
   baseCurrency,
   onAddToCart,
 }: VariantSelectionModalProps) {
-  const t = useTranslations();
+  const t = useTranslations('cart');
+  const tCommon = useTranslations('common');
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null
   );
@@ -151,7 +152,7 @@ export default function VariantSelectionModal({
             {/* Quantity */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text">{t('cart.quantity')}</span>
+                <span className="label-text">{t('quantity')}</span>
               </label>
               <div className="flex items-center gap-2">
                 <button
@@ -184,14 +185,14 @@ export default function VariantSelectionModal({
         {!isLoading && (
           <div className="modal-action">
             <button onClick={onClose} className="btn btn-ghost">
-              {t('common.cancel')}
+              {tCommon('cancel')}
             </button>
             <button
               onClick={handleAdd}
               disabled={hasVariants && !selectedVariant}
               className="btn btn-primary"
             >
-              {t('cart.addToCart')}
+              {t('addToCart')}
             </button>
           </div>
         )}

@@ -10,7 +10,7 @@ import { useLocale } from 'next-intl';
  */
 export function ModularTranslationExample() {
   const locale = useLocale();
-  const t = useTranslations();
+  const t = useTranslations('common');
   const [adminTranslations, setAdminTranslations] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -35,9 +35,9 @@ export function ModularTranslationExample() {
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <h3 className="card-title">Базовые переводы (common)</h3>
-          <p>{t('common.loading')}</p>
-          <p>{t('common.save')}</p>
-          <p>{t('common.cancel')}</p>
+          <p>{t('loading')}</p>
+          <p>{t('save')}</p>
+          <p>{t('cancel')}</p>
         </div>
       </div>
 

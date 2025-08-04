@@ -13,7 +13,7 @@ export default function GridColumnsToggle({
   currentColumns,
   onColumnsChange,
 }: GridColumnsToggleProps) {
-  const t = useTranslations();
+  const t = useTranslations('common');
 
   const columns: GridColumns[] = [1, 2, 3];
 

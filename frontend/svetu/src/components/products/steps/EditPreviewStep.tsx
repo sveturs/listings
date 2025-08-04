@@ -28,7 +28,10 @@ export default function EditPreviewStep({
   storefrontSlug,
   productId,
 }: EditPreviewStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts.products');
+  const tStorefronts.products.errors = useTranslations('storefronts.products.errors');
+  const tStorefronts.products.steps = useTranslations('storefronts.products.steps');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const router = useRouter();
   const { state, dispatch, goToStep } = useEditProduct();
@@ -116,7 +119,7 @@ export default function EditPreviewStep({
         payload: {
           field: 'submit',
           message:
-            error.message || t('storefronts.products.errors.updateFailed'),
+            error.message || tStorefronts.products.errors('updateFailed'),
         },
       });
     } finally {
@@ -134,10 +137,10 @@ export default function EditPreviewStep({
       <div className="text-center">
         <EyeIcon className="w-16 h-16 text-primary mx-auto mb-4" />
         <h3 className="text-2xl font-bold text-base-content mb-2">
-          {t('storefronts.products.steps.preview')}
+          {tStorefronts.products.steps('preview')}
         </h3>
         <p className="text-base-content/70">
-          {t('storefronts.products.previewStepDescription')}
+          {t('previewStepDescription')}
         </p>
       </div>
 
@@ -148,10 +151,10 @@ export default function EditPreviewStep({
             <ExclamationTriangleIcon className="w-6 h-6 text-warning flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="font-semibold text-warning">
-                {t('storefronts.products.unsavedChanges')}
+                {t('unsavedChanges')}
               </h4>
               <p className="text-warning/80 text-sm mt-1">
-                {t('storefronts.products.unsavedChangesDescription')}
+                {t('unsavedChangesDescription')}
               </p>
             </div>
           </div>
@@ -171,7 +174,7 @@ export default function EditPreviewStep({
             />
             {totalImages > 1 && (
               <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
-                +{totalImages - 1} {t('storefronts.products.morePhotos')}
+                +{totalImages - 1} {t('morePhotos')}
               </div>
             )}
           </div>
@@ -202,7 +205,7 @@ export default function EditPreviewStep({
           {/* Описание */}
           <div>
             <h4 className="font-semibold text-base-content mb-2">
-              {t('storefronts.products.description')}
+              {t('description')}
             </h4>
             <p className="text-base-content/80 whitespace-pre-wrap">
               {state.productData.description}
@@ -216,7 +219,7 @@ export default function EditPreviewStep({
               <div>
                 <p className="font-medium text-base-content">
                   {state.location.useStorefrontLocation
-                    ? t('storefronts.products.storefrontLocation')
+                    ? t('storefrontLocation')
                     : state.location.individualAddress}
                 </p>
                 <p className="text-sm text-base-content/60">
@@ -233,7 +236,7 @@ export default function EditPreviewStep({
           {Object.keys(state.attributes).length > 0 && (
             <div>
               <h4 className="font-semibold text-base-content mb-3">
-                {t('storefronts.products.attributes')}
+                {t('attributes')}
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 {Object.entries(state.attributes).map(([key, value]) => (
@@ -253,7 +256,7 @@ export default function EditPreviewStep({
           <div className="flex flex-wrap gap-4 pt-4 border-t border-base-300">
             <div className="flex items-center gap-2">
               <span className="text-sm text-base-content/60">
-                {t('storefronts.products.stockQuantity')}:
+                {t('stockQuantity')}:
               </span>
               <span className="font-medium text-base-content">
                 {state.productData.stock_quantity}
@@ -270,7 +273,7 @@ export default function EditPreviewStep({
             {state.productData.barcode && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-base-content/60">
-                  {t('storefronts.products.barcode')}:
+                  {t('barcode')}:
                 </span>
                 <span className="font-medium text-base-content">
                   {state.productData.barcode}
@@ -299,13 +302,13 @@ export default function EditPreviewStep({
             <div>
               <p className="font-semibold text-base-content">
                 {state.productData.is_active
-                  ? t('storefronts.products.active')
-                  : t('storefronts.products.inactive')}
+                  ? t('active')
+                  : t('inactive')}
               </p>
               <p className="text-sm text-base-content/60">
                 {state.productData.is_active
-                  ? t('storefronts.products.visibleToCustomers')
-                  : t('storefronts.products.hiddenFromCustomers')}
+                  ? t('visibleToCustomers')
+                  : t('hiddenFromCustomers')}
               </p>
             </div>
           </div>
@@ -315,7 +318,7 @@ export default function EditPreviewStep({
             disabled={isSubmitting}
           >
             <PencilIcon className="w-4 h-4 mr-2" />
-            {t('common.edit')}
+            {tCommon('edit')}
           </button>
         </div>
       </div>
@@ -327,19 +330,19 @@ export default function EditPreviewStep({
             <PhotoIcon className="w-6 h-6 text-info flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="font-semibold text-info mb-2">
-                {t('storefronts.products.imageChanges')}
+                {t('imageChanges')}
               </h4>
               <div className="space-y-1">
                 {state.newImages.length > 0 && (
                   <p className="text-info/80 text-sm">
                     • {state.newImages.length}{' '}
-                    {t('storefronts.products.newImagesToAdd')}
+                    {t('newImagesToAdd')}
                   </p>
                 )}
                 {state.imagesToDelete.length > 0 && (
                   <p className="text-info/80 text-sm">
                     • {state.imagesToDelete.length}{' '}
-                    {t('storefronts.products.imagesToDelete')}
+                    {t('imagesToDelete')}
                   </p>
                 )}
               </div>
@@ -363,7 +366,7 @@ export default function EditPreviewStep({
           className="btn btn-outline btn-lg"
           disabled={isSubmitting}
         >
-          {t('common.back')}
+          {tCommon('back')}
         </button>
         <button
           onClick={handleSubmit}
@@ -373,12 +376,12 @@ export default function EditPreviewStep({
           {isSubmitting ? (
             <>
               <span className="loading loading-spinner loading-sm mr-2"></span>
-              {t('storefronts.products.updating')}
+              {t('updating')}
             </>
           ) : (
             <>
               <CheckCircleIcon className="w-5 h-5 mr-2" />
-              {t('storefronts.products.updateProduct')}
+              {t('updateProduct')}
             </>
           )}
         </button>

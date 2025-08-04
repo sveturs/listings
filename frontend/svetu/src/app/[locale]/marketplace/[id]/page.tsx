@@ -131,7 +131,7 @@ export default function ListingPage({ params }: Props) {
   const locale = useLocale();
   const router = useRouter();
   const { user } = useAuth();
-  const t = useTranslations();
+  const t = useTranslations('cart');
   const _dispatch = useDispatch<AppDispatch>();
   const [listing, setListing] = useState<Listing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -602,7 +602,7 @@ export default function ListingPage({ params }: Props) {
                             onClick={handleAddToCartClick}
                             className="btn btn-primary btn-block"
                           >
-                            {t('cart.addToCart')}
+                            {t('addToCart')}
                           </button>
                         ) : (
                           <AddToCartButton
@@ -924,7 +924,7 @@ export default function ListingPage({ params }: Props) {
                       onClick={handleAddToCartClick}
                       className="btn btn-primary"
                     >
-                      {t('cart.addToCart')}
+                      {t('addToCart')}
                     </button>
                   ) : (
                     <AddToCartButton

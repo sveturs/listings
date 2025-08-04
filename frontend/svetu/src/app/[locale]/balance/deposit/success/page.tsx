@@ -8,7 +8,8 @@ import { useSearchParams } from 'next/navigation';
 import { BalanceWidget } from '@/components/balance/BalanceWidget';
 
 export default function DepositSuccessPage() {
-  const t = useTranslations();
+  const t = useTranslations('admin.balance');
+  const tProfile = useTranslations('profile');
   const locale = useLocale();
   const searchParams = useSearchParams();
   const [transactionId, setTransactionId] = useState<string | null>(null);
@@ -53,14 +54,14 @@ export default function DepositSuccessPage() {
       <div className="breadcrumbs text-sm mb-6">
         <ul>
           <li>
-            <Link href={`/${locale}/profile`}>{t('profile.title')}</Link>
+            <Link href={`/${locale}/profile`}>{tProfile('title')}</Link>
           </li>
           <li>
-            <Link href={`/${locale}/balance`}>{t('admin.balance.title')}</Link>
+            <Link href={`/${locale}/balance`}>{t('title')}</Link>
           </li>
           <li>
             <Link href={`/${locale}/balance/deposit`}>
-              {t('admin.balance.depositFunds')}
+              {t('depositFunds')}
             </Link>
           </li>
           <li>Успешно</li>

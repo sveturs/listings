@@ -36,7 +36,11 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function StorefrontDashboardPage() {
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
+  const tAdmin.common = useTranslations('admin.common');
+  const tStorefronts.products = useTranslations('storefronts.products');
+  const tStorefronts.delivery = useTranslations('storefronts.delivery');
   const locale = useLocale();
   const router = useRouter();
   const params = useParams();
@@ -94,10 +98,10 @@ export default function StorefrontDashboardPage() {
         <div className="text-center">
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold mb-2">
-            {t('common.accessDenied')}
+            {tCommon('accessDenied')}
           </h1>
           <p className="text-base-content/60">
-            {t('storefronts.dashboardAccessDenied')}
+            {t('dashboardAccessDenied')}
           </p>
         </div>
       </div>
@@ -112,7 +116,7 @@ export default function StorefrontDashboardPage() {
             <div className="text-center">
               <span className="loading loading-spinner loading-lg text-primary"></span>
               <p className="mt-4 text-base-content/60">
-                {t('admin.common.loading')}
+                {tAdmin.common('loading')}
               </p>
             </div>
           </div>
@@ -137,7 +141,7 @@ export default function StorefrontDashboardPage() {
               <div>
                 <h1 className="text-2xl font-bold">{currentStorefront.name}</h1>
                 <p className="text-sm text-base-content/60">
-                  {t('storefronts.managementDashboard')}
+                  {t('managementDashboard')}
                 </p>
               </div>
             </div>
@@ -149,7 +153,7 @@ export default function StorefrontDashboardPage() {
                 className="btn btn-outline btn-sm"
               >
                 <ChartBarIcon className="w-4 h-4" />
-                {t('storefronts.viewAnalytics')}
+                {t('viewAnalytics')}
               </Link>
 
               {/* Settings Button */}
@@ -171,7 +175,7 @@ export default function StorefrontDashboardPage() {
             <div className="stat-figure text-primary">
               <ShoppingBagIcon className="w-8 h-8" />
             </div>
-            <div className="stat-title">{t('storefronts.activeProducts')}</div>
+            <div className="stat-title">{t('activeProducts')}</div>
             <div className="stat-value text-primary">
               {isLoadingDashboard ? (
                 <span className="loading loading-dots loading-sm"></span>
@@ -190,7 +194,7 @@ export default function StorefrontDashboardPage() {
             <div className="stat-figure text-secondary">
               <ClipboardDocumentListIcon className="w-8 h-8" />
             </div>
-            <div className="stat-title">{t('storefronts.pendingOrders')}</div>
+            <div className="stat-title">{t('pendingOrders')}</div>
             <div className="stat-value text-secondary">
               {isLoadingDashboard ? (
                 <span className="loading loading-dots loading-sm"></span>
@@ -198,14 +202,14 @@ export default function StorefrontDashboardPage() {
                 dashboardStats?.pendingOrders || 0
               )}
             </div>
-            <div className="stat-desc">{t('storefronts.requiresAction')}</div>
+            <div className="stat-desc">{t('requiresAction')}</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow-sm">
             <div className="stat-figure text-accent">
               <ChatBubbleLeftRightIcon className="w-8 h-8" />
             </div>
-            <div className="stat-title">{t('storefronts.unreadMessages')}</div>
+            <div className="stat-title">{t('unreadMessages')}</div>
             <div className="stat-value text-accent">
               {isLoadingDashboard ? (
                 <span className="loading loading-dots loading-sm"></span>
@@ -213,14 +217,14 @@ export default function StorefrontDashboardPage() {
                 dashboardStats?.unreadMessages || 0
               )}
             </div>
-            <div className="stat-desc">{t('storefronts.fromCustomers')}</div>
+            <div className="stat-desc">{t('fromCustomers')}</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow-sm">
             <div className="stat-figure text-warning">
               <ExclamationTriangleIcon className="w-8 h-8" />
             </div>
-            <div className="stat-title">{t('storefronts.lowStock')}</div>
+            <div className="stat-title">{t('lowStock')}</div>
             <div className="stat-value text-warning">
               {isLoadingDashboard ? (
                 <span className="loading loading-dots loading-sm"></span>
@@ -228,7 +232,7 @@ export default function StorefrontDashboardPage() {
                 dashboardStats?.lowStockProducts || 0
               )}
             </div>
-            <div className="stat-desc">{t('storefronts.productsLowStock')}</div>
+            <div className="stat-desc">{t('productsLowStock')}</div>
           </div>
         </div>
 
@@ -240,7 +244,7 @@ export default function StorefrontDashboardPage() {
             <div className="card bg-base-100 shadow-md">
               <div className="card-body">
                 <h2 className="card-title text-lg mb-4">
-                  {t('storefronts.quickActions')}
+                  {t('quickActions')}
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <Link
@@ -248,43 +252,43 @@ export default function StorefrontDashboardPage() {
                     className="btn btn-primary"
                   >
                     <PlusIcon className="w-5 h-5" />
-                    {t('storefronts.addProduct')}
+                    {t('addProduct')}
                   </Link>
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/orders`}
                     className="btn btn-outline"
                   >
                     <ClipboardDocumentListIcon className="w-5 h-5" />
-                    {t('storefronts.manageOrders')}
+                    {t('manageOrders')}
                   </Link>
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/products`}
                     className="btn btn-outline"
                   >
                     <ShoppingBagIcon className="w-5 h-5" />
-                    {t('storefronts.products.title')}
+                    {tStorefronts.products('title')}
                   </Link>
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/customers`}
                     className="btn btn-outline"
                   >
                     <UsersIcon className="w-5 h-5" />
-                    {t('storefronts.customers')}
+                    {t('customers')}
                   </Link>
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/promotions`}
                     className="btn btn-outline"
                   >
                     <TagIcon className="w-5 h-5" />
-                    {t('storefronts.promotions')}
+                    {t('promotions')}
                   </Link>
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/delivery`}
                     className="btn btn-outline"
                   >
                     <TruckIcon className="w-5 h-5" />
-                    {t('storefronts.delivery.title') ||
-                      t('storefronts.delivery.shipping')}
+                    {tStorefronts.delivery('title') ||
+                      tStorefronts.delivery('shipping')}
                   </Link>
                 </div>
               </div>
@@ -295,20 +299,20 @@ export default function StorefrontDashboardPage() {
               <div className="card-body">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="card-title text-lg">
-                    {t('storefronts.recentOrders')}
+                    {t('recentOrders')}
                   </h2>
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/orders`}
                     className="btn btn-ghost btn-sm"
                   >
-                    {t('common.viewAll')}
+                    {tCommon('viewAll')}
                   </Link>
                 </div>
 
                 {recentOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-base-content/60">
-                      {t('storefronts.noRecentOrders')}
+                      {t('noRecentOrders')}
                     </p>
                   </div>
                 ) : (
@@ -316,12 +320,12 @@ export default function StorefrontDashboardPage() {
                     <table className="table table-zebra">
                       <thead>
                         <tr>
-                          <th>{t('storefronts.orderId')}</th>
-                          <th>{t('storefronts.customer')}</th>
-                          <th>{t('storefronts.products.title')}</th>
-                          <th>{t('storefronts.total')}</th>
-                          <th>{t('common.status')}</th>
-                          <th>{t('common.actions')}</th>
+                          <th>{t('orderId')}</th>
+                          <th>{t('customer')}</th>
+                          <th>{tStorefronts.products('title')}</th>
+                          <th>{t('total')}</th>
+                          <th>{tCommon('status')}</th>
+                          <th>{tCommon('actions')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -341,24 +345,24 @@ export default function StorefrontDashboardPage() {
                               {order.status === 'pending' && (
                                 <span className="badge badge-warning badge-sm">
                                   <ClockIcon className="w-3 h-3 mr-1" />
-                                  {t('storefronts.pending')}
+                                  {t('pending')}
                                 </span>
                               )}
                               {order.status === 'shipping' && (
                                 <span className="badge badge-info badge-sm">
                                   <TruckIcon className="w-3 h-3 mr-1" />
-                                  {t('storefronts.shipping')}
+                                  {t('shipping')}
                                 </span>
                               )}
                               {order.status === 'completed' && (
                                 <span className="badge badge-success badge-sm">
                                   <CheckCircleIcon className="w-3 h-3 mr-1" />
-                                  {t('storefronts.completed')}
+                                  {t('completed')}
                                 </span>
                               )}
                               {order.status === 'cancelled' && (
                                 <span className="badge badge-error badge-sm">
-                                  {t('storefronts.cancelled')}
+                                  {t('cancelled')}
                                 </span>
                               )}
                             </td>
@@ -367,7 +371,7 @@ export default function StorefrontDashboardPage() {
                                 href={`/${locale}/storefronts/${currentStorefront.slug}/orders/${order.id}`}
                                 className="btn btn-ghost btn-xs"
                               >
-                                {t('common.view')}
+                                {tCommon('view')}
                               </Link>
                             </td>
                           </tr>
@@ -385,14 +389,14 @@ export default function StorefrontDashboardPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <ExclamationTriangleIcon className="w-6 h-6 text-warning" />
                   <h2 className="card-title text-lg">
-                    {t('storefronts.lowStockAlert')}
+                    {t('lowStockAlert')}
                   </h2>
                 </div>
 
                 {lowStockProducts.length === 0 ? (
                   <div className="text-center py-4">
                     <p className="text-base-content/60">
-                      {t('storefronts.allProductsInStock')}
+                      {t('allProductsInStock')}
                     </p>
                   </div>
                 ) : (
@@ -407,7 +411,7 @@ export default function StorefrontDashboardPage() {
                         </span>
                         {product.stock_quantity === 0 ? (
                           <span className="badge badge-error">
-                            {t('storefronts.outOfStock')}
+                            {t('outOfStock')}
                           </span>
                         ) : (
                           <span className="badge badge-warning">
@@ -425,7 +429,7 @@ export default function StorefrontDashboardPage() {
                   href={`/${locale}/storefronts/${currentStorefront.slug}/inventory`}
                   className="btn btn-warning btn-sm w-full mt-4"
                 >
-                  {t('storefronts.manageInventory')}
+                  {t('manageInventory')}
                 </Link>
               </div>
             </div>
@@ -439,12 +443,12 @@ export default function StorefrontDashboardPage() {
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="card-title text-lg">
                     <BellIcon className="w-5 h-5" />
-                    {t('storefronts.notifications')}
+                    {t('notifications')}
                   </h2>
                   {notifications.filter((n) => !n.is_read).length > 0 && (
                     <span className="badge badge-primary">
                       {notifications.filter((n) => !n.is_read).length}{' '}
-                      {t('common.new')}
+                      {tCommon('new')}
                     </span>
                   )}
                 </div>
@@ -452,7 +456,7 @@ export default function StorefrontDashboardPage() {
                 {notifications.length === 0 ? (
                   <div className="text-center py-4">
                     <p className="text-base-content/60">
-                      {t('storefronts.noNotifications')}
+                      {t('noNotifications')}
                     </p>
                   </div>
                 ) : (
@@ -524,7 +528,7 @@ export default function StorefrontDashboardPage() {
                 )}
 
                 <button className="btn btn-ghost btn-sm w-full mt-4">
-                  {t('storefronts.viewAllNotifications')}
+                  {t('viewAllNotifications')}
                 </button>
               </div>
             </div>
@@ -535,10 +539,10 @@ export default function StorefrontDashboardPage() {
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="card-title text-lg">
                     <ChatBubbleLeftRightIcon className="w-5 h-5" />
-                    {t('storefronts.messages')}
+                    {t('messages')}
                   </h2>
                   <span className="badge badge-accent">
-                    7 {t('storefronts.unread')}
+                    7 {t('unread')}
                   </span>
                 </div>
 
@@ -557,7 +561,7 @@ export default function StorefrontDashboardPage() {
                         <p className="text-xs text-base-content/60">5m</p>
                       </div>
                       <p className="text-sm text-base-content/70 truncate">
-                        {t('storefronts.messagePreview')}
+                        {t('messagePreview')}
                       </p>
                     </div>
                     <div className="badge badge-accent badge-xs"></div>
@@ -577,7 +581,7 @@ export default function StorefrontDashboardPage() {
                         <p className="text-xs text-base-content/60">1h</p>
                       </div>
                       <p className="text-sm text-base-content/70 truncate">
-                        {t('storefronts.messagePreview2')}
+                        {t('messagePreview2')}
                       </p>
                     </div>
                   </div>
@@ -587,7 +591,7 @@ export default function StorefrontDashboardPage() {
                   href={`/${locale}/chat`}
                   className="btn btn-ghost btn-sm w-full mt-4"
                 >
-                  {t('storefronts.goToMessages')}
+                  {t('goToMessages')}
                 </Link>
               </div>
             </div>
@@ -596,13 +600,13 @@ export default function StorefrontDashboardPage() {
             <div className="card bg-base-100 shadow-md">
               <div className="card-body">
                 <h2 className="card-title text-lg mb-4">
-                  {t('storefronts.storeStatus')}
+                  {t('storeStatus')}
                 </h2>
 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">
-                      {t('storefronts.storeOpen')}
+                      {t('storeOpen')}
                     </span>
                     <input
                       type="checkbox"
@@ -615,7 +619,7 @@ export default function StorefrontDashboardPage() {
 
                   <div className="flex justify-between items-center">
                     <span className="text-sm">
-                      {t('storefronts.acceptingOrders')}
+                      {t('acceptingOrders')}
                     </span>
                     <input
                       type="checkbox"
@@ -626,7 +630,7 @@ export default function StorefrontDashboardPage() {
 
                   <div className="flex justify-between items-center">
                     <span className="text-sm">
-                      {t('storefronts.vacationMode')}
+                      {t('vacationMode')}
                     </span>
                     <input type="checkbox" className="toggle" />
                   </div>
@@ -637,7 +641,7 @@ export default function StorefrontDashboardPage() {
                   className="btn btn-outline btn-sm w-full mt-4"
                 >
                   <Cog6ToothIcon className="w-4 h-4" />
-                  {t('storefronts.storeSettings')}
+                  {t('storeSettings')}
                 </Link>
               </div>
             </div>

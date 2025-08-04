@@ -37,7 +37,7 @@ const steps = [
 export default function CreateListingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const t = useTranslations();
+  const t = useTranslations('create_listing');
   const { user, isLoading: authLoading } = useAuthContext();
   const [currentStep, setCurrentStep] = useState(0);
   const [showDraftsModal, setShowDraftsModal] = useState(false);
@@ -52,7 +52,7 @@ export default function CreateListingPage() {
 
   useEffect(() => {
     if (isClient && !authLoading && !user) {
-      toast.error(t('create_listing.auth_required'));
+      toast.error(t('auth_required'));
       router.push('/');
     }
   }, [user, authLoading, router, t, isClient]);
@@ -65,7 +65,7 @@ export default function CreateListingPage() {
   };
 
   const handleComplete = () => {
-    toast.success(t('create_listing.success'));
+    toast.success(t('success'));
     router.push('/profile');
   };
 
@@ -153,7 +153,7 @@ export default function CreateListingPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex-1" />
               <h1 className="text-2xl sm:text-3xl font-bold text-primary">
-                {t('create_listing.title')}
+                {t('title')}
               </h1>
               <div className="flex items-center gap-2">
                 <DraftStatus />
@@ -161,7 +161,7 @@ export default function CreateListingPage() {
               </div>
             </div>
             <p className="text-sm text-base-content/70">
-              {t('create_listing.subtitle_regional')}
+              {t('subtitle_regional')}
             </p>
           </div>
 
@@ -181,7 +181,7 @@ export default function CreateListingPage() {
               ></path>
             </svg>
             <span className="text-xs">
-              {t('create_listing.data_saving_mode')}
+              {t('data_saving_mode')}
             </span>
           </div>
 

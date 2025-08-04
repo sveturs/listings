@@ -18,7 +18,7 @@ interface SearchConfig {
 }
 
 export default function SearchConfig() {
-  const t = useTranslations();
+  const t = useTranslations('admin.search.config');
   const [config, setConfig] = useState<SearchConfig>({
     fuzzySearchEnabled: true,
     fuzzySearchThreshold: 0.3,
@@ -61,7 +61,7 @@ export default function SearchConfig() {
       setOriginalConfig(mockConfig);
     } catch (error) {
       console.error('Error fetching search config:', error);
-      toast.error(t('admin.search.config.fetchError'));
+      toast.error(t('fetchError'));
     } finally {
       setLoading(false);
     }
@@ -73,10 +73,10 @@ export default function SearchConfig() {
       // Mock save - in real implementation, this would call an API
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setOriginalConfig(config);
-      toast.success(t('admin.search.config.saved'));
+      toast.success(t('saved'));
     } catch (error) {
       console.error('Error saving search config:', error);
-      toast.error(t('admin.search.config.saveError'));
+      toast.error(t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -85,7 +85,7 @@ export default function SearchConfig() {
   const handleReset = () => {
     if (originalConfig) {
       setConfig(originalConfig);
-      toast(t('admin.search.config.reset'));
+      toast(t('reset'));
     }
   };
 
@@ -104,12 +104,12 @@ export default function SearchConfig() {
     <div className="space-y-6">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title">{t('admin.search.config.general')}</h2>
+          <h2 className="card-title">{t('general')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control">
               <label className="label">
                 <span className="label-text">
-                  {t('admin.search.config.maxResults')}
+                  {t('maxResults')}
                 </span>
               </label>
               <input
@@ -129,7 +129,7 @@ export default function SearchConfig() {
             <div className="form-control">
               <label className="label">
                 <span className="label-text">
-                  {t('admin.search.config.defaultSort')}
+                  {t('defaultSort')}
                 </span>
               </label>
               <select
@@ -146,10 +146,10 @@ export default function SearchConfig() {
                 }
               >
                 <option value="relevance">
-                  {t('admin.search.config.relevance')}
+                  {t('relevance')}
                 </option>
-                <option value="date">{t('admin.search.config.date')}</option>
-                <option value="price">{t('admin.search.config.price')}</option>
+                <option value="date">{t('date')}</option>
+                <option value="price">{t('price')}</option>
               </select>
             </div>
           </div>
@@ -158,11 +158,11 @@ export default function SearchConfig() {
 
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title">{t('admin.search.config.fuzzySearch')}</h2>
+          <h2 className="card-title">{t('fuzzySearch')}</h2>
           <div className="form-control">
             <label className="label cursor-pointer">
               <span className="label-text">
-                {t('admin.search.config.enableFuzzySearch')}
+                {t('enableFuzzySearch')}
               </span>
               <input
                 type="checkbox"
@@ -178,7 +178,7 @@ export default function SearchConfig() {
             <div className="form-control">
               <label className="label">
                 <span className="label-text">
-                  {t('admin.search.config.fuzzyThreshold')}
+                  {t('fuzzyThreshold')}
                 </span>
                 <span className="label-text-alt">
                   {config.fuzzySearchThreshold}
@@ -210,12 +210,12 @@ export default function SearchConfig() {
 
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title">{t('admin.search.config.features')}</h2>
+          <h2 className="card-title">{t('features')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control">
               <label className="label cursor-pointer">
                 <span className="label-text">
-                  {t('admin.search.config.enableSynonyms')}
+                  {t('enableSynonyms')}
                 </span>
                 <input
                   type="checkbox"
@@ -230,7 +230,7 @@ export default function SearchConfig() {
             <div className="form-control">
               <label className="label cursor-pointer">
                 <span className="label-text">
-                  {t('admin.search.config.enableTransliteration')}
+                  {t('enableTransliteration')}
                 </span>
                 <input
                   type="checkbox"
@@ -248,7 +248,7 @@ export default function SearchConfig() {
             <div className="form-control">
               <label className="label cursor-pointer">
                 <span className="label-text">
-                  {t('admin.search.config.enableAnalytics')}
+                  {t('enableAnalytics')}
                 </span>
                 <input
                   type="checkbox"
@@ -263,7 +263,7 @@ export default function SearchConfig() {
             <div className="form-control">
               <label className="label cursor-pointer">
                 <span className="label-text">
-                  {t('admin.search.config.debugMode')}
+                  {t('debugMode')}
                 </span>
                 <input
                   type="checkbox"
@@ -281,11 +281,11 @@ export default function SearchConfig() {
 
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title">{t('admin.search.config.caching')}</h2>
+          <h2 className="card-title">{t('caching')}</h2>
           <div className="form-control">
             <label className="label cursor-pointer">
               <span className="label-text">
-                {t('admin.search.config.enableCache')}
+                {t('enableCache')}
               </span>
               <input
                 type="checkbox"
@@ -301,7 +301,7 @@ export default function SearchConfig() {
             <div className="form-control">
               <label className="label">
                 <span className="label-text">
-                  {t('admin.search.config.cacheTimeout')}
+                  {t('cacheTimeout')}
                 </span>
                 <span className="label-text-alt">{config.cacheTimeout}s</span>
               </label>
@@ -331,14 +331,14 @@ export default function SearchConfig() {
               onClick={handleReset}
               disabled={!hasChanges || saving}
             >
-              {t('admin.search.config.reset')}
+              {t('reset')}
             </button>
             <button
               className={`btn btn-primary ${saving ? 'loading' : ''}`}
               onClick={handleSave}
               disabled={!hasChanges || saving}
             >
-              {saving ? '' : t('admin.search.config.save')}
+              {saving ? '' : t('save')}
             </button>
           </div>
         </div>
@@ -359,7 +359,7 @@ export default function SearchConfig() {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.98-.833-2.75 0L3.098 16.5c-.77.833.192 2.5 1.732 2.5z"
             />
           </svg>
-          <span>{t('admin.search.config.debugWarning')}</span>
+          <span>{t('debugWarning')}</span>
         </div>
       )}
     </div>

@@ -29,26 +29,27 @@ export default function PaymentMethodSelector({
   amount,
   currency = 'RSD',
 }: PaymentMethodSelectorProps) {
-  const t = useTranslations();
+  const t = useTranslations('payment.methods');
+  const tPayment = useTranslations('payment');
 
   const paymentMethods: PaymentMethod[] = [
     {
       id: 'card',
-      name: t('payment.methods.card'),
-      description: t('payment.methods.cardDescription'),
+      name: tPayment('methods.card'),
+      description: tPayment('methods.cardDescription'),
       icon: <CreditCardIcon className="w-6 h-6" />,
     },
     {
       id: 'cash_on_delivery',
-      name: t('payment.methods.cashOnDelivery'),
-      description: t('payment.methods.cashOnDeliveryDescription'),
+      name: tPayment('methods.cashOnDelivery'),
+      description: tPayment('methods.cashOnDeliveryDescription'),
       icon: <BanknotesIcon className="w-6 h-6" />,
       fee: amount * 0.02, // 2% fee
     },
     {
       id: 'bank_transfer',
-      name: t('payment.methods.bankTransfer'),
-      description: t('payment.methods.bankTransferDescription'),
+      name: tPayment('methods.bankTransfer'),
+      description: tPayment('methods.bankTransferDescription'),
       icon: <WalletIcon className="w-6 h-6" />,
     },
   ];
@@ -63,7 +64,7 @@ export default function PaymentMethodSelector({
   return (
     <div className="space-y-3">
       <h3 className="text-lg font-semibold text-base-content">
-        {t('payment.selectMethod')}
+        {tPayment('selectMethod')}
       </h3>
 
       <div className="space-y-2">
@@ -99,7 +100,7 @@ export default function PaymentMethodSelector({
 
                   {method.fee && (
                     <p className="text-sm text-warning mt-2">
-                      {t('payment.additionalFee')}: {formatCurrency(method.fee)}
+                      {tPayment('additionalFee')}: {formatCurrency(method.fee)}
                     </p>
                   )}
                 </div>
@@ -132,7 +133,7 @@ export default function PaymentMethodSelector({
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span className="text-sm">{t('payment.securePaymentInfo')}</span>
+        <span className="text-sm">{tPayment('securePaymentInfo')}</span>
       </div>
     </div>
   );

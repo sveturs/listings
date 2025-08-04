@@ -16,7 +16,7 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
   showActions = true,
   compact = false,
 }) => {
-  const t = useTranslations();
+  const t = useTranslations('admin.balance');
   const locale = useLocale();
   const { balance, loading, error } = useBalance();
   const [selectedCurrency, setSelectedCurrency] = useState('RSD');
@@ -35,7 +35,7 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
     return (
       <div className="alert alert-error">
         <span>
-          {t('admin.balance.errorLoading')}: {error}
+          {t('errorLoading')}: {error}
         </span>
       </div>
     );
@@ -47,7 +47,7 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
       <div className="card bg-gradient-to-r from-base-300 to-base-200 shadow-lg">
         <div className="card-body text-center">
           <h2 className="card-title justify-center">
-            🔒 {t('admin.balance.title')}
+            🔒 {t('title')}
           </h2>
           <p className="text-sm opacity-70">
             Войдите в систему для просмотра баланса
@@ -82,14 +82,14 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <p className="text-sm opacity-80">
-              {t('admin.balance.availableBalance')}
+              {t('availableBalance')}
             </p>
             <h2 className="text-3xl font-bold">
               {balanceService.formatAmount(availableBalance, selectedCurrency)}
             </h2>
             {frozenBalance > 0 && (
               <p className="text-sm opacity-80 mt-1">
-                {t('admin.balance.frozen')}:{' '}
+                {t('frozen')}:{' '}
                 {balanceService.formatAmount(frozenBalance, selectedCurrency)}
               </p>
             )}
@@ -112,13 +112,13 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
               href={`/${locale}/balance/deposit`}
               className="btn btn-primary btn-outline btn-sm"
             >
-              💳 {t('admin.balance.deposit')}
+              💳 {t('deposit')}
             </Link>
             <Link
               href={`/${locale}/balance/withdraw`}
               className="btn btn-primary btn-outline btn-sm"
             >
-              💸 {t('admin.balance.withdraw')}
+              💸 {t('withdraw')}
             </Link>
           </div>
         )}

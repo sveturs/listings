@@ -14,7 +14,7 @@ export default function ViewToggle({
   currentView,
   onViewChange,
 }: ViewToggleProps) {
-  const t = useTranslations();
+  const t = useTranslations('common');
 
   return (
     <div className="flex gap-1 bg-base-200 p-1 rounded-lg">
@@ -23,7 +23,7 @@ export default function ViewToggle({
         className={`btn btn-sm ${
           currentView === 'grid' ? 'btn-primary' : 'btn-ghost'
         }`}
-        title={t('common.viewGrid')}
+        title={t('viewGrid')}
       >
         <Squares2X2Icon className="w-4 h-4" />
       </button>
@@ -32,7 +32,7 @@ export default function ViewToggle({
         className={`btn btn-sm ${
           currentView === 'list' ? 'btn-primary' : 'btn-ghost'
         }`}
-        title={t('common.viewList')}
+        title={t('viewList')}
       >
         <ListBulletIcon className="w-4 h-4" />
       </button>

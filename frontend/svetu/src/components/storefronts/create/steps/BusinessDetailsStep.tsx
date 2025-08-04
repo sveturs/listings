@@ -13,7 +13,9 @@ export default function BusinessDetailsStep({
   onNext,
   onBack,
 }: BusinessDetailsStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_storefront.business_details');
+  const tCreate_storefront.errors = useTranslations('create_storefront.errors');
+  const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -22,17 +24,17 @@ export default function BusinessDetailsStep({
 
     // Email validation if provided
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = t('create_storefront.errors.email_invalid');
+      newErrors.email = tCreate_storefront.errors('email_invalid');
     }
 
     // Phone validation if provided
     if (formData.phone && !/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
-      newErrors.phone = t('create_storefront.errors.phone_invalid');
+      newErrors.phone = tCreate_storefront.errors('phone_invalid');
     }
 
     // Website validation if provided
     if (formData.website && !/^https?:\/\/.+\..+/.test(formData.website)) {
-      newErrors.website = t('create_storefront.errors.website_invalid');
+      newErrors.website = tCreate_storefront.errors('website_invalid');
     }
 
     setErrors(newErrors);
@@ -50,17 +52,17 @@ export default function BusinessDetailsStep({
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4">
-            {t('create_storefront.business_details.title')}
+            {t('title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {t('create_storefront.business_details.subtitle')}
+            {t('subtitle')}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">
-                  {t('create_storefront.business_details.registration_number')}
+                  {t('registration_number')}
                 </span>
               </label>
               <input
@@ -79,7 +81,7 @@ export default function BusinessDetailsStep({
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">
-                  {t('create_storefront.business_details.tax_number')}
+                  {t('tax_number')}
                 </span>
               </label>
               <input
@@ -96,7 +98,7 @@ export default function BusinessDetailsStep({
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">
-                  {t('create_storefront.business_details.vat_number')}
+                  {t('vat_number')}
                 </span>
               </label>
               <input
@@ -113,7 +115,7 @@ export default function BusinessDetailsStep({
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">
-                  {t('create_storefront.business_details.phone')}
+                  {t('phone')}
                 </span>
               </label>
               <input
@@ -137,7 +139,7 @@ export default function BusinessDetailsStep({
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">
-                  {t('create_storefront.business_details.email')}
+                  {t('email')}
                 </span>
               </label>
               <input
@@ -161,7 +163,7 @@ export default function BusinessDetailsStep({
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">
-                  {t('create_storefront.business_details.website')}
+                  {t('website')}
                 </span>
               </label>
               <input
@@ -185,10 +187,10 @@ export default function BusinessDetailsStep({
 
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-ghost" onClick={onBack}>
-              {t('common.back')}
+              {tCommon('back')}
             </button>
             <button className="btn btn-primary" onClick={handleNext}>
-              {t('common.next')}
+              {tCommon('next')}
             </button>
           </div>
         </div>

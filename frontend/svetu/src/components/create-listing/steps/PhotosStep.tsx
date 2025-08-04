@@ -13,7 +13,10 @@ interface PhotosStepProps {
 }
 
 export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_listing.photos');
+  const tCreate_listing.photos.tips = useTranslations('create_listing.photos.tips');
+  const tCreate_listing.photos.trust_tip = useTranslations('create_listing.photos.trust_tip');
+  const tCommon = useTranslations('common');
   const { state, dispatch } = useCreateListing();
   const [photos, setPhotos] = useState<string[]>(state.images || []);
   const [mainPhotoIndex, setMainPhotoIndex] = useState(
@@ -121,10 +124,10 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4 flex items-center">
-            📸 {t('create_listing.photos.title')}
+            📸 {t('title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {t('create_listing.photos.description')}
+            {t('description')}
           </p>
 
           {/* Зона загрузки */}
@@ -157,21 +160,21 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
               <div className="space-y-2">
                 <div className="loading loading-spinner loading-lg mx-auto"></div>
                 <p className="text-sm">
-                  {t('create_listing.photos.uploading')}
+                  {t('uploading')}
                 </p>
               </div>
             ) : (
               <div className="space-y-2">
                 <div className="text-4xl">📷</div>
                 <p className="font-medium">
-                  {t('create_listing.photos.upload_instruction')}
+                  {t('upload_instruction')}
                 </p>
                 <p className="text-sm text-base-content/60">
-                  {t('create_listing.photos.supported_formats')}
+                  {t('supported_formats')}
                 </p>
                 <p className="text-xs text-base-content/50">
-                  {t('create_listing.photos.max_size')} • {photos.length}/8{' '}
-                  {t('create_listing.photos.photos')}
+                  {t('max_size')} • {photos.length}/8{' '}
+                  {t('photos')}
                 </p>
               </div>
             )}
@@ -181,7 +184,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
           {photos.length > 0 && (
             <div className="mt-6">
               <h3 className="font-medium mb-3 flex items-center gap-2">
-                🖼️ {t('create_listing.photos.gallery')}
+                🖼️ {t('gallery')}
                 <span className="badge badge-primary badge-sm">
                   {photos.length}
                 </span>
@@ -238,7 +241,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                             setAsMainPhoto(index);
                           }}
                           className="btn btn-xs btn-primary"
-                          title={t('create_listing.photos.set_main')}
+                          title={t('set_main')}
                         >
                           ⭐
                         </button>
@@ -249,7 +252,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                           removePhoto(index);
                         }}
                         className="btn btn-xs btn-error"
-                        title={t('create_listing.photos.remove')}
+                        title={t('remove')}
                       >
                         🗑️
                       </button>
@@ -258,7 +261,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                     {/* Индикатор главного фото */}
                     {index === mainPhotoIndex && (
                       <div className="absolute top-1 left-1 bg-primary text-primary-content text-xs px-2 py-1 rounded">
-                        {t('create_listing.photos.main')}
+                        {t('main')}
                       </div>
                     )}
                   </div>
@@ -282,13 +285,13 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                 </svg>
                 <div className="text-sm">
                   <p className="font-medium">
-                    💡 {t('create_listing.photos.tips.title')}
+                    💡 {tCreate_listing.photos.tips('title')}
                   </p>
                   <ul className="text-xs mt-2 space-y-1">
-                    <li>• {t('create_listing.photos.tips.quality')}</li>
-                    <li>• {t('create_listing.photos.tips.lighting')}</li>
-                    <li>• {t('create_listing.photos.tips.angles')}</li>
-                    <li>• {t('create_listing.photos.tips.defects')}</li>
+                    <li>• {tCreate_listing.photos.tips('quality')}</li>
+                    <li>• {tCreate_listing.photos.tips('lighting')}</li>
+                    <li>• {tCreate_listing.photos.tips('angles')}</li>
+                    <li>• {tCreate_listing.photos.tips('defects')}</li>
                   </ul>
                 </div>
               </div>
@@ -312,10 +315,10 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
             </svg>
             <div className="text-sm">
               <p className="font-medium">
-                🤝 {t('create_listing.photos.trust_tip.title')}
+                🤝 {tCreate_listing.photos.trust_tip('title')}
               </p>
               <p className="text-xs mt-1">
-                {t('create_listing.photos.trust_tip.description')}
+                {tCreate_listing.photos.trust_tip('description')}
               </p>
             </div>
           </div>
@@ -323,14 +326,14 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
           {/* Кнопки навигации */}
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-outline" onClick={onBack}>
-              ← {t('common.back')}
+              ← {tCommon('back')}
             </button>
             <button
               className={`btn btn-primary ${!canProceed ? 'btn-disabled' : ''}`}
               onClick={onNext}
               disabled={!canProceed}
             >
-              {t('common.continue')} →
+              {tCommon('continue')} →
             </button>
           </div>
         </div>

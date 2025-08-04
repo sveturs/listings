@@ -27,7 +27,7 @@ export default function EditProductWizard({
   storefrontSlug,
   productId,
 }: EditProductWizardProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts.products');
   const { state, goToStep, nextStep, prevStep } = useEditProduct();
 
   const renderStepContent = () => {
@@ -71,7 +71,7 @@ export default function EditProductWizard({
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-warning rounded-full animate-pulse" />
             <p className="text-warning font-medium">
-              {t('storefronts.products.unsavedChanges')}
+              {t('unsavedChanges')}
             </p>
           </div>
         </div>

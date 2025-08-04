@@ -15,7 +15,8 @@ interface CategoryStepProps {
 }
 
 export default function CategoryStep({ onNext }: CategoryStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts.products');
+  const tCommon = useTranslations('common');
   const { state, setCategory, setError, clearError } = useCreateProduct();
   const [allCategories, setAllCategories] = useState<MarketplaceCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,7 +167,7 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
 
   const handleNext = () => {
     if (!selectedCategory) {
-      setError('category', t('storefronts.products.categoryRequired'));
+      setError('category', t('categoryRequired'));
       return;
     }
     onNext();
@@ -186,10 +187,10 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
     <div className="w-full">
       <div className="text-center mb-6 lg:mb-8">
         <h2 className="text-xl lg:text-3xl font-bold text-base-content mb-2 lg:mb-4">
-          {t('storefronts.products.selectCategory')}
+          {t('selectCategory')}
         </h2>
         <p className="text-sm lg:text-lg text-base-content/70">
-          {t('storefronts.products.categorySelectionDescription')}
+          {t('categorySelectionDescription')}
         </p>
       </div>
 
@@ -201,7 +202,7 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
               onClick={navigateToRoot}
               className="text-primary hover:text-primary-focus transition-colors"
             >
-              {t('storefronts.products.allCategories')}
+              {t('allCategories')}
             </button>
             {breadcrumbs.map((crumb, index) => (
               <div key={crumb.id} className="flex items-center gap-2">
@@ -239,7 +240,7 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            {t('common.back')}
+            {tCommon('back')}
           </button>
         </div>
       )}
@@ -297,14 +298,14 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
                   {category.listing_count !== undefined && (
                     <p className="text-xs sm:text-sm text-base-content/60 mt-1 truncate">
                       {category.listing_count}{' '}
-                      {t('storefronts.products.productsCount')}
+                      {t('productsCount')}
                     </p>
                   )}
 
                   {/* Индикатор подкатегорий */}
                   {hasSubcategories && (
                     <p className="text-xs text-primary mt-1">
-                      {t('storefronts.products.hasSubcategories')}
+                      {t('hasSubcategories')}
                     </p>
                   )}
                 </div>
@@ -376,7 +377,7 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="font-bold text-base lg:text-xl text-success">
-                {t('storefronts.products.selectedCategory')}
+                {t('selectedCategory')}
               </h3>
               <p className="text-sm lg:text-lg text-base-content truncate">
                 {selectedCategory.name}
@@ -402,7 +403,7 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
             ${selectedCategory ? 'btn-primary' : 'btn-disabled'}
           `}
         >
-          <span className="text-sm lg:text-base">{t('common.next')}</span>
+          <span className="text-sm lg:text-base">{tCommon('next')}</span>
           <svg
             className="w-4 h-4 lg:w-5 lg:h-5 ml-1 lg:ml-2"
             fill="none"

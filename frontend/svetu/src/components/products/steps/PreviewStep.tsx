@@ -26,7 +26,9 @@ export default function PreviewStep({
   onBack,
   storefrontSlug,
 }: PreviewStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts.products');
+  const tCommon = useTranslations('common');
+  const tStorefronts.products.privacy = useTranslations('storefronts.products.privacy');
   const locale = useLocale();
   const router = useRouter();
   const { state } = useCreateProduct();
@@ -116,19 +118,19 @@ export default function PreviewStep({
             console.error('Failed to upload images:', imageError);
             // Продолжаем даже если не удалось загрузить изображения
             toast.warning(
-              t('storefronts.products.productCreatedButImagesError')
+              t('productCreatedButImagesError')
             );
           }
         }
 
-        toast.success(t('storefronts.products.productCreated'));
+        toast.success(t('productCreated'));
         router.push(`/${locale}/storefronts/${storefrontSlug}/products`);
       }
     } catch (error: any) {
       console.error('Failed to create product:', error);
       toast.error(
         error.response?.data?.error ||
-          t('storefronts.products.errorCreatingProduct')
+          t('errorCreatingProduct')
       );
     } finally {
       setSubmitting(false);
@@ -177,7 +179,7 @@ export default function PreviewStep({
         .join(', ');
     }
     if (typeof value === 'boolean') {
-      return value ? t('common.yes') : t('common.no');
+      return value ? tCommon('yes') : tCommon('no');
     }
 
     // Для числовых значений добавляем единицы измерения если есть
@@ -204,10 +206,10 @@ export default function PreviewStep({
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-base-content mb-4">
-          {t('storefronts.products.previewProduct')}
+          {t('previewProduct')}
         </h2>
         <p className="text-lg text-base-content/70">
-          {t('storefronts.products.previewProductDescription')}
+          {t('previewProductDescription')}
         </p>
       </div>
 
@@ -262,7 +264,7 @@ export default function PreviewStep({
           <div className="stats shadow">
             <div className="stat">
               <div className="stat-title">
-                {t('storefronts.products.totalPhotos')}
+                {t('totalPhotos')}
               </div>
               <div className="stat-value text-primary">
                 {state.images.length}
@@ -270,7 +272,7 @@ export default function PreviewStep({
             </div>
             <div className="stat">
               <div className="stat-title">
-                {t('storefronts.products.category')}
+                {t('category')}
               </div>
               <div className="stat-value text-sm">{state.category?.name}</div>
             </div>
@@ -306,7 +308,7 @@ export default function PreviewStep({
                   state.productData.stock_quantity > 0 && (
                     <span className="text-sm text-success">
                       {state.productData.stock_quantity}{' '}
-                      {t('storefronts.products.inStock')}
+                      {t('inStock')}
                     </span>
                   )}
               </div>
@@ -316,7 +318,7 @@ export default function PreviewStep({
                 {state.productData.sku && (
                   <div>
                     <span className="font-semibold">
-                      {t('storefronts.products.sku')}:
+                      {t('sku')}:
                     </span>
                     <span className="ml-2">{state.productData.sku}</span>
                   </div>
@@ -324,21 +326,21 @@ export default function PreviewStep({
                 {state.productData.barcode && (
                   <div>
                     <span className="font-semibold">
-                      {t('storefronts.products.barcode')}:
+                      {t('barcode')}:
                     </span>
                     <span className="ml-2">{state.productData.barcode}</span>
                   </div>
                 )}
                 <div>
                   <span className="font-semibold">
-                    {t('storefronts.products.status')}:
+                    {t('status')}:
                   </span>
                   <span
                     className={`ml-2 ${state.productData.is_active ? 'text-success' : 'text-error'}`}
                   >
                     {state.productData.is_active
-                      ? t('storefronts.products.active')
-                      : t('storefronts.products.inactive')}
+                      ? t('active')
+                      : t('inactive')}
                   </span>
                 </div>
               </div>
@@ -351,7 +353,7 @@ export default function PreviewStep({
               <div className="card-body">
                 <h4 className="card-title text-lg mb-4 flex items-center gap-2">
                   <span className="text-xl">⚡</span>
-                  {t('storefronts.products.specifications')}
+                  {t('specifications')}
                 </h4>
 
                 <div className="space-y-3">
@@ -400,18 +402,18 @@ export default function PreviewStep({
               <div className="card-body">
                 <h4 className="card-title text-lg mb-4 flex items-center gap-2">
                   <span className="text-xl">🎯</span>
-                  {t('storefronts.products.variants')}
+                  {t('variants')}
                 </h4>
 
                 <div className="overflow-x-auto">
                   <table className="table table-sm">
                     <thead>
                       <tr>
-                        <th>{t('storefronts.products.variant')}</th>
-                        <th>{t('storefronts.products.sku')}</th>
-                        <th>{t('storefronts.products.price')}</th>
-                        <th>{t('storefronts.products.stock')}</th>
-                        <th>{t('storefronts.products.default')}</th>
+                        <th>{t('variant')}</th>
+                        <th>{t('sku')}</th>
+                        <th>{t('price')}</th>
+                        <th>{t('stock')}</th>
+                        <th>{t('default')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -429,13 +431,13 @@ export default function PreviewStep({
                                   variant.price,
                                   state.productData.currency || 'RSD'
                                 )
-                              : t('storefronts.products.basePrice')}
+                              : t('basePrice')}
                           </td>
                           <td>{variant.stock_quantity}</td>
                           <td>
                             {variant.is_default && (
                               <span className="badge badge-primary badge-sm">
-                                {t('storefronts.products.default')}
+                                {t('default')}
                               </span>
                             )}
                           </td>
@@ -445,7 +447,7 @@ export default function PreviewStep({
                   </table>
                 </div>
                 <div className="text-sm text-base-content/60 mt-2">
-                  {t('storefronts.products.totalVariants')}:{' '}
+                  {t('totalVariants')}:{' '}
                   {state.variants.length}
                 </div>
               </div>
@@ -457,18 +459,18 @@ export default function PreviewStep({
             <div className="card-body">
               <h4 className="card-title text-lg mb-4 flex items-center gap-2">
                 <span className="text-xl">📍</span>
-                {t('storefronts.products.location')}
+                {t('location')}
               </h4>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-base-200">
                   <span className="font-medium text-base-content/70">
-                    {t('storefronts.products.locationType')}:
+                    {t('locationType')}:
                   </span>
                   <span className="text-base-content">
                     {state.location?.useStorefrontLocation
-                      ? t('storefronts.products.storefrontLocation')
-                      : t('storefronts.products.individualLocation')}
+                      ? t('storefrontLocation')
+                      : t('individualLocation')}
                   </span>
                 </div>
 
@@ -477,7 +479,7 @@ export default function PreviewStep({
                     <>
                       <div className="flex justify-between items-center py-2 border-b border-base-200">
                         <span className="font-medium text-base-content/70">
-                          {t('storefronts.products.address')}:
+                          {t('address')}:
                         </span>
                         <span className="text-base-content text-right max-w-[60%]">
                           {formatAddressWithPrivacy(
@@ -489,30 +491,30 @@ export default function PreviewStep({
 
                       <div className="flex justify-between items-center py-2 border-b border-base-200">
                         <span className="font-medium text-base-content/70">
-                          {t('storefronts.products.privacyLevel')}:
+                          {t('privacyLevel')}:
                         </span>
                         <span className="text-base-content">
                           {state.location.privacyLevel === 'exact' &&
-                            t('storefronts.products.privacy.exact')}
+                            tStorefronts.products.privacy('exact')}
                           {state.location.privacyLevel === 'street' &&
-                            t('storefronts.products.privacy.street')}
+                            tStorefronts.products.privacy('street')}
                           {state.location.privacyLevel === 'district' &&
-                            t('storefronts.products.privacy.district')}
+                            tStorefronts.products.privacy('district')}
                           {state.location.privacyLevel === 'city' &&
-                            t('storefronts.products.privacy.city')}
+                            tStorefronts.products.privacy('city')}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center py-2">
                         <span className="font-medium text-base-content/70">
-                          {t('storefronts.products.showOnMap')}:
+                          {t('showOnMap')}:
                         </span>
                         <span
                           className={`text-base-content ${state.location.showOnMap ? 'text-success' : 'text-error'}`}
                         >
                           {state.location.showOnMap
-                            ? t('common.yes')
-                            : t('common.no')}
+                            ? tCommon('yes')
+                            : tCommon('no')}
                         </span>
                       </div>
                     </>
@@ -530,10 +532,10 @@ export default function PreviewStep({
             <div className="text-5xl">🎉</div>
             <div>
               <h3 className="text-xl font-bold text-primary mb-2">
-                {t('storefronts.products.readyToPublish')}
+                {t('readyToPublish')}
               </h3>
               <p className="text-base-content/70">
-                {t('storefronts.products.publishConfirmation')}
+                {t('publishConfirmation')}
               </p>
             </div>
           </div>
@@ -556,12 +558,12 @@ export default function PreviewStep({
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          {t('common.back')}
+          {tCommon('back')}
         </button>
 
         <div className="flex gap-4">
           <button className="btn btn-outline btn-lg px-8" disabled={submitting}>
-            {t('storefronts.products.saveDraft')}
+            {t('saveDraft')}
           </button>
 
           <button
@@ -572,11 +574,11 @@ export default function PreviewStep({
             {submitting ? (
               <>
                 <span className="loading loading-spinner loading-sm mr-2"></span>
-                {t('storefronts.products.creating')}
+                {t('creating')}
               </>
             ) : (
               <>
-                {t('storefronts.products.publishProduct')}
+                {t('publishProduct')}
                 <svg
                   className="w-5 h-5 ml-2"
                   fill="none"

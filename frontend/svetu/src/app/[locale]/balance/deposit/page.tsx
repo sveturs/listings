@@ -11,7 +11,10 @@ import { toast } from '@/utils/toast';
 const PRESET_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 
 export default function DepositPage() {
-  const t = useTranslations();
+  const t = useTranslations('admin.balance');
+  const tAdmin.balance.error = useTranslations('admin.balance.error');
+  const tProfile = useTranslations('profile');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
@@ -57,11 +60,11 @@ export default function DepositPage() {
         window.location.href = response.data.payment_url;
       } else {
         console.error('Invalid response structure:', response);
-        toast.error(t('admin.balance.error.deposit_failed'));
+        toast.error(tAdmin.balance.error('deposit_failed'));
       }
     } catch (error) {
       console.error('Deposit error:', error);
-      toast.error(t('admin.balance.error.deposit_failed'));
+      toast.error(tAdmin.balance.error('deposit_failed'));
     } finally {
       setIsProcessing(false);
     }
@@ -76,12 +79,12 @@ export default function DepositPage() {
       <div className="breadcrumbs text-sm mb-6">
         <ul>
           <li>
-            <Link href={`/${locale}/profile`}>{t('profile.title')}</Link>
+            <Link href={`/${locale}/profile`}>{tProfile('title')}</Link>
           </li>
           <li>
-            <Link href={`/${locale}/balance`}>{t('admin.balance.title')}</Link>
+            <Link href={`/${locale}/balance`}>{t('title')}</Link>
           </li>
-          <li>{t('admin.balance.depositFunds')}</li>
+          <li>{t('depositFunds')}</li>
         </ul>
       </div>
 
@@ -91,14 +94,14 @@ export default function DepositPage() {
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <h1 className="card-title text-2xl mb-6">
-                💳 {t('admin.balance.depositFunds')}
+                💳 {t('depositFunds')}
               </h1>
 
               {/* Выбор суммы */}
               <div className="form-control mb-6">
                 <label className="label">
                   <span className="label-text font-semibold">
-                    {t('admin.balance.selectAmount')}
+                    {t('selectAmount')}
                   </span>
                 </label>
 
@@ -124,7 +127,7 @@ export default function DepositPage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">
-                      {t('admin.balance.customAmount')}
+                      {t('customAmount')}
                     </span>
                   </label>
                   <div className="input-group">
@@ -145,7 +148,7 @@ export default function DepositPage() {
                   </div>
                   <label className="label">
                     <span className="label-text-alt text-neutral-500">
-                      {t('admin.balance.limits')}
+                      {t('limits')}
                     </span>
                   </label>
                 </div>
@@ -155,7 +158,7 @@ export default function DepositPage() {
               <div className="form-control mb-6">
                 <label className="label">
                   <span className="label-text font-semibold">
-                    {t('admin.balance.paymentMethod')}
+                    {t('paymentMethod')}
                   </span>
                 </label>
                 <div className="space-y-3">
@@ -173,10 +176,10 @@ export default function DepositPage() {
                         <span className="text-2xl">💳</span>
                         <div>
                           <div className="font-medium">
-                            {t('admin.balance.bankCard')}
+                            {t('bankCard')}
                           </div>
                           <div className="text-sm text-neutral-500">
-                            {t('admin.balance.supportedCards')}
+                            {t('supportedCards')}
                           </div>
                         </div>
                       </div>
@@ -190,15 +193,15 @@ export default function DepositPage() {
                 <div className="bg-base-200 rounded-lg p-4 mb-6">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">
-                      {t('admin.balance.amountToDeposit')}:
+                      {t('amountToDeposit')}:
                     </span>
                     <span className="text-xl font-bold text-primary">
                       {balanceService.formatAmount(amount, 'RSD')}
                     </span>
                   </div>
                   <div className="text-sm text-neutral-500 mt-2">
-                    {t('admin.balance.commission')}: 0 RSD •{' '}
-                    {t('admin.balance.toCredit')}:{' '}
+                    {t('commission')}: 0 RSD •{' '}
+                    {t('toCredit')}:{' '}
                     {balanceService.formatAmount(amount, 'RSD')}
                   </div>
                 </div>
@@ -213,16 +216,16 @@ export default function DepositPage() {
                 {isProcessing ? (
                   <>
                     <span className="loading loading-spinner loading-sm"></span>
-                    {t('common.loading')}
+                    {tCommon('loading')}
                   </>
                 ) : (
-                  <>🔒 {t('admin.balance.continueToPayment')}</>
+                  <>🔒 {t('continueToPayment')}</>
                 )}
               </button>
 
               {/* Информация о безопасности */}
               <div className="text-center text-sm text-neutral-500 mt-4">
-                🔒 {t('admin.balance.securePayment')}
+                🔒 {t('securePayment')}
               </div>
             </div>
           </div>
@@ -236,15 +239,15 @@ export default function DepositPage() {
           <div className="card bg-base-100 shadow-xl mt-6">
             <div className="card-body">
               <h3 className="card-title text-lg">
-                ℹ️ {t('admin.balance.information')}
+                ℹ️ {t('information')}
               </h3>
               <ul className="text-sm space-y-2">
-                <li>• {t('admin.balance.instantCredit')}</li>
-                <li>• {t('admin.balance.minAmount')}: 100 RSD</li>
-                <li>• {t('admin.balance.maxAmount')}: 100,000 RSD</li>
-                <li>• {t('admin.balance.noCommission')}: 0%</li>
+                <li>• {t('instantCredit')}</li>
+                <li>• {t('minAmount')}: 100 RSD</li>
+                <li>• {t('maxAmount')}: 100,000 RSD</li>
+                <li>• {t('noCommission')}: 0%</li>
                 <li>
-                  • {t('admin.balance.supportedCurrencies')}: RSD, EUR, USD
+                  • {t('supportedCurrencies')}: RSD, EUR, USD
                 </li>
               </ul>
             </div>
@@ -254,14 +257,14 @@ export default function DepositPage() {
           <div className="card bg-base-100 shadow-xl mt-6">
             <div className="card-body">
               <h3 className="card-title text-lg">
-                🆘 {t('admin.balance.needHelp')}
+                🆘 {t('needHelp')}
               </h3>
-              <p className="text-sm">{t('admin.balance.supportMessage')}</p>
+              <p className="text-sm">{t('supportMessage')}</p>
               <Link
                 href={`/${locale}/contacts`}
                 className="btn btn-sm btn-outline"
               >
-                {t('admin.balance.contactSupport')}
+                {t('contactSupport')}
               </Link>
             </div>
           </div>

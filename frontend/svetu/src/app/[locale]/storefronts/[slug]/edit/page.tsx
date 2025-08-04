@@ -32,7 +32,8 @@ export default function EditStorefrontPage() {
   const params = useParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const slug = params?.slug as string;
 
@@ -170,10 +171,10 @@ export default function EditStorefrontPage() {
         })
       ).unwrap();
 
-      toast.success(t('storefronts.updateSuccess'));
+      toast.success(t('updateSuccess'));
       router.push(`/${locale}/storefronts/${slug}/dashboard`);
     } catch {
-      toast.error(t('storefronts.updateError'));
+      toast.error(t('updateError'));
     }
   };
 
@@ -196,7 +197,7 @@ export default function EditStorefrontPage() {
       <div className="min-h-screen bg-base-200 flex items-center justify-center">
         <div className="text-center">
           <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="mt-4 text-base-content/60">{t('common.loading')}</p>
+          <p className="mt-4 text-base-content/60">{tCommon('loading')}</p>
         </div>
       </div>
     );
@@ -226,7 +227,7 @@ export default function EditStorefrontPage() {
                 className="btn btn-primary"
               >
                 <ArrowLeftIcon className="w-5 h-5" />
-                {t('common.back')}
+                {tCommon('back')}
               </Link>
             </div>
           </div>
@@ -253,7 +254,7 @@ export default function EditStorefrontPage() {
                 className="btn btn-primary"
               >
                 <ArrowLeftIcon className="w-5 h-5" />
-                {t('common.back')}
+                {tCommon('back')}
               </Link>
             </div>
           </div>
@@ -277,7 +278,7 @@ export default function EditStorefrontPage() {
               </Link>
               <div>
                 <h1 className="text-2xl font-bold">
-                  {t('storefronts.editStorefront')}
+                  {t('editStorefront')}
                 </h1>
                 <p className="text-base-content/60">{currentStorefront.name}</p>
               </div>
@@ -289,7 +290,7 @@ export default function EditStorefrontPage() {
             >
               {isLoading && <span className="loading loading-spinner"></span>}
               <CheckCircleIcon className="w-5 h-5" />
-              {t('common.save')}
+              {tCommon('save')}
             </button>
           </div>
         </div>
@@ -303,42 +304,42 @@ export default function EditStorefrontPage() {
             onClick={() => setActiveTab('basic')}
           >
             <BuildingStorefrontIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.basicInfo')}
+            {t('basicInfo')}
           </button>
           <button
             className={`tab ${activeTab === 'location' ? 'tab-active' : ''}`}
             onClick={() => setActiveTab('location')}
           >
             <MapPinIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.location')}
+            {t('location')}
           </button>
           <button
             className={`tab ${activeTab === 'hours' ? 'tab-active' : ''}`}
             onClick={() => setActiveTab('hours')}
           >
             <ClockIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.businessHours')}
+            {t('businessHours')}
           </button>
           <button
             className={`tab ${activeTab === 'payment' ? 'tab-active' : ''}`}
             onClick={() => setActiveTab('payment')}
           >
             <CreditCardIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.paymentTab')}
+            {t('paymentTab')}
           </button>
           <button
             className={`tab ${activeTab === 'delivery' ? 'tab-active' : ''}`}
             onClick={() => setActiveTab('delivery')}
           >
             <TruckIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.deliveryOptions')}
+            {t('deliveryOptions')}
           </button>
           <button
             className={`tab ${activeTab === 'media' ? 'tab-active' : ''}`}
             onClick={() => setActiveTab('media')}
           >
             <PhotoIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.media')}
+            {t('media')}
           </button>
         </div>
 
@@ -351,7 +352,7 @@ export default function EditStorefrontPage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">
-                      {t('storefronts.storeName')}
+                      {t('storeName')}
                     </span>
                   </label>
                   <input
@@ -367,7 +368,7 @@ export default function EditStorefrontPage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">
-                      {t('storefronts.description')}
+                      {t('description')}
                     </span>
                   </label>
                   <textarea
@@ -375,7 +376,7 @@ export default function EditStorefrontPage() {
                     value={formData.description}
                     onChange={handleInputChange}
                     className="textarea textarea-bordered h-32"
-                    placeholder={t('storefronts.descriptionPlaceholder')}
+                    placeholder={t('descriptionPlaceholder')}
                   />
                 </div>
 
@@ -383,7 +384,7 @@ export default function EditStorefrontPage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">
-                        {t('storefronts.phone')}
+                        {t('phone')}
                       </span>
                     </label>
                     <div className="input-group">
@@ -403,7 +404,7 @@ export default function EditStorefrontPage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">
-                        {t('storefronts.email')}
+                        {t('email')}
                       </span>
                     </label>
                     <div className="input-group">
@@ -424,7 +425,7 @@ export default function EditStorefrontPage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">
-                      {t('storefronts.website')}
+                      {t('website')}
                     </span>
                   </label>
                   <div className="input-group">
@@ -451,7 +452,7 @@ export default function EditStorefrontPage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">
-                        {t('storefronts.country')}
+                        {t('country')}
                       </span>
                     </label>
                     <input
@@ -466,7 +467,7 @@ export default function EditStorefrontPage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">
-                        {t('storefronts.city')}
+                        {t('city')}
                       </span>
                     </label>
                     <input
@@ -482,7 +483,7 @@ export default function EditStorefrontPage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">
-                      {t('storefronts.address')}
+                      {t('address')}
                     </span>
                   </label>
                   <input
@@ -497,7 +498,7 @@ export default function EditStorefrontPage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">
-                      {t('storefronts.postalCode')}
+                      {t('postalCode')}
                     </span>
                   </label>
                   <input
@@ -566,7 +567,7 @@ export default function EditStorefrontPage() {
             {activeTab === 'payment' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">
-                  {t('storefronts.acceptedPaymentMethods')}
+                  {t('acceptedPaymentMethods')}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Object.entries(paymentMethods).map(([method, enabled]) => (
@@ -597,7 +598,7 @@ export default function EditStorefrontPage() {
             {activeTab === 'delivery' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">
-                  {t('storefronts.deliveryOptions')}
+                  {t('deliveryOptions')}
                 </h3>
                 <div className="space-y-4">
                   {Object.entries(deliveryOptions).map(([option, enabled]) => (
@@ -634,7 +635,7 @@ export default function EditStorefrontPage() {
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-4">
-                    {t('storefronts.logo')}
+                    {t('logo')}
                   </h3>
                   <div className="flex items-center gap-6">
                     <div className="avatar">
@@ -687,11 +688,11 @@ export default function EditStorefrontPage() {
                               currentStorefront.id!,
                               file
                             );
-                            toast.success(t('storefronts.logoUploadSuccess'));
+                            toast.success(t('logoUploadSuccess'));
                             // Обновляем витрину чтобы получить новый URL
                             dispatch(fetchStorefrontBySlug(slug));
                           } catch {
-                            toast.error(t('storefronts.logoUploadError'));
+                            toast.error(t('logoUploadError'));
                             setLogoPreview(null);
                           } finally {
                             setUploadingLogo(false);
@@ -707,8 +708,8 @@ export default function EditStorefrontPage() {
                           className={`btn btn-primary btn-sm ${uploadingLogo ? 'loading' : ''}`}
                         >
                           {uploadingLogo
-                            ? t('common.uploading')
-                            : t('storefronts.uploadLogo')}
+                            ? tCommon('uploading')
+                            : t('uploadLogo')}
                         </label>
                         {(logoPreview || currentStorefront.logo_url) && (
                           <button
@@ -726,11 +727,11 @@ export default function EditStorefrontPage() {
                                       data: updates,
                                     })
                                   ).unwrap();
-                                  toast.success(t('storefronts.logoRemoved'));
+                                  toast.success(t('logoRemoved'));
                                   // Обновляем витрину
                                   dispatch(fetchStorefrontBySlug(slug));
                                 } catch {
-                                  toast.error(t('storefronts.logoRemoveError'));
+                                  toast.error(t('logoRemoveError'));
                                 }
                               }
                               // Очищаем превью и input
@@ -742,12 +743,12 @@ export default function EditStorefrontPage() {
                             }}
                             className="btn btn-ghost btn-sm text-error"
                           >
-                            {t('common.remove')}
+                            {tCommon('remove')}
                           </button>
                         )}
                       </div>
                       <p className="text-sm text-base-content/60 mt-2">
-                        {t('storefronts.logoRequirements')}
+                        {t('logoRequirements')}
                       </p>
                     </div>
                   </div>
@@ -757,7 +758,7 @@ export default function EditStorefrontPage() {
 
                 <div>
                   <h3 className="text-lg font-semibold mb-4">
-                    {t('storefronts.banner')}
+                    {t('banner')}
                   </h3>
                   <div className="space-y-4">
                     <div className="aspect-[3/1] bg-base-200 rounded-xl overflow-hidden relative max-h-48">
@@ -807,11 +808,11 @@ export default function EditStorefrontPage() {
                             currentStorefront.id!,
                             file
                           );
-                          toast.success(t('storefronts.bannerUploadSuccess'));
+                          toast.success(t('bannerUploadSuccess'));
                           // Обновляем витрину чтобы получить новый URL
                           dispatch(fetchStorefrontBySlug(slug));
                         } catch {
-                          toast.error(t('storefronts.bannerUploadError'));
+                          toast.error(t('bannerUploadError'));
                           setBannerPreview(null);
                         } finally {
                           setUploadingBanner(false);
@@ -827,8 +828,8 @@ export default function EditStorefrontPage() {
                         className={`btn btn-primary btn-sm ${uploadingBanner ? 'loading' : ''}`}
                       >
                         {uploadingBanner
-                          ? t('common.uploading')
-                          : t('storefronts.uploadBanner')}
+                          ? tCommon('uploading')
+                          : t('uploadBanner')}
                       </label>
                       {(bannerPreview || currentStorefront.banner_url) && (
                         <button
@@ -846,11 +847,11 @@ export default function EditStorefrontPage() {
                                     data: updates,
                                   })
                                 ).unwrap();
-                                toast.success(t('storefronts.bannerRemoved'));
+                                toast.success(t('bannerRemoved'));
                                 // Обновляем витрину
                                 dispatch(fetchStorefrontBySlug(slug));
                               } catch {
-                                toast.error(t('storefronts.bannerRemoveError'));
+                                toast.error(t('bannerRemoveError'));
                               }
                             }
                             // Очищаем превью и input
@@ -862,12 +863,12 @@ export default function EditStorefrontPage() {
                           }}
                           className="btn btn-ghost btn-sm text-error"
                         >
-                          {t('common.remove')}
+                          {tCommon('remove')}
                         </button>
                       )}
                     </div>
                     <p className="text-sm text-base-content/60">
-                      {t('storefronts.bannerRequirements')}
+                      {t('bannerRequirements')}
                     </p>
                   </div>
                 </div>

@@ -12,7 +12,8 @@ interface PhotosStepProps {
 }
 
 export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts.products');
+  const tCommon = useTranslations('common');
   const { state, setImages, setError, clearError } = useCreateProduct();
   const [images, setImagesState] = useState<File[]>(state.images || []);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -41,7 +42,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
 
     // Проверяем общее количество
     if (files.length + images.length > 10) {
-      toast.error(t('storefronts.products.maxImagesError'));
+      toast.error(t('maxImagesError'));
       return;
     }
 
@@ -53,7 +54,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
     });
 
     if (invalidFiles.length > 0) {
-      toast.error(t('storefronts.products.invalidImagesError'));
+      toast.error(t('invalidImagesError'));
       return;
     }
 
@@ -91,7 +92,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
 
   const validateImages = (): boolean => {
     if (images.length === 0) {
-      setError('images', t('storefronts.products.imagesRequired'));
+      setError('images', t('imagesRequired'));
       return false;
     }
     return true;
@@ -112,10 +113,10 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-base-content mb-4">
-          {t('storefronts.products.productPhotos')}
+          {t('productPhotos')}
         </h2>
         <p className="text-lg text-base-content/70">
-          {t('storefronts.products.productPhotosDescription')}
+          {t('productPhotosDescription')}
         </p>
       </div>
 
@@ -138,11 +139,11 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
             </svg>
           </div>
           <div className="stat-title">
-            {t('storefronts.products.photosUploaded')}
+            {t('photosUploaded')}
           </div>
           <div className="stat-value text-primary">{images.length}</div>
           <div className="stat-desc">
-            {t('storefronts.products.maxPhotos')}: 10
+            {t('maxPhotos')}: 10
           </div>
         </div>
 
@@ -163,11 +164,11 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
             </svg>
           </div>
           <div className="stat-title">
-            {t('storefronts.products.recommendedSize')}
+            {t('recommendedSize')}
           </div>
           <div className="stat-value text-secondary">1200px</div>
           <div className="stat-desc">
-            {t('storefronts.products.aspectRatio')}: 1:1
+            {t('aspectRatio')}: 1:1
           </div>
         </div>
       </div>
@@ -177,7 +178,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
         <div className="card-body">
           <h3 className="card-title text-xl mb-4 flex items-center gap-2">
             <span className="text-2xl">📸</span>
-            {t('storefronts.products.uploadPhotos')}
+            {t('uploadPhotos')}
           </h3>
 
           {/* Дроп-зона */}
@@ -193,14 +194,14 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
             <label htmlFor="image-upload" className="cursor-pointer">
               <div className="text-6xl mb-4">📷</div>
               <h4 className="text-xl font-semibold mb-2">
-                {t('storefronts.products.dragDropPhotos')}
+                {t('dragDropPhotos')}
               </h4>
               <p className="text-base-content/60 mb-4">
-                {t('storefronts.products.supportedFormats')}: JPEG, PNG, GIF,
+                {t('supportedFormats')}: JPEG, PNG, GIF,
                 WebP
               </p>
               <div className="btn btn-primary">
-                {t('storefronts.products.chooseFiles')}
+                {t('chooseFiles')}
               </div>
             </label>
           </div>
@@ -233,7 +234,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
           <div className="card-body">
             <h3 className="card-title text-xl mb-4 flex items-center gap-2">
               <span className="text-2xl">🖼️</span>
-              {t('storefronts.products.photoPreview')}
+              {t('photoPreview')}
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -253,7 +254,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                     {/* Главное фото */}
                     {index === 0 && (
                       <div className="badge badge-primary">
-                        {t('storefronts.products.mainPhoto')}
+                        {t('mainPhoto')}
                       </div>
                     )}
 
@@ -307,7 +308,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                 ></path>
               </svg>
               <span className="text-sm">
-                💡 {t('storefronts.products.photoTips')}
+                💡 {t('photoTips')}
               </span>
             </div>
           </div>
@@ -330,7 +331,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          {t('common.back')}
+          {tCommon('back')}
         </button>
 
         <button
@@ -338,7 +339,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
           disabled={images.length === 0}
           className={`btn btn-lg px-8 ${images.length > 0 ? 'btn-primary' : 'btn-disabled'}`}
         >
-          {t('common.next')}
+          {tCommon('next')}
           <svg
             className="w-5 h-5 ml-2"
             fill="none"

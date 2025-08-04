@@ -24,7 +24,7 @@ export default function EscrowStatus({
   releaseDate,
   sellerTier = 'new',
 }: EscrowStatusProps) {
-  const t = useTranslations();
+  const t = useTranslations('payment.escrow');
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('sr-RS', {
@@ -55,7 +55,7 @@ export default function EscrowStatus({
     held: {
       icon: <ShieldCheckIcon className="w-6 h-6" />,
       color: 'info',
-      label: t('payment.escrow.held'),
+      label: t('held'),
       description: t('payment.escrow.heldDescription', {
         days: getEscrowDays(),
       }),
@@ -63,20 +63,20 @@ export default function EscrowStatus({
     released: {
       icon: <CheckCircleIcon className="w-6 h-6" />,
       color: 'success',
-      label: t('payment.escrow.released'),
-      description: t('payment.escrow.releasedDescription'),
+      label: t('released'),
+      description: t('releasedDescription'),
     },
     refunded: {
       icon: <XCircleIcon className="w-6 h-6" />,
       color: 'error',
-      label: t('payment.escrow.refunded'),
-      description: t('payment.escrow.refundedDescription'),
+      label: t('refunded'),
+      description: t('refundedDescription'),
     },
     pending: {
       icon: <ClockIcon className="w-6 h-6" />,
       color: 'warning',
-      label: t('payment.escrow.pending'),
-      description: t('payment.escrow.pendingDescription'),
+      label: t('pending'),
+      description: t('pendingDescription'),
     },
   };
 
@@ -95,7 +95,7 @@ export default function EscrowStatus({
             <p className="font-bold text-lg">{formatCurrency(amount)}</p>
             {releaseDate && status === 'held' && (
               <p className="text-xs opacity-75">
-                {t('payment.escrow.releaseDate')}: {formatDate(releaseDate)}
+                {t('releaseDate')}: {formatDate(releaseDate)}
               </p>
             )}
           </div>
@@ -106,10 +106,10 @@ export default function EscrowStatus({
             <div className="flex items-start gap-2">
               <InformationCircleIcon className="w-5 h-5 shrink-0 mt-0.5" />
               <div className="text-sm space-y-1">
-                <p>{t('payment.escrow.buyerProtection')}</p>
+                <p>{t('buyerProtection')}</p>
                 <ul className="list-disc list-inside ml-2 space-y-1">
-                  <li>{t('payment.escrow.confirmReceipt')}</li>
-                  <li>{t('payment.escrow.disputeOption')}</li>
+                  <li>{t('confirmReceipt')}</li>
+                  <li>{t('disputeOption')}</li>
                   <li>
                     {t('payment.escrow.autoRelease', { days: getEscrowDays() })}
                   </li>
@@ -122,7 +122,7 @@ export default function EscrowStatus({
         {status === 'held' && sellerTier && (
           <div className="flex items-center gap-2 text-sm">
             <span className="opacity-75">
-              {t('payment.escrow.sellerTier')}:
+              {t('sellerTier')}:
             </span>
             <span
               className={`badge badge-sm ${

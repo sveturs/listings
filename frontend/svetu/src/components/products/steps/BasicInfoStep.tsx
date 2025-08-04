@@ -10,7 +10,8 @@ interface BasicInfoStepProps {
 }
 
 export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts.products');
+  const tCommon = useTranslations('common');
   const { state, setProductData, setError, clearError } = useCreateProduct();
   const [formData, setFormData] = useState({
     name: state.productData.name || '',
@@ -60,17 +61,17 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
     let isValid = true;
 
     if (!formData.name || formData.name.length < 3) {
-      setError('name', t('storefronts.products.nameRequired'));
+      setError('name', t('nameRequired'));
       isValid = false;
     }
 
     if (!formData.description || formData.description.length < 10) {
-      setError('description', t('storefronts.products.descriptionRequired'));
+      setError('description', t('descriptionRequired'));
       isValid = false;
     }
 
     if (formData.price <= 0) {
-      setError('price', t('storefronts.products.priceRequired'));
+      setError('price', t('priceRequired'));
       isValid = false;
     }
 
@@ -87,10 +88,10 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-base-content mb-4">
-          {t('storefronts.products.basicInformation')}
+          {t('basicInformation')}
         </h2>
         <p className="text-lg text-base-content/70">
-          {t('storefronts.products.basicInformationDescription')}
+          {t('basicInformationDescription')}
         </p>
       </div>
 
@@ -101,14 +102,14 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
             <div className="card-body">
               <h3 className="card-title text-xl mb-4 flex items-center gap-2">
                 <span className="text-2xl">📝</span>
-                {t('storefronts.products.productDetails')}
+                {t('productDetails')}
               </h3>
 
               {/* Название товара */}
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold">
-                    {t('storefronts.products.productName')} *
+                    {t('productName')} *
                   </span>
                 </label>
                 <input
@@ -117,7 +118,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                   value={formData.name}
                   onChange={handleChange}
                   className={`input input-bordered input-lg ${state.errors.name ? 'input-error' : ''}`}
-                  placeholder={t('storefronts.products.productNamePlaceholder')}
+                  placeholder={t('productNamePlaceholder')}
                 />
                 {state.errors.name && (
                   <label className="label">
@@ -132,10 +133,10 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold">
-                    {t('storefronts.products.description')} *
+                    {t('description')} *
                   </span>
                   <span className="label-text-alt text-base-content/60">
-                    {t('storefronts.products.descriptionHelp')}
+                    {t('descriptionHelp')}
                   </span>
                 </label>
                 <textarea
@@ -143,7 +144,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                   value={formData.description}
                   onChange={handleChange}
                   className={`textarea textarea-bordered h-32 ${state.errors.description ? 'textarea-error' : ''}`}
-                  placeholder={t('storefronts.products.descriptionPlaceholder')}
+                  placeholder={t('descriptionPlaceholder')}
                 />
                 {state.errors.description && (
                   <label className="label">
@@ -164,14 +165,14 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
             <div className="card-body">
               <h3 className="card-title text-xl mb-4 flex items-center gap-2">
                 <span className="text-2xl">💰</span>
-                {t('storefronts.products.pricing')}
+                {t('pricing')}
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t('storefronts.products.price')} *
+                      {t('price')} *
                     </span>
                   </label>
                   <div className="input-group">
@@ -200,7 +201,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t('storefronts.products.currency')}
+                      {t('currency')}
                     </span>
                   </label>
                   <select
@@ -223,17 +224,17 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
             <div className="card-body">
               <h3 className="card-title text-xl mb-4 flex items-center gap-2">
                 <span className="text-2xl">📦</span>
-                {t('storefronts.products.inventory')}
+                {t('inventory')}
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t('storefronts.products.stockQuantity')}
+                      {t('stockQuantity')}
                     </span>
                     <span className="label-text-alt text-base-content/60">
-                      {t('storefronts.products.stockQuantityHelp')}
+                      {t('stockQuantityHelp')}
                     </span>
                   </label>
                   <input
@@ -249,7 +250,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t('storefronts.products.sku')}
+                      {t('sku')}
                     </span>
                   </label>
                   <input
@@ -258,7 +259,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                     value={formData.sku}
                     onChange={handleChange}
                     className="input input-bordered"
-                    placeholder={t('storefronts.products.skuPlaceholder')}
+                    placeholder={t('skuPlaceholder')}
                   />
                 </div>
               </div>
@@ -266,7 +267,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold">
-                    {t('storefronts.products.barcode')}
+                    {t('barcode')}
                   </span>
                 </label>
                 <input
@@ -275,14 +276,14 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                   value={formData.barcode}
                   onChange={handleChange}
                   className="input input-bordered"
-                  placeholder={t('storefronts.products.barcodePlaceholder')}
+                  placeholder={t('barcodePlaceholder')}
                 />
               </div>
 
               <div className="form-control">
                 <label className="label cursor-pointer">
                   <span className="label-text font-semibold">
-                    {t('storefronts.products.activeProduct')}
+                    {t('activeProduct')}
                   </span>
                   <input
                     type="checkbox"
@@ -294,7 +295,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                 </label>
                 <label className="label">
                   <span className="label-text-alt text-base-content/60">
-                    {t('storefronts.products.activeProductHelp')}
+                    {t('activeProductHelp')}
                   </span>
                 </label>
               </div>
@@ -319,11 +320,11 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          {t('common.back')}
+          {tCommon('back')}
         </button>
 
         <button onClick={handleNext} className="btn btn-primary btn-lg px-8">
-          {t('common.next')}
+          {tCommon('next')}
           <svg
             className="w-5 h-5 ml-2"
             fill="none"

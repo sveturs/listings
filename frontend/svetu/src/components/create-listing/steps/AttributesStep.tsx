@@ -40,7 +40,9 @@ export default function AttributesStep({
   onNext,
   onBack,
 }: AttributesStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_listing.attributes.groups');
+  const tCommon = useTranslations('common');
+  const tCreate_listing.attributes = useTranslations('create_listing.attributes');
   const locale = useLocale();
   const { state, dispatch } = useCreateListing();
   const [attributes, setAttributes] = useState<CategoryAttributeMapping[]>([]);
@@ -192,32 +194,32 @@ export default function AttributesStep({
       { name: string; icon: string; priority: number }
     > = {
       basic: {
-        name: t('create_listing.attributes.groups.basic'),
+        name: tCreate_listing.attributes('groups.basic'),
         icon: '🏷️',
         priority: 1,
       },
       technical: {
-        name: t('create_listing.attributes.groups.technical'),
+        name: tCreate_listing.attributes('groups.technical'),
         icon: '⚙️',
         priority: 2,
       },
       condition: {
-        name: t('create_listing.attributes.groups.condition'),
+        name: tCreate_listing.attributes('groups.condition'),
         icon: '✨',
         priority: 3,
       },
       accessories: {
-        name: t('create_listing.attributes.groups.accessories'),
+        name: tCreate_listing.attributes('groups.accessories'),
         icon: '📦',
         priority: 4,
       },
       dimensions: {
-        name: t('create_listing.attributes.groups.dimensions'),
+        name: tCreate_listing.attributes('groups.dimensions'),
         icon: '📏',
         priority: 5,
       },
       other: {
-        name: t('create_listing.attributes.groups.other'),
+        name: tCreate_listing.attributes('groups.other'),
         icon: '📋',
         priority: 6,
       },
@@ -489,7 +491,7 @@ export default function AttributesStep({
               )
             }
           >
-            <option value="">{t('common.select')}</option>
+            <option value="">{tCommon('select')}</option>
             {selectOptions.map((option) => (
               <option key={option} value={option}>
                 {getOptionLabel(option)}
@@ -514,7 +516,7 @@ export default function AttributesStep({
                   )
                 }
               />
-              <span className="label-text">{t('common.yes')}</span>
+              <span className="label-text">{tCommon('yes')}</span>
             </label>
           </div>
         );
@@ -599,10 +601,10 @@ export default function AttributesStep({
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4 flex items-center">
-            🏷️ {t('create_listing.attributes.title')}
+            🏷️ {tCreate_listing.attributes('title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {t('create_listing.attributes.description')}
+            {tCreate_listing.attributes('description')}
           </p>
 
           {attributes.length === 0 ? (
@@ -620,7 +622,7 @@ export default function AttributesStep({
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 ></path>
               </svg>
-              <span>{t('create_listing.attributes.none_required')}</span>
+              <span>{tCreate_listing.attributes('none_required')}</span>
             </div>
           ) : (
             <div className="space-y-6 mb-8">
@@ -630,9 +632,9 @@ export default function AttributesStep({
                   <div className="card-body">
                     <h3 className="card-title text-xl flex items-center gap-3">
                       <span className="text-2xl">🚗</span>
-                      {t('create_listing.attributes.groups.car_selection')}
+                      {tCreate_listing.attributes('groups.car_selection')}
                       <div className="badge badge-warning">
-                        {t('common.required')}
+                        {tCommon('required')}
                       </div>
                     </h3>
                     <CarSelector
@@ -663,7 +665,7 @@ export default function AttributesStep({
                   </svg>
                   <div>
                     <h3 className="font-bold">
-                      {t('common.required')} атрибуты
+                      {tCommon('required')} атрибуты
                     </h3>
                     <div className="text-xs">
                       Обязательные поля автоматически развернуты для удобства
@@ -723,7 +725,7 @@ export default function AttributesStep({
                               >
                                 {filledRequiredFields
                                   ? '✓'
-                                  : t('common.required')}
+                                  : tCommon('required')}
                               </div>
                             )}
                           </h3>
@@ -799,10 +801,10 @@ export default function AttributesStep({
             </svg>
             <div className="text-sm">
               <p className="font-medium">
-                💡 {t('create_listing.attributes.tip')}
+                💡 {tCreate_listing.attributes('tip')}
               </p>
               <p className="text-xs mt-1">
-                {t('create_listing.attributes.tip_description')}
+                {tCreate_listing.attributes('tip_description')}
               </p>
             </div>
           </div>
@@ -810,14 +812,14 @@ export default function AttributesStep({
           {/* Кнопки навигации */}
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-outline" onClick={onBack}>
-              ← {t('common.back')}
+              ← {tCommon('back')}
             </button>
             <button
               className={`btn btn-primary ${!requiredAttributesFilled ? 'btn-disabled' : ''}`}
               onClick={onNext}
               disabled={!requiredAttributesFilled}
             >
-              {t('common.continue')} →
+              {tCommon('continue')} →
             </button>
           </div>
         </div>

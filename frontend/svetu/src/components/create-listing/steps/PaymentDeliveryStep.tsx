@@ -12,7 +12,9 @@ export default function PaymentDeliveryStep({
   onNext,
   onBack,
 }: PaymentDeliveryStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('payment');
+  const tCommon = useTranslations('common');
+  const tDelivery = useTranslations('delivery');
   const [formData, setFormData] = useState({
     paymentMethods: ['cod'], // cod, bank_transfer, cash
     codPrice: 250, // Стоимость наложенного платежа
@@ -72,10 +74,10 @@ export default function PaymentDeliveryStep({
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4 flex items-center">
-            💳 {t('payment.setup_title')}
+            💳 {t('setup_title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {t('payment.setup_description')}
+            {t('setup_description')}
           </p>
 
           {/* Способы оплаты */}
@@ -83,7 +85,7 @@ export default function PaymentDeliveryStep({
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">
-                  💳 {t('payment.methods_title')}
+                  💳 {t('methods_title')}
                 </span>
                 <span className="label-text-alt text-error">*</span>
               </label>
@@ -115,7 +117,7 @@ export default function PaymentDeliveryStep({
                               <h3 className="font-medium">{t(option.label)}</h3>
                               {option.popular && (
                                 <span className="badge badge-primary badge-sm">
-                                  {t('common.popular')}
+                                  {tCommon('popular')}
                                 </span>
                               )}
                             </div>
@@ -161,13 +163,13 @@ export default function PaymentDeliveryStep({
                   ></path>
                 </svg>
                 <div>
-                  <h3 className="font-medium">{t('payment.cod_calculator')}</h3>
+                  <h3 className="font-medium">{t('cod_calculator')}</h3>
                   <div className="text-sm mt-2 space-y-1">
                     <p>
-                      • {t('payment.cod_fee')}: {formData.codPrice} РСД
+                      • {t('cod_fee')}: {formData.codPrice} РСД
                     </p>
                     <p>
-                      • {t('payment.example')}: 1.000 РСД + {formData.codPrice}{' '}
+                      • {t('example')}: 1.000 РСД + {formData.codPrice}{' '}
                       РСД = {calculateCODTotal(1000)} РСД
                     </p>
                   </div>
@@ -182,10 +184,10 @@ export default function PaymentDeliveryStep({
                   <span className="text-2xl">🤝</span>
                   <div>
                     <span className="label-text font-medium">
-                      {t('delivery.personal_handover')}
+                      {tDelivery('personal_handover')}
                     </span>
                     <p className="text-sm text-base-content/60">
-                      {t('delivery.personal_handover_desc')}
+                      {tDelivery('personal_handover_desc')}
                     </p>
                   </div>
                 </div>
@@ -207,7 +209,7 @@ export default function PaymentDeliveryStep({
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">
-                  🚚 {t('delivery.services')}
+                  🚚 {tDelivery('services')}
                 </span>
               </label>
 
@@ -275,7 +277,7 @@ export default function PaymentDeliveryStep({
                   <div className="flex items-center gap-3">
                     <span className="text-xl">💬</span>
                     <span className="label-text">
-                      {t('payment.negotiable_price')}
+                      {t('negotiable_price')}
                     </span>
                   </div>
                   <input
@@ -297,7 +299,7 @@ export default function PaymentDeliveryStep({
                   <div className="flex items-center gap-3">
                     <span className="text-xl">📦</span>
                     <span className="label-text">
-                      {t('payment.bundle_deals')}
+                      {t('bundle_deals')}
                     </span>
                   </div>
                   <input
@@ -319,14 +321,14 @@ export default function PaymentDeliveryStep({
           {/* Кнопки навигации */}
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-outline" onClick={onBack}>
-              ← {t('common.back')}
+              ← {tCommon('back')}
             </button>
             <button
               className="btn btn-primary"
               onClick={onNext}
               disabled={formData.paymentMethods.length === 0}
             >
-              {t('common.continue')} →
+              {tCommon('continue')} →
             </button>
           </div>
         </div>

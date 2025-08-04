@@ -51,7 +51,9 @@ ChartJS.register(
 );
 
 export default function StorefrontAnalyticsPage() {
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
+  const tAdmin.common = useTranslations('admin.common');
   const locale = useLocale();
   const router = useRouter();
   const params = useParams();
@@ -122,10 +124,10 @@ export default function StorefrontAnalyticsPage() {
         <div className="text-center">
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold mb-2">
-            {t('common.accessDenied')}
+            {tCommon('accessDenied')}
           </h1>
           <p className="text-base-content/60">
-            {t('storefronts.analyticsAccessDenied')}
+            {t('analyticsAccessDenied')}
           </p>
         </div>
       </div>
@@ -140,7 +142,7 @@ export default function StorefrontAnalyticsPage() {
             <div className="text-center">
               <span className="loading loading-spinner loading-lg text-primary"></span>
               <p className="mt-4 text-base-content/60">
-                {t('admin.common.loading')}
+                {tAdmin.common('loading')}
               </p>
             </div>
           </div>
@@ -244,7 +246,7 @@ export default function StorefrontAnalyticsPage() {
         labels,
         datasets: [
           {
-            label: t('storefronts.pageViews'),
+            label: t('pageViews'),
             data: pageViews,
             fill: true,
             borderColor: 'rgb(75, 192, 192)',
@@ -252,7 +254,7 @@ export default function StorefrontAnalyticsPage() {
             tension: 0.4,
           },
           {
-            label: t('storefronts.uniqueVisitors'),
+            label: t('uniqueVisitors'),
             data: uniqueVisitors,
             fill: true,
             borderColor: 'rgb(153, 102, 255)',
@@ -265,7 +267,7 @@ export default function StorefrontAnalyticsPage() {
         labels,
         datasets: [
           {
-            label: t('storefronts.orders'),
+            label: t('orders'),
             data: orders,
             backgroundColor: 'rgba(99, 102, 241, 0.8)',
             borderColor: 'rgb(99, 102, 241)',
@@ -277,7 +279,7 @@ export default function StorefrontAnalyticsPage() {
         labels,
         datasets: [
           {
-            label: t('storefronts.conversionRate') + ' (%)',
+            label: t('conversionRate') + ' (%)',
             data: conversionRates,
             fill: false,
             borderColor: 'rgb(255, 99, 132)',
@@ -290,7 +292,7 @@ export default function StorefrontAnalyticsPage() {
         labels,
         datasets: [
           {
-            label: t('storefronts.revenue'),
+            label: t('revenue'),
             data: revenue,
             fill: true,
             borderColor: 'rgb(34, 197, 94)',
@@ -365,9 +367,9 @@ export default function StorefrontAnalyticsPage() {
   // Device data (mock for now)
   const deviceData = {
     labels: [
-      t('storefronts.mobile'),
-      t('storefronts.desktop'),
-      t('storefronts.tablet'),
+      t('mobile'),
+      t('desktop'),
+      t('tablet'),
     ],
     datasets: [
       {
@@ -424,7 +426,7 @@ export default function StorefrontAnalyticsPage() {
               <div>
                 <h1 className="text-2xl font-bold">{currentStorefront.name}</h1>
                 <p className="text-sm text-base-content/60">
-                  {t('storefronts.detailedAnalytics')}
+                  {t('detailedAnalytics')}
                 </p>
               </div>
             </div>
@@ -436,26 +438,26 @@ export default function StorefrontAnalyticsPage() {
                   className={`btn btn-sm ${timeRange === 'week' ? 'btn-primary' : 'btn-ghost'}`}
                   onClick={() => setTimeRange('week')}
                 >
-                  {t('common.week')}
+                  {tCommon('week')}
                 </button>
                 <button
                   className={`btn btn-sm ${timeRange === 'month' ? 'btn-primary' : 'btn-ghost'}`}
                   onClick={() => setTimeRange('month')}
                 >
-                  {t('common.month')}
+                  {tCommon('month')}
                 </button>
                 <button
                   className={`btn btn-sm ${timeRange === 'year' ? 'btn-primary' : 'btn-ghost'}`}
                   onClick={() => setTimeRange('year')}
                 >
-                  {t('common.year')}
+                  {tCommon('year')}
                 </button>
               </div>
 
               {/* Export Button */}
               <button className="btn btn-outline btn-sm">
                 <DocumentChartBarIcon className="w-4 h-4" />
-                {t('storefronts.exportReport')}
+                {t('exportReport')}
               </button>
             </div>
           </div>
@@ -471,7 +473,7 @@ export default function StorefrontAnalyticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-base-content/60">
-                    {t('storefronts.totalRevenue')}
+                    {t('totalRevenue')}
                   </p>
                   <p className="text-2xl font-bold mt-1">
                     ${stats.totalRevenue.toFixed(2)}
@@ -502,7 +504,7 @@ export default function StorefrontAnalyticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-base-content/60">
-                    {t('storefronts.totalViews')}
+                    {t('totalViews')}
                   </p>
                   <p className="text-2xl font-bold mt-1">
                     {stats.totalViews.toLocaleString()}
@@ -533,7 +535,7 @@ export default function StorefrontAnalyticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-base-content/60">
-                    {t('storefronts.conversionRate')}
+                    {t('conversionRate')}
                   </p>
                   <p className="text-2xl font-bold mt-1">
                     {stats.conversionRate.toFixed(2)}%
@@ -564,7 +566,7 @@ export default function StorefrontAnalyticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-base-content/60">
-                    {t('storefronts.avgOrderValue')}
+                    {t('avgOrderValue')}
                   </p>
                   <p className="text-2xl font-bold mt-1">
                     ${stats.avgOrderValue.toFixed(2)}
@@ -596,7 +598,7 @@ export default function StorefrontAnalyticsPage() {
           <div className="card bg-base-100 shadow-md">
             <div className="card-body">
               <h2 className="card-title text-lg mb-4">
-                {t('storefronts.trafficOverTime')}
+                {t('trafficOverTime')}
               </h2>
               <div className="h-64">
                 <Line data={viewsData} options={chartOptions} />
@@ -608,7 +610,7 @@ export default function StorefrontAnalyticsPage() {
           <div className="card bg-base-100 shadow-md">
             <div className="card-body">
               <h2 className="card-title text-lg mb-4">
-                {t('storefronts.revenueOverTime')}
+                {t('revenueOverTime')}
               </h2>
               <div className="h-64">
                 <Line data={revenueData} options={chartOptions} />
@@ -620,7 +622,7 @@ export default function StorefrontAnalyticsPage() {
           <div className="card bg-base-100 shadow-md">
             <div className="card-body">
               <h2 className="card-title text-lg mb-4">
-                {t('storefronts.ordersOverTime')}
+                {t('ordersOverTime')}
               </h2>
               <div className="h-64">
                 <Bar data={salesData} options={chartOptions} />
@@ -632,7 +634,7 @@ export default function StorefrontAnalyticsPage() {
           <div className="card bg-base-100 shadow-md">
             <div className="card-body">
               <h2 className="card-title text-lg mb-4">
-                {t('storefronts.conversionTrend')}
+                {t('conversionTrend')}
               </h2>
               <div className="h-64">
                 <Line data={conversionData} options={chartOptions} />
@@ -647,7 +649,7 @@ export default function StorefrontAnalyticsPage() {
           <div className="card bg-base-100 shadow-md">
             <div className="card-body">
               <h2 className="card-title text-lg mb-4">
-                {t('storefronts.salesByCategory')}
+                {t('salesByCategory')}
               </h2>
               <div className="h-64">
                 <Doughnut data={categoryData} options={doughnutOptions} />
@@ -659,7 +661,7 @@ export default function StorefrontAnalyticsPage() {
           <div className="card bg-base-100 shadow-md">
             <div className="card-body">
               <h2 className="card-title text-lg mb-4">
-                {t('storefronts.trafficByDevice')}
+                {t('trafficByDevice')}
               </h2>
               <div className="h-64">
                 <Pie data={deviceData} options={doughnutOptions} />
@@ -671,14 +673,14 @@ export default function StorefrontAnalyticsPage() {
           <div className="card bg-base-100 shadow-md">
             <div className="card-body">
               <h2 className="card-title text-lg mb-4">
-                {t('storefronts.topProducts')}
+                {t('topProducts')}
               </h2>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm">iPhone 15 Pro Max</span>
                   <div className="text-right">
                     <p className="text-sm font-semibold">
-                      23 {t('storefronts.sold')}
+                      23 {t('sold')}
                     </p>
                     <p className="text-xs text-base-content/60">$29,897</p>
                   </div>
@@ -687,7 +689,7 @@ export default function StorefrontAnalyticsPage() {
                   <span className="text-sm">MacBook Pro M3</span>
                   <div className="text-right">
                     <p className="text-sm font-semibold">
-                      18 {t('storefronts.sold')}
+                      18 {t('sold')}
                     </p>
                     <p className="text-xs text-base-content/60">$43,182</p>
                   </div>
@@ -696,7 +698,7 @@ export default function StorefrontAnalyticsPage() {
                   <span className="text-sm">Sony WH-1000XM5</span>
                   <div className="text-right">
                     <p className="text-sm font-semibold">
-                      31 {t('storefronts.sold')}
+                      31 {t('sold')}
                     </p>
                     <p className="text-xs text-base-content/60">$12,399</p>
                   </div>
@@ -705,7 +707,7 @@ export default function StorefrontAnalyticsPage() {
                   <span className="text-sm">Samsung Galaxy S24</span>
                   <div className="text-right">
                     <p className="text-sm font-semibold">
-                      15 {t('storefronts.sold')}
+                      15 {t('sold')}
                     </p>
                     <p className="text-xs text-base-content/60">$14,985</p>
                   </div>
@@ -714,7 +716,7 @@ export default function StorefrontAnalyticsPage() {
                   <span className="text-sm">iPad Pro 12.9&quot;</span>
                   <div className="text-right">
                     <p className="text-sm font-semibold">
-                      12 {t('storefronts.sold')}
+                      12 {t('sold')}
                     </p>
                     <p className="text-xs text-base-content/60">$11,988</p>
                   </div>
@@ -728,17 +730,17 @@ export default function StorefrontAnalyticsPage() {
         <div className="card bg-base-100 shadow-md mt-6">
           <div className="card-body">
             <h2 className="card-title text-lg mb-4">
-              {t('storefronts.trafficSources')}
+              {t('trafficSources')}
             </h2>
             <div className="overflow-x-auto">
               <table className="table">
                 <thead>
                   <tr>
-                    <th>{t('storefronts.source')}</th>
-                    <th>{t('storefronts.visitors')}</th>
-                    <th>{t('storefronts.pageViews')}</th>
-                    <th>{t('storefronts.conversionRate')}</th>
-                    <th>{t('storefronts.revenue')}</th>
+                    <th>{t('source')}</th>
+                    <th>{t('visitors')}</th>
+                    <th>{t('pageViews')}</th>
+                    <th>{t('conversionRate')}</th>
+                    <th>{t('revenue')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -746,7 +748,7 @@ export default function StorefrontAnalyticsPage() {
                     <td>
                       <div className="flex items-center gap-2">
                         <GlobeAltIcon className="w-4 h-4" />
-                        {t('storefronts.direct')}
+                        {t('direct')}
                       </div>
                     </td>
                     <td>1,234</td>
@@ -758,7 +760,7 @@ export default function StorefrontAnalyticsPage() {
                     <td>
                       <div className="flex items-center gap-2">
                         <GlobeAltIcon className="w-4 h-4" />
-                        {t('storefronts.search')}
+                        {t('search')}
                       </div>
                     </td>
                     <td>987</td>
@@ -770,7 +772,7 @@ export default function StorefrontAnalyticsPage() {
                     <td>
                       <div className="flex items-center gap-2">
                         <GlobeAltIcon className="w-4 h-4" />
-                        {t('storefronts.social')}
+                        {t('social')}
                       </div>
                     </td>
                     <td>567</td>
@@ -782,7 +784,7 @@ export default function StorefrontAnalyticsPage() {
                     <td>
                       <div className="flex items-center gap-2">
                         <GlobeAltIcon className="w-4 h-4" />
-                        {t('storefronts.referral')}
+                        {t('referral')}
                       </div>
                     </td>
                     <td>345</td>

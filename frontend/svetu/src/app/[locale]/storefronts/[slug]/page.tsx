@@ -28,7 +28,7 @@ type Props = {
 export default function StorefrontPage({ params }: Props) {
   const { slug } = use(params);
   const locale = useLocale();
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
   const { user } = useAuth();
   const [storefront, setStorefront] = useState<Storefront | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,13 +89,13 @@ export default function StorefrontPage({ params }: Props) {
         <div className="text-center">
           <div className="text-6xl mb-4">🏪</div>
           <h1 className="text-2xl font-bold mb-2">
-            {t('storefronts.notFound')}
+            {t('notFound')}
           </h1>
           <p className="text-base-content/60 mb-6">
-            {t('storefronts.notFoundDescription')}
+            {t('notFoundDescription')}
           </p>
           <Link href={`/${locale}/storefronts`} className="btn btn-primary">
-            {t('storefronts.browseStorefronts')}
+            {t('browseStorefronts')}
           </Link>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function StorefrontPage({ params }: Props) {
             <div className="card bg-base-200 shadow-xl">
               <div className="card-body">
                 <h2 className="card-title text-2xl mb-4">
-                  {t('storefronts.about')}
+                  {t('about')}
                 </h2>
                 <p className="text-base-content/80 whitespace-pre-wrap">
                   {storefront.description}
@@ -134,13 +134,13 @@ export default function StorefrontPage({ params }: Props) {
                   storefront.vat_number) && (
                   <div className="mt-6 pt-6 border-t border-base-300">
                     <h3 className="font-semibold mb-3">
-                      {t('storefronts.businessDetails')}
+                      {t('businessDetails')}
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       {storefront.registration_number && (
                         <div>
                           <span className="text-base-content/60">
-                            {t('storefronts.registrationNumber')}:
+                            {t('registrationNumber')}:
                           </span>
                           <span className="ml-2 font-medium">
                             {storefront.registration_number}
@@ -150,7 +150,7 @@ export default function StorefrontPage({ params }: Props) {
                       {storefront.tax_number && (
                         <div>
                           <span className="text-base-content/60">
-                            {t('storefronts.taxNumber')}:
+                            {t('taxNumber')}:
                           </span>
                           <span className="ml-2 font-medium">
                             {storefront.tax_number}
@@ -160,7 +160,7 @@ export default function StorefrontPage({ params }: Props) {
                       {storefront.vat_number && (
                         <div>
                           <span className="text-base-content/60">
-                            {t('storefronts.vatNumber')}:
+                            {t('vatNumber')}:
                           </span>
                           <span className="ml-2 font-medium">
                             {storefront.vat_number}
@@ -184,7 +184,7 @@ export default function StorefrontPage({ params }: Props) {
                 <div className="card bg-base-200 shadow-xl overflow-hidden">
                   <div className="card-body">
                     <h2 className="card-title text-2xl mb-4">
-                      {t('storefronts.location')}
+                      {t('location')}
                     </h2>
                     <div className="h-96 -mx-8 -mb-8">
                       <StorefrontLocationMap
@@ -237,14 +237,14 @@ export default function StorefrontPage({ params }: Props) {
               </svg>
               <div>
                 <h4 className="font-semibold">
-                  {t('storefronts.trustSafety')}
+                  {t('trustSafety')}
                 </h4>
                 <ul className="text-sm space-y-1 mt-1">
                   {storefront.is_verified && (
-                    <li>• {t('storefronts.verifiedBusiness')}</li>
+                    <li>• {t('verifiedBusiness')}</li>
                   )}
-                  <li>• {t('storefronts.securePayments')}</li>
-                  <li>• {t('storefronts.buyerProtection')}</li>
+                  <li>• {t('securePayments')}</li>
+                  <li>• {t('buyerProtection')}</li>
                 </ul>
               </div>
             </div>

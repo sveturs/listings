@@ -40,7 +40,8 @@ export default function PaymentDeliveryStep({
   onNext,
   onBack,
 }: PaymentDeliveryStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_storefront.payment_delivery');
+  const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [newDeliveryOption, setNewDeliveryOption] = useState<DeliveryOption>({
     providerName: '',
@@ -86,16 +87,16 @@ export default function PaymentDeliveryStep({
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4">
-            {t('create_storefront.payment_delivery.title')}
+            {t('title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {t('create_storefront.payment_delivery.subtitle')}
+            {t('subtitle')}
           </p>
 
           {/* Payment Methods */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-4">
-              {t('create_storefront.payment_delivery.payment_methods')}
+              {t('payment_methods')}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {paymentMethods.map((method) => (
@@ -119,7 +120,7 @@ export default function PaymentDeliveryStep({
           {/* Delivery Options */}
           <div>
             <h3 className="text-lg font-semibold mb-4">
-              {t('create_storefront.payment_delivery.delivery_options')}
+              {t('delivery_options')}
             </h3>
 
             {/* Existing delivery options */}
@@ -158,7 +159,7 @@ export default function PaymentDeliveryStep({
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">
-                        {t('create_storefront.payment_delivery.provider')}
+                        {t('provider')}
                       </span>
                     </label>
                     <select
@@ -171,7 +172,7 @@ export default function PaymentDeliveryStep({
                         })
                       }
                     >
-                      <option value="">{t('common.select')}</option>
+                      <option value="">{tCommon('select')}</option>
                       {deliveryProviders.map((provider) => (
                         <option key={provider} value={provider}>
                           {t(`delivery_providers.${provider}`)}
@@ -183,7 +184,7 @@ export default function PaymentDeliveryStep({
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">
-                        {t('create_storefront.payment_delivery.delivery_time')}
+                        {t('delivery_time')}
                       </span>
                     </label>
                     <input
@@ -202,7 +203,7 @@ export default function PaymentDeliveryStep({
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">
-                        {t('create_storefront.payment_delivery.delivery_cost')}
+                        {t('delivery_cost')}
                       </span>
                     </label>
                     <input
@@ -221,13 +222,13 @@ export default function PaymentDeliveryStep({
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">
-                        {t('create_storefront.payment_delivery.free_threshold')}
+                        {t('free_threshold')}
                       </span>
                     </label>
                     <input
                       type="number"
                       className="input input-bordered input-sm"
-                      placeholder={t('common.optional')}
+                      placeholder={tCommon('optional')}
                       value={newDeliveryOption.freeDeliveryThresholdRSD || ''}
                       onChange={(e) =>
                         setNewDeliveryOption({
@@ -246,7 +247,7 @@ export default function PaymentDeliveryStep({
                   onClick={addDeliveryOption}
                   disabled={!newDeliveryOption.providerName}
                 >
-                  {t('common.add')}
+                  {tCommon('add')}
                 </button>
               </div>
             </div>
@@ -254,10 +255,10 @@ export default function PaymentDeliveryStep({
 
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-ghost" onClick={onBack}>
-              {t('common.back')}
+              {tCommon('back')}
             </button>
             <button className="btn btn-primary" onClick={handleNext}>
-              {t('common.next')}
+              {tCommon('next')}
             </button>
           </div>
         </div>

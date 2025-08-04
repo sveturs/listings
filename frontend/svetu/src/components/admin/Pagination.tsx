@@ -21,7 +21,7 @@ export default function Pagination({
   onItemsPerPageChange,
   itemsPerPageOptions = [25, 50, 100, 200, 500],
 }: PaginationProps) {
-  const t = useTranslations();
+  const t = useTranslations('admin.pagination');
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
@@ -62,15 +62,15 @@ export default function Pagination({
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
       <div className="flex items-center gap-2">
         <span className="text-sm text-base-content/70">
-          {t('admin.pagination.showing')} {startItem}-{endItem}{' '}
-          {t('admin.pagination.of')} {totalItems}
+          {t('showing')} {startItem}-{endItem}{' '}
+          {t('of')} {totalItems}
         </span>
       </div>
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <label className="text-sm text-base-content/70">
-            {t('admin.pagination.itemsPerPage')}:
+            {t('itemsPerPage')}:
           </label>
           <select
             className="select select-bordered select-sm"

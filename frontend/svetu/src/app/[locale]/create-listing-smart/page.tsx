@@ -63,7 +63,7 @@ export default function CreateListingSmartPage() {
   const router = useRouter();
   const params = useParams();
   const locale = params.locale as string;
-  const t = useTranslations();
+  const t = useTranslations('create_listing');
   const { user } = useAuthContext();
   const [currentView, setCurrentView] = useState<
     'start' | 'create' | 'preview'
@@ -113,7 +113,7 @@ export default function CreateListingSmartPage() {
 
   useEffect(() => {
     if (!user) {
-      toast.error(t('create_listing.auth_required'));
+      toast.error(t('auth_required'));
       router.push('/');
     }
   }, [user, router, t]);

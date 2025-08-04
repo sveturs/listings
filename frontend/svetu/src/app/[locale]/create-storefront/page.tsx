@@ -27,7 +27,7 @@ const steps = [
 
 export default function CreateStorefrontPage() {
   const router = useRouter();
-  const t = useTranslations();
+  const t = useTranslations('create_storefront');
   const locale = useLocale();
   const { user, isLoading: authLoading } = useAuthContext();
   const [currentStep, setCurrentStep] = useState(0);
@@ -39,7 +39,7 @@ export default function CreateStorefrontPage() {
 
   useEffect(() => {
     if (isClient && !authLoading && !user) {
-      toast.error(t('create_storefront.auth_required'));
+      toast.error(t('auth_required'));
       router.push('/');
     }
   }, [user, authLoading, router, t, isClient]);
@@ -52,7 +52,7 @@ export default function CreateStorefrontPage() {
   };
 
   const handleComplete = () => {
-    toast.success(t('create_storefront.success'));
+    toast.success(t('success'));
     router.push(`/${locale}/profile/storefronts`);
   };
 
@@ -126,10 +126,10 @@ export default function CreateStorefrontPage() {
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 min-h-screen">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-primary">
-            {t('create_storefront.title')}
+            {t('title')}
           </h1>
           <p className="text-sm text-base-content/70 mt-2">
-            {t('create_storefront.subtitle')}
+            {t('subtitle')}
           </p>
         </div>
 
