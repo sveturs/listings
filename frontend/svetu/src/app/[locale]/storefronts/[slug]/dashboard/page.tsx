@@ -183,7 +183,7 @@ export default function StorefrontDashboardPage() {
               )}
             </div>
             <div className="stat-desc">
-              {t('storefronts.totalProducts', {
+              {t('totalProducts', {
                 count: dashboardStats?.totalProducts || 0,
               })}
             </div>
@@ -333,7 +333,7 @@ export default function StorefrontDashboardPage() {
                             <td>{order.order_id}</td>
                             <td>{order.customer}</td>
                             <td>
-                              {t('storefronts.itemsCount', {
+                              {t('itemsCount', {
                                 count: order.items_count,
                               })}
                             </td>
@@ -414,7 +414,7 @@ export default function StorefrontDashboardPage() {
                           </span>
                         ) : (
                           <span className="badge badge-warning">
-                            {t('storefronts.stockLeft', {
+                            {t('stockLeft', {
                               count: product.stock_quantity,
                             })}
                           </span>

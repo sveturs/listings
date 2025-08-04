@@ -26,7 +26,7 @@ export default function GridColumnsToggle({
           className={`btn btn-sm ${
             currentColumns === col ? 'btn-primary' : 'btn-ghost'
           } min-w-[2.5rem]`}
-          title={t('common.columns', { count: col })}
+          title={t('columns', { count: col })}
         >
           <div className="flex gap-0.5">
             {Array.from({ length: col }).map((_, i) => (

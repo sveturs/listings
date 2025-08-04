@@ -227,7 +227,7 @@ export default function CategoryAttributes({
           >
             <span className="text-sm truncate">
               {selectedValues.length > 0
-                ? t('common.selectedCount', { count: selectedValues.length })
+                ? t('selectedCount', { count: selectedValues.length })
                 : t('selectOptions')}
             </span>
             <ChevronDown className="w-4 h-4 flex-shrink-0" />
@@ -291,7 +291,7 @@ export default function CategoryAttributes({
           <input
             type="number"
             className="input input-bordered input-sm flex-1"
-            placeholder={t('common.enterValue', {
+            placeholder={t('enterValue', {
               field: attributeName.toLowerCase(),
             })}
             value={currentValue?.numeric_value || ''}
@@ -397,7 +397,7 @@ export default function CategoryAttributes({
           <div className="alert alert-info">
             <Info className="w-4 h-4" />
             <span className="text-sm">
-              {t('listing.noAttributesForCategory', {
+              {t('noAttributesForCategory', {
                 category:
                   selectedCategory.translations?.name ||
                   selectedCategory.name ||

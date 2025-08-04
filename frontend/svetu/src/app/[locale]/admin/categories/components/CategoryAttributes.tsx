@@ -448,11 +448,11 @@ export default function CategoryAttributes({
                         try {
                           await adminApi.translateAttribute(attr.id);
                           toast.success(
-                            t('admin.translations.translationSuccess')
+                            t('translations.translationSuccess')
                           );
                           loadData();
                         } catch {
-                          toast.error(t('admin.translations.translationError'));
+                          toast.error(t('translations.translationError'));
                         }
                       }}
                     />

@@ -297,13 +297,13 @@ export default function CategoryAttributesOptimized({
           className={`tab ${activeTab === 'attributes' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('attributes')}
         >
-          {t('admin.attributes')} ({categoryAttributes.length})
+          {t('attributes')} ({categoryAttributes.length})
         </button>
         <button
           className={`tab ${activeTab === 'groups' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('groups')}
         >
-          {t('admin.attributeGroups')} ({categoryGroups.length})
+          {t('attributeGroups')} ({categoryGroups.length})
         </button>
       </div>
 
@@ -407,7 +407,7 @@ export default function CategoryAttributesOptimized({
                   className="btn btn-secondary btn-sm"
                   onClick={() => setShowBatchTranslateModal(true)}
                 >
-                  {t('admin.translations.batchTranslate')}
+                  {t('translations.batchTranslate')}
                 </button>
               </div>
             </div>

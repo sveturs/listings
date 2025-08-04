@@ -56,7 +56,7 @@ export default function StorefrontHeader({
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {t('storefronts.verified')}
+            {t('verified')}
           </div>
         )}
       </div>
@@ -87,10 +87,10 @@ export default function StorefrontHeader({
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-1">{storefront.name || 'Storefront'}</h1>
               <p className="text-base-content/60">
-                {storefront.business_type === 'retail' && t('storefronts.business_types.retail')}
-                {storefront.business_type === 'service' && t('storefronts.business_types.service')}
-                {storefront.business_type === 'restaurant' && t('storefronts.business_types.restaurant')}
-                {storefront.business_type === 'other' && t('storefronts.business_types.other')}
+                {storefront.business_type === 'retail' && t('business_types.retail')}
+                {storefront.business_type === 'service' && t('business_types.service')}
+                {storefront.business_type === 'restaurant' && t('business_types.restaurant')}
+                {storefront.business_type === 'other' && t('business_types.other')}
               </p>
             </div>
 
@@ -107,7 +107,7 @@ export default function StorefrontHeader({
                 <div className="text-2xl font-bold">
                   {storefront.stats?.total_products || 0}
                 </div>
-                <div className="text-sm text-base-content/60">{t('storefronts.products.title')}</div>
+                <div className="text-sm text-base-content/60">{t('products.title')}</div>
               </div>
               <div className="divider divider-horizontal mx-0"></div>
               <div>

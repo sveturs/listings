@@ -288,7 +288,7 @@ export default function AdvancedGeoFilters({
                   className="range range-primary flex-1"
                 />
                 <span className="text-sm font-medium w-16">
-                  {travelMinutes} {t('common.minutes')}
+                  {travelMinutes} {t('minutes')}
                 </span>
               </div>
             </div>
@@ -364,8 +364,8 @@ export default function AdvancedGeoFilters({
                 />
                 <span className="text-sm font-medium w-20">
                   {poiDistance >= 1000
-                    ? `${(poiDistance / 1000).toFixed(1)} ${t('common.km')}`
-                    : `${poiDistance} ${t('common.m')}`}
+                    ? `${(poiDistance / 1000).toFixed(1)} ${t('km')}`
+                    : `${poiDistance} ${t('m')}`}
                 </span>
               </div>
             </div>
@@ -441,7 +441,7 @@ export default function AdvancedGeoFilters({
           }}
           className="btn btn-ghost btn-sm"
         >
-          {t('common.resetFilters')}
+          {t('resetFilters')}
         </button>
       </div>
     </div>

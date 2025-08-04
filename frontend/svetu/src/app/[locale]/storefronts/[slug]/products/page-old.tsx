@@ -186,7 +186,7 @@ export default function ProductsPage({ params }: PageProps) {
             {tStorefronts('products.title')}
           </h1>
           <p className="text-base-content/60 mt-2">
-            {t('storefronts.products.totalProducts', {
+            {t('products.totalProducts', {
               count: products.length,
             })}
           </p>
@@ -354,7 +354,7 @@ export default function ProductsPage({ params }: PageProps) {
 
                   {/* Stock Quantity */}
                   <p className="text-sm text-base-content/60">
-                    {t('storefronts.products.stockCount', {
+                    {t('products.stockCount', {
                       count: product.stock_quantity || 0,
                     })}
                   </p>
@@ -429,7 +429,7 @@ export default function ProductsPage({ params }: PageProps) {
                             </span>
                             {getStockStatusBadge(product)}
                             <span className="text-sm text-base-content/60">
-                              {t('storefronts.products.stockCount', {
+                              {t('products.stockCount', {
                                 count: product.stock_quantity || 0,
                               })}
                             </span>
@@ -488,7 +488,7 @@ export default function ProductsPage({ params }: PageProps) {
               {tStorefronts('products.deleteProductTitle')}
             </h3>
             <p className="py-4">
-              {t('storefronts.products.deleteProductConfirm', {
+              {t('products.deleteProductConfirm', {
                 name: productToDelete?.name || '',
               })}
             </p>

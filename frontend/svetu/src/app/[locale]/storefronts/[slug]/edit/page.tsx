@@ -668,7 +668,7 @@ export default function EditStorefrontPage() {
                           // Валидация размера файла (5MB)
                           if (file.size > 5 * 1024 * 1024) {
                             toast.error(
-                              t('storefronts.fileTooLarge', { max: '5MB' })
+                              t('fileTooLarge', { max: '5MB' })
                             );
                             e.target.value = ''; // Сбрасываем input
                             return;
@@ -788,7 +788,7 @@ export default function EditStorefrontPage() {
                         // Валидация размера файла (10MB)
                         if (file.size > 10 * 1024 * 1024) {
                           toast.error(
-                            t('storefronts.fileTooLarge', { max: '10MB' })
+                            t('fileTooLarge', { max: '10MB' })
                           );
                           e.target.value = ''; // Сбрасываем input
                           return;

@@ -56,7 +56,7 @@ export default function EscrowStatus({
       icon: <ShieldCheckIcon className="w-6 h-6" />,
       color: 'info',
       label: t('held'),
-      description: t('payment.escrow.heldDescription', {
+      description: t('escrow.heldDescription', {
         days: getEscrowDays(),
       }),
     },
@@ -111,7 +111,7 @@ export default function EscrowStatus({
                   <li>{t('confirmReceipt')}</li>
                   <li>{t('disputeOption')}</li>
                   <li>
-                    {t('payment.escrow.autoRelease', { days: getEscrowDays() })}
+                    {t('escrow.autoRelease', { days: getEscrowDays() })}
                   </li>
                 </ul>
               </div>

@@ -269,13 +269,13 @@ export default function PreviewPublishStep({
                         </p>
                         <div className="flex gap-2 text-sm text-base-content/70">
                           {member.canManageProducts && (
-                            <span>• {t('permissions.products')}</span>
+                            <span>• {t('products')}</span>
                           )}
                           {member.canManageOrders && (
-                            <span>• {t('permissions.orders')}</span>
+                            <span>• {t('orders')}</span>
                           )}
                           {member.canManageSettings && (
-                            <span>• {t('permissions.settings')}</span>
+                            <span>• {t('settings')}</span>
                           )}
                         </div>
                       </div>

@@ -227,7 +227,7 @@ export default function MySalesPage() {
                           </span>
                         </p>
                         <p className="text-xs text-base-content/70">
-                          {t('orders.afterFee', {
+                          {t('afterFee', {
                             fee: `${order.platform_fee_rate * 100}%`,
                           })}
                         </p>
