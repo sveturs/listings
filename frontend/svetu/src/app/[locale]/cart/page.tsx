@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from '@/utils/toast';
 import {
   selectCartItems,
   selectCartTotal,
@@ -66,9 +67,16 @@ export default function CartPage() {
   };
 
   const handleClearCart = () => {
-    if (confirm(t('confirmClear'))) {
-      dispatch(clearCart());
-    }
+    // Show confirmation toast with action
+    toast.warning(t('confirmClear'), {
+      action: {
+        label: t('clear'),
+        onClick: () => {
+          dispatch(clearCart());
+          toast.success(t('cartCleared'));
+        }
+      }
+    });
   };
 
   const handleCheckout = () => {

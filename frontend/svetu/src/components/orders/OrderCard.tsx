@@ -70,17 +70,26 @@ export default function OrderCard({ order, onOrderUpdate }: OrderCardProps) {
   const handleCancelOrder = async () => {
     if (!order.id || !canCancelOrder()) return;
 
-    const confirmed = window.confirm(t('confirmCancel'));
-    if (!confirmed) return;
+    // Use toast confirmation with optional reason input
+    toast.warning(t('confirmCancel'), {
+      action: {
+        label: t('cancel'),
+        onClick: async () => {
+          await performCancelOrder();
+        }
+      }
+    });
+  };
+
+  const performCancelOrder = async () => {
+    if (!order.id) return;
 
     try {
       setLoading(true);
-      const reason = prompt(t('cancelReason'));
-      const updatedOrder = await ordersService.cancelOrder(
-        order.id,
-        reason || undefined
-      );
+      // For now, cancel without reason. Could be enhanced with a modal for reason input.
+      const updatedOrder = await ordersService.cancelOrder(order.id);
       onOrderUpdate?.(updatedOrder);
+      toast.success(t('cancelSuccess'));
     } catch (error) {
       console.error('Failed to cancel order:', error);
       toast.error(t('cancelError'));

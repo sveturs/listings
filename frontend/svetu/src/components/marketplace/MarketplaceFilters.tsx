@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { MarketplaceService } from '@/services/marketplace';
 import { useConfig } from '@/hooks/useConfig';
 import type { components } from '@/types/generated/api';
@@ -17,6 +17,7 @@ export function MarketplaceFilters({
   onFilterChange,
 }: MarketplaceFiltersProps) {
   const locale = useLocale();
+  const t = useTranslations('dashboard');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -45,7 +46,7 @@ export function MarketplaceFilters({
   return (
     <div className="card bg-base-100 shadow-xl">
       <div className="card-body">
-        <h3 className="card-title text-lg">Filters</h3>
+        <h3 className="card-title text-lg">{t('filters')}</h3>
 
         {/* Debug info в development */}
         {config.env.isDevelopment && (
@@ -58,14 +59,14 @@ export function MarketplaceFilters({
           <div className="skeleton h-12 w-full"></div>
         ) : error ? (
           <div className="alert alert-error">
-            <span>Failed to load categories</span>
+            <span>{t('failedToLoadCategories')}</span>
           </div>
         ) : (
           <select
             onChange={(e) => onFilterChange({ category: e.target.value })}
             className="select select-bordered w-full"
           >
-            <option value="">All Categories</option>
+            <option value="">{t('allCategories')}</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}

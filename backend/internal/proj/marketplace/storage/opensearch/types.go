@@ -10,6 +10,13 @@ type GeoLocation struct {
 	Lon float64
 }
 
+// DBTranslation представляет перевод из таблицы translations
+type DBTranslation struct {
+	Language       string `json:"language"`
+	FieldName      string `json:"field_name"`
+	TranslatedText string `json:"translated_text"`
+}
+
 // SearchResult результаты поиска
 type SearchResult struct {
 	Listings     []*models.MarketplaceListing // Найденные объявления

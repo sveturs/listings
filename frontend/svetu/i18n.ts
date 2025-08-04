@@ -4,7 +4,7 @@ import { routing } from '@/i18n/routing';
 
 export default getRequestConfig(async ({ locale }) => {
   // Validate that the incoming `locale` parameter is valid
-  if (!locale || !routing.locales.includes(locale as 'en' | 'ru')) {
+  if (!locale || !routing.locales.includes(locale as 'en' | 'ru' | 'sr')) {
     notFound();
   }
 

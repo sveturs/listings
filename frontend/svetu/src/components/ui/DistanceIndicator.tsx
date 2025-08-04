@@ -3,6 +3,7 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import { Tooltip } from './Tooltip';
+import { useTranslations } from 'next-intl';
 
 interface DistanceIndicatorProps {
   distance: number; // в километрах
@@ -17,6 +18,7 @@ export const DistanceIndicator: React.FC<DistanceIndicatorProps> = ({
   showTooltip = true,
   size = 'md',
 }) => {
+  const t = useTranslations('common.distance');
   // Размеры в зависимости от size
   const sizeClasses = {
     sm: 'text-xs gap-1',
@@ -67,21 +69,22 @@ export const DistanceIndicator: React.FC<DistanceIndicatorProps> = ({
 
     return (
       <div className="space-y-2 p-2">
-        <div className="font-medium">Расстояние от вас</div>
+        <div className="font-medium">{t('fromYou')}</div>
         <div className="text-sm space-y-1">
           <div>
             {distance < 1
-              ? `${Math.round(distance * 1000)} метров`
-              : `${distance.toFixed(1)} километров`}
+              ? t('meters', { count: Math.round(distance * 1000) })
+              : t('kilometers', { count: distance.toFixed(1) })}
           </div>
           <div className="text-base-content/70">
-            Пешком: ~
-            {walkingTime < 60
-              ? `${walkingTime} мин`
-              : `${Math.round(walkingTime / 60)} ч`}
+            {t('walking', {
+              time: walkingTime < 60
+                ? t('minutes', { count: walkingTime })
+                : t('hours', { count: Math.round(walkingTime / 60) })
+            })}
           </div>
           {distance <= 1 && (
-            <div className="text-success">В шаговой доступности!</div>
+            <div className="text-success">{t('walkingDistance')}</div>
           )}
         </div>
       </div>
