@@ -56,7 +56,7 @@ export default function AdvancedGeoFilters({
   currentLocation,
   className = '',
 }: AdvancedGeoFiltersProps) {
-  const tMap = useTranslations('map');
+  const _tMap = useTranslations('map');
   const commonT = useTranslations('common');
   const t = (key: string) => commonT(`map.${key}`);
 

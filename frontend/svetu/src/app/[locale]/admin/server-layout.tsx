@@ -8,7 +8,7 @@ export default async function AdminServerLayout({
   params: { locale: string };
 }) {
   // Загружаем необходимые модули для админки
-  const messages = await loadMessages(params.locale as any, [
+  const _messages = await loadMessages(params.locale as any, [
     'common',
     'admin',
     'auth',

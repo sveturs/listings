@@ -1,0 +1,38 @@
+{
+  "title": "Profil",
+  "fields": {
+    "name": "Ime",
+    "email": "Email",
+    "phone": "Telefon",
+    "city": "Grad",
+    "country": "Zemlja"
+  },
+  "actions": {
+    "edit": "Uredi",
+    "save": "Sačuvaj",
+    "saving": "Čuvanje...",
+    "cancel": "Otkaži",
+    "myListings": "Moji oglasi",
+    "myStorefronts": "Moje prodavnice",
+    "myOrders": "Moje porudžbine",
+    "createListing": "Kreiraj oglas"
+  },
+  "balance": {
+    "title": "Balans"
+  },
+  "messages": {
+    "updateSuccess": "Profil je uspešno ažuriran"
+  },
+  "errors": {
+    "updateFailed": "Neuspešno ažuriranje profila. Molimo pokušajte ponovo."
+  },
+  "validation": {
+    "nameRequired": "Ime je obavezno",
+    "nameMinLength": "Ime mora imati najmanje 2 karaktera",
+    "nameMaxLength": "Ime ne može biti duže od 100 karaktera",
+    "phoneInvalid": "Molimo unesite važeći broj telefona",
+    "cityMaxLength": "Naziv grada ne može biti duži od 100 karaktera",
+    "countryMaxLength": "Naziv zemlje ne može biti duži od 100 karaktera"
+  },
+  "notProvided": "Nije navedeno"
+}

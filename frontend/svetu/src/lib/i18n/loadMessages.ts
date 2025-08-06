@@ -8,17 +8,24 @@ type Locale = 'ru' | 'en' | 'sr';
 // Типы доступных модулей
 export type TranslationModule =
   | 'common' // Базовые переводы (всегда загружаются)
-  | 'auth' // Авторизация и профиль
+  | 'auth' // Авторизация
+  | 'profile' // Профиль пользователя
   | 'marketplace' // Маркетплейс и объявления
   | 'admin' // Админ панель
   | 'storefronts' // Витрины магазинов
   | 'cars' // Автомобильный раздел
   | 'chat' // Чат и сообщения
   | 'cart' // Корзина и заказы
+  | 'checkout' // Оформление заказа
   | 'realEstate' // Недвижимость
+  | 'search' // Поиск
   | 'services' // Услуги
   | 'map' // Карта
-  | 'misc'; // Разное (metadata, bentoGrid и др.)
+  | 'misc' // Разное (metadata, bentoGrid и др.)
+  | 'notifications' // Уведомления
+  | 'orders' // Заказы
+  | 'products' // Товары
+  | 'reviews'; // Отзывы
 
 // Кэш для загруженных модулей
 const moduleCache = new Map<string, any>();
@@ -61,6 +68,9 @@ export async function loadMessages(
         case 'auth':
           moduleData = await import(`@/messages/${locale}/auth.json`);
           break;
+        case 'profile':
+          moduleData = await import(`@/messages/${locale}/profile.json`);
+          break;
         case 'marketplace':
           moduleData = await import(`@/messages/${locale}/marketplace.json`);
           break;
@@ -91,6 +101,24 @@ export async function loadMessages(
         case 'map':
           moduleData = await import(`@/messages/${locale}/map.json`);
           break;
+        case 'checkout':
+          moduleData = await import(`@/messages/${locale}/checkout.json`);
+          break;
+        case 'search':
+          moduleData = await import(`@/messages/${locale}/search.json`);
+          break;
+        case 'orders':
+          moduleData = await import(`@/messages/${locale}/orders.json`);
+          break;
+        case 'products':
+          moduleData = await import(`@/messages/${locale}/products.json`);
+          break;
+        case 'reviews':
+          moduleData = await import(`@/messages/${locale}/reviews.json`);
+          break;
+        case 'notifications':
+          moduleData = await import(`@/messages/${locale}/notifications.json`);
+          break;
         default:
           console.warn(`Unknown translation module: ${mod}`);
           continue;
@@ -100,13 +128,16 @@ export async function loadMessages(
       const data = moduleData.default || moduleData;
       moduleCache.set(cacheKey, data);
 
-      // Добавляем к общим переводам
-      Object.assign(messages, data);
-      
-      // Для модулей map и cars также добавляем их содержимое под соответствующими ключами
-      // чтобы поддержать обращения типа map.cluster.* и cars.filters.*
-      if (mod === 'map' || mod === 'cars') {
-        messages[mod] = data;
+      // Добавляем содержимое модуля под его именем для поддержки namespace
+      // Это позволит обращаться как common.photos или marketplace.title
+      messages[mod] = data;
+
+      // ТАКЖЕ добавляем к общим переводам для обратной совместимости
+      // Используем более аккуратное слияние, чтобы не перезаписывать существующие ключи
+      for (const [key, value] of Object.entries(data)) {
+        if (!messages[key]) {
+          messages[key] = value;
+        }
       }
     } catch (error) {
       console.error(
@@ -155,6 +186,8 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
   }
   if (pathname.includes('/store') || pathname.includes('/storefront')) {
     modules.push('storefronts');
+    modules.push('products');
+    modules.push('reviews');
   }
   if (pathname.includes('/cars') || pathname.includes('/automotive')) {
     modules.push('cars');
@@ -165,15 +198,18 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
   if (pathname.includes('/cart') || pathname.includes('/checkout')) {
     modules.push('cart');
   }
-  if (
-    pathname.includes('/auth') ||
-    pathname.includes('/login') ||
-    pathname.includes('/profile')
-  ) {
+  if (pathname.includes('/auth') || pathname.includes('/login')) {
     modules.push('auth');
+  }
+  if (pathname.includes('/profile')) {
+    modules.push('profile');
     // Для страницы storefronts в профиле также нужен модуль storefronts
     if (pathname.includes('/profile/storefronts')) {
       modules.push('storefronts');
+    }
+    // Для страницы заказов в профиле также нужен модуль orders
+    if (pathname.includes('/profile/orders')) {
+      modules.push('orders');
     }
   }
   if (pathname.includes('/real-estate') || pathname.includes('/property')) {

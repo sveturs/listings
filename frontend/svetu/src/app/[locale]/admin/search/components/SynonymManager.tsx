@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClientAuth } from '@/lib/api-client-auth';
 
 interface Synonym {
   id: number;
@@ -12,17 +12,6 @@ interface Synonym {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-}
-
-interface SynonymResponse {
-  success: boolean;
-  data: {
-    data: Synonym[];
-    total: number;
-    page: number;
-    limit: number;
-    total_pages: number;
-  };
 }
 
 export default function SynonymManager() {
@@ -50,7 +39,6 @@ export default function SynonymManager() {
   const fetchSynonyms = async () => {
     try {
       setLoading(true);
-      const accessToken = await tokenManager.getAccessToken();
 
       const params = new URLSearchParams({
         page: page.toString(),
@@ -65,22 +53,20 @@ export default function SynonymManager() {
         params.append('search', searchTerm.trim());
       }
 
-      const response = await fetch(`/api/v1/admin/search/synonyms?${params}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await apiClientAuth.get(
+        `/api/v1/admin/search/synonyms?${params}`
+      );
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch synonyms');
+      if (response && response.success) {
+        setSynonyms(response.data?.data || []);
+        setTotal(response.data?.total || 0);
+        setTotalPages(response.data?.total_pages || 1);
       }
-
-      const data: SynonymResponse = await response.json();
-      setSynonyms(data.data.data || []);
-      setTotal(data.data.total);
-      setTotalPages(data.data.total_pages);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching synonyms:', error);
+      if (error.status === 401) {
+        window.location.href = '/ru/login';
+      }
     } finally {
       setLoading(false);
     }
@@ -96,57 +82,35 @@ export default function SynonymManager() {
     }
 
     try {
-      const accessToken = await tokenManager.getAccessToken();
-      const response = await fetch('/api/v1/admin/search/synonyms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(editForm),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create synonym');
-      }
+      await apiClientAuth.post('/api/v1/admin/search/synonyms', editForm);
 
       setEditForm({ term: '', synonym: '', language: 'ru', is_active: true });
       setShowCreateForm(false);
       fetchSynonyms();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating synonym:', error);
+      if (error.status === 401) {
+        window.location.href = '/ru/login';
+      }
     }
   };
 
   const handleUpdate = async (synonym: Synonym) => {
     try {
-      const accessToken = await tokenManager.getAccessToken();
-      const response = await fetch(
-        `/api/v1/admin/search/synonyms/${synonym.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            term: synonym.term,
-            synonym: synonym.synonym,
-            language: synonym.language,
-            is_active: synonym.is_active,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to update synonym');
-      }
+      await apiClientAuth.put(`/api/v1/admin/search/synonyms/${synonym.id}`, {
+        term: synonym.term,
+        synonym: synonym.synonym,
+        language: synonym.language,
+        is_active: synonym.is_active,
+      });
 
       setIsEditing(null);
       fetchSynonyms();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating synonym:', error);
+      if (error.status === 401) {
+        window.location.href = '/ru/login';
+      }
     }
   };
 
@@ -156,24 +120,13 @@ export default function SynonymManager() {
     }
 
     try {
-      const accessToken = await tokenManager.getAccessToken();
-      const response = await fetch(
-        `/api/v1/admin/search/synonyms/${synonymId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to delete synonym');
-      }
-
+      await apiClientAuth.delete(`/api/v1/admin/search/synonyms/${synonymId}`);
       fetchSynonyms();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting synonym:', error);
+      if (error.status === 401) {
+        window.location.href = '/ru/login';
+      }
     }
   };
 
@@ -223,7 +176,7 @@ export default function SynonymManager() {
             {/* Поиск */}
             <div className="form-control flex-1 min-w-[200px]">
               <label className="label">
-                <span className="label-text">{t('search')}</span>
+                <span className="label-text">{t('searchLabel')}</span>
               </label>
               <input
                 type="text"

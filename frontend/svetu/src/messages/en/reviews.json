@@ -1,0 +1,13 @@
+{
+  "section": {
+    "title": "Reviews",
+    "writeReview": "Write Review",
+    "noReviews": "No reviews yet",
+    "cantReview": "You cannot review this product"
+  },
+  "stats": {
+    "reviews": "reviews",
+    "ratingDistribution": "Rating Distribution",
+    "withPhotos": "with photos"
+  }
+}

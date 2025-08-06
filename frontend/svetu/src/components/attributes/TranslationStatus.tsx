@@ -172,7 +172,9 @@ export function TranslationStatus({
         })}
       </div>
       {allTranslated && (
-        <div className="mt-2 text-xs text-success">{t('translations.allTranslated')}</div>
+        <div className="mt-2 text-xs text-success">
+          {t('translations.allTranslated')}
+        </div>
       )}
     </div>
   );

@@ -37,6 +37,7 @@
     "chat": "Chat",
     "sendMessage": "Send message",
     "viewAll": "View all",
+    "columns": "{count, plural, =1 {1 column} =2 {2 columns} other {3 columns}}",
     "documentation": "Documentation",
     "addressHidden": "Address hidden",
     "close": "Close",
@@ -73,7 +74,9 @@
     "translating": "Translating",
     "saveSuccess": "Save Success",
     "confirmDelete": "Confirm Delete",
-    "deleteSuccess": "Delete Success"
+    "deleteSuccess": "Delete Success",
+    "week": "Week",
+    "month": "Month"
   },
   "navigation": {
     "home": "Home",
@@ -506,6 +509,7 @@
     "avgResults": "Avg Results"
   },
   "noData": "No data",
+  "noAttributesForCategory": "No attributes for this category",
   "itemPerformance": {
     "title": "Title",
     "item": "Item",

@@ -60,9 +60,7 @@ export default function SuccessClient() {
             <Link href={`/${locale}/balance`}>{t('title')}</Link>
           </li>
           <li>
-            <Link href={`/${locale}/balance/deposit`}>
-              {t('depositFunds')}
-            </Link>
+            <Link href={`/${locale}/balance/deposit`}>{t('depositFunds')}</Link>
           </li>
           <li>Успешно</li>
         </ul>

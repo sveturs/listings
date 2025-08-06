@@ -148,9 +148,7 @@ export default function EditLocationStep({
                 <div className="bg-info/10 border border-info/30 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-sm text-info">
                     <span>💡</span>
-                    <span className="font-medium">
-                      {t('example')}
-                    </span>
+                    <span className="font-medium">{t('example')}</span>
                   </div>
                   <p className="text-sm text-info/80 mt-1">
                     {t('storefrontLocationExample')}
@@ -189,9 +187,7 @@ export default function EditLocationStep({
                 <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-sm text-warning">
                     <span>💡</span>
-                    <span className="font-medium">
-                      {t('example')}
-                    </span>
+                    <span className="font-medium">{t('example')}</span>
                   </div>
                   <p className="text-sm text-warning/80 mt-1">
                     {t('individualLocationExample')}
@@ -221,9 +217,7 @@ export default function EditLocationStep({
               <div className="flex items-start gap-3">
                 <span className="text-success text-lg">📍</span>
                 <div>
-                  <h4 className="font-semibold text-success">
-                    {t('address')}
-                  </h4>
+                  <h4 className="font-semibold text-success">{t('address')}</h4>
                   <p className="text-success/80">
                     {individualLocation.address}
                   </p>

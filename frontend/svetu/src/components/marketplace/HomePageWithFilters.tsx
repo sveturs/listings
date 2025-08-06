@@ -46,7 +46,7 @@ export default function HomePageWithFilters({
   error,
   paymentsEnabled = false,
 }: HomePageWithFiltersProps) {
-  const t = useTranslations('home');
+  const t = useTranslations('marketplace.home');
   const [showMap, setShowMap] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<

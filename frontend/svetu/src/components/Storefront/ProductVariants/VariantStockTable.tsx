@@ -227,11 +227,17 @@ export default function VariantStockTable({
     const status = getStockStatus(stock);
     switch (status) {
       case 'out_of_stock':
-        return <span className="badge badge-error">{t('variants.outOfStock')}</span>;
+        return (
+          <span className="badge badge-error">{t('variants.outOfStock')}</span>
+        );
       case 'low_stock':
-        return <span className="badge badge-warning">{t('variants.lowStock')}</span>;
+        return (
+          <span className="badge badge-warning">{t('variants.lowStock')}</span>
+        );
       case 'in_stock':
-        return <span className="badge badge-success">{t('variants.inStock')}</span>;
+        return (
+          <span className="badge badge-success">{t('variants.inStock')}</span>
+        );
     }
   };
 
@@ -544,7 +550,9 @@ export default function VariantStockTable({
             {/* Attribute Value Filter */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text">{t('variants.attributeValue')}</span>
+                <span className="label-text">
+                  {t('variants.attributeValue')}
+                </span>
               </label>
               <select
                 className="select select-bordered"
@@ -648,14 +656,18 @@ export default function VariantStockTable({
                   disabled={importing}
                   className={`btn btn-sm btn-outline ${importing ? 'loading' : ''}`}
                 >
-                  {importing ? t('variants.importing') : t('variants.importCSV')}
+                  {importing
+                    ? t('variants.importing')
+                    : t('variants.importCSV')}
                 </button>
                 <button
                   onClick={handleCSVExport}
                   disabled={exporting}
                   className={`btn btn-sm btn-outline ${exporting ? 'loading' : ''}`}
                 >
-                  {exporting ? t('variants.exporting') : t('variants.exportCSV')}
+                  {exporting
+                    ? t('variants.exporting')
+                    : t('variants.exportCSV')}
                 </button>
               </div>
             </div>
@@ -679,7 +691,9 @@ export default function VariantStockTable({
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 18.5c-.77.833.192 2.5 1.732 2.5z"
             ></path>
           </svg>
-          <span>{t('variants.pendingUpdates', { count: pendingUpdates.size })}</span>
+          <span>
+            {t('variants.pendingUpdates', { count: pendingUpdates.size })}
+          </span>
           <div className="flex space-x-2">
             <button
               onClick={applyPendingUpdates}
@@ -878,7 +892,9 @@ export default function VariantStockTable({
               />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              {variants.length === 0 ? t('variants.noVariants') : t('variants.noVariantsMatch')}
+              {variants.length === 0
+                ? t('variants.noVariants')
+                : t('variants.noVariantsMatch')}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
               {variants.length === 0

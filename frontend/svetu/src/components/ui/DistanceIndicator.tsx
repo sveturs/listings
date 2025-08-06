@@ -81,7 +81,9 @@ export const DistanceIndicator: React.FC<DistanceIndicatorProps> = ({
               time:
                 walkingTime < 60
                   ? t('distance.minutes', { count: walkingTime })
-                  : t('distance.hours', { count: Math.round(walkingTime / 60) }),
+                  : t('distance.hours', {
+                      count: Math.round(walkingTime / 60),
+                    }),
             })}
           </div>
           {distance <= 1 && (

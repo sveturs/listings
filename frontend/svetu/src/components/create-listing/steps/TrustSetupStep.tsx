@@ -75,9 +75,7 @@ export default function TrustSetupStep({
           <h2 className="card-title text-2xl mb-4 flex items-center">
             🛡️ {t('setup_title')}
           </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('setup_description')}
-          </p>
+          <p className="text-base-content/70 mb-6">{t('setup_description')}</p>
 
           {/* Верификация телефона */}
           <div className="space-y-4">
@@ -118,9 +116,7 @@ export default function TrustSetupStep({
                     onClick={handlePhoneVerification}
                     disabled={isVerifyingPhone}
                   >
-                    {isVerifyingPhone
-                      ? t('verifying')
-                      : t('verify_phone')}
+                    {isVerifyingPhone ? t('verifying') : t('verify_phone')}
                   </button>
                 </div>
               ) : (

@@ -128,9 +128,7 @@ export default function CreateStorefrontPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-primary">
             {t('title')}
           </h1>
-          <p className="text-sm text-base-content/70 mt-2">
-            {t('subtitle')}
-          </p>
+          <p className="text-sm text-base-content/70 mt-2">{t('subtitle')}</p>
         </div>
 
         <StepWizard

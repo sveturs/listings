@@ -123,12 +123,8 @@ export default function StorefrontAnalyticsPage() {
       <div className="min-h-screen bg-base-200 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold mb-2">
-            {tCommon('accessDenied')}
-          </h1>
-          <p className="text-base-content/60">
-            {t('analyticsAccessDenied')}
-          </p>
+          <h1 className="text-2xl font-bold mb-2">{tCommon('accessDenied')}</h1>
+          <p className="text-base-content/60">{t('analyticsAccessDenied')}</p>
         </div>
       </div>
     );
@@ -366,11 +362,7 @@ export default function StorefrontAnalyticsPage() {
 
   // Device data (mock for now)
   const deviceData = {
-    labels: [
-      t('mobile'),
-      t('desktop'),
-      t('tablet'),
-    ],
+    labels: [t('mobile'), t('desktop'), t('tablet')],
     datasets: [
       {
         data: [45, 40, 15],
@@ -621,9 +613,7 @@ export default function StorefrontAnalyticsPage() {
           {/* Orders Over Time */}
           <div className="card bg-base-100 shadow-md">
             <div className="card-body">
-              <h2 className="card-title text-lg mb-4">
-                {t('ordersOverTime')}
-              </h2>
+              <h2 className="card-title text-lg mb-4">{t('ordersOverTime')}</h2>
               <div className="h-64">
                 <Bar data={salesData} options={chartOptions} />
               </div>
@@ -672,52 +662,40 @@ export default function StorefrontAnalyticsPage() {
           {/* Top Products */}
           <div className="card bg-base-100 shadow-md">
             <div className="card-body">
-              <h2 className="card-title text-lg mb-4">
-                {t('topProducts')}
-              </h2>
+              <h2 className="card-title text-lg mb-4">{t('topProducts')}</h2>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm">iPhone 15 Pro Max</span>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">
-                      23 {t('sold')}
-                    </p>
+                    <p className="text-sm font-semibold">23 {t('sold')}</p>
                     <p className="text-xs text-base-content/60">$29,897</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">MacBook Pro M3</span>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">
-                      18 {t('sold')}
-                    </p>
+                    <p className="text-sm font-semibold">18 {t('sold')}</p>
                     <p className="text-xs text-base-content/60">$43,182</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Sony WH-1000XM5</span>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">
-                      31 {t('sold')}
-                    </p>
+                    <p className="text-sm font-semibold">31 {t('sold')}</p>
                     <p className="text-xs text-base-content/60">$12,399</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Samsung Galaxy S24</span>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">
-                      15 {t('sold')}
-                    </p>
+                    <p className="text-sm font-semibold">15 {t('sold')}</p>
                     <p className="text-xs text-base-content/60">$14,985</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">iPad Pro 12.9&quot;</span>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">
-                      12 {t('sold')}
-                    </p>
+                    <p className="text-sm font-semibold">12 {t('sold')}</p>
                     <p className="text-xs text-base-content/60">$11,988</p>
                   </div>
                 </div>
@@ -729,9 +707,7 @@ export default function StorefrontAnalyticsPage() {
         {/* Traffic Sources */}
         <div className="card bg-base-100 shadow-md mt-6">
           <div className="card-body">
-            <h2 className="card-title text-lg mb-4">
-              {t('trafficSources')}
-            </h2>
+            <h2 className="card-title text-lg mb-4">{t('trafficSources')}</h2>
             <div className="overflow-x-auto">
               <table className="table">
                 <thead>

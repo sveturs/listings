@@ -28371,6 +28371,14 @@ const docTemplate = `{
                 "payment_transaction_id": {
                     "type": "string"
                 },
+                "pickup_address": {
+                    "description": "Адрес забора товара у продавца",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.JSONB"
+                        }
+                    ]
+                },
                 "seller_amount": {
                     "type": "number"
                 },

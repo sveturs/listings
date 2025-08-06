@@ -128,9 +128,7 @@ export default function EditBasicInfoStep({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="label">
-              <span className="label-text font-semibold">
-                {t('price')} *
-              </span>
+              <span className="label-text font-semibold">{t('price')} *</span>
             </label>
             <input
               type="number"
@@ -154,9 +152,7 @@ export default function EditBasicInfoStep({
 
           <div>
             <label className="label">
-              <span className="label-text font-semibold">
-                {t('currency')}
-              </span>
+              <span className="label-text font-semibold">{t('currency')}</span>
             </label>
             <select className="select select-bordered w-full" disabled>
               <option value="RSD">RSD</option>
@@ -192,9 +188,7 @@ export default function EditBasicInfoStep({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="label">
-              <span className="label-text font-semibold">
-                {t('sku')}
-              </span>
+              <span className="label-text font-semibold">{t('sku')}</span>
             </label>
             <input
               type="text"
@@ -207,9 +201,7 @@ export default function EditBasicInfoStep({
 
           <div>
             <label className="label">
-              <span className="label-text font-semibold">
-                {t('barcode')}
-              </span>
+              <span className="label-text font-semibold">{t('barcode')}</span>
             </label>
             <input
               type="text"

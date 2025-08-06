@@ -28,19 +28,19 @@ function hasSuspense(content) {
 function createClientComponent(pageFile, componentName) {
   const dir = path.dirname(pageFile);
   const clientFile = path.join(dir, `${componentName}Client.tsx`);
-  
+
   // Читаем оригинальный файл
   let content = readFile(pageFile);
-  
+
   // Меняем имя компонента
   content = content.replace(
     /export default function \w+Page/,
     `export default function ${componentName}Client`
   );
-  
+
   // Сохраняем клиентский компонент
   writeFile(clientFile, content);
-  
+
   return clientFile;
 }
 
@@ -64,11 +64,11 @@ export default function ${componentName}Page() {
 function getComponentName(filePath) {
   const parts = filePath.split('/');
   const parentDir = parts[parts.length - 2];
-  
+
   // Конвертируем kebab-case в PascalCase
   return parentDir
     .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join('');
 }
 
@@ -82,24 +82,24 @@ const problematicFiles = [];
 
 files.forEach((file) => {
   const content = readFile(file);
-  
+
   // Проверяем, использует ли файл useSearchParams
   if (hasUseSearchParams(content) && !hasSuspense(content)) {
     console.log(`Found useSearchParams without Suspense in: ${file}`);
-    
+
     // Проверяем, является ли это клиентским компонентом
     if (content.includes("'use client'")) {
       const componentName = getComponentName(file);
-      
+
       try {
         // Создаем клиентский компонент
         const clientFile = createClientComponent(file, componentName);
         console.log(`  Created client component: ${clientFile}`);
-        
+
         // Обновляем page.tsx
         updatePageWithSuspense(file, componentName);
         console.log(`  Updated page with Suspense: ${file}`);
-        
+
         fixedCount++;
       } catch (error) {
         console.error(`  Error processing ${file}: ${error.message}`);
@@ -115,5 +115,5 @@ console.log(`\n✅ Fixed ${fixedCount} files`);
 
 if (problematicFiles.length > 0) {
   console.log(`\n⚠️  Problematic files that need manual review:`);
-  problematicFiles.forEach(file => console.log(`  - ${file}`));
+  problematicFiles.forEach((file) => console.log(`  - ${file}`));
 }

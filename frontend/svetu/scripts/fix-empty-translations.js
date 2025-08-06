@@ -7,22 +7,19 @@ const glob = require('glob');
 console.log('🔍 Поиск файлов с useTranslations() без модуля...\n');
 
 // Паттерны для поиска
-const patterns = [
-  'src/**/*.tsx',
-  'src/**/*.ts',
-];
+const patterns = ['src/**/*.tsx', 'src/**/*.ts'];
 
 let totalFiles = 0;
 let fixedFiles = 0;
 const problematicFiles = [];
 
-patterns.forEach(pattern => {
+patterns.forEach((pattern) => {
   const files = glob.sync(pattern, {
     cwd: path.join(__dirname, '..'),
-    ignore: ['**/node_modules/**', '**/*.test.*', '**/*.spec.*']
+    ignore: ['**/node_modules/**', '**/*.test.*', '**/*.spec.*'],
   });
 
-  files.forEach(file => {
+  files.forEach((file) => {
     totalFiles++;
     const filePath = path.join(__dirname, '..', file);
     let content = fs.readFileSync(filePath, 'utf8');
@@ -31,10 +28,10 @@ patterns.forEach(pattern => {
     // Проверяем, есть ли useTranslations() без аргумента
     if (content.includes('useTranslations()')) {
       console.log(`\n📄 ${file}`);
-      
+
       // Анализируем, какие модули используются через t('')
       const moduleUsage = new Map();
-      
+
       // Ищем все использования t('module.key')
       const tUsageRegex = /t\(['"]([^'"]+)\./g;
       let match;
@@ -54,8 +51,12 @@ patterns.forEach(pattern => {
           }
         });
 
-        console.log(`  ⚡ Обнаружены модули: ${Array.from(moduleUsage.keys()).join(', ')}`);
-        console.log(`  📦 Основной модуль: ${mainModule} (${maxUsage} использований)`);
+        console.log(
+          `  ⚡ Обнаружены модули: ${Array.from(moduleUsage.keys()).join(', ')}`
+        );
+        console.log(
+          `  📦 Основной модуль: ${mainModule} (${maxUsage} использований)`
+        );
 
         // Заменяем useTranslations()
         content = content.replace(
@@ -64,39 +65,61 @@ patterns.forEach(pattern => {
         );
 
         // Если есть другие модули, добавляем их
-        const otherModules = Array.from(moduleUsage.keys()).filter(m => m !== mainModule);
+        const otherModules = Array.from(moduleUsage.keys()).filter(
+          (m) => m !== mainModule
+        );
         if (otherModules.length > 0) {
           // Находим место после первого useTranslations
-          const insertIndex = content.indexOf(`useTranslations('${mainModule}')`) + `useTranslations('${mainModule}')`.length;
+          const insertIndex =
+            content.indexOf(`useTranslations('${mainModule}')`) +
+            `useTranslations('${mainModule}')`.length;
           const lineEnd = content.indexOf('\n', insertIndex);
-          
-          const additionalTranslations = otherModules.map(module => {
-            const varName = module === 'common' ? 'tCommon' : 
-                           module === 'admin' ? 'tAdmin' :
-                           module === 'auth' ? 'tAuth' :
-                           `t${module.charAt(0).toUpperCase() + module.slice(1)}`;
-            return `\n  const ${varName} = useTranslations('${module}');`;
-          }).join('');
 
-          content = content.slice(0, lineEnd) + additionalTranslations + content.slice(lineEnd);
+          const additionalTranslations = otherModules
+            .map((module) => {
+              const varName =
+                module === 'common'
+                  ? 'tCommon'
+                  : module === 'admin'
+                    ? 'tAdmin'
+                    : module === 'auth'
+                      ? 'tAuth'
+                      : `t${module.charAt(0).toUpperCase() + module.slice(1)}`;
+              return `\n  const ${varName} = useTranslations('${module}');`;
+            })
+            .join('');
 
-          console.log(`  ➕ Добавлены дополнительные модули: ${otherModules.join(', ')}`);
+          content =
+            content.slice(0, lineEnd) +
+            additionalTranslations +
+            content.slice(lineEnd);
+
+          console.log(
+            `  ➕ Добавлены дополнительные модули: ${otherModules.join(', ')}`
+          );
         }
 
         // Теперь обновляем использование t('module.key')
-        otherModules.forEach(module => {
-          const varName = module === 'common' ? 'tCommon' : 
-                         module === 'admin' ? 'tAdmin' :
-                         module === 'auth' ? 'tAuth' :
-                         `t${module.charAt(0).toUpperCase() + module.slice(1)}`;
-          
+        otherModules.forEach((module) => {
+          const varName =
+            module === 'common'
+              ? 'tCommon'
+              : module === 'admin'
+                ? 'tAdmin'
+                : module === 'auth'
+                  ? 'tAuth'
+                  : `t${module.charAt(0).toUpperCase() + module.slice(1)}`;
+
           // Заменяем t('module.key') на tModule('key')
           const regex = new RegExp(`t\\(['"]${module}\\.([^'"]+)['"]\\)`, 'g');
           content = content.replace(regex, `${varName}('$1')`);
         });
 
         // Обновляем использование основного модуля
-        const mainModuleRegex = new RegExp(`t\\(['"]${mainModule}\\.([^'"]+)['"]\\)`, 'g');
+        const mainModuleRegex = new RegExp(
+          `t\\(['"]${mainModule}\\.([^'"]+)['"]\\)`,
+          'g'
+        );
         content = content.replace(mainModuleRegex, "t('$1')");
 
         if (content !== originalContent) {
@@ -120,7 +143,7 @@ console.log(`   Требуют ручного исправления: ${problema
 
 if (problematicFiles.length > 0) {
   console.log('\n⚠️  Файлы, требующие ручного исправления:');
-  problematicFiles.forEach(file => {
+  problematicFiles.forEach((file) => {
     console.log(`   - ${file}`);
   });
 }

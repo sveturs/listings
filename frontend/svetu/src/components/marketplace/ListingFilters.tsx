@@ -31,7 +31,7 @@ export default function ListingFilters({
   className = '',
 }: ListingFiltersProps) {
   const t = useTranslations('marketplace');
-  const tRoot = useTranslations('filters');
+  const _tRoot = useTranslations('filters');
   const tCondition = useTranslations('condition');
   const locale = useLocale();
   const [isExpanded, setIsExpanded] = useState(true);
@@ -246,9 +246,7 @@ export default function ListingFilters({
                       )
                     }
                   />
-                  <span className="label-text">
-                    {t('withDelivery')}
-                  </span>
+                  <span className="label-text">{t('withDelivery')}</span>
                 </label>
               </div>
             </div>

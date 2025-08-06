@@ -171,7 +171,9 @@ export default function ListingDetailBySlugPage() {
               <div className="card-body">
                 <h1 className="card-title text-3xl">{listing.title}</h1>
                 <div className="flex items-center gap-4 text-sm text-base-content/70">
-                  <span>{t('listing.views', { count: listing.views_count })}</span>
+                  <span>
+                    {t('listing.views', { count: listing.views_count })}
+                  </span>
                   <span>•</span>
                   <span>
                     {new Date(listing.created_at).toLocaleDateString()}

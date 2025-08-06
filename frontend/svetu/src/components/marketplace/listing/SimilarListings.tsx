@@ -159,7 +159,9 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
   if (loading) {
     return (
       <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-6">{t('similarListings.title')}</h2>
+        <h2 className="text-2xl font-bold mb-6">
+          {t('similarListings.title')}
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="animate-pulse">

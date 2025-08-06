@@ -9,11 +9,13 @@ export default async function ProfileLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  
+
   // Загружаем дополнительные модули для профиля
   const messages = await loadMessages(locale as any, [
+    'profile',
     'storefronts',
     'admin',
+    'orders',
   ]);
 
   return (

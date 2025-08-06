@@ -1,4 +1,7 @@
 {
+  "addToCart": "Dodaj u korpu",
+  "added": "Dodato!",
+  "outOfStock": "Nema na stanju",
   "cart": {
     "title": "Shopping Cart",
     "empty": "Your cart is empty",
@@ -9,7 +12,16 @@
     "addToCart": "Add to Cart",
     "added": "Added!",
     "outOfStock": "Out of Stock",
-    "quantity": "Quantity"
+    "quantity": "Quantity",
+    "miniCart": {
+      "title": "Korpa",
+      "empty": "Vaša korpa je prazna",
+      "viewCart": "Pogledaj korpu",
+      "checkout": "Završi kupovinu",
+      "total": "Ukupno",
+      "moreItems": "+{count} proizvoda",
+      "freeShippingProgress": "Dodajte još {amount} RSD za besplatnu dostavu"
+    }
   },
   "checkout": {
     "title": "Checkout",
@@ -79,37 +91,5 @@
         "gold": "Gold Seller"
       }
     }
-  },
-  "title": "[SR] Title",
-  "remove": "[SR] Remove",
-  "empty": "[SR] Empty",
-  "total": "[SR] Total",
-  "clear": "[SR] Clear",
-  "miniCart": {
-    "title": "[SR] Title",
-    "empty": "[SR] Empty",
-    "total": "[SR] Total",
-    "viewCart": "[SR] View Cart",
-    "checkout": "[SR] Checkout"
-  },
-  "added": "[SR] Added",
-  "outOfStock": "[SR] Out Of Stock",
-  "addToCart": "[SR] Add To Cart",
-  "confirmClear": "[SR] Confirm Clear",
-  "cartCleared": "[SR] Cart Cleared",
-  "emptyTitle": "[SR] Empty Title",
-  "emptyDescription": "[SR] Empty Description",
-  "continueShopping": "[SR] Continue Shopping",
-  "clearCart": "[SR] Clear Cart",
-  "subtotal": "[SR] Subtotal",
-  "promoCode": "[SR] Promo Code",
-  "enterPromoCode": "[SR] Enter Promo Code",
-  "apply": "[SR] Apply",
-  "orderSummary": "[SR] Order Summary",
-  "shipping": "[SR] Shipping",
-  "freeShipping": "[SR] Free Shipping",
-  "proceedToCheckout": "[SR] Proceed To Checkout",
-  "secureCheckout": "[SR] Secure Checkout",
-  "securePayment": "[SR] Secure Payment",
-  "recommendations": "[SR] Recommendations"
+  }
 }

@@ -174,7 +174,11 @@ export default function DragDropMappingEditor({
         );
         setLinkedAttributes((prev) => [...prev, ...autoDetected]);
 
-        toast.success(t('variantAttributes.autoDetectSuccess', { count: autoDetected.length }));
+        toast.success(
+          t('variantAttributes.autoDetectSuccess', {
+            count: autoDetected.length,
+          })
+        );
       } else {
         toast.info(t('variantAttributes.autoDetectNoResults'));
       }
@@ -245,7 +249,9 @@ export default function DragDropMappingEditor({
         {/* Доступные атрибуты */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <h3 className="font-semibold">{t('variantAttributes.availableAttributes')}</h3>
+            <h3 className="font-semibold">
+              {t('variantAttributes.availableAttributes')}
+            </h3>
             <button
               className="btn btn-sm btn-ghost"
               onClick={handleAutoDetect}
@@ -337,10 +343,13 @@ export default function DragDropMappingEditor({
 
         {/* Связанные атрибуты */}
         <div className="space-y-2">
-          <h3 className="font-semibold">{t('variantAttributes.linkedAttributes')}</h3>
+          <h3 className="font-semibold">
+            {t('variantAttributes.linkedAttributes')}
+          </h3>
 
           <div className="text-sm text-base-content/70">
-            {t('variantAttributes.linkedWith')}: <strong>{variantAttribute.display_name}</strong>
+            {t('variantAttributes.linkedWith')}:{' '}
+            <strong>{variantAttribute.display_name}</strong>
           </div>
 
           <div

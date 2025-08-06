@@ -126,9 +126,7 @@ export default function DepositPage() {
                 {/* Кастомная сумма */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('customAmount')}
-                    </span>
+                    <span className="label-text">{t('customAmount')}</span>
                   </label>
                   <div className="input-group">
                     <input
@@ -175,9 +173,7 @@ export default function DepositPage() {
                       <div className="flex items-center gap-2">
                         <span className="text-2xl">💳</span>
                         <div>
-                          <div className="font-medium">
-                            {t('bankCard')}
-                          </div>
+                          <div className="font-medium">{t('bankCard')}</div>
                           <div className="text-sm text-neutral-500">
                             {t('supportedCards')}
                           </div>
@@ -192,16 +188,13 @@ export default function DepositPage() {
               {amount && isValidAmount && (
                 <div className="bg-base-200 rounded-lg p-4 mb-6">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">
-                      {t('amountToDeposit')}:
-                    </span>
+                    <span className="font-medium">{t('amountToDeposit')}:</span>
                     <span className="text-xl font-bold text-primary">
                       {balanceService.formatAmount(amount, 'RSD')}
                     </span>
                   </div>
                   <div className="text-sm text-neutral-500 mt-2">
-                    {t('commission')}: 0 RSD •{' '}
-                    {t('toCredit')}:{' '}
+                    {t('commission')}: 0 RSD • {t('toCredit')}:{' '}
                     {balanceService.formatAmount(amount, 'RSD')}
                   </div>
                 </div>
@@ -238,17 +231,13 @@ export default function DepositPage() {
           {/* Информация */}
           <div className="card bg-base-100 shadow-xl mt-6">
             <div className="card-body">
-              <h3 className="card-title text-lg">
-                ℹ️ {t('information')}
-              </h3>
+              <h3 className="card-title text-lg">ℹ️ {t('information')}</h3>
               <ul className="text-sm space-y-2">
                 <li>• {t('instantCredit')}</li>
                 <li>• {t('minAmount')}: 100 RSD</li>
                 <li>• {t('maxAmount')}: 100,000 RSD</li>
                 <li>• {t('noCommission')}: 0%</li>
-                <li>
-                  • {t('supportedCurrencies')}: RSD, EUR, USD
-                </li>
+                <li>• {t('supportedCurrencies')}: RSD, EUR, USD</li>
               </ul>
             </div>
           </div>
@@ -256,9 +245,7 @@ export default function DepositPage() {
           {/* Поддержка */}
           <div className="card bg-base-100 shadow-xl mt-6">
             <div className="card-body">
-              <h3 className="card-title text-lg">
-                🆘 {t('needHelp')}
-              </h3>
+              <h3 className="card-title text-lg">🆘 {t('needHelp')}</h3>
               <p className="text-sm">{t('supportMessage')}</p>
               <Link
                 href={`/${locale}/contacts`}

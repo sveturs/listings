@@ -47,9 +47,7 @@ export default function NewProductPage({ params }: PageProps) {
           <h1 className="text-3xl font-bold text-base-content">
             {t('addNewProduct')}
           </h1>
-          <p className="text-base-content/70 mt-2">
-            {t('wizardDescription')}
-          </p>
+          <p className="text-base-content/70 mt-2">{t('wizardDescription')}</p>
         </div>
       </div>
 

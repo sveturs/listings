@@ -149,7 +149,9 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
           {/* Марка и модель */}
           <div className="space-y-2">
             <label className="label">
-              <span className="label-text font-medium">{t('filters.make')}</span>
+              <span className="label-text font-medium">
+                {t('filters.make')}
+              </span>
             </label>
             <select
               value={selectedMake}
@@ -168,7 +170,9 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
             {selectedMake && (
               <>
                 <label className="label">
-                  <span className="label-text font-medium">{t('filters.model')}</span>
+                  <span className="label-text font-medium">
+                    {t('filters.model')}
+                  </span>
                 </label>
                 <select
                   value={selectedModel}
@@ -226,7 +230,9 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
           {/* Цена */}
           <div>
             <label className="label">
-              <span className="label-text font-medium">{t('filters.price')}</span>
+              <span className="label-text font-medium">
+                {t('filters.price')}
+              </span>
             </label>
             <div className="grid grid-cols-2 gap-2">
               <input
@@ -301,14 +307,18 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
               <option value="">{t('filters.allTransmissions')}</option>
               <option value="manual">{t('filters.manual')}</option>
               <option value="automatic">{t('filters.automatic')}</option>
-              <option value="semi-automatic">{t('filters.semiAutomatic')}</option>
+              <option value="semi-automatic">
+                {t('filters.semiAutomatic')}
+              </option>
             </select>
           </div>
 
           {/* Состояние */}
           <div>
             <label className="label">
-              <span className="label-text font-medium">{t('filters.condition')}</span>
+              <span className="label-text font-medium">
+                {t('filters.condition')}
+              </span>
             </label>
             <select
               value={condition}

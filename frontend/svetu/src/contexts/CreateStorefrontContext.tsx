@@ -205,8 +205,7 @@ export const CreateStorefrontProvider: React.FC<
         throw new Error('Failed to create storefront');
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : t('error');
+      const errorMessage = error instanceof Error ? error.message : t('error');
       toast.error(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

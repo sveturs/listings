@@ -297,13 +297,13 @@ export default function CategoryAttributesOptimized({
           className={`tab ${activeTab === 'attributes' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('attributes')}
         >
-          {t('attributes')} ({categoryAttributes.length})
+          {t('attributesTitle')} ({categoryAttributes.length})
         </button>
         <button
           className={`tab ${activeTab === 'groups' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('groups')}
         >
-          {t('attributeGroups')} ({categoryGroups.length})
+          {t('attributeGroupsTitle')} ({categoryGroups.length})
         </button>
       </div>
 

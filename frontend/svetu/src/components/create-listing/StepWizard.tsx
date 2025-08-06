@@ -119,19 +119,13 @@ export default function StepWizard({
       {/* Региональные подсказки */}
       <div className="mt-4 text-center">
         {currentStep === 0 && (
-          <p className="text-xs text-base-content/60">
-            💡 {t('category')}
-          </p>
+          <p className="text-xs text-base-content/60">💡 {t('category')}</p>
         )}
         {currentStep === 2 && (
-          <p className="text-xs text-base-content/60">
-            🤝 {t('trust')}
-          </p>
+          <p className="text-xs text-base-content/60">🤝 {t('trust')}</p>
         )}
         {currentStep === 6 && (
-          <p className="text-xs text-base-content/60">
-            📦 {t('delivery')}
-          </p>
+          <p className="text-xs text-base-content/60">📦 {t('delivery')}</p>
         )}
       </div>
     </div>

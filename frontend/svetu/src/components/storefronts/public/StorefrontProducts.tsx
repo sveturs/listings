@@ -19,7 +19,7 @@ interface StorefrontProductsProps {
 
 export default function StorefrontProducts({ storefrontSlug }: StorefrontProductsProps) {
   const t = useTranslations('products');
-  const tStorefronts = useTranslations('storefronts');
+  const _tStorefronts = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const [products, setProducts] = useState<StorefrontProduct[]>([]);
@@ -102,7 +102,7 @@ export default function StorefrontProducts({ storefrontSlug }: StorefrontProduct
             <svg className="w-16 h-16 mx-auto mb-4 text-base-content/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            <p className="text-base-content/60">{t('noProducts')}</p>
+            <p className="text-base-content/60">{t('products.noProducts')}</p>
           </div>
         </div>
       </div>
@@ -168,9 +168,9 @@ export default function StorefrontProducts({ storefrontSlug }: StorefrontProduct
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-base-content/60">
-                    <span>{t('inStock')}: {product.stock_quantity || 0}</span>
+                    <span>{t('products.inStock')}: {product.stock_quantity || 0}</span>
                     {product.sold_count && product.sold_count > 0 && (
-                      <span>• {t('sold')}: {product.sold_count}</span>
+                      <span>• {t('products.sold')}: {product.sold_count}</span>
                     )}
                   </div>
                 </div>

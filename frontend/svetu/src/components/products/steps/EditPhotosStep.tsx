@@ -123,9 +123,7 @@ export default function EditPhotosStep({
         <h3 className="text-2xl font-bold text-base-content mb-2">
           {t('products.steps.photos')}
         </h3>
-        <p className="text-base-content/70">
-          {t('photosStepDescription')}
-        </p>
+        <p className="text-base-content/70">{t('photosStepDescription')}</p>
       </div>
 
       {/* Статистика изображений */}
@@ -147,8 +145,7 @@ export default function EditPhotosStep({
           {state.imagesToDelete.length > 0 && (
             <div className="text-right">
               <p className="text-sm text-error">
-                {state.imagesToDelete.length}{' '}
-                {t('toDelete')}
+                {state.imagesToDelete.length} {t('toDelete')}
               </p>
             </div>
           )}
@@ -182,9 +179,7 @@ export default function EditPhotosStep({
         <div className="flex flex-col items-center">
           <ArrowUpTrayIcon className="w-12 h-12 text-base-content/40 mb-4" />
           <p className="text-lg font-semibold text-base-content mb-2">
-            {totalImages >= 10
-              ? t('maxImagesReached')
-              : t('dragDropImages')}
+            {totalImages >= 10 ? t('maxImagesReached') : t('dragDropImages')}
           </p>
           <p className="text-base-content/60 text-sm">
             {t('imageRequirements')}

@@ -799,12 +799,8 @@ export default function AttributesStep({
               ></path>
             </svg>
             <div className="text-sm">
-              <p className="font-medium">
-                💡 {t('attributes.tip')}
-              </p>
-              <p className="text-xs mt-1">
-                {t('attributes.tip_description')}
-              </p>
+              <p className="font-medium">💡 {t('attributes.tip')}</p>
+              <p className="text-xs mt-1">{t('attributes.tip_description')}</p>
             </div>
           </div>
 

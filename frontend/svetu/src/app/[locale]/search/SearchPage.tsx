@@ -580,9 +580,7 @@ export default function SearchPage() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title text-sm">
-                  {t('activeFilters')}
-                </div>
+                <div className="stat-title text-sm">{t('activeFilters')}</div>
                 <div className="stat-value text-2xl">
                   {activeFiltersCount()}
                 </div>
@@ -805,9 +803,7 @@ export default function SearchPage() {
                         <div className="flex gap-2">
                           <div className="form-control flex-1">
                             <label className="input-group">
-                              <span className="bg-base-200">
-                                {t('from')}
-                              </span>
+                              <span className="bg-base-200">{t('from')}</span>
                               <input
                                 type="number"
                                 className="input input-bordered w-full"
@@ -824,9 +820,7 @@ export default function SearchPage() {
                           </div>
                           <div className="form-control flex-1">
                             <label className="input-group">
-                              <span className="bg-base-200">
-                                {t('to')}
-                              </span>
+                              <span className="bg-base-200">{t('to')}</span>
                               <input
                                 type="number"
                                 className="input input-bordered w-full"

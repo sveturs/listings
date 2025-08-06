@@ -158,9 +158,7 @@ export default function MyStorefrontsPage() {
                 <div className="stat-figure text-primary">
                   <ShoppingBagIcon className="w-8 h-8" />
                 </div>
-                <div className="stat-title">
-                  {t('totalStorefronts')}
-                </div>
+                <div className="stat-title">{t('totalStorefronts')}</div>
                 <div className="stat-value text-2xl">{stats.total}</div>
                 <div className="stat-desc">
                   {stats.active} {t('activeCount')}
@@ -185,22 +183,16 @@ export default function MyStorefrontsPage() {
                 <div className="stat-figure text-accent">
                   <ShoppingBagIcon className="w-8 h-8" />
                 </div>
-                <div className="stat-title">
-                  {t('totalProducts')}
-                </div>
+                <div className="stat-title">{t('totalProducts')}</div>
                 <div className="stat-value text-2xl">{stats.totalProducts}</div>
-                <div className="stat-desc">
-                  {t('acrossAllStorefronts')}
-                </div>
+                <div className="stat-desc">{t('acrossAllStorefronts')}</div>
               </div>
 
               <div className="stat bg-base-100 rounded-2xl shadow-md">
                 <div className="stat-figure text-success">
                   <CurrencyDollarIcon className="w-8 h-8" />
                 </div>
-                <div className="stat-title">
-                  {t('monthlyRevenue')}
-                </div>
+                <div className="stat-title">{t('monthlyRevenue')}</div>
                 <div className="stat-value text-2xl">€0</div>
                 <div className="stat-desc">{t('thisMonth')}</div>
               </div>

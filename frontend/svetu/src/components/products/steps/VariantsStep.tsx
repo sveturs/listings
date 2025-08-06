@@ -91,7 +91,9 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
         <h2 className="text-2xl font-bold text-base-content mb-2">
           {t('steps.variants')}
         </h2>
-        <p className="text-base-content/70">{t('products.variantsStepDescription')}</p>
+        <p className="text-base-content/70">
+          {t('products.variantsStepDescription')}
+        </p>
       </div>
 
       {/* Variant Toggle */}
@@ -153,7 +155,9 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
                         readOnly
                       />
                       <div>
-                        <h4 className="font-medium">{t('products.simpleVariants')}</h4>
+                        <h4 className="font-medium">
+                          {t('products.simpleVariants')}
+                        </h4>
                         <p className="text-sm text-base-content/70">
                           {t('products.simpleVariantsDescription')}
                         </p>
@@ -184,7 +188,9 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
                         readOnly
                       />
                       <div>
-                        <h4 className="font-medium">{t('products.advancedVariants')}</h4>
+                        <h4 className="font-medium">
+                          {t('products.advancedVariants')}
+                        </h4>
                         <p className="text-sm text-base-content/70">
                           {t('products.advancedVariantsDescription')}
                         </p>

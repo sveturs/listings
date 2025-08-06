@@ -154,9 +154,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
             {/* Название объявления */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-medium">
-                  📋 {t('title')}
-                </span>
+                <span className="label-text font-medium">📋 {t('title')}</span>
                 <span className="label-text-alt text-error">*</span>
               </label>
               <input
@@ -210,8 +208,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
               />
               <label className="label">
                 <span className="label-text-alt text-base-content/60">
-                  {formData.description.length}/1000{' '}
-                  {t('characters')}
+                  {formData.description.length}/1000 {t('characters')}
                 </span>
               </label>
             </div>
@@ -372,9 +369,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                 ></path>
               </svg>
               <div className="text-sm">
-                <p className="font-medium">
-                  💡 {t('regional_tips.title')}
-                </p>
+                <p className="font-medium">💡 {t('regional_tips.title')}</p>
                 <ul className="text-xs mt-2 space-y-1">
                   <li>• {t('regional_tips.pricing')}</li>
                   <li>• {t('regional_tips.description')}</li>

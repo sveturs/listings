@@ -12,11 +12,18 @@ export type TranslationModule =
   | 'cars'
   | 'cart'
   | 'chat'
+  | 'checkout'
   | 'common'
   | 'map'
   | 'marketplace'
   | 'misc'
+  | 'notifications'
+  | 'orders'
+  | 'products'
+  | 'profile'
   | 'realEstate'
+  | 'reviews'
+  | 'search'
   | 'services'
   | 'storefronts';
 
@@ -27,10 +34,17 @@ export const moduleLoaders = {
   cars: () => import('./cars.json'),
   cart: () => import('./cart.json'),
   chat: () => import('./chat.json'),
+  checkout: () => import('./checkout.json'),
   map: () => import('./map.json'),
   marketplace: () => import('./marketplace.json'),
   misc: () => import('./misc.json'),
+  notifications: () => import('./notifications.json'),
+  orders: () => import('./orders.json'),
+  products: () => import('./products.json'),
+  profile: () => import('./profile.json'),
   realEstate: () => import('./realEstate.json'),
+  reviews: () => import('./reviews.json'),
+  search: () => import('./search.json'),
   services: () => import('./services.json'),
   storefronts: () => import('./storefronts.json'),
 };
@@ -44,8 +58,8 @@ export async function loadModule(moduleName: TranslationModule) {
     throw new Error(`Unknown module: ${moduleName}`);
   }
 
-  const module = await loader();
-  return module.default || module;
+  const moduleData = await loader();
+  return moduleData.default || moduleData;
 }
 
 // Экспорт базовых переводов

@@ -319,9 +319,7 @@ export default function PreviewPublishStep({
                 ⚖️ {tCreate_listing('preview.rules.title')}
               </p>
               <ul className="text-xs mt-2 space-y-1">
-                <li>
-                  • {tCreate_listing('preview.rules.honest_description')}
-                </li>
+                <li>• {tCreate_listing('preview.rules.honest_description')}</li>
                 <li>• {tCreate_listing('preview.rules.fair_pricing')}</li>
                 <li>
                   • {tCreate_listing('preview.rules.respectful_communication')}

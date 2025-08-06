@@ -29,7 +29,7 @@ export default function AttributesStep({
   onNext,
   onBack,
 }: AttributesStepProps) {
-  const tCommon = useTranslations('common');
+  const _tCommon = useTranslations('common');
   const t = useTranslations('storefronts');
   const locale = useLocale();
   const { state, setAttribute, setError, clearError } = useCreateProduct();

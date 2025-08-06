@@ -95,6 +95,9 @@ export default async function RootLayout({
     'marketplace', // И marketplace, так как многие компоненты его используют
     'admin', // Добавляем admin для страниц админки
     'cars', // Добавляем cars для car-selector
+    'search', // Добавляем search для SearchBar
+    'checkout', // Добавляем checkout для страницы оформления заказа
+    'orders', // Добавляем orders для страницы успешного заказа
   ]);
 
   return (

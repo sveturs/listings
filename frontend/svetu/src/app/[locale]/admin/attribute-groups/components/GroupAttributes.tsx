@@ -109,7 +109,9 @@ export default function GroupAttributes({
       {/* Add attribute */}
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('attributeGroups.availableAttributes')}</span>
+          <span className="label-text">
+            {t('attributeGroups.availableAttributes')}
+          </span>
         </label>
         <div className="flex gap-2">
           <select
@@ -137,7 +139,9 @@ export default function GroupAttributes({
       {/* Current attributes */}
       <div>
         <label className="label">
-          <span className="label-text">{t('attributeGroups.selectedAttributes')}</span>
+          <span className="label-text">
+            {t('attributeGroups.selectedAttributes')}
+          </span>
         </label>
 
         {groupItems.length === 0 ? (

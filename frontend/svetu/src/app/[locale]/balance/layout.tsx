@@ -8,12 +8,9 @@ export default async function BalanceLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  
+
   // Загружаем необходимые модули для страниц баланса
-  const messages = await loadMessages(locale as any, [
-    'admin',
-    'misc',
-  ]);
+  const _messages = await loadMessages(locale as any, ['admin', 'misc']);
 
   return <>{children}</>;
 }

@@ -99,12 +99,8 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
     <div className="max-w-4xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            {t('location.title')}
-          </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('location.subtitle')}
-          </p>
+          <h2 className="card-title text-2xl mb-4">{t('location.title')}</h2>
+          <p className="text-base-content/70 mb-6">{t('location.subtitle')}</p>
 
           {/* Выбор местоположения */}
           <div className="mb-6">

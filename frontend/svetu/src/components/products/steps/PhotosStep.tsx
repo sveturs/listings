@@ -138,13 +138,9 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
               ></path>
             </svg>
           </div>
-          <div className="stat-title">
-            {t('photosUploaded')}
-          </div>
+          <div className="stat-title">{t('photosUploaded')}</div>
           <div className="stat-value text-primary">{images.length}</div>
-          <div className="stat-desc">
-            {t('maxPhotos')}: 10
-          </div>
+          <div className="stat-desc">{t('maxPhotos')}: 10</div>
         </div>
 
         <div className="stat">
@@ -163,13 +159,9 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
               ></path>
             </svg>
           </div>
-          <div className="stat-title">
-            {t('recommendedSize')}
-          </div>
+          <div className="stat-title">{t('recommendedSize')}</div>
           <div className="stat-value text-secondary">1200px</div>
-          <div className="stat-desc">
-            {t('aspectRatio')}: 1:1
-          </div>
+          <div className="stat-desc">{t('aspectRatio')}: 1:1</div>
         </div>
       </div>
 
@@ -197,12 +189,9 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                 {t('dragDropPhotos')}
               </h4>
               <p className="text-base-content/60 mb-4">
-                {t('supportedFormats')}: JPEG, PNG, GIF,
-                WebP
+                {t('supportedFormats')}: JPEG, PNG, GIF, WebP
               </p>
-              <div className="btn btn-primary">
-                {t('chooseFiles')}
-              </div>
+              <div className="btn btn-primary">{t('chooseFiles')}</div>
             </label>
           </div>
 
@@ -307,9 +296,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 ></path>
               </svg>
-              <span className="text-sm">
-                💡 {t('photoTips')}
-              </span>
+              <span className="text-sm">💡 {t('photoTips')}</span>
             </div>
           </div>
         </div>

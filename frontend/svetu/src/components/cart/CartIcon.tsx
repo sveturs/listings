@@ -25,7 +25,7 @@ export default function CartIcon() {
   };
 
   return (
-    <div className="relative">
+    <>
       <button
         ref={iconRef as React.RefObject<HTMLButtonElement>}
         onClick={handleClick}
@@ -67,6 +67,6 @@ export default function CartIcon() {
         onClose={() => setShowMiniCart(false)}
         anchorRef={iconRef}
       />
-    </div>
+    </>
   );
 }

@@ -249,9 +249,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">
-                      {t('sku')}
-                    </span>
+                    <span className="label-text font-semibold">{t('sku')}</span>
                   </label>
                   <input
                     type="text"

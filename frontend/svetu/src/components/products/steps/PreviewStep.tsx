@@ -116,9 +116,7 @@ export default function PreviewStep({
           } catch (imageError) {
             console.error('Failed to upload images:', imageError);
             // Продолжаем даже если не удалось загрузить изображения
-            toast.warning(
-              t('productCreatedButImagesError')
-            );
+            toast.warning(t('productCreatedButImagesError'));
           }
         }
 
@@ -127,10 +125,7 @@ export default function PreviewStep({
       }
     } catch (error: any) {
       console.error('Failed to create product:', error);
-      toast.error(
-        error.response?.data?.error ||
-          t('errorCreatingProduct')
-      );
+      toast.error(error.response?.data?.error || t('errorCreatingProduct'));
     } finally {
       setSubmitting(false);
     }
@@ -262,17 +257,13 @@ export default function PreviewStep({
           {/* Статистика */}
           <div className="stats shadow">
             <div className="stat">
-              <div className="stat-title">
-                {t('totalPhotos')}
-              </div>
+              <div className="stat-title">{t('totalPhotos')}</div>
               <div className="stat-value text-primary">
                 {state.images.length}
               </div>
             </div>
             <div className="stat">
-              <div className="stat-title">
-                {t('category')}
-              </div>
+              <div className="stat-title">{t('category')}</div>
               <div className="stat-value text-sm">{state.category?.name}</div>
             </div>
           </div>
@@ -306,8 +297,7 @@ export default function PreviewStep({
                 {state.productData.stock_quantity !== undefined &&
                   state.productData.stock_quantity > 0 && (
                     <span className="text-sm text-success">
-                      {state.productData.stock_quantity}{' '}
-                      {t('inStock')}
+                      {state.productData.stock_quantity} {t('inStock')}
                     </span>
                   )}
               </div>
@@ -316,30 +306,22 @@ export default function PreviewStep({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {state.productData.sku && (
                   <div>
-                    <span className="font-semibold">
-                      {t('sku')}:
-                    </span>
+                    <span className="font-semibold">{t('sku')}:</span>
                     <span className="ml-2">{state.productData.sku}</span>
                   </div>
                 )}
                 {state.productData.barcode && (
                   <div>
-                    <span className="font-semibold">
-                      {t('barcode')}:
-                    </span>
+                    <span className="font-semibold">{t('barcode')}:</span>
                     <span className="ml-2">{state.productData.barcode}</span>
                   </div>
                 )}
                 <div>
-                  <span className="font-semibold">
-                    {t('status')}:
-                  </span>
+                  <span className="font-semibold">{t('status')}:</span>
                   <span
                     className={`ml-2 ${state.productData.is_active ? 'text-success' : 'text-error'}`}
                   >
-                    {state.productData.is_active
-                      ? t('active')
-                      : t('inactive')}
+                    {state.productData.is_active ? t('active') : t('inactive')}
                   </span>
                 </div>
               </div>
@@ -446,8 +428,7 @@ export default function PreviewStep({
                   </table>
                 </div>
                 <div className="text-sm text-base-content/60 mt-2">
-                  {t('totalVariants')}:{' '}
-                  {state.variants.length}
+                  {t('totalVariants')}: {state.variants.length}
                 </div>
               </div>
             </div>
@@ -533,9 +514,7 @@ export default function PreviewStep({
               <h3 className="text-xl font-bold text-primary mb-2">
                 {t('readyToPublish')}
               </h3>
-              <p className="text-base-content/70">
-                {t('publishConfirmation')}
-              </p>
+              <p className="text-base-content/70">{t('publishConfirmation')}</p>
             </div>
           </div>
         </div>

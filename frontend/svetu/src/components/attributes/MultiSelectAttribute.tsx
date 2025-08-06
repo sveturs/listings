@@ -161,7 +161,9 @@ export default function MultiSelectAttribute({
           <div className="absolute z-10 w-full mt-1">
             <ul className="menu p-2 shadow-lg bg-base-100 rounded-box w-full max-h-60 overflow-auto border border-base-300">
               {options.length === 0 ? (
-                <li className="text-base-content/50 p-2">{t('create.noOptions')}</li>
+                <li className="text-base-content/50 p-2">
+                  {t('create.noOptions')}
+                </li>
               ) : (
                 options.map((option, index) => {
                   const optionValue =

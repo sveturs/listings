@@ -88,9 +88,7 @@ export default function StorefrontPage({ params }: Props) {
       <div className="min-h-screen bg-base-100 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🏪</div>
-          <h1 className="text-2xl font-bold mb-2">
-            {t('notFound')}
-          </h1>
+          <h1 className="text-2xl font-bold mb-2">{t('notFound')}</h1>
           <p className="text-base-content/60 mb-6">
             {t('notFoundDescription')}
           </p>
@@ -121,9 +119,7 @@ export default function StorefrontPage({ params }: Props) {
             {/* About Section */}
             <div className="card bg-base-200 shadow-xl">
               <div className="card-body">
-                <h2 className="card-title text-2xl mb-4">
-                  {t('about')}
-                </h2>
+                <h2 className="card-title text-2xl mb-4">{t('about')}</h2>
                 <p className="text-base-content/80 whitespace-pre-wrap">
                   {storefront.description}
                 </p>
@@ -236,13 +232,9 @@ export default function StorefrontPage({ params }: Props) {
                 />
               </svg>
               <div>
-                <h4 className="font-semibold">
-                  {t('trustSafety')}
-                </h4>
+                <h4 className="font-semibold">{t('trustSafety')}</h4>
                 <ul className="text-sm space-y-1 mt-1">
-                  {storefront.is_verified && (
-                    <li>• {t('verifiedBusiness')}</li>
-                  )}
+                  {storefront.is_verified && <li>• {t('verifiedBusiness')}</li>}
                   <li>• {t('securePayments')}</li>
                   <li>• {t('buyerProtection')}</li>
                 </ul>

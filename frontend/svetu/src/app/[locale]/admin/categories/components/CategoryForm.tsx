@@ -264,7 +264,9 @@ export default function CategoryForm({
       {category?.id && (
         <div className="form-control">
           <label className="label">
-            <span className="label-text">{t('categories.translationStatus')}</span>
+            <span className="label-text">
+              {t('categories.translationStatus')}
+            </span>
           </label>
           <TranslationStatus
             entityType="category"

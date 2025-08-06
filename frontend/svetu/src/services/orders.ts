@@ -23,13 +23,11 @@ export const ordersService = {
 
   // Получить заказ по ID
   async getOrder(orderId: number): Promise<StorefrontOrder> {
-    const response = await apiClient.get(
-      `/api/v1/marketplace/orders/${orderId}`
-    );
-    if (response.data?.success && response.data?.data) {
+    const response = await apiClient.get(`/api/v1/orders/${orderId}`);
+    if (!response.error && response.data?.data) {
       return response.data.data;
     }
-    throw new Error('Order not found');
+    throw new Error(response.error?.message || 'Order not found');
   },
 
   // Получить список заказов пользователя (покупки)
@@ -49,12 +47,10 @@ export const ordersService = {
     searchParams.append('limit', limit.toString());
     if (params?.status) searchParams.append('status', params.status);
 
-    const response = await apiClient.get(
-      `/api/v1/marketplace/orders/my/purchases?${searchParams}`
-    );
+    const response = await apiClient.get(`/api/v1/orders?${searchParams}`);
     console.log('[ordersService] getUserOrders response:', response);
 
-    if (response.data?.success && response.data?.data) {
+    if (!response.error && response.data?.data) {
       const { orders = [], total = 0 } = response.data.data;
       return {
         orders: Array.isArray(orders) ? orders : [],
@@ -78,6 +74,9 @@ export const ordersService = {
       `/api/v1/orders/${orderId}/cancel`,
       cancelData
     );
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to cancel order');
+    }
     return response.data.data;
   },
 };

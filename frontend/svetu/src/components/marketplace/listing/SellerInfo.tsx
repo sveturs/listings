@@ -227,7 +227,9 @@ export default function SellerInfo({ listing, onChatClick }: SellerInfoProps) {
             </>
           ) : user && user.id === listing.user_id ? (
             <div className="text-center">
-              <p className="text-base-content/60 mb-3">{t('seller.yourListing')}</p>
+              <p className="text-base-content/60 mb-3">
+                {t('seller.yourListing')}
+              </p>
               <Link
                 href={`/${locale}/profile/listings/${listing.id}/edit`}
                 className="btn btn-outline btn-sm"

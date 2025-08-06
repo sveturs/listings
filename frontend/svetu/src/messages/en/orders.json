@@ -1,0 +1,56 @@
+{
+  "allOrders": "All Orders",
+  "myOrders": "My Orders",
+  "ordersDescription": "Manage all orders",
+  "filterByStatus": "Filter by status",
+  "noOrders": "No orders",
+  "noOrdersDescription": "You don't have any orders yet",
+  "status": {
+    "label": "Status",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled"
+  },
+  "loginRequired": "Sign in to view orders",
+  "tryAgain": "Try again",
+  "history": "Order History",
+  "totalOrders": "Total orders: {count}",
+  "loadMore": "Load more",
+  "trackingAvailable": "Tracking available",
+  "orderInfo": "Order Information",
+  "orderNumber": "Order Number",
+  "orderDate": "Order Date",
+  "paymentMethod": "Payment Method",
+  "pickupAddress": {
+    "title": "Pickup Address",
+    "description": "The item will be picked up by courier at this address"
+  },
+  "deliveryAddress": {
+    "title": "Delivery Address",
+    "description": "The item will be delivered to this address"
+  },
+  "shippingMethod": "Shipping Method",
+  "tracking": {
+    "title": "Tracking",
+    "number": "Tracking Number",
+    "provider": "Shipping Provider"
+  },
+  "items": "Items",
+  "subtotal": "Subtotal",
+  "shipping": "Shipping",
+  "tax": "Tax",
+  "discount": "Discount",
+  "total": "Total",
+  "payment": {
+    "cod": "Cash on Delivery",
+    "bank_transfer": "Bank Transfer",
+    "card": "Credit/Debit Card"
+  },
+  "shipping": {
+    "standard": "Standard Shipping",
+    "express": "Express Shipping",
+    "pickup": "Pickup"
+  }
+}

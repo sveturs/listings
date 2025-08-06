@@ -4,7 +4,10 @@ const fs = require('fs');
 const path = require('path');
 
 // Файл для обновления
-const filePath = path.join(__dirname, '../src/app/[locale]/profile/storefronts/page.tsx');
+const filePath = path.join(
+  __dirname,
+  '../src/app/[locale]/profile/storefronts/page.tsx'
+);
 
 // Читаем файл
 let content = fs.readFileSync(filePath, 'utf8');
@@ -27,7 +30,10 @@ const replacements = [
   [/t\('storefronts\.active'\)/g, "t('active')"],
   [/t\('storefronts\.inactive'\)/g, "t('inactive')"],
   [/t\('storefronts\.noStorefronts'\)/g, "t('noStorefronts')"],
-  [/t\('storefronts\.noStorefrontsInCategory'\)/g, "t('noStorefrontsInCategory')"],
+  [
+    /t\('storefronts\.noStorefrontsInCategory'\)/g,
+    "t('noStorefrontsInCategory')",
+  ],
   [/t\('storefronts\.createFirstStorefront'\)/g, "t('createFirstStorefront')"],
   [/t\('storefronts\.createStorefront'\)/g, "t('createStorefront')"],
   [/t\('storefronts\.noDescription'\)/g, "t('noDescription')"],
@@ -41,7 +47,7 @@ const replacements = [
   [/t\('storefronts\.manageStaff'\)/g, "t('manageStaff')"],
   [/t\('storefronts\.manageReviews'\)/g, "t('manageReviews')"],
   [/t\('storefronts\.messages'\)/g, "t('messages')"],
-  
+
   // Вложенные ключи
   [/t\('storefronts\.status\.active'\)/g, "t('status.active')"],
   [/t\('storefronts\.status\.inactive'\)/g, "t('status.inactive')"],

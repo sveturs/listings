@@ -18,6 +18,9 @@ import {
 import { PageTransition } from '@/components/ui/PageTransition';
 import { useAuthContext } from '@/contexts/AuthContext';
 import type { components } from '@/types/generated/api';
+import { useDispatch } from 'react-redux';
+import { clearCart } from '@/store/slices/localCartSlice';
+import { apiClient } from '@/services/api-client';
 
 type CreateOrderRequest =
   components['schemas']['backend_internal_domain_models.CreateOrderRequest'];
@@ -56,6 +59,7 @@ export default function CheckoutPage() {
   const t = useTranslations('checkout');
   const locale = useLocale();
   const router = useRouter();
+  const dispatch = useDispatch();
   const { user, isAuthenticated } = useAuthContext();
 
   const items = useSelector(selectCartItems);
@@ -209,17 +213,33 @@ export default function CheckoutPage() {
           customer_notes: '',
         };
 
-        // TODO: Call API to create order
-        console.log('Creating order:', orderData);
+        // Создаем заказ через API
+        const response = await apiClient.post('/api/v1/orders', orderData);
+
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to create order');
+        }
+
+        console.log('Order created successfully:', response.data);
+
+        // Очищаем корзину
+        dispatch(clearCart());
+
+        // Перенаправляем на страницу успешного заказа
+        if (response.data && response.data.data && response.data.data.id) {
+          router.push(
+            `/${locale}/checkout/success?orderId=${response.data.data.id}`
+          );
+        } else {
+          router.push(`/${locale}/checkout/success`);
+        }
       }
-
-      // TODO: Clear cart after successful order
-      // dispatch(clearCart());
-
-      // Redirect to success page
-      router.push(`/${locale}/checkout/success`);
     } catch (error) {
       console.error('Failed to create order:', error);
+      // Show error toast instead of setting state
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to create order';
+      alert(errorMessage); // Replace with toast notification in production
       setIsSubmitting(false);
     }
   };

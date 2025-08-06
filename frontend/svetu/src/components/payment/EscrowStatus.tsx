@@ -110,9 +110,7 @@ export default function EscrowStatus({
                 <ul className="list-disc list-inside ml-2 space-y-1">
                   <li>{t('confirmReceipt')}</li>
                   <li>{t('disputeOption')}</li>
-                  <li>
-                    {t('escrow.autoRelease', { days: getEscrowDays() })}
-                  </li>
+                  <li>{t('escrow.autoRelease', { days: getEscrowDays() })}</li>
                 </ul>
               </div>
             </div>
@@ -121,9 +119,7 @@ export default function EscrowStatus({
 
         {status === 'held' && sellerTier && (
           <div className="flex items-center gap-2 text-sm">
-            <span className="opacity-75">
-              {t('sellerTier')}:
-            </span>
+            <span className="opacity-75">{t('sellerTier')}:</span>
             <span
               className={`badge badge-sm ${
                 sellerTier === 'gold'

@@ -15,7 +15,7 @@ import { toast } from 'react-hot-toast';
 export default function MyPurchasesPage() {
   const locale = useLocale();
   const t = useTranslations('orders');
-  const tHome = useTranslations('home');
+  const tHome = useTranslations('marketplace.home');
   const tProfile = useTranslations('profile');
   const tCommon = useTranslations('common');
   const { isAuthenticated } = useAuth();
@@ -139,12 +139,8 @@ export default function MyPurchasesPage() {
       {orders.length === 0 ? (
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body text-center py-16">
-            <h3 className="text-xl font-semibold mb-2">
-              {t('noPurchases')}
-            </h3>
-            <p className="text-base-content/70 mb-6">
-              {t('noPurchasesDesc')}
-            </p>
+            <h3 className="text-xl font-semibold mb-2">{t('noPurchases')}</h3>
+            <p className="text-base-content/70 mb-6">{t('noPurchasesDesc')}</p>
             <Link href={`/${locale}/search`} className="btn btn-primary">
               {t('startShopping')}
             </Link>

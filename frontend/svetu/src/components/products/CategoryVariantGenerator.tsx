@@ -413,11 +413,15 @@ export default function CategoryVariantGenerator({
       {/* Настройки остатков */}
       <div className="divider"></div>
       <div className="space-y-4">
-        <h4 className="font-medium text-base-content">{t('products.stockSettings')}</h4>
+        <h4 className="font-medium text-base-content">
+          {t('products.stockSettings')}
+        </h4>
 
         <div className="form-control">
           <label className="label">
-            <span className="label-text">{t('products.defaultStockQuantity')}</span>
+            <span className="label-text">
+              {t('products.defaultStockQuantity')}
+            </span>
           </label>
           <input
             type="number"
@@ -446,7 +450,9 @@ export default function CategoryVariantGenerator({
                 }))
               }
             />
-            <span className="label-text">{t('products.useIndividualQuantities')}</span>
+            <span className="label-text">
+              {t('products.useIndividualQuantities')}
+            </span>
           </label>
         </div>
       </div>
@@ -466,7 +472,9 @@ export default function CategoryVariantGenerator({
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>{t('products.willGenerateVariants', { count: getTotalVariants() })}</span>
+        <span>
+          {t('products.willGenerateVariants', { count: getTotalVariants() })}
+        </span>
       </div>
 
       {/* Кнопки */}

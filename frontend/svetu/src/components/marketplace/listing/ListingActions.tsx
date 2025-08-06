@@ -31,7 +31,9 @@ export default function ListingActions({ listing }: ListingActionsProps) {
       setIsFavorite(!isFavorite);
       // TODO: API call to toggle favorite
       toast.success(
-        isFavorite ? t('listingActions.removedFromFavorites') : t('listingActions.addedToFavorites')
+        isFavorite
+          ? t('listingActions.removedFromFavorites')
+          : t('listingActions.addedToFavorites')
       );
     } catch {
       setIsFavorite(!isFavorite); // Revert on error
@@ -43,7 +45,9 @@ export default function ListingActions({ listing }: ListingActionsProps) {
     setIsInComparison(!isInComparison);
     // TODO: Add to comparison store
     toast.success(
-      isInComparison ? t('listingActions.removedFromComparison') : t('listingActions.addedToComparison')
+      isInComparison
+        ? t('listingActions.removedFromComparison')
+        : t('listingActions.addedToComparison')
     );
   };
 

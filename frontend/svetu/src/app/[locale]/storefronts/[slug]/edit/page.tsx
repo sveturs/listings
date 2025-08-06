@@ -277,9 +277,7 @@ export default function EditStorefrontPage() {
                 <ArrowLeftIcon className="w-5 h-5" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold">
-                  {t('editStorefront')}
-                </h1>
+                <h1 className="text-2xl font-bold">{t('editStorefront')}</h1>
                 <p className="text-base-content/60">{currentStorefront.name}</p>
               </div>
             </div>
@@ -351,9 +349,7 @@ export default function EditStorefrontPage() {
               <div className="space-y-6">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('storeName')}
-                    </span>
+                    <span className="label-text">{t('storeName')}</span>
                   </label>
                   <input
                     type="text"
@@ -367,9 +363,7 @@ export default function EditStorefrontPage() {
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('description')}
-                    </span>
+                    <span className="label-text">{t('description')}</span>
                   </label>
                   <textarea
                     name="description"
@@ -383,9 +377,7 @@ export default function EditStorefrontPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">
-                        {t('phone')}
-                      </span>
+                      <span className="label-text">{t('phone')}</span>
                     </label>
                     <div className="input-group">
                       <span className="bg-base-200">
@@ -403,9 +395,7 @@ export default function EditStorefrontPage() {
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">
-                        {t('email')}
-                      </span>
+                      <span className="label-text">{t('email')}</span>
                     </label>
                     <div className="input-group">
                       <span className="bg-base-200">
@@ -424,9 +414,7 @@ export default function EditStorefrontPage() {
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('website')}
-                    </span>
+                    <span className="label-text">{t('website')}</span>
                   </label>
                   <div className="input-group">
                     <span className="bg-base-200">
@@ -451,9 +439,7 @@ export default function EditStorefrontPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">
-                        {t('country')}
-                      </span>
+                      <span className="label-text">{t('country')}</span>
                     </label>
                     <input
                       type="text"
@@ -466,9 +452,7 @@ export default function EditStorefrontPage() {
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">
-                        {t('city')}
-                      </span>
+                      <span className="label-text">{t('city')}</span>
                     </label>
                     <input
                       type="text"
@@ -482,9 +466,7 @@ export default function EditStorefrontPage() {
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('address')}
-                    </span>
+                    <span className="label-text">{t('address')}</span>
                   </label>
                   <input
                     type="text"
@@ -497,9 +479,7 @@ export default function EditStorefrontPage() {
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('postalCode')}
-                    </span>
+                    <span className="label-text">{t('postalCode')}</span>
                   </label>
                   <input
                     type="text"
@@ -634,9 +614,7 @@ export default function EditStorefrontPage() {
             {activeTab === 'media' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">
-                    {t('logo')}
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-4">{t('logo')}</h3>
                   <div className="flex items-center gap-6">
                     <div className="avatar">
                       <div className="w-32 rounded-xl bg-base-200">
@@ -667,9 +645,7 @@ export default function EditStorefrontPage() {
 
                           // Валидация размера файла (5MB)
                           if (file.size > 5 * 1024 * 1024) {
-                            toast.error(
-                              t('fileTooLarge', { max: '5MB' })
-                            );
+                            toast.error(t('fileTooLarge', { max: '5MB' }));
                             e.target.value = ''; // Сбрасываем input
                             return;
                           }
@@ -757,9 +733,7 @@ export default function EditStorefrontPage() {
                 <div className="divider"></div>
 
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">
-                    {t('banner')}
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-4">{t('banner')}</h3>
                   <div className="space-y-4">
                     <div className="aspect-[3/1] bg-base-200 rounded-xl overflow-hidden relative max-h-48">
                       {bannerPreview || currentStorefront.banner_url ? (
@@ -787,9 +761,7 @@ export default function EditStorefrontPage() {
 
                         // Валидация размера файла (10MB)
                         if (file.size > 10 * 1024 * 1024) {
-                          toast.error(
-                            t('fileTooLarge', { max: '10MB' })
-                          );
+                          toast.error(t('fileTooLarge', { max: '10MB' }));
                           e.target.value = ''; // Сбрасываем input
                           return;
                         }

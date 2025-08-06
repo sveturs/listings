@@ -73,7 +73,9 @@ export default function VariantStockManager({
   if (localVariants.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-base-content/70">{t('products.noVariantsToManage')}</p>
+        <p className="text-base-content/70">
+          {t('products.noVariantsToManage')}
+        </p>
       </div>
     );
   }
@@ -101,7 +103,9 @@ export default function VariantStockManager({
       {/* Таблица вариантов */}
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body">
-          <h3 className="card-title text-lg mb-4">{t('products.manageVariants')}</h3>
+          <h3 className="card-title text-lg mb-4">
+            {t('products.manageVariants')}
+          </h3>
 
           <div className="overflow-x-auto">
             <table className="table table-zebra">

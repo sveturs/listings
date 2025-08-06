@@ -21,7 +21,7 @@ export default function OrderDetailsPage({ params }: Props) {
   const { id } = use(params);
   const locale = useLocale();
   const t = useTranslations('orders');
-  const tHome = useTranslations('home');
+  const tHome = useTranslations('marketplace.home');
   const tProfile = useTranslations('profile');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -333,9 +333,7 @@ export default function OrderDetailsPage({ params }: Props) {
 
                 <div className="flex justify-between font-bold">
                   <span>
-                    {isSeller
-                      ? t('yourEarnings')
-                      : t('sellerReceives')}
+                    {isSeller ? t('yourEarnings') : t('sellerReceives')}
                   </span>
                   <span className="text-success">
                     {balanceService.formatAmount(

@@ -531,12 +531,16 @@ function AttributeSelectionTab({
             <h3 className="card-title">{t('variants.generationSummary')}</h3>
             <div className="stats shadow">
               <div className="stat">
-                <div className="stat-title">{t('variants.totalCombinations')}</div>
+                <div className="stat-title">
+                  {t('variants.totalCombinations')}
+                </div>
                 <div className="stat-value text-primary">
                   {combinationsCount}
                 </div>
                 <div className="stat-desc">
-                  {t('variants.variantsWillBeCreated', { count: combinationsCount })}
+                  {t('variants.variantsWillBeCreated', {
+                    count: combinationsCount,
+                  })}
                 </div>
               </div>
             </div>
@@ -547,7 +551,9 @@ function AttributeSelectionTab({
                 disabled={combinationsCount === 0 || generating}
                 className={`btn btn-primary ${generating ? 'loading' : ''}`}
               >
-                {generating ? t('variants.generating') : t('variants.generateVariants')}
+                {generating
+                  ? t('variants.generating')
+                  : t('variants.generateVariants')}
               </button>
             </div>
           </div>
@@ -740,11 +746,17 @@ function VariantRow({
   const getStockStatusBadge = () => {
     const stock = variant.stock_quantity || 0;
     if (stock === 0) {
-      return <span className="badge badge-error">{t('variants.outOfStock')}</span>;
+      return (
+        <span className="badge badge-error">{t('variants.outOfStock')}</span>
+      );
     } else if (stock < 5) {
-      return <span className="badge badge-warning">{t('variants.lowStock')}</span>;
+      return (
+        <span className="badge badge-warning">{t('variants.lowStock')}</span>
+      );
     } else {
-      return <span className="badge badge-success">{t('variants.inStock')}</span>;
+      return (
+        <span className="badge badge-success">{t('variants.inStock')}</span>
+      );
     }
   };
 
@@ -1090,11 +1102,17 @@ function StockManagementTab({
                 </td>
                 <td>
                   {(variant.stock_quantity || 0) === 0 ? (
-                    <span className="badge badge-error">{t('variants.outOfStock')}</span>
+                    <span className="badge badge-error">
+                      {t('variants.outOfStock')}
+                    </span>
                   ) : (variant.stock_quantity || 0) < 5 ? (
-                    <span className="badge badge-warning">{t('variants.lowStock')}</span>
+                    <span className="badge badge-warning">
+                      {t('variants.lowStock')}
+                    </span>
                   ) : (
-                    <span className="badge badge-success">{t('variants.inStock')}</span>
+                    <span className="badge badge-success">
+                      {t('variants.inStock')}
+                    </span>
                   )}
                 </td>
                 <td>

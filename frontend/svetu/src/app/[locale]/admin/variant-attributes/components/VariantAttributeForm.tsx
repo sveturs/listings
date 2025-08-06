@@ -86,7 +86,9 @@ export default function VariantAttributeForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('variantAttributes.displayName')} *</span>
+          <span className="label-text">
+            {t('variantAttributes.displayName')} *
+          </span>
         </label>
         <input
           type="text"
@@ -101,7 +103,9 @@ export default function VariantAttributeForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('variantAttributes.systemName')} *</span>
+          <span className="label-text">
+            {t('variantAttributes.systemName')} *
+          </span>
         </label>
         <input
           type="text"
@@ -114,7 +118,9 @@ export default function VariantAttributeForm({
           placeholder={t('variantAttributes.systemNamePlaceholder')}
         />
         <label className="label">
-          <span className="label-text-alt">{t('variantAttributes.systemNameHint')}</span>
+          <span className="label-text-alt">
+            {t('variantAttributes.systemNameHint')}
+          </span>
         </label>
       </div>
 
@@ -153,7 +159,9 @@ export default function VariantAttributeForm({
           placeholder="0"
         />
         <label className="label">
-          <span className="label-text-alt">{t('variantAttributes.sortOrderHint')}</span>
+          <span className="label-text-alt">
+            {t('variantAttributes.sortOrderHint')}
+          </span>
         </label>
       </div>
 
@@ -162,7 +170,9 @@ export default function VariantAttributeForm({
       <div className="space-y-2">
         <div className="form-control">
           <label className="label cursor-pointer">
-            <span className="label-text">{t('variantAttributes.isRequired')}</span>
+            <span className="label-text">
+              {t('variantAttributes.isRequired')}
+            </span>
             <input
               type="checkbox"
               name="is_required"
@@ -172,7 +182,9 @@ export default function VariantAttributeForm({
             />
           </label>
           <label className="label">
-            <span className="label-text-alt">{t('variantAttributes.isRequiredHint')}</span>
+            <span className="label-text-alt">
+              {t('variantAttributes.isRequiredHint')}
+            </span>
           </label>
         </div>
 
@@ -190,7 +202,9 @@ export default function VariantAttributeForm({
             />
           </label>
           <label className="label">
-            <span className="label-text-alt">{t('variantAttributes.affectsStockHint')}</span>
+            <span className="label-text-alt">
+              {t('variantAttributes.affectsStockHint')}
+            </span>
           </label>
         </div>
       </div>

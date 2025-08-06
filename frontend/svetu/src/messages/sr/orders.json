@@ -1,0 +1,56 @@
+{
+  "allOrders": "Sve porudžbine",
+  "myOrders": "Moje porudžbine",
+  "ordersDescription": "Upravljanje svim porudžbinama",
+  "filterByStatus": "Filtriraj po statusu",
+  "noOrders": "Nema porudžbina",
+  "noOrdersDescription": "Nemate još uvek porudžbina",
+  "status": {
+    "label": "Status",
+    "pending": "Na čekanju",
+    "confirmed": "Potvrđena",
+    "shipped": "Poslana",
+    "delivered": "Dostavljena",
+    "cancelled": "Otkazana"
+  },
+  "loginRequired": "Prijavite se za pregled porudžbina",
+  "tryAgain": "Pokušajte ponovo",
+  "history": "Istorija porudžbina",
+  "totalOrders": "Ukupno porudžbina: {count}",
+  "loadMore": "Učitaj još",
+  "trackingAvailable": "Praćenje dostupno",
+  "orderInfo": "Informacije o porudžbini",
+  "orderNumber": "Broj porudžbine",
+  "orderDate": "Datum porudžbine",
+  "paymentMethod": "Način plaćanja",
+  "pickupAddress": {
+    "title": "Adresa preuzimanja",
+    "description": "Artikal će biti preuzet kurirskom službom na ovoj adresi"
+  },
+  "deliveryAddress": {
+    "title": "Adresa dostave",
+    "description": "Artikal će biti dostavljen na ovu adresu"
+  },
+  "shippingMethod": "Način dostave",
+  "tracking": {
+    "title": "Praćenje",
+    "number": "Broj za praćenje",
+    "provider": "Dostavna služba"
+  },
+  "items": "Artikli",
+  "subtotal": "Međuzbir",
+  "shipping": "Dostava",
+  "tax": "Porez",
+  "discount": "Popust",
+  "total": "Ukupno",
+  "payment": {
+    "cod": "Pouzećem",
+    "bank_transfer": "Bankovna doznaka",
+    "card": "Kreditna/Debitna kartica"
+  },
+  "shipping": {
+    "standard": "Standardna dostava",
+    "express": "Ekspres dostava",
+    "pickup": "Preuzimanje"
+  }
+}

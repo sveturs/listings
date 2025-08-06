@@ -82,9 +82,10 @@ export default function TestAuthPage() {
   };
 
   const getCurrentUser = () => {
-    const userStr = (typeof window !== 'undefined' && window.sessionStorage) 
-      ? sessionStorage.getItem('user') 
-      : null;
+    const userStr =
+      typeof window !== 'undefined' && window.sessionStorage
+        ? sessionStorage.getItem('user')
+        : null;
     if (userStr) {
       try {
         const user = JSON.parse(userStr);

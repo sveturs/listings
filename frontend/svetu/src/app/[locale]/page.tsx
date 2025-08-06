@@ -1,9 +1,7 @@
-import { NextIntlClientProvider } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import configManager from '@/config';
 import HomePageClient from './HomePageClient';
 import { getHomePageData } from './actions';
-import { loadMessages } from '@/lib/i18n/loadMessages';
 
 export default async function Home({
   params,
@@ -11,14 +9,7 @@ export default async function Home({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations('home');
-
-  // Загружаем необходимые модули для главной страницы
-  const additionalMessages = await loadMessages(locale as any, [
-    'marketplace',
-    'misc',
-    'cars', // Добавляем модуль cars для поддержки автомобильных фильтров
-  ]);
+  const t = await getTranslations('marketplace.home');
 
   // Проверяем feature flags
   const _paymentsEnabled = configManager.isFeatureEnabled('enablePayments');
@@ -44,14 +35,12 @@ export default async function Home({
   }
 
   return (
-    <NextIntlClientProvider messages={additionalMessages}>
-      <HomePageClient
-        title={t('title')}
-        description={t('description')}
-        createListingText={t('createListing')}
-        homePageData={homePageData}
-        locale={locale}
-      />
-    </NextIntlClientProvider>
+    <HomePageClient
+      title={t('title')}
+      description={t('description')}
+      createListingText={t('createListing')}
+      homePageData={homePageData}
+      locale={locale}
+    />
   );
 }

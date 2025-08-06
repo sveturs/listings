@@ -105,18 +105,12 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
     <div className="max-w-2xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            {t('title')}
-          </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('subtitle')}
-          </p>
+          <h2 className="card-title text-2xl mb-4">{t('title')}</h2>
+          <p className="text-base-content/70 mb-6">{t('subtitle')}</p>
 
           <div className="form-control w-full">
             <label className="label">
-              <span className="label-text">
-                {t('name')}
-              </span>
+              <span className="label-text">{t('name')}</span>
               <span className="label-text-alt text-error">*</span>
             </label>
             <input
@@ -135,9 +129,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full mt-4">
             <label className="label">
-              <span className="label-text">
-                {t('slug')}
-              </span>
+              <span className="label-text">{t('slug')}</span>
               <span className="label-text-alt text-error">*</span>
             </label>
             <div className="flex items-center gap-2">
@@ -161,9 +153,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full mt-4">
             <label className="label">
-              <span className="label-text">
-                {t('description')}
-              </span>
+              <span className="label-text">{t('description')}</span>
               <span className="label-text-alt text-error">*</span>
             </label>
             <textarea
@@ -185,39 +175,27 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full mt-4">
             <label className="label">
-              <span className="label-text">
-                {t('business_type')}
-              </span>
+              <span className="label-text">{t('business_type')}</span>
             </label>
             <select
               className="select select-bordered w-full"
               value={formData.businessType}
               onChange={(e) => updateFormData({ businessType: e.target.value })}
             >
-              <option value="retail">
-                {t('business_types.retail')}
-              </option>
-              <option value="service">
-                {t('business_types.service')}
-              </option>
+              <option value="retail">{t('business_types.retail')}</option>
+              <option value="service">{t('business_types.service')}</option>
               <option value="restaurant">
                 {t('business_types.restaurant')}
               </option>
-              <option value="grocery">
-                {t('business_types.grocery')}
-              </option>
-              <option value="other">
-                {t('business_types.other')}
-              </option>
+              <option value="grocery">{t('business_types.grocery')}</option>
+              <option value="other">{t('business_types.other')}</option>
             </select>
           </div>
 
           {/* Logo Upload */}
           <div className="form-control w-full mt-6">
             <label className="label">
-              <span className="label-text">
-                {t('logo')}
-              </span>
+              <span className="label-text">{t('logo')}</span>
               <span className="label-text-alt text-base-content/60">
                 {t('logo_hint')}
               </span>
@@ -291,9 +269,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
           {/* Banner Upload */}
           <div className="form-control w-full mt-6">
             <label className="label">
-              <span className="label-text">
-                {t('banner')}
-              </span>
+              <span className="label-text">{t('banner')}</span>
               <span className="label-text-alt text-base-content/60">
                 {t('banner_hint')}
               </span>

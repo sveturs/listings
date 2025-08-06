@@ -201,7 +201,9 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
 
             <div className="stats stats-horizontal w-full">
               <div className="stat">
-                <div className="stat-title">{t('priceHistory.currentPrice')}</div>
+                <div className="stat-title">
+                  {t('priceHistory.currentPrice')}
+                </div>
                 <div className="stat-value text-lg">
                   {priceHistory[
                     priceHistory.length - 1

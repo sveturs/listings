@@ -76,9 +76,7 @@ export default function PaymentDeliveryStep({
           <h2 className="card-title text-2xl mb-4 flex items-center">
             💳 {t('setup_title')}
           </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('setup_description')}
-          </p>
+          <p className="text-base-content/70 mb-6">{t('setup_description')}</p>
 
           {/* Способы оплаты */}
           <div className="space-y-6">
@@ -169,8 +167,8 @@ export default function PaymentDeliveryStep({
                       • {t('cod_fee')}: {formData.codPrice} РСД
                     </p>
                     <p>
-                      • {t('example')}: 1.000 РСД + {formData.codPrice}{' '}
-                      РСД = {calculateCODTotal(1000)} РСД
+                      • {t('example')}: 1.000 РСД + {formData.codPrice} РСД ={' '}
+                      {calculateCODTotal(1000)} РСД
                     </p>
                   </div>
                 </div>
@@ -276,9 +274,7 @@ export default function PaymentDeliveryStep({
                 <label className="label cursor-pointer">
                   <div className="flex items-center gap-3">
                     <span className="text-xl">💬</span>
-                    <span className="label-text">
-                      {t('negotiable_price')}
-                    </span>
+                    <span className="label-text">{t('negotiable_price')}</span>
                   </div>
                   <input
                     type="checkbox"
@@ -298,9 +294,7 @@ export default function PaymentDeliveryStep({
                 <label className="label cursor-pointer">
                   <div className="flex items-center gap-3">
                     <span className="text-xl">📦</span>
-                    <span className="label-text">
-                      {t('bundle_deals')}
-                    </span>
+                    <span className="label-text">{t('bundle_deals')}</span>
                   </div>
                   <input
                     type="checkbox"

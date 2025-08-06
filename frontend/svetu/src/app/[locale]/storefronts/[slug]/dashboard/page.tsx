@@ -40,6 +40,7 @@ export default function StorefrontDashboardPage() {
   const tCommon = useTranslations('common');
   const tAdmin = useTranslations('admin');
   const tStorefronts = useTranslations('storefronts');
+  const tNotifications = useTranslations('notifications');
   const locale = useLocale();
   const router = useRouter();
   const params = useParams();
@@ -96,12 +97,8 @@ export default function StorefrontDashboardPage() {
       <div className="min-h-screen bg-base-200 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold mb-2">
-            {tCommon('accessDenied')}
-          </h1>
-          <p className="text-base-content/60">
-            {t('dashboardAccessDenied')}
-          </p>
+          <h1 className="text-2xl font-bold mb-2">{tCommon('accessDenied')}</h1>
+          <p className="text-base-content/60">{t('dashboardAccessDenied')}</p>
         </div>
       </div>
     );
@@ -242,9 +239,7 @@ export default function StorefrontDashboardPage() {
             {/* Quick Actions */}
             <div className="card bg-base-100 shadow-md">
               <div className="card-body">
-                <h2 className="card-title text-lg mb-4">
-                  {t('quickActions')}
-                </h2>
+                <h2 className="card-title text-lg mb-4">{t('quickActions')}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/products/new`}
@@ -297,9 +292,7 @@ export default function StorefrontDashboardPage() {
             <div className="card bg-base-100 shadow-md">
               <div className="card-body">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="card-title text-lg">
-                    {t('recentOrders')}
-                  </h2>
+                  <h2 className="card-title text-lg">{t('recentOrders')}</h2>
                   <Link
                     href={`/${locale}/storefronts/${currentStorefront.slug}/orders`}
                     className="btn btn-ghost btn-sm"
@@ -387,9 +380,7 @@ export default function StorefrontDashboardPage() {
               <div className="card-body">
                 <div className="flex items-center gap-3 mb-4">
                   <ExclamationTriangleIcon className="w-6 h-6 text-warning" />
-                  <h2 className="card-title text-lg">
-                    {t('lowStockAlert')}
-                  </h2>
+                  <h2 className="card-title text-lg">{t('lowStockAlert')}</h2>
                 </div>
 
                 {lowStockProducts.length === 0 ? (
@@ -506,11 +497,27 @@ export default function StorefrontDashboardPage() {
                             </div>
                             <div className="flex-1">
                               <p className="text-sm font-medium">
-                                {notification.title}
+                                {notification.title.startsWith('notifications.')
+                                  ? tNotifications(
+                                      notification.title.replace(
+                                        'notifications.',
+                                        ''
+                                      )
+                                    )
+                                  : notification.title}
                               </p>
                               {notification.message && (
                                 <p className="text-xs text-base-content/70 mt-1">
-                                  {notification.message}
+                                  {notification.message.startsWith(
+                                    'notifications.'
+                                  )
+                                    ? tNotifications(
+                                        notification.message.replace(
+                                          'notifications.',
+                                          ''
+                                        )
+                                      )
+                                    : notification.message}
                                 </p>
                               )}
                               <p className="text-xs text-base-content/60 mt-1">
@@ -540,9 +547,7 @@ export default function StorefrontDashboardPage() {
                     <ChatBubbleLeftRightIcon className="w-5 h-5" />
                     {t('messages')}
                   </h2>
-                  <span className="badge badge-accent">
-                    7 {t('unread')}
-                  </span>
+                  <span className="badge badge-accent">7 {t('unread')}</span>
                 </div>
 
                 <div className="space-y-3">
@@ -598,15 +603,11 @@ export default function StorefrontDashboardPage() {
             {/* Store Status */}
             <div className="card bg-base-100 shadow-md">
               <div className="card-body">
-                <h2 className="card-title text-lg mb-4">
-                  {t('storeStatus')}
-                </h2>
+                <h2 className="card-title text-lg mb-4">{t('storeStatus')}</h2>
 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">
-                      {t('storeOpen')}
-                    </span>
+                    <span className="text-sm">{t('storeOpen')}</span>
                     <input
                       type="checkbox"
                       className="toggle toggle-success"
@@ -617,9 +618,7 @@ export default function StorefrontDashboardPage() {
                   <div className="divider my-2"></div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">
-                      {t('acceptingOrders')}
-                    </span>
+                    <span className="text-sm">{t('acceptingOrders')}</span>
                     <input
                       type="checkbox"
                       className="toggle toggle-primary"
@@ -628,9 +627,7 @@ export default function StorefrontDashboardPage() {
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">
-                      {t('vacationMode')}
-                    </span>
+                    <span className="text-sm">{t('vacationMode')}</span>
                     <input type="checkbox" className="toggle" />
                   </div>
                 </div>

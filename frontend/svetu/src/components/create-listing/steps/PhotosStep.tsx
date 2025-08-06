@@ -124,9 +124,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
           <h2 className="card-title text-2xl mb-4 flex items-center">
             📸 {t('title')}
           </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('description')}
-          </p>
+          <p className="text-base-content/70 mb-6">{t('description')}</p>
 
           {/* Зона загрузки */}
           <div
@@ -157,22 +155,17 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
             {uploading ? (
               <div className="space-y-2">
                 <div className="loading loading-spinner loading-lg mx-auto"></div>
-                <p className="text-sm">
-                  {t('uploading')}
-                </p>
+                <p className="text-sm">{t('uploading')}</p>
               </div>
             ) : (
               <div className="space-y-2">
                 <div className="text-4xl">📷</div>
-                <p className="font-medium">
-                  {t('upload_instruction')}
-                </p>
+                <p className="font-medium">{t('upload_instruction')}</p>
                 <p className="text-sm text-base-content/60">
                   {t('supported_formats')}
                 </p>
                 <p className="text-xs text-base-content/50">
-                  {t('max_size')} • {photos.length}/8{' '}
-                  {t('photos')}
+                  {t('max_size')} • {photos.length}/8 {t('photos')}
                 </p>
               </div>
             )}
@@ -282,9 +275,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
                   ></path>
                 </svg>
                 <div className="text-sm">
-                  <p className="font-medium">
-                    💡 {t('photos.tips.title')}
-                  </p>
+                  <p className="font-medium">💡 {t('photos.tips.title')}</p>
                   <ul className="text-xs mt-2 space-y-1">
                     <li>• {t('photos.tips.quality')}</li>
                     <li>• {t('photos.tips.lighting')}</li>
@@ -312,9 +303,7 @@ export default function PhotosStep({ onNext, onBack }: PhotosStepProps) {
               ></path>
             </svg>
             <div className="text-sm">
-              <p className="font-medium">
-                🤝 {t('photos.trust_tip.title')}
-              </p>
+              <p className="font-medium">🤝 {t('photos.trust_tip.title')}</p>
               <p className="text-xs mt-1">
                 {t('photos.trust_tip.description')}
               </p>

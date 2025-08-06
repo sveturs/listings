@@ -193,7 +193,9 @@ export const ReviewList: React.FC<ReviewListProps> = ({
                     // Note: This would require backend support for photo filter
                   }}
                 />
-                <span className="label-text text-sm">{t('list.withPhotos')}</span>
+                <span className="label-text text-sm">
+                  {t('list.withPhotos')}
+                </span>
               </label>
 
               <label className="label cursor-pointer">
@@ -652,7 +654,9 @@ export const ReviewList: React.FC<ReviewListProps> = ({
             >
               ✕
             </button>
-            <h3 className="font-bold text-lg mb-4">{t('list.disputeReview')}</h3>
+            <h3 className="font-bold text-lg mb-4">
+              {t('list.disputeReview')}
+            </h3>
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-base-content/70 mb-2 block">

@@ -565,7 +565,7 @@ const MapPage: React.FC = () => {
     debouncedBuyerLocation,
     districtBoundary,
     searchType,
-    t,
+    commonT,
   ]);
 
   // Функция для получения иконки по категории

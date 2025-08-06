@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -32,6 +32,7 @@ export default function MiniCart({
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const cartRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, right: 0 });
 
   const items = useSelector(selectCartItems);
   const total = useSelector(selectCartTotal);
@@ -52,6 +53,28 @@ export default function MiniCart({
     },
     {} as Record<number, { items: typeof items; name: string }>
   );
+
+  // Вычисляем позицию относительно кнопки корзины
+  useEffect(() => {
+    if (isOpen && anchorRef?.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      const cartWidth = 384; // w-96 = 24rem = 384px
+      const viewportWidth = window.innerWidth;
+
+      // Проверяем, не выходит ли корзина за правый край экрана
+      let rightPos = viewportWidth - rect.right;
+
+      // Если корзина выходит за левый край экрана, корректируем позицию
+      if (rect.right - cartWidth < 0) {
+        rightPos = viewportWidth - cartWidth - 16; // 16px отступ от края
+      }
+
+      setPosition({
+        top: rect.bottom + 8, // 8px отступ от кнопки
+        right: Math.max(16, rightPos), // минимум 16px от края
+      });
+    }
+  }, [isOpen, anchorRef]);
 
   // Закрытие при клике вне компонента
   useEffect(() => {
@@ -108,13 +131,17 @@ export default function MiniCart({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] bg-base-100 rounded-lg shadow-xl border border-base-300 z-50"
+          className="fixed w-96 max-w-[calc(100vw-2rem)] bg-base-100 rounded-lg shadow-xl border border-base-300 z-[150]"
+          style={{
+            top: `${position.top}px`,
+            right: `${position.right}px`,
+          }}
         >
           {/* Header */}
           <div className="p-4 border-b border-base-300">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">
-                {t('miniCart.title')} ({itemsCount})
+                {t('cart.miniCart.title')} ({itemsCount})
               </h3>
               <button
                 onClick={onClose}
@@ -154,7 +181,9 @@ export default function MiniCart({
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                   />
                 </svg>
-                <p className="text-base-content/60">{t('miniCart.empty')}</p>
+                <p className="text-base-content/60">
+                  {t('cart.miniCart.empty')}
+                </p>
               </div>
             ) : (
               <div className="p-4 space-y-4">
@@ -268,7 +297,7 @@ export default function MiniCart({
                       </div>
                       {group.items.length > 3 && (
                         <p className="text-xs text-base-content/60 mt-2">
-                          {t('miniCart.moreItems', {
+                          {t('cart.miniCart.moreItems', {
                             count: group.items.length - 3,
                           })}
                         </p>
@@ -284,7 +313,7 @@ export default function MiniCart({
           {itemsCount > 0 && (
             <div className="p-4 border-t border-base-300">
               <div className="flex items-center justify-between mb-4">
-                <span className="font-medium">{t('miniCart.total')}</span>
+                <span className="font-medium">{t('cart.miniCart.total')}</span>
                 <span className="text-xl font-bold text-primary">
                   {total.toFixed(2)} RSD
                 </span>
@@ -294,13 +323,13 @@ export default function MiniCart({
                   onClick={handleGoToCart}
                   className="btn btn-outline btn-block"
                 >
-                  {t('miniCart.viewCart')}
+                  {t('cart.miniCart.viewCart')}
                 </button>
                 <button
                   onClick={handleCheckout}
                   className="btn btn-primary btn-block"
                 >
-                  {t('miniCart.checkout')}
+                  {t('cart.miniCart.checkout')}
                 </button>
               </div>
             </div>
@@ -310,7 +339,7 @@ export default function MiniCart({
           {itemsCount > 0 && total < 5000 && (
             <div className="px-4 pb-4">
               <div className="text-xs text-base-content/60 mb-1">
-                {t('miniCart.freeShippingProgress', {
+                {t('cart.miniCart.freeShippingProgress', {
                   amount: (5000 - total).toFixed(2),
                 })}
               </div>

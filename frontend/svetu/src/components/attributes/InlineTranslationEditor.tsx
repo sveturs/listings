@@ -59,7 +59,9 @@ export function InlineTranslationEditor({
       await onSave(translations);
       setIsEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('translations.saveFailed'));
+      setError(
+        err instanceof Error ? err.message : t('translations.saveFailed')
+      );
     } finally {
       setSaving(false);
     }

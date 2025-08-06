@@ -24,17 +24,17 @@ let fixedCount = 0;
 files.forEach((file) => {
   let content = readFile(file);
   let modified = false;
-  
+
   // Ищем паттерн useTranslations('namespace')
   const translationMatches = content.match(/useTranslations\(['"](\w+)['"]\)/g);
-  
+
   if (translationMatches) {
-    translationMatches.forEach(match => {
+    translationMatches.forEach((match) => {
       const namespace = match.match(/useTranslations\(['"](\w+)['"]\)/)[1];
-      
+
       // Ищем использование t('namespace.key') с тем же namespace
       const pattern = new RegExp(`t\\(['"]${namespace}\\.([^'"]+)['"]`, 'g');
-      
+
       if (pattern.test(content)) {
         // Заменяем namespace.key на просто key
         content = content.replace(pattern, `t('$1'`);
@@ -43,7 +43,7 @@ files.forEach((file) => {
       }
     });
   }
-  
+
   if (modified) {
     writeFile(file, content);
     fixedCount++;

@@ -116,8 +116,7 @@ export default function EditPreviewStep({
         type: 'SET_ERROR',
         payload: {
           field: 'submit',
-          message:
-            error.message || t('products.errors.updateFailed'),
+          message: error.message || t('products.errors.updateFailed'),
         },
       });
     } finally {
@@ -137,9 +136,7 @@ export default function EditPreviewStep({
         <h3 className="text-2xl font-bold text-base-content mb-2">
           {t('products.steps.preview')}
         </h3>
-        <p className="text-base-content/70">
-          {t('previewStepDescription')}
-        </p>
+        <p className="text-base-content/70">{t('previewStepDescription')}</p>
       </div>
 
       {/* Предупреждение о несохраненных изменениях */}
@@ -299,9 +296,7 @@ export default function EditPreviewStep({
             </div>
             <div>
               <p className="font-semibold text-base-content">
-                {state.productData.is_active
-                  ? t('active')
-                  : t('inactive')}
+                {state.productData.is_active ? t('active') : t('inactive')}
               </p>
               <p className="text-sm text-base-content/60">
                 {state.productData.is_active
@@ -333,14 +328,12 @@ export default function EditPreviewStep({
               <div className="space-y-1">
                 {state.newImages.length > 0 && (
                   <p className="text-info/80 text-sm">
-                    • {state.newImages.length}{' '}
-                    {t('newImagesToAdd')}
+                    • {state.newImages.length} {t('newImagesToAdd')}
                   </p>
                 )}
                 {state.imagesToDelete.length > 0 && (
                   <p className="text-info/80 text-sm">
-                    • {state.imagesToDelete.length}{' '}
-                    {t('imagesToDelete')}
+                    • {state.imagesToDelete.length} {t('imagesToDelete')}
                   </p>
                 )}
               </div>

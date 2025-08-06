@@ -121,9 +121,13 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
                           </p>
                         )}
                         <div className="flex items-center gap-4 mt-2 text-xs text-base-content/50">
-                          <span>{t('draft.updatedAgo', { time: updatedAgo })}</span>
+                          <span>
+                            {t('draft.updatedAgo', { time: updatedAgo })}
+                          </span>
                           <span>•</span>
-                          <span>{t('draft.expiresIn', { time: expiresIn })}</span>
+                          <span>
+                            {t('draft.expiresIn', { time: expiresIn })}
+                          </span>
                           {draftMeta.isComplete && (
                             <>
                               <span>•</span>

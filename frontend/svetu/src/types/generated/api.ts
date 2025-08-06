@@ -25750,6 +25750,8 @@ export interface components {
       payment_status?: string;
       payment_transaction?: components['schemas']['backend_internal_domain_models.PaymentTransaction'];
       payment_transaction_id?: string;
+      /** @description Адрес забора товара у продавца */
+      pickup_address?: components['schemas']['backend_internal_domain_models.JSONB'];
       seller_amount?: number;
       seller_notes?: string;
       shipped_at?: string;

@@ -86,12 +86,8 @@ export default function PaymentDeliveryStep({
     <div className="max-w-3xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            {t('title')}
-          </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('subtitle')}
-          </p>
+          <h2 className="card-title text-2xl mb-4">{t('title')}</h2>
+          <p className="text-base-content/70 mb-6">{t('subtitle')}</p>
 
           {/* Payment Methods */}
           <div className="mb-8">
@@ -158,9 +154,7 @@ export default function PaymentDeliveryStep({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">
-                        {t('provider')}
-                      </span>
+                      <span className="label-text">{t('provider')}</span>
                     </label>
                     <select
                       className="select select-bordered select-sm"
@@ -183,9 +177,7 @@ export default function PaymentDeliveryStep({
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">
-                        {t('delivery_time')}
-                      </span>
+                      <span className="label-text">{t('delivery_time')}</span>
                     </label>
                     <input
                       type="number"
@@ -202,9 +194,7 @@ export default function PaymentDeliveryStep({
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">
-                        {t('delivery_cost')}
-                      </span>
+                      <span className="label-text">{t('delivery_cost')}</span>
                     </label>
                     <input
                       type="number"
@@ -221,9 +211,7 @@ export default function PaymentDeliveryStep({
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">
-                        {t('free_threshold')}
-                      </span>
+                      <span className="label-text">{t('free_threshold')}</span>
                     </label>
                     <input
                       type="number"

@@ -920,13 +920,7 @@
       "gallery.close",
       "gallery.swipeToNavigate"
     ],
-    "reviews.rating.labels": [
-      "terrible",
-      "bad",
-      "normal",
-      "good",
-      "excellent"
-    ],
+    "reviews.rating.labels": ["terrible", "bad", "normal", "good", "excellent"],
     "storefronts.products.bulk": [
       "clearSelection",
       "status",

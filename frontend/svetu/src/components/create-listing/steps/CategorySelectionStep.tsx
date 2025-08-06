@@ -159,7 +159,7 @@ export default function CategorySelectionStep({
     };
 
     loadCategories();
-  }, [locale, t]);
+  }, [locale, t, tMarketplace]);
 
   // Toggle category expansion
   const toggleExpand = (categoryId: number) => {
@@ -317,9 +317,7 @@ export default function CategorySelectionStep({
           <h2 className="card-title text-2xl mb-4 flex items-center">
             🏪 {t('title')}
           </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('description')}
-          </p>
+          <p className="text-base-content/70 mb-6">{t('description')}</p>
 
           {/* Search input */}
           <div className="mb-4">
@@ -363,9 +361,7 @@ export default function CategorySelectionStep({
                 />
               </svg>
               <div>
-                <div className="font-medium">
-                  {t('selected')}:
-                </div>
+                <div className="font-medium">{t('selected')}:</div>
                 <div className="text-sm">{state.category?.name}</div>
               </div>
             </div>
@@ -387,12 +383,8 @@ export default function CategorySelectionStep({
               ></path>
             </svg>
             <div className="text-sm">
-              <p className="font-medium">
-                💡 {t('tip_title')}
-              </p>
-              <p className="text-xs mt-1">
-                {t('tip_description')}
-              </p>
+              <p className="font-medium">💡 {t('tip_title')}</p>
+              <p className="text-xs mt-1">{t('tip_description')}</p>
             </div>
           </div>
 

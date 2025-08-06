@@ -19,7 +19,7 @@ export default function BuyPage({ params }: Props) {
   const { id } = use(params);
   const locale = useLocale();
   const t = useTranslations('marketplace');
-  const tHome = useTranslations('home');
+  const tHome = useTranslations('marketplace.home');
   const tCommon = useTranslations('common');
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
@@ -116,8 +116,7 @@ export default function BuyPage({ params }: Props) {
       }
     } catch (error: any) {
       console.error('Purchase error:', error);
-      const errorMessage =
-        error.response?.data?.error || t('purchaseError');
+      const errorMessage = error.response?.data?.error || t('purchaseError');
       toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -183,8 +182,7 @@ export default function BuyPage({ params }: Props) {
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{listing.title}</h3>
                     <p className="text-sm text-base-content/70 mb-2">
-                      {t('seller')}:{' '}
-                      {listing.user?.name || 'Unknown'}
+                      {t('seller')}: {listing.user?.name || 'Unknown'}
                     </p>
                     <p className="text-xl font-bold text-primary">
                       {balanceService.formatAmount(listing.price, 'RSD')}
@@ -243,9 +241,7 @@ export default function BuyPage({ params }: Props) {
                     />
                     <div className="flex items-center gap-2">
                       <span className="text-lg">💳</span>
-                      <span className="font-medium">
-                        {t('bankCard')}
-                      </span>
+                      <span className="font-medium">{t('bankCard')}</span>
                     </div>
                   </label>
                 </div>
@@ -281,9 +277,7 @@ export default function BuyPage({ params }: Props) {
               {/* Сообщение продавцу */}
               <div className="form-control mb-6">
                 <label className="label">
-                  <span className="label-text">
-                    {t('messageToSeller')}
-                  </span>
+                  <span className="label-text">{t('messageToSeller')}</span>
                   <span className="label-text-alt">{tCommon('optional')}</span>
                 </label>
                 <textarea
@@ -311,9 +305,7 @@ export default function BuyPage({ params }: Props) {
                   ></path>
                 </svg>
                 <div>
-                  <h4 className="font-semibold">
-                    🛡️ {t('buyerProtection')}
-                  </h4>
+                  <h4 className="font-semibold">🛡️ {t('buyerProtection')}</h4>
                   <ul className="text-sm mt-2 space-y-1">
                     <li>• {t('protectionPoint1')}</li>
                     <li>• {t('protectionPoint2')}</li>
@@ -352,9 +344,7 @@ export default function BuyPage({ params }: Props) {
           {/* Детали платежа */}
           <div className="card bg-base-100 shadow-xl mb-6">
             <div className="card-body">
-              <h3 className="card-title text-lg mb-4">
-                {t('paymentDetails')}
-              </h3>
+              <h3 className="card-title text-lg mb-4">{t('paymentDetails')}</h3>
 
               <div className="space-y-3">
                 <div className="flex justify-between">

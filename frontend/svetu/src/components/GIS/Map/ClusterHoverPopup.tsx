@@ -124,7 +124,9 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
           <h3 className="text-lg font-bold text-gray-900">
             {t('cluster.listingsCount', { count: totalCount })}
           </h3>
-          <p className="text-sm text-gray-600 mt-1">{t('cluster.zoomToView')}</p>
+          <p className="text-sm text-gray-600 mt-1">
+            {t('cluster.zoomToView')}
+          </p>
         </div>
 
         {/* Список объявлений */}
@@ -217,7 +219,9 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
               onClick={() => setShowAll(true)}
               className="w-full text-sm text-primary hover:text-primary-focus font-medium py-2 px-3 rounded-lg hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
             >
-              <span>{t('cluster.andMoreCount', { count: remainingCount })}</span>
+              <span>
+                {t('cluster.andMoreCount', { count: remainingCount })}
+              </span>
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -263,7 +267,9 @@ const ClusterHoverPopup: React.FC<ClusterHoverPopupProps> = ({
         {/* CTA */}
         <div className="mt-4 pt-3 border-t border-gray-200">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">{t('cluster.clickOnCluster')}</p>
+            <p className="text-sm text-gray-600">
+              {t('cluster.clickOnCluster')}
+            </p>
             <div className="flex items-center gap-1 text-primary">
               <span className="text-sm font-medium">{t('cluster.zoomIn')}</span>
               <svg

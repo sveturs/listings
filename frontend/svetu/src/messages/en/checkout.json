@@ -1,0 +1,80 @@
+{
+  "steps": {
+    "customer": "Customer Info",
+    "shipping": "Shipping",
+    "payment": "Payment",
+    "review": "Review"
+  },
+  "customer": {
+    "title": "Customer Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone"
+  },
+  "shipping": {
+    "title": "Shipping Address",
+    "street": "Street Address",
+    "city": "City",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "method": "Shipping Method",
+    "standard": "Standard Shipping",
+    "standardDesc": "Delivery in 3-5 business days",
+    "express": "Express Shipping",
+    "expressDesc": "Delivery in 1-2 business days",
+    "pickup": "Pickup",
+    "pickupDesc": "Pick up your order at the pickup point"
+  },
+  "payment": {
+    "title": "Payment Method",
+    "method": "Payment Method",
+    "cod": "Cash on Delivery",
+    "codDesc": "Pay when you receive your order",
+    "bank_transfer": "Bank Transfer",
+    "bankTransfer": "Bank Transfer",
+    "bankTransferDesc": "Transfer to company bank account",
+    "card": "Credit/Debit Card",
+    "cardDisabled": "Temporarily unavailable",
+    "acceptTerms": "I accept the",
+    "termsLink": "terms and conditions"
+  },
+  "summary": {
+    "title": "Order Summary",
+    "items": "{count, plural, =0 {No items} =1 {# item} other {# items}}",
+    "shipping": "Shipping",
+    "total": "Total",
+    "secureCheckout": "Secure Checkout",
+    "freeReturns": "Free Returns"
+  },
+  "next": "Next",
+  "back": "Back",
+  "submit": "Place Order",
+  "processing": "Processing...",
+  "free": "Free",
+  "edit": "Edit",
+  "previous": "Previous",
+  "placeOrder": "Place Order",
+  "review": {
+    "customer": "Customer Information",
+    "shipping": "Shipping",
+    "payment": "Payment"
+  },
+  "errors": {
+    "orderCreationFailed": "Failed to create order. Please try again.",
+    "emptyCart": "Cart is empty",
+    "invalidData": "Invalid data"
+  },
+  "success": {
+    "title": "Thank you for your order!",
+    "description": "Your order has been successfully placed and is being processed.",
+    "whatNext": "What's next?",
+    "emailConfirmation": "Email Confirmation",
+    "emailConfirmationDesc": "We've sent you an email with your order details to the provided email address.",
+    "shipping": "Shipping",
+    "shippingDesc": "We'll notify you when your order has been shipped.",
+    "contact": "Customer Support",
+    "contactDesc": "If you have any questions, contact us via chat or email."
+  },
+  "continueShopping": "Continue Shopping"
+}

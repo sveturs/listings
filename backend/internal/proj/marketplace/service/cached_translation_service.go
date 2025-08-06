@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 
 	//	"encoding/json"
 	"fmt"
@@ -22,7 +22,6 @@ type CachedTranslationService struct {
 	cachePrefix   string
 	cacheTTL      time.Duration
 	localCacheTTL time.Duration
-	mu            sync.RWMutex
 }
 
 // CachedTranslationConfig конфигурация для кэшированного сервиса переводов
@@ -71,9 +70,9 @@ func NewCachedTranslationService(
 
 // generateCacheKey создает уникальный ключ для кэширования
 func (s *CachedTranslationService) generateCacheKey(text, sourceLanguage, targetLanguage, context, fieldName string) string {
-	// Используем MD5 для создания компактного ключа
+	// Используем SHA256 для создания безопасного ключа
 	input := fmt.Sprintf("%s|%s|%s|%s|%s", text, sourceLanguage, targetLanguage, context, fieldName)
-	hash := md5.Sum([]byte(input))
+	hash := sha256.Sum256([]byte(input))
 	return fmt.Sprintf("%s%x", s.cachePrefix, hash)
 }
 

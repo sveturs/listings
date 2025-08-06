@@ -415,9 +415,7 @@ export default function StorefrontProductPage({ params }: Props) {
                 />
               </svg>
               <div>
-                <h4 className="font-semibold">
-                  {tStorefronts('trustSafety')}
-                </h4>
+                <h4 className="font-semibold">{tStorefronts('trustSafety')}</h4>
                 <ul className="text-sm space-y-1 mt-1">
                   <li>• {tStorefronts('securePayments')}</li>
                   <li>• {tStorefronts('buyerProtection')}</li>

@@ -298,12 +298,8 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
           />
         </svg>
         <div>
-          <h4 className="font-semibold">
-            {t('privacyNote')}
-          </h4>
-          <p className="text-sm mt-1">
-            {t('privacyNoteDescription')}
-          </p>
+          <h4 className="font-semibold">{t('privacyNote')}</h4>
+          <p className="text-sm mt-1">{t('privacyNoteDescription')}</p>
         </div>
       </div>
 

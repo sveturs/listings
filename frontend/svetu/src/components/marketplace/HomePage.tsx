@@ -30,7 +30,7 @@ export default function HomePage({
   error,
   paymentsEnabled = false,
 }: HomePageProps) {
-  const t = useTranslations('home');
+  const t = useTranslations('marketplace.home');
   const [showMap, setShowMap] = useState(false);
   const [selectedListing, setSelectedListing] =
     useState<RadiusSearchResult | null>(null);

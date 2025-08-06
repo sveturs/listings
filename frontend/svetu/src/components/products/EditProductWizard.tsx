@@ -70,9 +70,7 @@ export default function EditProductWizard({
         <div className="bg-warning/10 border border-warning rounded-2xl p-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-warning rounded-full animate-pulse" />
-            <p className="text-warning font-medium">
-              {t('unsavedChanges')}
-            </p>
+            <p className="text-warning font-medium">{t('unsavedChanges')}</p>
           </div>
         </div>
       )}

@@ -9,7 +9,9 @@ console.log('📝 Добавление отсутствующих ключей �
 const reportPath = path.join(__dirname, 'missing-keys-report.json');
 if (!fs.existsSync(reportPath)) {
   console.error('❌ Файл missing-keys-report.json не найден!');
-  console.log('   Сначала запустите: node scripts/find-missing-translation-keys.js');
+  console.log(
+    '   Сначала запустите: node scripts/find-missing-translation-keys.js'
+  );
   process.exit(1);
 }
 
@@ -27,7 +29,7 @@ let totalSkipped = 0;
 function setNestedValue(obj, path, value) {
   const parts = path.split('.');
   let current = obj;
-  
+
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
     if (!current[part] || typeof current[part] !== 'object') {
@@ -35,7 +37,7 @@ function setNestedValue(obj, path, value) {
     }
     current = current[part];
   }
-  
+
   const lastPart = parts[parts.length - 1];
   if (lastPart && current) {
     current[lastPart] = value;
@@ -46,137 +48,142 @@ function setNestedValue(obj, path, value) {
 function generateDefaultValue(key, locale) {
   // Очищаем ключ от префиксов модуля
   const cleanKey = key.split('.').pop();
-  
+
   // Преобразуем camelCase в readable text
   const readable = cleanKey
     .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, str => str.toUpperCase())
+    .replace(/^./, (str) => str.toUpperCase())
     .trim();
-  
+
   // Базовые переводы для общих ключей
   const commonTranslations = {
     ru: {
-      'loading': 'Загрузка...',
-      'save': 'Сохранить',
-      'cancel': 'Отмена',
-      'delete': 'Удалить',
-      'edit': 'Редактировать',
-      'close': 'Закрыть',
-      'search': 'Поиск',
-      'all': 'Все',
-      'active': 'Активный',
-      'inactive': 'Неактивный',
-      'yes': 'Да',
-      'no': 'Нет',
-      'back': 'Назад',
-      'next': 'Далее',
-      'error': 'Ошибка',
-      'success': 'Успешно',
-      'noData': 'Нет данных',
+      loading: 'Загрузка...',
+      save: 'Сохранить',
+      cancel: 'Отмена',
+      delete: 'Удалить',
+      edit: 'Редактировать',
+      close: 'Закрыть',
+      search: 'Поиск',
+      all: 'Все',
+      active: 'Активный',
+      inactive: 'Неактивный',
+      yes: 'Да',
+      no: 'Нет',
+      back: 'Назад',
+      next: 'Далее',
+      error: 'Ошибка',
+      success: 'Успешно',
+      noData: 'Нет данных',
     },
     en: {
-      'loading': 'Loading...',
-      'save': 'Save',
-      'cancel': 'Cancel',
-      'delete': 'Delete',
-      'edit': 'Edit',
-      'close': 'Close',
-      'search': 'Search',
-      'all': 'All',
-      'active': 'Active',
-      'inactive': 'Inactive',
-      'yes': 'Yes',
-      'no': 'No',
-      'back': 'Back',
-      'next': 'Next',
-      'error': 'Error',
-      'success': 'Success',
-      'noData': 'No data',
+      loading: 'Loading...',
+      save: 'Save',
+      cancel: 'Cancel',
+      delete: 'Delete',
+      edit: 'Edit',
+      close: 'Close',
+      search: 'Search',
+      all: 'All',
+      active: 'Active',
+      inactive: 'Inactive',
+      yes: 'Yes',
+      no: 'No',
+      back: 'Back',
+      next: 'Next',
+      error: 'Error',
+      success: 'Success',
+      noData: 'No data',
     },
     sr: {
-      'loading': 'Učitavanje...',
-      'save': 'Sačuvaj',
-      'cancel': 'Otkaži',
-      'delete': 'Obriši',
-      'edit': 'Izmeni',
-      'close': 'Zatvori',
-      'search': 'Pretraga',
-      'all': 'Sve',
-      'active': 'Aktivno',
-      'inactive': 'Neaktivno',
-      'yes': 'Da',
-      'no': 'Ne',
-      'back': 'Nazad',
-      'next': 'Sledeće',
-      'error': 'Greška',
-      'success': 'Uspešno',
-      'noData': 'Nema podataka',
-    }
+      loading: 'Učitavanje...',
+      save: 'Sačuvaj',
+      cancel: 'Otkaži',
+      delete: 'Obriši',
+      edit: 'Izmeni',
+      close: 'Zatvori',
+      search: 'Pretraga',
+      all: 'Sve',
+      active: 'Aktivno',
+      inactive: 'Neaktivno',
+      yes: 'Da',
+      no: 'Ne',
+      back: 'Nazad',
+      next: 'Sledeće',
+      error: 'Greška',
+      success: 'Uspešno',
+      noData: 'Nema podataka',
+    },
   };
-  
+
   // Проверяем есть ли готовый перевод
   if (commonTranslations[locale] && commonTranslations[locale][cleanKey]) {
     return commonTranslations[locale][cleanKey];
   }
-  
+
   // Иначе возвращаем сгенерированное значение
   if (locale === 'ru') {
     return `[RU] ${readable}`;
   } else if (locale === 'sr') {
     return `[SR] ${readable}`;
   }
-  
+
   return readable;
 }
 
 // Обрабатываем каждый модуль
 Object.entries(missingKeys).forEach(([module, keys]) => {
   console.log(`\n📦 Обработка модуля: ${module}`);
-  
+
   if (keys.length === 0) {
     console.log('   ✅ Нет отсутствующих ключей');
     return;
   }
-  
+
   // Фильтруем невалидные ключи
-  const validKeys = keys.filter(key => {
+  const validKeys = keys.filter((key) => {
     // Пропускаем пустые ключи и пути к файлам
-    if (!key || 
-        key.includes('/') || 
-        key.includes('@/') || 
-        key.trim() === ',' || 
-        key.trim() === '_' ||
-        key.trim() === 'a' ||
-        key.trim() === 'T' ||
-        key.includes('2d') ||
-        key.includes('canvas') ||
-        key.length > 100 || // Слишком длинные ключи обычно ошибочные
-        /^[0-9]+$/.test(key) || // Числовые ключи
-        key.includes('Facebook') ||
-        key.includes('Instagram') ||
-        key.includes('Геолокация') || // Длинные сообщения на русском
-        key.includes('Не удалось')) {
+    if (
+      !key ||
+      key.includes('/') ||
+      key.includes('@/') ||
+      key.trim() === ',' ||
+      key.trim() === '_' ||
+      key.trim() === 'a' ||
+      key.trim() === 'T' ||
+      key.includes('2d') ||
+      key.includes('canvas') ||
+      key.length > 100 || // Слишком длинные ключи обычно ошибочные
+      /^[0-9]+$/.test(key) || // Числовые ключи
+      key.includes('Facebook') ||
+      key.includes('Instagram') ||
+      key.includes('Геолокация') || // Длинные сообщения на русском
+      key.includes('Не удалось')
+    ) {
       totalSkipped++;
       return false;
     }
     return true;
   });
-  
+
   if (validKeys.length === 0) {
     console.log('   ⏭️  Все ключи невалидны, пропускаем');
     return;
   }
-  
+
   // Обновляем каждую локаль
-  locales.forEach(locale => {
-    const filePath = path.join(__dirname, `../src/messages/${locale}/${module}.json`);
-    
+  locales.forEach((locale) => {
+    const filePath = path.join(
+      __dirname,
+      `../src/messages/${locale}/${module}.json`
+    );
+
     // Проверяем существование файла
     if (!fs.existsSync(filePath)) {
       console.log(`   ⚠️  Файл не существует: ${locale}/${module}.json`);
       return;
     }
-    
+
     // Загружаем существующие переводы
     let translations = {};
     try {
@@ -185,15 +192,15 @@ Object.entries(missingKeys).forEach(([module, keys]) => {
       console.error(`   ❌ Ошибка чтения ${locale}/${module}.json:`, e.message);
       return;
     }
-    
+
     // Добавляем отсутствующие ключи
     let addedCount = 0;
-    validKeys.forEach(key => {
+    validKeys.forEach((key) => {
       // Проверяем, существует ли уже ключ
       const parts = key.split('.');
       let current = translations;
       let exists = true;
-      
+
       for (const part of parts) {
         if (!current || !current[part]) {
           exists = false;
@@ -201,7 +208,7 @@ Object.entries(missingKeys).forEach(([module, keys]) => {
         }
         current = current[part];
       }
-      
+
       if (!exists) {
         // Генерируем значение по умолчанию
         const defaultValue = generateDefaultValue(key, locale);
@@ -209,7 +216,7 @@ Object.entries(missingKeys).forEach(([module, keys]) => {
         addedCount++;
       }
     });
-    
+
     if (addedCount > 0) {
       // Сохраняем обновлённый файл
       fs.writeFileSync(filePath, JSON.stringify(translations, null, 2) + '\n');

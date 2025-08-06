@@ -22,7 +22,7 @@ export default function BusinessHoursStep({
   onNext,
   onBack,
 }: BusinessHoursStepProps) {
-  const tCommon = useTranslations('common');
+  const _tCommon = useTranslations('common');
   const t = useTranslations('create_storefront');
   const { formData, updateFormData } = useCreateStorefrontContext();
 

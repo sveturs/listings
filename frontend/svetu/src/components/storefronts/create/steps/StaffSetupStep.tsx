@@ -22,8 +22,8 @@ export default function StaffSetupStep({
   onBack,
 }: StaffSetupStepProps) {
   const t = useTranslations('create_storefront');
-  const tPermissions = useTranslations('permissions');
-  const tRoles = useTranslations('roles');
+  const _tPermissions = useTranslations('permissions');
+  const _tRoles = useTranslations('roles');
   const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [newStaffMember, setNewStaffMember] = useState<StaffMember>({
@@ -82,12 +82,8 @@ export default function StaffSetupStep({
     <div className="max-w-3xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            {t('title')}
-          </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('subtitle')}
-          </p>
+          <h2 className="card-title text-2xl mb-4">{t('title')}</h2>
+          <p className="text-base-content/70 mb-6">{t('subtitle')}</p>
 
           {/* Existing staff members */}
           {formData.staff && formData.staff.length > 0 && (
@@ -113,9 +109,7 @@ export default function StaffSetupStep({
                           </span>
                         )}
                         {member.canManageOrders && (
-                          <span className="badge badge-sm">
-                            {t('orders')}
-                          </span>
+                          <span className="badge badge-sm">{t('orders')}</span>
                         )}
                         {member.canManageSettings && (
                           <span className="badge badge-sm">
@@ -139,16 +133,12 @@ export default function StaffSetupStep({
           {/* Add new staff member */}
           <div className="card bg-base-200">
             <div className="card-body p-4">
-              <h3 className="text-lg font-semibold mb-3">
-                {t('add_member')}
-              </h3>
+              <h3 className="text-lg font-semibold mb-3">{t('add_member')}</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('email')}
-                    </span>
+                    <span className="label-text">{t('email')}</span>
                   </label>
                   <input
                     type="email"
@@ -176,9 +166,7 @@ export default function StaffSetupStep({
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('role')}
-                    </span>
+                    <span className="label-text">{t('role')}</span>
                   </label>
                   <select
                     className="select select-bordered"
@@ -198,9 +186,7 @@ export default function StaffSetupStep({
               </div>
 
               <div className="mt-4">
-                <h4 className="font-medium mb-2">
-                  {t('permissions')}
-                </h4>
+                <h4 className="font-medium mb-2">{t('permissions')}</h4>
                 <div className="space-y-2">
                   <label className="cursor-pointer label justify-start">
                     <input
@@ -214,9 +200,7 @@ export default function StaffSetupStep({
                         })
                       }
                     />
-                    <span className="label-text ml-2">
-                      {t('products')}
-                    </span>
+                    <span className="label-text ml-2">{t('products')}</span>
                   </label>
                   <label className="cursor-pointer label justify-start">
                     <input
@@ -230,9 +214,7 @@ export default function StaffSetupStep({
                         })
                       }
                     />
-                    <span className="label-text ml-2">
-                      {t('orders')}
-                    </span>
+                    <span className="label-text ml-2">{t('orders')}</span>
                   </label>
                   <label className="cursor-pointer label justify-start">
                     <input
@@ -246,9 +228,7 @@ export default function StaffSetupStep({
                         })
                       }
                     />
-                    <span className="label-text ml-2">
-                      {t('settings')}
-                    </span>
+                    <span className="label-text ml-2">{t('settings')}</span>
                   </label>
                 </div>
               </div>

@@ -116,7 +116,9 @@ export default function AttributeMappingEditor({
 
     if (autoDetected.size > 0) {
       setSelectedAttributes(autoDetected);
-      toast.success(t('variantAttributes.autoDetectSuccess', { count: autoDetected.size }));
+      toast.success(
+        t('variantAttributes.autoDetectSuccess', { count: autoDetected.size })
+      );
     } else {
       toast.info(t('variantAttributes.autoDetectNoResults'));
     }
@@ -254,7 +256,11 @@ export default function AttributeMappingEditor({
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>{t('variantAttributes.selectedCount', { count: selectedAttributes.size })}</span>
+        <span>
+          {t('variantAttributes.selectedCount', {
+            count: selectedAttributes.size,
+          })}
+        </span>
       </div>
 
       {/* Actions */}

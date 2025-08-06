@@ -15,7 +15,7 @@ import { toast } from 'react-hot-toast';
 export default function MySalesPage() {
   const locale = useLocale();
   const t = useTranslations('orders');
-  const tHome = useTranslations('home');
+  const tHome = useTranslations('marketplace.home');
   const tProfile = useTranslations('profile');
   const tCommon = useTranslations('common');
   const { isAuthenticated } = useAuth();
@@ -159,12 +159,8 @@ export default function MySalesPage() {
       {orders.length === 0 ? (
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body text-center py-16">
-            <h3 className="text-xl font-semibold mb-2">
-              {t('noSales')}
-            </h3>
-            <p className="text-base-content/70 mb-6">
-              {t('noSalesDesc')}
-            </p>
+            <h3 className="text-xl font-semibold mb-2">{t('noSales')}</h3>
+            <p className="text-base-content/70 mb-6">{t('noSalesDesc')}</p>
             <Link
               href={`/${locale}/profile/listings`}
               className="btn btn-primary"
@@ -357,9 +353,7 @@ export default function MySalesPage() {
       {shippingModal.orderId && (
         <dialog className="modal modal-open">
           <div className="modal-box">
-            <h3 className="font-bold text-lg mb-4">
-              {t('shippingDetails')}
-            </h3>
+            <h3 className="font-bold text-lg mb-4">{t('shippingDetails')}</h3>
 
             <div className="form-control mb-4">
               <label className="label">

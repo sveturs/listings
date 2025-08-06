@@ -309,12 +309,7 @@ export default function TransliterationConfig() {
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>
-          {t('info', {
-            defaultValue:
-              "Транслитерация используется для создания URL-friendly slug'ов из названий на кириллице. Встроенные правила нельзя изменить, но можно добавить дополнительные.",
-          })}
-        </span>
+        <span>{t('infoLabel')}</span>
       </div>
     </div>
   );

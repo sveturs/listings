@@ -108,9 +108,7 @@ export default function SearchConfig() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control">
               <label className="label">
-                <span className="label-text">
-                  {t('maxResults')}
-                </span>
+                <span className="label-text">{t('maxResults')}</span>
               </label>
               <input
                 type="number"
@@ -128,9 +126,7 @@ export default function SearchConfig() {
             </div>
             <div className="form-control">
               <label className="label">
-                <span className="label-text">
-                  {t('defaultSort')}
-                </span>
+                <span className="label-text">{t('defaultSort')}</span>
               </label>
               <select
                 className="select select-bordered"
@@ -145,9 +141,7 @@ export default function SearchConfig() {
                   })
                 }
               >
-                <option value="relevance">
-                  {t('relevance')}
-                </option>
+                <option value="relevance">{t('relevance')}</option>
                 <option value="date">{t('date')}</option>
                 <option value="price">{t('price')}</option>
               </select>
@@ -161,9 +155,7 @@ export default function SearchConfig() {
           <h2 className="card-title">{t('fuzzySearch')}</h2>
           <div className="form-control">
             <label className="label cursor-pointer">
-              <span className="label-text">
-                {t('enableFuzzySearch')}
-              </span>
+              <span className="label-text">{t('enableFuzzySearch')}</span>
               <input
                 type="checkbox"
                 className="toggle toggle-primary"
@@ -177,9 +169,7 @@ export default function SearchConfig() {
           {config.fuzzySearchEnabled && (
             <div className="form-control">
               <label className="label">
-                <span className="label-text">
-                  {t('fuzzyThreshold')}
-                </span>
+                <span className="label-text">{t('fuzzyThreshold')}</span>
                 <span className="label-text-alt">
                   {config.fuzzySearchThreshold}
                 </span>
@@ -214,9 +204,7 @@ export default function SearchConfig() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control">
               <label className="label cursor-pointer">
-                <span className="label-text">
-                  {t('enableSynonyms')}
-                </span>
+                <span className="label-text">{t('enableSynonyms')}</span>
                 <input
                   type="checkbox"
                   className="toggle toggle-primary"
@@ -229,9 +217,7 @@ export default function SearchConfig() {
             </div>
             <div className="form-control">
               <label className="label cursor-pointer">
-                <span className="label-text">
-                  {t('enableTransliteration')}
-                </span>
+                <span className="label-text">{t('enableTransliteration')}</span>
                 <input
                   type="checkbox"
                   className="toggle toggle-primary"
@@ -247,9 +233,7 @@ export default function SearchConfig() {
             </div>
             <div className="form-control">
               <label className="label cursor-pointer">
-                <span className="label-text">
-                  {t('enableAnalytics')}
-                </span>
+                <span className="label-text">{t('enableAnalytics')}</span>
                 <input
                   type="checkbox"
                   className="toggle toggle-primary"
@@ -262,9 +246,7 @@ export default function SearchConfig() {
             </div>
             <div className="form-control">
               <label className="label cursor-pointer">
-                <span className="label-text">
-                  {t('debugMode')}
-                </span>
+                <span className="label-text">{t('debugMode')}</span>
                 <input
                   type="checkbox"
                   className="toggle toggle-warning"
@@ -284,9 +266,7 @@ export default function SearchConfig() {
           <h2 className="card-title">{t('caching')}</h2>
           <div className="form-control">
             <label className="label cursor-pointer">
-              <span className="label-text">
-                {t('enableCache')}
-              </span>
+              <span className="label-text">{t('enableCache')}</span>
               <input
                 type="checkbox"
                 className="toggle toggle-primary"
@@ -300,9 +280,7 @@ export default function SearchConfig() {
           {config.cacheEnabled && (
             <div className="form-control">
               <label className="label">
-                <span className="label-text">
-                  {t('cacheTimeout')}
-                </span>
+                <span className="label-text">{t('cacheTimeout')}</span>
                 <span className="label-text-alt">{config.cacheTimeout}s</span>
               </label>
               <input

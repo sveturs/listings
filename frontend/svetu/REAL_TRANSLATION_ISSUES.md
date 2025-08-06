@@ -5,6 +5,7 @@
 **Проблема**: Страницы используют `useTranslations('storefront')` и `useTranslations('storefronts')`, но эти модули не загружаются.
 
 **Файлы с проблемой**:
+
 - `/profile/storefronts/page.tsx` - использует `storefronts`
 - Все компоненты витрин
 
@@ -15,6 +16,7 @@
 **Проблема**: Компоненты ищут `common.errors.authError.*`, но эти ключи находятся в `auth.errors.*`
 
 **Ошибки в консоли**:
+
 ```
 IntlError: MISSING_MESSAGE: Could not resolve `common.errors.authError.title`
 IntlError: MISSING_MESSAGE: Could not resolve `common.errors.authError.description`
@@ -25,6 +27,7 @@ IntlError: MISSING_MESSAGE: Could not resolve `common.errors.authError.reload`
 ## 3. Отсутствующие ключи в common
 
 **Проблема**: Используются ключи, которых нет в common.json:
+
 - `common.all`
 - `common.reviews`
 - `common.notSpecified`
@@ -34,6 +37,7 @@ IntlError: MISSING_MESSAGE: Could not resolve `common.errors.authError.reload`
 **Проблема**: 91 файл использует паттерн типа `useTranslations('module.submodule')`, что не поддерживается.
 
 **Примеры**:
+
 - `useTranslations('storefronts.products')`
 - `useTranslations('storefronts.business_types')`
 - `useTranslations('create_storefront.staff_setup')`
@@ -43,6 +47,7 @@ IntlError: MISSING_MESSAGE: Could not resolve `common.errors.authError.reload`
 **Проблема**: 2052 ключа используют snake_case вместо camelCase.
 
 **Примеры**:
+
 - `fetch_failed` → `fetchFailed`
 - `user_not_found` → `userNotFound`
 - `validation_failed` → `validationFailed`

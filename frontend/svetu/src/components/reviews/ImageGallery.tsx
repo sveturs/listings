@@ -198,7 +198,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         <div className="flex items-center justify-between p-4 bg-base-100/20 backdrop-blur-sm border-b border-base-200/20">
           <div className="flex items-center gap-4">
             <div className="text-base-content text-sm font-medium">
-              {t('gallery.photo')} {currentIndex + 1} {t('gallery.of')} {images.length}
+              {t('gallery.photo')} {currentIndex + 1} {t('gallery.of')}{' '}
+              {images.length}
             </div>
             {images.length > 1 && (
               <div className="flex gap-1">

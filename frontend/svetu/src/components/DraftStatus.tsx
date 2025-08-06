@@ -59,7 +59,9 @@ export function DraftStatus() {
     return (
       <div className="flex items-center gap-2 text-sm">
         <div className="w-2 h-2 bg-warning rounded-full animate-pulse"></div>
-        <span className="text-base-content/70">{t('draft.unsavedChanges')}</span>
+        <span className="text-base-content/70">
+          {t('draft.unsavedChanges')}
+        </span>
       </div>
     );
   }

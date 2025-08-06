@@ -297,8 +297,7 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
                   {/* Количество товаров */}
                   {category.listing_count !== undefined && (
                     <p className="text-xs sm:text-sm text-base-content/60 mt-1 truncate">
-                      {category.listing_count}{' '}
-                      {t('productsCount')}
+                      {category.listing_count} {t('productsCount')}
                     </p>
                   )}
 

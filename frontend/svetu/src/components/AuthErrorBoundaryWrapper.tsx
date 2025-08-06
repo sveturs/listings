@@ -4,7 +4,8 @@ import ErrorBoundaryClass from './ErrorBoundary';
 // Дефолтные сообщения на случай, если переводы не загружены
 const defaultMessages = {
   title: 'Authentication Error',
-  description: 'An error occurred while loading the authentication system. Please try reloading the page.',
+  description:
+    'An error occurred while loading the authentication system. Please try reloading the page.',
   details: 'Error details',
   reload: 'Reload page',
 };

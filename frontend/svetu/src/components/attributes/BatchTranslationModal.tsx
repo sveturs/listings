@@ -89,7 +89,10 @@ export function BatchTranslationModal({
         prev.map((result) => ({
           ...result,
           status: 'error',
-          error: error instanceof Error ? error.message : t('translations.unexpectedError'),
+          error:
+            error instanceof Error
+              ? error.message
+              : t('translations.unexpectedError'),
         }))
       );
       setOverallProgress(100);

@@ -50,19 +50,13 @@ export default function BusinessDetailsStep({
     <div className="max-w-2xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            {t('title')}
-          </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('subtitle')}
-          </p>
+          <h2 className="card-title text-2xl mb-4">{t('title')}</h2>
+          <p className="text-base-content/70 mb-6">{t('subtitle')}</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">
-                  {t('registration_number')}
-                </span>
+                <span className="label-text">{t('registration_number')}</span>
               </label>
               <input
                 type="text"
@@ -79,9 +73,7 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">
-                  {t('tax_number')}
-                </span>
+                <span className="label-text">{t('tax_number')}</span>
               </label>
               <input
                 type="text"
@@ -96,9 +88,7 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">
-                  {t('vat_number')}
-                </span>
+                <span className="label-text">{t('vat_number')}</span>
               </label>
               <input
                 type="text"
@@ -113,9 +103,7 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">
-                  {t('phone')}
-                </span>
+                <span className="label-text">{t('phone')}</span>
               </label>
               <input
                 type="tel"
@@ -137,9 +125,7 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">
-                  {t('email')}
-                </span>
+                <span className="label-text">{t('email')}</span>
               </label>
               <input
                 type="email"
@@ -161,9 +147,7 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">
-                  {t('website')}
-                </span>
+                <span className="label-text">{t('website')}</span>
               </label>
               <input
                 type="url"
