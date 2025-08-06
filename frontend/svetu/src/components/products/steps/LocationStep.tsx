@@ -22,7 +22,8 @@ interface LocationData {
 }
 
 export default function LocationStep({ onNext, onBack }: LocationStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
   const { state, setLocation, setError, clearError } = useCreateProduct();
 
   // Инициализация состояния из контекста
@@ -88,7 +89,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
 
   const validateAndProceed = () => {
     if (!useStorefrontLocation && !individualLocation) {
-      setError('location', t('storefronts.products.locationRequired'));
+      setError('location', t('locationRequired'));
       return;
     }
     onNext();
@@ -98,10 +99,10 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-base-content mb-4">
-          📍 {t('storefronts.products.productLocation')}
+          📍 {t('productLocation')}
         </h2>
         <p className="text-lg text-base-content/70">
-          {t('storefronts.products.locationDescription')}
+          {t('locationDescription')}
         </p>
       </div>
 
@@ -110,7 +111,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
         <div className="card-body">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <span className="text-2xl">🏪</span>
-            {t('storefronts.products.locationType')}
+            {t('locationType')}
           </h3>
 
           <div className="space-y-4">
@@ -127,7 +128,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                   />
                   <div className="flex-1">
                     <h4 className="font-medium text-base-content">
-                      {t('storefronts.products.useStorefrontLocation')}
+                      {t('useStorefrontLocation')}
                     </h4>
                     <p className="text-sm text-base-content/70 mt-1">
                       {t(
@@ -138,8 +139,8 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                       <p className="text-sm text-info-content flex items-start gap-2">
                         <span>💡</span>
                         <span>
-                          <strong>{t('storefronts.products.example')}:</strong>{' '}
-                          {t('storefronts.products.storefrontLocationExample')}
+                          <strong>{t('example')}:</strong>{' '}
+                          {t('storefrontLocationExample')}
                         </span>
                       </p>
                     </div>
@@ -161,7 +162,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                   />
                   <div className="flex-1">
                     <h4 className="font-medium text-base-content">
-                      {t('storefronts.products.useIndividualLocation')}
+                      {t('useIndividualLocation')}
                     </h4>
                     <p className="text-sm text-base-content/70 mt-1">
                       {t(
@@ -172,8 +173,8 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                       <p className="text-sm text-info-content flex items-start gap-2">
                         <span>💡</span>
                         <span>
-                          <strong>{t('storefronts.products.example')}:</strong>{' '}
-                          {t('storefronts.products.individualLocationExample')}
+                          <strong>{t('example')}:</strong>{' '}
+                          {t('individualLocationExample')}
                         </span>
                       </p>
                     </div>
@@ -191,13 +192,13 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
           <div className="card-body">
             <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <span className="text-2xl">📍</span>
-              {t('storefronts.products.selectProductLocation')}
+              {t('selectProductLocation')}
             </h3>
 
             <LocationPicker
               value={individualLocation}
               onChange={handleLocationChange}
-              placeholder={t('storefronts.products.locationPlaceholder')}
+              placeholder={t('locationPlaceholder')}
               height="400px"
               showCurrentLocation={true}
               defaultCountry={state.location?.country || 'Србија'}
@@ -229,7 +230,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                   onClick={() => setShowPrivacySettings(!showPrivacySettings)}
                   className="btn btn-outline btn-sm"
                 >
-                  🛡️ {t('storefronts.products.privacySettings')}
+                  🛡️ {t('privacySettings')}
                   <svg
                     className={`w-4 h-4 ml-2 transition-transform ${showPrivacySettings ? 'rotate-180' : ''}`}
                     fill="none"
@@ -260,7 +261,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                     <div className="form-control mt-4">
                       <label className="label cursor-pointer">
                         <span className="label-text font-medium">
-                          {t('storefronts.products.showOnMap')}
+                          {t('showOnMap')}
                         </span>
                         <input
                           type="checkbox"
@@ -270,7 +271,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                         />
                       </label>
                       <p className="text-sm text-base-content/60 mt-1">
-                        {t('storefronts.products.showOnMapDescription')}
+                        {t('showOnMapDescription')}
                       </p>
                     </div>
                   </div>
@@ -297,12 +298,8 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
           />
         </svg>
         <div>
-          <h4 className="font-semibold">
-            {t('storefronts.products.privacyNote')}
-          </h4>
-          <p className="text-sm mt-1">
-            {t('storefronts.products.privacyNoteDescription')}
-          </p>
+          <h4 className="font-semibold">{t('privacyNote')}</h4>
+          <p className="text-sm mt-1">{t('privacyNoteDescription')}</p>
         </div>
       </div>
 
@@ -322,14 +319,14 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          {t('common.back')}
+          {tCommon('back')}
         </button>
 
         <button
           onClick={validateAndProceed}
           className="btn btn-primary btn-lg px-8"
         >
-          {t('common.next')}
+          {tCommon('next')}
           <svg
             className="w-5 h-5 ml-2"
             fill="none"

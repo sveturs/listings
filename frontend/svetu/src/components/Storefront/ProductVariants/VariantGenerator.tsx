@@ -35,7 +35,7 @@ export default function VariantGenerator({
   onGenerate,
   onCancel,
 }: VariantGeneratorProps) {
-  const t = useTranslations('storefront');
+  const t = useTranslations('storefronts');
   const [attributes, setAttributes] = useState<StorefrontProductAttribute[]>(
     []
   );

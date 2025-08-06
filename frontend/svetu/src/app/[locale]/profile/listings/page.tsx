@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { apiClient } from '@/services/api-client';
 import { toast } from '@/utils/toast';
 
@@ -53,6 +54,7 @@ interface BackendResponse {
 
 export default function MyListingsPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const t = useTranslations('common');
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [listings, setListings] = useState<UserListing[]>([]);
@@ -144,12 +146,13 @@ export default function MyListingsPage() {
   };
 
   const handleDelete = async (listingId: number, listingTitle: string) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${listingTitle}"? This action cannot be undone.`
-    );
+    // Use browser confirm dialog
+    if (window.confirm(`${t('confirmDelete')}: "${listingTitle}"`)) {
+      await performDelete(listingId, listingTitle);
+    }
+  };
 
-    if (!confirmDelete) return;
-
+  const performDelete = async (listingId: number, _listingTitle: string) => {
     try {
       setDeletingId(listingId);
 
@@ -158,15 +161,15 @@ export default function MyListingsPage() {
       );
 
       if (!response.error) {
-        toast.success('Listing deleted successfully');
+        toast.success(t('deleteSuccess'));
         // Remove the listing from the local state
         setListings(listings.filter((listing) => listing.id !== listingId));
       } else {
-        toast.error(response.error.message || 'Failed to delete listing');
+        toast.error(response.error.message || t('error'));
       }
     } catch (err) {
       console.error('Error deleting listing:', err);
-      toast.error('Failed to delete listing. Please try again.');
+      toast.error(t('error'));
     } finally {
       setDeletingId(null);
     }

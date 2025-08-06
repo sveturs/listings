@@ -12,7 +12,8 @@ export default function EditAttributesStep({
   onNext,
   onBack,
 }: EditAttributesStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
   const { state } = useEditProduct();
 
   return (
@@ -23,10 +24,10 @@ export default function EditAttributesStep({
           <span className="text-2xl">⚙️</span>
         </div>
         <h3 className="text-2xl font-bold text-base-content mb-2">
-          {t('storefronts.products.steps.attributes')}
+          {t('products.steps.attributes')}
         </h3>
         <p className="text-base-content/70">
-          {t('storefronts.products.categoryAttributesDescription')}
+          {t('categoryAttributesDescription')}
         </p>
       </div>
 
@@ -34,12 +35,12 @@ export default function EditAttributesStep({
       <div className="text-center py-8">
         <div className="bg-base-200 rounded-2xl p-6">
           <h4 className="text-lg font-semibold text-base-content mb-2">
-            {t('storefronts.products.noAttributesTitle')}
+            {t('noAttributesTitle')}
           </h4>
           <p className="text-base-content/70">
             {state.category?.name
-              ? t('storefronts.products.noAttributesForCategory')
-              : t('storefronts.products.noAttributesMessage')}
+              ? t('noAttributesForCategory')
+              : t('noAttributesMessage')}
           </p>
         </div>
       </div>
@@ -47,10 +48,10 @@ export default function EditAttributesStep({
       {/* Кнопки навигации */}
       <div className="flex justify-between">
         <button onClick={onBack} className="btn btn-outline btn-lg">
-          {t('common.back')}
+          {tCommon('back')}
         </button>
         <button onClick={onNext} className="btn btn-primary btn-lg">
-          {t('common.continue')}
+          {tCommon('continue')}
         </button>
       </div>
     </div>

@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { SveTuLogoStatic } from '@/components/logos/SveTuLogoStatic';
 import { AnimatedSection } from '@/components/ui/AnimatedSection';
 
 const StorefrontDashboard = () => {
+  const t = useTranslations('storefronts');
   const [activeTab, setActiveTab] = useState<
     'overview' | 'products' | 'analytics' | 'settings'
   >('overview');
@@ -69,7 +71,7 @@ const StorefrontDashboard = () => {
         </div>
         <div className="navbar-center">
           <h1 className="text-xl font-bold">
-            🏪 TechStore - Панель управления
+            🏪 TechStore - {t('controlPanel')}
           </h1>
         </div>
         <div className="navbar-end">
@@ -94,13 +96,13 @@ const StorefrontDashboard = () => {
               className={`tab ${activeTab === 'overview' ? 'tab-active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
-              📊 Обзор
+              📊 {t('overview')}
             </a>
             <a
               className={`tab ${activeTab === 'products' ? 'tab-active' : ''}`}
               onClick={() => setActiveTab('products')}
             >
-              📦 Товары
+              📦 {t('product')}
             </a>
             <a
               className={`tab ${activeTab === 'analytics' ? 'tab-active' : ''}`}

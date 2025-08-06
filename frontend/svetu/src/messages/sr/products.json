@@ -1,0 +1,58 @@
+{
+  "title": "Proizvodi",
+  "noProducts": "Nema proizvoda",
+  "inStock": "Na stanju",
+  "sold": "Prodato",
+  "outOfStock": "Nema na stanju",
+  "lowStock": "Malo na stanju",
+  "description": "Opis",
+  "products": {
+    "title": "Proizvodi",
+    "noProducts": "Nema proizvoda",
+    "inStock": "Na stanju",
+    "sold": "Prodato",
+    "outOfStock": "Nema na stanju",
+    "lowStock": "Malo na stanju",
+    "status": {
+      "in_stock": "Na stanju",
+      "out_of_stock": "Nema na stanju",
+      "low_stock": "Malo na stanju"
+    }
+  },
+  "attributeGroups": {
+    "basic": "Osnovne karakteristike",
+    "technical": "Tehničke karakteristike",
+    "condition": "Stanje",
+    "accessories": "Priloženo",
+    "dimensions": "Dimenzije i težina",
+    "other": "Ostale karakteristike"
+  },
+  "categoryAttributes": "Atributi kategorije",
+  "categoryAttributesDescription": "Popunite karakteristike proizvoda za izabranu kategoriju",
+  "noAttributesTitle": "Nema dodatnih atributa",
+  "noAttributesMessage": "Za ovu kategoriju nije potrebno popunjavati dodatne karakteristike",
+  "requiredFieldsInfo": "Polja označena kao obavezna moraju biti popunjena",
+  "variantsStepDescription": "Podesite varijante proizvoda ako imate različite verzije (veličine, boje, itd.)",
+  "enableVariants": "Omogući varijante proizvoda",
+  "enableVariantsDescription": "Kreirajte različite verzije proizvoda sa različitim karakteristikama",
+  "variantMode": "Režim kreiranja varijanti",
+  "simpleVariants": "Jednostavan režim",
+  "simpleVariantsDescription": "Brzo kreiranje varijanti pomoću osnovnih atributa",
+  "advancedVariants": "Napredni režim",
+  "advancedVariantsDescription": "Potpuna kontrola nad varijantama i njihovim atributima",
+  "back": "Nazad",
+  "skipVariants": "Preskoči varijante",
+  "continue": "Nastavi",
+  "noAttributesForCategory": "Ova kategorija nema atribute za varijante",
+  "selectDifferentCategory": "Izaberite drugu kategoriju za korišćenje varijanti",
+  "generateVariants": "Generiši varijante",
+  "noVariantsConfigured": "Varijante nisu podešene",
+  "setupAttributesFirst": "Prvo podesite atribute za kreiranje varijanti",
+  "setupAttributes": "Podesi atribute",
+  "privacy": {
+    "exact": "Tačna adresa",
+    "street": "Ulica",
+    "district": "Opština",
+    "city": "Grad"
+  }
+}

@@ -10,7 +10,8 @@ import { toast } from '@/utils/toast';
 // Убираем дублирующий useBalance - используем данные из BalanceWidget
 
 export default function WithdrawPage() {
-  const t = useTranslations();
+  const t = useTranslations('admin');
+  const tProfile = useTranslations('profile');
   const locale = useLocale();
   const [amount, setAmount] = useState('');
   const [withdrawMethod, setWithdrawMethod] = useState('bank_transfer');
@@ -74,12 +75,12 @@ export default function WithdrawPage() {
       <div className="breadcrumbs text-sm mb-6">
         <ul>
           <li>
-            <Link href={`/${locale}/profile`}>{t('profile.title')}</Link>
+            <Link href={`/${locale}/profile`}>{tProfile('title')}</Link>
           </li>
           <li>
-            <Link href={`/${locale}/balance`}>{t('admin.balance.title')}</Link>
+            <Link href={`/${locale}/balance`}>{t('title')}</Link>
           </li>
-          <li>{t('admin.balance.withdrawFunds')}</li>
+          <li>{t('withdrawFunds')}</li>
         </ul>
       </div>
 
@@ -89,7 +90,7 @@ export default function WithdrawPage() {
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <h1 className="card-title text-2xl mb-6">
-                💸 {t('admin.balance.withdrawFunds')}
+                💸 {t('withdrawFunds')}
               </h1>
 
               {/* Сумма вывода */}

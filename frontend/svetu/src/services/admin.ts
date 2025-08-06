@@ -321,7 +321,8 @@ export const adminApi = {
       const response = await apiClient.get(
         `/api/v1/admin/categories/${categoryId}/variant-attributes`
       );
-      return response.data as any[];
+      // API возвращает { success: true, data: [...] }
+      return response.data?.data || [];
     },
 
     async updateVariantAttributes(

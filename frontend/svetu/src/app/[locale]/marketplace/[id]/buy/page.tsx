@@ -18,7 +18,9 @@ interface Props {
 export default function BuyPage({ params }: Props) {
   const { id } = use(params);
   const locale = useLocale();
-  const t = useTranslations();
+  const t = useTranslations('marketplace');
+  const tHome = useTranslations('marketplace.home');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const { balance, refreshBalance: _refreshBalance } = useBalance();
@@ -43,7 +45,7 @@ export default function BuyPage({ params }: Props) {
         }
       } catch (error) {
         console.error('Error fetching listing:', error);
-        toast.error(t('marketplace.errorLoadingListing'));
+        toast.error(t('errorLoadingListing'));
         router.push(`/${locale}/marketplace/${id}`);
       } finally {
         setLoading(false);
@@ -63,7 +65,7 @@ export default function BuyPage({ params }: Props) {
   useEffect(() => {
     if (listing && user) {
       if (listing.user_id === user.id) {
-        toast.error(t('marketplace.cannotBuyOwnListing'));
+        toast.error(t('cannotBuyOwnListing'));
         router.push(`/${locale}/marketplace/${id}`);
       }
     }
@@ -79,9 +81,9 @@ export default function BuyPage({ params }: Props) {
       if (paymentMethod === 'balance') {
         const currentBalance = balance?.balance || 0;
         if (currentBalance < listing.price) {
-          toast.error(t('marketplace.insufficientBalance'));
+          toast.error(t('insufficientBalance'));
           // Предлагаем пополнить баланс
-          const shouldDeposit = confirm(t('marketplace.depositPrompt'));
+          const shouldDeposit = confirm(t('depositPrompt'));
           if (shouldDeposit) {
             router.push(`/${locale}/balance/deposit`);
           }
@@ -114,8 +116,7 @@ export default function BuyPage({ params }: Props) {
       }
     } catch (error: any) {
       console.error('Purchase error:', error);
-      const errorMessage =
-        error.response?.data?.error || t('marketplace.purchaseError');
+      const errorMessage = error.response?.data?.error || t('purchaseError');
       toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -147,14 +148,14 @@ export default function BuyPage({ params }: Props) {
       <div className="breadcrumbs text-sm mb-6">
         <ul>
           <li>
-            <Link href={`/${locale}`}>{t('home.title')}</Link>
+            <Link href={`/${locale}`}>{tHome('title')}</Link>
           </li>
           <li>
             <Link href={`/${locale}/marketplace/${listing.id}`}>
               {listing.title}
             </Link>
           </li>
-          <li>{t('marketplace.buy')}</li>
+          <li>{t('buy')}</li>
         </ul>
       </div>
 
@@ -164,7 +165,7 @@ export default function BuyPage({ params }: Props) {
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <h1 className="card-title text-2xl mb-6">
-                {t('marketplace.confirmPurchase')}
+                {t('confirmPurchase')}
               </h1>
 
               {/* Информация о товаре */}
@@ -181,8 +182,7 @@ export default function BuyPage({ params }: Props) {
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{listing.title}</h3>
                     <p className="text-sm text-base-content/70 mb-2">
-                      {t('marketplace.seller')}:{' '}
-                      {listing.user?.name || 'Unknown'}
+                      {t('seller')}: {listing.user?.name || 'Unknown'}
                     </p>
                     <p className="text-xl font-bold text-primary">
                       {balanceService.formatAmount(listing.price, 'RSD')}
@@ -195,7 +195,7 @@ export default function BuyPage({ params }: Props) {
               <div className="form-control mb-6">
                 <label className="label">
                   <span className="label-text font-semibold">
-                    {t('marketplace.paymentMethod')}
+                    {t('paymentMethod')}
                   </span>
                 </label>
                 <div className="space-y-3">
@@ -213,11 +213,11 @@ export default function BuyPage({ params }: Props) {
                       <div className="flex items-center gap-2">
                         <span className="text-lg">💰</span>
                         <span className="font-medium">
-                          {t('marketplace.payFromBalance')}
+                          {t('payFromBalance')}
                         </span>
                       </div>
                       <div className="text-sm text-base-content/70 mt-1">
-                        {t('marketplace.availableBalance')}:{' '}
+                        {t('availableBalance')}:{' '}
                         <span
                           className={
                             hasEnoughBalance ? 'text-success' : 'text-error'
@@ -241,9 +241,7 @@ export default function BuyPage({ params }: Props) {
                     />
                     <div className="flex items-center gap-2">
                       <span className="text-lg">💳</span>
-                      <span className="font-medium">
-                        {t('marketplace.bankCard')}
-                      </span>
+                      <span className="font-medium">{t('bankCard')}</span>
                     </div>
                   </label>
                 </div>
@@ -264,12 +262,12 @@ export default function BuyPage({ params }: Props) {
                       />
                     </svg>
                     <div>
-                      <p>{t('marketplace.insufficientBalanceMessage')}</p>
+                      <p>{t('insufficientBalanceMessage')}</p>
                       <Link
                         href={`/${locale}/balance/deposit`}
                         className="link link-primary"
                       >
-                        {t('marketplace.depositNow')}
+                        {t('depositNow')}
                       </Link>
                     </div>
                   </div>
@@ -279,14 +277,12 @@ export default function BuyPage({ params }: Props) {
               {/* Сообщение продавцу */}
               <div className="form-control mb-6">
                 <label className="label">
-                  <span className="label-text">
-                    {t('marketplace.messageToSeller')}
-                  </span>
-                  <span className="label-text-alt">{t('common.optional')}</span>
+                  <span className="label-text">{t('messageToSeller')}</span>
+                  <span className="label-text-alt">{tCommon('optional')}</span>
                 </label>
                 <textarea
                   className="textarea textarea-bordered h-24"
-                  placeholder={t('marketplace.messagePlaceholder')}
+                  placeholder={t('messagePlaceholder')}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   maxLength={500}
@@ -309,13 +305,11 @@ export default function BuyPage({ params }: Props) {
                   ></path>
                 </svg>
                 <div>
-                  <h4 className="font-semibold">
-                    🛡️ {t('marketplace.buyerProtection')}
-                  </h4>
+                  <h4 className="font-semibold">🛡️ {t('buyerProtection')}</h4>
                   <ul className="text-sm mt-2 space-y-1">
-                    <li>• {t('marketplace.protectionPoint1')}</li>
-                    <li>• {t('marketplace.protectionPoint2')}</li>
-                    <li>• {t('marketplace.protectionPoint3')}</li>
+                    <li>• {t('protectionPoint1')}</li>
+                    <li>• {t('protectionPoint2')}</li>
+                    <li>• {t('protectionPoint3')}</li>
                   </ul>
                 </div>
               </div>
@@ -332,11 +326,11 @@ export default function BuyPage({ params }: Props) {
                 {isProcessing ? (
                   <>
                     <span className="loading loading-spinner loading-sm"></span>
-                    {t('common.processing')}
+                    {tCommon('processing')}
                   </>
                 ) : (
                   <>
-                    🔒 {t('marketplace.confirmAndPay')}{' '}
+                    🔒 {t('confirmAndPay')}{' '}
                     {balanceService.formatAmount(listing.price, 'RSD')}
                   </>
                 )}
@@ -350,20 +344,18 @@ export default function BuyPage({ params }: Props) {
           {/* Детали платежа */}
           <div className="card bg-base-100 shadow-xl mb-6">
             <div className="card-body">
-              <h3 className="card-title text-lg mb-4">
-                {t('marketplace.paymentDetails')}
-              </h3>
+              <h3 className="card-title text-lg mb-4">{t('paymentDetails')}</h3>
 
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span>{t('marketplace.itemPrice')}</span>
+                  <span>{t('itemPrice')}</span>
                   <span className="font-medium">
                     {balanceService.formatAmount(listing.price, 'RSD')}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-sm text-base-content/70">
-                  <span>{t('marketplace.platformFee')} (5%)</span>
+                  <span>{t('platformFee')} (5%)</span>
                   <span>
                     -{balanceService.formatAmount(platformFee, 'RSD')}
                   </span>
@@ -372,7 +364,7 @@ export default function BuyPage({ params }: Props) {
                 <div className="divider my-2"></div>
 
                 <div className="flex justify-between">
-                  <span>{t('marketplace.sellerReceives')}</span>
+                  <span>{t('sellerReceives')}</span>
                   <span className="font-medium">
                     {balanceService.formatAmount(sellerReceives, 'RSD')}
                   </span>
@@ -381,7 +373,7 @@ export default function BuyPage({ params }: Props) {
                 <div className="divider my-2"></div>
 
                 <div className="flex justify-between text-lg font-bold">
-                  <span>{t('marketplace.youPay')}</span>
+                  <span>{t('youPay')}</span>
                   <span className="text-primary">
                     {balanceService.formatAmount(listing.price, 'RSD')}
                   </span>
@@ -394,16 +386,16 @@ export default function BuyPage({ params }: Props) {
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <h3 className="card-title text-lg mb-4">
-                {t('marketplace.termsAndConditions')}
+                {t('termsAndConditions')}
               </h3>
 
               <div className="text-sm space-y-2">
-                <p>{t('marketplace.termsText1')}</p>
-                <p>{t('marketplace.termsText2')}</p>
+                <p>{t('termsText1')}</p>
+                <p>{t('termsText2')}</p>
                 <p className="text-base-content/70 mt-4">
-                  {t('marketplace.termsText3')}{' '}
+                  {t('termsText3')}{' '}
                   <Link href={`/${locale}/terms`} className="link link-primary">
-                    {t('marketplace.termsLink')}
+                    {t('termsLink')}
                   </Link>
                 </p>
               </div>

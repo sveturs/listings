@@ -32,7 +32,7 @@ export function BulkActions({
   onClearSelection,
   isProcessing = false,
 }: BulkActionsProps) {
-  const t = useTranslations('storefronts.products.bulk');
+  const t = useTranslations('storefronts');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleDelete = () => {

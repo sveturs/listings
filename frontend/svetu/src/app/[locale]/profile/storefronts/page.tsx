@@ -30,7 +30,9 @@ import {
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 
 export default function MyStorefrontsPage() {
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tAdmin = useTranslations('admin');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [selectedTab, setSelectedTab] = useState<'all' | 'active' | 'inactive'>(
@@ -67,7 +69,7 @@ export default function MyStorefrontsPage() {
   const formatBusinessHours = (settings: any) => {
     // Business hours might be stored in settings JSON
     const hours = settings?.business_hours;
-    if (!hours || typeof hours !== 'object') return t('storefronts.alwaysOpen');
+    if (!hours || typeof hours !== 'object') return t('alwaysOpen');
 
     const today = new Date()
       .toLocaleDateString('en-US', { weekday: 'long' })
@@ -75,7 +77,7 @@ export default function MyStorefrontsPage() {
     const todayHours = hours[today];
 
     if (!todayHours || !todayHours.open) {
-      return <span className="text-error">{t('storefronts.closedToday')}</span>;
+      return <span className="text-error">{t('closedToday')}</span>;
     }
 
     return (
@@ -116,7 +118,7 @@ export default function MyStorefrontsPage() {
             <div className="text-center">
               <span className="loading loading-spinner loading-lg text-primary"></span>
               <p className="mt-4 text-base-content/60">
-                {t('admin.common.loading')}
+                {tAdmin('common.loading')}
               </p>
             </div>
           </div>
@@ -134,10 +136,10 @@ export default function MyStorefrontsPage() {
             <div>
               <h1 className="text-4xl lg:text-5xl font-bold mb-3 flex items-center gap-3">
                 <SparklesIcon className="w-10 h-10 text-primary" />
-                {t('storefronts.myStorefronts')}
+                {t('myStorefronts')}
               </h1>
               <p className="text-lg text-base-content/70 max-w-2xl">
-                {t('storefronts.manageDescription')}
+                {t('manageDescription')}
               </p>
             </div>
             <button
@@ -145,7 +147,7 @@ export default function MyStorefrontsPage() {
               className="btn btn-primary btn-lg shadow-lg hover:shadow-xl transition-shadow"
             >
               <PlusIcon className="w-6 h-6" />
-              {t('storefronts.createNew')}
+              {t('createNew')}
             </button>
           </div>
 
@@ -156,12 +158,10 @@ export default function MyStorefrontsPage() {
                 <div className="stat-figure text-primary">
                   <ShoppingBagIcon className="w-8 h-8" />
                 </div>
-                <div className="stat-title">
-                  {t('storefronts.totalStorefronts')}
-                </div>
+                <div className="stat-title">{t('totalStorefronts')}</div>
                 <div className="stat-value text-2xl">{stats.total}</div>
                 <div className="stat-desc">
-                  {stats.active} {t('storefronts.activeCount')}
+                  {stats.active} {t('activeCount')}
                 </div>
               </div>
 
@@ -169,7 +169,7 @@ export default function MyStorefrontsPage() {
                 <div className="stat-figure text-secondary">
                   <EyeIcon className="w-8 h-8" />
                 </div>
-                <div className="stat-title">{t('storefronts.totalViews')}</div>
+                <div className="stat-title">{t('totalViews')}</div>
                 <div className="stat-value text-2xl">
                   {stats.totalViews.toLocaleString()}
                 </div>
@@ -183,24 +183,18 @@ export default function MyStorefrontsPage() {
                 <div className="stat-figure text-accent">
                   <ShoppingBagIcon className="w-8 h-8" />
                 </div>
-                <div className="stat-title">
-                  {t('storefronts.totalProducts')}
-                </div>
+                <div className="stat-title">{t('totalProducts')}</div>
                 <div className="stat-value text-2xl">{stats.totalProducts}</div>
-                <div className="stat-desc">
-                  {t('storefronts.acrossAllStorefronts')}
-                </div>
+                <div className="stat-desc">{t('acrossAllStorefronts')}</div>
               </div>
 
               <div className="stat bg-base-100 rounded-2xl shadow-md">
                 <div className="stat-figure text-success">
                   <CurrencyDollarIcon className="w-8 h-8" />
                 </div>
-                <div className="stat-title">
-                  {t('storefronts.monthlyRevenue')}
-                </div>
+                <div className="stat-title">{t('monthlyRevenue')}</div>
                 <div className="stat-value text-2xl">€0</div>
-                <div className="stat-desc">{t('storefronts.thisMonth')}</div>
+                <div className="stat-desc">{t('thisMonth')}</div>
               </div>
             </div>
           )}
@@ -215,19 +209,19 @@ export default function MyStorefrontsPage() {
               className={`tab ${selectedTab === 'all' ? 'tab-active' : ''}`}
               onClick={() => setSelectedTab('all')}
             >
-              {t('common.all')} ({stats.total})
+              {tCommon('all')} ({stats.total})
             </a>
             <a
               className={`tab ${selectedTab === 'active' ? 'tab-active' : ''}`}
               onClick={() => setSelectedTab('active')}
             >
-              {t('storefronts.active')} ({stats.active})
+              {t('active')} ({stats.active})
             </a>
             <a
               className={`tab ${selectedTab === 'inactive' ? 'tab-active' : ''}`}
               onClick={() => setSelectedTab('inactive')}
             >
-              {t('storefronts.inactive')} ({stats.total - stats.active})
+              {t('inactive')} ({stats.total - stats.active})
             </a>
           </div>
         )}
@@ -242,18 +236,18 @@ export default function MyStorefrontsPage() {
                 </div>
                 <h3 className="text-2xl font-bold mb-3">
                   {selectedTab === 'all'
-                    ? t('storefronts.noStorefronts')
-                    : t('storefronts.noStorefrontsInCategory')}
+                    ? t('noStorefronts')
+                    : t('noStorefrontsInCategory')}
                 </h3>
                 <p className="text-base-content/60 mb-8 text-lg">
-                  {t('storefronts.createFirstStorefront')}
+                  {t('createFirstStorefront')}
                 </p>
                 <button
                   onClick={handleCreateStorefront}
                   className="btn btn-primary btn-lg shadow-lg"
                 >
                   <PlusIcon className="w-6 h-6" />
-                  {t('storefronts.createStorefront')}
+                  {t('createStorefront')}
                 </button>
               </div>
             </div>
@@ -289,8 +283,8 @@ export default function MyStorefrontsPage() {
                       )}
                       <span className="text-sm font-medium">
                         {storefront.is_active
-                          ? t('storefronts.status.active')
-                          : t('storefronts.status.inactive')}
+                          ? t('status.active')
+                          : t('status.inactive')}
                       </span>
                     </div>
                   </div>
@@ -333,14 +327,14 @@ export default function MyStorefrontsPage() {
                       </div>
                       <span className="text-sm text-base-content/60">
                         {storefront.rating || 0} (
-                        {storefront.reviews_count || 0} {t('common.reviews')})
+                        {storefront.reviews_count || 0} {tCommon('reviews')})
                       </span>
                     </div>
                   </div>
 
                   {/* Description */}
                   <p className="text-sm text-base-content/70 line-clamp-2 mb-4">
-                    {storefront.description || t('storefronts.noDescription')}
+                    {storefront.description || t('noDescription')}
                   </p>
 
                   {/* Info Grid */}
@@ -348,7 +342,7 @@ export default function MyStorefrontsPage() {
                     <div className="flex items-center gap-2 text-sm">
                       <MapPinIcon className="w-4 h-4 text-base-content/50" />
                       <span className="text-base-content/70 truncate">
-                        {storefront.location?.city || t('common.notSpecified')}
+                        {storefront.location?.city || tCommon('notSpecified')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
@@ -364,7 +358,7 @@ export default function MyStorefrontsPage() {
                         {storefront.products_count || 0}
                       </div>
                       <div className="text-xs text-base-content/60">
-                        {t('storefronts.products.title')}
+                        {t('products.title')}
                       </div>
                     </div>
                     <div className="text-center p-3 bg-base-200 rounded-xl">
@@ -372,13 +366,13 @@ export default function MyStorefrontsPage() {
                         {storefront.views_count || 0}
                       </div>
                       <div className="text-xs text-base-content/60">
-                        {t('storefronts.views')}
+                        {t('views')}
                       </div>
                     </div>
                     <div className="text-center p-3 bg-base-200 rounded-xl">
                       <div className="text-2xl font-bold text-accent">0</div>
                       <div className="text-xs text-base-content/60">
-                        {t('storefronts.orders')}
+                        {t('orders')}
                       </div>
                     </div>
                   </div>
@@ -390,14 +384,14 @@ export default function MyStorefrontsPage() {
                       className="btn btn-primary flex-1"
                     >
                       <ChartBarIcon className="w-5 h-5" />
-                      {t('storefronts.dashboard')}
+                      {t('dashboard')}
                     </Link>
 
                     <div className="dropdown dropdown-end dropdown-top">
                       <button
                         tabIndex={0}
                         className="btn btn-ghost btn-square"
-                        aria-label={t('storefronts.settings')}
+                        aria-label={t('settings')}
                       >
                         <CogIcon className="w-5 h-5" />
                       </button>
@@ -412,7 +406,7 @@ export default function MyStorefrontsPage() {
                             className="gap-3"
                           >
                             <EyeIcon className="w-4 h-4" />
-                            {t('storefronts.viewPublicPage')}
+                            {t('viewPublicPage')}
                           </Link>
                         </li>
                         <li>
@@ -421,7 +415,7 @@ export default function MyStorefrontsPage() {
                             className="gap-3"
                           >
                             <PencilIcon className="w-4 h-4" />
-                            {t('storefronts.editDetails')}
+                            {t('editDetails')}
                           </Link>
                         </li>
                         <li>
@@ -430,7 +424,7 @@ export default function MyStorefrontsPage() {
                             className="gap-3"
                           >
                             <ShoppingBagIcon className="w-4 h-4" />
-                            {t('storefronts.manageProducts')}
+                            {t('manageProducts')}
                           </Link>
                         </li>
                         <li>
@@ -439,7 +433,7 @@ export default function MyStorefrontsPage() {
                             className="gap-3"
                           >
                             <UserGroupIcon className="w-4 h-4" />
-                            {t('storefronts.manageStaff')}
+                            {t('manageStaff')}
                           </Link>
                         </li>
                         <li>
@@ -448,7 +442,7 @@ export default function MyStorefrontsPage() {
                             className="gap-3"
                           >
                             <StarIcon className="w-4 h-4" />
-                            {t('storefronts.manageReviews')}
+                            {t('manageReviews')}
                           </Link>
                         </li>
                         <li>
@@ -457,7 +451,7 @@ export default function MyStorefrontsPage() {
                             className="gap-3"
                           >
                             <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                            {t('storefronts.messages')}
+                            {t('messages')}
                           </Link>
                         </li>
                       </ul>

@@ -91,6 +91,7 @@ type StorefrontOrder struct {
 	// Доставка и адреса
 	ShippingAddress  JSONB   `json:"shipping_address,omitempty" db:"shipping_address"`
 	BillingAddress   JSONB   `json:"billing_address,omitempty" db:"billing_address"`
+	PickupAddress    JSONB   `json:"pickup_address,omitempty" db:"pickup_address"` // Адрес забора товара у продавца
 	ShippingMethod   *string `json:"shipping_method,omitempty" db:"shipping_method"`
 	ShippingProvider *string `json:"shipping_provider,omitempty" db:"shipping_provider"`
 	TrackingNumber   *string `json:"tracking_number,omitempty" db:"tracking_number"`

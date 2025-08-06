@@ -10,7 +10,8 @@ interface BasicInfoStepProps {
 }
 
 export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_listing');
+  const tCommon = useTranslations('common');
   const { state, setBasicInfo, setLocalization } = useCreateListing();
   const [formData, setFormData] = useState({
     title: state.title || '',
@@ -111,10 +112,10 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4 flex items-center">
-            📝 {t('create_listing.basic_info.title')}
+            📝 {t('basic_info.title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {t('create_listing.basic_info.description')}
+            {t('basic_info.description')}
           </p>
 
           <div className="space-y-6">
@@ -122,7 +123,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">
-                  🔤 {t('create_listing.script_mode')}
+                  🔤 {t('script_mode')}
                 </span>
               </label>
               <div className="flex gap-2">
@@ -153,9 +154,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
             {/* Название объявления */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-medium">
-                  📋 {t('create_listing.title')}
-                </span>
+                <span className="label-text font-medium">📋 {t('title')}</span>
                 <span className="label-text-alt text-error">*</span>
               </label>
               <input
@@ -176,7 +175,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
               />
               <label className="label">
                 <span className="label-text-alt text-base-content/60">
-                  {formData.title.length}/80 {t('create_listing.characters')}
+                  {formData.title.length}/80 {t('characters')}
                 </span>
               </label>
             </div>
@@ -185,7 +184,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">
-                  📄 {t('create_listing.description')}
+                  📄 {t('description')}
                 </span>
                 <span className="label-text-alt text-error">*</span>
               </label>
@@ -209,8 +208,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
               />
               <label className="label">
                 <span className="label-text-alt text-base-content/60">
-                  {formData.description.length}/1000{' '}
-                  {t('create_listing.characters')}
+                  {formData.description.length}/1000 {t('characters')}
                 </span>
               </label>
             </div>
@@ -220,7 +218,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-medium">
-                    💰 {t('create_listing.price')}
+                    💰 {t('price')}
                   </span>
                   <span className="label-text-alt text-error">*</span>
                 </label>
@@ -245,7 +243,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-medium">
-                    💱 {t('create_listing.currency')}
+                    💱 {t('currency')}
                   </span>
                 </label>
                 <select
@@ -283,7 +281,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">
-                  🏷️ {t('create_listing.condition')}
+                  🏷️ {t('condition')}
                 </span>
                 <span className="label-text-alt text-error">*</span>
               </label>
@@ -326,7 +324,7 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                               </h3>
                               {condition.popular && (
                                 <span className="badge badge-primary badge-sm">
-                                  {t('common.popular')}
+                                  {tCommon('popular')}
                                 </span>
                               )}
                             </div>
@@ -371,13 +369,11 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
                 ></path>
               </svg>
               <div className="text-sm">
-                <p className="font-medium">
-                  💡 {t('create_listing.regional_tips.title')}
-                </p>
+                <p className="font-medium">💡 {t('regional_tips.title')}</p>
                 <ul className="text-xs mt-2 space-y-1">
-                  <li>• {t('create_listing.regional_tips.pricing')}</li>
-                  <li>• {t('create_listing.regional_tips.description')}</li>
-                  <li>• {t('create_listing.regional_tips.honesty')}</li>
+                  <li>• {t('regional_tips.pricing')}</li>
+                  <li>• {t('regional_tips.description')}</li>
+                  <li>• {t('regional_tips.honesty')}</li>
                 </ul>
               </div>
             </div>
@@ -386,14 +382,14 @@ export default function BasicInfoStep({ onNext, onBack }: BasicInfoStepProps) {
           {/* Кнопки навигации */}
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-outline" onClick={onBack}>
-              ← {t('common.back')}
+              ← {tCommon('back')}
             </button>
             <button
               className={`btn btn-primary ${!canProceed ? 'btn-disabled' : ''}`}
               onClick={onNext}
               disabled={!canProceed}
             >
-              {t('common.continue')} →
+              {tCommon('continue')} →
             </button>
           </div>
         </div>

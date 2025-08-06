@@ -22,7 +22,9 @@ export default function PreviewPublishStep({
   onBack,
   onComplete,
 }: PreviewPublishStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_storefront');
+  const tCommon = useTranslations('common');
+  const _tPermissions = useTranslations('permissions');
   const { formData, isSubmitting, submitStorefront } =
     useCreateStorefrontContext();
 
@@ -37,40 +39,29 @@ export default function PreviewPublishStep({
     <div className="max-w-4xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            {t('create_storefront.preview.title')}
-          </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('create_storefront.preview.subtitle')}
-          </p>
+          <h2 className="card-title text-2xl mb-4">{t('preview.title')}</h2>
+          <p className="text-base-content/70 mb-6">{t('preview.subtitle')}</p>
 
           {/* Preview sections */}
           <div className="space-y-6">
             {/* Basic Info */}
             <div className="card bg-base-200">
               <div className="card-body">
-                <h3 className="card-title text-lg">
-                  {t('create_storefront.steps.basic_info')}
-                </h3>
+                <h3 className="card-title text-lg">{t('basic_info')}</h3>
                 <div className="space-y-2">
                   <p>
-                    <strong>{t('create_storefront.basic_info.name')}:</strong>{' '}
-                    {formData.name}
+                    <strong>{t('basic_info.name')}:</strong> {formData.name}
                   </p>
                   <p>
-                    <strong>{t('create_storefront.basic_info.slug')}:</strong>{' '}
-                    svetu.rs/{formData.slug}
+                    <strong>{t('basic_info.slug')}:</strong> svetu.rs/
+                    {formData.slug}
                   </p>
                   <p>
-                    <strong>
-                      {t('create_storefront.basic_info.description')}:
-                    </strong>{' '}
+                    <strong>{t('basic_info.description')}:</strong>{' '}
                     {formData.description}
                   </p>
                   <p>
-                    <strong>
-                      {t('create_storefront.basic_info.business_type')}:
-                    </strong>{' '}
+                    <strong>{t('basic_info.business_type')}:</strong>{' '}
                     {t(
                       `create_storefront.business_types.${formData.businessType}`
                     )}
@@ -82,9 +73,7 @@ export default function PreviewPublishStep({
             {/* Business Details */}
             <div className="card bg-base-200">
               <div className="card-body">
-                <h3 className="card-title text-lg">
-                  {t('create_storefront.steps.business_details')}
-                </h3>
+                <h3 className="card-title text-lg">{t('business_details')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {formData.registrationNumber && (
                     <p>
@@ -99,41 +88,31 @@ export default function PreviewPublishStep({
                   )}
                   {formData.taxNumber && (
                     <p>
-                      <strong>
-                        {t('create_storefront.business_details.tax_number')}:
-                      </strong>{' '}
+                      <strong>{t('business_details.tax_number')}:</strong>{' '}
                       {formData.taxNumber}
                     </p>
                   )}
                   {formData.vatNumber && (
                     <p>
-                      <strong>
-                        {t('create_storefront.business_details.vat_number')}:
-                      </strong>{' '}
+                      <strong>{t('business_details.vat_number')}:</strong>{' '}
                       {formData.vatNumber}
                     </p>
                   )}
                   {formData.phone && (
                     <p>
-                      <strong>
-                        {t('create_storefront.business_details.phone')}:
-                      </strong>{' '}
+                      <strong>{t('business_details.phone')}:</strong>{' '}
                       {formData.phone}
                     </p>
                   )}
                   {formData.email && (
                     <p>
-                      <strong>
-                        {t('create_storefront.business_details.email')}:
-                      </strong>{' '}
+                      <strong>{t('business_details.email')}:</strong>{' '}
                       {formData.email}
                     </p>
                   )}
                   {formData.website && (
                     <p>
-                      <strong>
-                        {t('create_storefront.business_details.website')}:
-                      </strong>{' '}
+                      <strong>{t('business_details.website')}:</strong>{' '}
                       {formData.website}
                     </p>
                   )}
@@ -144,33 +123,25 @@ export default function PreviewPublishStep({
             {/* Location */}
             <div className="card bg-base-200">
               <div className="card-body">
-                <h3 className="card-title text-lg">
-                  {t('create_storefront.steps.location')}
-                </h3>
+                <h3 className="card-title text-lg">{t('location')}</h3>
                 <div className="space-y-2">
                   <p>
-                    <strong>{t('create_storefront.location.address')}:</strong>{' '}
-                    {formData.address}
+                    <strong>{t('location.address')}:</strong> {formData.address}
                   </p>
                   <p>
-                    <strong>{t('create_storefront.location.city')}:</strong>{' '}
-                    {formData.city}
+                    <strong>{t('location.city')}:</strong> {formData.city}
                   </p>
                   <p>
-                    <strong>
-                      {t('create_storefront.location.postal_code')}:
-                    </strong>{' '}
+                    <strong>{t('location.postal_code')}:</strong>{' '}
                     {formData.postalCode}
                   </p>
                   <p>
-                    <strong>{t('create_storefront.location.country')}:</strong>{' '}
+                    <strong>{t('location.country')}:</strong>{' '}
                     {t(`countries.${formData.country}`)}
                   </p>
                   {formData.latitude && formData.longitude && (
                     <p>
-                      <strong>
-                        {t('create_storefront.location.coordinates')}:
-                      </strong>{' '}
+                      <strong>{t('location.coordinates')}:</strong>{' '}
                       {formData.latitude.toFixed(6)},{' '}
                       {formData.longitude.toFixed(6)}
                     </p>
@@ -182,9 +153,7 @@ export default function PreviewPublishStep({
             {/* Business Hours */}
             <div className="card bg-base-200">
               <div className="card-body">
-                <h3 className="card-title text-lg">
-                  {t('create_storefront.steps.business_hours')}
-                </h3>
+                <h3 className="card-title text-lg">{t('business_hours')}</h3>
                 <div className="space-y-1">
                   {formData.businessHours.map((hours) => (
                     <p key={hours.dayOfWeek}>
@@ -192,7 +161,7 @@ export default function PreviewPublishStep({
                         {t(`common.days.${dayNames[hours.dayOfWeek]}`)}:
                       </strong>{' '}
                       {hours.isClosed
-                        ? t('common.closed')
+                        ? tCommon('closed')
                         : `${hours.openTime} - ${hours.closeTime}`}
                     </p>
                   ))}
@@ -203,9 +172,7 @@ export default function PreviewPublishStep({
             {/* Payment & Delivery */}
             <div className="card bg-base-200">
               <div className="card-body">
-                <h3 className="card-title text-lg">
-                  {t('create_storefront.steps.payment_delivery')}
-                </h3>
+                <h3 className="card-title text-lg">{t('payment_delivery')}</h3>
 
                 {formData.paymentMethods &&
                   formData.paymentMethods.length > 0 && (
@@ -242,7 +209,7 @@ export default function PreviewPublishStep({
                             {option.deliveryTimeMinutes} min,{' '}
                             {option.deliveryCostRSD} RSD
                             {option.freeDeliveryThresholdRSD &&
-                              ` (${t('common.free_above')} ${option.freeDeliveryThresholdRSD} RSD)`}
+                              ` (${tCommon('free_above')} ${option.freeDeliveryThresholdRSD} RSD)`}
                           </p>
                         ))}
                       </div>
@@ -255,9 +222,7 @@ export default function PreviewPublishStep({
             {formData.staff && formData.staff.length > 0 && (
               <div className="card bg-base-200">
                 <div className="card-body">
-                  <h3 className="card-title text-lg">
-                    {t('create_storefront.steps.staff_setup')}
-                  </h3>
+                  <h3 className="card-title text-lg">{t('staff_setup')}</h3>
                   <div className="space-y-2">
                     {formData.staff.map((member, index) => (
                       <div key={index}>
@@ -267,13 +232,13 @@ export default function PreviewPublishStep({
                         </p>
                         <div className="flex gap-2 text-sm text-base-content/70">
                           {member.canManageProducts && (
-                            <span>• {t('permissions.products')}</span>
+                            <span>• {t('products')}</span>
                           )}
                           {member.canManageOrders && (
-                            <span>• {t('permissions.orders')}</span>
+                            <span>• {t('orders')}</span>
                           )}
                           {member.canManageSettings && (
-                            <span>• {t('permissions.settings')}</span>
+                            <span>• {t('settings')}</span>
                           )}
                         </div>
                       </div>
@@ -290,14 +255,14 @@ export default function PreviewPublishStep({
               onClick={onBack}
               disabled={isSubmitting}
             >
-              {t('common.back')}
+              {tCommon('back')}
             </button>
             <button
               className={`btn btn-primary ${isSubmitting ? 'loading' : ''}`}
               onClick={handlePublish}
               disabled={isSubmitting}
             >
-              {isSubmitting ? t('common.publishing') : t('common.publish')}
+              {isSubmitting ? tCommon('publishing') : tCommon('publish')}
             </button>
           </div>
         </div>

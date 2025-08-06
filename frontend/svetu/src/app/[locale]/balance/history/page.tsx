@@ -19,7 +19,8 @@ interface Transaction {
 }
 
 export default function TransactionHistoryPage() {
-  const t = useTranslations();
+  const t = useTranslations('admin');
+  const tProfile = useTranslations('profile');
   const locale = useLocale();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,12 +137,12 @@ export default function TransactionHistoryPage() {
       <div className="breadcrumbs text-sm mb-6">
         <ul>
           <li>
-            <Link href={`/${locale}/profile`}>{t('profile.title')}</Link>
+            <Link href={`/${locale}/profile`}>{tProfile('title')}</Link>
           </li>
           <li>
-            <Link href={`/${locale}/balance`}>{t('admin.balance.title')}</Link>
+            <Link href={`/${locale}/balance`}>{t('title')}</Link>
           </li>
-          <li>{t('admin.balance.transactionHistory')}</li>
+          <li>{t('transactionHistory')}</li>
         </ul>
       </div>
 
@@ -152,7 +153,7 @@ export default function TransactionHistoryPage() {
             <div className="card-body">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <h1 className="card-title text-2xl">
-                  📋 {t('admin.balance.transactionHistory')}
+                  📋 {t('transactionHistory')}
                 </h1>
 
                 {/* Фильтры */}

@@ -25,7 +25,7 @@ export const RatingInput: React.FC<RatingInputProps> = ({
   error,
 }) => {
   const [hoverRating, setHoverRating] = useState(0);
-  const t = useTranslations('reviews.rating.labels');
+  const t = useTranslations('reviews');
 
   const sizeClasses = {
     sm: 'w-6 h-6',

@@ -20,7 +20,10 @@ interface Props {
 export default function OrderDetailsPage({ params }: Props) {
   const { id } = use(params);
   const locale = useLocale();
-  const t = useTranslations();
+  const t = useTranslations('orders');
+  const tHome = useTranslations('marketplace.home');
+  const tProfile = useTranslations('profile');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
 
@@ -44,7 +47,7 @@ export default function OrderDetailsPage({ params }: Props) {
       setOrder(orderData);
     } catch (error) {
       console.error('Error fetching order details:', error);
-      toast.error(t('orders.fetchError'));
+      toast.error(t('fetchError'));
       router.push(`/${locale}/profile/orders/purchases`);
     } finally {
       setLoading(false);
@@ -57,12 +60,12 @@ export default function OrderDetailsPage({ params }: Props) {
     setSendingMessage(true);
     try {
       await marketplaceOrdersService.addMessage(orderId, messageText);
-      toast.success(t('orders.messageSent'));
+      toast.success(t('messageSent'));
       setMessageText('');
       await fetchOrderDetails(); // Обновляем данные заказа
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error(t('orders.messageError'));
+      toast.error(t('messageError'));
     } finally {
       setSendingMessage(false);
     }
@@ -91,20 +94,20 @@ export default function OrderDetailsPage({ params }: Props) {
       <div className="breadcrumbs text-sm mb-6">
         <ul>
           <li>
-            <Link href={`/${locale}`}>{t('home.title')}</Link>
+            <Link href={`/${locale}`}>{tHome('title')}</Link>
           </li>
           <li>
-            <Link href={`/${locale}/profile`}>{t('profile.title')}</Link>
+            <Link href={`/${locale}/profile`}>{tProfile('title')}</Link>
           </li>
           <li>
             <Link
               href={`/${locale}/profile/orders/${isBuyer ? 'purchases' : 'sales'}`}
             >
-              {isBuyer ? t('orders.myPurchases') : t('orders.mySales')}
+              {isBuyer ? t('myPurchases') : t('mySales')}
             </Link>
           </li>
           <li>
-            {t('orders.orderNumber')}: #{order.id}
+            {t('orderNumber')}: #{order.id}
           </li>
         </ul>
       </div>
@@ -117,7 +120,7 @@ export default function OrderDetailsPage({ params }: Props) {
             <div className="card-body">
               <div className="flex justify-between items-start mb-6">
                 <h1 className="card-title text-2xl">
-                  {t('orders.orderNumber')}: #{order.id}
+                  {t('orderNumber')}: #{order.id}
                 </h1>
                 <div
                   className={`badge ${marketplaceOrdersService.getStatusColor(order.status)} badge-lg`}
@@ -130,7 +133,7 @@ export default function OrderDetailsPage({ params }: Props) {
               </div>
 
               {/* Товар */}
-              <div className="divider">{t('orders.itemDetails')}</div>
+              <div className="divider">{t('itemDetails')}</div>
               <div className="flex gap-4 mb-6">
                 <figure className="relative w-32 h-32 flex-shrink-0 bg-base-200 rounded-lg overflow-hidden">
                   <SafeImage
@@ -142,7 +145,7 @@ export default function OrderDetailsPage({ params }: Props) {
                 </figure>
                 <div className="flex-1">
                   <h3 className="text-xl font-semibold mb-2">
-                    {order.listing?.title || t('orders.unknownItem')}
+                    {order.listing?.title || t('unknownItem')}
                   </h3>
                   {order.listing?.description && (
                     <p className="text-base-content/70 line-clamp-2">
@@ -153,30 +156,30 @@ export default function OrderDetailsPage({ params }: Props) {
                     href={`/${locale}/marketplace/${order.listing_id}`}
                     className="link link-primary text-sm mt-2 inline-block"
                   >
-                    {t('orders.viewListing')} →
+                    {t('viewListing')} →
                   </Link>
                 </div>
               </div>
 
               {/* Участники сделки */}
-              <div className="divider">{t('orders.participants')}</div>
+              <div className="divider">{t('participants')}</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <p className="text-sm text-base-content/70 mb-1">
-                    {t('orders.buyer')}
+                    {t('buyer')}
                   </p>
                   <p className="font-medium">
                     {order.buyer?.name || 'Unknown'}
-                    {isBuyer && ' (' + t('common.you') + ')'}
+                    {isBuyer && ' (' + tCommon('you') + ')'}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-base-content/70 mb-1">
-                    {t('orders.seller')}
+                    {t('seller')}
                   </p>
                   <p className="font-medium">
                     {order.seller?.name || 'Unknown'}
-                    {isSeller && ' (' + t('common.you') + ')'}
+                    {isSeller && ' (' + tCommon('you') + ')'}
                   </p>
                 </div>
               </div>
@@ -184,12 +187,12 @@ export default function OrderDetailsPage({ params }: Props) {
               {/* Доставка */}
               {(order.shipping_method || order.tracking_number) && (
                 <>
-                  <div className="divider">{t('orders.shippingInfo')}</div>
+                  <div className="divider">{t('shippingInfo')}</div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     {order.shipping_method && (
                       <div>
                         <p className="text-sm text-base-content/70 mb-1">
-                          {t('orders.shippingMethod')}
+                          {t('shippingMethod')}
                         </p>
                         <p className="font-medium">{order.shipping_method}</p>
                       </div>
@@ -197,7 +200,7 @@ export default function OrderDetailsPage({ params }: Props) {
                     {order.tracking_number && (
                       <div>
                         <p className="text-sm text-base-content/70 mb-1">
-                          {t('orders.trackingNumber')}
+                          {t('trackingNumber')}
                         </p>
                         <p className="font-medium">{order.tracking_number}</p>
                       </div>
@@ -209,7 +212,7 @@ export default function OrderDetailsPage({ params }: Props) {
               {/* История статусов */}
               {order.status_history && order.status_history.length > 0 && (
                 <>
-                  <div className="divider">{t('orders.statusHistory')}</div>
+                  <div className="divider">{t('statusHistory')}</div>
                   <div className="space-y-2">
                     {order.status_history.map((history) => (
                       <div
@@ -242,7 +245,7 @@ export default function OrderDetailsPage({ params }: Props) {
           {/* Сообщения */}
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
-              <h2 className="card-title mb-4">{t('orders.messages')}</h2>
+              <h2 className="card-title mb-4">{t('messages')}</h2>
 
               {order.messages && order.messages.length > 0 ? (
                 <div className="space-y-3 mb-4 max-h-96 overflow-y-auto">
@@ -263,7 +266,7 @@ export default function OrderDetailsPage({ params }: Props) {
                 </div>
               ) : (
                 <p className="text-base-content/70 text-center py-8">
-                  {t('orders.noMessages')}
+                  {t('noMessages')}
                 </p>
               )}
 
@@ -272,7 +275,7 @@ export default function OrderDetailsPage({ params }: Props) {
                 <div className="input-group">
                   <input
                     type="text"
-                    placeholder={t('orders.typeMessage')}
+                    placeholder={t('typeMessage')}
                     className="input input-bordered flex-1"
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
@@ -287,7 +290,7 @@ export default function OrderDetailsPage({ params }: Props) {
                     {sendingMessage ? (
                       <span className="loading loading-spinner loading-sm"></span>
                     ) : (
-                      t('common.send')
+                      tCommon('send')
                     )}
                   </button>
                 </div>
@@ -302,12 +305,12 @@ export default function OrderDetailsPage({ params }: Props) {
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <h3 className="card-title text-lg mb-4">
-                {t('orders.financialDetails')}
+                {t('financialDetails')}
               </h3>
 
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span>{t('orders.itemPrice')}</span>
+                  <span>{t('itemPrice')}</span>
                   <span className="font-medium">
                     {balanceService.formatAmount(order.item_price, 'RSD')}
                   </span>
@@ -315,7 +318,7 @@ export default function OrderDetailsPage({ params }: Props) {
 
                 <div className="flex justify-between text-sm text-base-content/70">
                   <span>
-                    {t('orders.platformFee')} ({order.platform_fee_rate * 100}%)
+                    {t('platformFee')} ({order.platform_fee_rate * 100}%)
                   </span>
                   <span>
                     -
@@ -330,9 +333,7 @@ export default function OrderDetailsPage({ params }: Props) {
 
                 <div className="flex justify-between font-bold">
                   <span>
-                    {isSeller
-                      ? t('orders.yourEarnings')
-                      : t('orders.sellerReceives')}
+                    {isSeller ? t('yourEarnings') : t('sellerReceives')}
                   </span>
                   <span className="text-success">
                     {balanceService.formatAmount(
@@ -351,13 +352,13 @@ export default function OrderDetailsPage({ params }: Props) {
               <div className="card bg-warning/10 border-warning shadow-xl">
                 <div className="card-body">
                   <h3 className="card-title text-lg mb-2">
-                    🛡️ {t('orders.buyerProtection')}
+                    🛡️ {t('buyerProtection')}
                   </h3>
-                  <p className="text-sm mb-2">{t('orders.protectionActive')}</p>
+                  <p className="text-sm mb-2">{t('protectionActive')}</p>
                   <p className="font-bold">
-                    ⏱️ {t('orders.timeRemaining')}:{' '}
+                    ⏱️ {t('timeRemaining')}:{' '}
                     {marketplaceOrdersService.getProtectionTimeLeft(order) ||
-                      t('orders.expired')}
+                      t('expired')}
                   </p>
                 </div>
               </div>
@@ -366,7 +367,7 @@ export default function OrderDetailsPage({ params }: Props) {
           {/* Действия */}
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
-              <h3 className="card-title text-lg mb-4">{t('orders.actions')}</h3>
+              <h3 className="card-title text-lg mb-4">{t('actions')}</h3>
 
               <div className="space-y-2">
                 {isBuyer &&
@@ -375,20 +376,20 @@ export default function OrderDetailsPage({ params }: Props) {
                     user!.id
                   ) && (
                     <button className="btn btn-success btn-block">
-                      ✅ {t('orders.confirmDelivery')}
+                      ✅ {t('confirmDelivery')}
                     </button>
                   )}
 
                 {isSeller &&
                   marketplaceOrdersService.canShip(order, user!.id) && (
                     <button className="btn btn-primary btn-block">
-                      📦 {t('orders.markAsShipped')}
+                      📦 {t('markAsShipped')}
                     </button>
                   )}
 
                 {marketplaceOrdersService.canOpenDispute(order, user!.id) && (
                   <button className="btn btn-error btn-outline btn-block">
-                    ⚠️ {t('orders.openDispute')}
+                    ⚠️ {t('openDispute')}
                   </button>
                 )}
 
@@ -396,7 +397,7 @@ export default function OrderDetailsPage({ params }: Props) {
                   href={`/${locale}/support`}
                   className="btn btn-ghost btn-block"
                 >
-                  {t('orders.contactSupport')}
+                  {t('contactSupport')}
                 </Link>
               </div>
             </div>

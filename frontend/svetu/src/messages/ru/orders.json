@@ -1,0 +1,56 @@
+{
+  "allOrders": "Все заказы",
+  "myOrders": "Мои заказы",
+  "ordersDescription": "Управление всеми заказами",
+  "filterByStatus": "Фильтровать по статусу",
+  "noOrders": "Нет заказов",
+  "noOrdersDescription": "У вас пока нет заказов",
+  "status": {
+    "label": "Статус",
+    "pending": "В ожидании",
+    "confirmed": "Подтвержден",
+    "shipped": "Отправлен",
+    "delivered": "Доставлен",
+    "cancelled": "Отменен"
+  },
+  "loginRequired": "Войдите в систему для просмотра заказов",
+  "tryAgain": "Попробовать снова",
+  "history": "История заказов",
+  "totalOrders": "Всего заказов: {count}",
+  "loadMore": "Загрузить ещё",
+  "trackingAvailable": "Отслеживание доступно",
+  "orderInfo": "Информация о заказе",
+  "orderNumber": "Номер заказа",
+  "orderDate": "Дата заказа",
+  "paymentMethod": "Способ оплаты",
+  "pickupAddress": {
+    "title": "Адрес забора",
+    "description": "Товар будет забран курьером по этому адресу"
+  },
+  "deliveryAddress": {
+    "title": "Адрес доставки",
+    "description": "Товар будет доставлен по этому адресу"
+  },
+  "shippingMethod": "Способ доставки",
+  "tracking": {
+    "title": "Отслеживание",
+    "number": "Номер отслеживания",
+    "provider": "Служба доставки"
+  },
+  "items": "Товары",
+  "subtotal": "Подитог",
+  "shipping": "Доставка",
+  "tax": "Налог",
+  "discount": "Скидка",
+  "total": "Итого",
+  "payment": {
+    "cod": "Наложенный платеж",
+    "bank_transfer": "Банковский перевод",
+    "card": "Банковская карта"
+  },
+  "shipping": {
+    "standard": "Стандартная доставка",
+    "express": "Экспресс доставка",
+    "pickup": "Самовывоз"
+  }
+}

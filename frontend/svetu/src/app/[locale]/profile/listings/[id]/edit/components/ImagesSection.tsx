@@ -24,7 +24,7 @@ export function ImagesSection({
   images,
   onImagesChange,
 }: ImagesSectionProps) {
-  const t = useTranslations('profile.listings.editListing');
+  const t = useTranslations('profile');
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

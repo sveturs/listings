@@ -23,7 +23,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   storefrontId,
 }) => {
   const { user } = useAuth();
-  const t = useTranslations('reviews.section');
+  const t = useTranslations('reviews');
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [filters, setFilters] = useState<ReviewsFilter>({
     entity_type: entityType,
@@ -123,7 +123,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
             />
           </svg>
-          {t('title')}
+          {t('section.title')}
           {stats.total_reviews > 0 && (
             <span className="text-base-content/60 text-base font-normal">
               ({stats.total_reviews})
@@ -149,7 +149,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            {t('writeReview')}
+            {t('section.writeReview')}
           </button>
         )}
       </div>
@@ -173,10 +173,10 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
             </svg>
             <span className="text-sm text-base-content/80">
               {canReviewData.reason === 'already_reviewed'
-                ? t('alreadyReviewed')
+                ? t('section.alreadyReviewed')
                 : canReviewData.reason === 'is_owner'
-                  ? t('ownerCantReview')
-                  : t('cantReview')}
+                  ? t('section.ownerCantReview')
+                  : t('section.cantReview')}
             </span>
           </div>
         </div>
@@ -188,7 +188,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
           <div className="p-4 lg:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-base-content">
-                {t('yourReview')}
+                {t('section.yourReview')}
               </h3>
               <button
                 onClick={() => setShowReviewForm(false)}
@@ -250,7 +250,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
               d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
             />
           </svg>
-          <p className="text-base-content/60">{t('noReviews')}</p>
+          <p className="text-base-content/60">{t('section.noReviews')}</p>
         </div>
       )}
     </div>

@@ -101,7 +101,9 @@ interface CategorySelectionStepProps {
 export default function CategorySelectionStep({
   onNext,
 }: CategorySelectionStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_listing');
+  const tMarketplace = useTranslations('marketplace');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const { state, setCategory } = useCreateListing();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -150,14 +152,14 @@ export default function CategorySelectionStep({
         setCategories(rootCategories);
       } catch (error) {
         console.error('Failed to load categories:', error);
-        toast.error(t('marketplace.categoriesLoadError'));
+        toast.error(tMarketplace('categoriesLoadError'));
       } finally {
         setLoading(false);
       }
     };
 
     loadCategories();
-  }, [locale, t]);
+  }, [locale, t, tMarketplace]);
 
   // Toggle category expansion
   const toggleExpand = (categoryId: number) => {
@@ -313,11 +315,9 @@ export default function CategorySelectionStep({
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4 flex items-center">
-            🏪 {t('create_listing.category.title')}
+            🏪 {t('title')}
           </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('create_listing.category.description')}
-          </p>
+          <p className="text-base-content/70 mb-6">{t('description')}</p>
 
           {/* Search input */}
           <div className="mb-4">
@@ -325,7 +325,7 @@ export default function CategorySelectionStep({
               <Search size={20} />
               <input
                 type="text"
-                placeholder={t('marketplace.searchCategories')}
+                placeholder={tMarketplace('searchCategories')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 outline-none bg-transparent"
@@ -339,7 +339,7 @@ export default function CategorySelectionStep({
               renderTree(filteredCategories)
             ) : (
               <div className="text-center py-8 text-base-content/50">
-                {t('marketplace.noCategoriesFound')}
+                {tMarketplace('noCategoriesFound')}
               </div>
             )}
           </div>
@@ -361,9 +361,7 @@ export default function CategorySelectionStep({
                 />
               </svg>
               <div>
-                <div className="font-medium">
-                  {t('create_listing.category.selected')}:
-                </div>
+                <div className="font-medium">{t('selected')}:</div>
                 <div className="text-sm">{state.category?.name}</div>
               </div>
             </div>
@@ -385,12 +383,8 @@ export default function CategorySelectionStep({
               ></path>
             </svg>
             <div className="text-sm">
-              <p className="font-medium">
-                💡 {t('create_listing.category.tip_title')}
-              </p>
-              <p className="text-xs mt-1">
-                {t('create_listing.category.tip_description')}
-              </p>
+              <p className="font-medium">💡 {t('tip_title')}</p>
+              <p className="text-xs mt-1">{t('tip_description')}</p>
             </div>
           </div>
 
@@ -401,7 +395,7 @@ export default function CategorySelectionStep({
               onClick={handleNext}
               disabled={!selectedCategoryId}
             >
-              {t('common.continue')} →
+              {tCommon('continue')} →
             </button>
           </div>
         </div>

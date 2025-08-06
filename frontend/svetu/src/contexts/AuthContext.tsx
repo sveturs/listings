@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { AuthService } from '@/services/auth';
-import { AuthErrorBoundary } from '@/components/ErrorBoundary';
+import { AuthErrorBoundaryWrapper } from '@/components/AuthErrorBoundaryWrapper';
 import type { User, UpdateProfileRequest } from '@/types/auth';
 import { tokenManager } from '@/utils/tokenManager';
 
@@ -491,9 +491,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <AuthErrorBoundary>
+    <AuthErrorBoundaryWrapper>
       <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-    </AuthErrorBoundary>
+    </AuthErrorBoundaryWrapper>
   );
 }
 

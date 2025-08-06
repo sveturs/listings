@@ -7,7 +7,7 @@ import { sr, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
 
 export function DraftStatus() {
-  const t = useTranslations('create_listing.draft');
+  const t = useTranslations('create_listing');
   const locale = useLocale();
   const { isSavingDraft, hasUnsavedChanges, lastSavedAt } = useCreateListing();
 
@@ -19,7 +19,7 @@ export function DraftStatus() {
     return (
       <div className="flex items-center gap-2 text-sm">
         <span className="loading loading-spinner loading-xs"></span>
-        <span className="text-base-content/70">{t('saving')}</span>
+        <span className="text-base-content/70">{t('draft.saving')}</span>
       </div>
     );
   }
@@ -48,7 +48,7 @@ export function DraftStatus() {
           />
         </svg>
         <span className="text-base-content/70">
-          {t('savedAt', { time: timeAgo })}
+          {t('draft.savedAt', { time: timeAgo })}
         </span>
       </div>
     );
@@ -59,7 +59,9 @@ export function DraftStatus() {
     return (
       <div className="flex items-center gap-2 text-sm">
         <div className="w-2 h-2 bg-warning rounded-full animate-pulse"></div>
-        <span className="text-base-content/70">{t('unsavedChanges')}</span>
+        <span className="text-base-content/70">
+          {t('draft.unsavedChanges')}
+        </span>
       </div>
     );
   }
@@ -105,7 +107,7 @@ export function DraftIndicator({ onClick }: DraftIndicatorProps) {
 }
 
 export function OfflineIndicator() {
-  const t = useTranslations('create_listing.draft');
+  const t = useTranslations('create_listing');
   const isOnline =
     typeof window !== 'undefined' ? window.navigator.onLine : true;
 
@@ -126,7 +128,7 @@ export function OfflineIndicator() {
           d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <span>{t('offlineMode')}</span>
+      <span>{t('draft.offlineMode')}</span>
     </div>
   );
 }

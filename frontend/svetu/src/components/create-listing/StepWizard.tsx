@@ -18,7 +18,7 @@ export default function StepWizard({
   currentStep,
   onStepClick,
 }: StepWizardProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_listing');
 
   return (
     <div className="w-full mb-8">
@@ -119,19 +119,13 @@ export default function StepWizard({
       {/* Региональные подсказки */}
       <div className="mt-4 text-center">
         {currentStep === 0 && (
-          <p className="text-xs text-base-content/60">
-            💡 {t('create_listing.hints.category')}
-          </p>
+          <p className="text-xs text-base-content/60">💡 {t('category')}</p>
         )}
         {currentStep === 2 && (
-          <p className="text-xs text-base-content/60">
-            🤝 {t('create_listing.hints.trust')}
-          </p>
+          <p className="text-xs text-base-content/60">🤝 {t('trust')}</p>
         )}
         {currentStep === 6 && (
-          <p className="text-xs text-base-content/60">
-            📦 {t('create_listing.hints.delivery')}
-          </p>
+          <p className="text-xs text-base-content/60">📦 {t('delivery')}</p>
         )}
       </div>
     </div>

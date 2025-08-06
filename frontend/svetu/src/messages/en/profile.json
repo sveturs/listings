@@ -1,0 +1,38 @@
+{
+  "title": "Profile",
+  "fields": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "city": "City",
+    "country": "Country"
+  },
+  "actions": {
+    "edit": "Edit",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "myListings": "My Listings",
+    "myStorefronts": "My Storefronts",
+    "myOrders": "My Orders",
+    "createListing": "Create Listing"
+  },
+  "balance": {
+    "title": "Balance"
+  },
+  "messages": {
+    "updateSuccess": "Profile updated successfully"
+  },
+  "errors": {
+    "updateFailed": "Failed to update profile. Please try again."
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "nameMinLength": "Name must be at least 2 characters long",
+    "nameMaxLength": "Name cannot exceed 100 characters",
+    "phoneInvalid": "Please enter a valid phone number",
+    "cityMaxLength": "City name cannot exceed 100 characters",
+    "countryMaxLength": "Country name cannot exceed 100 characters"
+  },
+  "notProvided": "Not provided"
+}

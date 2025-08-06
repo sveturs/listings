@@ -17,7 +17,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   isOpen,
   onClose,
 }) => {
-  const t = useTranslations('reviews.gallery');
+  const t = useTranslations('reviews');
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -187,7 +187,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
       <div
         className="absolute inset-0 cursor-pointer"
         onClick={onClose}
-        aria-label={t('closeGallery')}
+        aria-label={t('gallery.closeGallery')}
       />
 
       {/* Gallery container */}
@@ -198,14 +198,15 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         <div className="flex items-center justify-between p-4 bg-base-100/20 backdrop-blur-sm border-b border-base-200/20">
           <div className="flex items-center gap-4">
             <div className="text-base-content text-sm font-medium">
-              {t('photo')} {currentIndex + 1} {t('of')} {images.length}
+              {t('gallery.photo')} {currentIndex + 1} {t('gallery.of')}{' '}
+              {images.length}
             </div>
             {images.length > 1 && (
               <div className="flex gap-1">
                 <button
                   onClick={goToPrevious}
                   className="btn btn-sm btn-ghost btn-circle"
-                  aria-label={t('previousImage')}
+                  aria-label={t('gallery.previousImage')}
                 >
                   <svg
                     className="w-4 h-4"
@@ -224,7 +225,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                 <button
                   onClick={goToNext}
                   className="btn btn-sm btn-ghost btn-circle"
-                  aria-label={t('nextImage')}
+                  aria-label={t('gallery.nextImage')}
                 >
                   <svg
                     className="w-4 h-4"
@@ -248,7 +249,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             <button
               onClick={toggleFullscreen}
               className="btn btn-sm btn-ghost btn-circle"
-              aria-label={t('fullscreenMode')}
+              aria-label={t('gallery.fullscreenMode')}
             >
               <svg
                 className="w-5 h-5"
@@ -276,7 +277,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             <button
               onClick={onClose}
               className="btn btn-sm btn-ghost btn-circle"
-              aria-label={t('closeGallery')}
+              aria-label={t('gallery.closeGallery')}
             >
               <svg
                 className="w-5 h-5"
@@ -322,7 +323,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
               <button
                 onClick={goToPrevious}
                 className="absolute left-4 top-1/2 -translate-y-1/2 p-4 rounded-full bg-base-100/90 hover:bg-base-200/90 text-base-content shadow-lg transition-all duration-200 hover:scale-110 border border-base-300 backdrop-blur-sm"
-                aria-label={t('previousImage')}
+                aria-label={t('gallery.previousImage')}
               >
                 <svg
                   className="w-8 h-8"
@@ -342,7 +343,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
               <button
                 onClick={goToNext}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-4 rounded-full bg-base-100/90 hover:bg-base-200/90 text-base-content shadow-lg transition-all duration-200 hover:scale-110 border border-base-300 backdrop-blur-sm"
-                aria-label={t('nextImage')}
+                aria-label={t('gallery.nextImage')}
               >
                 <svg
                   className="w-8 h-8"
@@ -405,7 +406,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-                {t('close')}
+                {t('gallery.close')}
               </button>
             </div>
           </div>
@@ -415,7 +416,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
       {/* Swipe indicator for mobile */}
       {images.length > 1 && isMobile && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-base-content/50 text-sm">
-          {t('swipeToNavigate')}
+          {t('gallery.swipeToNavigate')}
         </div>
       )}
     </div>

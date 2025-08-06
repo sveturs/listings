@@ -1,10 +1,11 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import { notFound } from 'next/navigation';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { PublicEnvScript } from 'next-runtime-env';
 import { routing } from '@/i18n/routing';
-import Header from '@/components/Header';
+import { ModularIntlProvider } from '@/providers/ModularIntlProvider';
+import { loadMessages } from '@/lib/i18n/loadMessages';
+import HeaderWrapper from '@/components/HeaderWrapper';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ReduxProvider } from '@/components/ReduxProvider';
 import WebSocketManager from '@/components/WebSocketManager';
@@ -84,9 +85,20 @@ export default async function RootLayout({
     notFound();
   }
 
-  // Providing all messages to the client
-  // side is the easiest way to get started
-  const messages = await getMessages();
+  // Загружаем базовые модули для layout
+  const messages = await loadMessages(locale as any, [
+    'common',
+    'auth',
+    'misc',
+    'cart',
+    'map', // Добавляем map модуль для компонентов GIS
+    'marketplace', // И marketplace, так как многие компоненты его используют
+    'admin', // Добавляем admin для страниц админки
+    'cars', // Добавляем cars для car-selector
+    'search', // Добавляем search для SearchBar
+    'checkout', // Добавляем checkout для страницы оформления заказа
+    'orders', // Добавляем orders для страницы успешного заказа
+  ]);
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -98,13 +110,13 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <NextIntlClientProvider messages={messages}>
+        <ModularIntlProvider locale={locale} messages={messages}>
           <ReduxProvider>
             <AuthProvider>
               <VisibleCitiesProvider>
                 <AuthStateManager />
                 <WebSocketManager />
-                <Header />
+                <HeaderWrapper />
                 <main className="min-h-screen pt-16 pb-16 md:pb-0">
                   {children}
                 </main>
@@ -112,7 +124,7 @@ export default async function RootLayout({
               </VisibleCitiesProvider>
             </AuthProvider>
           </ReduxProvider>
-        </NextIntlClientProvider>
+        </ModularIntlProvider>
       </body>
     </html>
   );

@@ -124,7 +124,7 @@ interface CreateStorefrontProviderProps {
 export const CreateStorefrontProvider: React.FC<
   CreateStorefrontProviderProps
 > = ({ children }) => {
-  const t = useTranslations();
+  const t = useTranslations('create_storefront');
   const [formData, setFormData] = useState<StorefrontFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -198,15 +198,14 @@ export const CreateStorefrontProvider: React.FC<
           // Don't fail the whole process if image upload fails
         }
 
-        toast.success(t('create_storefront.success'));
+        toast.success(t('success'));
         resetFormData();
         return { success: true, storefrontId: response.id };
       } else {
         throw new Error('Failed to create storefront');
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : t('create_storefront.error');
+      const errorMessage = error instanceof Error ? error.message : t('error');
       toast.error(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

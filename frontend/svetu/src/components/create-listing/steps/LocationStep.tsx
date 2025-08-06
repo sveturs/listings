@@ -27,7 +27,8 @@ interface LocationData {
 }
 
 export default function LocationStep({ onNext, onBack }: LocationStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_listing');
+  const tCommon = useTranslations('common');
   const { state, dispatch } = useCreateListing();
   const [step, setStep] = useState<'select' | 'privacy'>('select');
   const [location, setLocation] = useState<LocationData | undefined>(
@@ -95,7 +96,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-2 flex items-center">
-          📍 {t('create_listing.location.title')}
+          📍 {t('title')}
         </h2>
         <p className="text-base-content/70">
           Выберите местоположение объявления - введите адрес или укажите точку
@@ -239,7 +240,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
           {/* Кнопки навигации */}
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-outline" onClick={onBack}>
-              ← {t('common.back')}
+              ← {tCommon('back')}
             </button>
 
             {step === 'privacy' && (

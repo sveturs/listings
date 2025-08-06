@@ -12,8 +12,8 @@ interface GroupFormProps {
 }
 
 export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
-  const t = useTranslations('admin.attributeGroups');
-  const tCommon = useTranslations('admin.common');
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('admin');
 
   const [formData, setFormData] = useState<Partial<AttributeGroup>>({
     name: '',
@@ -107,7 +107,7 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('groupName')} *</span>
+          <span className="label-text">{t('attributeGroups.groupName')} *</span>
         </label>
         <input
           type="text"
@@ -121,7 +121,7 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{tCommon('systemName')} *</span>
+          <span className="label-text">{tCommon('common.systemName')} *</span>
         </label>
         <input
           type="text"
@@ -136,7 +136,7 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('description')}</span>
+          <span className="label-text">{t('attributeGroups.description')}</span>
         </label>
         <textarea
           name="description"
@@ -149,7 +149,7 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('icon')}</span>
+          <span className="label-text">{t('attributeGroups.icon')}</span>
         </label>
         <input
           type="text"
@@ -163,7 +163,7 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{tCommon('sortOrder')}</span>
+          <span className="label-text">{tCommon('common.sortOrder')}</span>
         </label>
         <input
           type="number"
@@ -177,7 +177,7 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
 
       <div className="form-control">
         <label className="label cursor-pointer">
-          <span className="label-text">{tCommon('isActive')}</span>
+          <span className="label-text">{tCommon('common.isActive')}</span>
           <input
             type="checkbox"
             name="is_active"
@@ -198,24 +198,24 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
           {isTranslating ? (
             <>
               <span className="loading loading-spinner loading-sm"></span>
-              {tCommon('translating')}
+              {tCommon('common.translating')}
             </>
           ) : (
-            <>🌍 {tCommon('translate')}</>
+            <>🌍 {tCommon('common.translate')}</>
           )}
         </button>
       </div>
 
       <div className="flex gap-2 pt-4">
         <button type="submit" className="btn btn-primary flex-1">
-          {tCommon('save')}
+          {tCommon('common.save')}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="btn btn-ghost flex-1"
         >
-          {tCommon('cancel')}
+          {tCommon('common.cancel')}
         </button>
       </div>
     </form>

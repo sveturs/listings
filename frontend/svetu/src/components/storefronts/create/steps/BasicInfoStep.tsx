@@ -10,7 +10,8 @@ interface BasicInfoStepProps {
 }
 
 export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_storefront');
+  const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -36,7 +37,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
       if (file.size > 5 * 1024 * 1024) {
         setErrors({
           ...errors,
-          logo: t('create_storefront.errors.logo_too_large'),
+          logo: t('errors.logo_too_large'),
         });
         return;
       }
@@ -57,7 +58,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
       if (file.size > 10 * 1024 * 1024) {
         setErrors({
           ...errors,
-          banner: t('create_storefront.errors.banner_too_large'),
+          banner: t('errors.banner_too_large'),
         });
         return;
       }
@@ -75,13 +76,13 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name || formData.name.length < 3) {
-      newErrors.name = t('create_storefront.errors.name_required');
+      newErrors.name = t('errors.name_required');
     }
 
     if (!formData.slug || formData.slug.length < 3) {
-      newErrors.slug = t('create_storefront.errors.slug_required');
+      newErrors.slug = t('errors.slug_required');
     } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = t('create_storefront.errors.slug_invalid');
+      newErrors.slug = t('errors.slug_invalid');
     }
 
     if (!formData.description || formData.description.length < 20) {
@@ -104,23 +105,17 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
     <div className="max-w-2xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            {t('create_storefront.basic_info.title')}
-          </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('create_storefront.basic_info.subtitle')}
-          </p>
+          <h2 className="card-title text-2xl mb-4">{t('title')}</h2>
+          <p className="text-base-content/70 mb-6">{t('subtitle')}</p>
 
           <div className="form-control w-full">
             <label className="label">
-              <span className="label-text">
-                {t('create_storefront.basic_info.name')}
-              </span>
+              <span className="label-text">{t('name')}</span>
               <span className="label-text-alt text-error">*</span>
             </label>
             <input
               type="text"
-              placeholder={t('create_storefront.basic_info.name_placeholder')}
+              placeholder={t('name_placeholder')}
               className={`input input-bordered w-full ${errors.name ? 'input-error' : ''}`}
               value={formData.name}
               onChange={(e) => updateFormData({ name: e.target.value })}
@@ -134,16 +129,14 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full mt-4">
             <label className="label">
-              <span className="label-text">
-                {t('create_storefront.basic_info.slug')}
-              </span>
+              <span className="label-text">{t('slug')}</span>
               <span className="label-text-alt text-error">*</span>
             </label>
             <div className="flex items-center gap-2">
               <span className="text-base-content/70">svetu.rs/</span>
               <input
                 type="text"
-                placeholder={t('create_storefront.basic_info.slug_placeholder')}
+                placeholder={t('slug_placeholder')}
                 className={`input input-bordered flex-1 ${errors.slug ? 'input-error' : ''}`}
                 value={formData.slug}
                 onChange={(e) =>
@@ -160,9 +153,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full mt-4">
             <label className="label">
-              <span className="label-text">
-                {t('create_storefront.basic_info.description')}
-              </span>
+              <span className="label-text">{t('description')}</span>
               <span className="label-text-alt text-error">*</span>
             </label>
             <textarea
@@ -184,41 +175,29 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full mt-4">
             <label className="label">
-              <span className="label-text">
-                {t('create_storefront.basic_info.business_type')}
-              </span>
+              <span className="label-text">{t('business_type')}</span>
             </label>
             <select
               className="select select-bordered w-full"
               value={formData.businessType}
               onChange={(e) => updateFormData({ businessType: e.target.value })}
             >
-              <option value="retail">
-                {t('create_storefront.business_types.retail')}
-              </option>
-              <option value="service">
-                {t('create_storefront.business_types.service')}
-              </option>
+              <option value="retail">{t('business_types.retail')}</option>
+              <option value="service">{t('business_types.service')}</option>
               <option value="restaurant">
-                {t('create_storefront.business_types.restaurant')}
+                {t('business_types.restaurant')}
               </option>
-              <option value="grocery">
-                {t('create_storefront.business_types.grocery')}
-              </option>
-              <option value="other">
-                {t('create_storefront.business_types.other')}
-              </option>
+              <option value="grocery">{t('business_types.grocery')}</option>
+              <option value="other">{t('business_types.other')}</option>
             </select>
           </div>
 
           {/* Logo Upload */}
           <div className="form-control w-full mt-6">
             <label className="label">
-              <span className="label-text">
-                {t('create_storefront.basic_info.logo')}
-              </span>
+              <span className="label-text">{t('logo')}</span>
               <span className="label-text-alt text-base-content/60">
-                {t('create_storefront.basic_info.logo_hint')}
+                {t('logo_hint')}
               </span>
             </label>
             <div className="flex items-center gap-4">
@@ -273,10 +252,10 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
                   className="btn btn-sm btn-outline"
                   onClick={() => logoInputRef.current?.click()}
                 >
-                  {t('create_storefront.basic_info.choose_logo')}
+                  {t('choose_logo')}
                 </button>
                 <p className="text-xs text-base-content/60 mt-1">
-                  {t('create_storefront.basic_info.logo_requirements')}
+                  {t('logo_requirements')}
                 </p>
               </div>
             </div>
@@ -290,11 +269,9 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
           {/* Banner Upload */}
           <div className="form-control w-full mt-6">
             <label className="label">
-              <span className="label-text">
-                {t('create_storefront.basic_info.banner')}
-              </span>
+              <span className="label-text">{t('banner')}</span>
               <span className="label-text-alt text-base-content/60">
-                {t('create_storefront.basic_info.banner_hint')}
+                {t('banner_hint')}
               </span>
             </label>
             <div
@@ -324,13 +301,13 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
                     />
                   </svg>
                   <span className="text-sm text-base-content/60">
-                    {t('create_storefront.basic_info.click_to_upload_banner')}
+                    {t('click_to_upload_banner')}
                   </span>
                 </div>
               )}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {t('create_storefront.basic_info.change_banner')}
+                  {t('change_banner')}
                 </span>
               </div>
             </div>
@@ -342,7 +319,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
               onChange={handleBannerChange}
             />
             <p className="text-xs text-base-content/60 mt-2">
-              {t('create_storefront.basic_info.banner_requirements')}
+              {t('banner_requirements')}
             </p>
             {errors.banner && (
               <label className="label">
@@ -355,7 +332,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="card-actions justify-end mt-6">
             <button className="btn btn-primary" onClick={handleNext}>
-              {t('common.next')}
+              {tCommon('next')}
             </button>
           </div>
         </div>

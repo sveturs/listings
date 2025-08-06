@@ -35,7 +35,7 @@ export function SEOSection({
   onChange,
   listingId,
 }: SEOSectionProps) {
-  const t = useTranslations('profile.listings.editListing');
+  const t = useTranslations('profile');
   const [analysis, setAnalysis] = useState<SEOAnalysis>({
     titleScore: 0,
     descriptionScore: 0,

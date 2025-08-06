@@ -1,0 +1,108 @@
+{
+  "title": "Маркетплейс",
+  "createListing": "Подать объявление",
+  "latestListings": "Последние объявления",
+  "allCategories": "Все категории",
+  "searchPlaceholder": "Поиск товаров и услуг...",
+
+  "listing": {
+    "title": "Название",
+    "description": "Описание",
+    "price": "Цена",
+    "category": "Категория",
+    "location": "Местоположение",
+    "condition": "Состояние",
+    "new": "Новый",
+    "used": "Б/у",
+    "views": "Просмотров",
+    "favorites": "В избранном",
+    "published": "Опубликовано",
+    "updated": "Обновлено",
+    "status": {
+      "active": "Активно",
+      "sold": "Продано",
+      "archived": "В архиве",
+      "pending": "На модерации"
+    }
+  },
+
+  "actions": {
+    "addToFavorites": "В избранное",
+    "removeFromFavorites": "Удалить из избранного",
+    "share": "Поделиться",
+    "report": "Пожаловаться",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "archive": "В архив",
+    "activate": "Активировать",
+    "contactSeller": "Связаться с продавцом",
+    "makeOffer": "Предложить цену"
+  },
+
+  "filters": {
+    "title": "Фильтры",
+    "priceRange": "Диапазон цен",
+    "from": "От",
+    "to": "До",
+    "condition": "Состояние",
+    "location": "Местоположение",
+    "radius": "Радиус",
+    "category": "Категория",
+    "seller": "Продавец",
+    "privateOnly": "Только частные",
+    "storesOnly": "Только магазины",
+    "withPhoto": "С фото",
+    "urgentOnly": "Только срочные",
+    "apply": "Применить",
+    "reset": "Сбросить",
+    "activeFilters": "Активные фильтры",
+    "clearAll": "Очистить все"
+  },
+
+  "sort": {
+    "relevance": "По релевантности",
+    "priceAsc": "Цена: по возрастанию",
+    "priceDesc": "Цена: по убыванию",
+    "dateDesc": "Дата: новые первые",
+    "dateAsc": "Дата: старые первые",
+    "viewsDesc": "По просмотрам",
+    "distanceAsc": "По расстоянию"
+  },
+
+  "categories": {
+    "all": "Все категории",
+    "transport": "Транспорт",
+    "realEstate": "Недвижимость",
+    "electronics": "Электроника",
+    "clothing": "Одежда и обувь",
+    "home": "Дом и сад",
+    "services": "Услуги",
+    "jobs": "Работа",
+    "business": "Бизнес",
+    "hobbies": "Хобби и отдых",
+    "animals": "Животные",
+    "other": "Другое"
+  },
+
+  "seller": {
+    "info": "Информация о продавце",
+    "name": "Имя",
+    "rating": "Рейтинг",
+    "reviews": "Отзывы",
+    "activeListings": "Активных объявлений",
+    "memberSince": "На сайте с",
+    "responseTime": "Время ответа",
+    "viewProfile": "Посмотреть профиль",
+    "allListings": "Все объявления"
+  },
+
+  "messages": {
+    "listingCreated": "Объявление создано",
+    "listingUpdated": "Объявление обновлено",
+    "listingDeleted": "Объявление удалено",
+    "addedToFavorites": "Добавлено в избранное",
+    "removedFromFavorites": "Удалено из избранного",
+    "offerSent": "Предложение отправлено",
+    "reportSent": "Жалоба отправлена"
+  }
+}

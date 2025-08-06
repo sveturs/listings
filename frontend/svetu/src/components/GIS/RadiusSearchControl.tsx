@@ -46,7 +46,7 @@ export default function RadiusSearchControl({
   className = '',
   disabled = false,
 }: RadiusSearchControlProps) {
-  const t = useTranslations('gis.radius_search');
+  const t = useTranslations('gis');
   const mergedConfig = { ...defaultConfig, ...config };
 
   // Состояние компонента
@@ -291,7 +291,7 @@ export default function RadiusSearchControl({
       <div className="flex items-center justify-between p-4 border-b border-base-300">
         <div className="flex items-center space-x-2">
           <div className="w-2 h-2 bg-primary rounded-full"></div>
-          <h3 className="font-semibold text-sm">{t('title')}</h3>
+          <h3 className="font-semibold text-sm">{t('radius_search.title')}</h3>
           {total > 0 && (
             <span className="badge badge-primary badge-sm">{total}</span>
           )}
@@ -328,14 +328,14 @@ export default function RadiusSearchControl({
               onClick={() => setActiveTab('radius')}
               disabled={disabled}
             >
-              {t('radius_search_tab')}
+              {t('radius_search.radius_search_tab')}
             </button>
             <button
               className={`tab ${activeTab === 'district' ? 'tab-active' : ''}`}
               onClick={() => setActiveTab('district')}
               disabled={disabled}
             >
-              {t('district_search_tab')}
+              {t('radius_search.district_search_tab')}
             </button>
           </div>
 
@@ -346,7 +346,7 @@ export default function RadiusSearchControl({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-base-content">
-                    {t('radius')}
+                    {t('radius_search.radius')}
                   </label>
                   <span className="text-sm font-mono bg-base-200 px-2 py-1 rounded">
                     {formatRadius(radius)}
@@ -374,7 +374,7 @@ export default function RadiusSearchControl({
               {mergedConfig.showAddressInput && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-base-content">
-                    {t('address')}
+                    {t('radius_search.address')}
                   </label>
                   <form onSubmit={handleSubmit} className="relative">
                     <div className="flex space-x-2">
@@ -385,7 +385,7 @@ export default function RadiusSearchControl({
                           onChange={(e) =>
                             handleAddressInputChange(e.target.value)
                           }
-                          placeholder={t('address_placeholder')}
+                          placeholder={t('radius_search.address_placeholder')}
                           className="input input-bordered input-sm w-full pr-10"
                           disabled={disabled || isLoading}
                         />
@@ -471,14 +471,14 @@ export default function RadiusSearchControl({
                         />
                       </svg>
                     )}
-                    {t('use_my_location')}
+                    {t('radius_search.use_my_location')}
                   </button>
                 )}
 
               {/* Переключатель показа круга */}
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-base-content">
-                  {t('show_search_area')}
+                  {t('radius_search.show_search_area')}
                 </label>
                 <input
                   type="checkbox"
@@ -494,7 +494,7 @@ export default function RadiusSearchControl({
                 <div className="flex items-center justify-center space-x-2 p-2">
                   <div className="loading loading-spinner loading-sm"></div>
                   <span className="text-sm text-base-content/70">
-                    {t('searching')}
+                    {t('radius_search.searching')}
                   </span>
                 </div>
               )}
@@ -525,7 +525,7 @@ export default function RadiusSearchControl({
               {total > 0 && searchCenter && (
                 <div className="space-y-2">
                   <div className="text-sm text-base-content/70">
-                    {t('results_found', {
+                    {t('radius_search.results_found', {
                       count: total,
                       radius: formatRadius(radius),
                     })}
@@ -535,7 +535,7 @@ export default function RadiusSearchControl({
                     onClick={clearResults}
                     className="btn btn-ghost btn-xs"
                   >
-                    {t('clear_results')}
+                    {t('radius_search.clear_results')}
                   </button>
                 </div>
               )}
@@ -559,7 +559,7 @@ export default function RadiusSearchControl({
             <div className="flex items-center justify-center space-x-2 p-2">
               <div className="loading loading-spinner loading-sm"></div>
               <span className="text-sm text-base-content/70">
-                {t('searching')}
+                {t('radius_search.searching')}
               </span>
             </div>
           )}
@@ -591,18 +591,18 @@ export default function RadiusSearchControl({
             <div className="space-y-2">
               <div className="text-sm text-base-content/70">
                 {activeTab === 'radius'
-                  ? t('results_found', {
+                  ? t('radius_search.results_found', {
                       count: total,
                       radius: formatRadius(radius),
                     })
-                  : t('district_results_found', { count: total })}
+                  : t('radius_search.district_results_found', { count: total })}
               </div>
               <button
                 type="button"
                 onClick={clearResults}
                 className="btn btn-ghost btn-xs"
               >
-                {t('clear_results')}
+                {t('radius_search.clear_results')}
               </button>
             </div>
           )}

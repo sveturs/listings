@@ -19,11 +19,11 @@ export default function ListingActions({ listing }: ListingActionsProps) {
   const [isFavorite, setIsFavorite] = useState(listing.is_favorite || false);
   const [isInComparison, setIsInComparison] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
-  const t = useTranslations('marketplace.listingActions');
+  const t = useTranslations('marketplace');
 
   const handleFavoriteToggle = async () => {
     if (!user) {
-      toast.error(t('signInToAddFavorites'));
+      toast.error(t('listingActions.signInToAddFavorites'));
       return;
     }
 
@@ -31,11 +31,13 @@ export default function ListingActions({ listing }: ListingActionsProps) {
       setIsFavorite(!isFavorite);
       // TODO: API call to toggle favorite
       toast.success(
-        isFavorite ? t('removedFromFavorites') : t('addedToFavorites')
+        isFavorite
+          ? t('listingActions.removedFromFavorites')
+          : t('listingActions.addedToFavorites')
       );
     } catch {
       setIsFavorite(!isFavorite); // Revert on error
-      toast.error(t('error'));
+      toast.error(t('listingActions.error'));
     }
   };
 
@@ -43,7 +45,9 @@ export default function ListingActions({ listing }: ListingActionsProps) {
     setIsInComparison(!isInComparison);
     // TODO: Add to comparison store
     toast.success(
-      isInComparison ? t('removedFromComparison') : t('addedToComparison')
+      isInComparison
+        ? t('listingActions.removedFromComparison')
+        : t('listingActions.addedToComparison')
     );
   };
 
@@ -61,13 +65,13 @@ export default function ListingActions({ listing }: ListingActionsProps) {
     try {
       const successful = document.execCommand('copy');
       if (successful) {
-        toast.success(t('linkCopied'));
+        toast.success(t('listingActions.linkCopied'));
       } else {
-        toast.error(t('failedToCopyLink'));
+        toast.error(t('listingActions.failedToCopyLink'));
       }
     } catch (err) {
       console.error('Fallback: Oops, unable to copy', err);
-      toast.error(t('copyNotSupported'));
+      toast.error(t('listingActions.copyNotSupported'));
     }
 
     document.body.removeChild(textArea);
@@ -92,7 +96,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
         navigator.clipboard
           .writeText(url)
           .then(() => {
-            toast.success(t('linkCopied'));
+            toast.success(t('listingActions.linkCopied'));
             setShareMenuOpen(false);
           })
           .catch(() => {
@@ -115,7 +119,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
       <button
         onClick={handleFavoriteToggle}
         className={`btn btn-circle ${isFavorite ? 'btn-error' : 'btn-ghost'}`}
-        aria-label={t('addToFavorites')}
+        aria-label={t('listingActions.addToFavorites')}
       >
         <svg
           className="w-6 h-6"
@@ -136,7 +140,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
       <button
         onClick={handleComparisonToggle}
         className={`btn btn-circle ${isInComparison ? 'btn-info' : 'btn-ghost'}`}
-        aria-label={t('addToComparison')}
+        aria-label={t('listingActions.addToComparison')}
       >
         <svg
           className="w-6 h-6"
@@ -159,7 +163,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
           tabIndex={0}
           onClick={() => setShareMenuOpen(!shareMenuOpen)}
           className="btn btn-circle btn-ghost"
-          aria-label={t('share')}
+          aria-label={t('listingActions.share')}
         >
           <svg
             className="w-6 h-6"
@@ -257,7 +261,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
                     d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                   />
                 </svg>
-                {t('copyLink')}
+                {t('listingActions.copyLink')}
               </a>
             </li>
           </ul>
@@ -267,7 +271,7 @@ export default function ListingActions({ listing }: ListingActionsProps) {
       {/* Report Button */}
       <button
         className="btn btn-circle btn-ghost text-error"
-        aria-label={t('report')}
+        aria-label={t('listingActions.report')}
       >
         <svg
           className="w-6 h-6"

@@ -25,7 +25,7 @@ const STEPS = [
 ];
 
 export default function ProductWizard({ storefrontSlug }: ProductWizardProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
   const { state, goToStep, nextStep, prevStep } = useCreateProduct();
 
   const renderStepContent = () => {
@@ -67,7 +67,7 @@ export default function ProductWizard({ storefrontSlug }: ProductWizardProps) {
             </div>
             <div className="flex-1">
               <h2 className="text-lg font-bold text-base-content">
-                {t(`storefronts.products.steps.${STEPS[state.currentStep].id}`)}
+                {t(`steps.${STEPS[state.currentStep].id}`)}
               </h2>
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex-1 bg-base-300 rounded-full h-1">
@@ -91,7 +91,7 @@ export default function ProductWizard({ storefrontSlug }: ProductWizardProps) {
       <div className="hidden lg:block mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-base-content">
-            {t(`storefronts.products.steps.${STEPS[state.currentStep].id}`)}
+            {t(`steps.${STEPS[state.currentStep].id}`)}
           </h2>
           <div className="text-sm text-base-content/60">
             {state.currentStep + 1} / {STEPS.length}
@@ -145,7 +145,7 @@ export default function ProductWizard({ storefrontSlug }: ProductWizardProps) {
                   {isCompleted ? '✓' : step.icon}
                 </div>
                 <span className="text-sm font-medium">
-                  {t(`storefronts.products.steps.${step.id}`)}
+                  {t(`steps.${step.id}`)}
                 </span>
               </button>
             );

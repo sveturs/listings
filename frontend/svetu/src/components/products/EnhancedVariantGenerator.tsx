@@ -27,7 +27,7 @@ export default function EnhancedVariantGenerator({
   onGenerate,
   onCancel,
 }: EnhancedVariantGeneratorProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const [loading, setLoading] = useState(true);
   const [variantAttributes, setVariantAttributes] = useState<
     ProductVariantAttribute[]
@@ -224,8 +224,12 @@ export default function EnhancedVariantGenerator({
             />
           </svg>
           <div>
-            <h3 className="font-bold">{t('noVariantAttributesForCategory')}</h3>
-            <div className="text-xs">{t('categoryDoesNotSupportVariants')}</div>
+            <h3 className="font-bold">
+              {t('products.noVariantAttributesForCategory')}
+            </h3>
+            <div className="text-xs">
+              {t('products.categoryDoesNotSupportVariants')}
+            </div>
           </div>
         </div>
       </div>
@@ -238,13 +242,13 @@ export default function EnhancedVariantGenerator({
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">
-            {t('configureStockAndPrices')}
+            {t('products.configureStockAndPrices')}
           </h3>
           <button
             onClick={() => setShowStockManager(false)}
             className="btn btn-outline btn-sm"
           >
-            ← {t('backToSettings')}
+            ← {t('products.backToSettings')}
           </button>
         </div>
 
@@ -258,13 +262,13 @@ export default function EnhancedVariantGenerator({
             onClick={() => setShowStockManager(false)}
             className="btn btn-outline"
           >
-            {t('cancel')}
+            {t('products.cancel')}
           </button>
           <button
             onClick={() => handleVariantsConfirm(generatedVariants)}
             className="btn btn-primary"
           >
-            {t('confirmVariants')}
+            {t('products.confirmVariants')}
           </button>
         </div>
       </div>
@@ -288,7 +292,7 @@ export default function EnhancedVariantGenerator({
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>{t('selectValuesForVariants')}</span>
+        <span>{t('products.selectValuesForVariants')}</span>
       </div>
 
       {/* Выбор значений для каждого атрибута */}
@@ -303,7 +307,7 @@ export default function EnhancedVariantGenerator({
                 {attr.display_name}
                 {attr.affects_stock && (
                   <div className="badge badge-info badge-sm">
-                    {t('affectsStock')}
+                    {t('products.affectsStock')}
                   </div>
                 )}
               </h4>
@@ -352,20 +356,22 @@ export default function EnhancedVariantGenerator({
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>{t('willGenerateVariants', { count: getTotalVariants() })}</span>
+        <span>
+          {t('products.willGenerateVariants', { count: getTotalVariants() })}
+        </span>
       </div>
 
       {/* Кнопки */}
       <div className="flex justify-end space-x-2">
         <button onClick={onCancel} className="btn btn-outline">
-          {t('cancel')}
+          {t('products.cancel')}
         </button>
         <button
           onClick={generateVariants}
           disabled={getTotalVariants() === 0}
           className="btn btn-primary"
         >
-          {t('generateVariants')}
+          {t('products.generateVariants')}
         </button>
       </div>
     </div>

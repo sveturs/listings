@@ -382,7 +382,7 @@ export default function SearchPage() {
                     }
                   }}
                 >
-                  {t('search.listings')}
+                  {t('listings')}
                 </button>
                 <button
                   className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.product_types?.includes('storefront') ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
@@ -399,7 +399,7 @@ export default function SearchPage() {
                     }
                   }}
                 >
-                  {t('search.storeProducts')}
+                  {t('storeProducts')}
                 </button>
                 <button
                   className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'price' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
@@ -440,7 +440,7 @@ export default function SearchPage() {
                       d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  {t('search.byPrice')}
+                  {t('byPrice')}
                 </button>
                 <button
                   className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.sort_by === 'date' ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
@@ -481,7 +481,7 @@ export default function SearchPage() {
                       d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
-                  {t('search.byDate')}
+                  {t('byDate')}
                 </button>
               </div>
             </div>
@@ -510,9 +510,9 @@ export default function SearchPage() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title text-sm">{t('search.found')}</div>
+                <div className="stat-title text-sm">{t('found')}</div>
                 <div className="stat-value text-2xl">{results.total || 0}</div>
-                <div className="stat-desc">{t('search.results')}</div>
+                <div className="stat-desc">{t('results')}</div>
               </div>
 
               {/* Время поиска */}
@@ -532,11 +532,11 @@ export default function SearchPage() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title text-sm">{t('search.speed')}</div>
+                <div className="stat-title text-sm">{t('speed')}</div>
                 <div className="stat-value text-2xl">
                   {results.took_ms || 0}
                 </div>
-                <div className="stat-desc">{t('search.milliseconds')}</div>
+                <div className="stat-desc">{t('milliseconds')}</div>
               </div>
 
               {/* Категории */}
@@ -556,11 +556,11 @@ export default function SearchPage() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title text-sm">{t('search.time')}</div>
+                <div className="stat-title text-sm">{t('time')}</div>
                 <div className="stat-value text-2xl">
                   {results.took_ms || 0}
                 </div>
-                <div className="stat-desc">{t('search.ms')}</div>
+                <div className="stat-desc">{t('ms')}</div>
               </div>
 
               {/* Фильтры */}
@@ -580,13 +580,11 @@ export default function SearchPage() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title text-sm">
-                  {t('search.activeFilters')}
-                </div>
+                <div className="stat-title text-sm">{t('activeFilters')}</div>
                 <div className="stat-value text-2xl">
                   {activeFiltersCount()}
                 </div>
-                <div className="stat-desc">{t('search.applied')}</div>
+                <div className="stat-desc">{t('applied')}</div>
               </div>
             </div>
           )}
@@ -595,7 +593,7 @@ export default function SearchPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
               <div>
                 <h2 className="text-2xl font-bold">
-                  {t('search.resultsFor')} &quot;{query}&quot;
+                  {t('resultsFor')} &quot;{query}&quot;
                 </h2>
               </div>
 
@@ -617,7 +615,7 @@ export default function SearchPage() {
                     d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
                   />
                 </svg>
-                {t('search.filters')}
+                {t('filters')}
                 {activeFiltersCount() > 0 && (
                   <span className="badge badge-primary badge-sm ml-2">
                     {activeFiltersCount()}
@@ -677,7 +675,7 @@ export default function SearchPage() {
                               d="M6 18L18 6M6 6l12 12"
                             />
                           </svg>
-                          {t('search.reset')}
+                          {t('reset')}
                         </button>
                       )}
                     </div>
@@ -687,7 +685,7 @@ export default function SearchPage() {
                       <div>
                         <label className="label">
                           <span className="label-text font-medium">
-                            {t('search.productTypes')}
+                            {t('productTypes')}
                           </span>
                         </label>
                         <div className="grid grid-cols-2 gap-3">
@@ -730,7 +728,7 @@ export default function SearchPage() {
                                 />
                               </svg>
                               <span className="text-xs font-medium">
-                                {t('search.private')}
+                                {t('private')}
                               </span>
                             </div>
                           </div>
@@ -773,7 +771,7 @@ export default function SearchPage() {
                                 />
                               </svg>
                               <span className="text-xs font-medium">
-                                {t('search.stores')}
+                                {t('stores')}
                               </span>
                             </div>
                           </div>
@@ -805,9 +803,7 @@ export default function SearchPage() {
                         <div className="flex gap-2">
                           <div className="form-control flex-1">
                             <label className="input-group">
-                              <span className="bg-base-200">
-                                {t('search.from')}
-                              </span>
+                              <span className="bg-base-200">{t('from')}</span>
                               <input
                                 type="number"
                                 className="input input-bordered w-full"
@@ -824,9 +820,7 @@ export default function SearchPage() {
                           </div>
                           <div className="form-control flex-1">
                             <label className="input-group">
-                              <span className="bg-base-200">
-                                {t('search.to')}
-                              </span>
+                              <span className="bg-base-200">{t('to')}</span>
                               <input
                                 type="number"
                                 className="input input-bordered w-full"
@@ -951,10 +945,10 @@ export default function SearchPage() {
                       </svg>
                     </div>
                     <h3 className="text-3xl font-bold mb-4">
-                      {t('search.noResults')}
+                      {t('noResults')}
                     </h3>
                     <p className="text-base-content/60 mb-8 max-w-md mx-auto">
-                      {t('search.noResultsDescription')}
+                      {t('noResultsDescription')}
                     </p>
 
                     <div className="divider">
@@ -1000,7 +994,7 @@ export default function SearchPage() {
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                           />
                         </svg>
-                        {t('search.clearFilters')}
+                        {t('clearFilters')}
                       </button>
                       <button
                         className="btn btn-primary"

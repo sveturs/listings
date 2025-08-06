@@ -18,7 +18,8 @@ interface StorefrontProductsProps {
 }
 
 export default function StorefrontProducts({ storefrontSlug }: StorefrontProductsProps) {
-  const t = useTranslations();
+  const t = useTranslations('products');
+  const _tStorefronts = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const [products, setProducts] = useState<StorefrontProduct[]>([]);
@@ -75,7 +76,7 @@ export default function StorefrontProducts({ storefrontSlug }: StorefrontProduct
     return (
       <div className="card bg-base-200 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">{t('storefronts.products.title')}</h2>
+          <h2 className="card-title text-2xl mb-4">{t('products.title')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="card bg-base-300 animate-pulse">
@@ -96,12 +97,12 @@ export default function StorefrontProducts({ storefrontSlug }: StorefrontProduct
     return (
       <div className="card bg-base-200 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">{t('storefronts.products.title')}</h2>
+          <h2 className="card-title text-2xl mb-4">{t('products.title')}</h2>
           <div className="text-center py-12">
             <svg className="w-16 h-16 mx-auto mb-4 text-base-content/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            <p className="text-base-content/60">{t('storefronts.noProducts')}</p>
+            <p className="text-base-content/60">{t('products.noProducts')}</p>
           </div>
         </div>
       </div>
@@ -112,14 +113,14 @@ export default function StorefrontProducts({ storefrontSlug }: StorefrontProduct
     <div className="card bg-base-200 shadow-xl">
       <div className="card-body">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="card-title text-2xl">{t('storefronts.products.title')}</h2>
+          <h2 className="card-title text-2xl">{t('products.title')}</h2>
           <div className="flex items-center gap-2">
             <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
             <Link 
               href={`/${locale}/storefronts/${storefrontSlug}/products`}
               className="btn btn-sm btn-ghost"
             >
-              {t('common.viewAll')}
+              {tCommon('viewAll')}
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -155,7 +156,7 @@ export default function StorefrontProducts({ storefrontSlug }: StorefrontProduct
                   />
                   {product.stock_status === 'out_of_stock' && (
                     <div className="absolute top-2 right-2 badge badge-warning">
-                      {t('products.outOfStock')}
+                      {t('outOfStock')}
                     </div>
                   )}
                 </figure>
@@ -198,7 +199,7 @@ export default function StorefrontProducts({ storefrontSlug }: StorefrontProduct
                       />
                       {product.stock_status === 'out_of_stock' && (
                         <div className="absolute top-1 right-1 badge badge-warning badge-sm">
-                          {t('products.outOfStock')}
+                          {t('outOfStock')}
                         </div>
                       )}
                     </figure>
@@ -210,9 +211,9 @@ export default function StorefrontProducts({ storefrontSlug }: StorefrontProduct
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-base-content/60 mt-1">
-                        <span>{t('products.inStock')}: {product.stock_quantity || 0}</span>
+                        <span>{t('inStock')}: {product.stock_quantity || 0}</span>
                         {product.sold_count && product.sold_count > 0 && (
-                          <span>• {t('products.sold')}: {product.sold_count}</span>
+                          <span>• {t('sold')}: {product.sold_count}</span>
                         )}
                       </div>
                     </div>

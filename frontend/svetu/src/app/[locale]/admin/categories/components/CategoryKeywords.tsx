@@ -23,7 +23,7 @@ export default function CategoryKeywords({
   categoryId,
   categoryName,
 }: CategoryKeywordsProps) {
-  const t = useTranslations('admin.categories.keywords');
+  const t = useTranslations('admin');
   const [keywords, setKeywords] = useState<CategoryKeyword[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

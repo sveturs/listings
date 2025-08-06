@@ -1,0 +1,34 @@
+{
+  "placeholder": "Pretraži proizvode i usluge...",
+  "fuzzySearch": "Tolerantna pretraga",
+  "fuzzySearchHint": "pretraga sa greškama",
+  "fuzzySearchTooltip": "Pretraga će raditi čak i sa malim greškama u kucanju",
+  "suggestions": "Predlozi",
+  "history": "Istorija pretrage",
+  "trending": "Popularne pretrage",
+  "noResults": "Nema rezultata",
+  "clear": "Obriši",
+  "searchButton": "Pretraži",
+  "categories": "Kategorije",
+  "filters": "Filteri",
+  "results": "rezultata",
+  "sort": {
+    "relevance": "Po relevantnosti",
+    "price_asc": "Cena (od niže ka višoj)",
+    "price_desc": "Cena (od više ka nižoj)",
+    "date_desc": "Najnovije prvo",
+    "date_asc": "Najstarije prvo"
+  },
+  "resultsInfo": {
+    "found": "Pronađeno",
+    "items": "stavki",
+    "for": "za"
+  },
+  "clearFilters": "Obriši filtere",
+  "listings": "Oglasi",
+  "storeProducts": "Proizvodi prodavnica",
+  "byPrice": "Po ceni",
+  "byDate": "Po datumu",
+  "searchHistory": "Istorija pretrage",
+  "clearHistory": "Obriši istoriju"
+}

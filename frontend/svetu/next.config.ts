@@ -123,6 +123,26 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Кэширование модулей переводов
+      {
+        source: '/_next/static/chunks/src_messages_:path*.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Кэширование JSON файлов переводов
+      {
+        source: '/messages/:locale/:module.json',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+        ],
+      },
     ];
   },
 };

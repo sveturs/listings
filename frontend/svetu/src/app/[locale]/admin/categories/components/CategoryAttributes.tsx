@@ -447,12 +447,10 @@ export default function CategoryAttributes({
                       onTranslateClick={async () => {
                         try {
                           await adminApi.translateAttribute(attr.id);
-                          toast.success(
-                            t('admin.translations.translationSuccess')
-                          );
+                          toast.success(t('translations.translationSuccess'));
                           loadData();
                         } catch {
-                          toast.error(t('admin.translations.translationError'));
+                          toast.error(t('translations.translationError'));
                         }
                       }}
                     />

@@ -19,7 +19,7 @@ export function BasicInfoSection({
   errors = {},
   onChange,
 }: BasicInfoSectionProps) {
-  const t = useTranslations('profile.listings.editListing');
+  const t = useTranslations('profile');
   const [titleSEO, setTitleSEO] = useState<'poor' | 'good' | 'excellent'>(
     'good'
   );

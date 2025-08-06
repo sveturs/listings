@@ -26,7 +26,7 @@ const WalkingAccessibilityControl: React.FC<
   searchRadius,
   onRadiusChange,
 }) => {
-  const t = useTranslations();
+  const t = useTranslations('map');
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 

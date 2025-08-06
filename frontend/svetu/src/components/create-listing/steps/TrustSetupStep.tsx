@@ -12,7 +12,8 @@ export default function TrustSetupStep({
   onNext,
   onBack,
 }: TrustSetupStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('trust');
+  const tCommon = useTranslations('common');
   const [formData, setFormData] = useState({
     phoneVerified: false,
     preferredMeetingType: 'personal', // personal, pickup, delivery
@@ -72,18 +73,16 @@ export default function TrustSetupStep({
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4 flex items-center">
-            🛡️ {t('trust.setup_title')}
+            🛡️ {t('setup_title')}
           </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('trust.setup_description')}
-          </p>
+          <p className="text-base-content/70 mb-6">{t('setup_description')}</p>
 
           {/* Верификация телефона */}
           <div className="space-y-4">
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">
-                  📞 {t('trust.phone_verification')}
+                  📞 {t('phone_verification')}
                 </span>
                 <span className="label-text-alt text-error">*</span>
               </label>
@@ -105,9 +104,9 @@ export default function TrustSetupStep({
                       ></path>
                     </svg>
                     <div className="text-sm">
-                      <p>{t('trust.phone_verification_info')}</p>
+                      <p>{t('phone_verification_info')}</p>
                       <p className="text-xs mt-1">
-                        {t('trust.local_operators_only')}
+                        {t('local_operators_only')}
                       </p>
                     </div>
                   </div>
@@ -117,9 +116,7 @@ export default function TrustSetupStep({
                     onClick={handlePhoneVerification}
                     disabled={isVerifyingPhone}
                   >
-                    {isVerifyingPhone
-                      ? t('trust.verifying')
-                      : t('trust.verify_phone')}
+                    {isVerifyingPhone ? t('verifying') : t('verify_phone')}
                   </button>
                 </div>
               ) : (
@@ -137,7 +134,7 @@ export default function TrustSetupStep({
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span>{t('trust.phone_verified')}</span>
+                  <span>{t('phone_verified')}</span>
                 </div>
               )}
             </div>
@@ -146,7 +143,7 @@ export default function TrustSetupStep({
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">
-                  🤝 {t('trust.preferred_meeting')}
+                  🤝 {t('preferred_meeting')}
                 </span>
                 <span className="label-text-alt text-error">*</span>
               </label>
@@ -212,7 +209,7 @@ export default function TrustSetupStep({
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-medium">
-                    📍 {t('trust.meeting_places')}
+                    📍 {t('meeting_places')}
                   </span>
                 </label>
 
@@ -247,7 +244,7 @@ export default function TrustSetupStep({
                 </div>
 
                 <p className="text-xs text-base-content/60">
-                  {t('trust.meeting_places_hint')}
+                  {t('meeting_places_hint')}
                 </p>
               </div>
             )}
@@ -256,7 +253,7 @@ export default function TrustSetupStep({
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">
-                  ⏰ {t('trust.available_hours')}
+                  ⏰ {t('available_hours')}
                 </span>
               </label>
               <input
@@ -273,7 +270,7 @@ export default function TrustSetupStep({
               />
               <label className="label">
                 <span className="label-text-alt">
-                  {t('trust.available_hours_hint')}
+                  {t('available_hours_hint')}
                 </span>
               </label>
             </div>
@@ -282,14 +279,14 @@ export default function TrustSetupStep({
           {/* Кнопки навигации */}
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-outline" onClick={onBack}>
-              ← {t('common.back')}
+              ← {tCommon('back')}
             </button>
             <button
               className={`btn btn-primary ${!canProceed ? 'btn-disabled' : ''}`}
               onClick={onNext}
               disabled={!canProceed}
             >
-              {t('common.continue')} →
+              {tCommon('continue')} →
             </button>
           </div>
         </div>

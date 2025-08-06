@@ -18,7 +18,7 @@ type TabType =
   | 'transliteration';
 
 export default function SearchDashboard() {
-  const t = useTranslations('admin.search');
+  const t = useTranslations('admin');
   const [activeTab, setActiveTab] = useState<TabType>('analytics');
 
   const tabs: { key: TabType; label: string; icon: string }[] = [
@@ -60,9 +60,9 @@ export default function SearchDashboard() {
         {/* Заголовок */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-base-content mb-2">
-            {t('title')}
+            {t('search.title')}
           </h1>
-          <p className="text-base-content/70">{t('description')}</p>
+          <p className="text-base-content/70">{t('search.description')}</p>
         </div>
 
         {/* Навигация по табам */}

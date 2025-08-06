@@ -22,7 +22,8 @@ export default function BusinessHoursStep({
   onNext,
   onBack,
 }: BusinessHoursStepProps) {
-  const t = useTranslations();
+  const _tCommon = useTranslations('common');
+  const t = useTranslations('create_storefront');
   const { formData, updateFormData } = useCreateStorefrontContext();
 
   const handleHoursChange = (dayIndex: number, field: string, value: any) => {
@@ -40,10 +41,10 @@ export default function BusinessHoursStep({
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4">
-            {t('create_storefront.business_hours.title')}
+            {t('business_hours.title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {t('create_storefront.business_hours.subtitle')}
+            {t('business_hours.subtitle')}
           </p>
 
           <div className="space-y-4">
@@ -74,7 +75,7 @@ export default function BusinessHoursStep({
                         }
                       />
                       <span className="label-text ml-2">
-                        {hours.isClosed ? t('common.closed') : t('common.open')}
+                        {hours.isClosed ? t('closed') : t('open')}
                       </span>
                     </label>
                   </div>
@@ -120,15 +121,15 @@ export default function BusinessHoursStep({
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               ></path>
             </svg>
-            <span>{t('create_storefront.business_hours.tip')}</span>
+            <span>{t('business_hours.tip')}</span>
           </div>
 
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-ghost" onClick={onBack}>
-              {t('common.back')}
+              {t('back')}
             </button>
             <button className="btn btn-primary" onClick={handleNext}>
-              {t('common.next')}
+              {t('next')}
             </button>
           </div>
         </div>

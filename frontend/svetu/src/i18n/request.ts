@@ -1,5 +1,6 @@
 import { getRequestConfig } from 'next-intl/server';
 import { routing } from './routing';
+import { loadMessages } from '@/lib/i18n/loadMessages';
 
 export default getRequestConfig(async ({ requestLocale }) => {
   // This typically corresponds to the `[locale]` segment
@@ -10,8 +11,21 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = routing.defaultLocale;
   }
 
+  // Загружаем базовые модули для серверного рендеринга
+  const messages = await loadMessages(locale as any, [
+    'common',
+    'marketplace',
+    'auth',
+    'misc',
+    'cart',
+    'map',
+    'storefronts',
+    'admin', // Добавляем admin так как он используется в storefronts странице
+    'cars', // Добавляем cars для car-selector
+  ]);
+
   return {
     locale,
-    messages: (await import(`../messages/${locale}.json`)).default,
+    messages,
   };
 });

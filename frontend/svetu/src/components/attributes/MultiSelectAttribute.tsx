@@ -26,7 +26,7 @@ export default function MultiSelectAttribute({
   error,
   locale = 'ru',
 }: MultiSelectAttributeProps) {
-  const t = useTranslations('marketplace.create');
+  const t = useTranslations('marketplace');
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -139,8 +139,8 @@ export default function MultiSelectAttribute({
         >
           <span className="text-left truncate">
             {selectedCount > 0
-              ? `${t('selected')}: ${selectedCount}`
-              : t('selectOptions')}
+              ? `${t('create.selected')}: ${selectedCount}`
+              : t('create.selectOptions')}
           </span>
           <svg
             className={`w-4 h-4 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -161,7 +161,9 @@ export default function MultiSelectAttribute({
           <div className="absolute z-10 w-full mt-1">
             <ul className="menu p-2 shadow-lg bg-base-100 rounded-box w-full max-h-60 overflow-auto border border-base-300">
               {options.length === 0 ? (
-                <li className="text-base-content/50 p-2">{t('noOptions')}</li>
+                <li className="text-base-content/50 p-2">
+                  {t('create.noOptions')}
+                </li>
               ) : (
                 options.map((option, index) => {
                   const optionValue =

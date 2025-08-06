@@ -29,7 +29,8 @@ export default function AttributesStep({
   onNext,
   onBack,
 }: AttributesStepProps) {
-  const t = useTranslations();
+  const _tCommon = useTranslations('common');
+  const t = useTranslations('storefronts');
   const locale = useLocale();
   const { state, setAttribute, setError, clearError } = useCreateProduct();
   const [attributes, setAttributes] = useState<CategoryAttribute[]>([]);
@@ -101,32 +102,32 @@ export default function AttributesStep({
       { name: string; icon: string; priority: number }
     > = {
       basic: {
-        name: t('storefronts.products.attributeGroups.basic'),
+        name: t('products.attributeGroups.basic'),
         icon: '🏷️',
         priority: 1,
       },
       technical: {
-        name: t('storefronts.products.attributeGroups.technical'),
+        name: t('products.attributeGroups.technical'),
         icon: '⚙️',
         priority: 2,
       },
       condition: {
-        name: t('storefronts.products.attributeGroups.condition'),
+        name: t('products.attributeGroups.condition'),
         icon: '✨',
         priority: 3,
       },
       accessories: {
-        name: t('storefronts.products.attributeGroups.accessories'),
+        name: t('products.attributeGroups.accessories'),
         icon: '📦',
         priority: 4,
       },
       dimensions: {
-        name: t('storefronts.products.attributeGroups.dimensions'),
+        name: t('products.attributeGroups.dimensions'),
         icon: '📏',
         priority: 5,
       },
       other: {
-        name: t('storefronts.products.attributeGroups.other'),
+        name: t('products.attributeGroups.other'),
         icon: '📋',
         priority: 99,
       },
@@ -307,7 +308,7 @@ export default function AttributesStep({
             }
           >
             <option value="">
-              {t('common.select')} {displayName.toLowerCase()}
+              {t('select')} {displayName.toLowerCase()}
             </option>
             {(() => {
               let options: string[] = [];
@@ -342,7 +343,7 @@ export default function AttributesStep({
               }
             />
             <span className="text-sm text-base-content/70">
-              {value ? t('common.yes') : t('common.no')}
+              {value ? t('yes') : t('no')}
             </span>
           </div>
         )}
@@ -403,10 +404,10 @@ export default function AttributesStep({
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-base-content mb-4">
-          {t('storefronts.products.categoryAttributes')}
+          {t('products.categoryAttributes')}
         </h2>
         <p className="text-lg text-base-content/70">
-          {t('storefronts.products.categoryAttributesDescription')}
+          {t('products.categoryAttributesDescription')}
         </p>
         {state.category && (
           <div className="badge badge-primary badge-lg mt-2">
@@ -419,10 +420,10 @@ export default function AttributesStep({
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🎉</div>
           <h3 className="text-2xl font-bold text-base-content mb-2">
-            {t('storefronts.products.noAttributesTitle')}
+            {t('products.noAttributesTitle')}
           </h3>
           <p className="text-lg text-base-content/70">
-            {t('storefronts.products.noAttributesMessage')}
+            {t('products.noAttributesMessage')}
           </p>
         </div>
       ) : (
@@ -443,7 +444,7 @@ export default function AttributesStep({
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 ></path>
               </svg>
-              <span>{t('storefronts.products.requiredFieldsInfo')}</span>
+              <span>{t('products.requiredFieldsInfo')}</span>
             </div>
           )}
 
@@ -485,7 +486,7 @@ export default function AttributesStep({
                           <div
                             className={`badge ${filledRequiredFields ? 'badge-success' : 'badge-warning'}`}
                           >
-                            {filledRequiredFields ? '✓' : t('common.required')}
+                            {filledRequiredFields ? '✓' : t('required')}
                           </div>
                         )}
                       </h3>
@@ -524,7 +525,7 @@ export default function AttributesStep({
         <div className="card bg-base-200 mb-6">
           <div className="card-body p-4">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium">{t('common.progress')}</h4>
+              <h4 className="text-sm font-medium">{t('progress')}</h4>
               <span className="text-sm text-base-content/70">
                 {
                   Object.keys(formData).filter(
@@ -565,11 +566,11 @@ export default function AttributesStep({
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          {t('common.back')}
+          {t('back')}
         </button>
 
         <button onClick={handleNext} className="btn btn-primary btn-lg px-8">
-          {t('common.next')}
+          {t('next')}
           <svg
             className="w-5 h-5 ml-2"
             fill="none"

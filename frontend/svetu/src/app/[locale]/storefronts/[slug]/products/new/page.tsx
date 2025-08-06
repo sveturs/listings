@@ -16,7 +16,8 @@ interface PageProps {
 
 export default function NewProductPage({ params }: PageProps) {
   const [slug, setSlug] = useState<string>('');
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
 
   useEffect(() => {
@@ -41,14 +42,12 @@ export default function NewProductPage({ params }: PageProps) {
             className="inline-flex items-center text-primary hover:underline mb-4"
           >
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
-            {t('common.back')}
+            {tCommon('back')}
           </Link>
           <h1 className="text-3xl font-bold text-base-content">
-            {t('storefronts.products.addNewProduct')}
+            {t('addNewProduct')}
           </h1>
-          <p className="text-base-content/70 mt-2">
-            {t('storefronts.products.wizardDescription')}
-          </p>
+          <p className="text-base-content/70 mt-2">{t('wizardDescription')}</p>
         </div>
       </div>
 

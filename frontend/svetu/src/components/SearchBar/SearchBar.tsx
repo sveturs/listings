@@ -568,7 +568,7 @@ export default function SearchBar({
           {suggestions.length === 0 && searchHistory.length > 0 && (
             <div className="p-2">
               <div className="px-3 py-2 text-xs font-semibold text-base-content/60 uppercase">
-                {t('search.searchHistory')}
+                {t('searchHistory')}
               </div>
               {searchHistory.slice(0, 5).map((historyItem, index) => (
                 <div
@@ -606,7 +606,7 @@ export default function SearchBar({
                   setSearchHistory([]);
                 }}
               >
-                {t('search.clearHistory')}
+                {t('clearHistory')}
               </button>
             </div>
           )}

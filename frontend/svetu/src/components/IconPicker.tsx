@@ -308,7 +308,7 @@ export default function IconPicker({
 }: IconPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('transport');
-  const t = useTranslations('marketplace.iconPicker');
+  const t = useTranslations('marketplace');
 
   const handleIconSelect = (icon: string) => {
     onChange(icon);
@@ -327,7 +327,7 @@ export default function IconPicker({
           value={value}
           onChange={handleInputChange}
           className="input input-bordered flex-1"
-          placeholder={placeholder || t('placeholder')}
+          placeholder={placeholder || t('iconPicker.placeholder')}
         />
         <button
           type="button"
@@ -381,7 +381,7 @@ export default function IconPicker({
               onClick={() => setIsOpen(false)}
               className="btn btn-sm btn-ghost"
             >
-              {t('close')}
+              {t('iconPicker.close')}
             </button>
           </div>
         </div>

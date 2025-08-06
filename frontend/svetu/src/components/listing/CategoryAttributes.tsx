@@ -35,7 +35,8 @@ export default function CategoryAttributes({
   onAttributeChange,
   locale,
 }: CategoryAttributesProps) {
-  const t = useTranslations();
+  const t = useTranslations('common');
+  const tListing = useTranslations('listing');
   const [categoryAttributes, setCategoryAttributes] = useState<
     CategoryAttribute[]
   >([]);
@@ -226,8 +227,8 @@ export default function CategoryAttributes({
           >
             <span className="text-sm truncate">
               {selectedValues.length > 0
-                ? t('common.selectedCount', { count: selectedValues.length })
-                : t('common.selectOptions')}
+                ? t('selectedCount', { count: selectedValues.length })
+                : t('selectOptions')}
             </span>
             <ChevronDown className="w-4 h-4 flex-shrink-0" />
           </label>
@@ -270,7 +271,7 @@ export default function CategoryAttributes({
           value={currentValue?.text_value || ''}
           onChange={(e) => handleAttributeChange(attribute, e.target.value)}
         >
-          <option value="">{t('common.select')}</option>
+          <option value="">{t('select')}</option>
           {options.map((option, index) => (
             <option key={index} value={option.value}>
               {option.label}
@@ -290,7 +291,7 @@ export default function CategoryAttributes({
           <input
             type="number"
             className="input input-bordered input-sm flex-1"
-            placeholder={t('common.enterValue', {
+            placeholder={t('enterValue', {
               field: attributeName.toLowerCase(),
             })}
             value={currentValue?.numeric_value || ''}
@@ -315,7 +316,7 @@ export default function CategoryAttributes({
             checked={currentValue?.boolean_value || false}
             onChange={(e) => handleAttributeChange(attribute, e.target.checked)}
           />
-          <span className="label-text">{t('common.yes')}</span>
+          <span className="label-text">{t('yes')}</span>
         </label>
       );
     }
@@ -391,12 +392,12 @@ export default function CategoryAttributes({
         <div className="card-body">
           <h3 className="card-title text-base">
             <Package className="w-5 h-5" />
-            {t('listing.additionalInfo')}
+            {tListing('additionalInfo')}
           </h3>
           <div className="alert alert-info">
             <Info className="w-4 h-4" />
             <span className="text-sm">
-              {t('listing.noAttributesForCategory', {
+              {t('noAttributesForCategory', {
                 category:
                   selectedCategory.translations?.name ||
                   selectedCategory.name ||
@@ -418,7 +419,7 @@ export default function CategoryAttributes({
       <div className="card-body">
         <h3 className="card-title text-base">
           <Package className="w-5 h-5" />
-          {t('listing.additionalInfo')}
+          {tListing('additionalInfo')}
           <div className="badge badge-primary badge-sm">
             {selectedCategory.translations?.name || selectedCategory.name}
           </div>
@@ -434,7 +435,7 @@ export default function CategoryAttributes({
               >
                 <h4 className="font-semibold text-sm flex items-center">
                   <Star className="w-4 h-4 mr-1 text-error" />
-                  {t('common.requiredFields')}
+                  {t('requiredFields')}
                   <span className="badge badge-error badge-xs ml-2">
                     {groupedAttributes.required.length}
                   </span>
@@ -482,7 +483,7 @@ export default function CategoryAttributes({
                 onClick={() => toggleGroup('optional')}
               >
                 <h4 className="font-semibold text-sm">
-                  {t('common.optionalFields')}
+                  {t('optionalFields')}
                   <span className="badge badge-neutral badge-xs ml-2">
                     {groupedAttributes.optional.length}
                   </span>
@@ -527,9 +528,9 @@ export default function CategoryAttributes({
           <Info className="w-4 h-4" />
           <div className="text-sm">
             <div className="font-semibold">
-              {t('listing.whyAttributesImportant')}
+              {tListing('whyAttributesImportant')}
             </div>
-            <div>{t('listing.attributesHelpBuyers')}</div>
+            <div>{tListing('attributesHelpBuyers')}</div>
           </div>
         </div>
       </div>

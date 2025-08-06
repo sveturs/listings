@@ -17,7 +17,9 @@ export default function PreviewPublishStep({
   onBack,
   onComplete: _onComplete,
 }: PreviewPublishStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_listing');
+  const tCreate_listing = useTranslations('create_listing');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const { state, saveDraft, publish } = useCreateListing();
   const [isPublishing, setIsPublishing] = useState(false);
@@ -67,7 +69,7 @@ export default function PreviewPublishStep({
           );
         } catch (imageError) {
           console.error('Error uploading images:', imageError);
-          toast.error(t('create_listing.errors.image_upload_failed'));
+          toast.error(t('errors.image_upload_failed'));
         } finally {
           setUploadingImages(false);
         }
@@ -80,7 +82,7 @@ export default function PreviewPublishStep({
       publish();
 
       // Показываем успешное сообщение
-      toast.success(t('create_listing.success'));
+      toast.success(tCreate_listing('success'));
 
       // Перенаправляем на страницу объявления
       setTimeout(() => {
@@ -88,7 +90,7 @@ export default function PreviewPublishStep({
       }, 1000);
     } catch (error) {
       console.error('Error publishing:', error);
-      toast.error(t('create_listing.errors.publish_failed'));
+      toast.error(t('errors.publish_failed'));
     } finally {
       setIsPublishing(false);
     }
@@ -100,10 +102,10 @@ export default function PreviewPublishStep({
       // Сохраняем черновик в localStorage
       await ListingsService.saveDraft(state);
       saveDraft();
-      toast.success(t('create_listing.draft_saved'));
+      toast.success(tCreate_listing('draft_saved'));
     } catch (error) {
       console.error('Error saving draft:', error);
-      toast.error(t('create_listing.errors.draft_save_failed'));
+      toast.error(t('errors.draft_save_failed'));
     } finally {
       setIsSavingDraft(false);
     }
@@ -133,10 +135,10 @@ export default function PreviewPublishStep({
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4 flex items-center">
-            👁️ {t('create_listing.preview.title')}
+            👁️ {tCreate_listing('preview.title')}
           </h2>
           <p className="text-base-content/70 mb-6">
-            {t('create_listing.preview.description')}
+            {tCreate_listing('preview.description')}
           </p>
 
           {/* Превью объявления */}
@@ -270,27 +272,27 @@ export default function PreviewPublishStep({
             </svg>
             <div className="text-sm">
               <p className="font-medium">
-                🏪 {t('create_listing.preview.regional_summary')}
+                🏪 {tCreate_listing('preview.regional_summary')}
               </p>
               <ul className="text-xs mt-2 space-y-1">
                 <li>
-                  • {t('create_listing.preview.script')}:{' '}
+                  • {tCreate_listing('preview.script')}:{' '}
                   {state.localization.script === 'cyrillic'
                     ? 'Ћирилица'
                     : 'Latinica'}
                 </li>
                 <li>
-                  • {t('create_listing.preview.trust')}:{' '}
+                  • {tCreate_listing('preview.trust')}:{' '}
                   {state.trust.phoneVerified ? 'Верификован' : 'Неверификован'}
                 </li>
                 <li>
-                  • {t('create_listing.preview.payment')}:{' '}
+                  • {tCreate_listing('preview.payment')}:{' '}
                   {state.payment.codEnabled
                     ? 'Наложен платеж омогућен'
                     : 'Само готовина'}
                 </li>
                 <li>
-                  • {t('create_listing.preview.meeting')}:{' '}
+                  • {tCreate_listing('preview.meeting')}:{' '}
                   {state.trust.preferredMeetingType}
                 </li>
               </ul>
@@ -314,17 +316,15 @@ export default function PreviewPublishStep({
             </svg>
             <div className="text-sm">
               <p className="font-medium">
-                ⚖️ {t('create_listing.preview.rules.title')}
+                ⚖️ {tCreate_listing('preview.rules.title')}
               </p>
               <ul className="text-xs mt-2 space-y-1">
+                <li>• {tCreate_listing('preview.rules.honest_description')}</li>
+                <li>• {tCreate_listing('preview.rules.fair_pricing')}</li>
                 <li>
-                  • {t('create_listing.preview.rules.honest_description')}
+                  • {tCreate_listing('preview.rules.respectful_communication')}
                 </li>
-                <li>• {t('create_listing.preview.rules.fair_pricing')}</li>
-                <li>
-                  • {t('create_listing.preview.rules.respectful_communication')}
-                </li>
-                <li>• {t('create_listing.preview.rules.safe_meetings')}</li>
+                <li>• {tCreate_listing('preview.rules.safe_meetings')}</li>
               </ul>
             </div>
           </div>
@@ -332,7 +332,7 @@ export default function PreviewPublishStep({
           {/* Кнопки действий */}
           <div className="card-actions justify-between mt-8">
             <button className="btn btn-outline" onClick={onBack}>
-              ← {t('common.back')}
+              ← {tCommon('back')}
             </button>
 
             <div className="flex gap-2">
@@ -341,7 +341,7 @@ export default function PreviewPublishStep({
                 onClick={handleSaveDraft}
                 disabled={isSavingDraft || isPublishing}
               >
-                {isSavingDraft ? '' : '💾'} {t('create_listing.save_draft')}
+                {isSavingDraft ? '' : '💾'} {tCreate_listing('save_draft')}
               </button>
 
               <button
@@ -351,8 +351,8 @@ export default function PreviewPublishStep({
               >
                 {isPublishing ? '' : '🚀'}
                 {uploadingImages
-                  ? t('create_listing.uploading_images')
-                  : t('create_listing.publish')}
+                  ? tCreate_listing('uploading_images')
+                  : tCreate_listing('publish')}
               </button>
             </div>
           </div>
@@ -360,7 +360,7 @@ export default function PreviewPublishStep({
           {/* Локальная подсказка о публикации */}
           <div className="text-center mt-4">
             <p className="text-xs text-base-content/60">
-              {t('create_listing.preview.publish_info')}
+              {tCreate_listing('preview.publish_info')}
             </p>
           </div>
         </div>

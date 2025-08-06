@@ -14,7 +14,10 @@ import { toast } from 'react-hot-toast';
 
 export default function MySalesPage() {
   const locale = useLocale();
-  const t = useTranslations();
+  const t = useTranslations('orders');
+  const tHome = useTranslations('marketplace.home');
+  const tProfile = useTranslations('profile');
+  const tCommon = useTranslations('common');
   const { isAuthenticated } = useAuth();
 
   const [orders, setOrders] = useState<MarketplaceOrder[]>([]);
@@ -50,7 +53,7 @@ export default function MySalesPage() {
       setTotal(response.total);
     } catch (error) {
       console.error('Error fetching sales:', error);
-      toast.error(t('orders.fetchError'));
+      toast.error(t('fetchError'));
     } finally {
       setLoading(false);
     }
@@ -62,7 +65,7 @@ export default function MySalesPage() {
       !shippingModal.shippingMethod ||
       !shippingModal.trackingNumber
     ) {
-      toast.error(t('orders.fillAllShippingFields'));
+      toast.error(t('fillAllShippingFields'));
       return;
     }
 
@@ -73,7 +76,7 @@ export default function MySalesPage() {
         shippingModal.shippingMethod,
         shippingModal.trackingNumber
       );
-      toast.success(t('orders.markedAsShipped'));
+      toast.success(t('markedAsShipped'));
       setShippingModal({
         orderId: null,
         shippingMethod: '',
@@ -82,7 +85,7 @@ export default function MySalesPage() {
       await fetchOrders(); // Обновляем список
     } catch (error) {
       console.error('Error marking as shipped:', error);
-      toast.error(t('orders.shippingError'));
+      toast.error(t('shippingError'));
     } finally {
       setProcessingOrderId(null);
     }
@@ -107,44 +110,44 @@ export default function MySalesPage() {
         <div className="breadcrumbs text-sm mb-4">
           <ul>
             <li>
-              <Link href={`/${locale}`}>{t('home.title')}</Link>
+              <Link href={`/${locale}`}>{tHome('title')}</Link>
             </li>
             <li>
-              <Link href={`/${locale}/profile`}>{t('profile.title')}</Link>
+              <Link href={`/${locale}/profile`}>{tProfile('title')}</Link>
             </li>
-            <li>{t('orders.mySales')}</li>
+            <li>{t('mySales')}</li>
           </ul>
         </div>
 
-        <h1 className="text-3xl font-bold mb-4">{t('orders.mySales')}</h1>
+        <h1 className="text-3xl font-bold mb-4">{t('mySales')}</h1>
 
         {/* Табы */}
         <div className="tabs tabs-boxed mb-6">
           <Link href={`/${locale}/profile/orders/purchases`} className="tab">
-            {t('orders.purchases')}
+            {t('purchases')}
           </Link>
           <Link
             href={`/${locale}/profile/orders/sales`}
             className="tab tab-active"
           >
-            {t('orders.sales')}
+            {t('sales')}
           </Link>
         </div>
 
         {/* Статистика */}
         <div className="stats shadow mb-6">
           <div className="stat">
-            <div className="stat-title">{t('orders.totalSales')}</div>
+            <div className="stat-title">{t('totalSales')}</div>
             <div className="stat-value">{total}</div>
           </div>
           <div className="stat">
-            <div className="stat-title">{t('orders.pendingShipment')}</div>
+            <div className="stat-title">{t('pendingShipment')}</div>
             <div className="stat-value text-warning">
               {orders.filter((o) => o.status === 'paid').length}
             </div>
           </div>
           <div className="stat">
-            <div className="stat-title">{t('orders.inDispute')}</div>
+            <div className="stat-title">{t('inDispute')}</div>
             <div className="stat-value text-error">
               {orders.filter((o) => o.status === 'disputed').length}
             </div>
@@ -156,17 +159,13 @@ export default function MySalesPage() {
       {orders.length === 0 ? (
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body text-center py-16">
-            <h3 className="text-xl font-semibold mb-2">
-              {t('orders.noSales')}
-            </h3>
-            <p className="text-base-content/70 mb-6">
-              {t('orders.noSalesDesc')}
-            </p>
+            <h3 className="text-xl font-semibold mb-2">{t('noSales')}</h3>
+            <p className="text-base-content/70 mb-6">{t('noSalesDesc')}</p>
             <Link
               href={`/${locale}/profile/listings`}
               className="btn btn-primary"
             >
-              {t('orders.createListing')}
+              {t('createListing')}
             </Link>
           </div>
         </div>
@@ -191,13 +190,13 @@ export default function MySalesPage() {
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-xl font-semibold mb-1">
-                          {order.listing?.title || t('orders.unknownItem')}
+                          {order.listing?.title || t('unknownItem')}
                         </h3>
                         <p className="text-sm text-base-content/70">
-                          {t('orders.orderNumber')}: #{order.id}
+                          {t('orderNumber')}: #{order.id}
                         </p>
                         <p className="text-sm text-base-content/70">
-                          {t('orders.orderDate')}:{' '}
+                          {t('orderDate')}:{' '}
                           {new Date(order.created_at).toLocaleDateString(
                             locale
                           )}
@@ -215,7 +214,7 @@ export default function MySalesPage() {
                           )}
                         </div>
                         <p className="text-sm">
-                          {t('orders.yourEarnings')}:{' '}
+                          {t('yourEarnings')}:{' '}
                           <span className="font-bold text-success">
                             {balanceService.formatAmount(
                               order.seller_payout_amount,
@@ -224,7 +223,7 @@ export default function MySalesPage() {
                           </span>
                         </p>
                         <p className="text-xs text-base-content/70">
-                          {t('orders.afterFee', {
+                          {t('afterFee', {
                             fee: `${order.platform_fee_rate * 100}%`,
                           })}
                         </p>
@@ -235,7 +234,7 @@ export default function MySalesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                       <div>
                         <p className="text-sm text-base-content/70">
-                          {t('orders.buyer')}
+                          {t('buyer')}
                         </p>
                         <p className="font-medium">
                           {order.buyer?.name || 'Unknown'}
@@ -243,7 +242,7 @@ export default function MySalesPage() {
                       </div>
                       <div>
                         <p className="text-sm text-base-content/70">
-                          {t('orders.price')}
+                          {t('price')}
                         </p>
                         <p className="font-medium">
                           {balanceService.formatAmount(order.item_price, 'RSD')}
@@ -252,7 +251,7 @@ export default function MySalesPage() {
                       {order.shipped_at && (
                         <div>
                           <p className="text-sm text-base-content/70">
-                            {t('orders.shippedDate')}
+                            {t('shippedDate')}
                           </p>
                           <p className="font-medium">
                             {new Date(order.shipped_at).toLocaleDateString(
@@ -279,7 +278,7 @@ export default function MySalesPage() {
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                           />
                         </svg>
-                        <span>{t('orders.shipmentRequired')}</span>
+                        <span>{t('shipmentRequired')}</span>
                       </div>
                     )}
 
@@ -289,7 +288,7 @@ export default function MySalesPage() {
                         href={`/${locale}/profile/orders/${order.id}`}
                         className="btn btn-sm btn-ghost"
                       >
-                        {t('orders.viewDetails')}
+                        {t('viewDetails')}
                       </Link>
 
                       {marketplaceOrdersService.canShip(
@@ -306,7 +305,7 @@ export default function MySalesPage() {
                           }
                           className="btn btn-sm btn-primary"
                         >
-                          📦 {t('orders.markAsShipped')}
+                          📦 {t('markAsShipped')}
                         </button>
                       )}
 
@@ -315,7 +314,7 @@ export default function MySalesPage() {
                           href={`/${locale}/marketplace/${order.listing_id}`}
                           className="btn btn-sm btn-ghost"
                         >
-                          {t('orders.viewListing')}
+                          {t('viewListing')}
                         </Link>
                       )}
                     </div>
@@ -338,7 +337,7 @@ export default function MySalesPage() {
             «
           </button>
           <button className="join-item btn btn-active">
-            {t('common.page')} {page} {t('common.of')} {totalPages}
+            {tCommon('page')} {page} {tCommon('of')} {totalPages}
           </button>
           <button
             className="join-item btn"
@@ -354,13 +353,11 @@ export default function MySalesPage() {
       {shippingModal.orderId && (
         <dialog className="modal modal-open">
           <div className="modal-box">
-            <h3 className="font-bold text-lg mb-4">
-              {t('orders.shippingDetails')}
-            </h3>
+            <h3 className="font-bold text-lg mb-4">{t('shippingDetails')}</h3>
 
             <div className="form-control mb-4">
               <label className="label">
-                <span className="label-text">{t('orders.shippingMethod')}</span>
+                <span className="label-text">{t('shippingMethod')}</span>
               </label>
               <select
                 className="select select-bordered w-full"
@@ -372,22 +369,22 @@ export default function MySalesPage() {
                   })
                 }
               >
-                <option value="">{t('orders.selectShippingMethod')}</option>
-                <option value="post">{t('orders.shippingPost')}</option>
-                <option value="courier">{t('orders.shippingCourier')}</option>
-                <option value="personal">{t('orders.shippingPersonal')}</option>
-                <option value="other">{t('orders.shippingOther')}</option>
+                <option value="">{t('selectShippingMethod')}</option>
+                <option value="post">{t('shippingPost')}</option>
+                <option value="courier">{t('shippingCourier')}</option>
+                <option value="personal">{t('shippingPersonal')}</option>
+                <option value="other">{t('shippingOther')}</option>
               </select>
             </div>
 
             <div className="form-control mb-6">
               <label className="label">
-                <span className="label-text">{t('orders.trackingNumber')}</span>
+                <span className="label-text">{t('trackingNumber')}</span>
               </label>
               <input
                 type="text"
                 className="input input-bordered w-full"
-                placeholder={t('orders.trackingNumberPlaceholder')}
+                placeholder={t('trackingNumberPlaceholder')}
                 value={shippingModal.trackingNumber}
                 onChange={(e) =>
                   setShippingModal({
@@ -410,7 +407,7 @@ export default function MySalesPage() {
                 }
                 disabled={processingOrderId === shippingModal.orderId}
               >
-                {t('common.cancel')}
+                {tCommon('cancel')}
               </button>
               <button
                 className="btn btn-primary"
@@ -424,7 +421,7 @@ export default function MySalesPage() {
                 {processingOrderId === shippingModal.orderId ? (
                   <span className="loading loading-spinner loading-sm"></span>
                 ) : (
-                  t('orders.confirmShipment')
+                  t('confirmShipment')
                 )}
               </button>
             </div>

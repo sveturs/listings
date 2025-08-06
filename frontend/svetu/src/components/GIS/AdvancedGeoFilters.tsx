@@ -56,7 +56,9 @@ export default function AdvancedGeoFilters({
   currentLocation,
   className = '',
 }: AdvancedGeoFiltersProps) {
-  const t = useTranslations();
+  const _tMap = useTranslations('map');
+  const commonT = useTranslations('common');
+  const t = (key: string) => commonT(`map.${key}`);
 
   // Travel Time Filter State
   const [travelTimeEnabled, setTravelTimeEnabled] = useState(false);
@@ -286,7 +288,7 @@ export default function AdvancedGeoFilters({
                   className="range range-primary flex-1"
                 />
                 <span className="text-sm font-medium w-16">
-                  {travelMinutes} {t('common.minutes')}
+                  {travelMinutes} {t('minutes')}
                 </span>
               </div>
             </div>
@@ -362,17 +364,15 @@ export default function AdvancedGeoFilters({
                 />
                 <span className="text-sm font-medium w-20">
                   {poiDistance >= 1000
-                    ? `${(poiDistance / 1000).toFixed(1)} ${t('common.km')}`
-                    : `${poiDistance} ${t('common.m')}`}
+                    ? `${(poiDistance / 1000).toFixed(1)} ${t('km')}`
+                    : `${poiDistance} ${t('m')}`}
                 </span>
               </div>
             </div>
 
             {poiResults.length > 0 && (
               <div className="text-sm text-base-content/70">
-                {t('gis.advancedFilters.foundPOIs', {
-                  count: poiResults.length,
-                })}
+                {t('gis.advancedFilters.foundPOIs')} ({poiResults.length})
               </div>
             )}
           </div>
@@ -441,7 +441,7 @@ export default function AdvancedGeoFilters({
           }}
           className="btn btn-ghost btn-sm"
         >
-          {t('common.resetFilters')}
+          {t('resetFilters')}
         </button>
       </div>
     </div>

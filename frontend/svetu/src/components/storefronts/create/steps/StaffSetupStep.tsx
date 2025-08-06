@@ -21,7 +21,10 @@ export default function StaffSetupStep({
   onNext,
   onBack,
 }: StaffSetupStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_storefront');
+  const _tPermissions = useTranslations('permissions');
+  const _tRoles = useTranslations('roles');
+  const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [newStaffMember, setNewStaffMember] = useState<StaffMember>({
     email: '',
@@ -40,11 +43,11 @@ export default function StaffSetupStep({
     const newErrors: Record<string, string> = {};
 
     if (!newStaffMember.email) {
-      newErrors.email = t('create_storefront.errors.email_required');
+      newErrors.email = t('errors.email_required');
     } else if (!validateEmail(newStaffMember.email)) {
-      newErrors.email = t('create_storefront.errors.email_invalid');
+      newErrors.email = t('errors.email_invalid');
     } else if (formData.staff?.some((s) => s.email === newStaffMember.email)) {
-      newErrors.email = t('create_storefront.errors.email_duplicate');
+      newErrors.email = t('errors.email_duplicate');
     }
 
     setErrors(newErrors);
@@ -79,18 +82,14 @@ export default function StaffSetupStep({
     <div className="max-w-3xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            {t('create_storefront.staff_setup.title')}
-          </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('create_storefront.staff_setup.subtitle')}
-          </p>
+          <h2 className="card-title text-2xl mb-4">{t('title')}</h2>
+          <p className="text-base-content/70 mb-6">{t('subtitle')}</p>
 
           {/* Existing staff members */}
           {formData.staff && formData.staff.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-3">
-                {t('create_storefront.staff_setup.current_staff')}
+                {t('current_staff')}
               </h3>
               <div className="space-y-2">
                 {formData.staff.map((member, index) => (
@@ -106,17 +105,15 @@ export default function StaffSetupStep({
                       <div className="flex gap-4 mt-1 text-xs">
                         {member.canManageProducts && (
                           <span className="badge badge-sm">
-                            {t('permissions.products')}
+                            {t('products')}
                           </span>
                         )}
                         {member.canManageOrders && (
-                          <span className="badge badge-sm">
-                            {t('permissions.orders')}
-                          </span>
+                          <span className="badge badge-sm">{t('orders')}</span>
                         )}
                         {member.canManageSettings && (
                           <span className="badge badge-sm">
-                            {t('permissions.settings')}
+                            {t('settings')}
                           </span>
                         )}
                       </div>
@@ -136,16 +133,12 @@ export default function StaffSetupStep({
           {/* Add new staff member */}
           <div className="card bg-base-200">
             <div className="card-body p-4">
-              <h3 className="text-lg font-semibold mb-3">
-                {t('create_storefront.staff_setup.add_member')}
-              </h3>
+              <h3 className="text-lg font-semibold mb-3">{t('add_member')}</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('create_storefront.staff_setup.email')}
-                    </span>
+                    <span className="label-text">{t('email')}</span>
                   </label>
                   <input
                     type="email"
@@ -173,9 +166,7 @@ export default function StaffSetupStep({
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">
-                      {t('create_storefront.staff_setup.role')}
-                    </span>
+                    <span className="label-text">{t('role')}</span>
                   </label>
                   <select
                     className="select select-bordered"
@@ -187,17 +178,15 @@ export default function StaffSetupStep({
                       })
                     }
                   >
-                    <option value="staff">{t('roles.staff')}</option>
-                    <option value="manager">{t('roles.manager')}</option>
-                    <option value="admin">{t('roles.admin')}</option>
+                    <option value="staff">{t('staff')}</option>
+                    <option value="manager">{t('manager')}</option>
+                    <option value="admin">{t('admin')}</option>
                   </select>
                 </div>
               </div>
 
               <div className="mt-4">
-                <h4 className="font-medium mb-2">
-                  {t('create_storefront.staff_setup.permissions')}
-                </h4>
+                <h4 className="font-medium mb-2">{t('permissions')}</h4>
                 <div className="space-y-2">
                   <label className="cursor-pointer label justify-start">
                     <input
@@ -211,9 +200,7 @@ export default function StaffSetupStep({
                         })
                       }
                     />
-                    <span className="label-text ml-2">
-                      {t('permissions.products')}
-                    </span>
+                    <span className="label-text ml-2">{t('products')}</span>
                   </label>
                   <label className="cursor-pointer label justify-start">
                     <input
@@ -227,9 +214,7 @@ export default function StaffSetupStep({
                         })
                       }
                     />
-                    <span className="label-text ml-2">
-                      {t('permissions.orders')}
-                    </span>
+                    <span className="label-text ml-2">{t('orders')}</span>
                   </label>
                   <label className="cursor-pointer label justify-start">
                     <input
@@ -243,9 +228,7 @@ export default function StaffSetupStep({
                         })
                       }
                     />
-                    <span className="label-text ml-2">
-                      {t('permissions.settings')}
-                    </span>
+                    <span className="label-text ml-2">{t('settings')}</span>
                   </label>
                 </div>
               </div>
@@ -255,7 +238,7 @@ export default function StaffSetupStep({
                 onClick={addStaffMember}
                 disabled={!newStaffMember.email}
               >
-                {t('common.add')}
+                {tCommon('add')}
               </button>
             </div>
           </div>
@@ -274,15 +257,15 @@ export default function StaffSetupStep({
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               ></path>
             </svg>
-            <span>{t('create_storefront.staff_setup.tip')}</span>
+            <span>{t('tip')}</span>
           </div>
 
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-ghost" onClick={onBack}>
-              {t('common.back')}
+              {tCommon('back')}
             </button>
             <button className="btn btn-primary" onClick={handleNext}>
-              {t('common.next')}
+              {tCommon('next')}
             </button>
           </div>
         </div>

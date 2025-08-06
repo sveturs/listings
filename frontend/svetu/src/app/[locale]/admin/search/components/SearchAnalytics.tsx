@@ -46,7 +46,7 @@ interface OverviewMetrics {
 }
 
 export default function SearchAnalytics() {
-  const t = useTranslations('admin.search.analytics');
+  const t = useTranslations('admin');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

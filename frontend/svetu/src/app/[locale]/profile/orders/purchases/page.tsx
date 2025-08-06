@@ -14,7 +14,10 @@ import { toast } from 'react-hot-toast';
 
 export default function MyPurchasesPage() {
   const locale = useLocale();
-  const t = useTranslations();
+  const t = useTranslations('orders');
+  const tHome = useTranslations('marketplace.home');
+  const tProfile = useTranslations('profile');
+  const tCommon = useTranslations('common');
   const { isAuthenticated } = useAuth();
 
   const [orders, setOrders] = useState<MarketplaceOrder[]>([]);
@@ -44,45 +47,45 @@ export default function MyPurchasesPage() {
       setTotal(response.total);
     } catch (error) {
       console.error('Error fetching purchases:', error);
-      toast.error(t('orders.fetchError'));
+      toast.error(t('fetchError'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleConfirmDelivery = async (orderId: number) => {
-    if (!confirm(t('orders.confirmDeliveryPrompt'))) {
+    if (!confirm(t('confirmDeliveryPrompt'))) {
       return;
     }
 
     setProcessingOrderId(orderId);
     try {
       await marketplaceOrdersService.confirmDelivery(orderId);
-      toast.success(t('orders.deliveryConfirmed'));
+      toast.success(t('deliveryConfirmed'));
       await fetchOrders(); // Обновляем список
     } catch (error) {
       console.error('Error confirming delivery:', error);
-      toast.error(t('orders.confirmDeliveryError'));
+      toast.error(t('confirmDeliveryError'));
     } finally {
       setProcessingOrderId(null);
     }
   };
 
   const handleOpenDispute = async (orderId: number) => {
-    const reason = prompt(t('orders.disputeReasonPrompt'));
+    const reason = prompt(t('disputeReasonPrompt'));
     if (!reason || reason.length < 10) {
-      toast.error(t('orders.disputeReasonTooShort'));
+      toast.error(t('disputeReasonTooShort'));
       return;
     }
 
     setProcessingOrderId(orderId);
     try {
       await marketplaceOrdersService.openDispute(orderId, reason);
-      toast.success(t('orders.disputeOpened'));
+      toast.success(t('disputeOpened'));
       await fetchOrders(); // Обновляем список
     } catch (error) {
       console.error('Error opening dispute:', error);
-      toast.error(t('orders.disputeError'));
+      toast.error(t('disputeError'));
     } finally {
       setProcessingOrderId(null);
     }
@@ -107,16 +110,16 @@ export default function MyPurchasesPage() {
         <div className="breadcrumbs text-sm mb-4">
           <ul>
             <li>
-              <Link href={`/${locale}`}>{t('home.title')}</Link>
+              <Link href={`/${locale}`}>{tHome('title')}</Link>
             </li>
             <li>
-              <Link href={`/${locale}/profile`}>{t('profile.title')}</Link>
+              <Link href={`/${locale}/profile`}>{tProfile('title')}</Link>
             </li>
-            <li>{t('orders.myPurchases')}</li>
+            <li>{t('myPurchases')}</li>
           </ul>
         </div>
 
-        <h1 className="text-3xl font-bold mb-4">{t('orders.myPurchases')}</h1>
+        <h1 className="text-3xl font-bold mb-4">{t('myPurchases')}</h1>
 
         {/* Табы */}
         <div className="tabs tabs-boxed mb-6">
@@ -124,10 +127,10 @@ export default function MyPurchasesPage() {
             href={`/${locale}/profile/orders/purchases`}
             className="tab tab-active"
           >
-            {t('orders.purchases')}
+            {t('purchases')}
           </Link>
           <Link href={`/${locale}/profile/orders/sales`} className="tab">
-            {t('orders.sales')}
+            {t('sales')}
           </Link>
         </div>
       </div>
@@ -136,14 +139,10 @@ export default function MyPurchasesPage() {
       {orders.length === 0 ? (
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body text-center py-16">
-            <h3 className="text-xl font-semibold mb-2">
-              {t('orders.noPurchases')}
-            </h3>
-            <p className="text-base-content/70 mb-6">
-              {t('orders.noPurchasesDesc')}
-            </p>
+            <h3 className="text-xl font-semibold mb-2">{t('noPurchases')}</h3>
+            <p className="text-base-content/70 mb-6">{t('noPurchasesDesc')}</p>
             <Link href={`/${locale}/search`} className="btn btn-primary">
-              {t('orders.startShopping')}
+              {t('startShopping')}
             </Link>
           </div>
         </div>
@@ -168,13 +167,13 @@ export default function MyPurchasesPage() {
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-xl font-semibold mb-1">
-                          {order.listing?.title || t('orders.unknownItem')}
+                          {order.listing?.title || t('unknownItem')}
                         </h3>
                         <p className="text-sm text-base-content/70">
-                          {t('orders.orderNumber')}: #{order.id}
+                          {t('orderNumber')}: #{order.id}
                         </p>
                         <p className="text-sm text-base-content/70">
-                          {t('orders.orderDate')}:{' '}
+                          {t('orderDate')}:{' '}
                           {new Date(order.created_at).toLocaleDateString(
                             locale
                           )}
@@ -194,7 +193,7 @@ export default function MyPurchasesPage() {
                         {order.protection_expires_at &&
                           order.status === 'delivered' && (
                             <p className="text-sm text-warning mt-2">
-                              ⏱️ {t('orders.protectionEnds')}:{' '}
+                              ⏱️ {t('protectionEnds')}:{' '}
                               {marketplaceOrdersService.getProtectionTimeLeft(
                                 order
                               )}
@@ -207,7 +206,7 @@ export default function MyPurchasesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                       <div>
                         <p className="text-sm text-base-content/70">
-                          {t('orders.seller')}
+                          {t('seller')}
                         </p>
                         <p className="font-medium">
                           {order.seller?.name || 'Unknown'}
@@ -215,7 +214,7 @@ export default function MyPurchasesPage() {
                       </div>
                       <div>
                         <p className="text-sm text-base-content/70">
-                          {t('orders.price')}
+                          {t('price')}
                         </p>
                         <p className="font-medium text-primary">
                           {balanceService.formatAmount(order.item_price, 'RSD')}
@@ -224,7 +223,7 @@ export default function MyPurchasesPage() {
                       {order.tracking_number && (
                         <div>
                           <p className="text-sm text-base-content/70">
-                            {t('orders.trackingNumber')}
+                            {t('trackingNumber')}
                           </p>
                           <p className="font-medium">{order.tracking_number}</p>
                         </div>
@@ -237,7 +236,7 @@ export default function MyPurchasesPage() {
                         href={`/${locale}/profile/orders/${order.id}`}
                         className="btn btn-sm btn-ghost"
                       >
-                        {t('orders.viewDetails')}
+                        {t('viewDetails')}
                       </Link>
 
                       {marketplaceOrdersService.canConfirmDelivery(
@@ -252,7 +251,7 @@ export default function MyPurchasesPage() {
                           {processingOrderId === order.id ? (
                             <span className="loading loading-spinner loading-xs"></span>
                           ) : (
-                            '✅ ' + t('orders.confirmDelivery')
+                            '✅ ' + t('confirmDelivery')
                           )}
                         </button>
                       )}
@@ -269,7 +268,7 @@ export default function MyPurchasesPage() {
                           {processingOrderId === order.id ? (
                             <span className="loading loading-spinner loading-xs"></span>
                           ) : (
-                            '⚠️ ' + t('orders.openDispute')
+                            '⚠️ ' + t('openDispute')
                           )}
                         </button>
                       )}
@@ -279,7 +278,7 @@ export default function MyPurchasesPage() {
                           href={`/${locale}/marketplace/${order.listing_id}`}
                           className="btn btn-sm btn-ghost"
                         >
-                          {t('orders.viewListing')}
+                          {t('viewListing')}
                         </Link>
                       )}
                     </div>
@@ -302,7 +301,7 @@ export default function MyPurchasesPage() {
             «
           </button>
           <button className="join-item btn btn-active">
-            {t('common.page')} {page} {t('common.of')} {totalPages}
+            {tCommon('page')} {page} {tCommon('of')} {totalPages}
           </button>
           <button
             className="join-item btn"

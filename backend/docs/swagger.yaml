@@ -2835,6 +2835,10 @@ definitions:
         $ref: '#/definitions/backend_internal_domain_models.PaymentTransaction'
       payment_transaction_id:
         type: string
+      pickup_address:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.JSONB'
+        description: Адрес забора товара у продавца
       seller_amount:
         type: number
       seller_notes:

@@ -75,7 +75,7 @@ type TabType =
 
 export default function EditListingPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const t = useTranslations('profile.listings.editListing');
+  const t = useTranslations('profile');
   const router = useRouter();
   const params = useParams();
   const listingId = params?.id as string;

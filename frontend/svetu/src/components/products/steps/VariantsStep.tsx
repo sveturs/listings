@@ -13,7 +13,7 @@ interface VariantsStepProps {
 }
 
 export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const { state, setHasVariants, setVariants, completeStep } =
     useCreateProduct();
 
@@ -91,7 +91,9 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
         <h2 className="text-2xl font-bold text-base-content mb-2">
           {t('steps.variants')}
         </h2>
-        <p className="text-base-content/70">{t('variantsStepDescription')}</p>
+        <p className="text-base-content/70">
+          {t('products.variantsStepDescription')}
+        </p>
       </div>
 
       {/* Variant Toggle */}
@@ -100,10 +102,10 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <h3 className="text-lg font-medium text-base-content">
-                {t('enableVariants')}
+                {t('products.enableVariants')}
               </h3>
               <p className="text-sm text-base-content/70">
-                {t('enableVariantsDescription')}
+                {t('products.enableVariantsDescription')}
               </p>
             </div>
             <div className="form-control">
@@ -127,7 +129,7 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
           <div className="card bg-base-100 shadow-sm">
             <div className="card-body">
               <h3 className="text-lg font-medium text-base-content mb-4">
-                {t('variantMode')}
+                {t('products.variantMode')}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -153,9 +155,11 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
                         readOnly
                       />
                       <div>
-                        <h4 className="font-medium">{t('simpleVariants')}</h4>
+                        <h4 className="font-medium">
+                          {t('products.simpleVariants')}
+                        </h4>
                         <p className="text-sm text-base-content/70">
-                          {t('simpleVariantsDescription')}
+                          {t('products.simpleVariantsDescription')}
                         </p>
                       </div>
                     </div>
@@ -184,9 +188,11 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
                         readOnly
                       />
                       <div>
-                        <h4 className="font-medium">{t('advancedVariants')}</h4>
+                        <h4 className="font-medium">
+                          {t('products.advancedVariants')}
+                        </h4>
                         <p className="text-sm text-base-content/70">
-                          {t('advancedVariantsDescription')}
+                          {t('products.advancedVariantsDescription')}
                         </p>
                       </div>
                     </div>
@@ -221,13 +227,13 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
       {/* Navigation */}
       <div className="flex justify-between items-center pt-6 border-t border-base-300">
         <button onClick={onBack} className="btn btn-outline">
-          {t('back')}
+          {t('products.back')}
         </button>
 
         <div className="flex space-x-2">
           {state.hasVariants && state.variants.length === 0 && (
             <button onClick={handleSkipVariants} className="btn btn-outline">
-              {t('skipVariants')}
+              {t('products.skipVariants')}
             </button>
           )}
 
@@ -236,7 +242,7 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
             className="btn btn-primary"
             disabled={state.hasVariants && state.variants.length === 0}
           >
-            {t('continue')}
+            {t('products.continue')}
           </button>
         </div>
       </div>
@@ -313,10 +319,10 @@ function SimpleVariantConfig({
         <div className="card-body">
           <div className="text-center py-8">
             <p className="text-base-content/70">
-              {t('noAttributesForCategory')}
+              {t('products.noAttributesForCategory')}
             </p>
             <p className="text-sm text-base-content/50 mt-2">
-              {t('selectDifferentCategory')}
+              {t('products.selectDifferentCategory')}
             </p>
           </div>
         </div>
@@ -328,7 +334,7 @@ function SimpleVariantConfig({
     <div className="card bg-base-100 shadow-sm">
       <div className="card-body">
         <h3 className="text-lg font-medium text-base-content mb-4">
-          {t('generateVariants')}
+          {t('products.generateVariants')}
         </h3>
 
         <SimplifiedVariantGenerator
@@ -393,17 +399,17 @@ function AdvancedVariantConfig({
                   />
                 </svg>
                 <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  {t('noVariantsConfigured')}
+                  {t('products.noVariantsConfigured')}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  {t('setupAttributesFirst')}
+                  {t('products.setupAttributesFirst')}
                 </p>
               </div>
               <button
                 onClick={() => setShowAttributeSetup(true)}
                 className="btn btn-primary mt-4"
               >
-                {t('setupAttributes')}
+                {t('products.setupAttributes')}
               </button>
             </div>
           </div>

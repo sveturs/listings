@@ -31,7 +31,8 @@ export default function ListingFilters({
   className = '',
 }: ListingFiltersProps) {
   const t = useTranslations('marketplace');
-  const tRoot = useTranslations();
+  const _tRoot = useTranslations('filters');
+  const tCondition = useTranslations('condition');
   const locale = useLocale();
   const [isExpanded, setIsExpanded] = useState(true);
   const [filterableAttributes, setFilterableAttributes] = useState<any[]>([]);
@@ -110,7 +111,7 @@ export default function ListingFilters({
       <div className="card-body p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-base">
-            {t('filters.title')}
+            {t('title')}
             {hasActiveFilters && (
               <span className="badge badge-primary badge-sm ml-2">
                 {Object.keys(filters).length}
@@ -123,7 +124,7 @@ export default function ListingFilters({
                 onClick={handleClearFilters}
                 className="btn btn-ghost btn-xs text-error"
               >
-                {t('filters.clearAll')}
+                {t('clearAll')}
               </button>
             )}
             <button
@@ -155,13 +156,13 @@ export default function ListingFilters({
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-medium">
-                    {t('filters.priceRange')}
+                    {t('priceRange')}
                   </span>
                 </label>
                 <div className="flex gap-2 items-center">
                   <input
                     type="number"
-                    placeholder={t('filters.priceFrom')}
+                    placeholder={t('priceFrom')}
                     className="input input-bordered input-sm flex-1"
                     value={filters.priceMin || ''}
                     onChange={(e) =>
@@ -174,7 +175,7 @@ export default function ListingFilters({
                   <span className="text-base-content/60">—</span>
                   <input
                     type="number"
-                    placeholder={t('filters.priceTo')}
+                    placeholder={t('priceTo')}
                     className="input input-bordered input-sm flex-1"
                     value={filters.priceMax || ''}
                     onChange={(e) =>
@@ -191,7 +192,7 @@ export default function ListingFilters({
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-medium">
-                    {t('filters.condition')}
+                    {t('condition')}
                   </span>
                 </label>
                 <select
@@ -201,13 +202,13 @@ export default function ListingFilters({
                     handlePermanentFilterChange('condition', e.target.value)
                   }
                 >
-                  <option value="">{t('filters.anyCondition')}</option>
-                  <option value="new">{tRoot('condition.new')}</option>
-                  <option value="used">{tRoot('condition.used')}</option>
+                  <option value="">{t('anyCondition')}</option>
+                  <option value="new">{tCondition('new')}</option>
+                  <option value="used">{tCondition('used')}</option>
                   <option value="refurbished">
-                    {tRoot('condition.refurbished')}
+                    {tCondition('refurbished')}
                   </option>
-                  <option value="damaged">{tRoot('condition.damaged')}</option>
+                  <option value="damaged">{tCondition('damaged')}</option>
                 </select>
               </div>
 
@@ -215,7 +216,7 @@ export default function ListingFilters({
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-medium">
-                    {t('filters.sellerType')}
+                    {t('sellerType')}
                   </span>
                 </label>
                 <select
@@ -225,9 +226,9 @@ export default function ListingFilters({
                     handlePermanentFilterChange('sellerType', e.target.value)
                   }
                 >
-                  <option value="">{t('filters.anySeller')}</option>
-                  <option value="private">{t('filters.privateSeller')}</option>
-                  <option value="company">{t('filters.companySeller')}</option>
+                  <option value="">{t('anySeller')}</option>
+                  <option value="private">{t('privateSeller')}</option>
+                  <option value="company">{t('companySeller')}</option>
                 </select>
               </div>
 
@@ -245,9 +246,7 @@ export default function ListingFilters({
                       )
                     }
                   />
-                  <span className="label-text">
-                    {t('filters.withDelivery')}
-                  </span>
+                  <span className="label-text">{t('withDelivery')}</span>
                 </label>
               </div>
             </div>
@@ -258,7 +257,7 @@ export default function ListingFilters({
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-medium">
-                      {t('filters.categoryFilters')}
+                      {t('categoryFilters')}
                     </span>
                   </label>
 
@@ -275,7 +274,7 @@ export default function ListingFilters({
                     />
                   ) : (
                     <p className="text-sm text-base-content/60 mt-2">
-                      {t('filters.noAttributeFilters')}
+                      {t('noAttributeFilters')}
                     </p>
                   )}
                 </div>

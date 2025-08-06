@@ -46,7 +46,7 @@ export default function VariantManager({
   onSave,
   onCancel,
 }: VariantManagerProps) {
-  const t = useTranslations('storefronts.variants');
+  const t = useTranslations('storefronts');
 
   // State management
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -250,7 +250,7 @@ export default function VariantManager({
       }
     } catch (error) {
       console.error('Failed to generate variants:', error);
-      alert('Failed to generate variants');
+      alert('variants.Failed to generate variants');
     } finally {
       setSaving(false);
     }
@@ -290,7 +290,7 @@ export default function VariantManager({
       }
     } catch (error) {
       console.error('Failed to update stock:', error);
-      alert('Failed to update stock');
+      alert('variants.Failed to update stock');
     }
   };
 
@@ -318,7 +318,7 @@ export default function VariantManager({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2">{t('loading')}</span>
+        <span className="ml-2">{t('variants.loading')}</span>
       </div>
     );
   }
@@ -328,17 +328,17 @@ export default function VariantManager({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">{t('title')}</h2>
+          <h2 className="text-xl font-semibold">{t('variants.title')}</h2>
           <p className="text-sm text-gray-600">
-            {t('subtitle', { count: variants.length })}
+            {t('variants.subtitle', { count: variants.length })}
           </p>
         </div>
         <div className="flex space-x-2">
           <button onClick={onCancel} className="btn btn-outline">
-            {t('cancel')}
+            {t('variants.cancel')}
           </button>
           <button onClick={onSave} className="btn btn-primary">
-            {t('save')}
+            {t('variants.save')}
           </button>
         </div>
       </div>
@@ -449,7 +449,7 @@ function AttributeSelectionTab({
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           ></path>
         </svg>
-        <span>{t('selectAttributesHelp')}</span>
+        <span>{t('variants.selectAttributesHelp')}</span>
       </div>
 
       {attributes.map((attribute) => {
@@ -528,15 +528,19 @@ function AttributeSelectionTab({
       {combinationsCount > 0 && (
         <div className="card bg-base-100 shadow-sm">
           <div className="card-body">
-            <h3 className="card-title">{t('generationSummary')}</h3>
+            <h3 className="card-title">{t('variants.generationSummary')}</h3>
             <div className="stats shadow">
               <div className="stat">
-                <div className="stat-title">{t('totalCombinations')}</div>
+                <div className="stat-title">
+                  {t('variants.totalCombinations')}
+                </div>
                 <div className="stat-value text-primary">
                   {combinationsCount}
                 </div>
                 <div className="stat-desc">
-                  {t('variantsWillBeCreated', { count: combinationsCount })}
+                  {t('variants.variantsWillBeCreated', {
+                    count: combinationsCount,
+                  })}
                 </div>
               </div>
             </div>
@@ -547,7 +551,9 @@ function AttributeSelectionTab({
                 disabled={combinationsCount === 0 || generating}
                 className={`btn btn-primary ${generating ? 'loading' : ''}`}
               >
-                {generating ? t('generating') : t('generateVariants')}
+                {generating
+                  ? t('variants.generating')
+                  : t('variants.generateVariants')}
               </button>
             </div>
           </div>
@@ -597,14 +603,14 @@ function VariantListTab({
       <div className="flex justify-between items-center">
         <div className="flex space-x-2">
           <button onClick={selectAll} className="btn btn-sm btn-outline">
-            {t('selectAll')}
+            {t('variants.selectAll')}
           </button>
           <button onClick={clearSelection} className="btn btn-sm btn-outline">
-            {t('clearSelection')}
+            {t('variants.clearSelection')}
           </button>
         </div>
         <span className="text-sm text-gray-600">
-          {selectedVariants.size} / {variants.length} {t('selected')}
+          {selectedVariants.size} / {variants.length} {t('variants.selected')}
         </span>
       </div>
 
@@ -628,12 +634,12 @@ function VariantListTab({
                   }
                 />
               </th>
-              <th>{t('variant')}</th>
-              <th>{t('sku')}</th>
-              <th>{t('price')}</th>
-              <th>{t('stock')}</th>
-              <th>{t('status')}</th>
-              <th>{t('actions')}</th>
+              <th>{t('variants.variant')}</th>
+              <th>{t('variants.sku')}</th>
+              <th>{t('variants.price')}</th>
+              <th>{t('variants.stock')}</th>
+              <th>{t('variants.status')}</th>
+              <th>{t('variants.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -668,10 +674,10 @@ function VariantListTab({
               />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              {t('noVariants')}
+              {t('variants.noVariants')}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {t('noVariantsDescription')}
+              {t('variants.noVariantsDescription')}
             </p>
           </div>
         </div>
@@ -725,7 +731,7 @@ function VariantRow({
       }
     } catch (error) {
       console.error('Failed to update variant:', error);
-      alert('Failed to update variant');
+      alert('variants.Failed to update variant');
     }
   };
 
@@ -740,11 +746,17 @@ function VariantRow({
   const getStockStatusBadge = () => {
     const stock = variant.stock_quantity || 0;
     if (stock === 0) {
-      return <span className="badge badge-error">{t('outOfStock')}</span>;
+      return (
+        <span className="badge badge-error">{t('variants.outOfStock')}</span>
+      );
     } else if (stock < 5) {
-      return <span className="badge badge-warning">{t('lowStock')}</span>;
+      return (
+        <span className="badge badge-warning">{t('variants.lowStock')}</span>
+      );
     } else {
-      return <span className="badge badge-success">{t('inStock')}</span>;
+      return (
+        <span className="badge badge-success">{t('variants.inStock')}</span>
+      );
     }
   };
 
@@ -819,13 +831,13 @@ function VariantRow({
           {editing ? (
             <>
               <button onClick={saveChanges} className="btn btn-sm btn-success">
-                {t('save')}
+                {t('variants.save')}
               </button>
               <button
                 onClick={() => setEditing(false)}
                 className="btn btn-sm btn-outline"
               >
-                {t('cancel')}
+                {t('variants.cancel')}
               </button>
             </>
           ) : (
@@ -833,7 +845,7 @@ function VariantRow({
               onClick={() => setEditing(true)}
               className="btn btn-sm btn-outline"
             >
-              {t('edit')}
+              {t('variants.edit')}
             </button>
           )}
         </div>
@@ -924,12 +936,12 @@ function StockManagementTab({
               ></path>
             </svg>
           </div>
-          <div className="stat-title">{t('totalStock')}</div>
+          <div className="stat-title">{t('variants.totalStock')}</div>
           <div className="stat-value text-primary">
             {analytics?.total_stock ||
               variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)}
           </div>
-          <div className="stat-desc">{t('acrossAllVariants')}</div>
+          <div className="stat-desc">{t('variants.acrossAllVariants')}</div>
         </div>
 
         <div className="stat">
@@ -948,11 +960,11 @@ function StockManagementTab({
               ></path>
             </svg>
           </div>
-          <div className="stat-title">{t('lowStock')}</div>
+          <div className="stat-title">{t('variants.lowStock')}</div>
           <div className="stat-value text-warning">
             {lowStockVariants.length}
           </div>
-          <div className="stat-desc">{t('variantsWithLowStock')}</div>
+          <div className="stat-desc">{t('variants.variantsWithLowStock')}</div>
         </div>
 
         <div className="stat">
@@ -971,23 +983,23 @@ function StockManagementTab({
               ></path>
             </svg>
           </div>
-          <div className="stat-title">{t('outOfStock')}</div>
+          <div className="stat-title">{t('variants.outOfStock')}</div>
           <div className="stat-value text-error">
             {outOfStockVariants.length}
           </div>
-          <div className="stat-desc">{t('variantsOutOfStock')}</div>
+          <div className="stat-desc">{t('variants.variantsOutOfStock')}</div>
         </div>
       </div>
 
       {/* Bulk Operations */}
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body">
-          <h3 className="card-title">{t('bulkStockOperations')}</h3>
+          <h3 className="card-title">{t('variants.bulkStockOperations')}</h3>
 
           <div className="flex flex-wrap gap-4 items-end">
             <div className="form-control">
               <label className="label">
-                <span className="label-text">{t('operation')}</span>
+                <span className="label-text">{t('variants.operation')}</span>
               </label>
               <select
                 className="select select-bordered"
@@ -996,15 +1008,15 @@ function StockManagementTab({
                   setBulkOperation(e.target.value as 'add' | 'set' | 'subtract')
                 }
               >
-                <option value="add">{t('add')}</option>
-                <option value="subtract">{t('subtract')}</option>
-                <option value="set">{t('setTo')}</option>
+                <option value="add">{t('variants.add')}</option>
+                <option value="subtract">{t('variants.subtract')}</option>
+                <option value="set">{t('variants.setTo')}</option>
               </select>
             </div>
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text">{t('amount')}</span>
+                <span className="label-text">{t('variants.amount')}</span>
               </label>
               <input
                 type="number"
@@ -1021,7 +1033,7 @@ function StockManagementTab({
               disabled={selectedForBulk.size === 0 || bulkValue === 0}
               className="btn btn-primary"
             >
-              {t('applyToSelected', { count: selectedForBulk.size })}
+              {t('variants.applyToSelected', { count: selectedForBulk.size })}
             </button>
           </div>
         </div>
@@ -1045,10 +1057,10 @@ function StockManagementTab({
                   }}
                 />
               </th>
-              <th>{t('variant')}</th>
-              <th>{t('currentStock')}</th>
-              <th>{t('status')}</th>
-              <th>{t('lastUpdated')}</th>
+              <th>{t('variants.variant')}</th>
+              <th>{t('variants.currentStock')}</th>
+              <th>{t('variants.status')}</th>
+              <th>{t('variants.lastUpdated')}</th>
             </tr>
           </thead>
           <tbody>
@@ -1090,11 +1102,17 @@ function StockManagementTab({
                 </td>
                 <td>
                   {(variant.stock_quantity || 0) === 0 ? (
-                    <span className="badge badge-error">{t('outOfStock')}</span>
+                    <span className="badge badge-error">
+                      {t('variants.outOfStock')}
+                    </span>
                   ) : (variant.stock_quantity || 0) < 5 ? (
-                    <span className="badge badge-warning">{t('lowStock')}</span>
+                    <span className="badge badge-warning">
+                      {t('variants.lowStock')}
+                    </span>
                   ) : (
-                    <span className="badge badge-success">{t('inStock')}</span>
+                    <span className="badge badge-success">
+                      {t('variants.inStock')}
+                    </span>
                   )}
                 </td>
                 <td>
@@ -1143,10 +1161,10 @@ function AnalyticsTab({
             />
           </svg>
           <h3 className="mt-2 text-sm font-medium text-gray-900">
-            {t('noAnalytics')}
+            {t('variants.noAnalytics')}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            {t('noAnalyticsDescription')}
+            {t('variants.noAnalyticsDescription')}
           </p>
         </div>
       </div>
@@ -1158,19 +1176,19 @@ function AnalyticsTab({
       {/* Overview Stats */}
       <div className="stats shadow w-full">
         <div className="stat">
-          <div className="stat-title">{t('totalVariants')}</div>
+          <div className="stat-title">{t('variants.totalVariants')}</div>
           <div className="stat-value">{analytics.total_variants}</div>
         </div>
         <div className="stat">
-          <div className="stat-title">{t('totalStock')}</div>
+          <div className="stat-title">{t('variants.totalStock')}</div>
           <div className="stat-value">{analytics.total_stock}</div>
         </div>
         <div className="stat">
-          <div className="stat-title">{t('totalSold')}</div>
+          <div className="stat-title">{t('variants.totalSold')}</div>
           <div className="stat-value">{analytics.total_sold}</div>
         </div>
         <div className="stat">
-          <div className="stat-title">{t('lowStockVariants')}</div>
+          <div className="stat-title">{t('variants.lowStockVariants')}</div>
           <div className="stat-value text-warning">
             {analytics.low_stock_variants?.length || 0}
           </div>
@@ -1181,7 +1199,7 @@ function AnalyticsTab({
       {analytics.best_seller && (
         <div className="card bg-base-100 shadow-sm">
           <div className="card-body">
-            <h3 className="card-title">{t('bestSeller')}</h3>
+            <h3 className="card-title">{t('variants.bestSeller')}</h3>
             <div className="flex justify-between items-center">
               <div>
                 <div className="font-medium">
@@ -1202,7 +1220,7 @@ function AnalyticsTab({
                   {analytics.best_seller.price} RSD
                 </div>
                 <div className="text-sm text-gray-500">
-                  {t('stock')}: {analytics.best_seller.stock_quantity}
+                  {t('variants.stock')}: {analytics.best_seller.stock_quantity}
                 </div>
               </div>
             </div>
@@ -1215,7 +1233,7 @@ function AnalyticsTab({
         Object.keys(analytics.stock_by_attribute).length > 0 && (
           <div className="card bg-base-100 shadow-sm">
             <div className="card-body">
-              <h3 className="card-title">{t('stockByAttribute')}</h3>
+              <h3 className="card-title">{t('variants.stockByAttribute')}</h3>
               <div className="space-y-4">
                 {Object.entries(analytics.stock_by_attribute).map(
                   ([attribute, values]) => (
@@ -1247,7 +1265,7 @@ function AnalyticsTab({
         Object.keys(analytics.sales_by_attribute).length > 0 && (
           <div className="card bg-base-100 shadow-sm">
             <div className="card-body">
-              <h3 className="card-title">{t('salesByAttribute')}</h3>
+              <h3 className="card-title">{t('variants.salesByAttribute')}</h3>
               <div className="space-y-4">
                 {Object.entries(analytics.sales_by_attribute).map(
                   ([attribute, values]) => (

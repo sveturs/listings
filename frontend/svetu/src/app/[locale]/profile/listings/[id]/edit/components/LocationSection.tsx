@@ -33,7 +33,7 @@ export function LocationSection({
   errors = {},
   onChange,
 }: LocationSectionProps) {
-  const t = useTranslations('profile.listings.editListing');
+  const t = useTranslations('profile');
   const [privacyLevel, setPrivacyLevel] = useState<'exact' | 'area' | 'city'>(
     data.show_on_map ? 'exact' : 'area'
   );

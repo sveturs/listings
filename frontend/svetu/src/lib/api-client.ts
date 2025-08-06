@@ -15,9 +15,7 @@ export const apiClient = {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return {
-      data: await response.json(),
-    };
+    return await response.json();
   },
 
   async post(path: string, data: any, options?: ApiClientOptions) {
@@ -32,9 +30,7 @@ export const apiClient = {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return {
-      data: await response.json(),
-    };
+    return await response.json();
   },
 
   async put(path: string, data: any, options?: ApiClientOptions) {
@@ -49,9 +45,7 @@ export const apiClient = {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return {
-      data: await response.json(),
-    };
+    return await response.json();
   },
 
   async delete(path: string, options?: ApiClientOptions) {
@@ -65,8 +59,6 @@ export const apiClient = {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return {
-      data: await response.json(),
-    };
+    return await response.json();
   },
 };

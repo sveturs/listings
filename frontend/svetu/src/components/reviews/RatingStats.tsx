@@ -14,7 +14,7 @@ export const RatingStats: React.FC<RatingStatsProps> = ({
   stats,
   className = '',
 }) => {
-  const t = useTranslations('reviews.stats');
+  const t = useTranslations('reviews');
   const maxCount = Math.max(...Object.values(stats.rating_distribution || {}));
 
   const getRatingPercentage = (count: number) => {
@@ -42,12 +42,12 @@ export const RatingStats: React.FC<RatingStatsProps> = ({
             className="mt-2"
           />
           <div className="text-sm text-base-content/70 mt-2">
-            {stats.total_reviews} {t('reviews')}
+            {stats.total_reviews} {t('stats.reviews')}
           </div>
           {stats.verified_reviews > 0 && (
             <div className="text-xs text-success mt-1">
               {Math.round((stats.verified_reviews / stats.total_reviews) * 100)}
-              % {t('verified')}
+              % {t('stats.verified')}
             </div>
           )}
         </div>
@@ -55,7 +55,7 @@ export const RatingStats: React.FC<RatingStatsProps> = ({
         {/* Rating Distribution */}
         <div className="flex-1">
           <h4 className="text-sm font-medium text-base-content/70 mb-3">
-            {t('ratingDistribution')}
+            {t('stats.ratingDistribution')}
           </h4>
           <div className="space-y-2">
             {[5, 4, 3, 2, 1].map((rating) => {
@@ -111,7 +111,7 @@ export const RatingStats: React.FC<RatingStatsProps> = ({
               />
             </svg>
             <span>
-              {stats.photo_reviews} {t('withPhotos')}
+              {stats.photo_reviews} {t('stats.withPhotos')}
             </span>
           </div>
         </div>

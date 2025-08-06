@@ -41,7 +41,7 @@ interface OptimizationSession {
 }
 
 export default function WeightOptimization() {
-  const t = useTranslations('admin.search.optimization');
+  const t = useTranslations('admin');
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [currentSession, setCurrentSession] =
     useState<OptimizationSession | null>(null);

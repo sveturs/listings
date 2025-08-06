@@ -17,7 +17,7 @@ interface DraftsModalProps {
 }
 
 export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
-  const t = useTranslations('create_listing.draft');
+  const t = useTranslations('create_listing');
   const locale = useLocale();
   const router = useRouter();
   const { user } = useAuth();
@@ -39,9 +39,9 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
     try {
       draftService.deleteDraft(draftId, user.id);
       refreshDrafts();
-      toast.success(t('deleted'));
+      toast.success(t('draft.deleted'));
     } catch {
-      toast.error(t('deleteError'));
+      toast.error(t('draft.deleteError'));
     } finally {
       setDeletingId(null);
     }
@@ -60,7 +60,7 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
       a.download = `draft_${draftId}_${new Date().toISOString()}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success(t('exported'));
+      toast.success(t('draft.exported'));
     }
   };
 
@@ -69,7 +69,7 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
   return (
     <div className="modal modal-open">
       <div className="modal-box max-w-4xl">
-        <h3 className="font-bold text-lg mb-4">{t('myDrafts')}</h3>
+        <h3 className="font-bold text-lg mb-4">{t('draft.myDrafts')}</h3>
 
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -90,7 +90,7 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <p className="text-base-content/70">{t('noDrafts')}</p>
+            <p className="text-base-content/70">{t('draft.noDrafts')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -113,7 +113,7 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <h4 className="font-semibold">
-                          {draftMeta.title || t('untitled')}
+                          {draftMeta.title || t('draft.untitled')}
                         </h4>
                         {draftMeta.category && (
                           <p className="text-sm text-base-content/70">
@@ -121,14 +121,18 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
                           </p>
                         )}
                         <div className="flex items-center gap-4 mt-2 text-xs text-base-content/50">
-                          <span>{t('updatedAgo', { time: updatedAgo })}</span>
+                          <span>
+                            {t('draft.updatedAgo', { time: updatedAgo })}
+                          </span>
                           <span>•</span>
-                          <span>{t('expiresIn', { time: expiresIn })}</span>
+                          <span>
+                            {t('draft.expiresIn', { time: expiresIn })}
+                          </span>
                           {draftMeta.isComplete && (
                             <>
                               <span>•</span>
                               <span className="text-success">
-                                {t('complete')}
+                                {t('draft.complete')}
                               </span>
                             </>
                           )}
@@ -140,7 +144,7 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
                           onClick={() => handleOpenDraft(draftMeta.id)}
                           className="btn btn-primary btn-sm"
                         >
-                          {t('open')}
+                          {t('draft.open')}
                         </button>
                         <div className="dropdown dropdown-end">
                           <div
@@ -171,7 +175,7 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
                               <button
                                 onClick={() => handleExportDraft(draftMeta.id)}
                               >
-                                {t('export')}
+                                {t('draft.export')}
                               </button>
                             </li>
                             <li>
@@ -183,7 +187,7 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
                                 {deletingId === draftMeta.id ? (
                                   <span className="loading loading-spinner loading-xs"></span>
                                 ) : (
-                                  t('delete')
+                                  t('draft.delete')
                                 )}
                               </button>
                             </li>
@@ -200,7 +204,7 @@ export function DraftsModal({ isOpen, onClose }: DraftsModalProps) {
 
         <div className="modal-action">
           <button onClick={onClose} className="btn btn-ghost">
-            {t('close')}
+            {t('draft.close')}
           </button>
         </div>
       </div>

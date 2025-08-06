@@ -20,8 +20,8 @@ export default function CategoryForm({
   onSave,
   onCancel,
 }: CategoryFormProps) {
-  const t = useTranslations('admin.categories');
-  const tCommon = useTranslations('admin.common');
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('admin');
 
   const [formData, setFormData] = useState<Partial<Category>>({
     name: '',
@@ -136,7 +136,7 @@ export default function CategoryForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('categoryName')} *</span>
+          <span className="label-text">{t('categories.categoryName')} *</span>
         </label>
         <input
           type="text"
@@ -150,7 +150,7 @@ export default function CategoryForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('slug')} *</span>
+          <span className="label-text">{t('categories.slug')} *</span>
         </label>
         <input
           type="text"
@@ -165,7 +165,7 @@ export default function CategoryForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('parentCategory')}</span>
+          <span className="label-text">{t('categories.parentCategory')}</span>
         </label>
         <select
           name="parent_id"
@@ -173,7 +173,7 @@ export default function CategoryForm({
           onChange={handleChange}
           className="select select-bordered"
         >
-          <option value="">{t('noParent')}</option>
+          <option value="">{t('categories.noParent')}</option>
           {getAvailableParents().map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.name}
@@ -184,7 +184,7 @@ export default function CategoryForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('icon')}</span>
+          <span className="label-text">{t('categories.icon')}</span>
         </label>
         <IconPicker
           value={formData.icon || ''}
@@ -195,7 +195,7 @@ export default function CategoryForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('description')}</span>
+          <span className="label-text">{t('categories.description')}</span>
         </label>
         <textarea
           name="description"
@@ -208,7 +208,7 @@ export default function CategoryForm({
 
       <div className="form-control">
         <label className="label cursor-pointer">
-          <span className="label-text">{t('isActive')}</span>
+          <span className="label-text">{t('categories.isActive')}</span>
           <input
             type="checkbox"
             name="is_active"
@@ -223,7 +223,7 @@ export default function CategoryForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('seoTitle')}</span>
+          <span className="label-text">{t('categories.seoTitle')}</span>
         </label>
         <input
           type="text"
@@ -236,7 +236,7 @@ export default function CategoryForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('seoDescription')}</span>
+          <span className="label-text">{t('categories.seoDescription')}</span>
         </label>
         <textarea
           name="seo_description"
@@ -249,7 +249,7 @@ export default function CategoryForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('seoKeywords')}</span>
+          <span className="label-text">{t('categories.seoKeywords')}</span>
         </label>
         <input
           type="text"
@@ -264,7 +264,9 @@ export default function CategoryForm({
       {category?.id && (
         <div className="form-control">
           <label className="label">
-            <span className="label-text">{t('translationStatus')}</span>
+            <span className="label-text">
+              {t('categories.translationStatus')}
+            </span>
           </label>
           <TranslationStatus
             entityType="category"
@@ -272,13 +274,13 @@ export default function CategoryForm({
             onTranslateClick={async () => {
               try {
                 await adminApi.translateCategory(category.id);
-                toast.success(t('translationSuccess'));
+                toast.success(t('categories.translationSuccess'));
                 // Обновляем форму после перевода
                 if (onSave) {
                   onSave(formData);
                 }
               } catch {
-                toast.error(t('translationError'));
+                toast.error(t('categories.translationError'));
               }
             }}
           />
@@ -296,10 +298,10 @@ export default function CategoryForm({
             {isTranslating ? (
               <>
                 <span className="loading loading-spinner loading-sm"></span>
-                {t('translating')}
+                {t('categories.translating')}
               </>
             ) : (
-              <>🌍 {t('translate')}</>
+              <>🌍 {t('categories.translate')}</>
             )}
           </button>
         </div>
@@ -307,14 +309,14 @@ export default function CategoryForm({
 
       <div className="flex gap-2 pt-4">
         <button type="submit" className="btn btn-primary flex-1">
-          {tCommon('save')}
+          {tCommon('common.save')}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="btn btn-ghost flex-1"
         >
-          {tCommon('cancel')}
+          {tCommon('common.cancel')}
         </button>
       </div>
     </form>

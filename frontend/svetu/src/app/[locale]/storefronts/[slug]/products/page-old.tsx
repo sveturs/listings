@@ -36,7 +36,8 @@ export default function ProductsPage({ params }: PageProps) {
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
   }, [params]);
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tStorefronts = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const [products, setProducts] = useState<StorefrontProduct[]>([]);
@@ -100,7 +101,7 @@ export default function ProductsPage({ params }: PageProps) {
       }
     } catch (error) {
       console.error('Failed to load products:', error);
-      toast.error(t('storefronts.products.errorLoadingProducts'));
+      toast.error(tStorefronts('products.errorLoadingProducts'));
     } finally {
       setLoading(false);
     }
@@ -133,14 +134,14 @@ export default function ProductsPage({ params }: PageProps) {
       await apiClient.delete(
         `/api/v1/storefronts/slug/${slug}/products/${productToDelete.id}`
       );
-      toast.success(t('storefronts.products.productDeleted'));
+      toast.success(tStorefronts('products.productDeleted'));
       setDeleteModalOpen(false);
       setProductToDelete(null);
       setCurrentPage(1);
       loadProducts(1, false);
     } catch (error) {
       console.error('Failed to delete product:', error);
-      toast.error(t('storefronts.products.errorDeletingProduct'));
+      toast.error(tStorefronts('products.errorDeletingProduct'));
     }
   };
 
@@ -149,19 +150,19 @@ export default function ProductsPage({ params }: PageProps) {
       case 'out_of_stock':
         return (
           <span className="badge badge-error">
-            {t('storefronts.products.outOfStock')}
+            {tStorefronts('products.outOfStock')}
           </span>
         );
       case 'low_stock':
         return (
           <span className="badge badge-warning">
-            {t('storefronts.products.lowStock')}
+            {tStorefronts('products.lowStock')}
           </span>
         );
       case 'in_stock':
         return (
           <span className="badge badge-success">
-            {t('storefronts.products.inStock')}
+            {tStorefronts('products.inStock')}
           </span>
         );
       default:
@@ -179,13 +180,13 @@ export default function ProductsPage({ params }: PageProps) {
             className="inline-flex items-center text-primary hover:underline mb-2"
           >
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
-            {t('storefronts.backToDashboard')}
+            {tStorefronts('backToDashboard')}
           </Link>
           <h1 className="text-3xl font-bold">
-            {t('storefronts.products.title')}
+            {tStorefronts('products.title')}
           </h1>
           <p className="text-base-content/60 mt-2">
-            {t('storefronts.products.totalProducts', {
+            {t('products.totalProducts', {
               count: products.length,
             })}
           </p>
@@ -208,14 +209,14 @@ export default function ProductsPage({ params }: PageProps) {
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            {t('storefronts.products.importProducts')}
+            {tStorefronts('products.importProducts')}
           </Link>
           <Link
             href={`/${locale}/storefronts/${slug}/products/new`}
             className="btn btn-primary"
           >
             <PlusIcon className="w-5 h-5" />
-            {t('storefronts.products.addProduct')}
+            {tStorefronts('products.addProduct')}
           </Link>
         </div>
       </div>
@@ -229,7 +230,7 @@ export default function ProductsPage({ params }: PageProps) {
               <div className="input-group">
                 <input
                   type="text"
-                  placeholder={t('storefronts.products.searchPlaceholder')}
+                  placeholder={tStorefronts('products.searchPlaceholder')}
                   className="input input-bordered w-full"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -248,19 +249,19 @@ export default function ProductsPage({ params }: PageProps) {
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
                 <option value="all">
-                  {t('storefronts.products.allProducts')}
+                  {tStorefronts('products.allProducts')}
                 </option>
                 <option value="active">
-                  {t('storefronts.products.activeOnly')}
+                  {tStorefronts('products.activeOnly')}
                 </option>
                 <option value="inactive">
-                  {t('storefronts.products.inactiveOnly')}
+                  {tStorefronts('products.inactiveOnly')}
                 </option>
                 <option value="out_of_stock">
-                  {t('storefronts.products.outOfStock')}
+                  {tStorefronts('products.outOfStock')}
                 </option>
                 <option value="low_stock">
-                  {t('storefronts.products.lowStock')}
+                  {tStorefronts('products.lowStock')}
                 </option>
               </select>
             </div>
@@ -285,8 +286,8 @@ export default function ProductsPage({ params }: PageProps) {
           <PhotoIcon className="w-16 h-16 mx-auto text-base-content/20 mb-4" />
           <p className="text-base-content/60 mb-4">
             {search || filterStatus !== 'all'
-              ? t('storefronts.products.noProductsFound')
-              : t('storefronts.products.noProducts')}
+              ? tStorefronts('products.noProductsFound')
+              : tStorefronts('products.noProducts')}
           </p>
           {!search && filterStatus === 'all' && (
             <Link
@@ -294,7 +295,7 @@ export default function ProductsPage({ params }: PageProps) {
               className="btn btn-primary"
             >
               <PlusIcon className="w-5 h-5" />
-              {t('storefronts.products.addFirstProduct')}
+              {tStorefronts('products.addFirstProduct')}
             </Link>
           )}
         </div>
@@ -331,7 +332,7 @@ export default function ProductsPage({ params }: PageProps) {
                     {product.name}
                     {!product.is_active && (
                       <span className="badge badge-ghost">
-                        {t('storefronts.products.inactive')}
+                        {tStorefronts('products.inactive')}
                       </span>
                     )}
                   </h2>
@@ -353,7 +354,7 @@ export default function ProductsPage({ params }: PageProps) {
 
                   {/* Stock Quantity */}
                   <p className="text-sm text-base-content/60">
-                    {t('storefronts.products.stockCount', {
+                    {t('products.stockCount', {
                       count: product.stock_quantity || 0,
                     })}
                   </p>
@@ -413,7 +414,7 @@ export default function ProductsPage({ params }: PageProps) {
                             {product.name}
                             {!product.is_active && (
                               <span className="badge badge-ghost badge-sm ml-2">
-                                {t('storefronts.products.inactive')}
+                                {tStorefronts('products.inactive')}
                               </span>
                             )}
                           </h2>
@@ -428,7 +429,7 @@ export default function ProductsPage({ params }: PageProps) {
                             </span>
                             {getStockStatusBadge(product)}
                             <span className="text-sm text-base-content/60">
-                              {t('storefronts.products.stockCount', {
+                              {t('products.stockCount', {
                                 count: product.stock_quantity || 0,
                               })}
                             </span>
@@ -484,10 +485,10 @@ export default function ProductsPage({ params }: PageProps) {
         <div className="modal modal-open">
           <div className="modal-box">
             <h3 className="font-bold text-lg">
-              {t('storefronts.products.deleteProductTitle')}
+              {tStorefronts('products.deleteProductTitle')}
             </h3>
             <p className="py-4">
-              {t('storefronts.products.deleteProductConfirm', {
+              {t('products.deleteProductConfirm', {
                 name: productToDelete?.name || '',
               })}
             </p>
@@ -499,10 +500,10 @@ export default function ProductsPage({ params }: PageProps) {
                   setProductToDelete(null);
                 }}
               >
-                {t('common.cancel')}
+                {tCommon('cancel')}
               </button>
               <button className="btn btn-error" onClick={handleDelete}>
-                {t('common.delete')}
+                {tCommon('delete')}
               </button>
             </div>
           </div>

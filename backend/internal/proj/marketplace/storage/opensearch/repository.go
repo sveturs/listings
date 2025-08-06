@@ -661,6 +661,53 @@ func (r *Repository) getAttributeOptionTranslations(ctx context.Context, attrNam
 	return translations, nil
 }
 
+// getListingTranslationsFromDB загружает переводы для объявления из таблицы translations
+func (r *Repository) getListingTranslationsFromDB(ctx context.Context, listingID int) ([]DBTranslation, error) {
+	query := `
+		SELECT language, field_name, translated_text 
+		FROM translations 
+		WHERE entity_type = 'listing' AND entity_id = $1
+		ORDER BY language, field_name
+	`
+
+	rows, err := r.storage.Query(ctx, query, listingID)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения запроса переводов: %w", err)
+	}
+	defer rows.Close()
+
+	var translations []DBTranslation
+	for rows.Next() {
+		var t DBTranslation
+		err := rows.Scan(&t.Language, &t.FieldName, &t.TranslatedText)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка сканирования перевода: %w", err)
+		}
+		translations = append(translations, t)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка итерации по переводам: %w", err)
+	}
+
+	return translations, nil
+}
+
+// extractSupportedLanguages извлекает список поддерживаемых языков из переводов
+func (r *Repository) extractSupportedLanguages(translations []DBTranslation) []string {
+	langMap := make(map[string]bool)
+	for _, t := range translations {
+		langMap[t.Language] = true
+	}
+
+	var languages []string
+	for lang := range langMap {
+		languages = append(languages, lang)
+	}
+
+	return languages
+}
+
 func (r *Repository) listingToDoc(ctx context.Context, listing *models.MarketplaceListing) map[string]interface{} {
 	doc := map[string]interface{}{
 		"id":                listing.ID,
@@ -684,6 +731,16 @@ func (r *Repository) listingToDoc(ctx context.Context, listing *models.Marketpla
 		"translations":      listing.Translations,
 		"average_rating":    listing.AverageRating,
 		"review_count":      listing.ReviewCount,
+	}
+
+	// Загружаем переводы из таблицы translations в новое поле db_translations
+	dbTranslations, err := r.getListingTranslationsFromDB(ctx, listing.ID)
+	if err != nil {
+		logger.Error().Msgf("Ошибка загрузки переводов для объявления %d: %v", listing.ID, err)
+	} else if len(dbTranslations) > 0 {
+		doc["db_translations"] = dbTranslations
+		doc["supported_languages"] = r.extractSupportedLanguages(dbTranslations)
+		logger.Info().Msgf("Загружено %d переводов из БД для объявления %d", len(dbTranslations), listing.ID)
 	}
 
 	logger.Info().Msgf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
@@ -1673,6 +1730,73 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 					},
 				},
 			})
+		}
+
+		// Поиск по переводам из БД (nested запросы для db_translations)
+		for _, queryVariant := range queryVariants {
+			for _, lang := range []string{"ru", "sr", "en"} {
+				should = append(should, map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "db_translations",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"db_translations.language": lang,
+										},
+									},
+									{
+										"term": map[string]interface{}{
+											"db_translations.field_name": "title",
+										},
+									},
+									{
+										"match": map[string]interface{}{
+											"db_translations.translated_text": map[string]interface{}{
+												"query":     queryVariant,
+												"boost":     r.getBoostWeight("TranslationTitle", 5.0),
+												"fuzziness": fuzziness,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				})
+
+				should = append(should, map[string]interface{}{
+					"nested": map[string]interface{}{
+						"path": "db_translations",
+						"query": map[string]interface{}{
+							"bool": map[string]interface{}{
+								"must": []map[string]interface{}{
+									{
+										"term": map[string]interface{}{
+											"db_translations.language": lang,
+										},
+									},
+									{
+										"term": map[string]interface{}{
+											"db_translations.field_name": "description",
+										},
+									},
+									{
+										"match": map[string]interface{}{
+											"db_translations.translated_text": map[string]interface{}{
+												"query":     queryVariant,
+												"boost":     r.getBoostWeight("TranslationDesc", 2.0),
+												"fuzziness": fuzziness,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				})
+			}
 		}
 
 		// Добавляем специальную обработку для атрибутов в nested формате для всех вариантов транслитерации

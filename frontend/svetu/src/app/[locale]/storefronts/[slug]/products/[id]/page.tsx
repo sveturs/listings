@@ -39,7 +39,11 @@ type Props = {
 export default function StorefrontProductPage({ params }: Props) {
   const { slug, id } = use(params);
   const locale = useLocale();
-  const t = useTranslations();
+  const t = useTranslations('products');
+  const tCommon = useTranslations('common');
+  const tStorefronts = useTranslations('storefronts');
+  const tCart = useTranslations('cart');
+  const tOrders = useTranslations('orders');
   const [product, setProduct] = useState<StorefrontProduct | null>(null);
   const [storefront, setStorefront] = useState<Storefront | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,15 +128,15 @@ export default function StorefrontProductPage({ params }: Props) {
       <div className="min-h-screen bg-base-100 flex items-center justify-center pt-24">
         <div className="text-center">
           <div className="text-6xl mb-4">📦</div>
-          <h1 className="text-2xl font-bold mb-2">{t('products.notFound')}</h1>
+          <h1 className="text-2xl font-bold mb-2">{t('notFound')}</h1>
           <p className="text-base-content/60 mb-6">
-            {t('products.notFoundDescription')}
+            {t('notFoundDescription')}
           </p>
           <Link
             href={`/${locale}/storefronts/${slug}`}
             className="btn btn-primary"
           >
-            {t('common.back')}
+            {tCommon('back')}
           </Link>
         </div>
       </div>
@@ -150,7 +154,7 @@ export default function StorefrontProductPage({ params }: Props) {
         <div className="breadcrumbs text-sm mb-6">
           <ul>
             <li>
-              <Link href={`/${locale}`}>{t('common.home')}</Link>
+              <Link href={`/${locale}`}>{tCommon('home')}</Link>
             </li>
             <li>
               <Link href={`/${locale}/storefronts/${slug}`}>
@@ -159,7 +163,7 @@ export default function StorefrontProductPage({ params }: Props) {
             </li>
             <li>
               <Link href={`/${locale}/storefronts/${slug}/products`}>
-                {t('storefronts.products.title')}
+                {tStorefronts('products.title')}
               </Link>
             </li>
             <li className="text-base-content/60">{product.name}</li>
@@ -196,7 +200,7 @@ export default function StorefrontProductPage({ params }: Props) {
               />
               {product.stock_status === 'out_of_stock' && (
                 <div className="absolute top-4 right-4 badge badge-warning">
-                  {t('cart.outOfStock')}
+                  {tCart('outOfStock')}
                 </div>
               )}
             </div>
@@ -248,10 +252,10 @@ export default function StorefrontProductPage({ params }: Props) {
                 <div className="text-sm text-base-content/60">
                   {storefront.is_verified && (
                     <span className="badge badge-success badge-sm mr-2">
-                      {t('storefronts.verified')}
+                      {tStorefronts('verified')}
                     </span>
                   )}
-                  {t('storefronts.store')}
+                  {tStorefronts('store')}
                 </div>
               </div>
             </div>
@@ -280,12 +284,12 @@ export default function StorefrontProductPage({ params }: Props) {
               {product.stock_quantity !== undefined &&
                 product.stock_quantity > 0 && (
                   <span className="text-sm text-base-content/60">
-                    {t('products.inStock')}: {product.stock_quantity}
+                    {t('inStock')}: {product.stock_quantity}
                   </span>
                 )}
               {product.sold_count && product.sold_count > 0 && (
                 <span className="text-sm text-base-content/60">
-                  {t('products.sold')}: {product.sold_count}
+                  {t('sold')}: {product.sold_count}
                 </span>
               )}
             </div>
@@ -294,7 +298,7 @@ export default function StorefrontProductPage({ params }: Props) {
             {product.category && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-base-content/60">
-                  {t('common.category')}:
+                  {tCommon('category')}:
                 </span>
                 <span className="badge badge-outline">
                   {product.category.name}
@@ -342,7 +346,7 @@ export default function StorefrontProductPage({ params }: Props) {
             {product.description && (
               <div className="prose max-w-none">
                 <h3 className="text-lg font-semibold mb-2">
-                  {t('products.description')}
+                  {t('description')}
                 </h3>
                 <p className="text-base-content/80 whitespace-pre-wrap">
                   {product.description}
@@ -411,13 +415,11 @@ export default function StorefrontProductPage({ params }: Props) {
                 />
               </svg>
               <div>
-                <h4 className="font-semibold">
-                  {t('storefronts.trustSafety')}
-                </h4>
+                <h4 className="font-semibold">{tStorefronts('trustSafety')}</h4>
                 <ul className="text-sm space-y-1 mt-1">
-                  <li>• {t('storefronts.securePayments')}</li>
-                  <li>• {t('storefronts.buyerProtection')}</li>
-                  <li>• {t('orders.trackingAvailable')}</li>
+                  <li>• {tStorefronts('securePayments')}</li>
+                  <li>• {tStorefronts('buyerProtection')}</li>
+                  <li>• {tOrders('trackingAvailable')}</li>
                 </ul>
               </div>
             </div>

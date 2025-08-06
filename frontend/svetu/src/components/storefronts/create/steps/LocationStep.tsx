@@ -21,7 +21,8 @@ interface LocationData {
 }
 
 export default function LocationStep({ onNext, onBack }: LocationStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('create_storefront');
+  const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [location, setLocation] = useState<LocationData | undefined>(
@@ -72,15 +73,15 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
     }
 
     if (!location?.address || location.address.length < 5) {
-      newErrors.address = t('create_storefront.errors.address_required');
+      newErrors.address = t('address_required');
     }
 
     if (!location?.city || location.city.length < 2) {
-      newErrors.city = t('create_storefront.errors.city_required');
+      newErrors.city = t('city_required');
     }
 
     if (!postalCode || postalCode.length < 4) {
-      newErrors.postalCode = t('create_storefront.errors.postal_code_required');
+      newErrors.postalCode = t('postal_code_required');
     }
 
     setErrors(newErrors);
@@ -98,12 +99,8 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
     <div className="max-w-4xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            {t('create_storefront.location.title')}
-          </h2>
-          <p className="text-base-content/70 mb-6">
-            {t('create_storefront.location.subtitle')}
-          </p>
+          <h2 className="card-title text-2xl mb-4">{t('location.title')}</h2>
+          <p className="text-base-content/70 mb-6">{t('location.subtitle')}</p>
 
           {/* Выбор местоположения */}
           <div className="mb-6">
@@ -130,7 +127,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
               <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text">
-                    {t('create_storefront.location.postal_code')}
+                    {t('location.postal_code')}
                   </span>
                   <span className="label-text-alt text-error">*</span>
                 </label>
@@ -286,10 +283,10 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
 
           <div className="card-actions justify-between mt-6">
             <button className="btn btn-ghost" onClick={onBack}>
-              {t('common.back')}
+              {tCommon('back')}
             </button>
             <button className="btn btn-primary" onClick={handleNext}>
-              {t('common.next')}
+              {tCommon('next')}
             </button>
           </div>
         </div>

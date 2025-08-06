@@ -1,0 +1,13 @@
+{
+  "section": {
+    "title": "Recenzije",
+    "writeReview": "Napišite recenziju",
+    "noReviews": "Još nema recenzija",
+    "cantReview": "Ne možete ostaviti recenziju za ovaj proizvod"
+  },
+  "stats": {
+    "reviews": "recenzija",
+    "ratingDistribution": "Distribucija ocena",
+    "withPhotos": "sa fotografijama"
+  }
+}

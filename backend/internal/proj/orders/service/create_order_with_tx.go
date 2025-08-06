@@ -177,6 +177,19 @@ func (s *OrderService) CreateOrderWithTx(ctx context.Context, db *sqlx.DB, req *
 
 // prepareOrderStruct подготавливает структуру заказа
 func (s *OrderService) prepareOrderStruct(req *models.CreateOrderRequest, userID int, storefront *models.Storefront) *models.StorefrontOrder {
+	// Формируем адрес забора из данных витрины
+	pickupAddress := map[string]interface{}{
+		"street":      storefront.Address,
+		"city":        storefront.City,
+		"postal_code": storefront.PostalCode,
+		"country":     storefront.Country,
+		"latitude":    storefront.Latitude,
+		"longitude":   storefront.Longitude,
+		"name":        storefront.Name, // Название витрины для удобства
+		"phone":       storefront.Phone,
+		"email":       storefront.Email,
+	}
+
 	return &models.StorefrontOrder{
 		StorefrontID:    req.StorefrontID,
 		CustomerID:      userID,
@@ -188,6 +201,7 @@ func (s *OrderService) prepareOrderStruct(req *models.CreateOrderRequest, userID
 		EscrowDays:      s.calculateEscrowDays(storefront),
 		ShippingAddress: convertToJSONB(req.ShippingAddress),
 		BillingAddress:  convertToJSONB(req.BillingAddress),
+		PickupAddress:   convertToJSONB(pickupAddress),
 		PaymentMethod:   req.PaymentMethod,
 		PaymentStatus:   "pending",
 		Metadata:        make(map[string]interface{}),
@@ -291,9 +305,9 @@ func (s *OrderService) createOrderInTransaction(ctx context.Context, tx *sqlx.Tx
 			storefront_id, customer_id, subtotal_amount, shipping_amount, 
 			tax_amount, total_amount, commission_amount, seller_amount, 
 			currency, status, escrow_days, shipping_address, billing_address,
-			shipping_method, customer_notes, payment_method, payment_status, metadata
+			shipping_method, customer_notes, payment_method, payment_status, metadata, pickup_address
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
 		) RETURNING id, created_at, updated_at`
 
 	var createdOrder models.StorefrontOrder
@@ -316,6 +330,7 @@ func (s *OrderService) createOrderInTransaction(ctx context.Context, tx *sqlx.Tx
 		order.PaymentMethod,
 		order.PaymentStatus,
 		order.Metadata,
+		order.PickupAddress,
 	).Scan(&createdOrder.ID, &createdOrder.CreatedAt, &createdOrder.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -332,6 +347,7 @@ func (s *OrderService) createOrderInTransaction(ctx context.Context, tx *sqlx.Tx
 	createdOrder.EscrowDays = order.EscrowDays
 	createdOrder.ShippingAddress = order.ShippingAddress
 	createdOrder.BillingAddress = order.BillingAddress
+	createdOrder.PickupAddress = order.PickupAddress
 	createdOrder.PaymentMethod = order.PaymentMethod
 	createdOrder.PaymentStatus = order.PaymentStatus
 	createdOrder.Metadata = order.Metadata

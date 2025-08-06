@@ -13,7 +13,8 @@ export default function EditBasicInfoStep({
   onNext,
   onBack,
 }: EditBasicInfoStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
   const { state, setProductData, setError, clearError } = useEditProduct();
 
   const [formData, setFormData] = useState({
@@ -40,15 +41,15 @@ export default function EditBasicInfoStep({
     const errors: Record<string, string> = {};
 
     if (!formData.name || formData.name.length < 3) {
-      errors.name = t('storefronts.products.nameRequired');
+      errors.name = t('nameRequired');
     }
 
     if (!formData.description || formData.description.length < 10) {
-      errors.description = t('storefronts.products.descriptionRequired');
+      errors.description = t('descriptionRequired');
     }
 
     if (!formData.price || formData.price <= 0) {
-      errors.price = t('storefronts.products.priceRequired');
+      errors.price = t('priceRequired');
     }
 
     // Показываем ошибки
@@ -69,10 +70,10 @@ export default function EditBasicInfoStep({
           <span className="text-2xl">📝</span>
         </div>
         <h3 className="text-2xl font-bold text-base-content mb-2">
-          {t('storefronts.products.steps.basic')}
+          {t('products.steps.basic')}
         </h3>
         <p className="text-base-content/70">
-          {t('storefronts.products.basicInformationDescription')}
+          {t('basicInformationDescription')}
         </p>
       </div>
 
@@ -82,13 +83,13 @@ export default function EditBasicInfoStep({
         <div>
           <label className="label">
             <span className="label-text font-semibold">
-              {t('storefronts.products.productName')} *
+              {t('productName')} *
             </span>
           </label>
           <input
             type="text"
             className={`input input-bordered w-full ${state.errors.name ? 'input-error' : ''}`}
-            placeholder={t('storefronts.products.productNamePlaceholder')}
+            placeholder={t('productNamePlaceholder')}
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
           />
@@ -105,12 +106,12 @@ export default function EditBasicInfoStep({
         <div>
           <label className="label">
             <span className="label-text font-semibold">
-              {t('storefronts.products.description')} *
+              {t('description')} *
             </span>
           </label>
           <textarea
             className={`textarea textarea-bordered w-full h-32 ${state.errors.description ? 'textarea-error' : ''}`}
-            placeholder={t('storefronts.products.descriptionPlaceholder')}
+            placeholder={t('descriptionPlaceholder')}
             value={formData.description}
             onChange={(e) => handleChange('description', e.target.value)}
           />
@@ -127,9 +128,7 @@ export default function EditBasicInfoStep({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="label">
-              <span className="label-text font-semibold">
-                {t('storefronts.products.price')} *
-              </span>
+              <span className="label-text font-semibold">{t('price')} *</span>
             </label>
             <input
               type="number"
@@ -153,9 +152,7 @@ export default function EditBasicInfoStep({
 
           <div>
             <label className="label">
-              <span className="label-text font-semibold">
-                {t('storefronts.products.currency')}
-              </span>
+              <span className="label-text font-semibold">{t('currency')}</span>
             </label>
             <select className="select select-bordered w-full" disabled>
               <option value="RSD">RSD</option>
@@ -167,7 +164,7 @@ export default function EditBasicInfoStep({
         <div>
           <label className="label">
             <span className="label-text font-semibold">
-              {t('storefronts.products.stockQuantity')}
+              {t('stockQuantity')}
             </span>
           </label>
           <input
@@ -182,7 +179,7 @@ export default function EditBasicInfoStep({
           />
           <div className="label">
             <span className="label-text-alt text-base-content/60">
-              {t('storefronts.products.stockQuantityHelp')}
+              {t('stockQuantityHelp')}
             </span>
           </div>
         </div>
@@ -191,14 +188,12 @@ export default function EditBasicInfoStep({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="label">
-              <span className="label-text font-semibold">
-                {t('storefronts.products.sku')}
-              </span>
+              <span className="label-text font-semibold">{t('sku')}</span>
             </label>
             <input
               type="text"
               className="input input-bordered w-full"
-              placeholder={t('storefronts.products.skuPlaceholder')}
+              placeholder={t('skuPlaceholder')}
               value={formData.sku}
               onChange={(e) => handleChange('sku', e.target.value)}
             />
@@ -206,14 +201,12 @@ export default function EditBasicInfoStep({
 
           <div>
             <label className="label">
-              <span className="label-text font-semibold">
-                {t('storefronts.products.barcode')}
-              </span>
+              <span className="label-text font-semibold">{t('barcode')}</span>
             </label>
             <input
               type="text"
               className="input input-bordered w-full"
-              placeholder={t('storefronts.products.barcodePlaceholder')}
+              placeholder={t('barcodePlaceholder')}
               value={formData.barcode}
               onChange={(e) => handleChange('barcode', e.target.value)}
             />
@@ -224,7 +217,7 @@ export default function EditBasicInfoStep({
         <div className="form-control">
           <label className="cursor-pointer label">
             <span className="label-text font-semibold">
-              {t('storefronts.products.activeProduct')}
+              {t('activeProduct')}
             </span>
             <input
               type="checkbox"
@@ -235,7 +228,7 @@ export default function EditBasicInfoStep({
           </label>
           <div className="label">
             <span className="label-text-alt text-base-content/60">
-              {t('storefronts.products.activeProductHelp')}
+              {t('activeProductHelp')}
             </span>
           </div>
         </div>
@@ -244,10 +237,10 @@ export default function EditBasicInfoStep({
       {/* Кнопки навигации */}
       <div className="flex justify-between">
         <button onClick={onBack} className="btn btn-outline btn-lg">
-          {t('common.back')}
+          {tCommon('back')}
         </button>
         <button onClick={handleNext} className="btn btn-primary btn-lg">
-          {t('common.continue')}
+          {tCommon('continue')}
         </button>
       </div>
     </div>

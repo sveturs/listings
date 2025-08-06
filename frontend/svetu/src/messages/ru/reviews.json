@@ -1,0 +1,13 @@
+{
+  "section": {
+    "title": "Отзывы",
+    "writeReview": "Написать отзыв",
+    "noReviews": "Отзывов пока нет",
+    "cantReview": "Вы не можете оставить отзыв на этот товар"
+  },
+  "stats": {
+    "reviews": "отзывов",
+    "ratingDistribution": "Распределение оценок",
+    "withPhotos": "с фотографиями"
+  }
+}

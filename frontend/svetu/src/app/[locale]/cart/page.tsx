@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from '@/utils/toast';
 import {
   selectCartItems,
   selectCartTotal,
@@ -66,8 +67,10 @@ export default function CartPage() {
   };
 
   const handleClearCart = () => {
-    if (confirm(t('confirmClear'))) {
+    // Show confirmation using browser confirm dialog
+    if (window.confirm(t('confirmClear'))) {
       dispatch(clearCart());
+      toast.success(t('cartCleared'));
     }
   };
 

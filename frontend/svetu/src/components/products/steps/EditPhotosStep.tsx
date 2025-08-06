@@ -22,7 +22,8 @@ export default function EditPhotosStep({
   onNext,
   onBack,
 }: EditPhotosStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
   const {
     state,
     addNewImage,
@@ -54,13 +55,13 @@ export default function EditPhotosStep({
 
         // Проверка типа файла
         if (!file.type.startsWith('image/')) {
-          setError('images', t('storefronts.products.errors.invalidImageType'));
+          setError('images', t('products.errors.invalidImageType'));
           continue;
         }
 
         // Проверка размера файла (максимум 10MB)
         if (file.size > 10 * 1024 * 1024) {
-          setError('images', t('storefronts.products.errors.imageTooLarge'));
+          setError('images', t('products.errors.imageTooLarge'));
           continue;
         }
 
@@ -93,7 +94,7 @@ export default function EditPhotosStep({
 
   const handleNext = () => {
     if (totalImages === 0) {
-      setError('images', t('storefronts.products.errors.atLeastOneImage'));
+      setError('images', t('products.errors.atLeastOneImage'));
       return;
     }
 
@@ -120,11 +121,9 @@ export default function EditPhotosStep({
       <div className="text-center">
         <PhotoIcon className="w-16 h-16 text-primary mx-auto mb-4" />
         <h3 className="text-2xl font-bold text-base-content mb-2">
-          {t('storefronts.products.steps.photos')}
+          {t('products.steps.photos')}
         </h3>
-        <p className="text-base-content/70">
-          {t('storefronts.products.photosStepDescription')}
-        </p>
+        <p className="text-base-content/70">{t('photosStepDescription')}</p>
       </div>
 
       {/* Статистика изображений */}
@@ -136,18 +135,17 @@ export default function EditPhotosStep({
             </div>
             <div>
               <p className="font-semibold text-base-content">
-                {t('storefronts.products.totalImages')}
+                {t('totalImages')}
               </p>
               <p className="text-sm text-base-content/60">
-                {totalImages} {t('storefronts.products.images')}
+                {totalImages} {t('images')}
               </p>
             </div>
           </div>
           {state.imagesToDelete.length > 0 && (
             <div className="text-right">
               <p className="text-sm text-error">
-                {state.imagesToDelete.length}{' '}
-                {t('storefronts.products.toDelete')}
+                {state.imagesToDelete.length} {t('toDelete')}
               </p>
             </div>
           )}
@@ -181,12 +179,10 @@ export default function EditPhotosStep({
         <div className="flex flex-col items-center">
           <ArrowUpTrayIcon className="w-12 h-12 text-base-content/40 mb-4" />
           <p className="text-lg font-semibold text-base-content mb-2">
-            {totalImages >= 10
-              ? t('storefronts.products.maxImagesReached')
-              : t('storefronts.products.dragDropImages')}
+            {totalImages >= 10 ? t('maxImagesReached') : t('dragDropImages')}
           </p>
           <p className="text-base-content/60 text-sm">
-            {t('storefronts.products.imageRequirements')}
+            {t('imageRequirements')}
           </p>
         </div>
       </div>
@@ -195,7 +191,7 @@ export default function EditPhotosStep({
       {(visibleExistingImages.length > 0 || state.newImages.length > 0) && (
         <div className="space-y-4">
           <h4 className="text-lg font-semibold text-base-content">
-            {t('storefronts.products.selectedImages')}
+            {t('selectedImages')}
           </h4>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -239,7 +235,7 @@ export default function EditPhotosStep({
                               setMainImage('existing', index);
                             }}
                             className="btn btn-sm btn-circle bg-primary/80 hover:bg-primary border-none text-primary-content"
-                            title={t('storefronts.products.setAsMain')}
+                            title={t('setAsMain')}
                           >
                             {isMain ? (
                               <StarSolidIcon className="w-4 h-4" />
@@ -265,8 +261,8 @@ export default function EditPhotosStep({
                           }`}
                           title={
                             isMarkedForDeletion
-                              ? t('storefronts.products.restoreImage')
-                              : t('storefronts.products.deleteImage')
+                              ? t('restoreImage')
+                              : t('deleteImage')
                           }
                         >
                           {isMarkedForDeletion ? (
@@ -283,12 +279,12 @@ export default function EditPhotosStep({
                   <div className="absolute top-2 left-2 flex gap-1">
                     {isMain && !isMarkedForDeletion && (
                       <span className="px-2 py-1 bg-primary text-primary-content text-xs rounded-full font-medium">
-                        {t('storefronts.products.main')}
+                        {t('main')}
                       </span>
                     )}
                     {isMarkedForDeletion && (
                       <span className="px-2 py-1 bg-error text-error-content text-xs rounded-full font-medium">
-                        {t('storefronts.products.toDelete')}
+                        {t('toDelete')}
                       </span>
                     )}
                   </div>
@@ -325,7 +321,7 @@ export default function EditPhotosStep({
                             setMainImage('new', index);
                           }}
                           className="btn btn-sm btn-circle bg-primary/80 hover:bg-primary border-none text-primary-content"
-                          title={t('storefronts.products.setAsMain')}
+                          title={t('setAsMain')}
                         >
                           {isMain ? (
                             <StarSolidIcon className="w-4 h-4" />
@@ -340,7 +336,7 @@ export default function EditPhotosStep({
                             removeNewImage(index);
                           }}
                           className="btn btn-sm btn-circle bg-error/80 hover:bg-error border-none text-white"
-                          title={t('storefronts.products.removeImage')}
+                          title={t('removeImage')}
                         >
                           <TrashIcon className="w-4 h-4" />
                         </button>
@@ -351,11 +347,11 @@ export default function EditPhotosStep({
                   {/* Индикаторы */}
                   <div className="absolute top-2 left-2 flex gap-1">
                     <span className="px-2 py-1 bg-success text-success-content text-xs rounded-full font-medium">
-                      {t('storefronts.products.new')}
+                      {t('new')}
                     </span>
                     {isMain && (
                       <span className="px-2 py-1 bg-primary text-primary-content text-xs rounded-full font-medium">
-                        {t('storefronts.products.main')}
+                        {t('main')}
                       </span>
                     )}
                   </div>
@@ -393,14 +389,14 @@ export default function EditPhotosStep({
           className="btn btn-outline btn-lg"
           disabled={state.isSaving}
         >
-          {t('common.back')}
+          {tCommon('back')}
         </button>
         <button
           onClick={handleNext}
           className="btn btn-primary btn-lg"
           disabled={totalImages === 0 || state.isSaving}
         >
-          {t('common.continue')}
+          {tCommon('continue')}
         </button>
       </div>
     </div>

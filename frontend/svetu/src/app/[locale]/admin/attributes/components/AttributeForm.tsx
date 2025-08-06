@@ -26,8 +26,8 @@ export default function AttributeForm({
   onSave,
   onCancel,
 }: AttributeFormProps) {
-  const t = useTranslations('admin.attributes');
-  const tCommon = useTranslations('admin.common');
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('admin');
 
   const [formData, setFormData] = useState<
     Partial<
@@ -362,7 +362,7 @@ export default function AttributeForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('displayName')} *</span>
+          <span className="label-text">{t('attributes.displayName')} *</span>
         </label>
         <input
           type="text"
@@ -376,7 +376,7 @@ export default function AttributeForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('systemName')} *</span>
+          <span className="label-text">{t('attributes.systemName')} *</span>
         </label>
         <input
           type="text"
@@ -391,7 +391,7 @@ export default function AttributeForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('type')} *</span>
+          <span className="label-text">{t('attributes.type')} *</span>
         </label>
         <select
           name="attribute_type"
@@ -415,7 +415,7 @@ export default function AttributeForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('icon')}</span>
+          <span className="label-text">{t('attributes.icon')}</span>
         </label>
         <IconPicker
           value={formData.icon || ''}
@@ -428,7 +428,7 @@ export default function AttributeForm({
       {showSelectOptions && (
         <div className="form-control">
           <label className="label">
-            <span className="label-text">{t('options')}</span>
+            <span className="label-text">{t('attributes.options')}</span>
           </label>
           <div className="space-y-2">
             {options.map((option, index) => (
@@ -456,7 +456,7 @@ export default function AttributeForm({
               onClick={handleAddOption}
               className="btn btn-outline btn-sm"
             >
-              {t('addOption')}
+              {t('attributes.addOption')}
             </button>
           </div>
         </div>
@@ -466,7 +466,7 @@ export default function AttributeForm({
       {showNumberFields && (
         <div className="form-control">
           <label className="label">
-            <span className="label-text">{t('unit')}</span>
+            <span className="label-text">{t('attributes.unit')}</span>
           </label>
           <input
             type="text"
@@ -482,7 +482,7 @@ export default function AttributeForm({
       {/* Range specific fields */}
       {showRangeFields && (
         <>
-          <div className="divider">{t('rangeSettings')}</div>
+          <div className="divider">{t('attributes.rangeSettings')}</div>
           <div className="alert alert-info">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -497,7 +497,7 @@ export default function AttributeForm({
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               ></path>
             </svg>
-            <span>{t('rangeDescription')}</span>
+            <span>{t('attributes.rangeDescription')}</span>
           </div>
         </>
       )}
@@ -505,7 +505,7 @@ export default function AttributeForm({
       {/* Validation Rules Editor */}
       {showValidationFields && (
         <>
-          <div className="divider">{t('validation')}</div>
+          <div className="divider">{t('attributes.validation')}</div>
           <ValidationRulesEditor
             value={formData.validation_rules as any}
             onChange={(rules) =>
@@ -527,7 +527,7 @@ export default function AttributeForm({
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('defaultValue')}</span>
+          <span className="label-text">{t('attributes.defaultValue')}</span>
         </label>
         <input
           type="text"
@@ -543,7 +543,7 @@ export default function AttributeForm({
       <div className="space-y-2">
         <div className="form-control">
           <label className="label cursor-pointer">
-            <span className="label-text">{t('isRequired')}</span>
+            <span className="label-text">{t('attributes.isRequired')}</span>
             <input
               type="checkbox"
               name="is_required"
@@ -556,7 +556,7 @@ export default function AttributeForm({
 
         <div className="form-control">
           <label className="label cursor-pointer">
-            <span className="label-text">{t('isSearchable')}</span>
+            <span className="label-text">{t('attributes.isSearchable')}</span>
             <input
               type="checkbox"
               name="is_searchable"
@@ -569,7 +569,7 @@ export default function AttributeForm({
 
         <div className="form-control">
           <label className="label cursor-pointer">
-            <span className="label-text">{t('isFilterable')}</span>
+            <span className="label-text">{t('attributes.isFilterable')}</span>
             <input
               type="checkbox"
               name="is_filterable"
@@ -582,7 +582,7 @@ export default function AttributeForm({
 
         <div className="form-control">
           <label className="label cursor-pointer">
-            <span className="label-text">{t('showInCard')}</span>
+            <span className="label-text">{t('attributes.showInCard')}</span>
             <input
               type="checkbox"
               name="show_in_card"
@@ -595,7 +595,7 @@ export default function AttributeForm({
 
         <div className="form-control">
           <label className="label cursor-pointer">
-            <span className="label-text">{t('showInList')}</span>
+            <span className="label-text">{t('attributes.showInList')}</span>
             <input
               type="checkbox"
               name="show_in_list"
@@ -609,7 +609,7 @@ export default function AttributeForm({
         <div className="form-control">
           <label className="label cursor-pointer">
             <span className="label-text flex items-center gap-2">
-              🔄 {t('isVariantCompatible')}
+              🔄 {t('attributes.isVariantCompatible')}
             </span>
             <input
               type="checkbox"
@@ -630,7 +630,7 @@ export default function AttributeForm({
           <div className="form-control">
             <label className="label cursor-pointer">
               <span className="label-text flex items-center gap-2">
-                📦 {t('affectsStock')}
+                📦 {t('attributes.affectsStock')}
               </span>
               <input
                 type="checkbox"
@@ -781,10 +781,10 @@ export default function AttributeForm({
           {isTranslating ? (
             <>
               <span className="loading loading-spinner loading-sm"></span>
-              {t('translating')}
+              {t('attributes.translating')}
             </>
           ) : (
-            <>🌍 {tCommon('translate')}</>
+            <>🌍 {tCommon('common.translate')}</>
           )}
         </button>
         {translations.display_name &&
@@ -813,14 +813,14 @@ export default function AttributeForm({
       {translations.display_name &&
         Object.keys(translations.display_name).length > 0 && (
           <div className="mt-6 animate-in slide-in-from-bottom duration-300">
-            <div className="divider">{t('translations')}</div>
+            <div className="divider">{t('attributes.translations')}</div>
 
             {/* Переводы названия атрибута */}
             <div className="card bg-base-100 shadow-sm border border-base-300 transition-all duration-300 hover:shadow-md">
               <div className="card-body">
                 <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                   <h4 className="card-title text-base">
-                    {t('displayNameTranslations')}
+                    {t('attributes.displayNameTranslations')}
                   </h4>
                   <div className="flex items-center gap-2">
                     <button
@@ -885,7 +885,7 @@ export default function AttributeForm({
                 <div className="card bg-base-100 shadow-sm border border-base-300 mt-4 transition-all duration-300 hover:shadow-md">
                   <div className="card-body">
                     <h4 className="card-title text-base">
-                      {t('optionTranslations')}
+                      {t('attributes.optionTranslations')}
                     </h4>
                     <div className="space-y-4">
                       {Object.entries(translations.options).map(
@@ -947,10 +947,10 @@ export default function AttributeForm({
 
       <div className="flex gap-2 pt-4">
         <button type="submit" className="btn btn-primary">
-          {tCommon('save')}
+          {tCommon('common.save')}
         </button>
         <button type="button" onClick={onCancel} className="btn btn-ghost">
-          {tCommon('cancel')}
+          {tCommon('common.cancel')}
         </button>
       </div>
     </form>

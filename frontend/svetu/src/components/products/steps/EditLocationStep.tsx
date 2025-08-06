@@ -25,7 +25,8 @@ export default function EditLocationStep({
   onNext,
   onBack,
 }: EditLocationStepProps) {
-  const t = useTranslations();
+  const t = useTranslations('storefronts');
+  const tCommon = useTranslations('common');
   const { state, setLocation, setError, clearError } = useEditProduct();
 
   // Инициализация состояния из контекста
@@ -92,7 +93,7 @@ export default function EditLocationStep({
   const handleNext = () => {
     // Валидация
     if (!useStorefrontLocation && !individualLocation) {
-      setError('location', t('storefronts.products.locationRequired'));
+      setError('location', t('locationRequired'));
       return;
     }
 
@@ -104,17 +105,17 @@ export default function EditLocationStep({
     <div className="w-full">
       <div className="text-center mb-6 lg:mb-8">
         <h2 className="text-xl lg:text-3xl font-bold text-base-content mb-2 lg:mb-4">
-          {t('storefronts.products.productLocation')}
+          {t('productLocation')}
         </h2>
         <p className="text-sm lg:text-lg text-base-content/70">
-          {t('storefronts.products.locationDescription')}
+          {t('locationDescription')}
         </p>
       </div>
 
       {/* Тип местоположения */}
       <div className="mb-6 lg:mb-8">
         <h3 className="text-lg font-bold text-base-content mb-4">
-          {t('storefronts.products.locationType')}
+          {t('locationType')}
         </h3>
 
         <div className="space-y-4">
@@ -139,20 +140,18 @@ export default function EditLocationStep({
               />
               <div className="flex-1">
                 <h4 className="text-lg font-semibold text-base-content mb-2">
-                  {t('storefronts.products.useStorefrontLocation')}
+                  {t('useStorefrontLocation')}
                 </h4>
                 <p className="text-base-content/70 mb-3">
-                  {t('storefronts.products.useStorefrontLocationDescription')}
+                  {t('useStorefrontLocationDescription')}
                 </p>
                 <div className="bg-info/10 border border-info/30 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-sm text-info">
                     <span>💡</span>
-                    <span className="font-medium">
-                      {t('storefronts.products.example')}
-                    </span>
+                    <span className="font-medium">{t('example')}</span>
                   </div>
                   <p className="text-sm text-info/80 mt-1">
-                    {t('storefronts.products.storefrontLocationExample')}
+                    {t('storefrontLocationExample')}
                   </p>
                 </div>
               </div>
@@ -180,20 +179,18 @@ export default function EditLocationStep({
               />
               <div className="flex-1">
                 <h4 className="text-lg font-semibold text-base-content mb-2">
-                  {t('storefronts.products.useIndividualLocation')}
+                  {t('useIndividualLocation')}
                 </h4>
                 <p className="text-base-content/70 mb-3">
-                  {t('storefronts.products.useIndividualLocationDescription')}
+                  {t('useIndividualLocationDescription')}
                 </p>
                 <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-sm text-warning">
                     <span>💡</span>
-                    <span className="font-medium">
-                      {t('storefronts.products.example')}
-                    </span>
+                    <span className="font-medium">{t('example')}</span>
                   </div>
                   <p className="text-sm text-warning/80 mt-1">
-                    {t('storefronts.products.individualLocationExample')}
+                    {t('individualLocationExample')}
                   </p>
                 </div>
               </div>
@@ -206,13 +203,13 @@ export default function EditLocationStep({
       {!useStorefrontLocation && (
         <div className="mb-6 lg:mb-8">
           <h3 className="text-lg font-bold text-base-content mb-4">
-            {t('storefronts.products.selectProductLocation')}
+            {t('selectProductLocation')}
           </h3>
 
           <LocationPicker
             onChange={handleLocationSelect}
             value={individualLocation}
-            placeholder={t('storefronts.products.locationPlaceholder')}
+            placeholder={t('locationPlaceholder')}
           />
 
           {individualLocation && (
@@ -220,9 +217,7 @@ export default function EditLocationStep({
               <div className="flex items-start gap-3">
                 <span className="text-success text-lg">📍</span>
                 <div>
-                  <h4 className="font-semibold text-success">
-                    {t('storefronts.products.address')}
-                  </h4>
+                  <h4 className="font-semibold text-success">{t('address')}</h4>
                   <p className="text-success/80">
                     {individualLocation.address}
                   </p>
@@ -241,7 +236,7 @@ export default function EditLocationStep({
       {!useStorefrontLocation && individualLocation && (
         <div className="mb-6 lg:mb-8">
           <h3 className="text-lg font-bold text-base-content mb-4">
-            {t('storefronts.products.privacySettings')}
+            {t('privacySettings')}
           </h3>
 
           <div className="bg-base-200/50 rounded-xl p-4 lg:p-6">
@@ -249,10 +244,10 @@ export default function EditLocationStep({
               <span className="text-2xl">🔒</span>
               <div>
                 <h4 className="font-semibold text-base-content">
-                  {t('storefronts.products.privacyNote')}
+                  {t('privacyNote')}
                 </h4>
                 <p className="text-sm text-base-content/70">
-                  {t('storefronts.products.privacyNoteDescription')}
+                  {t('privacyNoteDescription')}
                 </p>
               </div>
             </div>
@@ -297,10 +292,10 @@ export default function EditLocationStep({
       {/* Кнопки навигации */}
       <div className="flex justify-between">
         <button onClick={onBack} className="btn btn-outline btn-lg">
-          {t('common.back')}
+          {tCommon('back')}
         </button>
         <button onClick={handleNext} className="btn btn-primary btn-lg">
-          {t('common.continue')}
+          {tCommon('continue')}
         </button>
       </div>
     </div>

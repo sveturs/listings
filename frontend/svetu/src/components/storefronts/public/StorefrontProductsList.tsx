@@ -24,7 +24,7 @@ export default function StorefrontProductsList({
   showTitle = true,
   maxItems
 }: StorefrontProductsListProps) {
-  const t = useTranslations('storefronts.products');
+  const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
   
   const [products, setProducts] = useState<StorefrontProduct[]>([]);
@@ -87,7 +87,7 @@ export default function StorefrontProductsList({
       <div className="space-y-4">
         {showTitle && (
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">{t('title')}</h2>
+            <h2 className="text-2xl font-bold">{t('products.title')}</h2>
             <div className="skeleton h-8 w-24"></div>
           </div>
         )}
@@ -111,7 +111,7 @@ export default function StorefrontProductsList({
   if (error) {
     return (
       <div className="space-y-4">
-        {showTitle && <h2 className="text-2xl font-bold">{t('title')}</h2>}
+        {showTitle && <h2 className="text-2xl font-bold">{t('products.title')}</h2>}
         <div className="alert alert-error">
           <span>{error}</span>
           <button 
@@ -131,12 +131,12 @@ export default function StorefrontProductsList({
   if (products.length === 0) {
     return (
       <div className="space-y-4">
-        {showTitle && <h2 className="text-2xl font-bold">{t('title')}</h2>}
+        {showTitle && <h2 className="text-2xl font-bold">{t('products.title')}</h2>}
         <div className="text-center py-12">
           <svg className="w-16 h-16 mx-auto mb-4 text-base-content/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
           </svg>
-          <p className="text-base-content/60">{t('noProducts')}</p>
+          <p className="text-base-content/60">{t('products.noProducts')}</p>
         </div>
       </div>
     );
@@ -147,7 +147,7 @@ export default function StorefrontProductsList({
       {/* Header */}
       {showTitle && (
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">{t('title')}</h2>
+          <h2 className="text-2xl font-bold">{t('products.title')}</h2>
           <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
         </div>
       )}
