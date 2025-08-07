@@ -19,6 +19,7 @@
       "priceRange": "Price range",
       "priceFrom": "From",
       "priceTo": "To",
+      "condition": "Condition",
       "anyCondition": "Any condition",
       "sellerType": "Seller type",
       "anySeller": "Any seller",

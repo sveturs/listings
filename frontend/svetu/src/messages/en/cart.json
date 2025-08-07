@@ -119,6 +119,12 @@
     "codFee": "Cash on Delivery Fee",
     "agreeToTerms": "I agree to the terms and conditions",
     "securePayment": "Secure Payment",
+    "acceptedPaymentMethods": "Accepted Payment Methods",
+    "confirmAndPay": "Confirm and Pay",
+    "depositNow": "Deposit Now",
+    "depositPrompt": "Do you want to top up your balance?",
+    "messageToSeller": "Message to Seller",
+    "messagePlaceholder": "Add a message to the seller (optional)",
     "success": {
       "title": "Order Placed Successfully!",
       "description": "Thank you for your order. We've sent you a confirmation email with all the details.",
@@ -154,7 +160,10 @@
       "cashOnDelivery": "Cash on Delivery",
       "cashOnDeliveryDescription": "Pay when you receive your order",
       "bankTransfer": "Bank Transfer",
-      "bankTransferDescription": "Direct transfer to our bank account"
+      "bankTransferDescription": "Direct transfer to our bank account",
+      "cod": "Cash on Delivery",
+      "cash": "Cash",
+      "bank_transfer": "Bank Transfer"
     },
     "additionalFee": "Additional fee",
     "securePaymentInfo": "Your payment information is encrypted and secure",
