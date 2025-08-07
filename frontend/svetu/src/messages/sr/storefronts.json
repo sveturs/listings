@@ -406,5 +406,7 @@
   "saveDraft": "Sačuvaj nacrt",
   "creating": "Kreiranje...",
   "publishProduct": "Objavi proizvod",
-  "basePrice": "Osnovna cena"
+  "basePrice": "Osnovna cena",
+  "store": "Prodavnica",
+  "avgOrderValue": "Prosečna vrednost porudžbine"
 }

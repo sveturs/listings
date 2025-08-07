@@ -222,19 +222,19 @@
     "addressHidden": "Adresa je skrivena",
     "withoutTitle": "Bez naziva"
   },
-  "walkingAccessibility": "[SR] Walking Accessibility",
-  "searchRadius": "[SR] Search Radius",
+  "walkingAccessibility": "Pešačka dostupnost",
+  "searchRadius": "Radijus pretrage",
   "common": {
     "close": "Zatvori"
   },
-  "ru-RU": "[SR] Ru- R U",
-  "attributes": "[SR] Attributes",
-  "category": "[SR] Category",
-  "priceFrom": "[SR] Price From",
-  "priceTo": "[SR] Price To",
-  "radius": "[SR] Radius",
-  "lat": "[SR] Lat",
-  "lng": "[SR] Lng",
-  "zoom": "[SR] Zoom",
-  "q": "[SR] Q"
+  "ru-RU": "Srpski",
+  "attributes": "Atributi",
+  "category": "Kategorija",
+  "priceFrom": "Cena od",
+  "priceTo": "Cena do",
+  "radius": "Radijus",
+  "lat": "Geografska širina",
+  "lng": "Geografska dužina",
+  "zoom": "Zum",
+  "q": "Pretraga"
 }
