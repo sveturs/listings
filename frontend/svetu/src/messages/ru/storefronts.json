@@ -18,6 +18,9 @@
   "createFirstStorefront": "Создайте свою первую витрину, чтобы начать продавать",
   "createStorefront": "Создать витрину",
   "statusLabel": "Статус",
+  "controlPanel": "Панель управления",
+  "overview": "Обзор",
+  "product": "Товар",
   "status": {
     "active": "Активна",
     "inactive": "Неактивна"

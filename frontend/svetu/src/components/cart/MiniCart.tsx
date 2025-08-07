@@ -16,7 +16,8 @@ import {
   updateQuantity as updateLocalQuantity,
 } from '@/store/slices/localCartSlice';
 import {
-  selectCart,
+  selectAllCarts,
+  selectAllCartsItemsCount,
   removeFromCart,
   updateCartItem,
 } from '@/store/slices/cartSlice';
@@ -62,33 +63,45 @@ export default function MiniCart({
   const localTotal = useSelector(selectLocalCartTotal);
   const localItemsCount = useSelector(selectLocalCartItemsCount);
 
-  const backendCart = useSelector(selectCart);
+  // Для авторизованных пользователей получаем все корзины
+  const allCarts = useSelector(selectAllCarts);
+  const apiItemsCount = useSelector(selectAllCartsItemsCount);
 
-  // Преобразуем товары из backend корзины в нужный формат
+  // Преобразуем товары из всех backend корзин в нужный формат
   const backendItems = useMemo((): CartItemDisplay[] => {
-    if (!isAuthenticated || !backendCart?.items) return [];
+    if (!isAuthenticated || !allCarts || allCarts.length === 0) return [];
 
-    return backendCart.items.map((item) => ({
-      productId: item.product_id || 0,
-      variantId: item.variant_id,
-      quantity: item.quantity || 0,
-      name: item.product?.name || 'Product',
-      variantName: item.variant?.name,
-      // Преобразуем price_per_unit в число (может быть строкой из-за Decimal на backend)
-      price:
-        typeof item.price_per_unit === 'string'
-          ? parseFloat(item.price_per_unit)
-          : item.price_per_unit || 0,
-      currency: 'RSD',
-      image: item.product?.images?.[0]?.image_url,
-      storefrontId: backendCart.storefront_id,
-      storefrontName: backendCart.storefront?.name || 'Store',
-      storefrontSlug:
-        backendCart.storefront?.slug || String(backendCart.storefront_id),
-      stockQuantity: item.product?.stock_quantity || 99,
-      cartItemId: item.id,
-    }));
-  }, [backendCart, isAuthenticated]);
+    const items: CartItemDisplay[] = [];
+
+    allCarts.forEach((cart) => {
+      if (cart.items && cart.items.length > 0) {
+        cart.items.forEach((item) => {
+          items.push({
+            productId: item.product_id || 0,
+            variantId: item.variant_id,
+            quantity: item.quantity || 0,
+            name: item.product?.name || 'Product',
+            variantName: item.variant?.name,
+            // Преобразуем price_per_unit в число (может быть строкой из-за Decimal на backend)
+            price:
+              typeof item.price_per_unit === 'string'
+                ? parseFloat(item.price_per_unit)
+                : item.price_per_unit || 0,
+            currency: 'RSD',
+            image: item.product?.images?.[0]?.image_url,
+            storefrontId: cart.storefront_id,
+            storefrontName:
+              cart.storefront?.name || `Store ${cart.storefront_id}`,
+            storefrontSlug: cart.storefront?.slug || String(cart.storefront_id),
+            stockQuantity: item.product?.stock_quantity || 99,
+            cartItemId: item.id,
+          });
+        });
+      }
+    });
+
+    return items;
+  }, [allCarts, isAuthenticated]);
 
   const backendTotal = useMemo(() => {
     return backendItems.reduce(
@@ -97,14 +110,10 @@ export default function MiniCart({
     );
   }, [backendItems]);
 
-  const backendItemsCount = useMemo(() => {
-    return backendItems.reduce((sum, item) => sum + item.quantity, 0);
-  }, [backendItems]);
-
   // Используем данные в зависимости от авторизации
   const items: CartItemDisplay[] = isAuthenticated ? backendItems : localItems;
   const total = isAuthenticated ? backendTotal : localTotal;
-  const itemsCount = isAuthenticated ? backendItemsCount : localItemsCount;
+  const itemsCount = isAuthenticated ? apiItemsCount : localItemsCount;
 
   // Группируем товары по витринам
   const itemsByStorefront = items.reduce(

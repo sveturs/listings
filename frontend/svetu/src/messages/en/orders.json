@@ -8,10 +8,14 @@
   "status": {
     "label": "Status",
     "pending": "Pending",
+    "paid": "Paid",
     "confirmed": "Confirmed",
     "shipped": "Shipped",
     "delivered": "Delivered",
-    "cancelled": "Cancelled"
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "disputed": "Disputed",
+    "refunded": "Refunded"
   },
   "loginRequired": "Sign in to view orders",
   "tryAgain": "Try again",
@@ -48,9 +52,74 @@
     "bank_transfer": "Bank Transfer",
     "card": "Credit/Debit Card"
   },
-  "shipping": {
+  "shippingOptions": {
     "standard": "Standard Shipping",
     "express": "Express Shipping",
     "pickup": "Pickup"
-  }
+  },
+  "viewDetails": "View Details",
+  "order": "Order",
+  "seller": "Seller",
+  "buyer": "Buyer",
+  "unknown": "Unknown",
+  "searchOrders": "Search orders",
+  "dateRange": "Date Range",
+  "from": "From",
+  "to": "To",
+  "priceRange": "Price Range",
+  "minPrice": "Min Price",
+  "maxPrice": "Max Price",
+  "applyFilters": "Apply Filters",
+  "clearFilters": "Clear Filters",
+  "exportOrders": "Export Orders",
+  "exportAsCSV": "Export as CSV",
+  "exportAsPDF": "Export as PDF",
+  "cancelOrder": "Cancel Order",
+  "cancelOrderConfirm": "Are you sure you want to cancel this order?",
+  "cancelReason": "Cancellation reason",
+  "reorder": "Reorder",
+  "contactSeller": "Contact Seller",
+  "leaveReview": "Leave Review",
+  "statistics": {
+    "title": "Order Statistics",
+    "totalSpent": "Total Spent",
+    "activeOrders": "Active Orders",
+    "completedOrders": "Completed Orders",
+    "averageOrderValue": "Average Order Value",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "thisYear": "This Year"
+  },
+  "timeline": {
+    "title": "Order Timeline",
+    "orderPlaced": "Order placed",
+    "paymentReceived": "Payment received",
+    "orderConfirmed": "Order confirmed",
+    "orderShipped": "Order shipped",
+    "orderDelivered": "Order delivered",
+    "orderCompleted": "Order completed",
+    "orderCancelled": "Order cancelled"
+  },
+  "notifications": {
+    "orderUpdated": "Order status updated",
+    "orderCancelled": "Order cancelled successfully",
+    "exportReady": "Export ready for download"
+  },
+  "orderNotFound": "Order not found",
+  "orderAccessDenied": "You don't have access to this order",
+  "orderLoadError": "Error loading order",
+  "productInfo": "Product Information",
+  "productPrice": "Product price",
+  "shippingInfo": "Shipping Information",
+  "shippedDate": "Shipped date",
+  "deliveredDate": "Delivered date",
+  "actions": "Actions",
+  "confirmReceiptMessage": "If you have received the item, please confirm receipt. This will help complete the transaction.",
+  "confirmReceipt": "Confirm Receipt",
+  "dealParticipants": "Deal Participants",
+  "you": "You",
+  "protectionPeriod": "Protection Period",
+  "protectionActiveUntil": "Buyer protection active until",
+  "quantity": "Quantity",
+  "noItems": "No items"
 }

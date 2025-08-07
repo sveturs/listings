@@ -17,7 +17,8 @@ interface Props {
 export default function OrderDetailsPage({ params }: Props) {
   const { id } = use(params);
   const locale = useLocale();
-  const _t = useTranslations();
+  const t = useTranslations('orders');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const [order, setOrder] = useState<any>(null);
@@ -42,16 +43,16 @@ export default function OrderDetailsPage({ params }: Props) {
         if (response.data?.success && response.data?.data) {
           setOrder(response.data.data);
         } else {
-          setError('Заказ не найден');
+          setError(t('orderNotFound'));
         }
       } catch (error: any) {
         console.error('Error fetching order:', error);
         if (error.response?.status === 404) {
-          setError('Заказ не найден');
+          setError(t('orderNotFound'));
         } else if (error.response?.status === 403) {
-          setError('У вас нет доступа к этому заказу');
+          setError(t('orderAccessDenied'));
         } else {
-          setError('Ошибка загрузки заказа');
+          setError(t('orderLoadError'));
         }
       } finally {
         setLoading(false);
@@ -85,17 +86,7 @@ export default function OrderDetailsPage({ params }: Props) {
   };
 
   const getStatusLabel = (status: string) => {
-    const statusMap: Record<string, string> = {
-      pending: 'В ожидании',
-      paid: 'Оплачен',
-      shipped: 'Отправлен',
-      delivered: 'Доставлен',
-      completed: 'Завершен',
-      cancelled: 'Отменен',
-      disputed: 'Спор',
-      refunded: 'Возврат',
-    };
-    return statusMap[status] || status;
+    return t(`status.${status}` as any) || status;
   };
 
   const formatDate = (dateString: string) => {
@@ -125,7 +116,7 @@ export default function OrderDetailsPage({ params }: Props) {
         <div className="alert alert-error">
           <span>{error}</span>
           <Link href={`/${locale}/profile/orders`} className="btn btn-sm">
-            Вернуться к заказам
+            {tCommon('back')}
           </Link>
         </div>
       </div>
@@ -143,7 +134,9 @@ export default function OrderDetailsPage({ params }: Props) {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Заказ #{order.id}</h1>
+        <h1 className="text-3xl font-bold">
+          {t('order')} #{order.id}
+        </h1>
         <div className={`badge badge-lg ${getStatusBadgeClass(order.status)}`}>
           {getStatusLabel(order.status)}
         </div>
@@ -156,7 +149,7 @@ export default function OrderDetailsPage({ params }: Props) {
           {/* Product Info */}
           <div className="card bg-base-100 shadow">
             <div className="card-body">
-              <h2 className="card-title">Информация о товаре</h2>
+              <h2 className="card-title">{t('productInfo')}</h2>
 
               {order.listing && (
                 <div className="space-y-4">
@@ -201,13 +194,17 @@ export default function OrderDetailsPage({ params }: Props) {
 
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-base-content/70">Цена товара:</span>
+                      <span className="text-base-content/70">
+                        {t('productPrice')}:
+                      </span>
                       <p className="font-semibold">
                         {balanceService.formatAmount(order.item_price, 'RSD')}
                       </p>
                     </div>
                     <div>
-                      <span className="text-base-content/70">Дата заказа:</span>
+                      <span className="text-base-content/70">
+                        {t('orderDate')}:
+                      </span>
                       <p className="font-semibold">
                         {formatDate(order.created_at)}
                       </p>
@@ -224,13 +221,13 @@ export default function OrderDetailsPage({ params }: Props) {
             order.status === 'completed') && (
             <div className="card bg-base-100 shadow">
               <div className="card-body">
-                <h2 className="card-title">Информация о доставке</h2>
+                <h2 className="card-title">{t('shippingInfo')}</h2>
 
                 <div className="space-y-2 text-sm">
                   {order.shipping_method && (
                     <div>
                       <span className="text-base-content/70">
-                        Способ доставки:
+                        {t('shippingMethod')}:
                       </span>
                       <p className="font-semibold">{order.shipping_method}</p>
                     </div>
@@ -238,7 +235,9 @@ export default function OrderDetailsPage({ params }: Props) {
 
                   {order.tracking_number && (
                     <div>
-                      <span className="text-base-content/70">Трек-номер:</span>
+                      <span className="text-base-content/70">
+                        {t('tracking.number')}:
+                      </span>
                       <p className="font-semibold">{order.tracking_number}</p>
                     </div>
                   )}
@@ -246,7 +245,7 @@ export default function OrderDetailsPage({ params }: Props) {
                   {order.shipped_at && (
                     <div>
                       <span className="text-base-content/70">
-                        Дата отправки:
+                        {t('shippedDate')}:
                       </span>
                       <p className="font-semibold">
                         {formatDate(order.shipped_at)}
@@ -257,7 +256,7 @@ export default function OrderDetailsPage({ params }: Props) {
                   {order.delivered_at && (
                     <div>
                       <span className="text-base-content/70">
-                        Дата доставки:
+                        {t('deliveredDate')}:
                       </span>
                       <p className="font-semibold">
                         {formatDate(order.delivered_at)}
@@ -273,14 +272,13 @@ export default function OrderDetailsPage({ params }: Props) {
           {isBuyer && order.status === 'shipped' && (
             <div className="card bg-base-100 shadow">
               <div className="card-body">
-                <h2 className="card-title">Действия</h2>
+                <h2 className="card-title">{t('actions')}</h2>
                 <p className="text-sm text-base-content/70">
-                  Если вы получили товар, подтвердите получение. Это поможет
-                  завершить сделку.
+                  {t('confirmReceiptMessage')}
                 </p>
                 <div className="card-actions justify-end">
                   <button className="btn btn-primary">
-                    Подтвердить получение
+                    {t('confirmReceipt')}
                   </button>
                 </div>
               </div>
@@ -293,24 +291,24 @@ export default function OrderDetailsPage({ params }: Props) {
           {/* Participants */}
           <div className="card bg-base-100 shadow">
             <div className="card-body">
-              <h2 className="card-title text-lg">Участники сделки</h2>
+              <h2 className="card-title text-lg">{t('dealParticipants')}</h2>
 
               <div className="space-y-4">
                 {/* Seller */}
                 <div>
-                  <p className="text-sm text-base-content/70">Продавец:</p>
+                  <p className="text-sm text-base-content/70">{t('seller')}:</p>
                   <p className="font-semibold">
-                    {order.seller?.name || order.seller?.email || 'Неизвестно'}
-                    {isSeller && ' (Вы)'}
+                    {order.seller?.name || order.seller?.email || t('unknown')}
+                    {isSeller && ` (${t('you')})`}
                   </p>
                 </div>
 
                 {/* Buyer */}
                 <div>
-                  <p className="text-sm text-base-content/70">Покупатель:</p>
+                  <p className="text-sm text-base-content/70">{t('buyer')}:</p>
                   <p className="font-semibold">
-                    {order.buyer?.name || order.buyer?.email || 'Неизвестно'}
-                    {isBuyer && ' (Вы)'}
+                    {order.buyer?.name || order.buyer?.email || t('unknown')}
+                    {isBuyer && ` (${t('you')})`}
                   </p>
                 </div>
               </div>
@@ -321,9 +319,9 @@ export default function OrderDetailsPage({ params }: Props) {
           {order.protection_expires_at && (
             <div className="card bg-base-100 shadow">
               <div className="card-body">
-                <h2 className="card-title text-lg">Защитный период</h2>
+                <h2 className="card-title text-lg">{t('protectionPeriod')}</h2>
                 <p className="text-sm text-base-content/70">
-                  Период защиты покупателя активен до:
+                  {t('protectionActiveUntil')}:
                 </p>
                 <p className="font-semibold">
                   {formatDate(order.protection_expires_at)}
@@ -337,7 +335,7 @@ export default function OrderDetailsPage({ params }: Props) {
       {/* Back Button */}
       <div className="mt-8">
         <Link href={`/${locale}/profile/orders`} className="btn btn-outline">
-          ← Вернуться к заказам
+          ← {tCommon('back')}
         </Link>
       </div>
 

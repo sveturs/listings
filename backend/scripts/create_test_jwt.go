@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -21,10 +22,25 @@ func main() {
 		jwtSecret = "yoursecretkey" // значение по умолчанию из .env
 	}
 
+	// Параметры по умолчанию
+	userID := 2
+	email := "voroshilovdo@gmail.com"
+
+	// Если переданы аргументы, используем их
+	if len(os.Args) > 1 {
+		id, err := strconv.Atoi(os.Args[1])
+		if err == nil {
+			userID = id
+		}
+	}
+	if len(os.Args) > 2 {
+		email = os.Args[2]
+	}
+
 	// Создаем claims
 	claims := Claims{
-		UserID: 2,
-		Email:  "voroshilovdo@gmail.com",
+		UserID: userID,
+		Email:  email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

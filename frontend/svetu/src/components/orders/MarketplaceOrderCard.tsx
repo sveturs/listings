@@ -44,7 +44,7 @@ interface MarketplaceOrderCardProps {
 export default function MarketplaceOrderCard({
   order,
 }: MarketplaceOrderCardProps) {
-  const _t = useTranslations('orders');
+  const t = useTranslations('orders');
   const locale = useLocale();
 
   const getStatusBadgeClass = (status: string) => {
@@ -71,17 +71,7 @@ export default function MarketplaceOrderCard({
   };
 
   const getStatusLabel = (status: string) => {
-    const statusMap: Record<string, string> = {
-      pending: 'В ожидании',
-      paid: 'Оплачен',
-      shipped: 'Отправлен',
-      delivered: 'Доставлен',
-      completed: 'Завершен',
-      cancelled: 'Отменен',
-      disputed: 'Спор',
-      refunded: 'Возврат',
-    };
-    return statusMap[status] || status;
+    return t(`status.${status}` as any) || status;
   };
 
   const formatDate = (dateString: string) => {
@@ -119,14 +109,16 @@ export default function MarketplaceOrderCard({
               {/* Order Details */}
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">
-                  {order.listing?.title || `Заказ #${order.id}`}
+                  {order.listing?.title || `${t('order')} #${order.id}`}
                 </h3>
 
                 <div className="text-sm text-base-content/70 mt-1 space-y-1">
-                  <p>Заказ #{order.id}</p>
                   <p>
-                    Продавец:{' '}
-                    {order.seller?.name || order.seller?.email || 'Неизвестно'}
+                    {t('order')} #{order.id}
+                  </p>
+                  <p>
+                    {t('seller')}:{' '}
+                    {order.seller?.name || order.seller?.email || t('unknown')}
                   </p>
                   <p>{formatDate(order.created_at)}</p>
                 </div>
@@ -149,7 +141,7 @@ export default function MarketplaceOrderCard({
               href={`/${locale}/orders/${order.id}`}
               className="btn btn-sm btn-primary"
             >
-              Подробнее
+              {t('viewDetails')}
             </Link>
           </div>
         </div>

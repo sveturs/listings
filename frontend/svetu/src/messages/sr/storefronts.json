@@ -18,6 +18,9 @@
   "createFirstStorefront": "Kreirajte svoju prvu prodavnicu da biste počeli prodaju",
   "createStorefront": "Kreiraj prodavnicu",
   "statusLabel": "Status",
+  "controlPanel": "Kontrolna tabla",
+  "overview": "Pregled",
+  "product": "Proizvod",
   "status": {
     "active": "Aktivna",
     "inactive": "Neaktivna"
@@ -48,6 +51,9 @@
   "recentOrders": "Nedavne poružbine",
   "noRecentOrders": "Nema nedavnih poružbina",
   "lowStockAlert": "Upozorenje o malim zalihama",
+  "controlPanel": "Kontrolni panel",
+  "overview": "Pregled",
+  "product": "Proizvod",
   "allProductsInStock": "Svi proizvodi na stanju",
   "manageInventory": "Upravljanje zalihama",
   "notifications": "Obaveštenja",
