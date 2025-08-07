@@ -1,6 +1,13 @@
 {
   "marketplace": {
     "allCategories": "Sve kategorije",
+    "condition": {
+      "new": "Novo",
+      "like_new": "Kao novo",
+      "used": "Polovno",
+      "refurbished": "Obnovljeno",
+      "likeNew": "Kao novo"
+    },
     "filters": {
       "title": "Филтери",
       "clearAll": "Обриши све",
@@ -33,7 +40,6 @@
     "imageGallery": {
       "clickToZoom": "Kliknite za uvećanje"
     },
-    "condition": "Stanje",
     "invalidData": "Nevažeći format podataka",
     "duplicateTitle": "Oglas sa ovim naslovom već postoji",
     "createError": "Neuspešno kreiranje oglasa",

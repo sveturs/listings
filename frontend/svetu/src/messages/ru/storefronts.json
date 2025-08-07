@@ -17,6 +17,7 @@
   "noStorefrontsInCategory": "Нет витрин в выбранной категории",
   "createFirstStorefront": "Создайте свою первую витрину, чтобы начать продавать",
   "createStorefront": "Создать витрину",
+  "statusLabel": "Статус",
   "status": {
     "active": "Активна",
     "inactive": "Неактивна"
@@ -137,8 +138,46 @@
   "messages": "Сообщения",
   "alwaysOpen": "Работает круглосуточно",
   "closedToday": "Закрыто сегодня",
+  "backToDashboard": "Вернуться к панели управления",
+  "back": "Назад",
+  "next": "Далее",
   "products": {
     "title": "Товары",
+    "addProduct": "Добавить товар",
+    "importProducts": "Импортировать товары",
+    "searchPlaceholder": "Поиск товаров...",
+    "units": "шт.",
+    "categoryAttributes": "Атрибуты категории",
+    "categoryAttributesDescription": "Заполните атрибуты, специфичные для выбранной категории",
+    "noAttributesTitle": "Нет атрибутов",
+    "noAttributesMessage": "Для этой категории нет дополнительных атрибутов",
+    "attributeGroups": {
+      "basic": "Основные",
+      "technical": "Технические",
+      "condition": "Состояние",
+      "accessories": "Аксессуары",
+      "dimensions": "Размеры",
+      "other": "Прочее"
+    },
+    "variantsStepDescription": "Создайте варианты товара с разными характеристиками",
+    "enableVariants": "Включить варианты",
+    "enableVariantsDescription": "Создайте варианты товара с разными размерами, цветами или другими характеристиками",
+    "variantMode": "Режим вариантов",
+    "simpleVariants": "Простые варианты",
+    "simpleVariantsDescription": "Создайте варианты на основе одного атрибута (например, размер или цвет)",
+    "advancedVariants": "Расширенные варианты",
+    "advancedVariantsDescription": "Создайте варианты с комбинацией нескольких атрибутов",
+    "skipVariants": "Пропустить варианты",
+    "noAttributesForCategory": "Нет атрибутов для этой категории",
+    "selectDifferentCategory": "Выберите другую категорию или продолжите без вариантов",
+    "noVariantsConfigured": "Варианты не настроены",
+    "setupAttributesFirst": "Сначала настройте атрибуты для создания вариантов",
+    "setupAttributes": "Настроить атрибуты",
+    "back": "Назад",
+    "continue": "Продолжить",
+    "privacy": {
+      "street": "Улица"
+    },
     "addProductDescription": "Добавьте товары в свою витрину",
     "filters": "Фильтры",
     "loadMore": "Загрузить еще",
@@ -187,6 +226,14 @@
   "cancel": "Отмена",
   "generating": "Генерация...",
   "generate": "Сгенерировать",
+  "stock": {
+    "in_stock": "В наличии",
+    "out_of_stock": "Нет в наличии",
+    "low_stock": "Мало товара"
+  },
+  "bulk": {
+    "selectMode": "Режим выбора"
+  },
   "selectAttributeValues": "Выберите значения атрибутов",
   "custom": "Пользовательское",
   "defaultValue": "Значение по умолчанию",

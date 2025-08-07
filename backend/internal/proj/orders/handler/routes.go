@@ -22,6 +22,13 @@ func (h *OrdersHandler) RegisterRoutes(app *fiber.App, m *middleware.Middleware)
 		cartGroup.Delete("/", h.ClearCart)                    // DELETE /api/v1/storefronts/:id/cart
 	}
 
+	// Корзины пользователя (требует аутентификации)
+	userCartsGroup := api.Group("/user")
+	userCartsGroup.Use(m.RequireAuth())
+	{
+		userCartsGroup.Get("/carts", h.GetUserCarts) // GET /api/v1/user/carts
+	}
+
 	// Заказы (требует полную аутентификацию)
 	ordersGroup := api.Group("/orders")
 	ordersGroup.Use(m.RequireAuth())

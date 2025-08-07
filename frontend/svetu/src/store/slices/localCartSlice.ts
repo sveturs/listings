@@ -140,7 +140,13 @@ const localCartSlice = createSlice({
 export const { addItem, updateQuantity, removeItem, clearCart, syncCart } =
   localCartSlice.actions;
 
+// Re-export clearCart as clearLocalCart for consistency with imports
+export const clearLocalCart = clearCart;
+
 // Selectors
+export const selectLocalCart = (state: { localCart: LocalCartState }) =>
+  state.localCart;
+
 export const selectCartItems = (state: { localCart: LocalCartState }) =>
   state.localCart.items;
 

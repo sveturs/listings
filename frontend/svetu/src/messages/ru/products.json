@@ -6,6 +6,8 @@
   "outOfStock": "Нет в наличии",
   "lowStock": "Мало",
   "description": "Описание",
+  "notFound": "Товар не найден",
+  "notFoundDescription": "К сожалению, этот товар не найден или был удален",
   "products": {
     "title": "Товары",
     "noProducts": "Нет товаров",

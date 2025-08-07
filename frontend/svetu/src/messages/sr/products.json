@@ -6,6 +6,8 @@
   "outOfStock": "Nema na stanju",
   "lowStock": "Malo na stanju",
   "description": "Opis",
+  "notFound": "Proizvod nije pronađen",
+  "notFoundDescription": "Nažalost, ovaj proizvod nije pronađen ili je obrisan",
   "products": {
     "title": "Proizvodi",
     "noProducts": "Nema proizvoda",

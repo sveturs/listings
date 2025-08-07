@@ -6,23 +6,23 @@ import (
 
 // StorefrontProduct represents a product in a storefront
 type StorefrontProduct struct {
-	ID            int                    `json:"id" db:"id"`
-	StorefrontID  int                    `json:"storefront_id" db:"storefront_id"`
-	Name          string                 `json:"name" db:"name"`
-	Description   string                 `json:"description" db:"description"`
-	Price         float64                `json:"price" db:"price"`
-	Currency      string                 `json:"currency" db:"currency"`
-	CategoryID    int                    `json:"category_id" db:"category_id"`
-	SKU           *string                `json:"sku,omitempty" db:"sku"`
-	Barcode       *string                `json:"barcode,omitempty" db:"barcode"`
-	StockQuantity int                    `json:"stock_quantity" db:"stock_quantity"`
-	StockStatus   string                 `json:"stock_status" db:"stock_status"` // in_stock, low_stock, out_of_stock
-	IsActive      bool                   `json:"is_active" db:"is_active"`
-	Attributes    map[string]interface{} `json:"attributes,omitempty" db:"attributes"`
-	ViewCount     int                    `json:"view_count" db:"view_count"`
-	SoldCount     int                    `json:"sold_count" db:"sold_count"`
-	CreatedAt     time.Time              `json:"created_at" db:"created_at"`
-	UpdatedAt     time.Time              `json:"updated_at" db:"updated_at"`
+	ID            int       `json:"id" db:"id"`
+	StorefrontID  int       `json:"storefront_id" db:"storefront_id"`
+	Name          string    `json:"name" db:"name"`
+	Description   string    `json:"description" db:"description"`
+	Price         float64   `json:"price" db:"price"`
+	Currency      string    `json:"currency" db:"currency"`
+	CategoryID    int       `json:"category_id" db:"category_id"`
+	SKU           *string   `json:"sku,omitempty" db:"sku"`
+	Barcode       *string   `json:"barcode,omitempty" db:"barcode"`
+	StockQuantity int       `json:"stock_quantity" db:"stock_quantity"`
+	StockStatus   string    `json:"stock_status" db:"stock_status"` // in_stock, low_stock, out_of_stock
+	IsActive      bool      `json:"is_active" db:"is_active"`
+	Attributes    JSONB     `json:"attributes,omitempty" db:"attributes"`
+	ViewCount     int       `json:"view_count" db:"view_count"`
+	SoldCount     int       `json:"sold_count" db:"sold_count"`
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 
 	// Location fields
 	HasIndividualLocation bool     `json:"has_individual_location" db:"has_individual_location"`
@@ -186,16 +186,16 @@ func (s *StorefrontProductImage) SetMainImage(isMain bool) {
 
 // StorefrontProductVariant represents a variant of a product (e.g., size, color)
 type StorefrontProductVariant struct {
-	ID                  int                    `json:"id" db:"id"`
-	StorefrontProductID int                    `json:"storefront_product_id" db:"storefront_product_id"`
-	Name                string                 `json:"name" db:"name"` // e.g., "Red - Large"
-	SKU                 *string                `json:"sku,omitempty" db:"sku"`
-	Price               float64                `json:"price" db:"price"`
-	StockQuantity       int                    `json:"stock_quantity" db:"stock_quantity"`
-	Attributes          map[string]interface{} `json:"attributes,omitempty" db:"attributes"` // e.g., {"color": "red", "size": "L"}
-	IsActive            bool                   `json:"is_active" db:"is_active"`
-	CreatedAt           time.Time              `json:"created_at" db:"created_at"`
-	UpdatedAt           time.Time              `json:"updated_at" db:"updated_at"`
+	ID                  int       `json:"id" db:"id"`
+	StorefrontProductID int       `json:"storefront_product_id" db:"storefront_product_id"`
+	Name                string    `json:"name" db:"name"` // e.g., "Red - Large"
+	SKU                 *string   `json:"sku,omitempty" db:"sku"`
+	Price               float64   `json:"price" db:"price"`
+	StockQuantity       int       `json:"stock_quantity" db:"stock_quantity"`
+	Attributes          JSONB     `json:"attributes,omitempty" db:"attributes"` // e.g., {"color": "red", "size": "L"}
+	IsActive            bool      `json:"is_active" db:"is_active"`
+	CreatedAt           time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // StorefrontInventoryMovement tracks inventory changes
@@ -231,16 +231,16 @@ type ProductFilter struct {
 
 // CreateProductRequest represents a request to create a product
 type CreateProductRequest struct {
-	Name          string                 `json:"name" validate:"required,min=3,max=255"`
-	Description   string                 `json:"description" validate:"required,min=10"`
-	Price         float64                `json:"price" validate:"required,min=0"`
-	Currency      string                 `json:"currency" validate:"required,len=3"`
-	CategoryID    int                    `json:"category_id" validate:"required"`
-	SKU           *string                `json:"sku,omitempty"`
-	Barcode       *string                `json:"barcode,omitempty"`
-	StockQuantity int                    `json:"stock_quantity" validate:"min=0"`
-	IsActive      bool                   `json:"is_active"`
-	Attributes    map[string]interface{} `json:"attributes,omitempty"`
+	Name          string  `json:"name" validate:"required,min=3,max=255"`
+	Description   string  `json:"description" validate:"required,min=10"`
+	Price         float64 `json:"price" validate:"required,min=0"`
+	Currency      string  `json:"currency" validate:"required,len=3"`
+	CategoryID    int     `json:"category_id" validate:"required"`
+	SKU           *string `json:"sku,omitempty"`
+	Barcode       *string `json:"barcode,omitempty"`
+	StockQuantity int     `json:"stock_quantity" validate:"min=0"`
+	IsActive      bool    `json:"is_active"`
+	Attributes    JSONB   `json:"attributes,omitempty"`
 
 	// Location fields
 	HasIndividualLocation *bool    `json:"has_individual_location,omitempty"`
@@ -258,15 +258,15 @@ type CreateProductRequest struct {
 
 // UpdateProductRequest represents a request to update a product
 type UpdateProductRequest struct {
-	Name          *string                `json:"name,omitempty" validate:"omitempty,min=3,max=255"`
-	Description   *string                `json:"description,omitempty" validate:"omitempty,min=10"`
-	Price         *float64               `json:"price,omitempty" validate:"omitempty,min=0"`
-	CategoryID    *int                   `json:"category_id,omitempty"`
-	SKU           *string                `json:"sku,omitempty"`
-	Barcode       *string                `json:"barcode,omitempty"`
-	StockQuantity *int                   `json:"stock_quantity,omitempty" validate:"omitempty,min=0"`
-	IsActive      *bool                  `json:"is_active,omitempty"`
-	Attributes    map[string]interface{} `json:"attributes,omitempty"`
+	Name          *string  `json:"name,omitempty" validate:"omitempty,min=3,max=255"`
+	Description   *string  `json:"description,omitempty" validate:"omitempty,min=10"`
+	Price         *float64 `json:"price,omitempty" validate:"omitempty,min=0"`
+	CategoryID    *int     `json:"category_id,omitempty"`
+	SKU           *string  `json:"sku,omitempty"`
+	Barcode       *string  `json:"barcode,omitempty"`
+	StockQuantity *int     `json:"stock_quantity,omitempty" validate:"omitempty,min=0"`
+	IsActive      *bool    `json:"is_active,omitempty"`
+	Attributes    JSONB    `json:"attributes,omitempty"`
 
 	// Location fields
 	HasIndividualLocation *bool    `json:"has_individual_location,omitempty"`
@@ -396,7 +396,7 @@ type CreateVariantInline struct {
 	CostPrice         *float64               `json:"cost_price,omitempty"`
 	StockQuantity     int                    `json:"stock_quantity" validate:"min=0"`
 	LowStockThreshold *int                   `json:"low_stock_threshold,omitempty"`
-	VariantAttributes map[string]interface{} `json:"variant_attributes" validate:"required"`
+	VariantAttributes JSONB                  `json:"variant_attributes" validate:"required"`
 	Weight            *float64               `json:"weight,omitempty"`
 	Dimensions        map[string]interface{} `json:"dimensions,omitempty"`
 	IsDefault         bool                   `json:"is_default"`

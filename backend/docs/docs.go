@@ -23255,6 +23255,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/user/carts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets all shopping carts for the authenticated user across all storefronts",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Get all user carts",
+                "responses": {
+                    "200": {
+                        "description": "User's carts",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.ShoppingCart"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/admin-check/{email}": {
             "get": {
                 "security": [
@@ -25689,8 +25741,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "attributes": {
-                    "type": "object",
-                    "additionalProperties": true
+                    "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                 },
                 "barcode": {
                     "type": "string"
@@ -25914,8 +25965,7 @@ const docTemplate = `{
                     "minimum": 0
                 },
                 "variant_attributes": {
-                    "type": "object",
-                    "additionalProperties": true
+                    "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                 },
                 "weight": {
                     "type": "number"
@@ -26385,6 +26435,27 @@ const docTemplate = `{
                     "type": "number"
                 }
             }
+        },
+        "backend_internal_domain_models.LocationPrivacyLevel": {
+            "type": "string",
+            "enum": [
+                "exact",
+                "street",
+                "district",
+                "city"
+            ],
+            "x-enum-comments": {
+                "PrivacyLevelCity": "Только город",
+                "PrivacyLevelDistrict": "Только район",
+                "PrivacyLevelExact": "Точный адрес",
+                "PrivacyLevelStreet": "Только улица"
+            },
+            "x-enum-varnames": [
+                "PrivacyLevelExact",
+                "PrivacyLevelStreet",
+                "PrivacyLevelDistrict",
+                "PrivacyLevelCity"
+            ]
         },
         "backend_internal_domain_models.MapMarker": {
             "type": "object",
@@ -27845,6 +27916,9 @@ const docTemplate = `{
                     "description": "Локация",
                     "type": "string"
                 },
+                "address_verified": {
+                    "type": "boolean"
+                },
                 "ai_agent_config": {
                     "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                 },
@@ -27868,11 +27942,20 @@ const docTemplate = `{
                     "description": "Временные метки",
                     "type": "string"
                 },
+                "default_privacy_level": {
+                    "$ref": "#/definitions/backend_internal_domain_models.LocationPrivacyLevel"
+                },
                 "description": {
                     "type": "string"
                 },
                 "email": {
                     "type": "string"
+                },
+                "formatted_address": {
+                    "type": "string"
+                },
+                "geo_strategy": {
+                    "$ref": "#/definitions/backend_internal_domain_models.StorefrontGeoStrategy"
                 },
                 "group_buying_enabled": {
                     "type": "boolean"
@@ -27952,6 +28035,14 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "user": {
+                    "description": "Связанные данные",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.User"
+                        }
+                    ]
                 },
                 "user_id": {
                     "type": "integer"
@@ -28210,6 +28301,21 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_models.StorefrontGeoStrategy": {
+            "type": "string",
+            "enum": [
+                "storefront_location",
+                "individual_location"
+            ],
+            "x-enum-comments": {
+                "GeoStrategyIndividualLocation": "Использовать индивидуальные адреса товаров",
+                "GeoStrategyStorefrontLocation": "Использовать адрес витрины"
+            },
+            "x-enum-varnames": [
+                "GeoStrategyStorefrontLocation",
+                "GeoStrategyIndividualLocation"
+            ]
+        },
         "backend_internal_domain_models.StorefrontHours": {
             "type": "object",
             "properties": {
@@ -28378,6 +28484,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                         }
                     ]
+                },
+                "seller": {
+                    "$ref": "#/definitions/backend_internal_domain_models.User"
                 },
                 "seller_amount": {
                     "type": "number"
@@ -28559,8 +28668,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "attributes": {
-                    "type": "object",
-                    "additionalProperties": true
+                    "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                 },
                 "barcode": {
                     "type": "string"
@@ -28704,8 +28812,11 @@ const docTemplate = `{
             "properties": {
                 "attributes": {
                     "description": "e.g., {\"color\": \"red\", \"size\": \"L\"}",
-                    "type": "object",
-                    "additionalProperties": true
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.JSONB"
+                        }
+                    ]
                 },
                 "created_at": {
                     "type": "string"
@@ -29069,8 +29180,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "attributes": {
-                    "type": "object",
-                    "additionalProperties": true
+                    "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                 },
                 "barcode": {
                     "type": "string"
@@ -31638,6 +31748,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/internal_proj_global_handler.UnifiedStorefrontInfo"
                         }
                     ]
+                },
+                "storefront_id": {
+                    "description": "ID витрины для товаров маркетплейса",
+                    "type": "integer"
+                },
+                "storefront_slug": {
+                    "description": "Slug витрины для правильного URL",
+                    "type": "string"
                 },
                 "user": {
                     "description": "Информация о продавце",

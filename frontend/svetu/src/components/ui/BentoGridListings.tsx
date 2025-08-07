@@ -64,6 +64,7 @@ function convertToMarketplaceItem(
       ? {
           id: unifiedItem.storefront.id,
           name: unifiedItem.storefront.name,
+          // Если slug пустой, будем использовать только ID для создания реального slug через API
           slug: unifiedItem.storefront.slug || '',
         }
       : undefined,

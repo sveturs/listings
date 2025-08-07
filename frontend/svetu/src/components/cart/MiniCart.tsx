@@ -1,20 +1,42 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 import {
-  selectCartItems,
-  selectCartTotal,
-  selectCartItemsCount,
-  removeItem as removeFromCart,
-  updateQuantity,
+  selectCartItems as selectLocalCartItems,
+  selectCartTotal as selectLocalCartTotal,
+  selectCartItemsCount as selectLocalCartItemsCount,
+  removeItem as removeFromLocalCart,
+  updateQuantity as updateLocalQuantity,
 } from '@/store/slices/localCartSlice';
+import {
+  selectCart,
+  removeFromCart,
+  updateCartItem,
+} from '@/store/slices/cartSlice';
 import type { AppDispatch } from '@/store';
+
+interface CartItemDisplay {
+  productId: number;
+  variantId?: number;
+  quantity: number;
+  name: string;
+  variantName?: string;
+  price: number;
+  currency: string;
+  image?: string;
+  storefrontId?: number;
+  storefrontName?: string;
+  storefrontSlug?: string;
+  stockQuantity?: number;
+  cartItemId?: number;
+}
 
 interface MiniCartProps {
   isOpen: boolean;
@@ -31,17 +53,63 @@ export default function MiniCart({
   const locale = useLocale();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+  const { isAuthenticated } = useAuth();
   const cartRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: 0, right: 0 });
 
-  const items = useSelector(selectCartItems);
-  const total = useSelector(selectCartTotal);
-  const itemsCount = useSelector(selectCartItemsCount);
+  // Выбираем данные из правильного slice в зависимости от авторизации
+  const localItems = useSelector(selectLocalCartItems);
+  const localTotal = useSelector(selectLocalCartTotal);
+  const localItemsCount = useSelector(selectLocalCartItemsCount);
+
+  const backendCart = useSelector(selectCart);
+
+  // Преобразуем товары из backend корзины в нужный формат
+  const backendItems = useMemo((): CartItemDisplay[] => {
+    if (!isAuthenticated || !backendCart?.items) return [];
+
+    return backendCart.items.map((item) => ({
+      productId: item.product_id || 0,
+      variantId: item.variant_id,
+      quantity: item.quantity || 0,
+      name: item.product?.name || 'Product',
+      variantName: item.variant?.name,
+      // Преобразуем price_per_unit в число (может быть строкой из-за Decimal на backend)
+      price:
+        typeof item.price_per_unit === 'string'
+          ? parseFloat(item.price_per_unit)
+          : item.price_per_unit || 0,
+      currency: 'RSD',
+      image: item.product?.images?.[0]?.image_url,
+      storefrontId: backendCart.storefront_id,
+      storefrontName: backendCart.storefront?.name || 'Store',
+      storefrontSlug:
+        backendCart.storefront?.slug || String(backendCart.storefront_id),
+      stockQuantity: item.product?.stock_quantity || 99,
+      cartItemId: item.id,
+    }));
+  }, [backendCart, isAuthenticated]);
+
+  const backendTotal = useMemo(() => {
+    return backendItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+  }, [backendItems]);
+
+  const backendItemsCount = useMemo(() => {
+    return backendItems.reduce((sum, item) => sum + item.quantity, 0);
+  }, [backendItems]);
+
+  // Используем данные в зависимости от авторизации
+  const items: CartItemDisplay[] = isAuthenticated ? backendItems : localItems;
+  const total = isAuthenticated ? backendTotal : localTotal;
+  const itemsCount = isAuthenticated ? backendItemsCount : localItemsCount;
 
   // Группируем товары по витринам
   const itemsByStorefront = items.reduce(
     (acc, item) => {
-      const storefrontId = item.storefrontId;
+      const storefrontId = item.storefrontId || 0; // Default to 0 if undefined
       if (!acc[storefrontId]) {
         acc[storefrontId] = {
           items: [],
@@ -98,17 +166,51 @@ export default function MiniCart({
     };
   }, [isOpen, onClose, anchorRef]);
 
-  const handleRemove = (productId: number, variantId?: number) => {
-    dispatch(removeFromCart({ productId, variantId }));
+  const handleRemove = async (productId: number, variantId?: number) => {
+    if (isAuthenticated) {
+      // Для авторизованных пользователей используем backend API
+      // Находим товар, чтобы получить storefrontId и cartItemId
+      const item = items.find(
+        (i) => i.productId === productId && i.variantId === variantId
+      );
+      if (item && item.storefrontId && item.cartItemId) {
+        await dispatch(
+          removeFromCart({
+            storefrontId: item.storefrontId,
+            itemId: item.cartItemId,
+          })
+        );
+      }
+    } else {
+      // Для неавторизованных используем localStorage
+      dispatch(removeFromLocalCart({ productId, variantId }));
+    }
   };
 
-  const handleQuantityChange = (
+  const handleQuantityChange = async (
     productId: number,
     quantity: number,
     variantId?: number
   ) => {
-    if (quantity > 0) {
-      dispatch(updateQuantity({ productId, variantId, quantity }));
+    if (quantity <= 0) return;
+
+    if (isAuthenticated) {
+      // Для авторизованных пользователей используем backend API
+      const item = items.find(
+        (i) => i.productId === productId && i.variantId === variantId
+      );
+      if (item && item.storefrontId && item.cartItemId) {
+        await dispatch(
+          updateCartItem({
+            storefrontId: item.storefrontId,
+            itemId: item.cartItemId,
+            data: { quantity },
+          })
+        );
+      }
+    } else {
+      // Для неавторизованных используем localStorage
+      dispatch(updateLocalQuantity({ productId, variantId, quantity }));
     }
   };
 

@@ -106,6 +106,7 @@ type StorefrontOrder struct {
 	Items              []StorefrontOrderItem `json:"items,omitempty"`
 	Storefront         *Storefront           `json:"storefront,omitempty"`
 	Customer           *User                 `json:"customer,omitempty"`
+	Seller             *User                 `json:"seller,omitempty"`
 	PaymentTransaction *PaymentTransaction   `json:"payment_transaction,omitempty"`
 
 	// Временные метки

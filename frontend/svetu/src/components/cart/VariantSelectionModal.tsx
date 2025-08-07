@@ -16,6 +16,7 @@ interface VariantSelectionModalProps {
   productName: string;
   productImage?: string;
   storefrontSlug: string;
+  storefrontId?: number; // Добавляем storefrontId
   basePrice: number;
   baseCurrency: string;
   onAddToCart: (variant: ProductVariant | null, quantity: number) => void;
@@ -28,6 +29,7 @@ export default function VariantSelectionModal({
   productName,
   productImage,
   storefrontSlug,
+  storefrontId,
   basePrice,
   baseCurrency,
   onAddToCart,
@@ -40,14 +42,60 @@ export default function VariantSelectionModal({
   const [quantity, setQuantity] = useState(1);
   const [hasVariants, setHasVariants] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasChecked, setHasChecked] = useState(false);
 
   const checkForVariants = async () => {
-    console.log('VariantSelectionModal: checkForVariants started');
+    if (hasChecked) {
+      console.log('VariantSelectionModal: Already checked, skipping');
+      return;
+    }
+
+    console.log(
+      'VariantSelectionModal: checkForVariants started',
+      storefrontSlug,
+      storefrontId
+    );
     setIsLoading(true);
+    setHasChecked(true);
     try {
-      const response = await fetch(
-        `/api/v1/storefronts/slug/${storefrontSlug}/products/${productId}`
-      );
+      let actualSlug = storefrontSlug;
+
+      // Если slug пустой, загружаем реальный slug по ID витрины
+      if ((!storefrontSlug || storefrontSlug.trim() === '') && storefrontId) {
+        console.log(
+          'VariantSelectionModal: Loading real slug by storefront ID',
+          storefrontId
+        );
+        try {
+          const storefrontResponse = await fetch(
+            `/api/v1/storefronts/${storefrontId}`
+          );
+          if (storefrontResponse.ok) {
+            const storefrontData = await storefrontResponse.json();
+            actualSlug = storefrontData.slug || '';
+            console.log('VariantSelectionModal: Found real slug:', actualSlug);
+          }
+        } catch (error) {
+          console.error(
+            'VariantSelectionModal: Failed to load storefront data:',
+            error
+          );
+        }
+      }
+
+      // Если так и не получили slug, показываем модал без проверки вариантов
+      if (!actualSlug || actualSlug.trim() === '') {
+        console.log(
+          'VariantSelectionModal: No valid slug found, showing modal without variant check'
+        );
+        setHasVariants(false);
+        return;
+      }
+
+      // Используем публичный эндпоинт с реальным slug
+      const url = `/api/v1/public/storefronts/${actualSlug}/products/${productId}`;
+
+      const response = await fetch(url);
       console.log(
         'VariantSelectionModal: API response status:',
         response.status
@@ -65,16 +113,16 @@ export default function VariantSelectionModal({
           setHasVariants(true);
         } else {
           console.log(
-            'VariantSelectionModal: No variants found, adding directly to cart'
+            'VariantSelectionModal: No variants found, showing quantity selector'
           );
-          // No variants, add directly to cart
-          handleAdd();
+          // No variants, but still show the modal for quantity selection
+          setHasVariants(false);
         }
       }
     } catch (error) {
       console.error('VariantSelectionModal: Error checking variants:', error);
-      // On error, add without variant
-      handleAdd();
+      // On error, show modal without variants
+      setHasVariants(false);
     } finally {
       setIsLoading(false);
       console.log('VariantSelectionModal: checkForVariants finished');
@@ -86,10 +134,12 @@ export default function VariantSelectionModal({
       // Reset state when modal opens
       setSelectedVariant(null);
       setQuantity(1);
+      setHasVariants(false);
+      setHasChecked(false);
       checkForVariants();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, productId, storefrontSlug]);
+  }, [isOpen, productId, storefrontSlug, storefrontId]);
 
   const handleAdd = () => {
     onAddToCart(selectedVariant, quantity);
@@ -116,6 +166,7 @@ export default function VariantSelectionModal({
                 src={productImage}
                 alt={productName}
                 fill
+                sizes="80px"
                 className="object-cover"
               />
             </div>
@@ -138,21 +189,24 @@ export default function VariantSelectionModal({
           </div>
         )}
 
-        {/* Variant Selection */}
-        {!isLoading && hasVariants && (
+        {/* Content when not loading */}
+        {!isLoading && (
           <div className="space-y-4">
-            <VariantSelector
-              productId={productId}
-              storefrontSlug={storefrontSlug}
-              basePrice={basePrice}
-              baseCurrency={baseCurrency}
-              onVariantChange={setSelectedVariant}
-            />
+            {/* Variant Selection - only if has variants */}
+            {hasVariants && (
+              <VariantSelector
+                productId={productId}
+                storefrontSlug={storefrontSlug}
+                basePrice={basePrice}
+                baseCurrency={baseCurrency}
+                onVariantChange={setSelectedVariant}
+              />
+            )}
 
-            {/* Quantity */}
+            {/* Quantity - always show */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text">{t('quantity')}</span>
+                <span className="label-text">{t('cart.quantity')}</span>
               </label>
               <div className="flex items-center gap-2">
                 <button

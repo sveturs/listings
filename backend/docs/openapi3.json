@@ -27225,6 +27225,67 @@
                 }
             }
         },
+        "/api/v1/user/carts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets all shopping carts for the authenticated user across all storefronts",
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Get all user carts",
+                "responses": {
+                    "200": {
+                        "description": "User's carts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.ShoppingCart"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/admin-check/{email}": {
             "get": {
                 "security": [
@@ -29874,8 +29935,7 @@
                 ],
                 "properties": {
                     "attributes": {
-                        "type": "object",
-                        "additionalProperties": true
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
                     },
                     "barcode": {
                         "type": "string"
@@ -30099,8 +30159,7 @@
                         "minimum": 0
                     },
                     "variant_attributes": {
-                        "type": "object",
-                        "additionalProperties": true
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
                     },
                     "weight": {
                         "type": "number"
@@ -30570,6 +30629,27 @@
                         "type": "number"
                     }
                 }
+            },
+            "backend_internal_domain_models.LocationPrivacyLevel": {
+                "type": "string",
+                "enum": [
+                    "exact",
+                    "street",
+                    "district",
+                    "city"
+                ],
+                "x-enum-comments": {
+                    "PrivacyLevelCity": "Только город",
+                    "PrivacyLevelDistrict": "Только район",
+                    "PrivacyLevelExact": "Точный адрес",
+                    "PrivacyLevelStreet": "Только улица"
+                },
+                "x-enum-varnames": [
+                    "PrivacyLevelExact",
+                    "PrivacyLevelStreet",
+                    "PrivacyLevelDistrict",
+                    "PrivacyLevelCity"
+                ]
             },
             "backend_internal_domain_models.MapMarker": {
                 "type": "object",
@@ -32030,6 +32110,9 @@
                         "description": "Локация",
                         "type": "string"
                     },
+                    "address_verified": {
+                        "type": "boolean"
+                    },
                     "ai_agent_config": {
                         "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
                     },
@@ -32053,11 +32136,20 @@
                         "description": "Временные метки",
                         "type": "string"
                     },
+                    "default_privacy_level": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.LocationPrivacyLevel"
+                    },
                     "description": {
                         "type": "string"
                     },
                     "email": {
                         "type": "string"
+                    },
+                    "formatted_address": {
+                        "type": "string"
+                    },
+                    "geo_strategy": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontGeoStrategy"
                     },
                     "group_buying_enabled": {
                         "type": "boolean"
@@ -32137,6 +32229,14 @@
                     },
                     "updated_at": {
                         "type": "string"
+                    },
+                    "user": {
+                        "description": "Связанные данные",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.User"
+                            }
+                        ]
                     },
                     "user_id": {
                         "type": "integer"
@@ -32395,6 +32495,21 @@
                     }
                 }
             },
+            "backend_internal_domain_models.StorefrontGeoStrategy": {
+                "type": "string",
+                "enum": [
+                    "storefront_location",
+                    "individual_location"
+                ],
+                "x-enum-comments": {
+                    "GeoStrategyIndividualLocation": "Использовать индивидуальные адреса товаров",
+                    "GeoStrategyStorefrontLocation": "Использовать адрес витрины"
+                },
+                "x-enum-varnames": [
+                    "GeoStrategyStorefrontLocation",
+                    "GeoStrategyIndividualLocation"
+                ]
+            },
             "backend_internal_domain_models.StorefrontHours": {
                 "type": "object",
                 "properties": {
@@ -32563,6 +32678,9 @@
                                 "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
                             }
                         ]
+                    },
+                    "seller": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.User"
                     },
                     "seller_amount": {
                         "type": "number"
@@ -32744,8 +32862,7 @@
                 "type": "object",
                 "properties": {
                     "attributes": {
-                        "type": "object",
-                        "additionalProperties": true
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
                     },
                     "barcode": {
                         "type": "string"
@@ -32889,8 +33006,11 @@
                 "properties": {
                     "attributes": {
                         "description": "e.g., {\"color\": \"red\", \"size\": \"L\"}",
-                        "type": "object",
-                        "additionalProperties": true
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
+                            }
+                        ]
                     },
                     "created_at": {
                         "type": "string"
@@ -33254,8 +33374,7 @@
                 "type": "object",
                 "properties": {
                     "attributes": {
-                        "type": "object",
-                        "additionalProperties": true
+                        "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
                     },
                     "barcode": {
                         "type": "string"
@@ -35823,6 +35942,14 @@
                                 "$ref": "#/components/schemas/internal_proj_global_handler.UnifiedStorefrontInfo"
                             }
                         ]
+                    },
+                    "storefront_id": {
+                        "description": "ID витрины для товаров маркетплейса",
+                        "type": "integer"
+                    },
+                    "storefront_slug": {
+                        "description": "Slug витрины для правильного URL",
+                        "type": "string"
                     },
                     "user": {
                         "description": "Информация о продавце",

@@ -1,6 +1,13 @@
 {
   "marketplace": {
     "allCategories": "Все категории",
+    "condition": {
+      "new": "Новый",
+      "like_new": "Как новый",
+      "used": "Б/у",
+      "refurbished": "Восстановленный",
+      "likeNew": "Как новый"
+    },
     "create": {
       "title": "Создать",
       "selectOptions": "Выберите опции",
@@ -12,7 +19,6 @@
       "priceRange": "Диапазон цены",
       "priceFrom": "От",
       "priceTo": "До",
-      "condition": "Состояние",
       "anyCondition": "Любое состояние",
       "sellerType": "Тип продавца",
       "anySeller": "Любой продавец",
@@ -38,7 +44,6 @@
     "imageGallery": {
       "clickToZoom": "Нажмите для увеличения"
     },
-    "condition": "Состояние",
     "invalidData": "Недопустимый формат данных",
     "duplicateTitle": "Объявление с таким названием уже существует",
     "createError": "Не удалось создать объявление",

@@ -630,9 +630,44 @@ func (s *OrderService) UpdateCartItemQuantity(ctx context.Context, itemID int, s
 func (s *OrderService) RemoveFromCart(ctx context.Context, itemID int, storefrontID int, userID *int, sessionID *string) (*models.ShoppingCart, error) {
 	s.logger.Info("Removing item from cart (item_id: %d)", itemID)
 
-	// TODO: Implement cart item removal
-	// Пока что возвращаем ошибку, так как нужно доработать интерфейс репозитория
-	return nil, fmt.Errorf("method not implemented yet")
+	// Получаем корзину пользователя/сессии
+	var cart *models.ShoppingCart
+	var err error
+
+	switch {
+	case userID != nil:
+		cart, err = s.cartRepo.GetByUser(ctx, *userID, storefrontID)
+	case sessionID != nil:
+		cart, err = s.cartRepo.GetBySession(ctx, *sessionID, storefrontID)
+	default:
+		return nil, fmt.Errorf("either user_id or session_id must be provided")
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cart: %w", err)
+	}
+
+	// Ищем товар в корзине по itemID
+	var targetItem *models.ShoppingCartItem
+	for i := range cart.Items {
+		if cart.Items[i].ID == int64(itemID) {
+			targetItem = &cart.Items[i]
+			break
+		}
+	}
+
+	if targetItem == nil {
+		return nil, fmt.Errorf("item not found in cart")
+	}
+
+	// Удаляем товар из корзины
+	err = s.cartRepo.RemoveItem(ctx, cart.ID, targetItem.ProductID, targetItem.VariantID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to remove item from cart: %w", err)
+	}
+
+	// Возвращаем обновленную корзину
+	return s.cartRepo.GetByID(ctx, cart.ID)
 }
 
 // GetCart получает корзину пользователя
@@ -676,6 +711,18 @@ func (s *OrderService) ClearCart(ctx context.Context, storefrontID int, userID *
 	}
 
 	return nil
+}
+
+// GetUserCarts возвращает все корзины пользователя
+func (s *OrderService) GetUserCarts(ctx context.Context, userID int) ([]*models.ShoppingCart, error) {
+	s.logger.Info("Getting all carts for user (user_id: %d)", userID)
+
+	carts, err := s.cartRepo.GetAllUserCarts(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user carts: %w", err)
+	}
+
+	return carts, nil
 }
 
 // getOrCreateCart получает существующую корзину или создает новую

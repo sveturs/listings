@@ -1651,3 +1651,28 @@ func (r *ProductRepository) SearchSimilarProducts(ctx context.Context, productID
 
 	return similarListings, nil
 }
+
+// UpdateProductStock частично обновляет только поля склада товара в OpenSearch
+func (r *ProductRepository) UpdateProductStock(ctx context.Context, productID int, stockData map[string]interface{}) error {
+	if len(stockData) == 0 {
+		return fmt.Errorf("no stock data to update")
+	}
+
+	docID := strconv.Itoa(productID)
+
+	// Обновляем только переданные поля
+	updateDoc := make(map[string]interface{})
+	for field, value := range stockData {
+		updateDoc[field] = value
+	}
+
+	// Добавляем timestamp обновления
+	updateDoc["updated_at"] = time.Now().Format(time.RFC3339)
+
+	if err := r.client.UpdateDocument(ctx, r.indexName, docID, updateDoc); err != nil {
+		return fmt.Errorf("failed to update product stock in OpenSearch: %w", err)
+	}
+
+	logger.Info().Msgf("Successfully updated stock for product %d in OpenSearch index %s", productID, r.indexName)
+	return nil
+}

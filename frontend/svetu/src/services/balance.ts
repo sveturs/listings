@@ -51,8 +51,21 @@ export const balanceService = {
   },
 
   // Форматировать сумму с валютой
-  formatAmount(amount: number | string, currency: string): string {
+  formatAmount(
+    amount: number | string | undefined | null,
+    currency: string
+  ): string {
+    // Проверяем на null/undefined
+    if (amount == null) {
+      return '0.00 RSD';
+    }
+
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+
+    // Проверяем на NaN или невалидное число
+    if (isNaN(numAmount) || !isFinite(numAmount)) {
+      return '0.00 RSD';
+    }
 
     // Определяем формат для разных валют
     const formatOptions: Intl.NumberFormatOptions = {

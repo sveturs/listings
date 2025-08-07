@@ -37,10 +37,14 @@ export default function AuthStateManager() {
 
         keysToRemove.forEach((key) => sessionStorage.removeItem(key));
 
-        // Для localStorage очищаем всё кроме локали
+        // Для localStorage очищаем всё кроме локали и корзины
+        const cart = localStorage.getItem('svetu_cart');
         localStorage.clear();
         if (locale) {
           localStorage.setItem('NEXT_LOCALE', locale);
+        }
+        if (cart) {
+          localStorage.setItem('svetu_cart', cart);
         }
       } catch (error) {
         console.error('Error clearing storage:', error);

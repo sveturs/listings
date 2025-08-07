@@ -127,24 +127,23 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
 
-    // Для товаров витрин сначала проверяем авторизацию
-    if (product.type === 'storefront' && !isAuthenticated) {
-      router.push(
-        `/${locale}/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`
-      );
-      return;
-    }
-
     // Проверяем можно ли купить товар (для маркетплейса)
     if (product.type === 'marketplace' && !canBuy) {
       return;
     }
 
-    // Для товаров витрин показываем модальное окно выбора вариантов
+    // Для товаров витрин показываем модальное окно выбора вариантов или добавляем в корзину
     if (product.type === 'storefront') {
+      // Для товаров витрин добавляем в корзину (локальную для неавторизованных)
       setShowVariantModal(true);
     } else {
-      // Для обычных товаров переходим на страницу покупки
+      // Для обычных товаров маркетплейса требуется авторизация для покупки
+      if (!isAuthenticated) {
+        router.push(
+          `/${locale}/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`
+        );
+        return;
+      }
       router.push(`/${locale}/marketplace/${product.id}/buy`);
     }
   };
@@ -586,6 +585,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
             productName={product.name}
             productImage={product.images[0]?.publicUrl}
             storefrontSlug={product.storefront.slug}
+            storefrontId={product.storefront.id}
             basePrice={minPrice}
             baseCurrency={product.currency}
             onAddToCart={handleAddToCartWithVariant}
@@ -951,6 +951,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
           productName={product.name}
           productImage={product.images[0]?.publicUrl}
           storefrontSlug={product.storefront.slug}
+          storefrontId={product.storefront.id}
           basePrice={minPrice}
           baseCurrency={product.currency}
           onAddToCart={handleAddToCartWithVariant}

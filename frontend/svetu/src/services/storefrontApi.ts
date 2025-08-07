@@ -146,7 +146,13 @@ class StorefrontApiService {
    */
   async getStorefrontBySlug(slug: string): Promise<Storefront> {
     const endpoint = `/api/v1/storefronts/slug/${slug}`;
-    return this.request<Storefront>(endpoint);
+    const storefront = await this.request<Storefront>(endpoint);
+
+    if (!storefront) {
+      throw new Error('Storefront not found');
+    }
+
+    return storefront;
   }
 
   /**

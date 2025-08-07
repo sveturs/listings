@@ -73,6 +73,16 @@ export default function CreateListingSmartPage() {
   const [categories, setCategories] = useState<MarketplaceCategory[]>([]);
   const [selectedCategory, setSelectedCategory] =
     useState<MarketplaceCategory | null>(null);
+  const [categorySelectedManually, setCategorySelectedManually] =
+    useState(false);
+  const [suggestedCategories, setSuggestedCategories] = useState<
+    Array<{
+      categoryId: number;
+      categoryName: string;
+      categorySlug: string;
+      confidenceScore: number;
+    }>
+  >([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     images: [] as string[],
@@ -355,6 +365,125 @@ export default function CreateListingSmartPage() {
       }));
   };
 
+  // Умное определение категории через API
+  const detectCategoryByTitle = useCallback(
+    async (title: string) => {
+      if (!title || title.length < 3) return;
+
+      try {
+        // Извлекаем ключевые слова из названия
+        const keywords = title
+          .toLowerCase()
+          .split(' ')
+          .filter((word) => word.length > 2);
+
+        const response = await fetch('/api/v1/marketplace/categories/detect', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: title,
+            keywords: keywords,
+            language: locale,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && data.data.category_id) {
+            const detectedCategory = categories.find(
+              (c) => c.id === data.data.category_id
+            );
+
+            if (detectedCategory) {
+              // Проверяем, изменилась ли категория
+              const categoryChanged =
+                selectedCategory?.id !== detectedCategory.id;
+
+              // Автоматически обновляем категорию только если:
+              // 1. Категория не была выбрана вручную
+              // 2. И категория действительно изменилась
+              if (!categorySelectedManually && categoryChanged) {
+                setSelectedCategory(detectedCategory);
+                setFormData((prev) => ({
+                  ...prev,
+                  category: detectedCategory.slug || '',
+                  categoryId: detectedCategory.id || 0,
+                }));
+
+                // Показываем уведомление только при изменении категории
+                const confidence = Math.round(data.data.confidence_score * 100);
+                toast.info(
+                  `Категория определена: ${detectedCategory.translations?.name || detectedCategory.name} (${confidence}% уверенность)`
+                );
+              }
+
+              // Всегда обновляем список предложенных категорий
+              if (
+                data.data.alternative_categories &&
+                data.data.alternative_categories.length > 0
+              ) {
+                const alternatives = data.data.alternative_categories.map(
+                  (alt: any) => ({
+                    categoryId: alt.category_id,
+                    categoryName: alt.category_name,
+                    categorySlug: alt.category_slug,
+                    confidenceScore: alt.confidence_score,
+                  })
+                );
+                setSuggestedCategories([
+                  {
+                    categoryId: data.data.category_id,
+                    categoryName: data.data.category_name,
+                    categorySlug: data.data.category_slug,
+                    confidenceScore: data.data.confidence_score,
+                  },
+                  ...alternatives,
+                ]);
+              } else {
+                // Только основная категория
+                setSuggestedCategories([
+                  {
+                    categoryId: data.data.category_id,
+                    categoryName: data.data.category_name,
+                    categorySlug: data.data.category_slug,
+                    confidenceScore: data.data.confidence_score,
+                  },
+                ]);
+              }
+            }
+          } else {
+            // Если категория не определена - очищаем предложения
+            setSuggestedCategories([]);
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка определения категории:', error);
+      }
+    },
+    [categories, locale, selectedCategory, categorySelectedManually]
+  );
+
+  // Эффект для умного определения категории при изменении названия
+  useEffect(() => {
+    // Определяем категорию при изменении названия
+    if (formData.title && formData.title.length > 3) {
+      const timeoutId = setTimeout(() => {
+        detectCategoryByTitle(formData.title);
+      }, 800); // Задержка 800мс после последнего ввода
+
+      return () => clearTimeout(timeoutId);
+    } else if (formData.title.length === 0) {
+      // Если название очищено - очищаем предложенные категории и сбрасываем флаг ручного выбора
+      setSuggestedCategories([]);
+      setCategorySelectedManually(false);
+      // Можно также очистить выбранную категорию если нужно
+      // setSelectedCategory(null);
+      // setFormData(prev => ({ ...prev, category: '', categoryId: 0 }));
+    }
+  }, [formData.title, detectCategoryByTitle]);
+
   useEffect(() => {
     // Обновляем похожие объявления при изменении категории или заголовка
     console.log('useEffect triggered, formData:', {
@@ -386,162 +515,6 @@ export default function CreateListingSmartPage() {
     const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
     return phoneRegex.test(text) || emailRegex.test(text);
-  };
-
-  // Автоматическое определение категории по названию
-  const detectCategory = (title: string) => {
-    const lowerTitle = title.toLowerCase();
-
-    // Ключевые слова для категорий
-    const categoryKeywords = {
-      fashion: [
-        'обувь',
-        'туфли',
-        'тапки',
-        'тапочки',
-        'кроссовки',
-        'ботинки',
-        'сапоги',
-        'босоножки',
-        'сандалии',
-        'кеды',
-        'одежда',
-        'платье',
-        'брюки',
-        'джинсы',
-        'футболка',
-        'рубашка',
-        'куртка',
-        'пальто',
-        'шуба',
-        'размер',
-      ],
-      electronics: [
-        'телефон',
-        'iphone',
-        'samsung',
-        'xiaomi',
-        'ноутбук',
-        'компьютер',
-        'планшет',
-        'наушники',
-        'телевизор',
-        'playstation',
-        'xbox',
-        'приставка',
-        'фотоаппарат',
-        'камера',
-      ],
-      home: [
-        'мебель',
-        'диван',
-        'кресло',
-        'стол',
-        'стул',
-        'шкаф',
-        'кровать',
-        'матрас',
-        'ковер',
-        'штора',
-        'посуда',
-        'кухня',
-        'холодильник',
-        'стиральная',
-        'пылесос',
-      ],
-      auto: [
-        'машина',
-        'автомобиль',
-        'мотоцикл',
-        'велосипед',
-        'самокат',
-        'колеса',
-        'шины',
-        'запчасти',
-        'двигатель',
-        'коробка',
-        'бампер',
-        // Марки автомобилей
-        'volkswagen',
-        'vw',
-        'фольксваген',
-        'mercedes',
-        'мерседес',
-        'мерс',
-        'bmw',
-        'бмв',
-        'audi',
-        'ауди',
-        'toyota',
-        'тойота',
-        'honda',
-        'хонда',
-        'ford',
-        'форд',
-        'opel',
-        'опель',
-        'peugeot',
-        'пежо',
-        'renault',
-        'рено',
-        'citroen',
-        'ситроен',
-        'fiat',
-        'фиат',
-        'nissan',
-        'ниссан',
-        'mazda',
-        'мазда',
-        'hyundai',
-        'хундай',
-        'хюндай',
-        'kia',
-        'киа',
-        'škoda',
-        'skoda',
-        'шкода',
-        'seat',
-        'сеат',
-        'volvo',
-        'вольво',
-        // Модели
-        'golf',
-        'гольф',
-        'passat',
-        'пассат',
-        'touran',
-        'туран',
-        'tiguan',
-        'тигуан',
-        'polo',
-        'поло',
-        'jetta',
-        'джетта',
-        // Общие термины
-        'авто',
-        'тачка',
-        'минивэн',
-        'минивен',
-        'седан',
-        'хэтчбек',
-        'хетчбек',
-        'кроссовер',
-        'внедорожник',
-        'пикап',
-        'грузовик',
-        'автобус',
-        'микроавтобус',
-      ],
-    };
-
-    // Проверяем каждую категорию
-    for (const [category, keywords] of Object.entries(categoryKeywords)) {
-      if (keywords.some((keyword) => lowerTitle.includes(keyword))) {
-        return category;
-      }
-    }
-
-    return '';
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -649,6 +622,7 @@ export default function CreateListingSmartPage() {
 
   const handleCategorySelect = (category: MarketplaceCategory) => {
     setSelectedCategory(category);
+    setCategorySelectedManually(true); // Помечаем, что категория выбрана вручную
     setFormData((prev) => ({
       ...prev,
       category: category.slug || '',
@@ -1154,48 +1128,68 @@ export default function CreateListingSmartPage() {
                   onChange={(e) => {
                     const newTitle = e.target.value;
                     setFormData({ ...formData, title: newTitle });
-
-                    // Автоматически определяем категорию
-                    if (newTitle.length > 3) {
-                      const detectedCategory = detectCategory(newTitle);
-                      if (detectedCategory && !formData.category) {
-                        // Ищем соответствующую категорию в загруженных категориях
-                        const categoryMap: Record<string, number> = {
-                          fashion: 1002, // Fashion
-                          electronics: 1001, // Electronics
-                          home: 1005, // Home & Garden
-                          auto: 1003, // Automotive
-                        };
-
-                        const categoryId = categoryMap[detectedCategory];
-                        const fullCategory = categories.find(
-                          (c) => c.id === categoryId
-                        );
-
-                        if (fullCategory) {
-                          setSelectedCategory(fullCategory);
-                          setFormData((prev) => ({
-                            ...prev,
-                            category: detectedCategory,
-                            categoryId: categoryId,
-                          }));
-
-                          const categoryNames: Record<string, string> = {
-                            fashion: 'Мода',
-                            electronics: 'Электроника',
-                            home: 'Дом и сад',
-                            auto: 'Автомобили',
-                          };
-
-                          toast.success(
-                            `Категория определена автоматически: ${categoryNames[detectedCategory] || detectedCategory}`
-                          );
-                        }
-                      }
-                    }
                   }}
                   maxLength={80}
                 />
+
+                {/* Предложенные категории */}
+                {suggestedCategories.length > 0 && (
+                  <div className="mt-3 p-3 bg-base-100 rounded-lg border border-base-300">
+                    <p className="text-sm font-semibold mb-2 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      {categorySelectedManually
+                        ? 'Альтернативные категории (на основе названия):'
+                        : 'Предложенные категории (на основе названия):'}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestedCategories.map((cat, index) => {
+                        const category = categories.find(
+                          (c) => c.id === cat.categoryId
+                        );
+                        const isSelected =
+                          selectedCategory?.id === cat.categoryId;
+                        const confidence = Math.round(
+                          cat.confidenceScore * 100
+                        );
+
+                        return (
+                          <button
+                            key={cat.categoryId}
+                            onClick={() => {
+                              if (category) {
+                                setSelectedCategory(category);
+                                setCategorySelectedManually(true); // Помечаем, что категория выбрана вручную
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  category: category.slug || '',
+                                  categoryId: category.id || 0,
+                                }));
+                                toast.success(
+                                  `Выбрана категория: ${category.translations?.name || category.name}`
+                                );
+                              }
+                            }}
+                            className={`btn btn-sm ${
+                              isSelected
+                                ? 'btn-primary'
+                                : index === 0
+                                  ? 'btn-outline btn-primary'
+                                  : 'btn-outline'
+                            }`}
+                          >
+                            {category?.translations?.name || cat.categoryName}
+                            <span className="badge badge-xs ml-1">
+                              {confidence}%
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-base-content/60 mt-2">
+                      Нажмите на категорию, чтобы выбрать её
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Category Selector */}
@@ -1388,15 +1382,10 @@ export default function CreateListingSmartPage() {
                   value={carSelection}
                   onChange={(selection) => {
                     setCarSelection(selection);
-                    // Обновляем заголовок и атрибуты при выборе машины
+                    // Добавляем марку и модель только как атрибуты, НЕ в название
                     if (selection.make && selection.model) {
-                      const newTitle =
-                        `${selection.make?.name || ''} ${selection.model?.name || ''}`.trim();
                       setFormData((prev) => ({
                         ...prev,
-                        title: prev.title
-                          ? `${prev.title} ${newTitle}`
-                          : newTitle,
                         // Добавляем марку и модель как атрибуты
                         attributes: {
                           ...prev.attributes,

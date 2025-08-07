@@ -6,6 +6,8 @@
   "outOfStock": "Out of stock",
   "lowStock": "Low stock",
   "description": "Description",
+  "notFound": "Product not found",
+  "notFoundDescription": "Sorry, this product was not found or has been deleted",
   "products": {
     "title": "Products",
     "noProducts": "No products",

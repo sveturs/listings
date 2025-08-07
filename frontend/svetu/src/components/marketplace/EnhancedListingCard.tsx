@@ -202,7 +202,8 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   };
 
   const isOnlinePurchaseAvailable = () => {
-    return item.product_type === 'storefront' && item.storefront_id;
+    // Онлайн покупка доступна если у товара есть витрина
+    return item.storefront_id && item.storefront_id > 0;
   };
 
   const handleAddToCart = () => {
@@ -237,11 +238,13 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   };
 
   const getItemUrl = () => {
-    // Для товаров витрин используем другой URL
+    // Настоящие товары витрин (из таблицы storefront_products) имеют тип 'storefront'
+    // и для них используется специальный URL с slug витрины
     if (item.product_type === 'storefront' && item.storefront_slug) {
       return `/${locale}/storefronts/${item.storefront_slug}/products/${item.id}`;
     }
-    // Для обычных объявлений маркетплейса
+    // Все объявления маркетплейса открываются через marketplace URL,
+    // даже если они связаны с витриной
     return `/${locale}/marketplace/${item.id}`;
   };
 
@@ -262,7 +265,13 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   if (viewMode === 'list') {
     return (
       <>
-        <div className="card bg-base-100 shadow-sm hover:shadow-md border border-base-300 dark:border-base-600 transition-shadow duration-200 group">
+        <div
+          className={`card bg-base-100 shadow-sm hover:shadow-md border ${
+            item.storefront_id
+              ? 'border-primary/50 ring-1 ring-primary/20'
+              : 'border-base-300 dark:border-base-600'
+          } transition-shadow duration-200 group`}
+        >
           <Link href={getItemUrl()} className="block">
             <div className="card-body p-4">
               <div className="flex gap-4">
@@ -552,7 +561,13 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
   // Grid view (default)
   return (
     <>
-      <div className="card card-compact bg-base-100 shadow-sm hover:shadow-md border border-base-300 dark:border-base-600 transition-shadow duration-200 group">
+      <div
+        className={`card card-compact bg-base-100 shadow-sm hover:shadow-md border ${
+          item.storefront_id
+            ? 'border-primary/50 ring-1 ring-primary/20'
+            : 'border-base-300 dark:border-base-600'
+        } transition-shadow duration-200 group`}
+      >
         {/* Изображение с оверлеями */}
         <figure className="relative aspect-square overflow-hidden">
           <Link href={getItemUrl()}>

@@ -268,14 +268,19 @@ export default function SearchBar({
         const position =
           suggestions.findIndex((s) => s.text === suggestion.text) + 1;
 
+        // Определяем тип элемента на основе metadata
+        let itemType = 'marketplace';
+        if (suggestion.metadata?.source_type === 'storefront') {
+          itemType = 'storefront';
+        }
+
         await trackResultClicked({
           search_query: query,
           clicked_item_id: suggestion.product_id?.toString() || suggestion.text,
           click_position: position,
           total_results: suggestions.length,
           click_time_from_search_ms: Date.now() - Date.now(), // приблизительное время
-          item_type:
-            suggestion.type === 'product' ? 'marketplace' : 'marketplace', // По умолчанию marketplace для всех предложений
+          item_type: itemType as any,
         });
       }
     } catch (error) {
@@ -290,9 +295,30 @@ export default function SearchBar({
       return;
     }
 
-    // Если это товар, можно перейти на страницу товара (если есть id)
+    // Если это товар, переходим на соответствующую страницу
     if (suggestion.type === 'product' && suggestion.product_id) {
-      router.push(`/${locale}/marketplace/${suggestion.product_id}`);
+      // Проверяем тип товара через metadata
+      if (
+        suggestion.metadata?.source_type === 'storefront' &&
+        suggestion.metadata?.storefront_id
+      ) {
+        // Для товаров витрин нужен правильный URL
+        // Получаем slug витрины из metadata или делаем запрос
+        const storefrontSlug = suggestion.metadata?.storefront_slug;
+        if (storefrontSlug) {
+          router.push(
+            `/${locale}/storefronts/${storefrontSlug}/products/${suggestion.product_id}`
+          );
+        } else {
+          // Если нет slug, переходим на страницу поиска с фильтром
+          router.push(
+            `/${locale}/search?q=${encodeURIComponent(suggestion.text)}&product_types=storefront`
+          );
+        }
+      } else {
+        // Для товаров маркетплейса
+        router.push(`/${locale}/marketplace/${suggestion.product_id}`);
+      }
       return;
     }
 
@@ -521,6 +547,20 @@ export default function SearchBar({
                         suggestion.category.translations[locale]
                           ? suggestion.category.translations[locale]
                           : suggestion.category.name}
+                      </div>
+                    )}
+                    {suggestion.type === 'product' && suggestion.metadata && (
+                      <div className="flex items-center gap-2 mt-1">
+                        {suggestion.metadata.source_type === 'storefront' && (
+                          <span className="badge badge-sm badge-secondary">
+                            {suggestion.metadata.storefront || t('storefront')}
+                          </span>
+                        )}
+                        {suggestion.metadata.price && (
+                          <span className="text-xs text-primary font-semibold">
+                            {suggestion.metadata.price} RSD
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>

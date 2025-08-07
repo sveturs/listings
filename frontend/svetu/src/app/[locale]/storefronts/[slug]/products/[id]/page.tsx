@@ -68,11 +68,18 @@ export default function StorefrontProductPage({ params }: Props) {
         setStorefront(storefrontData);
 
         // Check if product has variants
-        if (productData.variants && productData.variants.length > 0) {
+        if (
+          productData &&
+          productData.variants &&
+          productData.variants.length > 0
+        ) {
           setHasVariants(true);
         }
       } catch (error) {
         console.error('Error fetching product:', error);
+        // Очищаем состояние при ошибке
+        setProduct(null);
+        setStorefront(null);
       } finally {
         setIsLoading(false);
       }

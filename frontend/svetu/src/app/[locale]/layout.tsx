@@ -12,6 +12,7 @@ import WebSocketManager from '@/components/WebSocketManager';
 import AuthStateManager from '@/components/AuthStateManager';
 import { VisibleCitiesProvider } from '@/components/GIS/contexts/VisibleCitiesContext';
 import { SmartMobileBottomNav } from '@/components/navigation/SmartMobileBottomNav';
+import { CartSyncProvider } from '@/components/CartSyncProvider';
 import { themeInitScript } from '@/scripts/theme-init';
 import '../globals.css';
 
@@ -114,13 +115,15 @@ export default async function RootLayout({
           <ReduxProvider>
             <AuthProvider>
               <VisibleCitiesProvider>
-                <AuthStateManager />
-                <WebSocketManager />
-                <HeaderWrapper />
-                <main className="min-h-screen pt-16 pb-16 md:pb-0">
-                  {children}
-                </main>
-                <SmartMobileBottomNav />
+                <CartSyncProvider>
+                  <AuthStateManager />
+                  <WebSocketManager />
+                  <HeaderWrapper />
+                  <main className="min-h-screen pt-16 pb-16 md:pb-0">
+                    {children}
+                  </main>
+                  <SmartMobileBottomNav />
+                </CartSyncProvider>
               </VisibleCitiesProvider>
             </AuthProvider>
           </ReduxProvider>

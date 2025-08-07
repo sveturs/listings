@@ -16213,6 +16213,40 @@ paths:
       summary: Set translation provider
       tags:
         - marketplace-translations
+  /api/v1/user/carts:
+    get:
+      description: Gets all shopping carts for the authenticated user across all storefronts
+      responses:
+        "200":
+          description: User's carts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.ShoppingCart"
+                        type: array
+                    type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get all user carts
+      tags:
+        - cart
   "/api/v1/users/{id}/aggregated-rating":
     get:
       description: Returns aggregated rating for a user including breakdown by sources
@@ -17896,8 +17930,7 @@ components:
     backend_internal_domain_models.CreateProductRequest:
       properties:
         attributes:
-          additionalProperties: true
-          type: object
+          $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
         barcode:
           type: string
         category_id:
@@ -18058,8 +18091,7 @@ components:
           minimum: 0
           type: integer
         variant_attributes:
-          additionalProperties: true
-          type: object
+          $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
         weight:
           type: number
       required:
@@ -18382,6 +18414,23 @@ components:
         user_lng:
           type: number
       type: object
+    backend_internal_domain_models.LocationPrivacyLevel:
+      enum:
+        - exact
+        - street
+        - district
+        - city
+      type: string
+      x-enum-comments:
+        PrivacyLevelCity: Только город
+        PrivacyLevelDistrict: Только район
+        PrivacyLevelExact: Точный адрес
+        PrivacyLevelStreet: Только улица
+      x-enum-varnames:
+        - PrivacyLevelExact
+        - PrivacyLevelStreet
+        - PrivacyLevelDistrict
+        - PrivacyLevelCity
     backend_internal_domain_models.MapMarker:
       properties:
         category_id:
@@ -19369,6 +19418,8 @@ components:
         address:
           description: Локация
           type: string
+        address_verified:
+          type: boolean
         ai_agent_config:
           $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
         ai_agent_enabled:
@@ -19385,10 +19436,17 @@ components:
         created_at:
           description: Временные метки
           type: string
+        default_privacy_level:
+          $ref: "#/components/schemas/backend_internal_domain_models.LocationPrivacyLevel"
         description:
           type: string
         email:
           type: string
+        formatted_address:
+          type: string
+        geo_strategy:
+          $ref: "#/components/schemas/backend_internal_domain_models.StorefrontGeoStrateg\
+            y"
         group_buying_enabled:
           type: boolean
         id:
@@ -19440,6 +19498,10 @@ components:
           $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
         updated_at:
           type: string
+        user:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_models.User"
+          description: Связанные данные
         user_id:
           type: integer
         verification_date:
@@ -19606,6 +19668,17 @@ components:
             $ref: "#/components/schemas/backend_internal_domain_models.DeliveryZone"
           type: array
       type: object
+    backend_internal_domain_models.StorefrontGeoStrategy:
+      enum:
+        - storefront_location
+        - individual_location
+      type: string
+      x-enum-comments:
+        GeoStrategyIndividualLocation: Использовать индивидуальные адреса товаров
+        GeoStrategyStorefrontLocation: Использовать адрес витрины
+      x-enum-varnames:
+        - GeoStrategyStorefrontLocation
+        - GeoStrategyIndividualLocation
     backend_internal_domain_models.StorefrontHours:
       properties:
         close_time:
@@ -19720,6 +19793,8 @@ components:
           allOf:
             - $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
           description: Адрес забора товара у продавца
+        seller:
+          $ref: "#/components/schemas/backend_internal_domain_models.User"
         seller_amount:
           type: number
         seller_notes:
@@ -19838,8 +19913,7 @@ components:
     backend_internal_domain_models.StorefrontProduct:
       properties:
         attributes:
-          additionalProperties: true
-          type: object
+          $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
         barcode:
           type: string
         category:
@@ -19937,9 +20011,9 @@ components:
     backend_internal_domain_models.StorefrontProductVariant:
       properties:
         attributes:
-          additionalProperties: true
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
           description: 'e.g., {"color": "red", "size": "L"}'
-          type: object
         created_at:
           type: string
         id:
@@ -20182,8 +20256,7 @@ components:
     backend_internal_domain_models.UpdateProductRequest:
       properties:
         attributes:
-          additionalProperties: true
-          type: object
+          $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
         barcode:
           type: string
         category_id:
@@ -21935,6 +22008,12 @@ components:
           allOf:
             - $ref: "#/components/schemas/internal_proj_global_handler.UnifiedStorefrontInfo"
           description: Только для storefront товаров
+        storefront_id:
+          description: ID витрины для товаров маркетплейса
+          type: integer
+        storefront_slug:
+          description: Slug витрины для правильного URL
+          type: string
         user:
           allOf:
             - $ref: "#/components/schemas/internal_proj_global_handler.UnifiedUserInfo"

@@ -60,9 +60,9 @@ export default function PreviewStep({
   const mapPrivacyLevel = (frontendLevel: string): string => {
     const mapping: Record<string, string> = {
       exact: 'exact',
-      street: 'approximate',
-      district: 'approximate',
-      city: 'city_only',
+      street: 'street',
+      district: 'district',
+      city: 'city',
     };
     return mapping[frontendLevel] || 'exact';
   };
@@ -317,7 +317,7 @@ export default function PreviewStep({
                   </div>
                 )}
                 <div>
-                  <span className="font-semibold">{t('status')}:</span>
+                  <span className="font-semibold">{t('statusLabel')}:</span>
                   <span
                     className={`ml-2 ${state.productData.is_active ? 'text-success' : 'text-error'}`}
                   >

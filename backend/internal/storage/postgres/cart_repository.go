@@ -30,6 +30,7 @@ type CartRepositoryInterface interface {
 	GetItems(ctx context.Context, cartID int64) ([]models.ShoppingCartItem, error)
 
 	CleanupExpiredCarts(ctx context.Context, olderThanDays int) error
+	GetAllUserCarts(ctx context.Context, userID int) ([]*models.ShoppingCart, error)
 }
 
 // cartRepository реализует интерфейс для работы с корзинами
@@ -90,13 +91,16 @@ func (r *cartRepository) GetByID(ctx context.Context, cartID int64) (*models.Sho
 // GetByUser получает корзину пользователя для определенной витрины
 func (r *cartRepository) GetByUser(ctx context.Context, userID int, storefrontID int) (*models.ShoppingCart, error) {
 	query := `
-		SELECT id, user_id, storefront_id, session_id, created_at, updated_at
-		FROM shopping_carts 
-		WHERE user_id = $1 AND storefront_id = $2`
+		SELECT c.id, c.user_id, c.storefront_id, c.session_id, c.created_at, c.updated_at,
+			   s.name, s.slug
+		FROM shopping_carts c
+		LEFT JOIN storefronts s ON s.id = c.storefront_id
+		WHERE c.user_id = $1 AND c.storefront_id = $2`
 
 	var cart models.ShoppingCart
 	var dbUserID sql.NullInt32
 	var sessionID sql.NullString
+	var storefrontName, storefrontSlug sql.NullString
 
 	err := r.pool.QueryRow(ctx, query, userID, storefrontID).Scan(
 		&cart.ID,
@@ -105,6 +109,8 @@ func (r *cartRepository) GetByUser(ctx context.Context, userID int, storefrontID
 		&sessionID,
 		&cart.CreatedAt,
 		&cart.UpdatedAt,
+		&storefrontName,
+		&storefrontSlug,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -122,6 +128,15 @@ func (r *cartRepository) GetByUser(ctx context.Context, userID int, storefrontID
 		cart.SessionID = &sessionID.String
 	}
 
+	// Заполняем информацию о витрине
+	if storefrontName.Valid && storefrontSlug.Valid {
+		cart.Storefront = &models.Storefront{
+			ID:   cart.StorefrontID,
+			Name: storefrontName.String,
+			Slug: storefrontSlug.String,
+		}
+	}
+
 	// Получаем позиции корзины
 	items, err := r.GetItems(ctx, cart.ID)
 	if err != nil {
@@ -135,13 +150,16 @@ func (r *cartRepository) GetByUser(ctx context.Context, userID int, storefrontID
 // GetBySession получает корзину по session ID для неавторизованных пользователей
 func (r *cartRepository) GetBySession(ctx context.Context, sessionID string, storefrontID int) (*models.ShoppingCart, error) {
 	query := `
-		SELECT id, user_id, storefront_id, session_id, created_at, updated_at
-		FROM shopping_carts 
-		WHERE session_id = $1 AND storefront_id = $2`
+		SELECT c.id, c.user_id, c.storefront_id, c.session_id, c.created_at, c.updated_at,
+			   s.name, s.slug
+		FROM shopping_carts c
+		LEFT JOIN storefronts s ON s.id = c.storefront_id
+		WHERE c.session_id = $1 AND c.storefront_id = $2`
 
 	var cart models.ShoppingCart
 	var userID sql.NullInt32
 	var dbSessionID sql.NullString
+	var storefrontName, storefrontSlug sql.NullString
 
 	err := r.pool.QueryRow(ctx, query, sessionID, storefrontID).Scan(
 		&cart.ID,
@@ -150,6 +168,8 @@ func (r *cartRepository) GetBySession(ctx context.Context, sessionID string, sto
 		&dbSessionID,
 		&cart.CreatedAt,
 		&cart.UpdatedAt,
+		&storefrontName,
+		&storefrontSlug,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -165,6 +185,15 @@ func (r *cartRepository) GetBySession(ctx context.Context, sessionID string, sto
 	}
 	if dbSessionID.Valid {
 		cart.SessionID = &dbSessionID.String
+	}
+
+	// Заполняем информацию о витрине
+	if storefrontName.Valid && storefrontSlug.Valid {
+		cart.Storefront = &models.Storefront{
+			ID:   cart.StorefrontID,
+			Name: storefrontName.String,
+			Slug: storefrontSlug.String,
+		}
 	}
 
 	// Получаем позиции корзины
@@ -384,14 +413,20 @@ func (r *cartRepository) RemoveItem(ctx context.Context, cartID int64, productID
 	return nil
 }
 
-// GetItems получает все позиции корзины
+// GetItems получает все позиции корзины с полной информацией о товарах
 func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.ShoppingCartItem, error) {
 	query := `
-		SELECT id, cart_id, product_id, variant_id, quantity,
-			   price_per_unit, total_price, created_at, updated_at
-		FROM shopping_cart_items 
-		WHERE cart_id = $1
-		ORDER BY created_at ASC`
+		SELECT 
+			ci.id, ci.cart_id, ci.product_id, ci.variant_id, ci.quantity,
+			ci.price_per_unit, ci.total_price, ci.created_at, ci.updated_at,
+			p.name, p.description, p.price, p.sku, p.stock_quantity,
+			p.category_id, p.is_active,
+			v.variant_attributes, v.sku, v.price, v.stock_quantity
+		FROM shopping_cart_items ci
+		LEFT JOIN storefront_products p ON ci.product_id = p.id
+		LEFT JOIN storefront_product_variants v ON ci.variant_id = v.id
+		WHERE ci.cart_id = $1
+		ORDER BY ci.created_at ASC`
 
 	rows, err := r.pool.Query(ctx, query, cartID)
 	if err != nil {
@@ -405,6 +440,17 @@ func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.S
 		var variantID sql.NullInt64
 		var pricePerUnit, totalPrice float64
 
+		// Product fields
+		var productName, productDesc, productSKU sql.NullString
+		var productPrice sql.NullFloat64
+		var productStock, productCategoryID sql.NullInt64
+		var productActive sql.NullBool
+
+		// Variant fields
+		var variantAttributes, variantSKU sql.NullString
+		var variantPrice sql.NullFloat64
+		var variantStock sql.NullInt64
+
 		err := rows.Scan(
 			&item.ID,
 			&item.CartID,
@@ -415,6 +461,19 @@ func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.S
 			&totalPrice,
 			&item.CreatedAt,
 			&item.UpdatedAt,
+			// Product fields
+			&productName,
+			&productDesc,
+			&productPrice,
+			&productSKU,
+			&productStock,
+			&productCategoryID,
+			&productActive,
+			// Variant fields
+			&variantAttributes,
+			&variantSKU,
+			&variantPrice,
+			&variantStock,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan cart item: %w", err)
@@ -428,6 +487,86 @@ func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.S
 		// Конвертируем цены из float64 в decimal
 		item.PricePerUnit = decimal.NewFromFloat(pricePerUnit)
 		item.TotalPrice = decimal.NewFromFloat(totalPrice)
+
+		// Заполняем информацию о продукте
+		if productName.Valid {
+			var productSKUPtr *string
+			if productSKU.Valid {
+				productSKUPtr = &productSKU.String
+			}
+
+			item.Product = &models.StorefrontProduct{
+				ID:          int(item.ProductID),
+				Name:        productName.String,
+				Description: productDesc.String,
+				SKU:         productSKUPtr,
+				IsActive:    productActive.Bool,
+			}
+
+			if productPrice.Valid {
+				item.Product.Price = productPrice.Float64
+			}
+			if productStock.Valid {
+				item.Product.StockQuantity = int(productStock.Int64)
+			}
+			if productCategoryID.Valid {
+				item.Product.CategoryID = int(productCategoryID.Int64)
+			}
+
+			// Получаем изображения товара
+			imagesQuery := `
+				SELECT id, image_url, display_order 
+				FROM storefront_product_images 
+				WHERE storefront_product_id = $1 
+				ORDER BY display_order ASC, id ASC
+				LIMIT 1`
+
+			var imageID int
+			var imageURL string
+			var displayOrder int
+
+			err := r.pool.QueryRow(ctx, imagesQuery, item.ProductID).Scan(&imageID, &imageURL, &displayOrder)
+			if err == nil {
+				item.Product.Images = []models.StorefrontProductImage{
+					{
+						ID:                  imageID,
+						StorefrontProductID: int(item.ProductID),
+						ImageURL:            imageURL,
+						DisplayOrder:        displayOrder,
+					},
+				}
+			}
+		}
+
+		// Заполняем информацию о варианте
+		if variantID.Valid {
+			var variantSKUPtr *string
+			if variantSKU.Valid {
+				variantSKUPtr = &variantSKU.String
+			}
+
+			// Создаем имя варианта из атрибутов
+			variantName := ""
+			if variantAttributes.Valid {
+				// Пытаемся извлечь атрибуты для создания имени
+				// Например: {"color": "red", "size": "L"} -> "Red - L"
+				variantName = variantAttributes.String // Пока используем raw JSON как имя
+			}
+
+			item.Variant = &models.StorefrontProductVariant{
+				ID:                  int(*item.VariantID),
+				StorefrontProductID: int(item.ProductID),
+				Name:                variantName,
+				SKU:                 variantSKUPtr,
+			}
+
+			if variantPrice.Valid {
+				item.Variant.Price = variantPrice.Float64
+			}
+			if variantStock.Valid {
+				item.Variant.StockQuantity = int(variantStock.Int64)
+			}
+		}
 
 		items = append(items, item)
 	}
@@ -452,4 +591,55 @@ func (r *cartRepository) CleanupExpiredCarts(ctx context.Context, olderThanDays 
 	}
 
 	return nil
+}
+
+// GetAllUserCarts получает все корзины пользователя
+func (r *cartRepository) GetAllUserCarts(ctx context.Context, userID int) ([]*models.ShoppingCart, error) {
+	query := `
+		SELECT c.id, c.user_id, c.storefront_id, c.session_id, c.created_at, c.updated_at,
+			   s.name as storefront_name
+		FROM shopping_carts c
+		JOIN storefronts s ON s.id = c.storefront_id
+		WHERE c.user_id = $1
+		ORDER BY c.updated_at DESC`
+
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query user carts: %w", err)
+	}
+	defer rows.Close()
+
+	var carts []*models.ShoppingCart
+	for rows.Next() {
+		cart := &models.ShoppingCart{}
+		var storefrontName string
+
+		err := rows.Scan(
+			&cart.ID,
+			&cart.UserID,
+			&cart.StorefrontID,
+			&cart.SessionID,
+			&cart.CreatedAt,
+			&cart.UpdatedAt,
+			&storefrontName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan cart: %w", err)
+		}
+
+		// Загружаем товары в корзине
+		items, err := r.GetItems(ctx, cart.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cart items: %w", err)
+		}
+		cart.Items = items
+
+		carts = append(carts, cart)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	return carts, nil
 }

@@ -186,6 +186,41 @@ func (c *OpenSearchClient) BulkIndex(ctx context.Context, indexName string, docu
 	return nil
 }
 
+// UpdateDocument частично обновляет документ в индексе
+func (c *OpenSearchClient) UpdateDocument(ctx context.Context, indexName, id string, doc map[string]interface{}) error {
+	updateData := map[string]interface{}{
+		"doc": doc,
+	}
+
+	docJSON, err := json.Marshal(updateData)
+	if err != nil {
+		return fmt.Errorf("ошибка сериализации документа для обновления: %w", err)
+	}
+
+	req := opensearchapi.UpdateRequest{
+		Index:      indexName,
+		DocumentID: id,
+		Body:       strings.NewReader(string(docJSON)),
+	}
+
+	res, err := req.Do(ctx, c.client)
+	if err != nil {
+		return fmt.Errorf("ошибка обновления документа: %w", err)
+	}
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v", err)
+		}
+	}()
+
+	if res.IsError() {
+		body, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("ошибка обновления документа: %s, body: %s", res.String(), string(body))
+	}
+
+	return nil
+}
+
 // DeleteDocument удаляет документ из индекса
 func (c *OpenSearchClient) DeleteDocument(ctx context.Context, indexName, id string) error {
 	req := opensearchapi.DeleteRequest{

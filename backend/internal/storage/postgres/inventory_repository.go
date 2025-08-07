@@ -199,7 +199,7 @@ func (r *inventoryRepository) ReleaseReservation(ctx context.Context, reservatio
 	getQuery := `
 		SELECT product_id, variant_id, quantity, order_id, status
 		FROM inventory_reservations
-		WHERE id = $1 AND status = 'reserved'`
+		WHERE id = $1 AND status = 'active'`
 
 	err = tx.QueryRow(ctx, getQuery, reservationID).Scan(
 		&reservation.ProductID,
@@ -289,7 +289,7 @@ func (r *inventoryRepository) ConfirmReservation(ctx context.Context, reservatio
 	getQuery := `
 		SELECT product_id, variant_id, quantity, order_id
 		FROM inventory_reservations
-		WHERE id = $1 AND status = 'reserved'`
+		WHERE id = $1 AND status = 'active'`
 
 	err = tx.QueryRow(ctx, getQuery, reservationID).Scan(
 		&reservation.ProductID,
@@ -311,7 +311,7 @@ func (r *inventoryRepository) ConfirmReservation(ctx context.Context, reservatio
 	// Обновляем статус резервирования
 	updateReservationQuery := `
 		UPDATE inventory_reservations 
-		SET status = 'confirmed', updated_at = CURRENT_TIMESTAMP
+		SET status = 'committed', updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1`
 
 	_, err = tx.Exec(ctx, updateReservationQuery, reservationID)
@@ -364,7 +364,7 @@ func (r *inventoryRepository) GetExpiredReservations(ctx context.Context) ([]mod
 		SELECT id, order_id, product_id, variant_id, quantity,
 			   status, expires_at, created_at, updated_at
 		FROM inventory_reservations
-		WHERE status = 'reserved' AND expires_at < $1`
+		WHERE status = 'active' AND expires_at < $1`
 
 	rows, err := r.pool.Query(ctx, query, time.Now())
 	if err != nil {

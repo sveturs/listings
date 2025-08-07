@@ -5,13 +5,21 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
-import { selectCartItemsCount } from '@/store/slices/localCartSlice';
+import { selectCartItemsCount as selectLocalCartItemsCount } from '@/store/slices/localCartSlice';
+import { selectAllCartsItemsCount as selectApiCartItemsCount } from '@/store/slices/cartSlice';
+import { useAuth } from '@/contexts/AuthContext';
 import MiniCart from './MiniCart';
 
 export default function CartIcon() {
   const locale = useLocale();
   const router = useRouter();
-  const itemsCount = useSelector(selectCartItemsCount);
+  const { isAuthenticated } = useAuth();
+
+  // Используем правильный селектор в зависимости от состояния авторизации
+  const localItemsCount = useSelector(selectLocalCartItemsCount);
+  const apiItemsCount = useSelector(selectApiCartItemsCount);
+  const itemsCount = isAuthenticated ? apiItemsCount : localItemsCount;
+
   const [showMiniCart, setShowMiniCart] = useState(false);
   const iconRef = useRef<HTMLElement>(null);
 

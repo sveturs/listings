@@ -267,3 +267,31 @@ func (h *OrdersHandler) ClearCart(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, "cart.cleared")
 }
+
+// GetUserCarts возвращает все корзины пользователя
+// @Summary Get all user carts
+// @Description Gets all shopping carts for the authenticated user across all storefronts
+// @Tags cart
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ShoppingCart} "User's carts"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/user/carts [get]
+func (h *OrdersHandler) GetUserCarts(c *fiber.Ctx) error {
+	// Получаем user_id из контекста (только для авторизованных)
+	userIDRaw := c.Locals("user_id")
+	if userIDRaw == nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
+	}
+
+	userID := userIDRaw.(int)
+
+	carts, err := h.orderService.GetUserCarts(c.Context(), userID)
+	if err != nil {
+		logger.Error().Err(err).Int("user_id", userID).Msg("Failed to get user carts")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "cart.error.get_user_carts_failed")
+	}
+
+	return utils.SuccessResponse(c, carts)
+}
