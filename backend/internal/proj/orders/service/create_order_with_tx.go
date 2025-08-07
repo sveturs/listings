@@ -112,16 +112,15 @@ func (s *OrderService) CreateOrderWithTx(ctx context.Context, db *sqlx.DB, req *
 
 			// Создаем позицию заказа
 			orderItem := models.StorefrontOrderItem{
-				OrderID:           createdOrder.ID,
-				ProductID:         item.ProductID,
-				VariantID:         item.VariantID,
-				ProductName:       product.Name,
-				ProductSKU:        product.SKU,
-				Quantity:          item.Quantity,
-				PricePerUnit:      price,
-				TotalPrice:        price.Mul(decimal.NewFromInt(int64(item.Quantity))),
-				ProductAttributes: product.Attributes,
-				VariantName:       variantName,
+				OrderID:      createdOrder.ID,
+				ProductID:    item.ProductID,
+				VariantID:    item.VariantID,
+				ProductName:  product.Name,
+				ProductSKU:   product.SKU,
+				Quantity:     item.Quantity,
+				PricePerUnit: price,
+				TotalPrice:   price.Mul(decimal.NewFromInt(int64(item.Quantity))),
+				VariantName:  variantName,
 			}
 
 			// Сохраняем позицию заказа
@@ -367,7 +366,7 @@ func (s *OrderService) createReservationTx(ctx context.Context, tx *sqlx.Tx, pro
 		INSERT INTO inventory_reservations (
 			product_id, variant_id, quantity, order_id, status, expires_at
 		) VALUES (
-			$1, $2, $3, $4, 'reserved', NOW() + INTERVAL '30 minutes'
+			$1, $2, $3, $4, 'active', NOW() + INTERVAL '30 minutes'
 		) RETURNING id, product_id, variant_id, quantity, order_id, status, expires_at, created_at`
 
 	var reservation models.InventoryReservation
@@ -404,9 +403,9 @@ func (s *OrderService) createOrderItemTx(ctx context.Context, tx *sqlx.Tx, item 
 	query := `
 		INSERT INTO storefront_order_items (
 			order_id, product_id, variant_id, product_name, variant_name,
-			product_sku, quantity, price_per_unit, total_price, product_attributes
+			product_sku, quantity, unit_price, total_price
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+			$1, $2, $3, $4, $5, $6, $7, $8, $9
 		)`
 
 	_, err := tx.ExecContext(ctx, query,
@@ -419,7 +418,6 @@ func (s *OrderService) createOrderItemTx(ctx context.Context, tx *sqlx.Tx, item 
 		item.Quantity,
 		item.PricePerUnit,
 		item.TotalPrice,
-		item.ProductAttributes,
 	)
 
 	return err

@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '@/store';
-import { addItem } from '@/store/slices/localCartSlice';
+// import { addItem } from '@/store/slices/localCartSlice';
 import config from '@/config';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -22,9 +22,10 @@ import {
   getFullLocalizedAddress,
 } from '@/utils/addressUtils';
 import { PageTransition } from '@/components/ui/PageTransition';
+// Marketplace listings linked to storefronts can be added to cart
 import AddToCartButton from '@/components/cart/AddToCartButton';
-import VariantSelector from '@/components/Storefront/ProductVariants/VariantSelector';
-import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
+// import VariantSelector from '@/components/Storefront/ProductVariants/VariantSelector';
+// import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import type { components } from '@/types/generated/api';
 
 type ProductVariant =
@@ -113,6 +114,8 @@ interface Listing {
   helpful_votes?: number;
   not_helpful_votes?: number;
   storefront_id?: number;
+  storefront_product_id?: number; // ID товара в витрине (если связан)
+  stock_quantity?: number; // Количество на складе
   product_type?: string;
   storefront?: {
     id: number;
@@ -137,10 +140,10 @@ export default function ListingPage({ params }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [localizedAddress, setLocalizedAddress] = useState<string | null>(null);
-  const [_selectedVariant, setSelectedVariant] =
+  const [_selectedVariant, _setSelectedVariant] =
     useState<ProductVariant | null>(null);
-  const [hasVariants, setHasVariants] = useState(false);
-  const [showVariantModal, setShowVariantModal] = useState(false);
+  const [_hasVariants, _setHasVariants] = useState(false);
+  const [_showVariantModal, _setShowVariantModal] = useState(false);
 
   // Функция для получения переведенного значения
   const getTranslatedValue = (field: 'title' | 'description') => {
@@ -154,8 +157,9 @@ export default function ListingPage({ params }: Props) {
     return listing[field];
   };
 
-  // Функция для обработки нажатия на кнопку "Добавить в корзину"
-  const handleAddToCartClick = async () => {
+  // Функция для обработки нажатия на кнопку "Добавить в корзину" - отключена для marketplace
+  // Marketplace listings cannot be added to cart
+  /*const handleAddToCartClick = async () => {
     if (hasVariants && _selectedVariant) {
       // Если вариант выбран, добавляем напрямую в корзину
       console.log('Adding variant to cart:', _selectedVariant);
@@ -186,7 +190,7 @@ export default function ListingPage({ params }: Props) {
       // Если варианты есть, но ничего не выбрано, открываем модальное окно
       setShowVariantModal(true);
     }
-  };
+  };*/
 
   // Используем локализованный адрес из backend или запрашиваем через геокодирование
 
@@ -274,7 +278,7 @@ export default function ListingPage({ params }: Props) {
                   'Product has variants:',
                   productData.variants.length
                 );
-                setHasVariants(true);
+                _setHasVariants(true);
               }
             } else {
               console.error('Failed to fetch product:', productResponse.status);
@@ -583,7 +587,8 @@ export default function ListingPage({ params }: Props) {
                     user &&
                     user.id !== listing.user_id && (
                       <div className="mt-4 space-y-4">
-                        {/* Variant Selector */}
+                        {/* Variant Selector - Disabled for marketplace listings */}
+                        {/* Marketplace listings don't support variants selection
                         {hasVariants && (
                           <VariantSelector
                             productId={listing.id}
@@ -594,32 +599,36 @@ export default function ListingPage({ params }: Props) {
                               setSelectedVariant(variant)
                             }
                           />
-                        )}
+                        )} */}
 
-                        {/* Add to Cart Button */}
-                        {hasVariants ? (
+                        {/* Add to Cart Button - Only for storefront products */}
+                        {listing.storefront_product_id ? (
+                          <AddToCartButton
+                            product={{
+                              id: listing.storefront_product_id,
+                              name: getTranslatedValue('title'),
+                              price: listing.price,
+                              currency: 'RSD',
+                              image: images[0]?.public_url || '',
+                              storefrontId: listing.storefront_id,
+                              storefrontName: listing.storefront?.name,
+                              storefrontSlug: listing.storefront?.slug,
+                              stockQuantity: listing.stock_quantity,
+                            }}
+                            variant={_selectedVariant || undefined}
+                          />
+                        ) : (
                           <button
-                            onClick={handleAddToCartClick}
-                            className="btn btn-primary btn-block"
+                            disabled
+                            className="btn btn-disabled btn-block"
+                            title={
+                              locale === 'ru'
+                                ? 'Обычные объявления нельзя добавить в корзину. Посетите витрину для покупки товаров.'
+                                : 'Regular marketplace listings cannot be added to cart. Visit the storefront to purchase products.'
+                            }
                           >
                             {t('addToCart')}
                           </button>
-                        ) : (
-                          <AddToCartButton
-                            product={{
-                              id: listing.id,
-                              name: getTranslatedValue('title'),
-                              price: listing.price,
-                              image: images[0]?.public_url || '',
-                              storefrontId: listing.storefront_id,
-                              storefrontName: listing.storefront.name,
-                              storefrontSlug: listing.storefront.slug,
-                              stockQuantity: 100, // TODO: get real stock from API
-                              minOrderQuantity: 1,
-                              maxOrderQuantity: 10,
-                            }}
-                            className="btn-block"
-                          />
                         )}
                       </div>
                     )}
@@ -917,31 +926,7 @@ export default function ListingPage({ params }: Props) {
             </div>
             {user && user.id !== listing.user_id && (
               <div className="flex gap-2">
-                {listing.storefront_id &&
-                  listing.storefront &&
-                  (hasVariants ? (
-                    <button
-                      onClick={handleAddToCartClick}
-                      className="btn btn-primary"
-                    >
-                      {t('addToCart')}
-                    </button>
-                  ) : (
-                    <AddToCartButton
-                      product={{
-                        id: listing.id,
-                        name: getTranslatedValue('title'),
-                        price: listing.price,
-                        image: images[0]?.public_url || '',
-                        storefrontId: listing.storefront_id,
-                        storefrontName: listing.storefront.name,
-                        storefrontSlug: listing.storefront.slug,
-                        stockQuantity: 100, // TODO: get real stock from API
-                        minOrderQuantity: 1,
-                        maxOrderQuantity: 10,
-                      }}
-                    />
-                  ))}
+                {/* Marketplace listings cannot be added to cart - only storefront products can be */}
                 <button onClick={handleChatClick} className="btn btn-primary">
                   <svg
                     className="w-5 h-5"
@@ -964,8 +949,9 @@ export default function ListingPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Variant Selection Modal */}
-      {listing && listing.storefront_id && listing.storefront && (
+      {/* Variant Selection Modal - Disabled for marketplace listings */}
+      {/* Marketplace listings cannot be added to cart - only storefront products */}
+      {/*listing && listing.storefront_id && listing.storefront && (
         <VariantSelectionModal
           isOpen={showVariantModal}
           onClose={() => setShowVariantModal(false)}
@@ -1008,7 +994,7 @@ export default function ListingPage({ params }: Props) {
             }
           }}
         />
-      )}
+      )*/}
     </PageTransition>
   );
 }

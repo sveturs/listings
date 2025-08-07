@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { storefrontProductsService } from '@/services/storefrontProducts';
+import { storefrontApi } from '@/services/storefrontApi';
 import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
 import { adaptStorefrontProduct } from '@/utils/product-adapters';
 import ViewToggle from '@/components/common/ViewToggle';
@@ -10,6 +11,7 @@ import { useViewPreference } from '@/hooks/useViewPreference';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { components } from '@/types/generated/api';
+import type { UnifiedStorefrontInfo } from '@/types/unified-product';
 
 type StorefrontProduct = components['schemas']['backend_internal_domain_models.StorefrontProduct'];
 
@@ -34,8 +36,28 @@ export default function StorefrontProductsList({
   const [_totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [viewMode, setViewMode] = useViewPreference('grid');
+  const [storefrontInfo, setStorefrontInfo] = useState<UnifiedStorefrontInfo | null>(null);
 
   const ITEMS_PER_PAGE = maxItems || 12;
+
+  const fetchStorefrontInfo = useCallback(async () => {
+    try {
+      const storefront = await storefrontApi.getStorefrontById(storefrontId);
+      setStorefrontInfo({
+        id: storefront.id!,
+        name: storefront.name!,
+        slug: storefront.slug!,
+      });
+    } catch (err) {
+      console.error('Error fetching storefront info:', err);
+      // Используем fallback значения если не получилось загрузить
+      setStorefrontInfo({
+        id: storefrontId,
+        name: 'Store',
+        slug: 'store',
+      });
+    }
+  }, [storefrontId]);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -67,8 +89,14 @@ export default function StorefrontProductsList({
   }, [storefrontId, currentPage, ITEMS_PER_PAGE]);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    fetchStorefrontInfo();
+  }, [fetchStorefrontInfo]);
+
+  useEffect(() => {
+    if (storefrontInfo) {
+      fetchProducts();
+    }
+  }, [fetchProducts, storefrontInfo]);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoading && !maxItems) {
@@ -82,7 +110,7 @@ export default function StorefrontProductsList({
     onLoadMore: handleLoadMore,
   });
 
-  if (isLoading && currentPage === 1) {
+  if ((isLoading && currentPage === 1) || !storefrontInfo) {
     return (
       <div className="space-y-4">
         {showTitle && (
@@ -159,11 +187,9 @@ export default function StorefrontProductsList({
           : "space-y-4"
       }>
         {products.map((product) => {
-          const unifiedProduct = adaptStorefrontProduct(product, {
-            id: storefrontId,
-            name: 'Store', // TODO: получать название витрины
-            slug: 'store' // TODO: получать slug витрины
-          });
+          if (!storefrontInfo) return null;
+          
+          const unifiedProduct = adaptStorefrontProduct(product, storefrontInfo);
           return (
             <UnifiedProductCard
               key={product.id}

@@ -23302,6 +23302,65 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/user/carts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all user carts
+     * @description Gets all shopping carts for the authenticated user across all storefronts
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description User's carts */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.ShoppingCart'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/users/{id}/aggregated-rating': {
     parameters: {
       query?: never;
@@ -24813,9 +24872,7 @@ export interface components {
       storefront_id: number;
     };
     'backend_internal_domain_models.CreateProductRequest': {
-      attributes?: {
-        [key: string]: unknown;
-      };
+      attributes?: components['schemas']['backend_internal_domain_models.JSONB'];
       barcode?: string;
       category_id: number;
       currency: string;
@@ -24883,9 +24940,7 @@ export interface components {
       price?: number;
       sku?: string;
       stock_quantity?: number;
-      variant_attributes: {
-        [key: string]: unknown;
-      };
+      variant_attributes: components['schemas']['backend_internal_domain_models.JSONB'];
       weight?: number;
     };
     'backend_internal_domain_models.CustomUIComponent': {
@@ -25058,6 +25113,12 @@ export interface components {
       user_lat?: number;
       user_lng?: number;
     };
+    /** @enum {string} */
+    'backend_internal_domain_models.LocationPrivacyLevel':
+      | 'exact'
+      | 'street'
+      | 'district'
+      | 'city';
     'backend_internal_domain_models.MapMarker': {
       category_id?: number;
       city?: string;
@@ -25565,6 +25626,7 @@ export interface components {
     'backend_internal_domain_models.Storefront': {
       /** @description Локация */
       address?: string;
+      address_verified?: boolean;
       ai_agent_config?: components['schemas']['backend_internal_domain_models.JSONB'];
       /** @description AI и killer features */
       ai_agent_enabled?: boolean;
@@ -25574,8 +25636,11 @@ export interface components {
       country?: string;
       /** @description Временные метки */
       created_at?: string;
+      default_privacy_level?: components['schemas']['backend_internal_domain_models.LocationPrivacyLevel'];
       description?: string;
       email?: string;
+      formatted_address?: string;
+      geo_strategy?: components['schemas']['backend_internal_domain_models.StorefrontGeoStrategy'];
       group_buying_enabled?: boolean;
       id?: number;
       /** @description Статус и статистика */
@@ -25603,6 +25668,8 @@ export interface components {
       subscription_plan?: components['schemas']['backend_internal_domain_models.SubscriptionPlan'];
       theme?: components['schemas']['backend_internal_domain_models.JSONB'];
       updated_at?: string;
+      /** @description Связанные данные */
+      user?: components['schemas']['backend_internal_domain_models.User'];
       user_id?: number;
       verification_date?: string;
       views_count?: number;
@@ -25689,6 +25756,10 @@ export interface components {
       /** @description Зоны и доступность */
       zones?: components['schemas']['backend_internal_domain_models.DeliveryZone'][];
     };
+    /** @enum {string} */
+    'backend_internal_domain_models.StorefrontGeoStrategy':
+      | 'storefront_location'
+      | 'individual_location';
     'backend_internal_domain_models.StorefrontHours': {
       close_time?: string;
       /** @description 0=Sunday, 6=Saturday */
@@ -25752,6 +25823,7 @@ export interface components {
       payment_transaction_id?: string;
       /** @description Адрес забора товара у продавца */
       pickup_address?: components['schemas']['backend_internal_domain_models.JSONB'];
+      seller?: components['schemas']['backend_internal_domain_models.User'];
       seller_amount?: number;
       seller_notes?: string;
       shipped_at?: string;
@@ -25816,9 +25888,7 @@ export interface components {
       transaction_fee?: number;
     };
     'backend_internal_domain_models.StorefrontProduct': {
-      attributes?: {
-        [key: string]: unknown;
-      };
+      attributes?: components['schemas']['backend_internal_domain_models.JSONB'];
       barcode?: string;
       category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
       category_id?: number;
@@ -25868,9 +25938,7 @@ export interface components {
     };
     'backend_internal_domain_models.StorefrontProductVariant': {
       /** @description e.g., {"color": "red", "size": "L"} */
-      attributes?: {
-        [key: string]: unknown;
-      };
+      attributes?: components['schemas']['backend_internal_domain_models.JSONB'];
       created_at?: string;
       id?: number;
       is_active?: boolean;
@@ -25995,9 +26063,7 @@ export interface components {
       allow_messages_from_contacts_only?: boolean;
     };
     'backend_internal_domain_models.UpdateProductRequest': {
-      attributes?: {
-        [key: string]: unknown;
-      };
+      attributes?: components['schemas']['backend_internal_domain_models.JSONB'];
       barcode?: string;
       category_id?: number;
       description?: string;
@@ -26908,6 +26974,10 @@ export interface components {
       score?: number;
       /** @description Только для storefront товаров */
       storefront?: components['schemas']['internal_proj_global_handler.UnifiedStorefrontInfo'];
+      /** @description ID витрины для товаров маркетплейса */
+      storefront_id?: number;
+      /** @description Slug витрины для правильного URL */
+      storefront_slug?: string;
       /** @description Информация о продавце */
       user?: components['schemas']['internal_proj_global_handler.UnifiedUserInfo'];
       /** @description Для расчета популярности */

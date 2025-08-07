@@ -71,6 +71,15 @@ export const storefrontProductsService = {
     const response = await apiClient.get(
       `/api/v1/storefronts/slug/${storefrontSlug}/products/${productId}`
     );
+
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to fetch product');
+    }
+
+    if (!response.data) {
+      throw new Error('Product not found');
+    }
+
     return response.data;
   },
 

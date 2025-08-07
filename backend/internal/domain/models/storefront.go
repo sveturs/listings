@@ -56,6 +56,24 @@ const (
 	DeliveryProviderOwnDelivery DeliveryProvider = "own_delivery"
 )
 
+// StorefrontGeoStrategy стратегия геолокации витрины
+type StorefrontGeoStrategy string
+
+const (
+	GeoStrategyStorefrontLocation StorefrontGeoStrategy = "storefront_location" // Использовать адрес витрины
+	GeoStrategyIndividualLocation StorefrontGeoStrategy = "individual_location" // Использовать индивидуальные адреса товаров
+)
+
+// LocationPrivacyLevel уровень приватности адреса
+type LocationPrivacyLevel string
+
+const (
+	PrivacyLevelExact    LocationPrivacyLevel = "exact"    // Точный адрес
+	PrivacyLevelStreet   LocationPrivacyLevel = "street"   // Только улица
+	PrivacyLevelDistrict LocationPrivacyLevel = "district" // Только район
+	PrivacyLevelCity     LocationPrivacyLevel = "city"     // Только город
+)
+
 // JSONB тип для работы с JSONB полями PostgreSQL
 type JSONB map[string]interface{}
 
@@ -82,58 +100,65 @@ func (j *JSONB) Scan(value interface{}) error {
 
 // Storefront представляет структуру витрины
 type Storefront struct {
-	ID          int    `json:"id"`
-	UserID      int    `json:"user_id"`
-	Slug        string `json:"slug"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
+	ID          int    `json:"id" db:"id"`
+	UserID      int    `json:"user_id" db:"user_id"`
+	Slug        string `json:"slug" db:"slug"`
+	Name        string `json:"name" db:"name"`
+	Description string `json:"description,omitempty" db:"description"`
+
+	// Связанные данные
+	User *User `json:"user,omitempty"` // Владелец витрины
 
 	// Брендинг
-	LogoURL   string `json:"logo_url,omitempty"`
-	BannerURL string `json:"banner_url,omitempty"`
-	Theme     JSONB  `json:"theme"`
+	LogoURL   string `json:"logo_url,omitempty" db:"logo_url"`
+	BannerURL string `json:"banner_url,omitempty" db:"banner_url"`
+	Theme     JSONB  `json:"theme" db:"theme"`
 
 	// Контактная информация
-	Phone   string `json:"phone,omitempty"`
-	Email   string `json:"email,omitempty"`
-	Website string `json:"website,omitempty"`
+	Phone   string `json:"phone,omitempty" db:"phone"`
+	Email   string `json:"email,omitempty" db:"email"`
+	Website string `json:"website,omitempty" db:"website"`
 
 	// Локация
-	Address    string   `json:"address,omitempty"`
-	City       string   `json:"city,omitempty"`
-	PostalCode string   `json:"postal_code,omitempty"`
-	Country    string   `json:"country"`
-	Latitude   *float64 `json:"latitude,omitempty"`
-	Longitude  *float64 `json:"longitude,omitempty"`
+	Address             string                `json:"address,omitempty" db:"address"`
+	City                string                `json:"city,omitempty" db:"city"`
+	PostalCode          string                `json:"postal_code,omitempty" db:"postal_code"`
+	Country             string                `json:"country" db:"country"`
+	Latitude            *float64              `json:"latitude,omitempty" db:"latitude"`
+	Longitude           *float64              `json:"longitude,omitempty" db:"longitude"`
+	FormattedAddress    *string               `json:"formatted_address,omitempty" db:"formatted_address"`
+	GeoStrategy         StorefrontGeoStrategy `json:"geo_strategy" db:"geo_strategy"`
+	DefaultPrivacyLevel LocationPrivacyLevel  `json:"default_privacy_level" db:"default_privacy_level"`
+	AddressVerified     bool                  `json:"address_verified" db:"address_verified"`
 
 	// Настройки бизнеса
-	Settings JSONB `json:"settings"`
-	SEOMeta  JSONB `json:"seo_meta"`
+	Settings JSONB `json:"settings" db:"settings"`
+	SEOMeta  JSONB `json:"seo_meta" db:"seo_meta"`
 
 	// Статус и статистика
-	IsActive         bool       `json:"is_active"`
-	IsVerified       bool       `json:"is_verified"`
-	VerificationDate *time.Time `json:"verification_date,omitempty"`
-	Rating           float64    `json:"rating"`
-	ReviewsCount     int        `json:"reviews_count"`
-	ProductsCount    int        `json:"products_count"`
-	SalesCount       int        `json:"sales_count"`
-	ViewsCount       int        `json:"views_count"`
+	IsActive         bool       `json:"is_active" db:"is_active"`
+	IsVerified       bool       `json:"is_verified" db:"is_verified"`
+	VerificationDate *time.Time `json:"verification_date,omitempty" db:"verification_date"`
+	Rating           float64    `json:"rating" db:"rating"`
+	ReviewsCount     int        `json:"reviews_count" db:"reviews_count"`
+	ProductsCount    int        `json:"products_count" db:"products_count"`
+	SalesCount       int        `json:"sales_count" db:"sales_count"`
+	ViewsCount       int        `json:"views_count" db:"views_count"`
 
 	// Подписка (монетизация)
-	SubscriptionPlan      SubscriptionPlan `json:"subscription_plan"`
-	SubscriptionExpiresAt *time.Time       `json:"subscription_expires_at,omitempty"`
-	CommissionRate        float64          `json:"commission_rate"`
+	SubscriptionPlan      SubscriptionPlan `json:"subscription_plan" db:"subscription_plan"`
+	SubscriptionExpiresAt *time.Time       `json:"subscription_expires_at,omitempty" db:"subscription_expires_at"`
+	CommissionRate        float64          `json:"commission_rate" db:"commission_rate"`
 
 	// AI и killer features
-	AIAgentEnabled      bool  `json:"ai_agent_enabled"`
-	AIAgentConfig       JSONB `json:"ai_agent_config"`
-	LiveShoppingEnabled bool  `json:"live_shopping_enabled"`
-	GroupBuyingEnabled  bool  `json:"group_buying_enabled"`
+	AIAgentEnabled      bool  `json:"ai_agent_enabled" db:"ai_agent_enabled"`
+	AIAgentConfig       JSONB `json:"ai_agent_config" db:"ai_agent_config"`
+	LiveShoppingEnabled bool  `json:"live_shopping_enabled" db:"live_shopping_enabled"`
+	GroupBuyingEnabled  bool  `json:"group_buying_enabled" db:"group_buying_enabled"`
 
 	// Временные метки
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // StorefrontStaff представляет сотрудника витрины

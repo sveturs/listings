@@ -498,6 +498,23 @@ const ListingMapping = `
                   "analyzer": "english_analyzer"
               }
           }
+      },
+      "db_translations": {
+          "type": "nested",
+          "properties": {
+              "field_name": {
+                  "type": "keyword"
+              },
+              "language": {
+                  "type": "keyword"
+              },
+              "translation": {
+                  "type": "text"
+              }
+          }
+      },
+      "popularity_score": {
+          "type": "float"
       }
     }
   }

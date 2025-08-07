@@ -23,6 +23,9 @@ type ProductSearchRepository interface {
 	// DeleteProduct удаляет товар из индекса
 	DeleteProduct(ctx context.Context, productID int) error
 
+	// UpdateProductStock частично обновляет поля склада товара
+	UpdateProductStock(ctx context.Context, productID int, stockData map[string]interface{}) error
+
 	// SearchProducts выполняет поиск товаров
 	SearchProducts(ctx context.Context, params *ProductSearchParams) (*ProductSearchResult, error)
 

@@ -9,6 +9,12 @@ type UpdateCartItemRequest =
   components['schemas']['backend_internal_domain_models.UpdateCartItemRequest'];
 
 export const cartService = {
+  // Получить все корзины пользователя
+  async getUserCarts(): Promise<ShoppingCart[]> {
+    const response = await apiClient.get('/api/v1/user/carts');
+    return response.data.data;
+  },
+
   // Получить корзину витрины
   async getCart(storefrontId: number): Promise<ShoppingCart> {
     const response = await apiClient.get(

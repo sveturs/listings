@@ -131,9 +131,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                       {t('useStorefrontLocation')}
                     </h4>
                     <p className="text-sm text-base-content/70 mt-1">
-                      {t(
-                        'storefronts.products.useStorefrontLocationDescription'
-                      )}
+                      {t('products.useStorefrontLocationDescription')}
                     </p>
                     <div className="mt-3 p-3 bg-info/10 rounded-lg">
                       <p className="text-sm text-info-content flex items-start gap-2">
@@ -165,9 +163,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                       {t('useIndividualLocation')}
                     </h4>
                     <p className="text-sm text-base-content/70 mt-1">
-                      {t(
-                        'storefronts.products.useIndividualLocationDescription'
-                      )}
+                      {t('products.useIndividualLocationDescription')}
                     </p>
                     <div className="mt-3 p-3 bg-info/10 rounded-lg">
                       <p className="text-sm text-info-content flex items-start gap-2">

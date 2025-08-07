@@ -101,6 +101,16 @@ export interface SearchSuggestion {
     translations?: Record<string, string>;
   };
   product_id?: number;
+  metadata?: {
+    source_type?: 'marketplace' | 'storefront';
+    storefront_id?: number;
+    storefront_slug?: string;
+    storefront?: string;
+    price?: number;
+    image?: string;
+    category?: string;
+    [key: string]: any;
+  };
 }
 
 export interface EnhancedSuggestion {
@@ -265,11 +275,18 @@ export class UnifiedSearchService {
       }
 
       if (item.type === 'product') {
-        return {
+        const suggestion: SearchSuggestion = {
           text: item.label || item.value,
           type: 'product',
           product_id: item.product_id || item.id,
         };
+
+        // Добавляем metadata если есть
+        if (item.metadata) {
+          suggestion.metadata = item.metadata;
+        }
+
+        return suggestion;
       }
 
       // Для text/query типов

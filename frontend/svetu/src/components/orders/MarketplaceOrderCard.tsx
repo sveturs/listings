@@ -11,7 +11,7 @@ interface MarketplaceOrder {
   buyer_id: number;
   seller_id: number;
   listing_id: number;
-  item_price: number;
+  total: number | string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -133,7 +133,7 @@ export default function MarketplaceOrderCard({
 
                 {/* Price */}
                 <div className="font-semibold text-lg mt-2">
-                  {balanceService.formatAmount(order.item_price, 'RSD')}
+                  {balanceService.formatAmount(order.total, 'RSD')}
                 </div>
               </div>
             </div>

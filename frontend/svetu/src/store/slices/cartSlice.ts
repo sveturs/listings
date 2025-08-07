@@ -10,18 +10,86 @@ type UpdateCartItemRequest =
   components['schemas']['backend_internal_domain_models.UpdateCartItemRequest'];
 
 interface CartState {
-  cart: ShoppingCart | null;
+  cart: ShoppingCart | null; // Текущая активная корзина
+  allCarts: ShoppingCart[]; // Все корзины пользователя
   loading: boolean;
   error: string | null;
 }
 
+// Утилиты для работы с localStorage
+const CART_STORAGE_KEY_PREFIX = 'svetu_cart';
+
+const getCartStorageKey = (userId?: number): string => {
+  // Если есть userId, используем уникальный ключ для пользователя
+  // Иначе используем общий ключ для анонимной корзины
+  return userId
+    ? `${CART_STORAGE_KEY_PREFIX}_user_${userId}`
+    : `${CART_STORAGE_KEY_PREFIX}_anon`;
+};
+
+const _loadCartFromStorage = (userId?: number): ShoppingCart | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const key = getCartStorageKey(userId);
+    const savedCart = localStorage.getItem(key);
+    if (savedCart) {
+      return JSON.parse(savedCart);
+    }
+  } catch (error) {
+    console.error('Failed to load cart from localStorage:', error);
+  }
+  return null;
+};
+
+const saveCartToStorage = (cart: ShoppingCart | null, userId?: number) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const key = getCartStorageKey(userId);
+    if (cart) {
+      localStorage.setItem(key, JSON.stringify(cart));
+    } else {
+      localStorage.removeItem(key);
+    }
+  } catch (error) {
+    console.error('Failed to save cart to localStorage:', error);
+  }
+};
+
+// Очистка старой корзины при смене пользователя
+const clearOldCartStorage = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    // Очищаем общий ключ (для обратной совместимости)
+    localStorage.removeItem('svetu_cart');
+
+    // Очищаем анонимную корзину при входе пользователя
+    localStorage.removeItem(`${CART_STORAGE_KEY_PREFIX}_anon`);
+  } catch (error) {
+    console.error('Failed to clear old cart from localStorage:', error);
+  }
+};
+
 const initialState: CartState = {
-  cart: null,
+  cart: null, // Не загружаем из localStorage при инициализации - будет загружено в useCartSync
+  allCarts: [], // Все корзины пользователя
   loading: false,
   error: null,
 };
 
 // Async thunks
+export const fetchUserCarts = createAsyncThunk(
+  'cart/fetchUserCarts',
+  async (userId: number) => {
+    // Сначала очищаем старые корзины при входе нового пользователя
+    clearOldCartStorage();
+
+    const carts = await cartService.getUserCarts();
+    // Если есть корзины, берем последнюю обновленную для текущего storefront
+    // или первую из списка как активную
+    return { carts, userId };
+  }
+);
+
 export const fetchCart = createAsyncThunk(
   'cart/fetchCart',
   async (storefrontId: number) => {
@@ -87,7 +155,25 @@ const cartSlice = createSlice({
     },
     resetCart: (state) => {
       state.cart = null;
+      state.allCarts = [];
       state.error = null;
+      saveCartToStorage(null);
+    },
+    clearCartOnLogout: (state) => {
+      state.cart = null;
+      state.allCarts = [];
+      state.error = null;
+      // Очищаем все возможные корзины из localStorage при выходе
+      clearOldCartStorage();
+      // Также очищаем корзины для всех пользователей (на случай если есть старые ключи)
+      if (typeof window !== 'undefined') {
+        const keys = Object.keys(localStorage);
+        keys.forEach((key) => {
+          if (key.startsWith(CART_STORAGE_KEY_PREFIX)) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
     },
   },
   extraReducers: (builder) => {
@@ -100,6 +186,7 @@ const cartSlice = createSlice({
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.loading = false;
         state.cart = action.payload;
+        saveCartToStorage(action.payload);
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.loading = false;
@@ -113,7 +200,23 @@ const cartSlice = createSlice({
       })
       .addCase(addToCart.fulfilled, (state, action) => {
         state.loading = false;
-        state.cart = action.payload;
+        const updatedCart = action.payload;
+        state.cart = updatedCart;
+
+        // Обновляем корзину в allCarts если она там есть
+        if (updatedCart && state.allCarts.length > 0) {
+          const existingCartIndex = state.allCarts.findIndex(
+            (cart) => cart.storefront_id === updatedCart.storefront_id
+          );
+          if (existingCartIndex >= 0) {
+            state.allCarts[existingCartIndex] = updatedCart;
+          } else {
+            // Добавляем новую корзину если её не было
+            state.allCarts.push(updatedCart);
+          }
+        }
+
+        saveCartToStorage(updatedCart);
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.loading = false;
@@ -128,6 +231,17 @@ const cartSlice = createSlice({
       .addCase(updateCartItem.fulfilled, (state, action) => {
         state.loading = false;
         state.cart = action.payload;
+        saveCartToStorage(action.payload);
+
+        // Обновляем соответствующую корзину в allCarts
+        if (action.payload && action.payload.storefront_id) {
+          const cartIndex = state.allCarts.findIndex(
+            (cart) => cart.storefront_id === action.payload.storefront_id
+          );
+          if (cartIndex !== -1) {
+            state.allCarts[cartIndex] = action.payload;
+          }
+        }
       })
       .addCase(updateCartItem.rejected, (state, action) => {
         state.loading = false;
@@ -142,6 +256,17 @@ const cartSlice = createSlice({
       .addCase(removeFromCart.fulfilled, (state, action) => {
         state.loading = false;
         state.cart = action.payload;
+        saveCartToStorage(action.payload);
+
+        // Обновляем соответствующую корзину в allCarts
+        if (action.payload && action.payload.storefront_id) {
+          const cartIndex = state.allCarts.findIndex(
+            (cart) => cart.storefront_id === action.payload.storefront_id
+          );
+          if (cartIndex !== -1) {
+            state.allCarts[cartIndex] = action.payload;
+          }
+        }
       })
       .addCase(removeFromCart.rejected, (state, action) => {
         state.loading = false;
@@ -153,18 +278,68 @@ const cartSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(clearCart.fulfilled, (state) => {
+      .addCase(clearCart.fulfilled, (state, _action) => {
         state.loading = false;
         state.cart = null;
+        saveCartToStorage(null);
+
+        // Удаляем соответствующую корзину из allCarts или обновляем её как пустую
+        // Нужно знать storefrontId чтобы обновить правильную корзину
+        // Поскольку clearCart не возвращает storefrontId, будем очищать текущую активную корзину
+        if (state.allCarts.length > 0) {
+          // Если была активная корзина, найдем её в allCarts и очистим
+          const currentCartIndex = state.allCarts.findIndex(
+            (cart) => cart.items && cart.items.length > 0
+          );
+          if (currentCartIndex !== -1) {
+            state.allCarts[currentCartIndex] = {
+              ...state.allCarts[currentCartIndex],
+              items: [],
+            };
+          }
+        }
       })
       .addCase(clearCart.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to clear cart';
+      })
+
+      // Fetch user carts
+      .addCase(fetchUserCarts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserCarts.fulfilled, (state, action) => {
+        state.loading = false;
+        const { carts, userId } = action.payload;
+
+        // Сохраняем все корзины
+        state.allCarts = carts || [];
+
+        // Если есть корзины, берем первую как активную
+        if (carts && carts.length > 0) {
+          // Находим корзину с наибольшим количеством товаров или последнюю обновленную
+          const mostRecentCart = carts.reduce((prev, current) => {
+            const prevTime = new Date(prev.updated_at || 0).getTime();
+            const currentTime = new Date(current.updated_at || 0).getTime();
+            return currentTime > prevTime ? current : prev;
+          });
+          state.cart = mostRecentCart;
+          saveCartToStorage(mostRecentCart, userId);
+        } else {
+          // Если корзин нет, очищаем localStorage для этого пользователя
+          state.cart = null;
+          saveCartToStorage(null, userId);
+        }
+      })
+      .addCase(fetchUserCarts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch user carts';
       });
   },
 });
 
-export const { clearError, resetCart } = cartSlice.actions;
+export const { clearError, resetCart, clearCartOnLogout } = cartSlice.actions;
 
 // Selectors
 export const selectCart = (state: { cart: CartState }) => state.cart.cart;
@@ -176,6 +351,18 @@ export const selectCartItemsCount = (state: { cart: CartState }) =>
     (total, item) => total + (item.quantity || 0),
     0
   ) || 0;
+
+// Селектор для подсчета всех товаров во всех корзинах
+export const selectAllCartsItemsCount = (state: { cart: CartState }) =>
+  state.cart.allCarts.reduce(
+    (total, cart) =>
+      total +
+      (cart.items?.reduce(
+        (cartTotal, item) => cartTotal + (item.quantity || 0),
+        0
+      ) || 0),
+    0
+  );
 export const selectCartTotal = (state: { cart: CartState }) =>
   state.cart.cart?.items?.reduce(
     (total, item) => total + Number(item.total_price || 0),

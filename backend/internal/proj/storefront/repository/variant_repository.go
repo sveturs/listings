@@ -1438,9 +1438,11 @@ func (r *VariantRepository) GetVariantAttributeValuesPublic(ctx context.Context,
 func (r *VariantRepository) GetProductPublic(ctx context.Context, slug string, productID int) (*models.StorefrontProduct, error) {
 	query := `
 		SELECT 
-			p.id, p.storefront_id, p.title, p.description, p.price, p.compare_at_price,
-			p.category_id, p.is_active, p.is_featured, p.view_count, p.created_at, p.updated_at,
-			s.slug as storefront_slug
+			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
+			p.category_id, p.stock_quantity, p.stock_status, p.is_active, 
+			p.view_count, p.sold_count, p.created_at, p.updated_at,
+			p.has_individual_location, p.individual_address, p.individual_latitude,
+			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants
 		FROM storefront_products p
 		JOIN storefronts s ON p.storefront_id = s.id
 		WHERE p.id = $1 AND s.slug = $2 AND p.is_active = true`

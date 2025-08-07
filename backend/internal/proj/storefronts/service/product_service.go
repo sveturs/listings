@@ -340,6 +340,17 @@ func (s *ProductService) UpdateInventory(ctx context.Context, storefrontID, prod
 		return fmt.Errorf("failed to update inventory: %w", err)
 	}
 
+	// Частично обновляем продукт в OpenSearch (только поля склада)
+	if s.searchRepo != nil {
+		go func() {
+			if err := s.updateProductStockInSearch(ctx, storefrontID, productID, req); err != nil {
+				logger.Error().Err(err).Msgf("Failed to update product %d stock in OpenSearch", productID)
+			} else {
+				logger.Info().Msgf("Successfully updated product %d stock in OpenSearch", productID)
+			}
+		}()
+	}
+
 	return nil
 }
 
@@ -844,4 +855,29 @@ func (s *ProductService) indexProductWithVariants(ctx context.Context, product *
 	} else {
 		logger.Info().Msgf("Successfully indexed product %d with %d variants in OpenSearch", product.ID, len(product.Variants))
 	}
+}
+
+// updateProductStockInSearch частично обновляет только поля склада в OpenSearch
+func (s *ProductService) updateProductStockInSearch(ctx context.Context, storefrontID, productID int, req *models.UpdateInventoryRequest) error {
+	// Получаем актуальное состояние продукта после обновления склада
+	product, err := s.storage.GetStorefrontProduct(ctx, storefrontID, productID)
+	if err != nil {
+		return fmt.Errorf("failed to get updated product for indexing: %w", err)
+	}
+
+	// Проверяем, поддерживает ли OpenSearch репозиторий частичные обновления
+	if partialUpdater, ok := s.searchRepo.(interface {
+		UpdateProductStock(ctx context.Context, productID int, stockData map[string]interface{}) error
+	}); ok {
+		// Используем специализированный метод для частичного обновления остатков
+		stockData := map[string]interface{}{
+			"stock_quantity": product.StockQuantity,
+			"stock_status":   product.GetStockStatus(),
+		}
+
+		return partialUpdater.UpdateProductStock(ctx, productID, stockData)
+	}
+
+	// Fallback: полное переиндексирование продукта
+	return s.searchRepo.IndexProduct(ctx, product)
 }

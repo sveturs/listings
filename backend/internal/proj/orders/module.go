@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"backend/internal/middleware"
+	"backend/internal/proj/orders/adapters"
 	"backend/internal/proj/orders/handler"
 	"backend/internal/proj/orders/service"
 	"backend/internal/storage"
@@ -26,18 +27,21 @@ func NewModule(db storage.Storage) (*Module, error) {
 	inventoryRepo := db.Inventory().(postgres.InventoryRepositoryInterface)
 	storefrontRepo := db.Storefront().(service.StorefrontRepositoryInterface)
 
-	// Создаем сервисы
-	log := logger.New()
-	inventoryManager := service.NewInventoryManager(inventoryRepo, nil, *log)
-
-	// Пока используем nil для productRepo - TODO: реализовать позже
-	orderService := service.NewOrderService(orderRepo, cartRepo, nil, storefrontRepo, inventoryManager, *log)
-
-	// Получаем sqlx.DB для транзакций
+	// Получаем postgresDB для адаптера и транзакций
 	postgresDB, ok := db.(*postgres.Database)
 	if !ok {
 		return nil, fmt.Errorf("expected postgres.Database, got %T", db)
 	}
+
+	// Создаем адаптер для работы с продуктами
+	productRepo := adapters.NewProductRepositoryAdapter(postgresDB)
+
+	// Создаем сервисы
+	log := logger.New()
+	inventoryManager := service.NewInventoryManager(inventoryRepo, nil, *log)
+
+	// Теперь передаем productRepo вместо nil
+	orderService := service.NewOrderService(orderRepo, cartRepo, productRepo, storefrontRepo, inventoryManager, *log)
 	sqlxDB := postgresDB.GetSQLXDB()
 
 	// Создаем handler с поддержкой транзакций

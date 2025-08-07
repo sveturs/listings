@@ -2,6 +2,9 @@
   "addToCart": "Add to Cart",
   "added": "Added!",
   "outOfStock": "Out of Stock",
+  "emptyTitle": "Your cart is empty",
+  "emptyDescription": "Start shopping to add items to your cart",
+  "continueShopping": "Continue Shopping",
   "cart": {
     "title": "Shopping Cart",
     "empty": "Your cart is empty",

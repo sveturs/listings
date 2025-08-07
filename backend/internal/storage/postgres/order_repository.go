@@ -376,12 +376,16 @@ func (r *orderRepository) Update(ctx context.Context, order *models.StorefrontOr
 
 // List возвращает список заказов с фильтрацией и пагинацией
 func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) ([]models.StorefrontOrder, int, error) {
-	// Базовый запрос
-	baseQuery := `FROM storefront_orders WHERE 1=1`
+	// Базовый запрос с JOIN для получения информации о продавце
+	baseQuery := `FROM storefront_orders so 
+		LEFT JOIN storefronts sf ON so.storefront_id = sf.id
+		LEFT JOIN users seller ON sf.user_id = seller.id
+		WHERE 1=1`
 	countQuery := `SELECT COUNT(*) ` + baseQuery
-	selectQuery := `SELECT id, order_number, storefront_id, customer_id, status,
-		subtotal_amount, tax_amount, shipping_amount, discount, total_amount, currency,
-		created_at, updated_at ` + baseQuery
+	selectQuery := `SELECT so.id, so.order_number, so.storefront_id, so.customer_id, so.status,
+		so.subtotal_amount, so.tax_amount, so.shipping_amount, so.discount, so.total_amount, so.currency,
+		so.created_at, so.updated_at,
+		seller.id as seller_id, seller.name as seller_name, seller.email as seller_email ` + baseQuery
 
 	var args []interface{}
 	var conditions []string
@@ -389,37 +393,41 @@ func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) (
 
 	// Добавляем условия фильтрации
 	if filter.StorefrontID != nil {
-		conditions = append(conditions, fmt.Sprintf("storefront_id = $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("so.storefront_id = $%d", argCount))
 		args = append(args, *filter.StorefrontID)
 		argCount++
 	}
 
 	if filter.UserID != nil {
-		conditions = append(conditions, fmt.Sprintf("customer_id = $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("so.customer_id = $%d", argCount))
 		args = append(args, *filter.UserID)
+		argCount++
+	} else if filter.CustomerID != nil {
+		conditions = append(conditions, fmt.Sprintf("so.customer_id = $%d", argCount))
+		args = append(args, *filter.CustomerID)
 		argCount++
 	}
 
 	if filter.Status != nil {
-		conditions = append(conditions, fmt.Sprintf("status = $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("so.status = $%d", argCount))
 		args = append(args, *filter.Status)
 		argCount++
 	}
 
 	if filter.PaymentStatus != nil {
-		conditions = append(conditions, fmt.Sprintf("payment_status = $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("so.payment_status = $%d", argCount))
 		args = append(args, *filter.PaymentStatus)
 		argCount++
 	}
 
 	if filter.DateFrom != nil {
-		conditions = append(conditions, fmt.Sprintf("created_at >= $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("so.created_at >= $%d", argCount))
 		args = append(args, *filter.DateFrom)
 		argCount++
 	}
 
 	if filter.DateTo != nil {
-		conditions = append(conditions, fmt.Sprintf("created_at <= $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf("so.created_at <= $%d", argCount))
 		args = append(args, *filter.DateTo)
 		argCount++
 	}
@@ -439,7 +447,7 @@ func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) (
 	}
 
 	// Добавляем сортировку и пагинацию
-	selectQuery += fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d OFFSET $%d", argCount, argCount+1)
+	selectQuery += fmt.Sprintf(" ORDER BY so.created_at DESC LIMIT $%d OFFSET $%d", argCount, argCount+1)
 	args = append(args, filter.Limit, filter.Offset)
 
 	// Выполняем запрос
@@ -452,6 +460,9 @@ func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) (
 	var orders []models.StorefrontOrder
 	for rows.Next() {
 		var order models.StorefrontOrder
+		var sellerID sql.NullInt64
+		var sellerName, sellerEmail sql.NullString
+
 		err := rows.Scan(
 			&order.ID,
 			&order.OrderNumber,
@@ -466,10 +477,34 @@ func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) (
 			&order.Currency,
 			&order.CreatedAt,
 			&order.UpdatedAt,
+			&sellerID,
+			&sellerName,
+			&sellerEmail,
 		)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to scan order: %w", err)
 		}
+
+		// Заполняем информацию о продавце если есть
+		if sellerID.Valid {
+			seller := &models.User{
+				ID:    int(sellerID.Int64),
+				Email: sellerEmail.String,
+			}
+			if sellerName.Valid {
+				seller.Name = sellerName.String
+			}
+
+			// Создаем витрину с продавцом
+			storefront := &models.Storefront{
+				ID:     order.StorefrontID,
+				UserID: int(sellerID.Int64),
+				User:   seller,
+			}
+			order.Storefront = storefront
+			order.Seller = seller
+		}
+
 		orders = append(orders, order)
 	}
 

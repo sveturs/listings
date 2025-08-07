@@ -68,22 +68,24 @@ type UnifiedSearchResult struct {
 
 // UnifiedSearchItem унифицированный элемент поиска
 type UnifiedSearchItem struct {
-	ID          string                 `json:"id"`           // Уникальный ID (ml_123 или sp_456)
-	ProductType string                 `json:"product_type"` // "marketplace" или "storefront"
-	ProductID   int                    `json:"product_id"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Price       float64                `json:"price"`
-	Currency    string                 `json:"currency"`
-	Images      []UnifiedProductImage  `json:"images"`
-	Category    UnifiedCategoryInfo    `json:"category"`
-	Location    *UnifiedLocationInfo   `json:"location,omitempty"`
-	User        *UnifiedUserInfo       `json:"user,omitempty"`       // Информация о продавце
-	Storefront  *UnifiedStorefrontInfo `json:"storefront,omitempty"` // Только для storefront товаров
-	Score       float64                `json:"score"`
-	Highlights  map[string][]string    `json:"highlights,omitempty"`
-	ViewsCount  int                    `json:"views_count,omitempty"` // Для расчета популярности
-	CreatedAt   *time.Time             `json:"created_at,omitempty"`  // Для расчета свежести
+	ID             string                 `json:"id"`           // Уникальный ID (ml_123 или sp_456)
+	ProductType    string                 `json:"product_type"` // "marketplace" или "storefront"
+	ProductID      int                    `json:"product_id"`
+	Name           string                 `json:"name"`
+	Description    string                 `json:"description"`
+	Price          float64                `json:"price"`
+	Currency       string                 `json:"currency"`
+	Images         []UnifiedProductImage  `json:"images"`
+	Category       UnifiedCategoryInfo    `json:"category"`
+	Location       *UnifiedLocationInfo   `json:"location,omitempty"`
+	User           *UnifiedUserInfo       `json:"user,omitempty"`            // Информация о продавце
+	Storefront     *UnifiedStorefrontInfo `json:"storefront,omitempty"`      // Только для storefront товаров
+	StorefrontID   *int                   `json:"storefront_id,omitempty"`   // ID витрины для товаров маркетплейса
+	StorefrontSlug string                 `json:"storefront_slug,omitempty"` // Slug витрины для правильного URL
+	Score          float64                `json:"score"`
+	Highlights     map[string][]string    `json:"highlights,omitempty"`
+	ViewsCount     int                    `json:"views_count,omitempty"` // Для расчета популярности
+	CreatedAt      *time.Time             `json:"created_at,omitempty"`  // Для расчета свежести
 }
 
 // UnifiedProductImage изображение товара
@@ -308,10 +310,12 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 
 	// Поиск в storefront (если включен)
 	if h.containsProductType(params.ProductTypes, "storefront") {
+		logger.Debug().Str("query", params.Query).Int("limit", searchLimit).Msg("Starting storefront search")
 		storefrontItems, count, took, err := h.searchStorefrontWithLimit(ctx, params, searchLimit)
 		if err != nil {
 			logger.Error().Err(err).Msg("Storefront search failed")
 		} else {
+			logger.Debug().Int("count", len(storefrontItems)).Int("total", count).Msg("Storefront search completed")
 			allItems = append(allItems, storefrontItems...)
 			totalCount += count
 			tookMs += took
@@ -385,10 +389,9 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 			productTypeMarketplace = "marketplace"
 			productTypeStorefront  = "storefront"
 		)
+		// Объявления маркетплейса всегда остаются объявлениями маркетплейса
+		// но если у них есть storefront_id, они могут продаваться через витрину
 		productType := productTypeMarketplace
-		if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-			productType = productTypeStorefront
-		}
 
 		item := UnifiedSearchItem{
 			ID:          "ml_" + strconv.Itoa(listing.ID),
@@ -416,8 +419,9 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 			}
 		}
 
-		// Если это товар витрины, нужно добавить информацию о витрине
-		if productType == productTypeStorefront && listing.StorefrontID != nil {
+		// Если у объявления есть витрина, добавляем информацию о ней
+		if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+			item.StorefrontID = listing.StorefrontID
 			// Получаем информацию о витрине из базы данных
 			storefront, err := h.services.Storefront().GetByID(ctx, *listing.StorefrontID)
 			if err != nil {
@@ -430,6 +434,8 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 					Rating:     storefront.Rating,
 					IsVerified: storefront.IsVerified,
 				}
+				// Добавляем slug витрины для формирования правильного URL
+				item.StorefrontSlug = storefront.Slug
 			}
 		}
 
@@ -444,9 +450,10 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 	// Получаем репозиторий поиска товаров витрин
 	searchRepo := h.services.Storage().StorefrontProductSearch()
 	if searchRepo == nil {
-		logger.Debug().Msg("Storefront product search repository not configured")
+		logger.Warn().Msg("Storefront product search repository not configured")
 		return []UnifiedSearchItem{}, 0, 0, nil
 	}
+	logger.Debug().Msg("Storefront product search repository found")
 
 	productSearchRepo, ok := searchRepo.(storefrontOpenSearch.ProductSearchRepository)
 	if !ok {

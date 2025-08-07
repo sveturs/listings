@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
+	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
 )
 
 type SuggestionType string
@@ -140,31 +141,80 @@ func (s *MarketplaceService) getProductSuggestions(
 	ctx context.Context,
 	query string,
 ) ([]SuggestionItem, error) {
-	// Быстрый поиск объявлений
+	suggestions := []SuggestionItem{}
+
+	// 1. Поиск в объявлениях маркетплейса
 	searchParams := &search.ServiceParams{
 		Query: query,
-		Size:  5,
+		Size:  3, // Уменьшаем до 3 для баланса с товарами витрин
 		Page:  1,
 	}
 
-	results, err := s.SearchListingsAdvanced(ctx, searchParams)
-	if err != nil {
-		return nil, err
+	marketplaceResults, err := s.SearchListingsAdvanced(ctx, searchParams)
+	if err == nil && marketplaceResults != nil {
+		for _, item := range marketplaceResults.Items {
+			suggestions = append(suggestions, SuggestionItem{
+				Type:      SuggestionTypeProduct,
+				Value:     item.Title,
+				Label:     item.Title,
+				ProductID: item.ID,
+				Metadata: map[string]interface{}{
+					"price":       item.Price,
+					"image":       getFirstImage(item.Images),
+					"category":    item.Category.Name,
+					"source_type": "marketplace",
+				},
+			})
+		}
 	}
 
-	suggestions := make([]SuggestionItem, 0, len(results.Items))
-	for _, item := range results.Items {
-		suggestions = append(suggestions, SuggestionItem{
-			Type:      SuggestionTypeProduct,
-			Value:     item.Title,
-			Label:     item.Title,
-			ProductID: item.ID,
-			Metadata: map[string]interface{}{
-				"price":    item.Price,
-				"image":    getFirstImage(item.Images),
-				"category": item.Category.Name,
-			},
-		})
+	// 2. Поиск в товарах витрин
+	if s.storage != nil && s.storage.StorefrontProductSearch() != nil {
+		storefrontSearchRepo := s.storage.StorefrontProductSearch()
+
+		// Проверяем, что репозиторий правильного типа
+		if productSearchRepo, ok := storefrontSearchRepo.(storefrontOpenSearch.ProductSearchRepository); ok {
+			// Создаем параметры поиска для товаров витрин
+			storefrontParams := &storefrontOpenSearch.ProductSearchParams{
+				Query:  query,
+				Limit:  3,
+				Offset: 0,
+			}
+
+			storefrontResults, err := productSearchRepo.SearchProducts(ctx, storefrontParams)
+			if err == nil && storefrontResults != nil {
+				for _, product := range storefrontResults.Products {
+					if product != nil {
+						// Получаем первое изображение
+						var imageURL string
+						if len(product.Images) > 0 {
+							imageURL = product.Images[0].URL
+						}
+
+						suggestions = append(suggestions, SuggestionItem{
+							Type:      SuggestionTypeProduct,
+							Value:     product.Name,
+							Label:     product.Name,
+							ProductID: product.ProductID,
+							Metadata: map[string]interface{}{
+								"price":           product.Price,
+								"image":           imageURL,
+								"category":        product.Category.Name,
+								"source_type":     "storefront",
+								"storefront_id":   product.StorefrontID,
+								"storefront":      product.Storefront.Name,
+								"storefront_slug": product.Storefront.Slug,
+							},
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// Ограничиваем общее количество до 5
+	if len(suggestions) > 5 {
+		suggestions = suggestions[:5]
 	}
 
 	return suggestions, nil

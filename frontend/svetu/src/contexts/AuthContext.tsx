@@ -390,15 +390,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Очищаем localStorage и sessionStorage, но сохраняем важные данные
       const locale = localStorage.getItem('NEXT_LOCALE');
+      // НЕ сохраняем корзину - она должна быть привязана к пользователю!
 
       // Очищаем токен через tokenManager чтобы он удалился из sessionStorage
       tokenManager.clearTokens();
 
       localStorage.clear();
       sessionStorage.clear();
+
+      // Восстанавливаем важные данные
       if (locale) {
         localStorage.setItem('NEXT_LOCALE', locale);
       }
+      // НЕ восстанавливаем корзину - при выходе корзина должна очищаться
 
       // Устанавливаем флаг в sessionStorage чтобы предотвратить автоматическое восстановление
       sessionStorage.setItem('svetu_logout_flag', 'true');

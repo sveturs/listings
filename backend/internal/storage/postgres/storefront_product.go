@@ -295,6 +295,176 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 	return p, nil
 }
 
+// GetProductByID retrieves a product by ID (for ProductRepositoryInterface)
+func (s *Database) GetProductByID(ctx context.Context, productID int64) (*models.StorefrontProduct, error) {
+	query := `
+		SELECT
+			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
+			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
+			p.is_active, p.attributes, p.view_count, p.sold_count,
+			p.created_at, p.updated_at,
+			p.has_individual_location, p.individual_address, p.individual_latitude,
+			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants
+		FROM storefront_products p
+		WHERE p.id = $1`
+
+	product := &models.StorefrontProduct{}
+	var attributesJSON []byte
+
+	err := s.pool.QueryRow(ctx, query, productID).Scan(
+		&product.ID, &product.StorefrontID, &product.Name, &product.Description,
+		&product.Price, &product.Currency, &product.CategoryID, &product.SKU,
+		&product.Barcode, &product.StockQuantity, &product.StockStatus,
+		&product.IsActive, &attributesJSON, &product.ViewCount, &product.SoldCount,
+		&product.CreatedAt, &product.UpdatedAt,
+		&product.HasIndividualLocation, &product.IndividualAddress,
+		&product.IndividualLatitude, &product.IndividualLongitude,
+		&product.LocationPrivacy, &product.ShowOnMap, &product.HasVariants,
+	)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("product not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get product: %w", err)
+	}
+
+	if attributesJSON != nil {
+		if unmarshalErr := json.Unmarshal(attributesJSON, &product.Attributes); unmarshalErr != nil {
+			return nil, fmt.Errorf("failed to unmarshal attributes: %w", unmarshalErr)
+		}
+	}
+
+	// Load images
+	images, err := s.getProductImages(ctx, []int{product.ID})
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get product images")
+	}
+	if images != nil {
+		product.Images = images
+	} else {
+		product.Images = []models.StorefrontProductImage{}
+	}
+
+	// Load variants
+	variants, err := s.getProductVariants(ctx, product.ID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get product variants")
+	}
+	product.Variants = variants
+
+	return product, nil
+}
+
+// GetProductVariantByID retrieves a product variant by ID
+func (s *Database) GetProductVariantByID(ctx context.Context, variantID int64) (*models.StorefrontProductVariant, error) {
+	query := `
+		SELECT 
+			id, storefront_product_id, sku, price, stock_quantity, 
+			variant_attributes, is_active, created_at, updated_at
+		FROM storefront_product_variants
+		WHERE id = $1`
+
+	variant := &models.StorefrontProductVariant{}
+	var attributesJSON []byte
+
+	err := s.pool.QueryRow(ctx, query, variantID).Scan(
+		&variant.ID, &variant.StorefrontProductID, &variant.SKU,
+		&variant.Price, &variant.StockQuantity, &attributesJSON,
+		&variant.IsActive, &variant.CreatedAt, &variant.UpdatedAt,
+	)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("variant not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get variant: %w", err)
+	}
+
+	// Parse variant attributes to create name
+	if attributesJSON != nil {
+		if unmarshalErr := json.Unmarshal(attributesJSON, &variant.Attributes); unmarshalErr != nil {
+			logger.Error().Err(unmarshalErr).Msg("Failed to unmarshal variant attributes")
+		}
+		// Create variant name from attributes (e.g., "Red - Large")
+		variant.Name = s.createVariantNameFromAttributes(variant.Attributes)
+	}
+
+	return variant, nil
+}
+
+// createVariantNameFromAttributes creates a readable name from variant attributes
+func (s *Database) createVariantNameFromAttributes(attributes map[string]interface{}) string {
+	if len(attributes) == 0 {
+		return ""
+	}
+
+	var parts []string
+	// Common attribute order for display
+	order := []string{"color", "size", "material", "style"}
+
+	for _, key := range order {
+		if val, ok := attributes[key]; ok {
+			parts = append(parts, fmt.Sprintf("%v", val))
+		}
+	}
+
+	// Add any remaining attributes not in the order list
+	for key, val := range attributes {
+		found := false
+		for _, orderedKey := range order {
+			if key == orderedKey {
+				found = true
+				break
+			}
+		}
+		if !found {
+			parts = append(parts, fmt.Sprintf("%v", val))
+		}
+	}
+
+	return strings.Join(parts, " - ")
+}
+
+// UpdateProductStock updates the stock quantity for a product or variant
+func (s *Database) UpdateProductStock(ctx context.Context, productID int64, variantID *int64, quantity int) error {
+	if variantID != nil && *variantID > 0 {
+		// Update variant stock
+		query := `
+			UPDATE storefront_product_variants 
+			SET stock_quantity = stock_quantity - $1, 
+			    updated_at = CURRENT_TIMESTAMP
+			WHERE id = $2 AND stock_quantity >= $1`
+
+		result, err := s.pool.Exec(ctx, query, quantity, *variantID)
+		if err != nil {
+			return fmt.Errorf("failed to update variant stock: %w", err)
+		}
+
+		if result.RowsAffected() == 0 {
+			return fmt.Errorf("insufficient stock for variant %d", *variantID)
+		}
+	} else {
+		// Update product stock
+		query := `
+			UPDATE storefront_products 
+			SET stock_quantity = stock_quantity - $1,
+			    updated_at = CURRENT_TIMESTAMP
+			WHERE id = $2 AND stock_quantity >= $1`
+
+		result, err := s.pool.Exec(ctx, query, quantity, productID)
+		if err != nil {
+			return fmt.Errorf("failed to update product stock: %w", err)
+		}
+
+		if result.RowsAffected() == 0 {
+			return fmt.Errorf("insufficient stock for product %d", productID)
+		}
+	}
+
+	return nil
+}
+
 // CreateStorefrontProduct creates a new product
 func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
 	// Log incoming request

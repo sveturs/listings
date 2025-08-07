@@ -11,15 +11,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
 import {
-  selectCartItems,
-  selectCartTotal,
-  selectCartItemsCount,
+  selectCartItems as selectLocalCartItems,
+  selectCartTotal as selectLocalCartTotal,
+  selectCartItemsCount as selectLocalCartItemsCount,
 } from '@/store/slices/localCartSlice';
+import {
+  selectCart,
+  selectCartTotal as selectApiCartTotal,
+  selectAllCartsItemsCount as selectApiCartItemsCount,
+} from '@/store/slices/cartSlice';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { useAuthContext } from '@/contexts/AuthContext';
 import type { components } from '@/types/generated/api';
-import { useDispatch } from 'react-redux';
-import { clearCart } from '@/store/slices/localCartSlice';
+import { useAppDispatch } from '@/store/hooks';
+import { clearCart as clearLocalCart } from '@/store/slices/localCartSlice';
+import { clearCart as clearApiCart } from '@/store/slices/cartSlice';
 import { apiClient } from '@/services/api-client';
 
 type CreateOrderRequest =
@@ -59,12 +65,42 @@ export default function CheckoutPage() {
   const t = useTranslations('checkout');
   const locale = useLocale();
   const router = useRouter();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAuthContext();
 
-  const items = useSelector(selectCartItems);
-  const total = useSelector(selectCartTotal);
-  const itemsCount = useSelector(selectCartItemsCount);
+  // Выбираем данные из правильного slice в зависимости от авторизации
+  const localItems = useSelector(selectLocalCartItems);
+  const localTotal = useSelector(selectLocalCartTotal);
+  const localItemsCount = useSelector(selectLocalCartItemsCount);
+
+  const backendCart = useSelector(selectCart);
+  const apiTotal = useSelector(selectApiCartTotal);
+  const apiItemsCount = useSelector(selectApiCartItemsCount);
+
+  // Используем данные в зависимости от авторизации
+  const items = isAuthenticated
+    ? (backendCart?.items || []).map((item) => ({
+        productId: item.product_id || 0,
+        variantId: item.variant_id,
+        quantity: item.quantity || 0,
+        name: item.product?.name || 'Product',
+        variantName: item.variant?.name,
+        price:
+          typeof item.price_per_unit === 'string'
+            ? parseFloat(item.price_per_unit)
+            : item.price_per_unit || 0,
+        currency: 'RSD',
+        image: item.product?.images?.[0]?.image_url,
+        storefrontId: backendCart?.storefront_id || 0,
+        storefrontName: backendCart?.storefront?.name || 'Store',
+        storefrontSlug:
+          backendCart?.storefront?.slug ||
+          String(backendCart?.storefront_id || 0),
+      }))
+    : localItems;
+
+  const total = isAuthenticated ? apiTotal : localTotal;
+  const itemsCount = isAuthenticated ? apiItemsCount : localItemsCount;
 
   const [currentStep, setCurrentStep] = useState<Step>('customer');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,10 +112,21 @@ export default function CheckoutPage() {
 
   // Redirect if cart is empty
   useEffect(() => {
-    if (itemsCount === 0 && !isSubmitting) {
-      router.push(`/${locale}/cart`);
-    }
-  }, [itemsCount, locale, router, isSubmitting]);
+    // Небольшая задержка чтобы избежать мгновенного перенаправления при загрузке
+    const timer = setTimeout(() => {
+      if (itemsCount === 0 && !isSubmitting) {
+        console.log(
+          'Checkout: redirecting to cart, itemsCount:',
+          itemsCount,
+          'isAuthenticated:',
+          isAuthenticated
+        );
+        router.push(`/${locale}/cart`);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [itemsCount, locale, router, isSubmitting, isAuthenticated]);
 
   // Pre-fill customer info if authenticated
   useEffect(() => {
@@ -222,8 +269,14 @@ export default function CheckoutPage() {
 
         console.log('Order created successfully:', response.data);
 
-        // Очищаем корзину
-        dispatch(clearCart());
+        // Очищаем корзину в зависимости от авторизации
+        if (isAuthenticated) {
+          // Для авторизованных пользователей очищаем API корзину
+          dispatch(clearApiCart(parseInt(storefrontId)));
+        } else {
+          // Для неавторизованных пользователей очищаем локальную корзину
+          dispatch(clearLocalCart());
+        }
 
         // Перенаправляем на страницу успешного заказа
         if (response.data && response.data.data && response.data.data.id) {
@@ -261,7 +314,7 @@ export default function CheckoutPage() {
     },
     {} as Record<
       number,
-      { items: typeof items; name: string; subtotal: number }
+      { items: (typeof items)[0][]; name: string; subtotal: number }
     >
   );
 

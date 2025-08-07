@@ -1,6 +1,13 @@
 {
   "marketplace": {
     "allCategories": "All categories",
+    "condition": {
+      "new": "New",
+      "like_new": "Like New",
+      "used": "Used",
+      "refurbished": "Refurbished",
+      "likeNew": "Like New"
+    },
     "create": {
       "title": "Create",
       "selectOptions": "Select options",
@@ -12,7 +19,6 @@
       "priceRange": "Price range",
       "priceFrom": "From",
       "priceTo": "To",
-      "condition": "Condition",
       "anyCondition": "Any condition",
       "sellerType": "Seller type",
       "anySeller": "Any seller",
@@ -38,7 +44,6 @@
     "imageGallery": {
       "clickToZoom": "Click to zoom"
     },
-    "condition": "Condition",
     "invalidData": "Invalid data format",
     "duplicateTitle": "Listing with this title already exists",
     "createError": "Failed to create listing",
@@ -551,7 +556,6 @@
     "priceRange": "Price Range",
     "priceMin": "Price Min",
     "priceMax": "Price Max",
-    "condition": "Condition",
     "sellerType": "Seller Type",
     "privateSeller": "Private Seller",
     "companySeller": "Company Seller",

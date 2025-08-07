@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { useChat } from '@/hooks/useChat';
+import { useAppDispatch } from '@/store/hooks';
+import { clearCartOnLogout } from '@/store/slices/cartSlice';
 
 interface AuthButtonProps {
   onLoginClick?: () => void;
@@ -26,9 +28,18 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
   const tCommon = useTranslations('common');
   const [imageError, setImageError] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const dispatch = useAppDispatch();
 
   // Получаем количество непрочитанных сообщений из useChat
   const { unreadCount } = useChat();
+
+  // Обработчик logout с очисткой корзины
+  const handleLogout = async () => {
+    // Сначала очищаем корзину в Redux
+    dispatch(clearCartOnLogout());
+    // Затем выполняем logout
+    await logout();
+  };
 
   // Временное логирование для отладки
   useEffect(() => {
@@ -351,7 +362,7 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
             {/* Logout */}
             <li>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 disabled={isLoggingOut}
                 className={`flex items-center gap-3 py-3 text-error hover:bg-error/10 ${isLoggingOut ? 'loading' : ''}`}
               >
