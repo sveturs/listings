@@ -96,6 +96,7 @@ func (c *OpenSearchClient) IndexDocument(ctx context.Context, indexName, id stri
 		Index:      indexName,
 		DocumentID: id,
 		Body:       strings.NewReader(string(docBytes)),
+		Refresh:    "true", // Добавляем refresh для немедленной видимости изменений
 	}
 
 	res, err := req.Do(ctx, c.client)
@@ -201,6 +202,7 @@ func (c *OpenSearchClient) UpdateDocument(ctx context.Context, indexName, id str
 		Index:      indexName,
 		DocumentID: id,
 		Body:       strings.NewReader(string(docJSON)),
+		Refresh:    "true", // Добавляем refresh для немедленной видимости изменений
 	}
 
 	res, err := req.Do(ctx, c.client)

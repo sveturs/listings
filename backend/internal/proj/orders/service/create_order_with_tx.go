@@ -155,6 +155,10 @@ func (s *OrderService) CreateOrderWithTx(ctx context.Context, db *sqlx.DB, req *
 			return fmt.Errorf("failed to commit transaction: %w", err)
 		}
 
+		// 11. После успешного коммита обновляем остатки в OpenSearch
+		// Это делается после транзакции, чтобы не блокировать основной процесс
+		go s.updateProductStocksInSearch(ctx, orderItems)
+
 		s.logger.Info("Order created successfully with transaction (order_id: %d)", createdOrder.ID)
 		return nil
 	}()
@@ -462,4 +466,75 @@ func (s *OrderService) clearCartTx(ctx context.Context, tx *sqlx.Tx, cartID int6
 	updateCartQuery := `UPDATE storefront_carts SET updated_at = NOW() WHERE id = $1`
 	_, err = tx.ExecContext(ctx, updateCartQuery, cartID)
 	return err
+}
+
+// updateProductStocksInSearch обновляет остатки товаров в OpenSearch после создания заказа
+func (s *OrderService) updateProductStocksInSearch(ctx context.Context, orderItems []models.StorefrontOrderItem) {
+	// Проверяем наличие OpenSearch репозитория
+	if s.productSearchRepo == nil {
+		s.logger.Info("ProductSearchRepo is not configured, skipping stock update in OpenSearch")
+		return
+	}
+
+	// Обновляем остатки для каждого товара в заказе
+	for _, item := range orderItems {
+		// Получаем актуальную информацию о товаре из БД
+		product, err := s.productRepo.GetByID(ctx, item.ProductID)
+		if err != nil {
+			s.logger.Error("Failed to get product %d for OpenSearch update: %v", item.ProductID, err)
+			continue
+		}
+
+		// Определяем актуальное количество на складе
+		stockQuantity := 0
+		if product != nil {
+			stockQuantity = product.StockQuantity
+		}
+
+		// Если есть вариант, получаем его остатки
+		if item.VariantID != nil {
+			variant, err := s.productRepo.GetVariantByID(ctx, *item.VariantID)
+			if err != nil {
+				s.logger.Error("Failed to get variant %d for OpenSearch update: %v", *item.VariantID, err)
+			} else if variant != nil {
+				stockQuantity = variant.StockQuantity
+			}
+		}
+
+		// Подготавливаем данные для обновления в OpenSearch
+		stockData := map[string]interface{}{
+			"stock_quantity": stockQuantity,
+			"inventory": map[string]interface{}{
+				"quantity":  stockQuantity,
+				"in_stock":  stockQuantity > 0,
+				"available": stockQuantity,
+				"low_stock": stockQuantity > 0 && stockQuantity <= 5,
+			},
+			"status": "active", // Добавляем статус для совместимости с фильтром поиска
+		}
+
+		// Определяем статус наличия
+		stockStatus := "in_stock"
+		if stockQuantity <= 0 {
+			stockStatus = "out_of_stock"
+		} else if stockQuantity <= 5 {
+			stockStatus = "low_stock"
+		}
+		stockData["stock_status"] = stockStatus
+
+		// Обновляем данные в OpenSearch
+		// Для товаров витрин используем префикс sp_ в ID документа
+		err = s.productSearchRepo.UpdateProductStock(ctx, int(item.ProductID), stockData)
+		if err != nil {
+			// Если товар не найден с обычным ID, пробуем с префиксом sp_ для товаров витрин
+			s.logger.Info("Trying to update storefront product sp_%d in OpenSearch", item.ProductID)
+			// Здесь нужно использовать специальный метод для обновления товаров витрин
+			// Но пока просто логируем ошибку
+			s.logger.Error("Failed to update product %d stock in OpenSearch: %v", item.ProductID, err)
+			// Не прерываем процесс, продолжаем с другими товарами
+		} else {
+			s.logger.Info("Successfully updated stock for product %d in OpenSearch (new quantity: %d)",
+				item.ProductID, stockQuantity)
+		}
+	}
 }

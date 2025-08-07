@@ -22,7 +22,9 @@ import (
 )
 
 const (
-	sortOrderAsc = "asc"
+	sortOrderAsc           = "asc"
+	productTypeMarketplace = "marketplace"
+	productTypeStorefront  = "storefront"
 )
 
 // UnifiedSearchHandler обрабатывает унифицированные поисковые запросы
@@ -84,8 +86,10 @@ type UnifiedSearchItem struct {
 	StorefrontSlug string                 `json:"storefront_slug,omitempty"` // Slug витрины для правильного URL
 	Score          float64                `json:"score"`
 	Highlights     map[string][]string    `json:"highlights,omitempty"`
-	ViewsCount     int                    `json:"views_count,omitempty"` // Для расчета популярности
-	CreatedAt      *time.Time             `json:"created_at,omitempty"`  // Для расчета свежести
+	ViewsCount     int                    `json:"views_count,omitempty"`    // Для расчета популярности
+	CreatedAt      *time.Time             `json:"created_at,omitempty"`     // Для расчета свежести
+	StockQuantity  *int                   `json:"stock_quantity,omitempty"` // Остатки товара
+	StockStatus    string                 `json:"stock_status,omitempty"`   // Статус наличия
 }
 
 // UnifiedProductImage изображение товара
@@ -236,7 +240,7 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 		params.Language = "ru"
 	}
 	if len(params.ProductTypes) == 0 {
-		params.ProductTypes = []string{"marketplace", "storefront"}
+		params.ProductTypes = []string{productTypeMarketplace, productTypeStorefront}
 	}
 
 	// Выполняем поиск
@@ -309,7 +313,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	}
 
 	// Поиск в storefront (если включен)
-	if h.containsProductType(params.ProductTypes, "storefront") {
+	if h.containsProductType(params.ProductTypes, productTypeStorefront) {
 		logger.Debug().Str("query", params.Query).Int("limit", searchLimit).Msg("Starting storefront search")
 		storefrontItems, count, took, err := h.searchStorefrontWithLimit(ctx, params, searchLimit)
 		if err != nil {
@@ -385,10 +389,6 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		}
 
 		// Определяем тип товара на основе StorefrontID
-		const (
-			productTypeMarketplace = "marketplace"
-			productTypeStorefront  = "storefront"
-		)
 		// Объявления маркетплейса всегда остаются объявлениями маркетплейса
 		// но если у них есть storefront_id, они могут продаваться через витрину
 		productType := productTypeMarketplace
@@ -510,7 +510,7 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 		// Создаем унифицированный элемент
 		item := UnifiedSearchItem{
 			ID:          "sp_" + strconv.Itoa(product.ProductID),
-			ProductType: "storefront",
+			ProductType: productTypeStorefront,
 			ProductID:   product.ProductID,
 			Name:        product.Name,
 			Description: product.Description,
@@ -523,6 +523,30 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 				Slug: product.Category.Slug,
 			},
 			Score: product.Score,
+		}
+
+		// Добавляем информацию об остатках
+		logger.Debug().
+			Int("product_id", product.ProductID).
+			Int("available_quantity", product.AvailableQuantity).
+			Bool("in_stock", product.InStock).
+			Msg("Processing storefront product stock info")
+
+		if product.AvailableQuantity > 0 {
+			stockQty := product.AvailableQuantity
+			item.StockQuantity = &stockQty
+		}
+		if product.InStock {
+			switch {
+			case product.AvailableQuantity <= 0:
+				item.StockStatus = "out_of_stock"
+			case product.AvailableQuantity <= 5:
+				item.StockStatus = "low_stock"
+			default:
+				item.StockStatus = "in_stock"
+			}
+		} else {
+			item.StockStatus = "out_of_stock"
 		}
 
 		// Добавляем информацию о локации, если есть
@@ -594,6 +618,13 @@ func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, pa
 
 	// Если нет поискового запроса, просто сортируем по указанному критерию
 	if params.Query == "" {
+		// Добавляем бонус для товаров витрин даже без поискового запроса
+		for i := range items {
+			if items[i].ProductType == productTypeStorefront {
+				// Товары витрин получают дополнительный приоритет
+				items[i].Score += 10.0
+			}
+		}
 		h.sortScoredItems(items, params.SortBy, params.SortOrder)
 		return items
 	}
@@ -601,6 +632,12 @@ func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, pa
 	// Вычисляем оценку релевантности для каждого элемента
 	for i := range items {
 		items[i].Score = h.calculateRelevanceScore(&items[i], params.Query)
+
+		// Добавляем бонус для товаров витрин
+		if items[i].ProductType == productTypeStorefront {
+			// Товары витрин получают дополнительный приоритет
+			items[i].Score += 10.0
+		}
 	}
 
 	// Сортируем результаты
@@ -664,8 +701,20 @@ func (h *UnifiedSearchHandler) calculateRelevanceScore(item *UnifiedSearchItem, 
 // sortScoredItems сортирует элементы по указанному критерию
 func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy, sortOrder string) {
 	sort.Slice(items, func(i, j int) bool {
+		// Для любой сортировки, если одинаковые значения, то товары витрин идут первыми
 		switch sortBy {
 		case "price":
+			if items[i].Price == items[j].Price {
+				// При одинаковой цене товары витрин идут первыми
+				if items[i].ProductType == productTypeStorefront && items[j].ProductType != productTypeStorefront {
+					return true
+				}
+				if items[i].ProductType != productTypeStorefront && items[j].ProductType == productTypeStorefront {
+					return false
+				}
+				// Если оба одного типа, сортируем по score
+				return items[i].Score > items[j].Score
+			}
 			if sortOrder == sortOrderAsc {
 				return items[i].Price < items[j].Price
 			}
@@ -673,7 +722,24 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 
 		case "date":
 			if items[i].CreatedAt == nil || items[j].CreatedAt == nil {
+				// Если нет даты у одного, товары витрин идут первыми
+				if items[i].ProductType == productTypeStorefront && items[j].ProductType != productTypeStorefront {
+					return true
+				}
+				if items[i].ProductType != productTypeStorefront && items[j].ProductType == productTypeStorefront {
+					return false
+				}
 				return false
+			}
+			// При одинаковой дате товары витрин идут первыми
+			if items[i].CreatedAt.Equal(*items[j].CreatedAt) {
+				if items[i].ProductType == productTypeStorefront && items[j].ProductType != productTypeStorefront {
+					return true
+				}
+				if items[i].ProductType != productTypeStorefront && items[j].ProductType == productTypeStorefront {
+					return false
+				}
+				return items[i].Score > items[j].Score
 			}
 			if sortOrder == sortOrderAsc {
 				return items[i].CreatedAt.Before(*items[j].CreatedAt)
@@ -681,6 +747,16 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 			return items[i].CreatedAt.After(*items[j].CreatedAt)
 
 		case "popularity":
+			if items[i].ViewsCount == items[j].ViewsCount {
+				// При одинаковой популярности товары витрин идут первыми
+				if items[i].ProductType == productTypeStorefront && items[j].ProductType != productTypeStorefront {
+					return true
+				}
+				if items[i].ProductType != productTypeStorefront && items[j].ProductType == productTypeStorefront {
+					return false
+				}
+				return items[i].Score > items[j].Score
+			}
 			if sortOrder == sortOrderAsc {
 				return items[i].ViewsCount < items[j].ViewsCount
 			}
@@ -688,6 +764,7 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 
 		case "relevance", "":
 			// По умолчанию сортируем по релевантности (score) по убыванию
+			// Score уже включает бонус для товаров витрин
 			return items[i].Score > items[j].Score
 
 		default:
@@ -820,7 +897,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 		switch params.ProductTypes[0] {
 		case "marketplace":
 			itemType = behavior.ItemTypeMarketplace
-		case "storefront":
+		case productTypeStorefront:
 			itemType = behavior.ItemTypeStorefront
 		default:
 			// Если неизвестный тип, используем marketplace по умолчанию
@@ -837,7 +914,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 				switch item.ProductType {
 				case "marketplace":
 					marketplaceCount++
-				case "storefront":
+				case productTypeStorefront:
 					storefrontCount++
 				}
 			}

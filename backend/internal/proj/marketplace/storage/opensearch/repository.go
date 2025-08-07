@@ -2552,7 +2552,18 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 				if hit, ok := hitI.(map[string]interface{}); ok {
 					if source, ok := hit["_source"].(map[string]interface{}); ok {
 						if idStr, ok := hit["_id"].(string); ok {
-							if id, err := strconv.Atoi(idStr); err == nil {
+							// Обрабатываем ID товаров витрин (формат sp_XXX) и обычных товаров
+							if strings.HasPrefix(idStr, "sp_") {
+								// Для товаров витрин сохраняем ID как есть
+								source["id"] = idStr
+								// Также сохраняем числовой ID для совместимости
+								if numID := strings.TrimPrefix(idStr, "sp_"); numID != "" {
+									if id, err := strconv.Atoi(numID); err == nil {
+										source["product_id"] = float64(id)
+									}
+								}
+							} else if id, err := strconv.Atoi(idStr); err == nil {
+								// Для обычных товаров парсим числовой ID
 								source["id"] = float64(id)
 							}
 						}
@@ -2689,7 +2700,13 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 	} else if idInt, ok := doc["id"].(int); ok {
 		listing.ID = idInt
 	} else if idStr, ok := doc["id"].(string); ok {
-		if id, err := strconv.Atoi(idStr); err == nil {
+		// Обрабатываем ID товаров витрин (формат sp_XXX)
+		if strings.HasPrefix(idStr, "sp_") {
+			// Для товаров витрин используем product_id
+			if productID, ok := doc["product_id"].(float64); ok {
+				listing.ID = int(productID)
+			}
+		} else if id, err := strconv.Atoi(idStr); err == nil {
 			listing.ID = id
 		}
 	} else {
@@ -2782,6 +2799,15 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		if lon, ok := coordinates["lon"].(float64); ok {
 			listing.Longitude = &lon
 		}
+	}
+
+	// Обрабатываем остатки товара (для товаров витрин)
+	if stockQuantity, ok := doc["stock_quantity"].(float64); ok {
+		stockInt := int(stockQuantity)
+		listing.StockQuantity = &stockInt
+	}
+	if stockStatus, ok := doc["stock_status"].(string); ok {
+		listing.StockStatus = &stockStatus
 	}
 
 	// Обрабатываем информацию о категории

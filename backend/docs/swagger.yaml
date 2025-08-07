@@ -1757,6 +1757,11 @@ definitions:
         type: boolean
       status:
         type: string
+      stock_quantity:
+        description: Поля для товаров витрин
+        type: integer
+      stock_status:
+        type: string
       storefront:
         allOf:
         - $ref: '#/definitions/backend_internal_domain_models.Storefront'
@@ -5073,6 +5078,12 @@ definitions:
         type: string
       score:
         type: number
+      stock_quantity:
+        description: Остатки товара
+        type: integer
+      stock_status:
+        description: Статус наличия
+        type: string
       storefront:
         allOf:
         - $ref: '#/definitions/internal_proj_global_handler.UnifiedStorefrontInfo'

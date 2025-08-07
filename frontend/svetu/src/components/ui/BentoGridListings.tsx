@@ -68,6 +68,9 @@ function convertToMarketplaceItem(
           slug: unifiedItem.storefront.slug || '',
         }
       : undefined,
+    // Добавляем информацию об остатках
+    stock_quantity: unifiedItem.stock_quantity,
+    stock_status: unifiedItem.stock_status,
   };
 }
 
