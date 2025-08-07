@@ -222,19 +222,19 @@
     "addressHidden": "Адрес скрыт",
     "withoutTitle": "Без названия"
   },
-  "walkingAccessibility": "[RU] Walking Accessibility",
-  "searchRadius": "[RU] Search Radius",
+  "walkingAccessibility": "Пешеходная доступность",
+  "searchRadius": "Радиус поиска",
   "common": {
     "close": "Закрыть"
   },
-  "ru-RU": "[RU] Ru- R U",
-  "attributes": "[RU] Attributes",
-  "category": "[RU] Category",
-  "priceFrom": "[RU] Price From",
-  "priceTo": "[RU] Price To",
-  "radius": "[RU] Radius",
-  "lat": "[RU] Lat",
-  "lng": "[RU] Lng",
-  "zoom": "[RU] Zoom",
-  "q": "[RU] Q"
+  "ru-RU": "Русский",
+  "attributes": "Атрибуты",
+  "category": "Категория",
+  "priceFrom": "Цена от",
+  "priceTo": "Цена до",
+  "radius": "Радиус",
+  "lat": "Широта",
+  "lng": "Долгота",
+  "zoom": "Масштаб",
+  "q": "Поиск"
 }

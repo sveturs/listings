@@ -1,12 +1,35 @@
 {
   "marketplace": {
     "allCategories": "Sve kategorije",
+    "iconPicker": {
+      "placeholder": "Izaberite ikonu",
+      "close": "Zatvori",
+      "categories": {
+        "transport": "Transport",
+        "electronics": "Elektronika",
+        "home": "Kuća i dom",
+        "clothing": "Odeća",
+        "food": "Hrana i piće",
+        "sports": "Sport i rekreacija",
+        "beauty": "Lepota i zdravlje",
+        "books": "Knjige i obrazovanje",
+        "nature": "Priroda i životinje",
+        "tools": "Alati",
+        "numbers": "Brojevi i simboli",
+        "attributes": "Atributi"
+      }
+    },
     "condition": {
       "new": "Novo",
       "like_new": "Kao novo",
       "used": "Polovno",
       "refurbished": "Obnovljeno",
       "likeNew": "Kao novo"
+    },
+    "create": {
+      "title": "Kreiraj",
+      "selectOptions": "Izaberite opcije",
+      "noOptions": "Nema dostupnih opcija"
     },
     "filters": {
       "title": "Филтери",
@@ -387,6 +410,13 @@
     "rating": {
       "error": {
         "fetch_failed": "Greška pri učitavanju ocene"
+      },
+      "labels": {
+        "terrible": "Užasno",
+        "bad": "Loše",
+        "normal": "Normalno",
+        "good": "Dobro",
+        "excellent": "Odlično"
       }
     },
     "photos": {
@@ -511,7 +541,12 @@
     "listView": "Prikaz liste",
     "mapView": "Prikaz mape",
     "switchToListView": "Prebaci na prikaz liste",
-    "switchToMapView": "Prebaci na prikaz mape"
+    "switchToMapView": "Prebaci na prikaz mape",
+    "activeFilters": "Aktivni filteri",
+    "clearAll": "Očisti sve",
+    "filters": "Filteri",
+    "map": "Mapa",
+    "view": "Prikaz"
   },
   "iconPicker": {
     "placeholder": "Izaberite ikonu",
