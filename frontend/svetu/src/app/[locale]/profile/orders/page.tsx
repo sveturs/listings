@@ -3,10 +3,22 @@
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import OrderHistory from '@/components/orders/OrderHistory';
+import OrderStatistics from '@/components/orders/OrderStatistics';
+import OrderFilters from '@/components/orders/OrderFilters';
 
 export default function OrdersPage() {
   const t = useTranslations('orders');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [_filters, setFilters] = useState<any>({});
+
+  const handleApplyFilters = (newFilters: any) => {
+    setFilters(newFilters);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+    setSelectedStatus('');
+  };
 
   const statusOptions = [
     { value: '', label: t('allOrders') },
@@ -47,6 +59,15 @@ export default function OrdersPage() {
             </select>
           </div>
         </div>
+
+        {/* Filters */}
+        <OrderFilters
+          onApplyFilters={handleApplyFilters}
+          onClearFilters={handleClearFilters}
+        />
+
+        {/* Statistics */}
+        <OrderStatistics />
 
         {/* Orders List */}
         <OrderHistory status={selectedStatus || undefined} limit={10} />

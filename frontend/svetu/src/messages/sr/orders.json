@@ -8,10 +8,14 @@
   "status": {
     "label": "Status",
     "pending": "Na čekanju",
+    "paid": "Plaćeno",
     "confirmed": "Potvrđena",
     "shipped": "Poslana",
     "delivered": "Dostavljena",
-    "cancelled": "Otkazana"
+    "completed": "Završena",
+    "cancelled": "Otkazana",
+    "disputed": "Sporna",
+    "refunded": "Refundirana"
   },
   "loginRequired": "Prijavite se za pregled porudžbina",
   "tryAgain": "Pokušajte ponovo",
@@ -48,9 +52,74 @@
     "bank_transfer": "Bankovna doznaka",
     "card": "Kreditna/Debitna kartica"
   },
-  "shipping": {
+  "shippingOptions": {
     "standard": "Standardna dostava",
     "express": "Ekspres dostava",
     "pickup": "Preuzimanje"
-  }
+  },
+  "viewDetails": "Detalji",
+  "order": "Porudžbina",
+  "seller": "Prodavac",
+  "buyer": "Kupac",
+  "unknown": "Nepoznato",
+  "searchOrders": "Pretraži porudžbine",
+  "dateRange": "Vremenski period",
+  "from": "Od",
+  "to": "Do",
+  "priceRange": "Raspon cena",
+  "minPrice": "Min. cena",
+  "maxPrice": "Maks. cena",
+  "applyFilters": "Primeni filtere",
+  "clearFilters": "Obriši filtere",
+  "exportOrders": "Izvezi porudžbine",
+  "exportAsCSV": "Izvezi kao CSV",
+  "exportAsPDF": "Izvezi kao PDF",
+  "cancelOrder": "Otkaži porudžbinu",
+  "cancelOrderConfirm": "Da li ste sigurni da želite da otkažete ovu porudžbinu?",
+  "cancelReason": "Razlog otkazivanja",
+  "reorder": "Ponovi porudžbinu",
+  "contactSeller": "Kontaktiraj prodavca",
+  "leaveReview": "Ostavi recenziju",
+  "statistics": {
+    "title": "Statistika porudžbina",
+    "totalSpent": "Ukupno potrošeno",
+    "activeOrders": "Aktivne porudžbine",
+    "completedOrders": "Završene porudžbine",
+    "averageOrderValue": "Prosečna vrednost porudžbine",
+    "thisMonth": "Ovog meseca",
+    "lastMonth": "Prošlog meseca",
+    "thisYear": "Ove godine"
+  },
+  "timeline": {
+    "title": "Istorija promena",
+    "orderPlaced": "Porudžbina postavljena",
+    "paymentReceived": "Uplata primljena",
+    "orderConfirmed": "Porudžbina potvrđena",
+    "orderShipped": "Porudžbina poslata",
+    "orderDelivered": "Porudžbina dostavljena",
+    "orderCompleted": "Porudžbina završena",
+    "orderCancelled": "Porudžbina otkazana"
+  },
+  "notifications": {
+    "orderUpdated": "Status porudžbine ažuriran",
+    "orderCancelled": "Porudžbina uspešno otkazana",
+    "exportReady": "Izvoz spreman za preuzimanje"
+  },
+  "orderNotFound": "Porudžbina nije pronađena",
+  "orderAccessDenied": "Nemate pristup ovoj porudžbini",
+  "orderLoadError": "Greška pri učitavanju porudžbine",
+  "productInfo": "Informacije o proizvodu",
+  "productPrice": "Cena proizvoda",
+  "shippingInfo": "Informacije o dostavi",
+  "shippedDate": "Datum slanja",
+  "deliveredDate": "Datum dostave",
+  "actions": "Akcije",
+  "confirmReceiptMessage": "Ako ste primili artikal, molimo potvrdite prijem. Ovo će pomoći završiti transakciju.",
+  "confirmReceipt": "Potvrdi prijem",
+  "dealParticipants": "Učesnici transakcije",
+  "you": "Vi",
+  "protectionPeriod": "Period zaštite",
+  "protectionActiveUntil": "Zaštita kupca aktivna do",
+  "quantity": "Količina",
+  "noItems": "Nema artikala"
 }

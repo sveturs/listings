@@ -80,10 +80,12 @@ const initialState: CartState = {
 export const fetchUserCarts = createAsyncThunk(
   'cart/fetchUserCarts',
   async (userId: number) => {
+    console.log('[fetchUserCarts] Starting with userId:', userId);
     // Сначала очищаем старые корзины при входе нового пользователя
     clearOldCartStorage();
 
     const carts = await cartService.getUserCarts();
+    console.log('[fetchUserCarts] Received carts:', carts);
     // Если есть корзины, берем последнюю обновленную для текущего storefront
     // или первую из списка как активную
     return { carts, userId };
@@ -313,6 +315,8 @@ const cartSlice = createSlice({
         state.loading = false;
         const { carts, userId } = action.payload;
 
+        console.log('[CartSlice] fetchUserCarts fulfilled:', { carts, userId });
+
         // Сохраняем все корзины
         state.allCarts = carts || [];
 
@@ -352,6 +356,10 @@ export const selectCartItemsCount = (state: { cart: CartState }) =>
     0
   ) || 0;
 
+// Селектор для всех корзин
+export const selectAllCarts = (state: { cart: CartState }) =>
+  state.cart.allCarts;
+
 // Селектор для подсчета всех товаров во всех корзинах
 export const selectAllCartsItemsCount = (state: { cart: CartState }) =>
   state.cart.allCarts.reduce(
@@ -368,5 +376,8 @@ export const selectCartTotal = (state: { cart: CartState }) =>
     (total, item) => total + Number(item.total_price || 0),
     0
   ) || 0;
+
+// Алиас для fetchUserCarts
+export const fetchAllCarts = fetchUserCarts;
 
 export default cartSlice.reducer;
