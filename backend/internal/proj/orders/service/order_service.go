@@ -9,18 +9,20 @@ import (
 	"github.com/shopspring/decimal"
 
 	"backend/internal/domain/models"
+	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"backend/pkg/logger"
 )
 
 // OrderService представляет сервис для работы с заказами
 type OrderService struct {
-	orderRepo      postgres.OrderRepositoryInterface
-	cartRepo       postgres.CartRepositoryInterface
-	productRepo    ProductRepositoryInterface
-	storefrontRepo StorefrontRepositoryInterface
-	inventoryMgr   InventoryManagerInterface
-	logger         logger.Logger
+	orderRepo         postgres.OrderRepositoryInterface
+	cartRepo          postgres.CartRepositoryInterface
+	productRepo       ProductRepositoryInterface
+	storefrontRepo    StorefrontRepositoryInterface
+	inventoryMgr      InventoryManagerInterface
+	productSearchRepo opensearch.ProductSearchRepository // OpenSearch репозиторий для реиндексации
+	logger            logger.Logger
 }
 
 // Интерфейсы зависимостей
@@ -50,15 +52,17 @@ func NewOrderService(
 	productRepo ProductRepositoryInterface,
 	storefrontRepo StorefrontRepositoryInterface,
 	inventoryMgr InventoryManagerInterface,
+	productSearchRepo opensearch.ProductSearchRepository,
 	logger logger.Logger,
 ) *OrderService {
 	return &OrderService{
-		orderRepo:      orderRepo,
-		cartRepo:       cartRepo,
-		productRepo:    productRepo,
-		storefrontRepo: storefrontRepo,
-		inventoryMgr:   inventoryMgr,
-		logger:         logger,
+		orderRepo:         orderRepo,
+		cartRepo:          cartRepo,
+		productRepo:       productRepo,
+		storefrontRepo:    storefrontRepo,
+		inventoryMgr:      inventoryMgr,
+		productSearchRepo: productSearchRepo,
+		logger:            logger,
 	}
 }
 

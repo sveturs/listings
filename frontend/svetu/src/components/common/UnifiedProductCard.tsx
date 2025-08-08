@@ -406,11 +406,12 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
                           <span className={`text-sm font-medium ${stockColor}`}>
                             {t(`stockStatus.${product.stockStatus}`)}
                           </span>
-                          {product.stockQuantity !== undefined && (
-                            <span className="text-sm text-base-content/70">
-                              ({product.stockQuantity} {t('units')})
-                            </span>
-                          )}
+                          {product.stockQuantity !== undefined &&
+                            product.stockQuantity > 0 && (
+                              <span className="text-sm text-base-content/70">
+                                ({product.stockQuantity} {t('units')})
+                              </span>
+                            )}
                         </div>
                       )}
                     </div>
@@ -791,20 +792,19 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
           </div>
 
           {/* Статус наличия для товаров витрин */}
-          {product.type === 'storefront' &&
-            product.stockStatus &&
-            gridColumns < 3 && (
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-medium ${stockColor}`}>
-                  {t(`stockStatus.${product.stockStatus}`)}
-                </span>
-                {product.stockQuantity !== undefined && (
+          {product.type === 'storefront' && product.stockStatus && (
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-medium ${stockColor}`}>
+                {t(`stockStatus.${product.stockStatus}`)}
+              </span>
+              {product.stockQuantity !== undefined &&
+                product.stockQuantity > 0 && (
                   <span className="text-xs text-base-content/70">
-                    ({product.stockQuantity})
+                    ({product.stockQuantity} {t('units')})
                   </span>
                 )}
-              </div>
-            )}
+            </div>
+          )}
 
           {/* Цена и действия */}
           <div className="card-actions justify-between items-end mt-2">

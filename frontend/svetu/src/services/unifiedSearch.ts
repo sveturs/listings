@@ -78,6 +78,9 @@ export interface UnifiedSearchItem {
   };
   score: number;
   highlights?: Record<string, string[]>;
+  // Информация об остатках (для товаров витрин)
+  stock_quantity?: number;
+  stock_status?: 'in_stock' | 'out_of_stock' | 'low_stock';
 }
 
 export interface UnifiedSearchResult {

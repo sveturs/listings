@@ -102,6 +102,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"barcode":        product.Barcode,
 		"stock_status":   product.StockStatus,
 		"is_active":      product.IsActive,
+		"status":         "active", // Добавляем статус для совместимости с фильтром поиска
 		"created_at":     product.CreatedAt.Format(time.RFC3339),
 		"updated_at":     product.UpdatedAt.Format(time.RFC3339),
 	}
@@ -110,6 +111,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 	doc["stock_quantity"] = product.StockQuantity
 	doc["inventory"] = map[string]interface{}{
 		"quantity":  product.StockQuantity,
+		"available": product.StockQuantity, // Доступное количество равно общему количеству минус резервы (пока резервы не реализованы)
 		"in_stock":  product.StockQuantity > 0,
 		"low_stock": product.StockQuantity > 0 && product.StockQuantity <= 5, // TODO: сделать настраиваемым
 		"status":    product.StockStatus,
@@ -986,6 +988,10 @@ func (r *ProductRepository) parseSearchHit(hit map[string]interface{}) *ProductS
 
 	// Парсим _source
 	if source, ok := hit["_source"].(map[string]interface{}); ok {
+		logger.Debug().
+			Str("id", item.ID).
+			Interface("full_source", source).
+			Msg("Full OpenSearch document source")
 		r.parseProductSource(source, item)
 	}
 
@@ -1031,12 +1037,30 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 
 	// Инвентарь
 	if inventory, ok := source["inventory"].(map[string]interface{}); ok {
+		logger.Debug().
+			Int("product_id", item.ProductID).
+			Interface("inventory", inventory).
+			Msg("Parsing inventory from OpenSearch")
+
 		if v, ok := inventory["in_stock"].(bool); ok {
 			item.InStock = v
 		}
 		if v, ok := inventory["available"].(float64); ok {
 			item.AvailableQuantity = int(v)
+			logger.Debug().
+				Int("product_id", item.ProductID).
+				Int("available_quantity", item.AvailableQuantity).
+				Msg("Set available quantity from inventory")
+		} else {
+			logger.Debug().
+				Int("product_id", item.ProductID).
+				Interface("available_value", inventory["available"]).
+				Msg("Failed to parse available quantity")
 		}
+	} else {
+		logger.Debug().
+			Int("product_id", item.ProductID).
+			Msg("No inventory data found in OpenSearch response")
 	}
 
 	// Изображения
@@ -1658,7 +1682,9 @@ func (r *ProductRepository) UpdateProductStock(ctx context.Context, productID in
 		return fmt.Errorf("no stock data to update")
 	}
 
-	docID := strconv.Itoa(productID)
+	// Для товаров витрин используем префикс sp_
+	// Это соответствует формату ID при индексации в методе IndexProduct
+	docID := fmt.Sprintf("sp_%d", productID)
 
 	// Обновляем только переданные поля
 	updateDoc := make(map[string]interface{})
@@ -1673,6 +1699,6 @@ func (r *ProductRepository) UpdateProductStock(ctx context.Context, productID in
 		return fmt.Errorf("failed to update product stock in OpenSearch: %w", err)
 	}
 
-	logger.Info().Msgf("Successfully updated stock for product %d in OpenSearch index %s", productID, r.indexName)
+	logger.Info().Msgf("Successfully updated stock for storefront product sp_%d in OpenSearch index %s", productID, r.indexName)
 	return nil
 }

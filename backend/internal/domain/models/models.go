@@ -78,6 +78,10 @@ type (
 
 		AverageRating float64 `json:"average_rating,omitempty"`
 		ReviewCount   int     `json:"review_count,omitempty"`
+
+		// Поля для товаров витрин
+		StockQuantity *int    `json:"stock_quantity,omitempty"`
+		StockStatus   *string `json:"stock_status,omitempty"`
 	}
 )
 

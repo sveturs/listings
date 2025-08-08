@@ -152,8 +152,11 @@ export function adaptMarketplaceItem(item: MarketplaceItem): UnifiedProduct {
     // Состояние и наличие
     condition: condition as UnifiedProduct['condition'],
     isActive: item.status === 'active' || item.status === undefined, // По умолчанию считаем активным
-    stockStatus: item.product_type === 'storefront' ? 'in_stock' : undefined, // Для товаров витрин предполагаем наличие
-    stockQuantity: item.product_type === 'storefront' ? 100 : undefined, // Условное количество для витрин
+    stockStatus:
+      item.stock_status ||
+      (item.product_type === 'storefront' ? 'in_stock' : undefined),
+    stockQuantity:
+      item.stock_quantity !== undefined ? item.stock_quantity : undefined, // Используем реальные остатки из API
 
     // Варианты - для товаров маркетплейса их нет
     variants: [],

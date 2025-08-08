@@ -1,123 +1,118 @@
-#!/bin/bash
+#\!/bin/bash
 
 # Скрипт для переиндексации товаров витрин в OpenSearch
 
-set -e
+echo "🔄 Начинаем переиндексацию товаров витрин..."
 
-# Цвета для вывода
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Получаем все товары витрин из БД
+PRODUCTS=$(psql "postgres://postgres:password@localhost:5432/svetubd?sslmode=disable" -t -c "
+SELECT json_build_object(
+    'id', sp.id,
+    'storefront_id', sp.storefront_id,
+    'category_id', sp.category_id,
+    'name', sp.name,
+    'description', COALESCE(sp.description, ''),
+    'price', sp.price,
+    'currency', sp.currency,
+    'stock_quantity', sp.stock_quantity,
+    'stock_status', sp.stock_status,
+    'is_active', sp.is_active,
+    'sku', sp.sku,
+    'storefront_name', s.name,
+    'storefront_slug', s.slug
+)
+FROM storefront_products sp
+LEFT JOIN storefronts s ON s.id = sp.storefront_id
+WHERE sp.is_active = true
+ORDER BY sp.id;")
 
-echo -e "${GREEN}=== Reindex Storefront Products in OpenSearch ===${NC}"
-echo
+# Счетчик успешно проиндексированных товаров
+SUCCESS_COUNT=0
+FAIL_COUNT=0
 
-# Проверка наличия .env файла
-if [ ! -f .env ]; then
-    echo -e "${RED}Error: .env file not found${NC}"
-    exit 1
-fi
-
-# Загрузка переменных окружения
-set -o allexport
-source .env
-set +o allexport
-
-# Проверка подключения к OpenSearch
-echo -e "${YELLOW}Checking OpenSearch connection...${NC}"
-curl -s -o /dev/null -w "%{http_code}" http://localhost:9200 > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: Cannot connect to OpenSearch at localhost:9200${NC}"
-    exit 1
-fi
-echo -e "${GREEN}OpenSearch is accessible${NC}"
-
-# Опции по умолчанию
-CREATE_INDEX=false
-BATCH_SIZE=100
-INDEX_NAME="storefront_products"
-
-# Обработка аргументов командной строки
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --create)
-            CREATE_INDEX=true
-            shift
-            ;;
-        --batch)
-            BATCH_SIZE="$2"
-            shift 2
-            ;;
-        --index)
-            INDEX_NAME="$2"
-            shift 2
-            ;;
-        --help)
-            echo "Usage: $0 [options]"
-            echo "Options:"
-            echo "  --create       Create new index before reindexing"
-            echo "  --batch SIZE   Batch size for indexing (default: 100)"
-            echo "  --index NAME   Index name (default: storefront_products)"
-            echo "  --help         Show this help message"
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}Unknown option: $1${NC}"
-            exit 1
-            ;;
-    esac
+# Обрабатываем каждый товар
+echo "$PRODUCTS" | while IFS= read -r product_json; do
+    # Пропускаем пустые строки
+    if [ -z "$product_json" ]; then
+        continue
+    fi
+    
+    # Извлекаем данные из JSON
+    ID=$(echo "$product_json" | jq -r '.id')
+    STOREFRONT_ID=$(echo "$product_json" | jq -r '.storefront_id')
+    CATEGORY_ID=$(echo "$product_json" | jq -r '.category_id // 0')
+    NAME=$(echo "$product_json" | jq -r '.name')
+    DESCRIPTION=$(echo "$product_json" | jq -r '.description // ""')
+    PRICE=$(echo "$product_json" | jq -r '.price')
+    CURRENCY=$(echo "$product_json" | jq -r '.currency // "RSD"')
+    STOCK_QUANTITY=$(echo "$product_json" | jq -r '.stock_quantity')
+    STOCK_STATUS=$(echo "$product_json" | jq -r '.stock_status')
+    SKU=$(echo "$product_json" | jq -r '.sku // ""')
+    STOREFRONT_NAME=$(echo "$product_json" | jq -r '.storefront_name // ""')
+    STOREFRONT_SLUG=$(echo "$product_json" | jq -r '.storefront_slug // ""')
+    
+    # Определяем статус наличия
+    if [ "$STOCK_QUANTITY" -le 0 ]; then
+        STOCK_STATUS="out_of_stock"
+    elif [ "$STOCK_QUANTITY" -le 5 ]; then
+        STOCK_STATUS="low_stock"
+    else
+        STOCK_STATUS="in_stock"
+    fi
+    
+    # Формируем документ для индексации
+    DOC=$(cat <<EOFDOC
+{
+  "product_id": $ID,
+  "product_type": "storefront",
+  "storefront_id": $STOREFRONT_ID,
+  "category_id": $CATEGORY_ID,
+  "name": "$NAME",
+  "name_lowercase": "$(echo "$NAME" | tr '[:upper:]' '[:lower:]')",
+  "description": "$DESCRIPTION",
+  "price": $PRICE,
+  "currency": "$CURRENCY",
+  "stock_quantity": $STOCK_QUANTITY,
+  "stock_status": "$STOCK_STATUS",
+  "sku": "$SKU",
+  "is_active": true,
+  "inventory": {
+    "quantity": $STOCK_QUANTITY,
+    "in_stock": $([ "$STOCK_QUANTITY" -gt 0 ] && echo "true" || echo "false"),
+    "available": $STOCK_QUANTITY,
+    "low_stock": $([ "$STOCK_QUANTITY" -gt 0 ] && [ "$STOCK_QUANTITY" -le 5 ] && echo "true" || echo "false"),
+    "status": "$STOCK_STATUS"
+  },
+  "storefront": {
+    "id": $STOREFRONT_ID,
+    "name": "$STOREFRONT_NAME",
+    "slug": "$STOREFRONT_SLUG"
+  },
+  "created_at": "$(date -Iseconds)",
+  "updated_at": "$(date -Iseconds)"
+}
+EOFDOC
+)
+    
+    # Индексируем документ в OpenSearch
+    RESPONSE=$(curl -s -X POST "http://localhost:9200/marketplace/_doc/sp_$ID" \
+        -H "Content-Type: application/json" \
+        -d "$DOC")
+    
+    # Проверяем результат
+    if echo "$RESPONSE" | grep -q '"result":"created"\|"result":"updated"'; then
+        echo "✅ Товар ID=$ID успешно проиндексирован (остаток: $STOCK_QUANTITY)"
+        ((SUCCESS_COUNT++))
+    else
+        echo "❌ Ошибка при индексации товара ID=$ID"
+        echo "   Ответ: $RESPONSE"
+        ((FAIL_COUNT++))
+    fi
 done
 
-# Показать текущие настройки
-echo -e "${YELLOW}Settings:${NC}"
-echo "  Index name: $INDEX_NAME"
-echo "  Batch size: $BATCH_SIZE"
-echo "  Create index: $CREATE_INDEX"
-echo
-
-# Подтверждение
-if [ "$CREATE_INDEX" = true ]; then
-    echo -e "${YELLOW}WARNING: This will recreate the index '$INDEX_NAME'${NC}"
-    echo -n "Are you sure you want to continue? (y/N) "
-    read -r response
-    if [[ ! "$response" =~ ^[Yy]$ ]]; then
-        echo "Aborted."
-        exit 0
-    fi
-fi
-
-# Запуск переиндексации
-echo -e "${YELLOW}Starting reindexing...${NC}"
-echo
-
-# Собираем аргументы для утилиты
-ARGS=""
-if [ "$CREATE_INDEX" = true ]; then
-    ARGS="$ARGS --recreate"
-fi
-ARGS="$ARGS --batch $BATCH_SIZE"
-
-# Запускаем утилиту переиндексации
-go run ./cmd/reindex-products/main.go $ARGS
-
-RESULT=$?
-
-if [ $RESULT -eq 0 ]; then
-    echo
-    echo -e "${GREEN}Reindexing completed successfully!${NC}"
-    
-    # Показать статистику индекса
-    echo
-    echo -e "${YELLOW}Index statistics:${NC}"
-    curl -s "http://localhost:9200/$INDEX_NAME/_count" | jq '.count' | xargs echo "Total documents:"
-    
-    # Показать размер индекса
-    SIZE_BYTES=$(curl -s "http://localhost:9200/$INDEX_NAME/_stats/store" | jq '.indices["'$INDEX_NAME'"].total.store.size_in_bytes // 0')
-    SIZE_MB=$((SIZE_BYTES / 1024 / 1024))
-    echo "Index size: ${SIZE_MB} MB"
-else
-    echo
-    echo -e "${RED}Reindexing failed!${NC}"
-    exit 1
-fi
+echo ""
+echo "📊 Результаты переиндексации:"
+echo "   ✅ Успешно: $SUCCESS_COUNT товаров"
+echo "   ❌ Ошибок: $FAIL_COUNT товаров"
+echo ""
+echo "✅ Переиндексация завершена\!"

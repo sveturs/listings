@@ -78,6 +78,9 @@ export interface MarketplaceItem {
     numeric_value?: number;
     boolean_value?: boolean;
   }>;
+  // Информация об остатках (для товаров витрин)
+  stock_quantity?: number;
+  stock_status?: 'in_stock' | 'out_of_stock' | 'low_stock';
 }
 
 export interface MarketplaceSearchResponse {

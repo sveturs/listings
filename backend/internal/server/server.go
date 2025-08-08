@@ -96,7 +96,11 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(services)
 	balanceHandler := balanceHandler.NewHandler(services)
 	storefrontModule := storefronts.NewModule(services)
-	ordersModule, err := orders.NewModule(db)
+	ordersModule, err := orders.NewModule(db, &opensearch.Config{
+		URL:      cfg.OpenSearch.URL,
+		Username: cfg.OpenSearch.Username,
+		Password: cfg.OpenSearch.Password,
+	})
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
 	}

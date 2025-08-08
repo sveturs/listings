@@ -26812,6 +26812,13 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
+                "stock_quantity": {
+                    "description": "Поля для товаров витрин",
+                    "type": "integer"
+                },
+                "stock_status": {
+                    "type": "string"
+                },
                 "storefront": {
                     "description": "данные витрины",
                     "allOf": [
@@ -31740,6 +31747,14 @@ const docTemplate = `{
                 },
                 "score": {
                     "type": "number"
+                },
+                "stock_quantity": {
+                    "description": "Остатки товара",
+                    "type": "integer"
+                },
+                "stock_status": {
+                    "description": "Статус наличия",
+                    "type": "string"
                 },
                 "storefront": {
                     "description": "Только для storefront товаров",

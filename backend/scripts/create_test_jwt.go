@@ -23,8 +23,8 @@ func main() {
 
 	// Создаем claims
 	claims := Claims{
-		UserID: 1,
-		Email:  "test@example.com",
+		UserID: 2,
+		Email:  "voroshilovdo@gmail.com",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

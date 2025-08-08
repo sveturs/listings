@@ -25241,6 +25241,9 @@ export interface components {
       review_count?: number;
       show_on_map?: boolean;
       status?: string;
+      /** @description Поля для товаров витрин */
+      stock_quantity?: number;
+      stock_status?: string;
       /** @description данные витрины */
       storefront?: components['schemas']['backend_internal_domain_models.Storefront'];
       /** @description связь с витриной */
@@ -26972,6 +26975,10 @@ export interface components {
       /** @description "marketplace" или "storefront" */
       product_type?: string;
       score?: number;
+      /** @description Остатки товара */
+      stock_quantity?: number;
+      /** @description Статус наличия */
+      stock_status?: string;
       /** @description Только для storefront товаров */
       storefront?: components['schemas']['internal_proj_global_handler.UnifiedStorefrontInfo'];
       /** @description ID витрины для товаров маркетплейса */

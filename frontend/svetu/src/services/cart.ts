@@ -12,7 +12,7 @@ export const cartService = {
   // Получить все корзины пользователя
   async getUserCarts(): Promise<ShoppingCart[]> {
     const response = await apiClient.get('/api/v1/user/carts');
-    return response.data.data;
+    return response.data?.data || [];
   },
 
   // Получить корзину витрины
