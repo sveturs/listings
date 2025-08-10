@@ -80,7 +80,7 @@
       "email": "Email adresa",
       "phone": "Broj telefona"
     },
-    "shipping": "Dostava",
+    "shipping": "Shipping",
     "payment": {
       "title": "Način plaćanja",
       "method": "Izaberite način plaćanja",
@@ -125,7 +125,6 @@
     "orderSummary": "Order Summary",
     "quantity": "Qty",
     "subtotal": "Subtotal",
-    "shipping": "Shipping",
     "tax": "Tax",
     "total": "Total",
     "placeOrder": "Place Order",
@@ -208,5 +207,15 @@
         "gold": "Zlatni prodavac"
       }
     }
+  },
+  "remove": "[SR] Remove",
+  "empty": "[SR] Empty",
+  "clear": "[SR] Clear",
+  "miniCart": {
+    "title": "[SR] Title",
+    "empty": "[SR] Empty",
+    "total": "[SR] Total",
+    "viewCart": "[SR] View Cart",
+    "checkout": "[SR] Checkout"
   }
 }

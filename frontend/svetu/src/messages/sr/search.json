@@ -50,5 +50,15 @@
   "byPrice": "Po ceni",
   "byDate": "Po datumu",
   "searchHistory": "Istorija pretrage",
-  "clearHistory": "Obriši istoriju"
+  "clearHistory": "Obriši istoriju",
+  "city": "[SR] City",
+  "enterCity": "[SR] Enter City",
+  "category": "[SR] Category",
+  "allCategories": "[SR] All Categories",
+  "inCategory": "[SR] In Category",
+  "search": {
+    "searchHistory": "[SR] Search History",
+    "clearHistory": "[SR] Clear History"
+  },
+  "popularSearches": "[SR] Popular Searches"
 }

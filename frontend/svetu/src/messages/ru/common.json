@@ -18,7 +18,13 @@
     "profile": "Профиль",
     "close": "Закрыть"
   },
-  "search": "Поиск",
+  "search": {
+    "notFound": "[RU] Not Found",
+    "addressPlaceholder": "[RU] Address Placeholder",
+    "address": "[RU] Address",
+    "byAddress": "[RU] By Address",
+    "byDistrict": "[RU] By District"
+  },
   "validation": {
     "nameRequired": "Имя обязательно для заполнения",
     "nameMinLength": "Имя должно содержать минимум 2 символа",
@@ -315,7 +321,23 @@
   "fuzzy": "Нечёткий поиск",
   "lat": "Широта",
   "lon": "Долгота",
-  "filters": "Фильтры",
+  "filters": {
+    "title": "[RU] Title",
+    "category": "[RU] Category",
+    "allCategories": "[RU] All Categories",
+    "price": "Цена",
+    "priceFrom": "[RU] Price From",
+    "priceTo": "[RU] Price To",
+    "resetFilters": "[RU] Reset Filters",
+    "radius": "[RU] Radius",
+    "period": "[RU] Period",
+    "periods": {
+      "day": "[RU] Day",
+      "week": "[RU] Week",
+      "month": "[RU] Month"
+    },
+    "limit": "[RU] Limit"
+  },
   "priceRange": "Диапазон цен",
   "sortBy": "Сортировать по",
   "relevance": "Релевантности",
@@ -340,7 +362,10 @@
   "noStorefrontsInCategory": "Нет витрин в категории",
   "createFirstStorefront": "Создать первую витрину",
   "createStorefront": "Создать витрину",
-  "status": "Статус",
+  "status": {
+    "active": "Активный",
+    "inactive": "Неактивный"
+  },
   "reviews": "отзывов",
   "noDescription": "Нет описания",
   "notSpecified": "Не указано",
@@ -401,7 +426,10 @@
     "showing": "Показано",
     "listings": "объявлений"
   },
-  "actions": "Действия",
+  "actions": {
+    "apply": "[RU] Apply",
+    "reset": "Сбросить"
+  },
   "loadError": "Ошибка загрузки",
   "ctr": {
     "label": "CTR",
@@ -537,5 +565,19 @@
   "systemName": "Системное имя",
   "sortOrder": "Порядок сортировки",
   "isActive": "Активно",
-  "translating": "Переводим..."
+  "translating": "Переводим...",
+  "common": {
+    "minutes": "[RU] Minutes",
+    "km": "[RU] Km",
+    "m": "[RU] M",
+    "resetFilters": "[RU] Reset Filters",
+    "translate": "[RU] Translate",
+    "systemName": "[RU] System Name",
+    "sortOrder": "[RU] Sort Order",
+    "isActive": "[RU] Is Active",
+    "translating": "[RU] Translating",
+    "saveSuccess": "[RU] Save Success",
+    "confirmDelete": "[RU] Confirm Delete",
+    "deleteSuccess": "[RU] Delete Success"
+  }
 }

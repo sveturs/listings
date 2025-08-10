@@ -16,7 +16,7 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
   showActions = true,
   compact = false,
 }) => {
-  const t = useTranslations('admin.balance');
+  const t = useTranslations('admin');
   const locale = useLocale();
   const { balance, loading, error } = useBalance();
   const [selectedCurrency, setSelectedCurrency] = useState('RSD');
@@ -35,7 +35,7 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
     return (
       <div className="alert alert-error">
         <span>
-          {t('errorLoading')}: {error}
+          {t('balance.errorLoading')}: {error}
         </span>
       </div>
     );
@@ -46,7 +46,7 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
     return (
       <div className="card bg-gradient-to-r from-base-300 to-base-200 shadow-lg">
         <div className="card-body text-center">
-          <h2 className="card-title justify-center">🔒 {t('title')}</h2>
+          <h2 className="card-title justify-center">🔒 {t('balance.title')}</h2>
           <p className="text-sm opacity-70">
             Войдите в систему для просмотра баланса
           </p>
@@ -79,13 +79,13 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
       <div className="card-body">
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <p className="text-sm opacity-80">{t('availableBalance')}</p>
+            <p className="text-sm opacity-80">{t('balance.availableBalance')}</p>
             <h2 className="text-3xl font-bold">
               {balanceService.formatAmount(availableBalance, selectedCurrency)}
             </h2>
             {frozenBalance > 0 && (
               <p className="text-sm opacity-80 mt-1">
-                {t('frozen')}:{' '}
+                {t('balance.frozen')}:{' '}
                 {balanceService.formatAmount(frozenBalance, selectedCurrency)}
               </p>
             )}
@@ -108,13 +108,13 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
               href={`/${locale}/balance/deposit`}
               className="btn btn-primary btn-outline btn-sm"
             >
-              💳 {t('deposit')}
+              💳 {t('balance.deposit')}
             </Link>
             <Link
               href={`/${locale}/balance/withdraw`}
               className="btn btn-primary btn-outline btn-sm"
             >
-              💸 {t('withdraw')}
+              💸 {t('balance.withdraw')}
             </Link>
           </div>
         )}

@@ -3,11 +3,85 @@
     "title": "Reviews",
     "writeReview": "Write Review",
     "noReviews": "No reviews yet",
-    "cantReview": "You cannot review this product"
+    "cantReview": "You cannot review this product",
+    "alreadyReviewed": "Already Reviewed",
+    "ownerCantReview": "Owner Cant Review",
+    "yourReview": "Your Review"
   },
   "stats": {
     "reviews": "reviews",
     "ratingDistribution": "Rating Distribution",
-    "withPhotos": "with photos"
+    "withPhotos": "with photos",
+    "verified": "Verified"
+  },
+  "list": {
+    "sortBy": "Sort By",
+    "byDate": "By Date",
+    "byRating": "By Rating",
+    "byHelpfulness": "By Helpfulness",
+    "rating": "Rating",
+    "all": "All",
+    "withPhotos": "With Photos",
+    "verified": "Verified",
+    "anonymous": "Anonymous",
+    "verifiedPurchase": "Verified Purchase",
+    "sellerConfirmed": "Seller Confirmed",
+    "pros": "Pros",
+    "cons": "Cons",
+    "helpful": "Helpful",
+    "confirm": "Confirm",
+    "dispute": "Dispute",
+    "seller": "Seller",
+    "disputeReview": "Dispute Review",
+    "disputeReason": "Dispute Reason",
+    "disputePlaceholder": "Dispute Placeholder",
+    "cancel": "Cancel",
+    "submit": "Submit"
+  },
+  "photos": {
+    "maxFiles": "Max Files",
+    "label": "Label",
+    "limitReached": "Limit Reached",
+    "dragText": "Drag Text",
+    "fileTypes": "File Types"
+  },
+  "rating": {
+    "error": "Error",
+    "label": "Label"
+  },
+  "comment": {
+    "error": "Error",
+    "tooShort": "Too Short",
+    "label": "Label",
+    "placeholder": "Placeholder"
+  },
+  "form": {
+    "success": "Success",
+    "error": "Error",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  },
+  "progress": {
+    "creating": "Creating",
+    "uploading": "Uploading",
+    "publishing": "Publishing"
+  },
+  "pros": {
+    "label": "Label",
+    "placeholder": "Placeholder"
+  },
+  "cons": {
+    "label": "Label",
+    "placeholder": "Placeholder"
+  },
+  "gallery": {
+    "closeGallery": "Close Gallery",
+    "photo": "Photo",
+    "of": "Of",
+    "previousImage": "Previous Image",
+    "nextImage": "Next Image",
+    "fullscreenMode": "Fullscreen Mode",
+    "close": "Close",
+    "swipeToNavigate": "Swipe To Navigate"
   }
 }

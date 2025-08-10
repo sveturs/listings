@@ -18,7 +18,13 @@
     "profile": "Profile",
     "close": "Close"
   },
-  "search": "Search",
+  "search": {
+    "notFound": "Not Found",
+    "addressPlaceholder": "Address Placeholder",
+    "address": "Address",
+    "byAddress": "By Address",
+    "byDistrict": "By District"
+  },
   "validation": {
     "nameRequired": "Name is required",
     "nameMinLength": "Name must be at least 2 characters long",
@@ -315,7 +321,23 @@
   "fuzzy": "Fuzzy search",
   "lat": "Latitude",
   "lon": "Longitude",
-  "filters": "Filters",
+  "filters": {
+    "title": "Title",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "price": "Price",
+    "priceFrom": "Price From",
+    "priceTo": "Price To",
+    "resetFilters": "Reset Filters",
+    "radius": "Radius",
+    "period": "Period",
+    "periods": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "limit": "Limit"
+  },
   "priceRange": "Price range",
   "sortBy": "Sort by",
   "relevance": "Relevance",
@@ -340,7 +362,10 @@
   "noStorefrontsInCategory": "No storefronts in category",
   "createFirstStorefront": "Create first storefront",
   "createStorefront": "Create storefront",
-  "status": "Status",
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
   "reviews": "reviews",
   "noDescription": "No description",
   "notSpecified": "Not specified",
@@ -401,7 +426,10 @@
     "showing": "Showing",
     "listings": "listings"
   },
-  "actions": "Actions",
+  "actions": {
+    "apply": "Apply",
+    "reset": "Reset"
+  },
   "loadError": "Loading error",
   "ctr": {
     "label": "CTR",
@@ -537,5 +565,19 @@
   "systemName": "System name",
   "sortOrder": "Sort order",
   "isActive": "Active",
-  "translating": "Translating..."
+  "translating": "Translating...",
+  "common": {
+    "minutes": "Minutes",
+    "km": "Km",
+    "m": "M",
+    "resetFilters": "Reset Filters",
+    "translate": "Translate",
+    "systemName": "System Name",
+    "sortOrder": "Sort Order",
+    "isActive": "Is Active",
+    "translating": "Translating",
+    "saveSuccess": "Save Success",
+    "confirmDelete": "Confirm Delete",
+    "deleteSuccess": "Delete Success"
+  }
 }

@@ -38,7 +38,13 @@
       "specifyLocation": "Одредите локацију"
     }
   },
-  "search": "Pretraži",
+  "search": {
+    "notFound": "[SR] Not Found",
+    "addressPlaceholder": "[SR] Address Placeholder",
+    "address": "[SR] Address",
+    "byAddress": "[SR] By Address",
+    "byDistrict": "[SR] By District"
+  },
   "validation": {
     "nameRequired": "Ime je obavezno",
     "nameMinLength": "Ime mora imati najmanje 2 karaktera",
@@ -148,7 +154,6 @@
         "terrace": "Sa terasom",
         "airConditioning": "Sa klima uređajem",
         "centralHeating": "Centralno grejanje",
-        "furnished": "Namešteno",
         "partlyFurnished": "Polunamešten",
         "unfurnished": "Nenamešten"
       }
@@ -350,7 +355,10 @@
   "noStorefrontsInCategory": "Nema prodavnica u kategoriji",
   "createFirstStorefront": "Kreirajte prvu prodavnicu",
   "createStorefront": "Kreiraj prodavnicu",
-  "status": "Status",
+  "status": {
+    "active": "Aktivno",
+    "inactive": "Neaktivno"
+  },
   "reviews": "recenzije",
   "noDescription": "Bez opisa",
   "notSpecified": "Nije navedeno",
@@ -411,7 +419,10 @@
     "showing": "Prikazuje se",
     "listings": "oglasi"
   },
-  "actions": "Akcije",
+  "actions": {
+    "apply": "[SR] Apply",
+    "reset": "[SR] Reset"
+  },
   "loadError": "Greška učitavanja",
   "ctr": {
     "label": "Oznaka",
@@ -542,5 +553,19 @@
   "showInactive": "Prikaži neaktivne",
   "expand": "Proširi",
   "collapse": "Smanji",
-  "required": "Obavezno"
+  "required": "Obavezno",
+  "common": {
+    "minutes": "[SR] Minutes",
+    "km": "[SR] Km",
+    "m": "[SR] M",
+    "resetFilters": "[SR] Reset Filters",
+    "translate": "[SR] Translate",
+    "systemName": "[SR] System Name",
+    "sortOrder": "[SR] Sort Order",
+    "isActive": "[SR] Is Active",
+    "translating": "[SR] Translating",
+    "saveSuccess": "[SR] Save Success",
+    "confirmDelete": "[SR] Confirm Delete",
+    "deleteSuccess": "[SR] Delete Success"
+  }
 }

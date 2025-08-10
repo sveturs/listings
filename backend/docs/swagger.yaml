@@ -21324,9 +21324,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns storefront details by slug
+      description: Returns storefront details by slug or ID
       parameters:
-      - description: Storefront slug
+      - description: Storefront slug or ID
         in: path
         name: slug
         required: true
@@ -21346,7 +21346,7 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Get storefront by slug
+      summary: Get storefront by slug or ID
       tags:
       - storefronts
   /api/v1/storefronts/slug/{slug}/products/{product_id}/images:

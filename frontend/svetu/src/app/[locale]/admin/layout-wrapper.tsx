@@ -1,7 +1,6 @@
 import { loadMessages } from '@/lib/i18n/loadMessages';
-import AdminLayoutClient from './layout-client';
 
-export default async function AdminLayout({
+export default async function AdminLayoutWrapper({
   children,
   params,
 }: {
@@ -17,5 +16,5 @@ export default async function AdminLayout({
     'common',
   ]);
 
-  return <AdminLayoutClient>{children}</AdminLayoutClient>;
+  return <>{children}</>;
 }

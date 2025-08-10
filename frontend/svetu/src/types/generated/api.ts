@@ -22761,15 +22761,15 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get storefront by slug
-     * @description Returns storefront details by slug
+     * Get storefront by slug or ID
+     * @description Returns storefront details by slug or ID
      */
     get: {
       parameters: {
         query?: never;
         header?: never;
         path: {
-          /** @description Storefront slug */
+          /** @description Storefront slug or ID */
           slug: string;
         };
         cookie?: never;

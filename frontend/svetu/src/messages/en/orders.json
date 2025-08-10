@@ -121,5 +121,25 @@
   "protectionPeriod": "Protection Period",
   "protectionActiveUntil": "Buyer protection active until",
   "quantity": "Quantity",
-  "noItems": "No items"
+  "noItems": "No items",
+  "confirmCancel": "Confirm Cancel",
+  "cancelSuccess": "Cancel Success",
+  "cancelError": "Cancel Error",
+  "ordered": "Ordered",
+  "hideDetails": "Hide Details",
+  "cancel": "Cancel",
+  "trackingNumber": "Tracking Number",
+  "carrier": "Carrier",
+  "success": {
+    "title": "Title",
+    "description": "Description",
+    "whatNext": "What Next",
+    "emailConfirmation": "Email Confirmation",
+    "emailConfirmationDesc": "Email Confirmation Desc",
+    "shipping": "Shipping",
+    "shippingDesc": "Shipping Desc",
+    "contact": "Contact",
+    "contactDesc": "Contact Desc"
+  },
+  "continueShopping": "Continue Shopping"
 }

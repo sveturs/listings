@@ -267,7 +267,8 @@ export default function ListingPage({ params }: Props) {
 
             // Теперь загружаем информацию о продукте витрины, чтобы получить варианты
             // Используем slug если есть, иначе ID
-            const storefrontIdentifier = listingData.storefront.slug || listingData.storefront_id;
+            const storefrontIdentifier =
+              listingData.storefront.slug || listingData.storefront_id;
             const productResponse = await fetch(
               `${config.getApiUrl()}/api/v1/storefronts/slug/${storefrontIdentifier}/products/${listingData.id}`
             );
@@ -275,16 +276,19 @@ export default function ListingPage({ params }: Props) {
             if (productResponse.ok) {
               const productData = await productResponse.json();
               console.log('Product data:', productData);
-              
+
               // Обновляем данные о товаре из витрины
               if (productData.data) {
-                listingData.stock_quantity = productData.data.stock_quantity || 0;
-                listingData.stock_status = productData.data.stock_status || 'out_of_stock';
+                listingData.stock_quantity =
+                  productData.data.stock_quantity || 0;
+                listingData.stock_status =
+                  productData.data.stock_status || 'out_of_stock';
               } else {
                 listingData.stock_quantity = productData.stock_quantity || 0;
-                listingData.stock_status = productData.stock_status || 'out_of_stock';
+                listingData.stock_status =
+                  productData.stock_status || 'out_of_stock';
               }
-              
+
               if (productData.variants && productData.variants.length > 0) {
                 console.log(
                   'Product has variants:',
@@ -292,7 +296,7 @@ export default function ListingPage({ params }: Props) {
                 );
                 _setHasVariants(true);
               }
-              
+
               // Обновляем состояние с обновлёнными данными
               setListing(listingData);
             } else {
@@ -597,11 +601,10 @@ export default function ListingPage({ params }: Props) {
                     });
                     return null;
                   })()}
-                  {listing.storefront_id &&
-                    listing.storefront && (
-                      <div className="mt-4 space-y-4">
-                        {/* Variant Selector - Disabled for marketplace listings */}
-                        {/* Marketplace listings don't support variants selection
+                  {listing.storefront_id && listing.storefront && (
+                    <div className="mt-4 space-y-4">
+                      {/* Variant Selector - Disabled for marketplace listings */}
+                      {/* Marketplace listings don't support variants selection
                         {hasVariants && (
                           <VariantSelector
                             productId={listing.id}
@@ -614,40 +617,49 @@ export default function ListingPage({ params }: Props) {
                           />
                         )} */}
 
-                        {/* Add to Cart Button - Only for storefront products */}
-                        {listing.storefront_id ? (
-                          <AddToCartButton
-                            product={{
-                              id: listing.id, // Используем ID самого listing как ID товара
-                              name: getTranslatedValue('title'),
-                              price: listing.price,
-                              currency: 'RSD',
-                              image: images[0]?.public_url || '',
-                              storefrontId: listing.storefront_id,
-                              storefrontName: listing.storefront?.name,
-                              storefrontSlug: listing.storefront?.slug || listing.storefront_id?.toString(),
-                              stockQuantity: listing.stock_quantity || 0,
-                              stockStatus: listing.stock_quantity && listing.stock_quantity > 0 ? 'in_stock' : 'out_of_stock',
-                            }}
-                            variant={_selectedVariant || undefined}
-                            className="btn btn-primary btn-block"
-                            disabled={!listing.stock_quantity || listing.stock_quantity === 0}
-                          />
-                        ) : (
-                          <button
-                            disabled
-                            className="btn btn-disabled btn-block"
-                            title={
-                              locale === 'ru'
-                                ? 'Обычные объявления нельзя добавить в корзину. Посетите витрину для покупки товаров.'
-                                : 'Regular marketplace listings cannot be added to cart. Visit the storefront to purchase products.'
-                            }
-                          >
-                            {t('addToCart')}
-                          </button>
-                        )}
-                      </div>
-                    )}
+                      {/* Add to Cart Button - Only for storefront products */}
+                      {listing.storefront_id ? (
+                        <AddToCartButton
+                          product={{
+                            id: listing.id, // Используем ID самого listing как ID товара
+                            name: getTranslatedValue('title'),
+                            price: listing.price,
+                            currency: 'RSD',
+                            image: images[0]?.public_url || '',
+                            storefrontId: listing.storefront_id,
+                            storefrontName: listing.storefront?.name,
+                            storefrontSlug:
+                              listing.storefront?.slug ||
+                              listing.storefront_id?.toString(),
+                            stockQuantity: listing.stock_quantity || 0,
+                            stockStatus:
+                              listing.stock_quantity &&
+                              listing.stock_quantity > 0
+                                ? 'in_stock'
+                                : 'out_of_stock',
+                          }}
+                          variant={_selectedVariant || undefined}
+                          className="btn btn-primary btn-block"
+                          disabled={
+                            !listing.stock_quantity ||
+                            listing.stock_quantity === 0
+                          }
+                        />
+                      ) : (
+                        <button
+                          disabled
+                          className="btn btn-disabled btn-block"
+                          title={
+                            locale === 'ru'
+                              ? 'Обычные объявления нельзя добавить в корзину. Посетите витрину для покупки товаров.'
+                              : 'Regular marketplace listings cannot be added to cart. Visit the storefront to purchase products.'
+                          }
+                        >
+                          {t('addToCart')}
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   {listing.location && (
                     <p className="flex items-center gap-2 mt-4 text-base-content/70">

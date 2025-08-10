@@ -207,5 +207,15 @@
         "gold": "Золотой продавец"
       }
     }
+  },
+  "remove": "[RU] Remove",
+  "empty": "[RU] Empty",
+  "clear": "Очистить",
+  "miniCart": {
+    "title": "[RU] Title",
+    "empty": "[RU] Empty",
+    "total": "[RU] Total",
+    "viewCart": "[RU] View Cart",
+    "checkout": "Оформление заказа"
   }
 }

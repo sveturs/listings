@@ -19773,7 +19773,7 @@ const docTemplate = `{
         },
         "/api/v1/storefronts/slug/{slug}": {
             "get": {
-                "description": "Returns storefront details by slug",
+                "description": "Returns storefront details by slug or ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -19783,11 +19783,11 @@ const docTemplate = `{
                 "tags": [
                     "storefronts"
                 ],
-                "summary": "Get storefront by slug",
+                "summary": "Get storefront by slug or ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Storefront slug",
+                        "description": "Storefront slug or ID",
                         "name": "slug",
                         "in": "path",
                         "required": true

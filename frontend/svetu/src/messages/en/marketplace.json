@@ -583,7 +583,8 @@
     "anySeller": "Any Seller",
     "withDelivery": "With Delivery",
     "categoryFilters": "Category Filters",
-    "noAttributeFilters": "No Attribute Filters"
+    "noAttributeFilters": "No Attribute Filters",
+    "condition": "Condition"
   },
   "allCategories": "All Categories",
   "categories": "Categories",
