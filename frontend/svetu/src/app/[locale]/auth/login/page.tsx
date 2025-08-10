@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const searchParams = useSearchParams();
   const { login } = useAuth();
 
@@ -23,5 +23,17 @@ export default function LoginPage() {
         <p className="mt-4 text-base-content/70">Redirecting to login...</p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-base-100">
+        <div className="loading loading-spinner loading-lg text-primary"></div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }

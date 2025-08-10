@@ -121,5 +121,25 @@
   "protectionPeriod": "Period zaštite",
   "protectionActiveUntil": "Zaštita kupca aktivna do",
   "quantity": "Količina",
-  "noItems": "Nema artikala"
+  "noItems": "Nema artikala",
+  "confirmCancel": "Potvrdite otkazivanje",
+  "cancelSuccess": "Uspešno otkazano",
+  "cancelError": "Greška pri otkazivanju",
+  "ordered": "Poručeno",
+  "hideDetails": "Sakrij detalje",
+  "cancel": "Otkaži",
+  "trackingNumber": "Broj za praćenje",
+  "carrier": "Kurir",
+  "success": {
+    "title": "Porudžbina uspešno kreirana!",
+    "description": "Vaša porudžbina je uspešno registrovana",
+    "whatNext": "Šta dalje?",
+    "emailConfirmation": "Potvrda putem e-pošte",
+    "emailConfirmationDesc": "Poslali smo vam potvrdu porudžbine na vašu e-poštu",
+    "shipping": "Dostava",
+    "shippingDesc": "Prodavac će vas kontaktirati u vezi sa dostavom",
+    "contact": "Kontakt",
+    "contactDesc": "Možete kontaktirati prodavca putem četa"
+  },
+  "continueShopping": "Nastavite kupovinu"
 }

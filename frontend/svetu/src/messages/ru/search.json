@@ -50,5 +50,15 @@
   "byPrice": "По цене",
   "byDate": "По дате",
   "searchHistory": "История поиска",
-  "clearHistory": "Очистить историю"
+  "clearHistory": "Очистить историю",
+  "city": "[RU] City",
+  "enterCity": "[RU] Enter City",
+  "category": "[RU] Category",
+  "allCategories": "[RU] All Categories",
+  "inCategory": "[RU] In Category",
+  "search": {
+    "searchHistory": "[RU] Search History",
+    "clearHistory": "[RU] Clear History"
+  },
+  "popularSearches": "Популярные запросы"
 }

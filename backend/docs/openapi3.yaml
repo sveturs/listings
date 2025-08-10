@@ -15834,9 +15834,9 @@ paths:
         - search
   "/api/v1/storefronts/slug/{slug}":
     get:
-      description: Returns storefront details by slug
+      description: Returns storefront details by slug or ID
       parameters:
-        - description: Storefront slug
+        - description: Storefront slug or ID
           in: path
           name: slug
           required: true
@@ -15861,7 +15861,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-      summary: Get storefront by slug
+      summary: Get storefront by slug or ID
       tags:
         - storefronts
   "/api/v1/storefronts/slug/{slug}/products/{product_id}/images":

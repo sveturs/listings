@@ -1,7 +1,6 @@
 import { loadMessages } from '@/lib/i18n/loadMessages';
-import AdminLayoutClient from './layout-client';
 
-export default async function AdminLayout({
+export default async function ExamplesLayout({
   children,
   params,
 }: {
@@ -10,12 +9,15 @@ export default async function AdminLayout({
 }) {
   const { locale } = await params;
 
-  // Загружаем необходимые модули для админ панели
+  // Загружаем необходимые модули для примеров
   const _messages = await loadMessages(locale as any, [
     'admin',
     'misc',
     'common',
+    'storefronts',
+    'marketplace',
+    'auth',
   ]);
 
-  return <AdminLayoutClient>{children}</AdminLayoutClient>;
+  return <>{children}</>;
 }

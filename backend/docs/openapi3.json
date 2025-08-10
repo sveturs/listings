@@ -22902,14 +22902,14 @@
         },
         "/api/v1/storefronts/slug/{slug}": {
             "get": {
-                "description": "Returns storefront details by slug",
+                "description": "Returns storefront details by slug or ID",
                 "tags": [
                     "storefronts"
                 ],
-                "summary": "Get storefront by slug",
+                "summary": "Get storefront by slug or ID",
                 "parameters": [
                     {
-                        "description": "Storefront slug",
+                        "description": "Storefront slug or ID",
                         "name": "slug",
                         "in": "path",
                         "required": true,

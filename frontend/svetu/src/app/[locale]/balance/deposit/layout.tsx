@@ -1,7 +1,6 @@
 import { loadMessages } from '@/lib/i18n/loadMessages';
-import AdminLayoutClient from './layout-client';
 
-export default async function AdminLayout({
+export default async function DepositLayout({
   children,
   params,
 }: {
@@ -10,12 +9,13 @@ export default async function AdminLayout({
 }) {
   const { locale } = await params;
 
-  // Загружаем необходимые модули для админ панели
+  // Загружаем необходимые модули для страниц депозита
   const _messages = await loadMessages(locale as any, [
     'admin',
     'misc',
+    'profile',
     'common',
   ]);
 
-  return <AdminLayoutClient>{children}</AdminLayoutClient>;
+  return <>{children}</>;
 }

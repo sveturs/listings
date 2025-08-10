@@ -133,5 +133,25 @@
   "advancedFilters": "Расширенные фильтры",
   "activeFilters": "Активные фильтры",
   "search": "Поиск",
-  "filter": "Фильтр"
+  "filter": "Фильтр",
+  "confirmCancel": "[RU] Confirm Cancel",
+  "cancelSuccess": "[RU] Cancel Success",
+  "cancelError": "[RU] Cancel Error",
+  "ordered": "[RU] Ordered",
+  "hideDetails": "[RU] Hide Details",
+  "cancel": "Отмена",
+  "trackingNumber": "[RU] Tracking Number",
+  "carrier": "[RU] Carrier",
+  "success": {
+    "title": "[RU] Title",
+    "description": "[RU] Description",
+    "whatNext": "[RU] What Next",
+    "emailConfirmation": "[RU] Email Confirmation",
+    "emailConfirmationDesc": "[RU] Email Confirmation Desc",
+    "shipping": "Доставка",
+    "shippingDesc": "[RU] Shipping Desc",
+    "contact": "[RU] Contact",
+    "contactDesc": "[RU] Contact Desc"
+  },
+  "continueShopping": "Продолжить покупки"
 }

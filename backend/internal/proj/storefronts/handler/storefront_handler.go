@@ -93,21 +93,31 @@ func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 	return c.JSON(storefront)
 }
 
-// GetStorefrontBySlug получает витрину по slug
-// @Summary Get storefront by slug
-// @Description Returns storefront details by slug
+// GetStorefrontBySlug получает витрину по slug или ID
+// @Summary Get storefront by slug or ID
+// @Description Returns storefront details by slug or ID
 // @Tags storefronts
 // @Accept json
 // @Produce json
-// @Param slug path string true "Storefront slug"
+// @Param slug path string true "Storefront slug or ID"
 // @Success 200 {object} models.Storefront "Storefront details"
 // @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug} [get]
 func (h *StorefrontHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
-	slug := c.Params("slug")
+	slugOrID := c.Params("slug")
 
-	storefront, err := h.service.GetBySlug(c.Context(), slug)
+	// Пробуем сначала как ID
+	if id, err := strconv.Atoi(slugOrID); err == nil {
+		storefront, err := h.service.GetByID(c.Context(), id)
+		if err == nil {
+			return c.JSON(storefront)
+		}
+		// Если не нашли по ID, пробуем как slug
+	}
+
+	// Пробуем как slug
+	storefront, err := h.service.GetBySlug(c.Context(), slugOrID)
 	if err != nil {
 		if errors.Is(err, postgres.ErrNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")

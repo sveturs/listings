@@ -50,5 +50,15 @@
   "byPrice": "By Price",
   "byDate": "By Date",
   "searchHistory": "Search History",
-  "clearHistory": "Clear History"
+  "clearHistory": "Clear History",
+  "city": "City",
+  "enterCity": "Enter City",
+  "category": "Category",
+  "allCategories": "All Categories",
+  "inCategory": "In Category",
+  "search": {
+    "searchHistory": "Search History",
+    "clearHistory": "Clear History"
+  },
+  "popularSearches": "Popular Searches"
 }

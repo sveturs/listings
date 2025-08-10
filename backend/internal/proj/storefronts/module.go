@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -413,27 +414,40 @@ func (m *Module) getProductStatsBySlug(c *fiber.Ctx) error {
 	return m.productHandler.GetProductStats(c)
 }
 
-// setStorefrontIDBySlug добавляет storefront ID в контекст по slug
+// setStorefrontIDBySlug добавляет storefront ID в контекст по slug или ID
 func (m *Module) setStorefrontIDBySlug(c *fiber.Ctx) error {
-	slug := c.Params("slug")
-	if slug == "" {
+	slugOrID := c.Params("slug")
+	if slugOrID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Storefront slug is required",
 		})
 	}
 
+	var storefront *models.Storefront
+	var err error
+
+	// Пробуем сначала как ID
+	if id, parseErr := strconv.Atoi(slugOrID); parseErr == nil {
+		storefront, err = m.services.Storefront().GetByID(c.Context(), id)
+		if err == nil {
+			c.Locals("storefrontID", storefront.ID)
+			return nil
+		}
+		// Если не нашли по ID, пробуем как slug
+	}
+
 	// Получаем витрину через сервис по slug
-	storefront, err := m.services.Storefront().GetBySlug(c.Context(), slug)
+	storefront, err = m.services.Storefront().GetBySlug(c.Context(), slugOrID)
 	if err != nil {
 		if errors.Is(err, postgres.ErrNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "Storefront not found",
-				"slug":  slug,
+				"slug":  slugOrID,
 			})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get storefront: " + err.Error(),
-			"slug":  slug,
+			"slug":  slugOrID,
 		})
 	}
 
