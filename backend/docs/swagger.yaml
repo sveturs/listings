@@ -236,6 +236,81 @@ definitions:
     required:
     - event_type
     type: object
+  backend_internal_domain_models.AITranslateBatchRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.TranslationItem'
+        minItems: 1
+        type: array
+      provider:
+        type: string
+      source_lang:
+        type: string
+      target_langs:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - items
+    - source_lang
+    - target_langs
+    type: object
+  backend_internal_domain_models.AITranslateBatchResponse:
+    properties:
+      failed_count:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.AITranslationResult'
+        type: array
+      success_count:
+        type: integer
+      total_items:
+        type: integer
+    type: object
+  backend_internal_domain_models.AITranslateRequest:
+    properties:
+      provider:
+        type: string
+      source_lang:
+        type: string
+      target_lang:
+        type: string
+      text:
+        type: string
+    required:
+    - source_lang
+    - target_lang
+    - text
+    type: object
+  backend_internal_domain_models.AITranslateResponse:
+    properties:
+      confidence:
+        type: number
+      provider:
+        type: string
+      translation:
+        type: string
+    type: object
+  backend_internal_domain_models.AITranslationResult:
+    properties:
+      confidence:
+        type: number
+      error:
+        type: string
+      key:
+        type: string
+      module:
+        type: string
+      provider:
+        type: string
+      translations:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
   backend_internal_domain_models.AddContactRequest:
     properties:
       added_from_chat_id:
@@ -318,6 +393,15 @@ definitions:
       verified_percentage:
         type: integer
     type: object
+  backend_internal_domain_models.ApplyTranslationsRequest:
+    properties:
+      translations:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.TranslationUpdate'
+        type: array
+    required:
+    - translations
+    type: object
   backend_internal_domain_models.AttachGroupToCategoryRequest:
     properties:
       collapsed_by_default:
@@ -385,6 +469,23 @@ definitions:
           type: integer
         type: array
     type: object
+  backend_internal_domain_models.AuditStatistics:
+    properties:
+      actions_by_type:
+        additionalProperties:
+          type: integer
+        type: object
+      actions_by_user:
+        additionalProperties:
+          type: integer
+        type: object
+      recent_actions:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.TranslationAuditLog'
+        type: array
+      total_actions:
+        type: integer
+    type: object
   backend_internal_domain_models.BalanceTransaction:
     properties:
       amount:
@@ -410,6 +511,51 @@ definitions:
       type:
         type: string
       user_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.BatchOperationsRequest:
+    properties:
+      create:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.Translation'
+        type: array
+      delete:
+        items:
+          type: integer
+        type: array
+      update:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.Translation'
+        type: array
+    type: object
+  backend_internal_domain_models.BatchOperationsResult:
+    properties:
+      created:
+        type: integer
+      deleted:
+        type: integer
+      errors:
+        items:
+          type: string
+        type: array
+      failed:
+        type: integer
+      updated:
+        type: integer
+    type: object
+  backend_internal_domain_models.BatchTranslateResult:
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      failed_count:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.TranslateResult'
+        type: array
+      translated_count:
         type: integer
     type: object
   backend_internal_domain_models.BreakdownItem:
@@ -478,6 +624,27 @@ definitions:
       product_id:
         description: Product ID if available
         type: integer
+    type: object
+  backend_internal_domain_models.BulkTranslateRequest:
+    properties:
+      auto_approve:
+        type: boolean
+      entity_ids:
+        items:
+          type: integer
+        type: array
+      entity_type:
+        type: string
+      overwrite_existing:
+        type: boolean
+      provider_id:
+        type: integer
+      source_language:
+        type: string
+      target_languages:
+        items:
+          type: string
+        type: array
     type: object
   backend_internal_domain_models.BulkUpdateItem:
     properties:
@@ -904,6 +1071,44 @@ definitions:
           type: integer
         type: array
     type: object
+  backend_internal_domain_models.ConflictResolution:
+    properties:
+      conflict_id:
+        type: integer
+      custom_value:
+        type: string
+      resolution:
+        enum:
+        - use_frontend
+        - use_database
+        - use_custom
+        type: string
+    required:
+    - conflict_id
+    - resolution
+    type: object
+  backend_internal_domain_models.ConflictResolutionBatch:
+    properties:
+      resolutions:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.ConflictResolution'
+        type: array
+    required:
+    - resolutions
+    type: object
+  backend_internal_domain_models.ConflictResolutionResult:
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      failed:
+        type: integer
+      resolved:
+        type: integer
+      total_processed:
+        type: integer
+    type: object
   backend_internal_domain_models.ContactsListResponse:
     properties:
       contacts:
@@ -1286,6 +1491,69 @@ definitions:
       price_modifier:
         type: number
     type: object
+  backend_internal_domain_models.ExportFormat:
+    enum:
+    - json
+    - csv
+    - xliff
+    type: string
+    x-enum-varnames:
+    - ExportFormatJSON
+    - ExportFormatCSV
+    - ExportFormatXLIFF
+  backend_internal_domain_models.ExportRequest:
+    properties:
+      entity_type:
+        type: string
+      format:
+        $ref: '#/definitions/backend_internal_domain_models.ExportFormat'
+      include_metadata:
+        type: boolean
+      language:
+        type: string
+      module:
+        type: string
+      only_verified:
+        type: boolean
+    type: object
+  backend_internal_domain_models.FrontendModule:
+    properties:
+      complete:
+        type: integer
+      incomplete:
+        type: integer
+      keys:
+        type: integer
+      languages:
+        additionalProperties:
+          $ref: '#/definitions/backend_internal_domain_models.ModuleStats'
+        type: object
+      missing:
+        type: integer
+      name:
+        type: string
+      placeholders:
+        type: integer
+    type: object
+  backend_internal_domain_models.FrontendTranslation:
+    properties:
+      key:
+        type: string
+      metadata:
+        $ref: '#/definitions/backend_internal_domain_models.TranslationMetadata'
+      module:
+        type: string
+      path:
+        description: Full path like "marketplace.filters.priceFrom"
+        type: string
+      status:
+        $ref: '#/definitions/backend_internal_domain_models.TranslationStatus'
+      translations:
+        additionalProperties:
+          type: string
+        description: lang -> text
+        type: object
+    type: object
   backend_internal_domain_models.GeoLocation:
     properties:
       city:
@@ -1422,8 +1690,39 @@ definitions:
     - file_type
     - storefront_id
     type: object
+  backend_internal_domain_models.ImportResult:
+    properties:
+      failed:
+        type: integer
+      skipped:
+        type: integer
+      success:
+        type: integer
+    type: object
+  backend_internal_domain_models.ImportTranslationsRequest:
+    properties:
+      overwrite_existing:
+        type: boolean
+      translations:
+        additionalProperties: true
+        type: object
+    type: object
   backend_internal_domain_models.JSONB:
     additionalProperties: true
+    type: object
+  backend_internal_domain_models.LanguageStats:
+    properties:
+      complete:
+        type: integer
+      coverage:
+        description: Percentage
+        type: number
+      machine_translated:
+        type: integer
+      total:
+        type: integer
+      verified:
+        type: integer
     type: object
   backend_internal_domain_models.ListingAttributeValue:
     properties:
@@ -1906,6 +2205,19 @@ definitions:
     - MarketplaceOrderStatusDisputed
     - MarketplaceOrderStatusCancelled
     - MarketplaceOrderStatusRefunded
+  backend_internal_domain_models.ModuleStats:
+    properties:
+      complete:
+        type: integer
+      incomplete:
+        type: integer
+      missing:
+        type: integer
+      placeholders:
+        type: integer
+      total:
+        type: integer
+    type: object
   backend_internal_domain_models.Notification:
     properties:
       created_at:
@@ -2418,6 +2730,15 @@ definitions:
       total_reviews:
         type: integer
       verified_reviews:
+        type: integer
+    type: object
+  backend_internal_domain_models.RollbackRequest:
+    properties:
+      comment:
+        type: string
+      translation_id:
+        type: integer
+      version_id:
         type: integer
     type: object
   backend_internal_domain_models.ShippingAddress:
@@ -3215,6 +3536,74 @@ definitions:
     - SubscriptionPlanProfessional
     - SubscriptionPlanBusiness
     - SubscriptionPlanEnterprise
+  backend_internal_domain_models.TextChange:
+    properties:
+      length:
+        type: integer
+      new_text:
+        type: string
+      old_text:
+        type: string
+      position:
+        type: integer
+      type:
+        description: '"addition", "deletion", "modification"'
+        type: string
+    type: object
+  backend_internal_domain_models.TranslateModuleRequest:
+    properties:
+      module:
+        type: string
+      only_missing:
+        type: boolean
+      provider:
+        type: string
+      source_lang:
+        type: string
+      target_langs:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - module
+    - source_lang
+    - target_langs
+    type: object
+  backend_internal_domain_models.TranslateModuleResponse:
+    properties:
+      module:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.AITranslationResult'
+        type: array
+      total_keys:
+        type: integer
+      translated_keys:
+        type: integer
+    type: object
+  backend_internal_domain_models.TranslateResult:
+    properties:
+      alternative_translations:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+      confidence:
+        type: number
+      key:
+        type: string
+      module:
+        type: string
+      provider:
+        type: string
+      translations:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
   backend_internal_domain_models.Translation:
     properties:
       created_at:
@@ -3240,12 +3629,176 @@ definitions:
         type: string
       updated_at:
         type: string
+      updated_by:
+        type: integer
+      version:
+        type: integer
+    type: object
+  backend_internal_domain_models.TranslationAuditLog:
+    properties:
+      action:
+        type: string
+      created_at:
+        type: string
+      entity_id:
+        type: integer
+      entity_type:
+        type: string
+      id:
+        type: integer
+      ip_address:
+        type: string
+      new_value:
+        type: string
+      old_value:
+        type: string
+      user_agent:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.TranslationImportRequest:
+    properties:
+      data: {}
+      format:
+        $ref: '#/definitions/backend_internal_domain_models.ExportFormat'
+      metadata:
+        additionalProperties: true
+        type: object
+      overwrite_existing:
+        type: boolean
+      validate_only:
+        type: boolean
+    type: object
+  backend_internal_domain_models.TranslationItem:
+    properties:
+      key:
+        type: string
+      module:
+        type: string
+      text:
+        type: string
+    required:
+    - key
+    - text
     type: object
   backend_internal_domain_models.TranslationMap:
     additionalProperties:
       additionalProperties:
         type: string
       type: object
+    type: object
+  backend_internal_domain_models.TranslationMetadata:
+    properties:
+      character_count:
+        type: integer
+      provider:
+        type: string
+      quality_score:
+        type: number
+      translated_at:
+        type: string
+      translated_by:
+        type: integer
+      verified_at:
+        type: string
+      verified_by:
+        type: integer
+      word_count:
+        type: integer
+    type: object
+  backend_internal_domain_models.TranslationStatistics:
+    properties:
+      complete_translations:
+        type: integer
+      language_stats:
+        additionalProperties:
+          $ref: '#/definitions/backend_internal_domain_models.LanguageStats'
+        type: object
+      missing_translations:
+        type: integer
+      module_stats:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.FrontendModule'
+        type: array
+      placeholder_count:
+        type: integer
+      recent_changes:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.TranslationAuditLog'
+        type: array
+      total_translations:
+        type: integer
+    type: object
+  backend_internal_domain_models.TranslationStatus:
+    enum:
+    - complete
+    - incomplete
+    - placeholder
+    - missing
+    - outdated
+    type: string
+    x-enum-varnames:
+    - StatusComplete
+    - StatusIncomplete
+    - StatusPlaceholder
+    - StatusMissing
+    - StatusOutdated
+  backend_internal_domain_models.TranslationUpdate:
+    properties:
+      key:
+        type: string
+      language:
+        type: string
+      module:
+        type: string
+      value:
+        type: string
+    required:
+    - key
+    - language
+    - module
+    - value
+    type: object
+  backend_internal_domain_models.TranslationUpdateRequest:
+    properties:
+      is_machine_translated:
+        type: boolean
+      is_verified:
+        type: boolean
+      metadata:
+        additionalProperties: true
+        type: object
+      translated_text:
+        type: string
+    type: object
+  backend_internal_domain_models.TranslationVersion:
+    properties:
+      change_comment:
+        type: string
+      changed_at:
+        type: string
+      changed_by:
+        type: integer
+      entity_id:
+        type: integer
+      entity_type:
+        type: string
+      field_name:
+        type: string
+      id:
+        type: integer
+      language:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      translated_text:
+        type: string
+      translation_id:
+        type: integer
+      version_number:
+        type: integer
     type: object
   backend_internal_domain_models.UpdateAttributeGroupRequest:
     properties:
@@ -3604,6 +4157,45 @@ definitions:
       plant_code:
         type: string
     type: object
+  backend_internal_domain_models.ValidateTranslationsRequest:
+    properties:
+      check_html:
+        type: boolean
+      check_length:
+        type: boolean
+      check_variables:
+        type: boolean
+      languages:
+        items:
+          type: string
+        type: array
+      module:
+        type: string
+    type: object
+  backend_internal_domain_models.ValidationIssue:
+    properties:
+      language:
+        type: string
+      message:
+        type: string
+      severity:
+        description: '"error", "warning", "info"'
+        type: string
+      type:
+        description: '"missing", "placeholder", "variable_mismatch", "length", "html"'
+        type: string
+    type: object
+  backend_internal_domain_models.ValidationResult:
+    properties:
+      issues:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.ValidationIssue'
+        type: array
+      key:
+        type: string
+      module:
+        type: string
+    type: object
   backend_internal_domain_models.VariantSettings:
     properties:
       continue_selling:
@@ -3623,6 +4215,33 @@ definitions:
       weight_unit:
         description: kg, g, lb, oz
         type: string
+    type: object
+  backend_internal_domain_models.VersionDiff:
+    properties:
+      metadata_changes:
+        additionalProperties: true
+        type: object
+      text_changes:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.TextChange'
+        type: array
+      version1:
+        $ref: '#/definitions/backend_internal_domain_models.TranslationVersion'
+      version2:
+        $ref: '#/definitions/backend_internal_domain_models.TranslationVersion'
+    type: object
+  backend_internal_domain_models.VersionHistoryResponse:
+    properties:
+      current_version:
+        type: integer
+      total_versions:
+        type: integer
+      translation_id:
+        type: integer
+      versions:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.TranslationVersion'
+        type: array
     type: object
   backend_internal_domain_search.AdvancedGeoFilters:
     properties:
@@ -10413,6 +11032,990 @@ paths:
       summary: Synchronize discount data
       tags:
       - marketplace-admin
+  /api/v1/admin/translations/ai/apply:
+    post:
+      consumes:
+      - application/json
+      description: Apply translations generated by AI providers
+      parameters:
+      - description: Translations to apply
+        in: body
+        name: translations
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.ApplyTranslationsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Apply AI-generated translations
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/ai/providers:
+    get:
+      description: Returns list of configured AI translation providers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    additionalProperties: true
+                    type: object
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get available AI translation providers
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/ai/translate:
+    post:
+      consumes:
+      - application/json
+      description: Translates text using configured AI providers
+      parameters:
+      - description: Translation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.AITranslateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.AITranslateResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Translate text using AI
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/ai/translate-batch:
+    post:
+      consumes:
+      - application/json
+      description: Translates multiple texts using configured AI providers
+      parameters:
+      - description: Batch translation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.AITranslateBatchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.AITranslateBatchResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Batch translate texts using AI
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/ai/translate-module:
+    post:
+      consumes:
+      - application/json
+      description: Translates all missing translations in a module
+      parameters:
+      - description: Module translation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.TranslateModuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.TranslateModuleResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Translate entire module using AI
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/audit/logs:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve audit logs with optional filters
+      parameters:
+      - description: 'Limit results (default: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by user ID
+        in: query
+        name: user_id
+        type: integer
+      - description: Filter by action type
+        in: query
+        name: action
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.TranslationAuditLog'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get audit logs
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/audit/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve statistics about audit logs and user activity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.AuditStatistics'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get audit statistics
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/bulk/translate:
+    post:
+      consumes:
+      - application/json
+      description: Perform bulk translation of multiple entities across languages
+      parameters:
+      - description: Bulk translation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.BulkTranslateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.BatchTranslateResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Bulk translate multiple entities
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/database:
+    get:
+      consumes:
+      - application/json
+      description: Returns translations from database with optional filters
+      parameters:
+      - description: Entity type filter
+        in: query
+        name: entity_type
+        type: string
+      - description: Entity ID filter
+        in: query
+        name: entity_id
+        type: integer
+      - description: Language filter
+        in: query
+        name: language
+        type: string
+      - description: Field name filter
+        in: query
+        name: field_name
+        type: string
+      - description: Verified status filter
+        in: query
+        name: is_verified
+        type: boolean
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.Translation'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get database translations with filters
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/database/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a translation permanently
+      parameters:
+      - description: Translation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Delete translation from database
+      tags:
+      - Translation Admin
+    get:
+      consumes:
+      - application/json
+      description: Returns a single translation from database
+      parameters:
+      - description: Translation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.Translation'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get single translation by ID
+      tags:
+      - Translation Admin
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing translation
+      parameters:
+      - description: Translation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Translation update
+        in: body
+        name: translation
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.TranslationUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Update translation in database
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/database/batch:
+    post:
+      consumes:
+      - application/json
+      description: Create, update or delete multiple translations at once
+      parameters:
+      - description: Batch operations
+        in: body
+        name: operations
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.BatchOperationsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.BatchOperationsResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Perform batch operations on translations
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/export:
+    get:
+      consumes:
+      - application/json
+      description: Export database translations to JSON format for backup or migration
+      parameters:
+      - description: Entity type to export (frontend, database, all)
+        in: query
+        name: entity_type
+        type: string
+      - description: Language code to export (en, ru, sr, all)
+        in: query
+        name: language
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Export translations to JSON
+      tags:
+      - admin-translations
+  /api/v1/admin/translations/export/advanced:
+    post:
+      consumes:
+      - application/json
+      description: Export translations in various formats (JSON, CSV, XLIFF)
+      parameters:
+      - description: Export request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.ExportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Advanced export translations
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/frontend/module/{name}:
+    get:
+      consumes:
+      - application/json
+      description: Returns all translations for the specified module
+      parameters:
+      - description: Module name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.FrontendTranslation'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get translations for a specific module
+      tags:
+      - Translation Admin
+    put:
+      consumes:
+      - application/json
+      description: Updates multiple translations within a module
+      parameters:
+      - description: Module name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Translation updates
+        in: body
+        name: updates
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/backend_internal_domain_models.FrontendTranslation'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Update translations for a module
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/frontend/modules:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of all frontend modules with statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.FrontendModule'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get all frontend translation modules
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/frontend/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validates translations across modules and languages
+      parameters:
+      - description: Validation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.ValidateTranslationsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.ValidationResult'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Validate translations for consistency
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/import:
+    post:
+      consumes:
+      - application/json
+      description: Import translations from JSON format to database
+      parameters:
+      - description: Import request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.ImportTranslationsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Import translations from JSON
+      tags:
+      - admin-translations
+  /api/v1/admin/translations/import/advanced:
+    post:
+      consumes:
+      - application/json
+      description: Import translations from various formats (JSON, CSV, XLIFF)
+      parameters:
+      - description: Import request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.TranslationImportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ImportResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Advanced import translations
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/stats/overview:
+    get:
+      consumes:
+      - application/json
+      description: Returns comprehensive statistics about translations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.TranslationStatistics'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get translation statistics overview
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/sync/conflicts/resolve:
+    post:
+      consumes:
+      - application/json
+      description: Batch resolve translation sync conflicts
+      parameters:
+      - description: Conflict resolutions
+        in: body
+        name: resolutions
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.ConflictResolutionBatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ConflictResolutionResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Resolve multiple translation conflicts
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/sync/db-to-frontend:
+    post:
+      consumes:
+      - application/json
+      description: Synchronize database translations to frontend JSON files
+      parameters:
+      - description: Entity type to sync
+        in: query
+        name: entity_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Sync database to frontend
+      tags:
+      - admin-translations
+  /api/v1/admin/translations/sync/frontend-to-db:
+    post:
+      consumes:
+      - application/json
+      description: Synchronize frontend JSON translations to database
+      parameters:
+      - description: Module name to sync (all for all modules)
+        in: query
+        name: module
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Sync frontend to database
+      tags:
+      - admin-translations
+  /api/v1/admin/translations/sync/frontend-to-db-old:
+    post:
+      consumes:
+      - application/json
+      description: Synchronizes all frontend translations to the database (OLD METHOD)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Sync frontend translations to database OLD
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/versions/{entity}/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns version history for all translations of an entity
+      parameters:
+      - description: Entity type (translation, category, listing)
+        in: path
+        name: entity
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.VersionHistoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get version history for an entity
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/versions/diff:
+    get:
+      consumes:
+      - application/json
+      description: Compare two translation versions and return differences
+      parameters:
+      - description: First version ID
+        in: query
+        name: version1
+        required: true
+        type: integer
+      - description: Second version ID
+        in: query
+        name: version2
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.VersionDiff'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get differences between two versions
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/versions/rollback:
+    post:
+      consumes:
+      - application/json
+      description: Rollback a translation to a specific previous version
+      parameters:
+      - description: Rollback request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.RollbackRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Rollback translation to previous version
+      tags:
+      - Translation Admin
   /api/v1/admin/users:
     get:
       consumes:

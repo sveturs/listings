@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"backend/internal/domain/models"
@@ -524,7 +525,7 @@ func (r *Repository) GetQualityMetrics(ctx context.Context, translationID int) (
 		&m.HasPlaceholders, &m.HasHTMLTags, &m.CheckedAt, &m.CheckedBy, &issues,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("quality metrics not found")
 	}
 	if err != nil {
@@ -684,7 +685,7 @@ func (r *Repository) GetTranslationByID(ctx context.Context, id int) (*models.Tr
 		&t.CreatedAt, &t.UpdatedAt, &metadata, &version,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("translation not found")
 	}
 	if err != nil {
@@ -704,4 +705,236 @@ func (r *Repository) GetTranslationByID(ctx context.Context, id int) (*models.Tr
 	}
 
 	return &t, nil
+}
+
+// GetVersionsByEntity retrieves version history for all translations of an entity
+func (r *Repository) GetVersionsByEntity(ctx context.Context, entityType string, entityID int) ([]models.TranslationVersion, error) {
+	query := `SELECT tv.id, tv.translation_id, tv.version_number, tv.entity_type, tv.entity_id, 
+	          tv.language, tv.field_name, tv.translated_text, tv.changed_by, tv.changed_at, 
+	          tv.change_comment, tv.metadata
+	          FROM translation_versions tv
+	          WHERE tv.entity_type = $1 AND tv.entity_id = $2
+	          ORDER BY tv.translation_id, tv.version_number DESC`
+
+	rows, err := r.db.QueryContext(ctx, query, entityType, entityID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query entity versions: %w", err)
+	}
+	defer rows.Close()
+
+	var versions []models.TranslationVersion
+	for rows.Next() {
+		var v models.TranslationVersion
+		var changedBy sql.NullInt64
+		var changeComment sql.NullString
+		var metadata sql.NullString
+
+		err := rows.Scan(
+			&v.ID, &v.TranslationID, &v.VersionNumber, &v.EntityType, &v.EntityID,
+			&v.Language, &v.FieldName, &v.TranslatedText, &changedBy, &v.ChangedAt,
+			&changeComment, &metadata,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan entity version: %w", err)
+		}
+
+		if changedBy.Valid {
+			val := int(changedBy.Int64)
+			v.ChangedBy = &val
+		}
+
+		if changeComment.Valid {
+			v.ChangeComment = &changeComment.String
+		}
+
+		if metadata.Valid {
+			if err := json.Unmarshal([]byte(metadata.String), &v.Metadata); err != nil {
+				r.logger.Error().Err(err).Msg("Failed to unmarshal metadata")
+			}
+		}
+
+		versions = append(versions, v)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	return versions, nil
+}
+
+// GetVersionDiff compares two translation versions and returns differences
+func (r *Repository) GetVersionDiff(ctx context.Context, versionID1, versionID2 int) (*models.VersionDiff, error) {
+	query := `SELECT id, translation_id, version_number, entity_type, entity_id, 
+	          language, field_name, translated_text, changed_by, changed_at, 
+	          change_comment, metadata
+	          FROM translation_versions 
+	          WHERE id IN ($1, $2)
+	          ORDER BY id`
+
+	rows, err := r.db.QueryContext(ctx, query, versionID1, versionID2)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query versions for diff: %w", err)
+	}
+	defer rows.Close()
+
+	var versions []*models.TranslationVersion
+	for rows.Next() {
+		var v models.TranslationVersion
+		var changedBy sql.NullInt64
+		var changeComment sql.NullString
+		var metadata sql.NullString
+
+		err := rows.Scan(
+			&v.ID, &v.TranslationID, &v.VersionNumber, &v.EntityType, &v.EntityID,
+			&v.Language, &v.FieldName, &v.TranslatedText, &changedBy, &v.ChangedAt,
+			&changeComment, &metadata,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan version for diff: %w", err)
+		}
+
+		if changedBy.Valid {
+			val := int(changedBy.Int64)
+			v.ChangedBy = &val
+		}
+
+		if changeComment.Valid {
+			v.ChangeComment = &changeComment.String
+		}
+
+		if metadata.Valid {
+			if err := json.Unmarshal([]byte(metadata.String), &v.Metadata); err != nil {
+				r.logger.Error().Err(err).Msg("Failed to unmarshal metadata")
+			}
+		}
+
+		versions = append(versions, &v)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	if len(versions) != 2 {
+		return nil, fmt.Errorf("expected 2 versions, got %d", len(versions))
+	}
+
+	// Calculate text differences using simple diff algorithm
+	textChanges := r.calculateTextDiff(versions[0].TranslatedText, versions[1].TranslatedText)
+
+	// Calculate metadata changes
+	metadataChanges := make(map[string]interface{})
+	for key, value := range versions[1].Metadata {
+		if oldValue, exists := versions[0].Metadata[key]; !exists || oldValue != value {
+			metadataChanges[key] = map[string]interface{}{
+				"old": oldValue,
+				"new": value,
+			}
+		}
+	}
+
+	diff := &models.VersionDiff{
+		Version1:        versions[0],
+		Version2:        versions[1],
+		TextChanges:     textChanges,
+		MetadataChanges: metadataChanges,
+	}
+
+	return diff, nil
+}
+
+// calculateTextDiff calculates differences between two texts
+func (r *Repository) calculateTextDiff(text1, text2 string) []models.TextChange {
+	// Simple diff implementation - can be enhanced with better algorithms like Myers
+	var changes []models.TextChange
+
+	if text1 == text2 {
+		return changes
+	}
+
+	// For simplicity, treat the entire text as one change if different
+	// In production, you might want to use a more sophisticated diff algorithm
+	change := models.TextChange{
+		Type:     "modification",
+		Position: 0,
+		OldText:  text1,
+		NewText:  text2,
+		Length:   len(text2),
+	}
+	changes = append(changes, change)
+
+	return changes
+}
+
+// RollbackToVersion rolls back a translation to a previous version
+func (r *Repository) RollbackToVersion(ctx context.Context, translationID int, versionID int, userID int) error {
+	// Begin transaction
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	// Get the version data to rollback to
+	var version models.TranslationVersion
+	query := `SELECT translated_text, metadata FROM translation_versions WHERE id = $1 AND translation_id = $2`
+
+	var metadata sql.NullString
+	err = tx.QueryRowContext(ctx, query, versionID, translationID).Scan(&version.TranslatedText, &metadata)
+	if errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("version not found")
+	}
+	if err != nil {
+		return fmt.Errorf("failed to get version: %w", err)
+	}
+
+	if metadata.Valid {
+		if err := json.Unmarshal([]byte(metadata.String), &version.Metadata); err != nil {
+			r.logger.Error().Err(err).Msg("Failed to unmarshal metadata")
+		}
+	}
+
+	// Update the main translation record
+	metadataJSON, err := json.Marshal(version.Metadata)
+	if err != nil {
+		return fmt.Errorf("failed to marshal metadata: %w", err)
+	}
+
+	updateQuery := `UPDATE translations 
+	                SET translated_text = $1, metadata = $2, updated_at = CURRENT_TIMESTAMP
+	                WHERE id = $3`
+
+	result, err := tx.ExecContext(ctx, updateQuery, version.TranslatedText, metadataJSON, translationID)
+	if err != nil {
+		return fmt.Errorf("failed to update translation: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("translation not found")
+	}
+
+	// Log the rollback action
+	auditQuery := `INSERT INTO translation_audit_log 
+	               (user_id, action, entity_type, entity_id, old_value, new_value)
+	               VALUES ($1, 'rollback', 'translation', $2, 'version_rollback', $3)`
+
+	_, err = tx.ExecContext(ctx, auditQuery, userID, translationID, fmt.Sprintf("rolled back to version %d", versionID))
+	if err != nil {
+		return fmt.Errorf("failed to log rollback: %w", err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
 }

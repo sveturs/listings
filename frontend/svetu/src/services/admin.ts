@@ -44,6 +44,7 @@ export interface Category {
   name: string;
   slug: string;
   parent_id?: number;
+  parent_name?: string;
   icon?: string;
   description?: string;
   is_active?: boolean;
@@ -54,6 +55,7 @@ export interface Category {
   updated_at?: string;
   children?: Category[];
   items_count?: number;
+  listing_count?: number;
   translations?: {
     [key: string]: string;
   };
