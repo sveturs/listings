@@ -35,6 +35,7 @@ import (
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
 	"backend/internal/proj/storefronts"
+	"backend/internal/proj/translation_admin"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
@@ -59,6 +60,7 @@ type Server struct {
 	docs               *docsHandler.Handler
 	analytics          *analytics.Module
 	behaviorTracking   *behavior_tracking.Module
+	translationAdmin   *translation_admin.Module
 	searchAdmin        *search_admin.Module
 	searchOptimization *search_optimization.Module
 	global             *globalHandler.Handler
@@ -112,6 +114,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db)
 	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool())
+	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system")
 	searchAdminModule := search_admin.NewModule(db)
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())
@@ -162,6 +165,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		docs:               docsHandlerInstance,
 		analytics:          analyticsModule,
 		behaviorTracking:   behaviorTrackingModule,
+		translationAdmin:   translationAdminModule,
 		searchAdmin:        searchAdminModule,
 		searchOptimization: searchOptimizationModule,
 		global:             globalHandlerInstance,
@@ -291,7 +295,7 @@ func (s *Server) registerProjectRoutes() {
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.marketplace, s.balance, s.orders, s.storefront,
-		s.geocode, s.gis, s.contacts, s.payments, s.docs, s.analytics, s.behaviorTracking)
+		s.geocode, s.gis, s.contacts, s.payments, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {

@@ -382,11 +382,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	// Использовать реальный обработчик из UserHandler
 
-	// Маршруты для админских переводов
-	adminRoutes.Post("/translations/batch-categories", h.AdminTranslations.BatchTranslateCategories)
-	adminRoutes.Post("/translations/batch-attributes", h.AdminTranslations.BatchTranslateAttributes)
-	adminRoutes.Get("/translations/status", h.AdminTranslations.GetTranslationStatus)
-	adminRoutes.Put("/translations/:entity_type/:entity_id/:field_name", h.AdminTranslations.UpdateFieldTranslation)
+	// Маршруты для админских переводов marketplace
+	// Изменен путь для избежания конфликта с translation_admin модулем
+	adminRoutes.Post("/marketplace-translations/batch-categories", h.AdminTranslations.BatchTranslateCategories)
+	adminRoutes.Post("/marketplace-translations/batch-attributes", h.AdminTranslations.BatchTranslateAttributes)
+	adminRoutes.Get("/marketplace-translations/status", h.AdminTranslations.GetTranslationStatus)
+	adminRoutes.Put("/marketplace-translations/:entity_type/:entity_id/:field_name", h.AdminTranslations.UpdateFieldTranslation)
 
 	// Управление администраторами
 
