@@ -79,7 +79,9 @@ export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
       <div className="card-body">
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <p className="text-sm opacity-80">{t('balance.availableBalance')}</p>
+            <p className="text-sm opacity-80">
+              {t('balance.availableBalance')}
+            </p>
             <h2 className="text-3xl font-bold">
               {balanceService.formatAmount(availableBalance, selectedCurrency)}
             </h2>

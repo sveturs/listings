@@ -28,11 +28,13 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-base-100">
-        <div className="loading loading-spinner loading-lg text-primary"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-base-100">
+          <div className="loading loading-spinner loading-lg text-primary"></div>
+        </div>
+      }
+    >
       <LoginPageContent />
     </Suspense>
   );

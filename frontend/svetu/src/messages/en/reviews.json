@@ -1,87 +1,87 @@
 {
-  "section": {
-    "title": "Reviews",
-    "writeReview": "Write Review",
-    "noReviews": "No reviews yet",
-    "cantReview": "You cannot review this product",
-    "alreadyReviewed": "Already Reviewed",
-    "ownerCantReview": "Owner Cant Review",
-    "yourReview": "Your Review"
-  },
-  "stats": {
-    "reviews": "reviews",
-    "ratingDistribution": "Rating Distribution",
-    "withPhotos": "with photos",
-    "verified": "Verified"
-  },
-  "list": {
-    "sortBy": "Sort By",
-    "byDate": "By Date",
-    "byRating": "By Rating",
-    "byHelpfulness": "By Helpfulness",
-    "rating": "Rating",
-    "all": "All",
-    "withPhotos": "With Photos",
-    "verified": "Verified",
-    "anonymous": "Anonymous",
-    "verifiedPurchase": "Verified Purchase",
-    "sellerConfirmed": "Seller Confirmed",
-    "pros": "Pros",
-    "cons": "Cons",
-    "helpful": "Helpful",
-    "confirm": "Confirm",
-    "dispute": "Dispute",
-    "seller": "Seller",
-    "disputeReview": "Dispute Review",
-    "disputeReason": "Dispute Reason",
-    "disputePlaceholder": "Dispute Placeholder",
-    "cancel": "Cancel",
-    "submit": "Submit"
-  },
-  "photos": {
-    "maxFiles": "Max Files",
-    "label": "Label",
-    "limitReached": "Limit Reached",
-    "dragText": "Drag Text",
-    "fileTypes": "File Types"
-  },
-  "rating": {
-    "error": "Error",
-    "label": "Label"
-  },
   "comment": {
     "error": "Error",
-    "tooShort": "Too Short",
     "label": "Label",
-    "placeholder": "Placeholder"
-  },
-  "form": {
-    "success": "Success",
-    "error": "Error",
-    "submit": "Submit",
-    "cancel": "Cancel"
-  },
-  "progress": {
-    "creating": "Creating",
-    "uploading": "Uploading",
-    "publishing": "Publishing"
-  },
-  "pros": {
-    "label": "Label",
-    "placeholder": "Placeholder"
+    "placeholder": "Placeholder",
+    "tooShort": "Too Short"
   },
   "cons": {
     "label": "Label",
     "placeholder": "Placeholder"
   },
+  "form": {
+    "cancel": "Cancel",
+    "error": "Error",
+    "submit": "Submit",
+    "success": "Success"
+  },
   "gallery": {
-    "closeGallery": "Close Gallery",
-    "photo": "Photo",
-    "of": "Of",
-    "previousImage": "Previous Image",
-    "nextImage": "Next Image",
-    "fullscreenMode": "Fullscreen Mode",
     "close": "Close",
+    "closeGallery": "Close Gallery",
+    "fullscreenMode": "Fullscreen Mode",
+    "nextImage": "Next Image",
+    "of": "Of",
+    "photo": "Photo",
+    "previousImage": "Previous Image",
     "swipeToNavigate": "Swipe To Navigate"
+  },
+  "list": {
+    "all": "All",
+    "anonymous": "Anonymous",
+    "byDate": "By Date",
+    "byHelpfulness": "By Helpfulness",
+    "byRating": "By Rating",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "cons": "Cons",
+    "dispute": "Dispute",
+    "disputePlaceholder": "Dispute Placeholder",
+    "disputeReason": "Dispute Reason",
+    "disputeReview": "Dispute Review",
+    "helpful": "Helpful",
+    "pros": "Pros",
+    "rating": "Rating",
+    "seller": "Seller",
+    "sellerConfirmed": "Seller Confirmed",
+    "sortBy": "Sort By",
+    "submit": "Submit",
+    "verified": "Verified",
+    "verifiedPurchase": "Verified Purchase",
+    "withPhotos": "With Photos"
+  },
+  "photos": {
+    "dragText": "Drag Text",
+    "fileTypes": "File Types",
+    "label": "Label",
+    "limitReached": "Limit Reached",
+    "maxFiles": "Max Files"
+  },
+  "progress": {
+    "creating": "Creating",
+    "publishing": "Publishing",
+    "uploading": "Uploading"
+  },
+  "pros": {
+    "label": "Label",
+    "placeholder": "Placeholder"
+  },
+  "rating": {
+    "error": "Error",
+    "label": "Label"
+  },
+  "section": {
+    "alreadyReviewed": "Already Reviewed",
+    "cantReview": "You cannot review this product",
+    "noReviews": "No reviews yet",
+    "ownerCantReview": "Owner Cant Review",
+    "title": "Reviews",
+    "writeReview": "Write Review",
+    "yourReview": "Your Review"
+  },
+  "stats": {
+    "ratingDistribution": "Rating Distribution",
+    "reviews": "reviews",
+    "verified": "Verified",
+    "withPhotos": "with photos"
   }
 }

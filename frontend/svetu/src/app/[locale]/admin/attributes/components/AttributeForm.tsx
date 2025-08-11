@@ -43,6 +43,8 @@ export default function AttributeForm({
         variant_is_required?: boolean;
         variant_sort_order?: number;
         variant_affects_stock?: boolean;
+        data_source?: string;
+        data_source_config?: any;
       }
     >
   >({
@@ -71,6 +73,8 @@ export default function AttributeForm({
     default_value: '',
     validation_rules: {},
     custom_component: '',
+    data_source: 'manual',
+    data_source_config: {},
   });
 
   const [options, setOptions] = useState<SelectOption[]>([]);
@@ -110,6 +114,8 @@ export default function AttributeForm({
         default_value: attribute.default_value || '',
         validation_rules: attribute.validation_rules || {},
         custom_component: attribute.custom_component || '',
+        data_source: (attribute as any).data_source || 'manual',
+        data_source_config: (attribute as any).data_source_config || {},
       });
 
       // Parse options if select or multiselect type
@@ -768,6 +774,278 @@ export default function AttributeForm({
               </label>
             </div>
           </div>
+        </>
+      )}
+
+      {/* Секция настройки источника данных */}
+      {(formData.attribute_type === 'select' ||
+        formData.attribute_type === 'multiselect') && (
+        <>
+          <div className="divider">Источник данных</div>
+
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Тип источника данных</span>
+            </label>
+            <select
+              name="data_source"
+              value={formData.data_source || 'manual'}
+              onChange={handleChange}
+              className="select select-bordered"
+            >
+              <option value="manual">Ручной ввод (опции выше)</option>
+              <option value="database">База данных (таблица)</option>
+              <option value="api_external">Внешний API</option>
+              <option value="computed">Вычисляемый</option>
+            </select>
+          </div>
+
+          {formData.data_source === 'database' && (
+            <div className="space-y-4 p-4 bg-base-200 rounded-lg">
+              <div className="alert alert-info">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  className="stroke-current shrink-0 w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <span>
+                  Данные будут загружаться из указанной таблицы базы данных
+                </span>
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Таблица</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.data_source_config?.table || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      data_source_config: {
+                        ...prev.data_source_config,
+                        table: e.target.value,
+                      },
+                    }))
+                  }
+                  className="input input-bordered"
+                  placeholder="car_makes, car_models, etc."
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Поле для значения (ID)</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.data_source_config?.valueField || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      data_source_config: {
+                        ...prev.data_source_config,
+                        valueField: e.target.value,
+                      },
+                    }))
+                  }
+                  className="input input-bordered"
+                  placeholder="id"
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Поле для отображения</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.data_source_config?.labelField || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      data_source_config: {
+                        ...prev.data_source_config,
+                        labelField: e.target.value,
+                      },
+                    }))
+                  }
+                  className="input input-bordered"
+                  placeholder="name"
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">
+                    Поле для сортировки (опционально)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.data_source_config?.sortField || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      data_source_config: {
+                        ...prev.data_source_config,
+                        sortField: e.target.value,
+                      },
+                    }))
+                  }
+                  className="input input-bordered"
+                  placeholder="popularity_rs, sort_order"
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">
+                    Поле для фильтрации (опционально)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.data_source_config?.filterField || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      data_source_config: {
+                        ...prev.data_source_config,
+                        filterField: e.target.value,
+                      },
+                    }))
+                  }
+                  className="input input-bordered"
+                  placeholder="car_make_id"
+                />
+                <label className="label">
+                  <span className="label-text-alt">
+                    Используется для зависимых списков (например, модели авто от
+                    марки)
+                  </span>
+                </label>
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">
+                    Время кэширования (секунды)
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  value={formData.data_source_config?.cacheTime || 3600}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      data_source_config: {
+                        ...prev.data_source_config,
+                        cacheTime: parseInt(e.target.value),
+                      },
+                    }))
+                  }
+                  className="input input-bordered"
+                  min="0"
+                  placeholder="3600"
+                />
+              </div>
+            </div>
+          )}
+
+          {formData.data_source === 'api_external' && (
+            <div className="space-y-4 p-4 bg-base-200 rounded-lg">
+              <div className="alert alert-info">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  className="stroke-current shrink-0 w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <span>Данные будут загружаться из внешнего API</span>
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">URL API</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.data_source_config?.apiEndpoint || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      data_source_config: {
+                        ...prev.data_source_config,
+                        apiEndpoint: e.target.value,
+                      },
+                    }))
+                  }
+                  className="input input-bordered"
+                  placeholder="https://api.example.com/options"
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Метод запроса</span>
+                </label>
+                <select
+                  value={formData.data_source_config?.method || 'GET'}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      data_source_config: {
+                        ...prev.data_source_config,
+                        method: e.target.value,
+                      },
+                    }))
+                  }
+                  className="select select-bordered"
+                >
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                </select>
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Заголовки (JSON)</span>
+                </label>
+                <textarea
+                  value={formData.data_source_config?.headers || '{}'}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      data_source_config: {
+                        ...prev.data_source_config,
+                        headers: e.target.value,
+                      },
+                    }))
+                  }
+                  className="textarea textarea-bordered"
+                  placeholder='{"Authorization": "Bearer token"}'
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
         </>
       )}
 

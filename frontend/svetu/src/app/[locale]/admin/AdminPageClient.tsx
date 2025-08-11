@@ -70,6 +70,18 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <h2 className="card-title">🌐 {t('sections.translations')}</h2>
+            <p>{t('sections.translationsDescription')}</p>
+            <div className="card-actions justify-end">
+              <Link href="/admin/translations" className="btn btn-primary">
+                {t('manage')}
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
