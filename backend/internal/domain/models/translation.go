@@ -16,4 +16,6 @@ type Translation struct {
 	Metadata            map[string]interface{} `json:"metadata,omitempty"`
 	CreatedAt           time.Time              `json:"created_at"`
 	UpdatedAt           time.Time              `json:"updated_at"`
+	UpdatedBy           int                    `json:"updated_by,omitempty"`
+	Version             int                    `json:"version,omitempty"`
 }
